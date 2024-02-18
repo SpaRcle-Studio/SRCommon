@@ -1,0 +1,9 @@
+[submodule "libs/assimp"]
+	path = libs/assimp
+	url = https://github.com/SpaRcle-Studio/assimp
+[submodule "libs/fmt"]
+	path = libs/fmt
+	url = https://github.com/SpaRcle-Studio/fmt
+[submodule "libs/nativefiledialog"]
+	path = libs/nativefiledialog
+	url = https://github.com/SpaRcle-Studio/nativefiledialog-extended
