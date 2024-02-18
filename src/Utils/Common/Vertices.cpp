@@ -5,12 +5,12 @@
 #include <Utils/Common/Vertices.h>
 #include <Utils/Debug.h>
 
-#include <Hull/Coordinate.h>
-#include <QuickHull/FastQuickHull.h>
+// #include <Hull/Coordinate.h>
+// #include <QuickHull/FastQuickHull.h>
 
 namespace SR_UTILS_NS {
     std::vector<Vertex> ComputeConvexHull(const std::vector<Vertex>& vertices) {
-        std::vector<hull::Coordinate> coordinates;
+        /*std::vector<hull::Coordinate> coordinates;
         coordinates.reserve(vertices.size());
 
         for (auto&& vertex : vertices) {
@@ -30,6 +30,7 @@ namespace SR_UTILS_NS {
             hullVertices.emplace_back(vertices[face[2]]);
         }
 
-        return hullVertices;
+        return hullVertices;*/
+        return std::vector<Vertex>();
     }
 }

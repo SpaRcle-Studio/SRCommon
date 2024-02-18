@@ -118,7 +118,7 @@ if (MSVC)
     target_compile_options(Utils PUBLIC /openmp)
 endif()
 
-target_link_libraries(Utils Fast-Quick-Hull fmt)
+target_link_libraries(Utils fmt)
 
 get_property(SR_UTILS_INCLUDE_DIRECTORIES_CONTENT GLOBAL PROPERTY SR_UTILS_INCLUDE_DIRECTORIES)
 message("SpaRcle utils include directories: ${SR_UTILS_INCLUDE_DIRECTORIES_CONTENT}")
