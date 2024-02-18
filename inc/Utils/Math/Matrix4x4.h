@@ -351,11 +351,11 @@ namespace SR_MATH_NS {
             return GetQuat().EulerAngle();
         }
 
-        SR_FORCE_INLINE const SR_MATH_NS::FVector4& operator[](int32_t row) const {
+        SR_FORCE_INLINE SR_CONSTEXPR const SR_MATH_NS::FVector4& operator[](int32_t row) const {
             return value[row];
         }
 
-        SR_FORCE_INLINE SR_MATH_NS::FVector4& operator[](int32_t row) {
+        SR_FORCE_INLINE SR_CONSTEXPR SR_MATH_NS::FVector4& operator[](int32_t row) {
             return value[row];
         }
 
