@@ -55,9 +55,14 @@ namespace SR_HTYPES_NS {
         ~SharedPtr(); /// не должен быть виртуальным
 
     public:
-        template<typename... Args> SR_NODISCARD static SharedPtr<T> MakeShared(Args&&... args) {
-            auto&& pData = new T(std::forward<Args>(args)...);
-            return pData->GetThis();
+        template<typename U = T, typename R = U, typename... Args> SR_NODISCARD static SharedPtr<R> MakeShared(Args&&... args) {
+            auto&& pData = new U(std::forward<Args>(args)...);
+            if constexpr (std::is_same_v<R, U>) {
+                return pData->GetThis();
+            }
+            else {
+                return pData->GetThis().template DynamicCast<R>();
+            }
         }
 
         SR_NODISCARD SR_FORCE_INLINE operator bool() const noexcept { return m_data && m_data->valid; } /** NOLINT */

@@ -191,6 +191,7 @@
 #define SR_PHYSICS_UTILS_NS SR_PHYSICS_NS::Utils
 #define SR_UTILS_NS SpaRcle::Utils
 #define SR_SRLM_NS SR_UTILS_NS::SRLM
+#define SR_NETWORK_NS SR_UTILS_NS::Network
 #define SR_PLATFORM_NS SpaRcle::Utils::Platform
 #define SR_MATH_NS SpaRcle::Utils::Math
 #define SR_GRAPH_NS SpaRcle::Graphics
@@ -221,7 +222,7 @@
 #ifdef SR_LINUX
     #define SR_DLL_EXPORT
 #else
-    #if defined(SR_DLL_EXPORTS)
+    #ifdef SR_DLL_EXPORTS
         #ifdef SR_ANDROID
             #define SR_DLL_EXPORT
         #else

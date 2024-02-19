@@ -6,15 +6,9 @@ set(CMAKE_CXX_STANDARD 20)
 option(SR_UTILS_ASSIMP "" ON)
 option(SR_UTILS_DLL_EXPORTS "" ON)
 
-if (SR_UTILS_DLL_EXPORTS)
-    add_definitions(
-        -DSR_DLL_EXPORTS=1
-    )
-endif()
-
 if (SR_UTILS_ASSIMP)
-    add_definitions(
-        -DSR_UTILS_ASSIMP=1
+    add_compile_definitions(
+        SR_UTILS_ASSIMP
     )
 
     set(ASSIMP_BUILD_TESTS OFF CACHE INTERNAL "" FORCE)
@@ -68,6 +62,7 @@ list(APPEND SR_UTILS_LINK_LIBRARIES cxx/World.cxx)
 list(APPEND SR_UTILS_LINK_LIBRARIES cxx/Platform.cxx)
 list(APPEND SR_UTILS_LINK_LIBRARIES cxx/Types.cxx)
 list(APPEND SR_UTILS_LINK_LIBRARIES cxx/Common.cxx)
+list(APPEND SR_UTILS_LINK_LIBRARIES cxx/Network.cxx)
 
 define_property(GLOBAL PROPERTY SR_UTILS_INCLUDE_DIRECTORIES
     BRIEF_DOCS "Contains linkable libraries"
@@ -92,6 +87,11 @@ SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_SOURCE_DIR}/inc)
 SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_SOURCE_DIR}/libs)
 SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_SOURCE_DIR}/libs/glm)
 SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_SOURCE_DIR}/libs/fmt/include)
+
+add_library(asio INTERFACE)
+
+target_include_directories(asio INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/libs/asio/include)
+target_include_directories(asio INTERFACE ${CMAKE_CURRENT_BINARY_DIR}/libs/asio/include)
 
 if (SR_ICU)
     SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_BINARY_DIR}/include/icu)
@@ -154,6 +154,8 @@ else()
     target_link_libraries(Utils fmt)
 endif()
 
+target_link_libraries(Utils asio)
+
 get_property(SR_UTILS_INCLUDE_DIRECTORIES_CONTENT GLOBAL PROPERTY SR_UTILS_INCLUDE_DIRECTORIES)
 message("SpaRcle utils include directories: ${SR_UTILS_INCLUDE_DIRECTORIES_CONTENT}")
 target_include_directories(Utils PUBLIC ${SR_UTILS_INCLUDE_DIRECTORIES_CONTENT})
@@ -162,6 +164,13 @@ set(SR_UTILS_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 set(SR_UTILS_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR})
 
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/CopyFiles.cmake)
+
+if (SR_UTILS_DLL_EXPORTS)
+    message("SpaRcle utils will be using DLL exports")
+    target_compile_definitions(Utils PUBLIC
+        SR_DLL_EXPORTS
+    )
+endif()
 
 add_custom_target(CopyUtilsFiles)
 add_custom_command(TARGET CopyUtilsFiles
