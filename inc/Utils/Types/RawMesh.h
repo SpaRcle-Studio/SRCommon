@@ -11,6 +11,7 @@
 #include <Utils/Common/Vertices.h>
 #include <Utils/Math/Matrix4x4.h>
 
+#ifdef SR_UTILS_ASSIMP
 namespace Assimp {
     class Importer;
 }
@@ -18,6 +19,7 @@ namespace Assimp {
 class aiScene;
 class aiAnimation;
 class aiMesh;
+#endif
 
 namespace SR_WORLD_NS {
     class Scene;
@@ -70,7 +72,9 @@ namespace SR_HTYPES_NS {
 
         SR_NODISCARD bool IsAllowedToRevive() const override { return true; }
 
+    #ifdef SR_UTILS_ASSIMP
         SR_NODISCARD const aiScene* GetAssimpScene() const noexcept { return m_scene; }
+    #endif
 
     protected:
         bool Unload() override;
@@ -83,11 +87,11 @@ namespace SR_HTYPES_NS {
         void CalculateOffsets();
         void CalculateAnimations();
 
+    #ifdef SR_UTILS_ASSIMP
         uint32_t NormalizeWeights(const aiMesh* pMesh);
+    #endif
 
     private:
-        ska::flat_hash_map<Hash, aiAnimation*> m_animations;
-
         std::vector<ska::flat_hash_map<Hash, uint32_t>> m_bones;
         ska::flat_hash_map<Hash, uint16_t> m_optimizedBones;
 
@@ -96,9 +100,13 @@ namespace SR_HTYPES_NS {
 
         RawMeshParams m_params;
 
-        const aiScene* m_scene = nullptr;
         bool m_fromCache = false;
+
+    #ifdef SR_UTILS_ASSIMP
+        ska::flat_hash_map<Hash, aiAnimation*> m_animations;
+        const aiScene* m_scene = nullptr;
         Assimp::Importer* m_importer = nullptr;
+    #endif
 
     };
 }

@@ -8,30 +8,38 @@
 #include <Utils/ResourceManager/ResourceManager.h>
 #include <Utils/FileSystem/AssimpCache.h>
 
-#include <assimp/scene.h>
-#include <assimp/postprocess.h>
-#include <assimp/Importer.hpp>
-#include <assimp/include/assimp/Exporter.hpp>
-#include <assimp/include/assimp/cexport.h>
+#ifdef SR_UTILS_ASSIMP
+    #include <assimp/scene.h>
+    #include <assimp/postprocess.h>
+    #include <assimp/Importer.hpp>
+    #include <assimp/include/assimp/Exporter.hpp>
+    #include <assimp/include/assimp/cexport.h>
+#endif
 
 namespace SR_HTYPES_NS {
+#ifdef SR_UTILS_ASSIMP
     SR_INLINE_STATIC int SR_RAW_MESH_ASSIMP_FLAGS = aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_MakeLeftHanded | aiProcess_FlipWindingOrder | aiProcess_JoinIdenticalVertices | aiProcess_GenUVCoords | aiProcess_TransformUVCoords | aiProcess_SortByPType | aiProcess_GlobalScale;
     SR_INLINE_STATIC int SR_RAW_MESH_ASSIMP_CACHED_FLAGS = aiProcess_FlipUVs;
     SR_INLINE_STATIC int SR_RAW_MESH_ASSIMP_ANIMATION_FLAGS = aiProcess_MakeLeftHanded | aiProcess_FlipWindingOrder;
+#endif
 
     RawMesh::RawMesh()
         : IResource(SR_COMPILE_TIME_CRC32_TYPE_NAME(RawMesh))
     {
+    #ifdef SR_UTILS_ASSIMP
         m_importer = new Assimp::Importer();
+    #endif
     }
 
     RawMesh::~RawMesh() {
+    #ifdef SR_UTILS_ASSIMP
         delete m_importer;
 
         if (m_fromCache) {
             delete m_scene;
             m_scene = nullptr;
         }
+    #endif
     }
 
     SR_UTILS_NS::Path RawMesh::InitializeResourcePath() const {
@@ -82,6 +90,7 @@ namespace SR_HTYPES_NS {
     bool RawMesh::Unload() {
         bool hasErrors = !IResource::Unload();
 
+    #ifdef SR_UTILS_ASSIMP
         if (m_importer) {
             m_importer->FreeScene();
         }
@@ -91,6 +100,9 @@ namespace SR_HTYPES_NS {
             m_scene = nullptr;
         }
 
+        m_animations.clear();
+    #endif
+
         m_fromCache = false;
 
         m_bones.clear();
@@ -98,8 +110,6 @@ namespace SR_HTYPES_NS {
 
         m_boneOffsetsMap.clear();
         m_boneOffsets.clear();
-
-        m_animations.clear();
 
         return !hasErrors;
     }
@@ -116,14 +126,15 @@ namespace SR_HTYPES_NS {
             cache = cache.ConcatExt("animation");
         }
 
-        Path&& binary = cache.ConcatExt("cache");
-        Path&& hashFile = cache.ConcatExt("hash");
+        SR_MAYBE_UNUSED Path&& binary = cache.ConcatExt("cache");
+        SR_MAYBE_UNUSED Path&& hashFile = cache.ConcatExt("hash");
 
-        const uint64_t resourceHash = path.GetFileHash();
+        SR_MAYBE_UNUSED const uint64_t resourceHash = path.GetFileHash();
 
-        const bool supportFastLoad = SR_UTILS_NS::Features::Instance().Enabled("FastModelsLoad", false);
-        bool needFastLoad = supportFastLoad;
+        SR_MAYBE_UNUSED const bool supportFastLoad = SR_UTILS_NS::Features::Instance().Enabled("FastModelsLoad", false);
+        SR_MAYBE_UNUSED bool needFastLoad = supportFastLoad;
 
+    #ifdef SR_UTILS_ASSIMP
     retry:
         if (needFastLoad && resourceHash == SR_UTILS_NS::FileSystem::ReadHashFromFile(hashFile)) {
             if ((m_scene = SR_UTILS_NS::AssimpCache::Instance().Load(binary))) {
@@ -174,29 +185,41 @@ namespace SR_HTYPES_NS {
             SR_ERROR("RawMesh::Load() : failed to read file! \n\tPath: " + path.ToString() + "\n\tReason: " + m_importer->GetErrorString());
             hasErrors |= true;
         }
+    #endif
 
         return !hasErrors;
     }
 
     uint32_t RawMesh::GetMeshesCount() const {
+    #ifdef SR_UTILS_ASSIMP
         if (!m_scene) {
             SRHalt("RawMesh::GetMeshesCount() : assimp scene is invalid!");
             return 0;
         }
 
         return m_scene->mNumMeshes;
+    #else
+        return 0;
+    #endif
     }
 
     std::string RawMesh::GetGeometryName(uint32_t id) const {
+    #ifdef SR_UTILS_ASSIMP
         if (!m_scene || id >= m_scene->mNumMeshes) {
             SRAssert2(false, "Out of range or invalid scene!");
             return {};
         }
 
         return m_scene->mMeshes[id]->mName.C_Str();
+    #else
+        return std::string();
+    #endif
     }
 
     std::vector<SR_UTILS_NS::Vertex> RawMesh::GetVertices(uint32_t id) const {
+        std::vector<SR_UTILS_NS::Vertex> vertices;
+
+    #ifdef SR_UTILS_ASSIMP
         if (!m_scene || id >= m_scene->mNumMeshes) {
             SRAssert2(false, "Out of range or invalid scene!");
             return {};
@@ -204,7 +227,6 @@ namespace SR_HTYPES_NS {
 
         auto&& mesh = m_scene->mMeshes[id];
 
-        std::vector<SR_UTILS_NS::Vertex> vertices;
         vertices.reserve(mesh->mNumVertices);
 
         const bool hasUV = mesh->mTextureCoords[0];
@@ -284,11 +306,15 @@ namespace SR_HTYPES_NS {
             }
         #endif
         }
+    #endif
 
         return vertices;
     }
 
     std::vector<uint32_t> RawMesh::GetIndices(uint32_t id) const {
+        std::vector<uint32_t> indices;
+
+    #ifdef SR_UTILS_ASSIMP
         if (!m_scene || id >= m_scene->mNumMeshes) {
             SRAssert2(false, "Out of range or invalid scene!");
             return {};
@@ -296,7 +322,6 @@ namespace SR_HTYPES_NS {
 
         auto&& mesh = m_scene->mMeshes[id];
 
-        std::vector<uint32_t> indices;
 
         indices.reserve(mesh->mNumFaces * 3);
 
@@ -318,20 +343,26 @@ namespace SR_HTYPES_NS {
                 indices.emplace_back(face.mIndices[2]);
             }
         }
+    #endif
 
         return indices;
     }
 
     uint32_t RawMesh::GetVerticesCount(uint32_t id) const {
+    #ifdef SR_UTILS_ASSIMP
         if (!m_scene || id >= m_scene->mNumMeshes) {
             SRAssert2(false, "Out of range or invalid scene!");
             return {};
         }
 
         return m_scene->mMeshes[id]->mNumVertices;
+    #else
+        return 0;
+    #endif
     }
 
     uint32_t RawMesh::GetIndicesCount(uint32_t id) const {
+    #ifdef SR_UTILS_ASSIMP
         if (!m_scene || id >= m_scene->mNumMeshes) {
             SRAssert2(false, "Out of range or invalid scene!");
             return {};
@@ -346,15 +377,20 @@ namespace SR_HTYPES_NS {
         }
 
         return sum;
+    #else
+        return 0;
+    #endif
     }
 
     float_t RawMesh::GetScaleFactor() const {
         float_t factor = 0.f;
 
+    #ifdef SR_UTILS_ASSIMP
         if (m_scene->mMetaData->Get("UnitScaleFactor", factor))
            return static_cast<double_t>(factor);
+    #endif
 
-        SRAssert(false);
+        SRHalt0();
 
         return 1.f;
     }
@@ -364,12 +400,15 @@ namespace SR_HTYPES_NS {
     }
 
     uint32_t RawMesh::GetAnimationsCount() const {
+    #ifdef SR_UTILS_ASSIMP
         if (!m_scene) {
             SRHalt("Invalid scene!");
             return 0;
         }
 
         return m_scene->mNumAnimations;
+    #endif
+        return 0;
     }
 
     const ska::flat_hash_map<uint64_t, uint32_t>& RawMesh::GetBones(uint32_t id) const {
@@ -394,6 +433,7 @@ namespace SR_HTYPES_NS {
     }
 
     void RawMesh::CalculateBones() {
+    #ifdef SR_UTILS_ASSIMP
         m_bones.resize(m_scene->mNumMeshes);
 
         for (uint32_t meshId = 0; meshId < m_scene->mNumMeshes; ++meshId) {
@@ -405,9 +445,11 @@ namespace SR_HTYPES_NS {
                 m_bones[meshId].insert(std::make_pair(hashName, static_cast<uint32_t>(m_bones[meshId].size())));
             }
         }
+    #endif
     }
 
     void RawMesh::CalculateAnimations() {
+    #ifdef SR_UTILS_ASSIMP
         if (!m_params.animation || !m_scene) {
             return;
         }
@@ -416,6 +458,7 @@ namespace SR_HTYPES_NS {
             auto&& pAnimation = m_scene->mAnimations[i];
             m_animations[SR_HASH_STR(pAnimation->mName.C_Str())] = pAnimation;
         }
+    #endif
     }
 
     void RawMesh::OptimizeSkeleton() {
@@ -429,6 +472,7 @@ namespace SR_HTYPES_NS {
     }
 
     void RawMesh::CalculateOffsets() {
+    #ifdef SR_UTILS_ASSIMP
         for (uint32_t meshId = 0; meshId < m_scene->mNumMeshes; ++meshId) {
             auto&& pMesh = m_scene->mMeshes[meshId];
 
@@ -454,6 +498,7 @@ namespace SR_HTYPES_NS {
                 m_boneOffsetsMap.insert(std::make_pair(hashName, std::move(matrix4X4)));
             }
         }
+    #endif
 
         m_boneOffsets.resize(m_boneOffsetsMap.size());
 
@@ -475,6 +520,7 @@ namespace SR_HTYPES_NS {
     }
 
     void RawMesh::NormalizeWeights() {
+    #ifdef SR_UTILS_ASSIMP
         if (!m_scene) {
             SR_ERROR("RawMesh::NormalizeWeights() : scene is nullptr!");
             return;
@@ -483,8 +529,10 @@ namespace SR_HTYPES_NS {
         for (uint32_t i = 0; i < m_scene->mNumMeshes; ++i) {
             NormalizeWeights(m_scene->mMeshes[i]);
         }
+    #endif
     }
 
+#ifdef SR_UTILS_ASSIMP
     uint32_t RawMesh::NormalizeWeights(const aiMesh* pMesh) {
         if (pMesh->mNumBones == 0) {
             return 0;
@@ -543,6 +591,7 @@ namespace SR_HTYPES_NS {
 
         return count;
     }
+#endif
 
     void RawMesh::ComputeConvexHull() {
         if (!m_params.convexHull) {
@@ -560,6 +609,7 @@ namespace SR_HTYPES_NS {
     }
 
     int32_t RawMesh::GetMeshId(SR_UTILS_NS::StringAtom name) const {
+    #ifdef SR_UTILS_ASSIMP
         if (!m_scene) {
             SRHalt("Invalid scene!");
             return SR_ID_INVALID;
@@ -570,7 +620,7 @@ namespace SR_HTYPES_NS {
                 return static_cast<int32_t>(i);
             }
         }
-
+    #endif
         return SR_ID_INVALID;
     }
 }

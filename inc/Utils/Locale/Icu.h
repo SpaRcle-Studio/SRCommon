@@ -11,14 +11,16 @@
 #define U_COMMON_IMPLEMENTATION 0
 #define U_STATIC_IMPLEMENTATION 1
 
-#include <unicode/urename.h>
-#include <unicode/uversion.h>
+#ifdef SR_ICU
+    #include <unicode/urename.h>
+    #include <unicode/uversion.h>
 
-#include <unicode/utypes.h>
-#include <unicode/ucnv.h>
-#include <unicode/unistr.h>
-#include <unicode/utf.h>
-#include <unicode/utf16.h>
+    #include <unicode/utypes.h>
+    #include <unicode/ucnv.h>
+    #include <unicode/unistr.h>
+    #include <unicode/utf.h>
+    #include <unicode/utf16.h>
+#endif
 
 namespace SR_UTILS_NS::Locale {
     enum class EncMethodType {
@@ -31,6 +33,7 @@ namespace SR_UTILS_NS::Locale {
 #define SR_UCNV_GET_MAX_BYTES_FOR_STRING(length, maxCharSize) \
      (((int32_t)(length)+10)*(int32_t)(maxCharSize))
 
+#ifdef SR_ICU
 namespace SR_UTILS_NS::Locale::ICU {
     template<typename CharType, int char_size = sizeof(CharType)> class IcuStdConverter {
     public:
@@ -347,5 +350,6 @@ namespace SR_UTILS_NS::Locale::ICU {
 
     };
 }
+#endif
 
 #endif //SR_ENGINE_ICU_H

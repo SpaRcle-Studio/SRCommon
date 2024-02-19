@@ -5,6 +5,7 @@
 #include <Utils/FileSystem/AssimpCache.h>
 #include <Utils/Types/Marshal.h>
 
+#ifdef SR_UTILS_ASSIMP
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 #include <assimp/Importer.hpp>
@@ -667,3 +668,4 @@ namespace SR_UTILS_NS {
         *pData = (void*)(new aiVector3t<float>[count]);
     }
 }
+#endif

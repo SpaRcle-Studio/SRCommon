@@ -3,21 +3,38 @@ project(Utils)
 
 set(CMAKE_CXX_STANDARD 20)
 
-set(ASSIMP_BUILD_TESTS OFF CACHE INTERNAL "" FORCE)
-set(ASSIMP_BUILD_ASSIMP_TOOLS OFF CACHE INTERNAL "" FORCE)
-set(ASSIMP_INSTALL OFF CACHE INTERNAL "" FORCE)
-set(ASSIMP_BUILD_ASSIMP_VIEW OFF CACHE INTERNAL "" FORCE)
-set(BUILD_SHARED_LIBS OFF CACHE INTERNAL "" FORCE)
-set(ASSIMP_WARNINGS_AS_ERRORS OFF CACHE INTERNAL "" FORCE)
+option(SR_UTILS_ASSIMP "" ON)
+option(SR_UTILS_DLL_EXPORTS "" ON)
+
+if (SR_UTILS_DLL_EXPORTS)
+    add_definitions(
+        -DSR_DLL_EXPORTS=1
+    )
+endif()
+
+if (SR_UTILS_ASSIMP)
+    add_definitions(
+        -DSR_UTILS_ASSIMP=1
+    )
+
+    set(ASSIMP_BUILD_TESTS OFF CACHE INTERNAL "" FORCE)
+    set(ASSIMP_BUILD_ASSIMP_TOOLS OFF CACHE INTERNAL "" FORCE)
+    set(ASSIMP_INSTALL OFF CACHE INTERNAL "" FORCE)
+    set(ASSIMP_BUILD_ASSIMP_VIEW OFF CACHE INTERNAL "" FORCE)
+    set(BUILD_SHARED_LIBS OFF CACHE INTERNAL "" FORCE)
+    set(ASSIMP_WARNINGS_AS_ERRORS OFF CACHE INTERNAL "" FORCE)
+
+    if (ANDROID_NDK)
+        set(ASSIMP_BUILD_ZLIB OFF CACHE INTERNAL "" FORCE)
+    else()
+        set(ASSIMP_BUILD_ZLIB ON CACHE INTERNAL "" FORCE)
+    endif()
+
+    add_subdirectory(libs/assimp)
+endif()
 
 if (UNIX AND NOT APPLE)
     find_package(X11 REQUIRED)
-endif()
-
-if (ANDROID_NDK)
-    set(ASSIMP_BUILD_ZLIB OFF CACHE INTERNAL "" FORCE)
-else()
-    set(ASSIMP_BUILD_ZLIB ON CACHE INTERNAL "" FORCE)
 endif()
 
 set(ICU_PREBUILT_VERSION "69.1")
@@ -31,13 +48,18 @@ else()
 endif()
 
 add_subdirectory(libs/glm)
-add_subdirectory(libs/assimp)
+
+if (SR_UTILS_FMT_HEADER_ONLY)
+    add_definitions(
+        -DFMT_HEADER_ONLY
+    )
+endif()
+
 add_subdirectory(libs/fmt)
 
 if (SR_TRACY_ENABLE)
     add_subdirectory(libs/tracy)
 endif()
-
 
 list(APPEND SR_UTILS_LINK_LIBRARIES cxx/ICU.cxx)
 list(APPEND SR_UTILS_LINK_LIBRARIES cxx/Utils.cxx)
@@ -58,10 +80,16 @@ macro(SR_UTILS_INCLUDE_DIRECTORIES_APPEND var)
     set_property(GLOBAL APPEND PROPERTY SR_UTILS_INCLUDE_DIRECTORIES "${var}")
 endmacro(SR_UTILS_INCLUDE_DIRECTORIES_APPEND)
 
-SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_BINARY_DIR}/libs/assimp/include)
+if (SR_UTILS_ASSIMP)
+    SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_BINARY_DIR}/libs/assimp/include)
+    SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_SOURCE_DIR}/libs/assimp/include)
+endif()
+
+SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_BINARY_DIR}/libs/nativefiledialog/src/include)
+SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_SOURCE_DIR}/libs/nativefiledialog/src/include)
+
 SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_SOURCE_DIR}/inc)
 SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_SOURCE_DIR}/libs)
-SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_SOURCE_DIR}/libs/assimp/include)
 SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_SOURCE_DIR}/libs/glm)
 SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_SOURCE_DIR}/libs/fmt/include)
 
@@ -76,7 +104,7 @@ endif()
 
 if (UNIX)
     list(APPEND SR_UTILS_LINK_LIBRARIES src/Utils/Platform/LinuxStacktraceImpl.cpp)
-endif ()
+endif()
 
 if (SR_UTILS_STATIC_LIBRARY)
     add_library(Utils STATIC ${SR_UTILS_LINK_LIBRARIES})
@@ -104,10 +132,13 @@ if (UNIX AND NOT APPLE)
     target_link_libraries(Utils bfd)
 endif()
 
-if (ANDROID_NDK)
+if (SR_UTILS_ASSIMP)
     target_link_libraries(Utils assimp)
+endif()
+
+if (ANDROID_NDK)
 else()
-	target_link_libraries(Utils nfd assimp)
+    target_link_libraries(Utils nfd)
 endif()
 
 if (SR_TRACY_ENABLE)
@@ -118,7 +149,10 @@ if (MSVC)
     target_compile_options(Utils PUBLIC /openmp)
 endif()
 
-target_link_libraries(Utils fmt)
+if (SR_UTILS_FMT_HEADER_ONLY)
+else()
+    target_link_libraries(Utils fmt)
+endif()
 
 get_property(SR_UTILS_INCLUDE_DIRECTORIES_CONTENT GLOBAL PROPERTY SR_UTILS_INCLUDE_DIRECTORIES)
 message("SpaRcle utils include directories: ${SR_UTILS_INCLUDE_DIRECTORIES_CONTENT}")

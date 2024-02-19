@@ -21,15 +21,23 @@ namespace SR_UTILS_NS::Locale {
     // }
 
     template<typename CharType> std::basic_string<CharType> ConvertTo(const char *begin, const char *end, const char *charset, EncMethodType how = EncMethodType::Default) {
+    #ifdef SR_ICU
         auto&& from = ICU::IcuStdConverter<char>(charset, how);
         auto&& to = ICU::IcuStdConverter<CharType>("UTF-8", how);
         return to.Std(from.IcuChecked(begin, end));
+    #else
+        return std::basic_string<CharType>();
+    #endif
     }
 
     template<typename CharType> std::string ConvertFrom(const CharType *begin, const CharType *end, const char *charset, EncMethodType how = EncMethodType::Default) {
+    #ifdef SR_ICU
         auto&& from = ICU::IcuStdConverter<CharType>("UTF-8", how);
         auto&& to = ICU::IcuStdConverter<char>(charset, how);
         return to.Std(from.IcuChecked(begin, end));
+    #else
+        return std::string();
+    #endif
     }
 }
 

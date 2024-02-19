@@ -2,12 +2,13 @@
 // Created by Monika on 15.02.2023.
 //
 
-#ifndef SR_ENGINE_ASSIMPCACHE_H
-#define SR_ENGINE_ASSIMPCACHE_H
+#ifndef SR_ENGINE_ASSIMP_CACHE_H
+#define SR_ENGINE_ASSIMP_CACHE_H
 
 #include <Utils/Debug.h>
 #include <Utils/Types/Marshal.h>
 
+#ifdef SR_UTILS_ASSIMP
 namespace Assimp {
     class Importer;
 }
@@ -157,5 +158,6 @@ namespace SR_UTILS_NS {
 
     };
 }
+#endif
 
-#endif //SR_ENGINE_ASSIMPCACHE_H
+#endif //SR_ENGINE_ASSIMP_CACHE_H

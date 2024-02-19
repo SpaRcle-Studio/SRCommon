@@ -24,7 +24,7 @@ namespace SR_UTILS_NS {
         ~HashManager() override = default;
 
     public:
-        static HashManager& Instance();
+        SR_MAYBE_UNUSED static HashManager& Instance();
 
     public:
         SR_NODISCARD const std::string& HashToString(Hash hash) const;
