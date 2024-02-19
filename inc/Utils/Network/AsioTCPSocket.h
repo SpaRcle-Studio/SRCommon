@@ -2,8 +2,8 @@
 // Created by Monika on 19.02.2024.
 //
 
-#ifndef SR_UTILS_ASIO_TCP_SOCKET_H
-#define SR_UTILS_ASIO_TCP_SOCKET_H
+#ifndef SR_UTILS_NETWORK_ASIO_TCP_SOCKET_H
+#define SR_UTILS_NETWORK_ASIO_TCP_SOCKET_H
 
 #include <Utils/Network/Socket.h>
 
@@ -33,4 +33,4 @@ namespace SR_NETWORK_NS {
     };
 }
 
-#endif //SR_UTILS_ASIO_TCP_SOCKET_H
+#endif //SR_UTILS_NETWORK_ASIO_TCP_SOCKET_H

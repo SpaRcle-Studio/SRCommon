@@ -5,8 +5,8 @@
 #include <Utils/Common/Enumerations.h>
 #include <Utils/Types/SharedPtr.h>
 
-#ifndef SR_UTILS_SOCKET_H
-#define SR_UTILS_SOCKET_H
+#ifndef SR_UTILS_NETWORK_SOCKET_H
+#define SR_UTILS_NETWORK_SOCKET_H
 
 namespace SR_NETWORK_NS {
     SR_ENUM_NS_CLASS_T(SocketType, uint8_t,
@@ -42,4 +42,4 @@ namespace SR_NETWORK_NS {
     };
 }
 
-#endif //SR_UTILS_SOCKET_H
+#endif //SR_UTILS_NETWORK_SOCKET_H
