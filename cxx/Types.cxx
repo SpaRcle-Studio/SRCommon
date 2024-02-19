@@ -14,3 +14,6 @@
 #include "../../Utils/src/Utils/Types/Mutex.cpp"
 #include "../../Utils/src/Utils/Types/LockGuard.cpp"
 #include "../../Utils/src/Utils/Types/StringAtom.cpp"
+#include "../../Utils/src/Utils/Types/LinkedList.cpp"
+#include "../../Utils/src/Utils/Types/Node.cpp"
+#include "../../Utils/src/Utils/Types/NodeDictionary.cpp"
