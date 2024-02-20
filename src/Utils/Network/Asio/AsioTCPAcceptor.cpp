@@ -12,7 +12,7 @@ namespace SR_NETWORK_NS {
 
     AsioTCPAcceptor::~AsioTCPAcceptor() {
         if (m_acceptor.has_value() && m_acceptor->is_open()) {
-            SR_WARN("~AsioTCPAcceptor::AsioTCPAcceptor() : acceptor is still open, closing it.");
+            SR_WARN("AsioTCPAcceptor::~AsioTCPAcceptor() : acceptor is still open, closing it.");
             m_acceptor->close();
         }
     }
@@ -70,16 +70,16 @@ namespace SR_NETWORK_NS {
         return true;
     }
 
-    void AsioTCPAcceptor::Stop() {
+    void AsioTCPAcceptor::Close() {
         if (!m_acceptor.has_value()) {
-            SR_ERROR("AsioTCPAcceptor::Stop() : acceptor is not started!");
+            SR_ERROR("AsioTCPAcceptor::Close() : acceptor is not started!");
             return;
         }
 
         m_acceptor->close();
         m_acceptor.reset();
 
-        Super::Stop();
+        Super::Close();
     }
 
     bool AsioTCPAcceptor::StartBase() {

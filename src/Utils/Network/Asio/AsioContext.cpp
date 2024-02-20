@@ -7,6 +7,13 @@
 #include <Utils/Network/Asio/AsioTCPAcceptor.h>
 
 namespace SR_NETWORK_NS {
+    AsioContext::~AsioContext() {
+        if (m_isRunning) {
+            SR_WARN("AsioContext::~AsioContext() : context is not stopped!");
+            m_context.stop();
+        }
+    }
+
     SR_HTYPES_NS::SharedPtr<Socket> AsioContext::CreateSocket(SocketType type) {
         switch (type) {
             case SocketType::TCP:
@@ -43,10 +50,17 @@ namespace SR_NETWORK_NS {
             return false;
         }
 
+        m_isRunning = true;
+
         return true;
     }
 
     bool AsioContext::Pool() {
+        if (!m_isRunning) {
+            SR_ERROR("AsioContext::Pool() : context is not running!");
+            return false;
+        }
+
         asio::error_code errorCode;
 
         m_context.poll(errorCode);
@@ -57,5 +71,15 @@ namespace SR_NETWORK_NS {
         }
 
         return true;
+    }
+
+    void AsioContext::Stop() {
+        if (!m_isRunning) {
+            SR_ERROR("AsioContext::Stop() : context is not running!");
+            return;
+        }
+
+        m_context.stop();
+        m_isRunning = false;
     }
 }

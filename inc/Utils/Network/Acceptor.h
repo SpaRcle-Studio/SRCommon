@@ -35,7 +35,7 @@ namespace SR_NETWORK_NS {
             return true;
         }
 
-        virtual void Stop() { m_callback = nullptr; }
+        virtual void Close() { m_callback = nullptr; }
 
     protected:
         const SocketType m_type = SocketType::Unknown;

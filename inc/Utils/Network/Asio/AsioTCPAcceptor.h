@@ -25,7 +25,7 @@ namespace SR_NETWORK_NS {
     public:
         bool Start(Callback&& callback) override;
         bool StartAsync(Callback&& callback) override;
-        void Stop() override;
+        void Close() override;
 
     private:
         bool StartBase();

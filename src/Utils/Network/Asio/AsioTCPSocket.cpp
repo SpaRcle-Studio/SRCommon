@@ -14,7 +14,7 @@ namespace SR_NETWORK_NS {
 
     AsioTCPSocket::~AsioTCPSocket() {
         if (m_socket.has_value() && m_socket->is_open()) {
-            SR_WARN("~AsioTCPSocket::AsioTCPSocket() : socket is still open, closing it");
+            SR_WARN("AsioTCPSocket::~AsioTCPSocket() : socket is still open, closing it");
             m_socket->close();
             m_socket.reset();
         }

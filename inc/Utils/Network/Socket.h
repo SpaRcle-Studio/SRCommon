@@ -26,8 +26,9 @@ namespace SR_NETWORK_NS {
         SR_NODISCARD virtual bool Listen(int32_t backlog) = 0;
         SR_NODISCARD virtual bool Send(const void* data, size_t size) = 0;
         SR_NODISCARD virtual bool Receive(void* data, size_t size) = 0;
-        SR_NODISCARD virtual bool Close() = 0;
         SR_NODISCARD virtual bool IsOpen() const = 0;
+
+        virtual bool Close() = 0;
 
         SR_NODISCARD SocketType GetType() const { return m_type; }
 

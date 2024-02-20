@@ -37,12 +37,16 @@ namespace SR_NETWORK_NS {
 
         virtual bool Run() = 0;
         virtual bool Pool() = 0;
+        virtual void Stop() = 0;
 
     public:
         SR_NODISCARD virtual SR_HTYPES_NS::SharedPtr<Socket> CreateSocket(SocketType type) = 0;
         SR_NODISCARD virtual SR_HTYPES_NS::SharedPtr<Acceptor> CreateAcceptor(SocketType type, const std::string& address, uint16_t port) = 0;
 
         SR_NODISCARD SR_HTYPES_NS::SharedPtr<PeerToPeer> CreateP2P(SocketType type, const std::string& address, uint16_t port);
+
+    protected:
+        bool m_isRunning = false;
 
     };
 }
