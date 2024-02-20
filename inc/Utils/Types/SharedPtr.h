@@ -17,13 +17,35 @@ namespace SR_UTILS_NS {
 }
 
 namespace SR_HTYPES_NS {
+    class SR_DLL_EXPORT SharedPtrDynamicDataCounter : public Singleton<SharedPtrDynamicDataCounter> {
+        SR_REGISTER_SINGLETON(SharedPtrDynamicDataCounter);
+    public:
+        SR_NODISCARD uint64_t GetCount() const { return m_count; }
+
+        void Increment() { ++m_count; }
+        void Decrement() { --m_count; }
+
+    public:
+        SR_NODISCARD bool IsSingletonCanBeDestroyed() const override { return false; }
+
+    private:
+        uint64_t m_count = 0;
+
+    };
+
     struct SharedPtrDynamicData {
         SharedPtrDynamicData(uint16_t strongCount, uint16_t weakCount, bool valid, SharedPtrPolicy policy)
             : strongCount(strongCount)
             , weakCount(weakCount)
             , valid(valid)
             , policy(policy)
-        { }
+        {
+            SharedPtrDynamicDataCounter::Instance().Increment();
+        }
+
+        ~SharedPtrDynamicData() {
+            SharedPtrDynamicDataCounter::Instance().Decrement();
+        }
 
         void IncrementStrong() {
             SRAssert2(strongCount != SR_UINT16_MAX, "Strong count overflow!");
@@ -201,7 +223,7 @@ namespace SR_HTYPES_NS {
 
             if (needAlloc && ptr) {
                 m_data = new SharedPtrDynamicData(
-                    1,    /// strong
+                    0,    /// strong
                     0,    /// weak
                     true, /// valid
                     SharedPtrPolicy::Automatic /// policy
@@ -220,6 +242,11 @@ namespace SR_HTYPES_NS {
 
     template<typename T> bool SharedPtr<T>::AutoFree(const SR_HTYPES_NS::Function<void(T *ptr)> &freeFun) {
         SharedPtr<T> ptrCopy = SharedPtr<T>(*this);
+
+        /// чтобы при ручном освобождении не ругаться не не освобожденную память,
+        /// так как в последней копии все равно вызовется деструктор при наследовании, делаем вспомогательную копию.
+        SharedPtr<T> ptrCopy2 = ptrCopy;
+
         /// после вызова FreeImpl this может потенциально инвалидироваться!
 
         return ptrCopy.Valid() ? ptrCopy.FreeImpl(freeFun) : false;
@@ -227,6 +254,11 @@ namespace SR_HTYPES_NS {
 
     template<typename T> bool SharedPtr<T>::AutoFree() {
         SharedPtr<T> ptrCopy = SharedPtr<T>(*this);
+
+        /// чтобы при ручном освобождении не ругаться не не освобожденную память,
+        /// так как в последней копии все равно вызовется деструктор при наследовании, делаем вспомогательную копию.
+        SharedPtr<T> ptrCopy2 = ptrCopy;
+
         /// после вызова FreeImpl this может потенциально инвалидироваться!
 
         return ptrCopy.Valid() ? ptrCopy.FreeImpl([](auto&& pData) { delete pData; }) : false;
