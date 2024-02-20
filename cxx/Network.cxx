@@ -2,3 +2,4 @@
 #include "../../Utils/src/Utils/Network/AsioTCPSocket.cpp"
 #include "../../Utils/src/Utils/Network/Server.cpp"
 #include "../../Utils/src/Utils/Network/PeerToPeer.cpp"
+#include "../../Utils/src/Utils/Network/Client.cpp"

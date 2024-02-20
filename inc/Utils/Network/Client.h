@@ -7,19 +7,15 @@
 
 #include <Utils/Network/Socket.h>
 #include <Utils/Network/Server.h>
-#include <asio/ip/tcp.hpp>
-#include <string>
-
 
 namespace SR_NETWORK_NS {
     class Client : public SR_HTYPES_NS::SharedPtr<Client> {
         using Super = SR_HTYPES_NS::SharedPtr<Client>;
     public:
-        Client(SocketType socket, int32_t domain, int32_t service, int32_t protocol, int32_t port, uint64_t interface);
+        Client(SocketType type, int32_t domain, int32_t service, int32_t protocol, int32_t port, uint64_t interface);
 
-        std::string Request(std::string_view serverIp, void* request, uint64_t size);
-
-        ~Client();
+    public:
+        std::string Request(const std::string& serverIp, void* request, uint64_t size);
 
     private:
         int32_t m_domain;
@@ -28,7 +24,7 @@ namespace SR_NETWORK_NS {
         int32_t m_port;
         uint64_t m_interface;
 
-        SR_UTILS_NS::SharedPtr<Socket> m_socket;
+        SR_HTYPES_NS::SharedPtr<Socket> m_socket;
     };
 }
 
