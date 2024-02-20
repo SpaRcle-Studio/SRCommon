@@ -3,7 +3,7 @@ project(Utils)
 
 set(CMAKE_CXX_STANDARD 20)
 
-option(SR_UTILS_ASSIMP "" ON)
+option(SR_UTILS_CMAKE_ASSIMP "" ON)
 option(SR_UTILS_DLL_EXPORTS "" ON)
 
 if (SR_UTILS_DLL_EXPORTS)
@@ -11,12 +11,14 @@ if (SR_UTILS_DLL_EXPORTS)
         -DSR_DLL_EXPORTS=1
     )
     add_definitions(
-        -DSR_UTILS_ASSIMP=1
+        -DSR_DLL_EXPORTS=1
     )
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DSR_DLL_EXPORTS")
 endif()
 
-if (SR_UTILS_ASSIMP)
+if (SR_UTILS_CMAKE_ASSIMP)
+    message("SpaRcle utils will be using Assimp")
+
     add_definitions(
         -DSR_UTILS_ASSIMP=1
     )
@@ -89,7 +91,7 @@ macro(SR_UTILS_INCLUDE_DIRECTORIES_APPEND var)
     set_property(GLOBAL APPEND PROPERTY SR_UTILS_INCLUDE_DIRECTORIES "${var}")
 endmacro(SR_UTILS_INCLUDE_DIRECTORIES_APPEND)
 
-if (SR_UTILS_ASSIMP)
+if (SR_UTILS_CMAKE_ASSIMP)
     SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_BINARY_DIR}/libs/assimp/include)
     SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_SOURCE_DIR}/libs/assimp/include)
 endif()
@@ -146,7 +148,7 @@ if (UNIX AND NOT APPLE)
     target_link_libraries(Utils bfd)
 endif()
 
-if (SR_UTILS_ASSIMP)
+if (SR_UTILS_CMAKE_ASSIMP)
     target_link_libraries(Utils assimp)
 endif()
 
