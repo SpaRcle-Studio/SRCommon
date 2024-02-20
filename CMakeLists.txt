@@ -6,7 +6,21 @@ set(CMAKE_CXX_STANDARD 20)
 option(SR_UTILS_ASSIMP "" ON)
 option(SR_UTILS_DLL_EXPORTS "" ON)
 
+if (SR_UTILS_DLL_EXPORTS)
+    add_definitions(
+        -DSR_DLL_EXPORTS=1
+    )
+    add_definitions(
+        -DSR_UTILS_ASSIMP=1
+    )
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DSR_DLL_EXPORTS")
+endif()
+
 if (SR_UTILS_ASSIMP)
+    add_definitions(
+        -DSR_UTILS_ASSIMP=1
+    )
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DSR_UTILS_ASSIMP")
     add_compile_definitions(
         SR_UTILS_ASSIMP
     )
