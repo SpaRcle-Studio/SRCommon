@@ -19,6 +19,10 @@ namespace SR_UTILS_NS::Platform {
 
     }
 
+    bool IsConsoleFocused() {
+        return true; /// always focused
+    }
+
     void SetInstance(void* pInstance) {
         pAndroidInstance = reinterpret_cast<android_app*>(pInstance);
     }

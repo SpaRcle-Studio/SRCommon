@@ -14,4 +14,8 @@ namespace SR_NETWORK_NS {
     SR_HTYPES_NS::SharedPtr<Context> Context::Create() {
         return AsioContext::MakeShared<AsioContext, Context>();
     }
+
+    SR_HTYPES_NS::SharedPtr<PeerToPeer> Context::CreateP2P(SocketType type, const std::string& address, uint16_t port) {
+        return new PeerToPeer(type, GetThis(), address, port);
+    }
 }

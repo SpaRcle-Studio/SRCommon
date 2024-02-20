@@ -27,6 +27,11 @@ namespace SR_UTILS_NS::Platform {
         exit(1);
     }
 
+    bool IsConsoleFocused() {
+        SRHaltOnce("Not implemented!");
+        return true;
+    }
+
     void StdHandler() {
         SegmentationHandler(1);
     }

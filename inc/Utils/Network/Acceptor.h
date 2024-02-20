@@ -30,6 +30,11 @@ namespace SR_NETWORK_NS {
             return true;
         }
 
+        virtual bool StartAsync(Callback&& callback) {
+            m_callback = std::move(callback);
+            return true;
+        }
+
         virtual void Stop() { m_callback = nullptr; }
 
     protected:

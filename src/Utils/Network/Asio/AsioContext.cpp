@@ -2,10 +2,9 @@
 // Created by Monika on 20.02.2024.
 //
 
+#include <Utils/Network/Asio/AsioContext.h>
 #include <Utils/Network/Asio/AsioTCPSocket.h>
 #include <Utils/Network/Asio/AsioTCPAcceptor.h>
-#include "Utils/Network/Asio/AsioContext.h"
-
 
 namespace SR_NETWORK_NS {
     SR_HTYPES_NS::SharedPtr<Socket> AsioContext::CreateSocket(SocketType type) {
@@ -22,8 +21,10 @@ namespace SR_NETWORK_NS {
 
     SR_HTYPES_NS::SharedPtr<Acceptor> AsioContext::CreateAcceptor(SocketType type, const std::string& address, uint16_t port) {
         switch (type) {
-            case SocketType::TCP:
-                return new AsioTCPAcceptor(GetThis(), address, port);
+            case SocketType::TCP: {
+                auto&& pAcceptor = new AsioTCPAcceptor(GetThis(), address, port);
+                return pAcceptor;
+            }
             case SocketType::UDP:
                 // return new AsioUDPAcceptor(GetThis(), address, port);
             default:

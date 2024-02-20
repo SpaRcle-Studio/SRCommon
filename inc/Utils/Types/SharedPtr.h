@@ -150,7 +150,7 @@ namespace SR_HTYPES_NS {
 
         if (needAlloc && ptr) {
             m_data = new SharedPtrDynamicData(
-                1,                   /// strong
+                0,                   /// strong
                 0,                   /// weak
                 (bool)(m_ptr = ptr), /// valid
                 policy               /// policy

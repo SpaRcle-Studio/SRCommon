@@ -40,6 +40,7 @@ namespace SR_UTILS_NS::Platform {
     SR_DLL_EXPORT extern bool CreateFolder(const std::string& path);
     SR_DLL_EXPORT extern bool Copy(const Path& from, const Path& to);
     SR_DLL_EXPORT extern bool Delete(const Path& path);
+    SR_DLL_EXPORT extern bool IsConsoleFocused();
 
     SR_DLL_EXPORT extern uint64_t GetProcessUsedMemory();
     SR_DLL_EXPORT extern SR_MATH_NS::FVector2 GetMousePos();

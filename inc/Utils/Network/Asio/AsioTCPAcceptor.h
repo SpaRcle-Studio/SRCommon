@@ -24,7 +24,11 @@ namespace SR_NETWORK_NS {
 
     public:
         bool Start(Callback&& callback) override;
+        bool StartAsync(Callback&& callback) override;
         void Stop() override;
+
+    private:
+        bool StartBase();
 
     private:
         std::optional<asio::ip::tcp::acceptor> m_acceptor;
