@@ -4,8 +4,6 @@
 
 #include <Utils/Network/Client.h>
 
-#include <asio/ip/tcp.hpp>
-
 namespace SR_NETWORK_NS {
     Client::Client(SocketType type, int32_t domain, int32_t service, int32_t protocol, int32_t port, uint64_t interface)
         : Super(this, SR_UTILS_NS::SharedPtrPolicy::Automatic)
@@ -17,24 +15,28 @@ namespace SR_NETWORK_NS {
         m_socket = Socket::Create(type);
     }
 
-
     std::string Client::Request(const std::string& serverIp, void* request, uint64_t size) {
-        asio::io_context ioContext;
-        asio::ip::tcp::endpoint servEndpoint(asio::ip::address::from_string(serverIp), m_port);
-        
-        asio::ip::tcp::socket socket(ioContext);
-        socket.connect(servEndpoint);
+        if (!m_socket->IsOpen()) {
+            if (!m_socket->Connect(serverIp, m_port)) {
+                SR_ERROR("Client::Request() : failed to connect to server: {}:{}", serverIp, m_port);
+                return { };
+            }
+        }
 
+        if (!m_socket->Send(request, size)) {
+            SR_ERROR("Client::Request() : failed to send request to server: {}:{}", serverIp, m_port);
+            return { };
+        }
 
-        socket.send(asio::buffer(request, size));
-
-        constexpr size_t maxSize = 30000;
+        constexpr size_t maxSize = 30000; /// TODO: make it configurable
         std::string response;
         response.reserve(maxSize);
-        socket.receive(asio::buffer(response.data(), maxSize));
+
+        if (!m_socket->Receive(response.data(), maxSize)) {
+            SR_ERROR("Client::Request() : failed to receive response from server: {}:{}", serverIp, m_port);
+            return { };
+        }
 
         return response;       
     }
-
-
 }

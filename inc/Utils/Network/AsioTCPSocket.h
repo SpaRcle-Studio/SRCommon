@@ -25,6 +25,7 @@ namespace SR_NETWORK_NS {
         bool Send(const void* data, size_t size) override;
         bool Receive(void* data, size_t size) override;
         bool Close() override;
+        bool IsOpen() const override;
 
     private:
         asio::io_context m_context;

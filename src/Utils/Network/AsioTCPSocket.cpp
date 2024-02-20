@@ -64,4 +64,8 @@ namespace SR_NETWORK_NS {
         m_socket.close();
         return true;
     }
+
+    bool AsioTCPSocket::IsOpen() const {
+        return m_socket.is_open();
+    }
 }

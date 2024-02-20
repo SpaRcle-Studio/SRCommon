@@ -18,15 +18,14 @@ namespace SR_NETWORK_NS {
         std::string Request(const std::string& serverIp, void* request, uint64_t size);
 
     private:
-        int32_t m_domain;
-        int32_t m_service;
-        int32_t m_protocol;
-        int32_t m_port;
-        uint64_t m_interface;
+        int32_t m_domain = 0;
+        int32_t m_service = 0;
+        int32_t m_protocol = 0;
+        int32_t m_port = 0;
+        uint64_t m_interface = 0;
 
         SR_HTYPES_NS::SharedPtr<Socket> m_socket;
     };
 }
-
 
 #endif
