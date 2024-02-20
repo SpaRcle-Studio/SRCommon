@@ -10,7 +10,7 @@ if (SR_UTILS_DLL_EXPORTS)
     add_definitions(
         -DSR_DLL_EXPORTS=1
     )
-    add_definitions(
+    add_compile_definitions(
         -DSR_DLL_EXPORTS=1
     )
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DSR_DLL_EXPORTS")
