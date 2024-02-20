@@ -41,6 +41,7 @@ namespace SR_UTILS_NS {
         Ctrl = 17,
         Alt = 18,
         Esc = 27,
+        Escape = 27,
         Space = 32,
         LeftArrow = 37,
         UpArrow = 38,

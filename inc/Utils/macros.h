@@ -185,6 +185,10 @@
 
 #define SR_LINE __LINE__
 
+#define SR_AF_INET 2 /// internetwork: UDP, TCP, etc.
+#define SR_SOCK_STREAM 1 /// stream socket
+#define SR_INADDR_ANY (ULONG)0x00000000
+
 #define SR_XML_NS SpaRcle::Utils::Xml
 #define SR_PHYSICS_NS SpaRcle::Physics
 #define SR_PTYPES_NS SR_PHYSICS_NS::Types

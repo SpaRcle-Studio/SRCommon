@@ -44,6 +44,8 @@ namespace SR_HTYPES_NS {
 
     template<class T> class SR_DLL_EXPORT SharedPtr {
     public:
+        using Ptr = SharedPtr<T>;
+
         SharedPtr() = default;
         SharedPtr(const T* constPtr); /** NOLINT */
         SharedPtr(const T* constPtr, SharedPtrPolicy policy); /** NOLINT */
@@ -57,7 +59,7 @@ namespace SR_HTYPES_NS {
     public:
         template<typename U = T, typename R = U, typename... Args> SR_NODISCARD static SharedPtr<R> MakeShared(Args&&... args) {
             auto&& pData = new U(std::forward<Args>(args)...);
-            if constexpr (std::is_same_v<R, U>) {
+            if constexpr (std::is_same_v<R, T>) {
                 return pData->GetThis();
             }
             else {

@@ -12,10 +12,15 @@
 #include <asio/io_context.hpp>
 
 namespace SR_NETWORK_NS {
+    class AsioContext;
+
     class AsioTCPSocket : public Socket {
         using Super = Socket;
+        friend class AsioContext;
+    private:
+        explicit AsioTCPSocket(Context::Ptr pContext);
+
     public:
-        AsioTCPSocket();
         ~AsioTCPSocket() override;
 
     public:
@@ -27,9 +32,10 @@ namespace SR_NETWORK_NS {
         bool Close() override;
         bool IsOpen() const override;
 
+        void SetSocket(asio::ip::tcp::socket&& socket) { m_socket = std::move(socket); }
+
     private:
-        asio::io_context m_context;
-        asio::ip::tcp::socket m_socket;
+        std::optional<asio::ip::tcp::socket> m_socket;
 
     };
 }

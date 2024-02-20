@@ -12,7 +12,7 @@ namespace SR_NETWORK_NS {
         , m_protocol(protocol)
         , m_port(port) 
     {
-        m_socket = Socket::Create(type);
+        // m_socket = Socket::Create(type);
     }
 
     std::string Client::Request(const std::string& serverIp, void* request, uint64_t size) {

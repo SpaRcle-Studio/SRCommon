@@ -2,29 +2,23 @@
 // Created by Monika on 19.02.2024.
 //
 
-#include <Utils/Common/Enumerations.h>
-#include <Utils/Types/SharedPtr.h>
-
 #ifndef SR_UTILS_NETWORK_SOCKET_H
 #define SR_UTILS_NETWORK_SOCKET_H
 
-namespace SR_NETWORK_NS {
-    SR_ENUM_NS_CLASS_T(SocketType, uint8_t,
-        Unknown,
-        TCP,
-        UDP
-    )
+#include <Utils/Network/Context.h>
 
+namespace SR_NETWORK_NS {
     class Socket : public SR_HTYPES_NS::SharedPtr<Socket> {
         using Super = SR_HTYPES_NS::SharedPtr<Socket>;
     protected:
-        explicit Socket(SocketType type);
+        explicit Socket(SocketType type, Context::Ptr context)
+            : Super(this, SR_UTILS_NS::SharedPtrPolicy::Automatic)
+            , m_type(type)
+            , m_context(std::move(context))
+        { };
 
     public:
         virtual ~Socket() = default;
-
-    public:
-        SR_NODISCARD static SR_HTYPES_NS::SharedPtr<Socket> Create(SocketType type);
 
     public:
         SR_NODISCARD virtual bool Connect(const std::string& address, uint16_t port) = 0;
@@ -37,8 +31,9 @@ namespace SR_NETWORK_NS {
 
         SR_NODISCARD SocketType GetType() const { return m_type; }
 
-    private:
-        SocketType m_type = SocketType::Unknown;
+    protected:
+        const SocketType m_type = SocketType::Unknown;
+        Context::Ptr m_context;
 
     };
 }

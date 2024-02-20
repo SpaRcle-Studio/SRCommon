@@ -14,7 +14,7 @@ namespace SR_NETWORK_NS {
         , m_backlog(backlog)
         , m_interface(interface)
     {
-        m_socket = Socket::Create(type);
+        //m_socket = Socket::Create(type);
     }
 
     Server::~Server() {
@@ -22,6 +22,11 @@ namespace SR_NETWORK_NS {
     }
 
     bool Server::Start() {
+        if (!m_socket->Connect("127.0.0.1", m_port)) {
+            SR_ERROR("Server::Start() : failed to connect to localhost by port {}!", m_port);
+            return false;
+        }
+
         if (m_socket->Bind(m_port)) {
             return m_socket->Listen(m_backlog);
         }
