@@ -306,7 +306,7 @@ namespace SR_HTYPES_NS {
         }
 
         const auto strongCount = pData->strongCount;
-        if (strongCount < 1) {
+        if (strongCount <= 1) {
             if (pData->policy == SharedPtrPolicy::Manually) {
                 SR_SAFE_PTR_ASSERT(!pData->valid, "Ptr was not freed!");
                 delete pData;
