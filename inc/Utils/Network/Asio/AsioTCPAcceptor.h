@@ -23,12 +23,19 @@ namespace SR_NETWORK_NS {
         ~AsioTCPAcceptor() override;
 
     public:
-        bool Start(Callback&& callback) override;
-        bool StartAsync(Callback&& callback) override;
         void Close() override;
 
+        SR_NODISCARD std::string GetLocalAddress() const override;
+        SR_NODISCARD std::string GetRemoteAddress() const override;
+
+        SR_NODISCARD uint16_t GetLocalPort() const override;
+        SR_NODISCARD uint16_t GetRemotePort() const override;
+
     private:
-        bool StartBase();
+        bool Init() override;
+
+        bool StartInternal(bool async) override;
+        bool Accept(const asio::error_code& errorCode);
 
     private:
         std::optional<asio::ip::tcp::acceptor> m_acceptor;

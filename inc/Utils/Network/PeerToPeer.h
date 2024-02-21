@@ -23,10 +23,18 @@ namespace SR_NETWORK_NS {
 
     public:
         bool Run();
+        void Close();
+
+        bool Connect(const std::string& address, uint16_t port);
+
         void SetOnAcceptCallback(Callback&& callback) { m_onAccept = std::move(callback); }
+
+        SR_NODISCARD const Acceptor::Ptr& GetAcceptor() const { return m_acceptor; }
 
     private:
         void OnAccept(Socket::Ptr&& pSocket);
+
+        bool SharePeer(const Socket::Ptr& pTarget, const Socket::Ptr& pNewPeer);
 
     private:
         std::string m_address;

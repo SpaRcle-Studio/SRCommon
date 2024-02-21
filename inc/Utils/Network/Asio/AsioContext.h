@@ -20,7 +20,7 @@ namespace SR_NETWORK_NS {
         asio::io_context& GetContext() { return m_context; }
 
         bool Run() override;
-        bool Pool() override;
+        bool Poll() override;
         void Stop() override;
 
         SR_NODISCARD SR_HTYPES_NS::SharedPtr<Socket> CreateSocket(SocketType type) override;

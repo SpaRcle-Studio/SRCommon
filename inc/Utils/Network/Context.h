@@ -36,10 +36,13 @@ namespace SR_NETWORK_NS {
         SR_NODISCARD static SR_HTYPES_NS::SharedPtr<Context> Create();
 
         virtual bool Run() = 0;
-        virtual bool Pool() = 0;
         virtual void Stop() = 0;
 
+        virtual bool Poll();
+
     public:
+        void AddAsyncAcceptor(const SR_HTYPES_NS::SharedPtr<Acceptor>& pAcceptor);
+
         SR_NODISCARD virtual SR_HTYPES_NS::SharedPtr<Socket> CreateSocket(SocketType type) = 0;
         SR_NODISCARD virtual SR_HTYPES_NS::SharedPtr<Acceptor> CreateAcceptor(SocketType type, const std::string& address, uint16_t port) = 0;
 
@@ -47,6 +50,8 @@ namespace SR_NETWORK_NS {
 
     protected:
         bool m_isRunning = false;
+
+        std::list<SR_HTYPES_NS::SharedPtr<Acceptor>> m_asyncAcceptors;
 
     };
 }

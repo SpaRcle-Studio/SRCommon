@@ -22,11 +22,16 @@ namespace SR_NETWORK_NS {
 
     public:
         SR_NODISCARD virtual bool Connect(const std::string& address, uint16_t port) = 0;
-        SR_NODISCARD virtual bool Bind(uint16_t port) = 0;
         SR_NODISCARD virtual bool Listen(int32_t backlog) = 0;
         SR_NODISCARD virtual bool Send(const void* data, size_t size) = 0;
         SR_NODISCARD virtual bool Receive(void* data, size_t size) = 0;
         SR_NODISCARD virtual bool IsOpen() const = 0;
+
+        SR_NODISCARD virtual std::string GetLocalAddress() const = 0;
+        SR_NODISCARD virtual std::string GetRemoteAddress() const = 0;
+
+        SR_NODISCARD virtual uint16_t GetLocalPort() const = 0;
+        SR_NODISCARD virtual uint16_t GetRemotePort() const = 0;
 
         virtual bool Close() = 0;
 
