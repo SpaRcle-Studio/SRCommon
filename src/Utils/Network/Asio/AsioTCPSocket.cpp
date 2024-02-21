@@ -38,23 +38,7 @@ namespace SR_NETWORK_NS {
 
         if (errorCode) {
             SR_ERROR("AsioTCPSocket::Connect() : failed to connect to address: {}", errorCode.message());
-            return false;
-        }
-
-        return true;
-    }
-
-    bool AsioTCPSocket::Bind(uint16_t port) {
-        if (!m_socket->is_open()) {
-            SR_ERROR("AsioTCPSocket::Bind() : socket is not open!");
-            return false;
-        }
-
-        asio::error_code errorCode;
-        asio::ip::tcp::endpoint endpoint(asio::ip::tcp::v4(), port);
-        m_socket->bind(endpoint, errorCode);
-        if (errorCode) {
-            SR_ERROR("AsioTCPSocket::Bind() : failed to bind to port {}: {}", port, errorCode.message());
+            Close();
             return false;
         }
 
@@ -83,5 +67,45 @@ namespace SR_NETWORK_NS {
 
     bool AsioTCPSocket::IsOpen() const {
         return m_socket.has_value() && m_socket->is_open();
+    }
+
+    std::string AsioTCPSocket::GetLocalAddress() const {
+        if (m_socket.has_value()) {
+            return m_socket->local_endpoint().address().to_string();
+        }
+
+        SR_ERROR("AsioTCPSocket::GetLocalAddress() : invalid socket!");
+
+        return std::string(); /// NOLINT
+    }
+
+    uint16_t AsioTCPSocket::GetLocalPort() const {
+        if (m_socket.has_value()) {
+            return m_socket->local_endpoint().port();
+        }
+
+        SR_ERROR("AsioTCPSocket::GetLocalPort() : invalid socket!");
+
+        return 0;
+    }
+
+    std::string AsioTCPSocket::GetRemoteAddress() const {
+        if (m_socket.has_value()) {
+            return m_socket->remote_endpoint().address().to_string();
+        }
+
+        SR_ERROR("AsioTCPSocket::GetRemoteAddress() : invalid socket!");
+
+        return std::string(); /// NOLINT
+    }
+
+    uint16_t AsioTCPSocket::GetRemotePort() const {
+        if (m_socket.has_value()) {
+            return m_socket->remote_endpoint().port();
+        }
+
+        SR_ERROR("AsioTCPSocket::GetRemotePort() : invalid socket!");
+
+        return 0;
     }
 }

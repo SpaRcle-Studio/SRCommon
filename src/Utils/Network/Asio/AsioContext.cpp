@@ -55,9 +55,9 @@ namespace SR_NETWORK_NS {
         return true;
     }
 
-    bool AsioContext::Pool() {
-        if (!m_isRunning) {
-            SR_ERROR("AsioContext::Pool() : context is not running!");
+    bool AsioContext::Poll() {
+        if (!Super::Poll()) {
+            SR_ERROR("AsioContext::Pool() : failed to poll super!");
             return false;
         }
 
