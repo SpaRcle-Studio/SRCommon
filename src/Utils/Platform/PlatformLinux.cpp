@@ -36,6 +36,10 @@ namespace SR_UTILS_NS::Platform {
         SegmentationHandler(1);
     }
 
+    uint16_t GetCurrentProcessId() {
+        return ::getpid();
+    }
+
     void InitSegmentationHandler() {
         StacktraceInit();
         signal(SIGSEGV, SegmentationHandler);

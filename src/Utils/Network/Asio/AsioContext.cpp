@@ -4,6 +4,7 @@
 
 #include <Utils/Network/Asio/AsioContext.h>
 #include <Utils/Network/Asio/AsioTCPSocket.h>
+#include <Utils/Network/Asio/AsioICMPSocket.h>
 #include <Utils/Network/Asio/AsioTCPAcceptor.h>
 
 namespace SR_NETWORK_NS {
@@ -20,6 +21,8 @@ namespace SR_NETWORK_NS {
                 return new AsioTCPSocket(GetThis());
             case SocketType::UDP:
                 // return new AsioUDPSocket(GetThis());
+            case SocketType::ICMP:
+                return new AsioICMPSocket(GetThis());
             default:
                 SR_ERROR("AsioContext::CreateSocket() : unknown socket type: {}", SR_UTILS_NS::EnumReflector::ToStringAtom(type).c_str());
                 return nullptr;

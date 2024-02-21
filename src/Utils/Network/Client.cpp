@@ -39,4 +39,9 @@ namespace SR_NETWORK_NS {
 
         return response;       
     }
+
+    void Client::Ping(const std::string &ip, int32_t port) {
+
+
+    }
 }

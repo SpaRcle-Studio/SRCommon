@@ -102,6 +102,10 @@ namespace SR_UTILS_NS::Platform {
         SegmentationHandler(1);
     }
 
+    uint16_t GetCurrentProcessId() {
+        return ::GetCurrentProcessId();
+    }
+
     void InitSegmentationHandler() {
         signal(SIGSEGV, SegmentationHandler);
         std::set_terminate(StdHandler);
