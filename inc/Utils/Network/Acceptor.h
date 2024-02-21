@@ -36,6 +36,7 @@ namespace SR_NETWORK_NS {
 
         SR_NODISCARD bool IsOpen() const { return m_isOpen; }
         SR_NODISCARD bool IsRepeated() const { return m_isRepeated; }
+        SR_NODISCARD bool IsWaitingAccept() const { return m_isWaitingAccept; }
 
         void SetCallback(Callback&& callback) { m_callback = std::move(callback); }
         void SetRepeated(bool isRepeated) { m_isRepeated = isRepeated; }
@@ -52,6 +53,7 @@ namespace SR_NETWORK_NS {
 
     protected:
         bool m_isOpen = false;
+        bool m_isWaitingAccept = false;
 
         /// Нужно ли повторять прослушивание новых соединений.
         /// Работает только для асинхронного режима.
