@@ -56,12 +56,12 @@ namespace SR_NETWORK_NS {
     }
 
     bool AsioContext::Poll() {
+        asio::error_code errorCode;
+
         if (!Super::Poll()) {
             SR_ERROR("AsioContext::Pool() : failed to poll super!");
             return false;
         }
-
-        asio::error_code errorCode;
 
         m_context.poll(errorCode);
 

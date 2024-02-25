@@ -25,11 +25,12 @@ namespace SR_NETWORK_NS {
 
     public:
         bool Connect(const std::string& address, uint16_t port) override;
-        bool Listen(int32_t backlog) override;
         bool Send(const void* data, size_t size) override;
-        bool Receive(void* data, size_t size) override;
         bool Close() override;
-        bool IsOpen() const override;
+
+        uint64_t Receive(void* data, size_t size) override;
+
+        SR_NODISCARD bool IsOpen() const override;
 
         SR_NODISCARD std::string GetLocalAddress() const override;
         SR_NODISCARD std::string GetRemoteAddress() const override;
@@ -38,6 +39,9 @@ namespace SR_NETWORK_NS {
         SR_NODISCARD uint16_t GetRemotePort() const override;
 
         void SetSocket(asio::ip::tcp::socket&& socket) { m_socket = std::move(socket); }
+
+    protected:
+        bool ReceiveAsyncInternal() override;
 
     private:
         std::optional<asio::ip::tcp::socket> m_socket;

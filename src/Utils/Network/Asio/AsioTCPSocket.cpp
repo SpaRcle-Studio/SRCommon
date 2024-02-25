@@ -37,7 +37,7 @@ namespace SR_NETWORK_NS {
         m_socket->connect(endpoint, errorCode);
 
         if (errorCode) {
-            SR_ERROR("AsioTCPSocket::Connect() : failed to connect to address: {}", errorCode.message());
+            SR_ERROR("AsioTCPSocket::Connect() : failed to connect to {}:{} address: {}", address, port, errorCode.message());
             Close();
             return false;
         }
@@ -45,23 +45,64 @@ namespace SR_NETWORK_NS {
         return true;
     }
 
-    bool AsioTCPSocket::Listen(int32_t backlog) {
-       // m_socket.listen(backlog);
-        return true;
-    }
-
     bool AsioTCPSocket::Send(const void* data, size_t size) {
-        m_socket->send(asio::buffer(data, size));
+        if (size == 0) {
+            SR_ERROR("AsioTCPSocket::Send() : invalid size!");
+            return false;
+        }
+
+        if (!m_socket) {
+            SR_ERROR("AsioTCPSocket::Send() : invalid socket!");
+            return false;
+        }
+
+        if (!data) {
+            SR_ERROR("AsioTCPSocket::Send() : invalid data!");
+            return false;
+        }
+
+        asio::error_code errorCode;
+        m_socket->send(asio::buffer(data, size), 0, errorCode);
+
+        if (errorCode) {
+            SR_ERROR("AsioTCPSocket::Send() : failed to send data: {}", errorCode.message());
+            return false;
+        }
+
         return true;
     }
 
-    bool AsioTCPSocket::Receive(void* data, size_t size) {
-        m_socket->receive(asio::buffer(data, size));
-        return true;
+    uint64_t AsioTCPSocket::Receive(void* data, size_t size) {
+        if (size == 0) {
+            SR_ERROR("AsioTCPSocket::Receive() : invalid size!");
+            return 0;
+        }
+
+        if (!m_socket) {
+            SR_ERROR("AsioTCPSocket::Receive() : invalid socket!");
+            return 0;
+        }
+
+        asio::error_code errorCode;
+        const uint64_t receivedSize = m_socket->receive(asio::buffer(data, size), 0, errorCode);
+
+        if (errorCode) {
+            SR_ERROR("AsioTCPSocket::Receive() : failed to receive data: {}", errorCode.message());
+            return 0;
+        }
+
+        return receivedSize;
     }
 
     bool AsioTCPSocket::Close() {
+        if (!m_socket.has_value()) {
+            SR_ERROR("AsioTCPSocket::Close() : invalid socket!");
+            return false;
+        }
+
         m_socket->close();
+        m_socket.reset();
+
         return true;
     }
 
@@ -107,5 +148,38 @@ namespace SR_NETWORK_NS {
         SR_ERROR("AsioTCPSocket::GetRemotePort() : invalid socket!");
 
         return 0;
+    }
+
+    bool AsioTCPSocket::ReceiveAsyncInternal() {
+        if (!m_socket.has_value()) {
+            SR_ERROR("AsioTCPSocket::ReceiveAsyncInternal() : invalid socket!");
+            return false;
+        }
+
+        if (!m_receivedAsyncData) {
+            SR_ERROR("AsioTCPSocket::ReceiveAsyncInternal() : invalid received data!");
+            return false;
+        }
+
+        m_isWaitingReceive = true;
+
+        m_socket->async_receive(asio::buffer(m_receivedAsyncData->GetData(), m_receivedAsyncData->GetSize()),[pStrong = GetThis()](const asio::error_code& errorCode, uint64_t size) {
+            pStrong->SetWaitingReceive(false);
+
+            if (errorCode) {
+                SR_ERROR("AsioTCPSocket::ReceiveAsyncInternal() : failed to receive data: {}", errorCode.message());
+                return;
+            }
+
+            if (auto&& pReceiveCallback = pStrong->GetReceiveCallback()) {
+                pReceiveCallback(pStrong, pStrong->GetReceivedAsyncData(), size);
+            }
+
+            if (pStrong->IsReceiveRepeated()) {
+                pStrong->GetContext()->AddAsyncReceiveSocket(pStrong);
+            }
+        });
+
+        return true;
     }
 }

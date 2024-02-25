@@ -47,6 +47,7 @@ namespace SR_HTYPES_NS {
 
             SR_NODISCARD Ptr GetMainThread();
             SR_NODISCARD Ptr GetThisThread();
+            SR_NODISCARD Ptr TryGetThisThread();
             SR_NODISCARD Ptr Create(std::thread thread);
             SR_NODISCARD Ptr Create(const std::function<void()>& fn);
             SR_NODISCARD uint32_t GetThreadsCount();
