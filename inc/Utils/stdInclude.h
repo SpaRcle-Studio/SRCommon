@@ -57,6 +57,7 @@
 #include <random>
 #include <cstdint>
 #include <iomanip>
+#include <concepts>
 #include <condition_variable>
 
 #ifdef SR_SUPPORT_PARALLEL

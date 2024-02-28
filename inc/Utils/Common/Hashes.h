@@ -5,8 +5,10 @@
 #ifndef SR_ENGINE_UTILS_HASHES_H
 #define SR_ENGINE_UTILS_HASHES_H
 
+#include <openssl/include/openssl/sha.h>
 #include <Utils/stdInclude.h>
 #include <xxHash/xxhash.h>
+
 
 namespace SR_UTILS_NS {
     namespace Hash::Detail {
@@ -83,6 +85,12 @@ namespace SR_UTILS_NS {
         template<class T> constexpr std::string_view GetTypeName() {
             return SR_FUNCTION_SIGNATURE;
         }
+
+        template<typename T>
+        concept SHA256HashType =
+            std::constructible_from<T, std::string> &&
+            requires(T type) { type.to_string(); } ||
+            requires(T type) { type.ToString(); };
     }
 
     SR_INLINE_STATIC constexpr size_t SR_FNV_OFFSET_BASIS = 14695981039346656037ULL;
@@ -147,6 +155,23 @@ namespace SR_UTILS_NS {
 
     template <class T, class... Types> constexpr bool IsAnyOfV = std::disjunction_v<std::is_same<T, Types>...>;
     template <class T> SR_INLINE constexpr bool IsECharT = IsAnyOfV<T, char, wchar_t, char8_t, char16_t, char32_t>;
+
+
+    template<Hash::Detail::SHA256HashType T>
+    T sha256(const std::string& msg) {
+        std::array<unsigned char, SHA256_DIGEST_LENGTH> hash;
+        SHA256_CTX ctx;
+
+        SHA256_Init(&ctx);
+        SHA256_Update(&ctx, msg.c_str(), msg.size());
+        SHA256_Final(hash.data(), &ctx);
+
+        std::stringstream sstream;
+        for (auto&& i : hash)
+            sstream << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(i);
+
+        return T(sstream.str());
+    }
 }
 
 template <class Elem, class Alloc> struct SR_UTILS_NS::SRHash<std::basic_string<Elem, std::char_traits<Elem>, Alloc>> : SR_UTILS_NS::SRConditionallyEnabledHash<std::basic_string<Elem, std::char_traits<Elem>, Alloc>, IsECharT<Elem>> {
@@ -185,6 +210,7 @@ template<> struct SR_UTILS_NS::SRHash<nullptr_t> {
         return HashRepresentation(null);
     }
 };
+
 
 #define SR_COMBINE_HASHES(x1, x2) (SR_UTILS_NS::CombineTwoHashes(x1, x2))
 

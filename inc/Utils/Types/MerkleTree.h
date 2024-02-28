@@ -219,11 +219,17 @@ namespace SR_TYPES_NS {
             return memcmp(bytes, other.bytes, SIZE) == 0;
         }
 
+        bool operator==(const std::string& rawHash) const
+        {
+            return *this == HashT<SIZE>(rawHash);
+        }
+
         /// @brief Hash inequality operator
         bool operator!=(const HashT<SIZE>& other) const
         {
             return memcmp(bytes, other.bytes, SIZE) != 0;
         }
+
 
         /// @brief Serialises a hash
         /// @param buffer Buffer to serialise to
