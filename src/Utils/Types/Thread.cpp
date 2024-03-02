@@ -86,16 +86,9 @@ namespace SR_HTYPES_NS {
     Thread::Ptr Thread::Factory::GetThisThread() {
         SR_SCOPED_LOCK;
 
-        auto&& threadId = SR_UTILS_NS::GetThisThreadId();
-
-        if (auto&& pIt = m_threads.find(threadId); pIt != m_threads.end()) {
-            return pIt->second;
-        }
-
-        auto&& main = GetMainThread();
-
-        if (main && threadId == main->m_id) {
-            return main;
+        auto&& pThisThread = TryGetThisThread();
+        if (pThisThread) {
+            return pThisThread;
         }
 
     #ifdef SR_DEBUG
@@ -217,6 +210,22 @@ namespace SR_HTYPES_NS {
         }
 
         SR_SYSTEM_LOG(log);
+    }
+
+    Thread::Ptr Thread::Factory::TryGetThisThread() {
+        auto&& threadId = SR_UTILS_NS::GetThisThreadId();
+
+        if (auto&& pIt = m_threads.find(threadId); pIt != m_threads.end()) {
+            return pIt->second;
+        }
+
+        auto&& main = GetMainThread();
+
+        if (main && threadId == main->m_id) {
+            return main;
+        }
+
+        return nullptr;
     }
 }
 

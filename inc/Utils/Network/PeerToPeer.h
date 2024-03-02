@@ -23,10 +23,33 @@ namespace SR_NETWORK_NS {
 
     public:
         bool Run();
+        void Close();
+
+        bool Connect(const std::string& address, uint16_t port);
+
         void SetOnAcceptCallback(Callback&& callback) { m_onAccept = std::move(callback); }
+
+        SR_NODISCARD const Acceptor::Ptr& GetAcceptor() const { return m_acceptor; }
+
+        SR_NODISCARD uint32_t GetConnectionsCount() const { return m_connections.size(); }
+        SR_NODISCARD uint32_t GetNewPeersCount() const { return m_newPeers.size(); }
+        SR_NODISCARD bool IsOpen() const { return m_acceptor && m_acceptor->IsOpen(); }
+        SR_NODISCARD bool HasConnection(uint32_t address, uint16_t port) const;
+
+        bool SendKnownHosts(const Socket::Ptr& pSocket);
 
     private:
         void OnAccept(Socket::Ptr&& pSocket);
+
+        bool RegisterSocket(Socket::Ptr pSocket, uint32_t address, uint16_t port);
+
+        bool ConnectInternal(const std::string& address, uint16_t port, bool share);
+
+        void ProcessMessage(const Socket::Ptr& pSocket, const DataPackage::Ptr& pData);
+
+        bool SharePeer(const Socket::Ptr& pTarget, const Socket::Ptr& pNewPeer);
+        bool SharePeer(const Socket::Ptr& pNewPeer);
+        bool ListerPeer(const Socket::Ptr& pSocket);
 
     private:
         std::string m_address;
@@ -37,7 +60,15 @@ namespace SR_NETWORK_NS {
         Context::Ptr m_context;
 
         Acceptor::Ptr m_acceptor;
-        std::vector<Socket::Ptr> m_sockets;
+
+        struct Connection {
+            uint32_t address;
+            uint16_t port;
+        };
+
+        std::map<Socket::Ptr, Connection> m_connections;
+
+        std::set<Socket::Ptr> m_newPeers;
 
         Callback m_onAccept;
 

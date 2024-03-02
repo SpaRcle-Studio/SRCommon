@@ -27,9 +27,9 @@ namespace SR_NETWORK_NS {
             return false;
         }
 
-        if (m_socket->Bind(m_port)) {
-            return m_socket->Listen(m_backlog);
-        }
+        //if (m_socket->Bind(m_port)) {
+        //    return m_socket->Listen(m_backlog);
+        //}
         return false;
     }
 

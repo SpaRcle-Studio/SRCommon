@@ -63,3 +63,5 @@
 #endif
 
 #include "../../Utils/libs/xxHash/xxhash.c"
+#include "../../Utils/libs/openssl/crypto/sha/sha256.c"
+#include "../../Utils/libs/openssl/crypto/mem_clr.c"

@@ -6,13 +6,23 @@
 
 namespace SR_UTILS_NS {
     SingletonManager* GetSingletonManager() noexcept {
-        static SingletonManager* singletonManager = nullptr;
+        static std::atomic<SingletonManager*> pSingletonManager {nullptr};
 
-        if (!singletonManager) {
-            singletonManager = new SingletonManager();
+        SingletonManager* pLocalPtr = pSingletonManager.load(std::memory_order_acquire);
+        if (!pLocalPtr) {
+            auto&& newManager = new SingletonManager();
+
+            if (pSingletonManager.compare_exchange_strong(pLocalPtr, newManager, std::memory_order_release)) {
+                /// Successfully set the singleton manager
+                pLocalPtr = newManager;
+            }
+            else {
+                /// Failed to set the singleton manager, another thread did it
+                delete newManager;
+            }
         }
 
-        return singletonManager;
+        return pLocalPtr;
     }
 
     void* SingletonManager::GetSingleton(StringAtom name) noexcept {

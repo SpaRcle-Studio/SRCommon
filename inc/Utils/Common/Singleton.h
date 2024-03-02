@@ -112,6 +112,8 @@ namespace SR_UTILS_NS {
 
         /// TODO: (Multi-threading) Refactor Singleton::Instance().
         SR_MAYBE_UNUSED static T& Instance() noexcept {
+            std::lock_guard lock(GetSingletonManager()->GetMutex());
+
             auto&& pSingleton = GetSingleton();
 
             if (!pSingleton) {

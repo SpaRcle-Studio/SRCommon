@@ -17,57 +17,44 @@ namespace SR_NETWORK_NS {
         }
     }
 
-    bool AsioTCPAcceptor::StartAsync(Acceptor::Callback&& callback) {
-        if (!StartBase()) {
-            SR_ERROR("AsioTCPAcceptor::Start() : failed to start acceptor!");
+    bool AsioTCPAcceptor::StartInternal(bool async) {
+        if (IsWaitingAccept()) {
+            SRHalt("AsioTCPAcceptor::StartInternal() : acceptor is already waiting for accept!");
             return false;
         }
 
-        Acceptor::StartAsync(std::move(callback));
-
-        m_acceptor->async_accept(m_socket.value(), [this](const asio::error_code& errorCode) {
-            if (errorCode) {
-                SR_ERROR("AsioTCPAcceptor::Start() : failed to accept connection: {}", errorCode.message());
-                return;
-            }
-
-            auto&& pAsioContext = m_context.DynamicCast<AsioContext>();
-            auto&& pSocket = pAsioContext->CreateSocket(SocketType::TCP);
-
-            pSocket.DynamicCast<AsioTCPSocket>()->SetSocket(std::move(m_socket.value()));
-
-            m_callback(std::move(pSocket));
-        });
-
-        return true;
-    }
-
-    bool AsioTCPAcceptor::Start(Callback&& callback) {
-        if (!StartBase()) {
-            SR_ERROR("AsioTCPAcceptor::Start() : failed to start acceptor!");
+        if (!Init()) {
+            SR_ERROR("AsioTCPAcceptor::StartInternal() : failed to init acceptor!");
             return false;
         }
 
-        Super::Start(std::move(callback));
-
-        while (m_callback) {
-            asio::error_code errorCode;
-            m_acceptor->accept(m_socket.value(), errorCode);
-
-            if (errorCode) {
-                SR_ERROR("AsioTCPAcceptor::Start() : failed to accept connection: {}", errorCode.message());
-                return false;
-            }
-
-            auto&& pAsioContext = m_context.DynamicCast<AsioContext>();
-            auto&& pSocket = pAsioContext->CreateSocket(SocketType::TCP);
-
-            pSocket.DynamicCast<AsioTCPSocket>()->SetSocket(std::move(m_socket.value()));
-
-            m_callback(std::move(pSocket));
+        if (!m_socket.has_value()) {
+            m_socket = asio::ip::tcp::socket(m_context.DynamicCast<AsioContext>()->GetContext());
         }
 
-        return true;
+        if (async) {
+            m_isWaitingAccept = true;
+            m_acceptor->async_accept(m_socket.value(), [this](const asio::error_code& errorCode) {
+                m_isWaitingAccept = false;
+                Accept(errorCode);
+            });
+            return true;
+        }
+
+        asio::error_code errorCode;
+
+        if (m_isRepeated) {
+            while (m_callback && IsOpen()) {
+                m_acceptor->accept(m_socket.value(), errorCode);
+                if (!Accept(errorCode)) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        m_acceptor->accept(m_socket.value(), errorCode);
+        return Accept(errorCode);
     }
 
     void AsioTCPAcceptor::Close() {
@@ -82,17 +69,21 @@ namespace SR_NETWORK_NS {
         Super::Close();
     }
 
-    bool AsioTCPAcceptor::StartBase() {
-        if (m_acceptor.has_value()) {
-            SR_ERROR("AsioTCPAcceptor::Start() : acceptor is already started!");
+    bool AsioTCPAcceptor::Init() {
+        if (!IsOpen()) {
+            SR_ERROR("AsioTCPAcceptor::Init() : acceptor is not open!");
             return false;
+        }
+
+        if (m_acceptor.has_value() && m_acceptor->is_open()) {
+            return true;
         }
 
         asio::error_code errorCode;
         asio::ip::tcp::endpoint endpoint(asio::ip::make_address(m_address, errorCode), m_port);
 
         if (errorCode) {
-            SR_ERROR("AsioTCPAcceptor::Start() : failed to create endpoint: {}", errorCode.message());
+            SR_ERROR("AsioTCPAcceptor::Init() : failed to create endpoint: {}", errorCode.message());
             return false;
         }
 
@@ -100,12 +91,105 @@ namespace SR_NETWORK_NS {
 
         m_acceptor = asio::ip::tcp::acceptor(pAsioContext->GetContext(), endpoint);
         if (!m_acceptor->is_open()) {
-            SR_ERROR("AsioTCPAcceptor::Start() : failed to open acceptor!");
+            SR_ERROR("AsioTCPAcceptor::Init() : failed to open acceptor!");
             return false;
         }
 
-        m_socket = asio::ip::tcp::socket(pAsioContext->GetContext());
-
         return true;
+    }
+
+    std::string AsioTCPAcceptor::GetLocalAddress() const {
+        if (!m_acceptor.has_value()) {
+            SR_ERROR("AsioTCPAcceptor::GetLocalAddress() : acceptor is not started!");
+            return {};
+        }
+
+        asio::error_code errorCode;
+        auto&& endpoint = m_acceptor->local_endpoint(errorCode);
+
+        if (errorCode) {
+            SR_ERROR("AsioTCPAcceptor::GetLocalAddress() : failed to get local endpoint: {}", errorCode.message());
+            return {};
+        }
+
+        return endpoint.address().to_string();
+    }
+
+    std::string AsioTCPAcceptor::GetRemoteAddress() const {
+        if (!m_acceptor.has_value()) {
+            SR_ERROR("AsioTCPAcceptor::GetRemoteAddress() : acceptor is not started!");
+            return {};
+        }
+
+        asio::error_code errorCode;
+        auto&& endpoint = m_acceptor->local_endpoint(errorCode);
+
+        if (errorCode) {
+            SR_ERROR("AsioTCPAcceptor::GetRemoteAddress() : failed to get local endpoint: {}", errorCode.message());
+            return {};
+        }
+
+        return endpoint.address().to_string();
+    }
+
+    uint16_t AsioTCPAcceptor::GetLocalPort() const {
+        if (!m_acceptor.has_value()) {
+            SR_ERROR("AsioTCPAcceptor::GetLocalPort() : acceptor is not started!");
+            return 0;
+        }
+
+        asio::error_code errorCode;
+        auto&& endpoint = m_acceptor->local_endpoint(errorCode);
+
+        if (errorCode) {
+            SR_ERROR("AsioTCPAcceptor::GetLocalPort() : failed to get local endpoint: {}", errorCode.message());
+            return 0;
+        }
+
+        return endpoint.port();
+    }
+
+    uint16_t AsioTCPAcceptor::GetRemotePort() const {
+        if (!m_acceptor.has_value()) {
+            SR_ERROR("AsioTCPAcceptor::GetRemotePort() : acceptor is not started!");
+            return 0;
+        }
+
+        asio::error_code errorCode;
+        auto&& endpoint = m_acceptor->local_endpoint(errorCode);
+
+        if (errorCode) {
+            SR_ERROR("AsioTCPAcceptor::GetRemotePort() : failed to get local endpoint: {}", errorCode.message());
+            return 0;
+        }
+
+        return endpoint.port();
+    }
+
+    bool AsioTCPAcceptor::Accept(const asio::error_code& errorCode) {
+        if (errorCode) {
+            SR_ERROR("AsioTCPAcceptor::Start() : failed to accept connection: {}", errorCode.message());
+            return false;
+        }
+
+        auto&& pAsioContext = m_context.DynamicCast<AsioContext>();
+        auto&& pSocket = pAsioContext->CreateSocket(SocketType::TCP);
+
+        pSocket.DynamicCast<AsioTCPSocket>()->SetSocket(std::move(m_socket.value()));
+        m_socket.reset();
+
+        if (IsOpen() && IsRepeated()) {
+            m_context->AddAsyncAcceptor(GetThis());
+        }
+
+        if (m_callback) {
+            m_callback(std::move(pSocket));
+            return true;
+        }
+
+        SR_ERROR("AsioTCPAcceptor::Accept() : callback is not set!");
+        pSocket->Close();
+
+        return false;
     }
 }
