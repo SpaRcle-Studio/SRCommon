@@ -71,9 +71,26 @@ namespace SR_NETWORK_NS {
         return true;
     }
 
-    bool AsioICMPSocket::Receive(void* data, size_t size) {
-        m_socket->receive(asio::buffer(data, size));
-        return true;
+    uint64_t AsioICMPSocket::Receive(void* data, size_t size) {
+        if (size == 0) {
+            SR_ERROR("AsioTCPSocket::Receive() : invalid size!");
+            return 0;
+        }
+
+        if (!m_socket) {
+            SR_ERROR("AsioTCPSocket::Receive() : invalid socket!");
+            return 0;
+        }
+
+        asio::error_code errorCode;
+        const uint64_t receivedSize = m_socket->receive(asio::buffer(data, size), 0, errorCode);
+
+        if (errorCode) {
+            SR_ERROR("AsioTCPSocket::Receive() : failed to receive data: {}", errorCode.message());
+            return 0;
+        }
+
+        return receivedSize;
     }
 
     bool AsioICMPSocket::Close() {
@@ -83,5 +100,25 @@ namespace SR_NETWORK_NS {
 
     bool AsioICMPSocket::IsOpen() const {
         return m_socket.has_value() && m_socket->is_open();
+    }
+
+    std::string AsioICMPSocket::GetLocalAddress() const {
+        return std::string();
+    }
+
+    std::string AsioICMPSocket::GetRemoteAddress() const {
+        return std::string();
+    }
+
+    uint16_t AsioICMPSocket::GetLocalPort() const {
+        return 0;
+    }
+
+    uint16_t AsioICMPSocket::GetRemotePort() const {
+        return 0;
+    }
+
+    bool AsioICMPSocket::ReceiveAsyncInternal() {
+        return false;
     }
 }
