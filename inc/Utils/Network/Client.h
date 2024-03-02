@@ -17,6 +17,8 @@ namespace SR_NETWORK_NS {
     public:
         std::string Request(const std::string& serverIp, void* request, uint64_t size);
 
+        void Ping(const std::string& ip, int32_t port);
+
     private:
         int32_t m_domain = 0;
         int32_t m_service = 0;

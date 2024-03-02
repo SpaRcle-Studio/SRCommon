@@ -8,3 +8,5 @@
 #include "../../Utils/src/Utils/Network/Asio/AsioContext.cpp"
 #include "../../Utils/src/Utils/Network/Asio/AsioTCPSocket.cpp"
 #include "../../Utils/src/Utils/Network/Asio/AsioTCPAcceptor.cpp"
+#include "../../Utils/src/Utils/Network/Asio/AsioPinger.cpp"
+#include "../../Utils/src/Utils/Network/Asio/AsioICMPSocket.cpp"

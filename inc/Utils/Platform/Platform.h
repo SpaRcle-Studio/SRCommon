@@ -43,6 +43,7 @@ namespace SR_UTILS_NS::Platform {
     SR_DLL_EXPORT extern bool IsConsoleFocused();
 
     SR_DLL_EXPORT extern uint64_t GetProcessUsedMemory();
+    SR_DLL_EXPORT extern uint16_t GetCurrentProcessId();
     SR_DLL_EXPORT extern SR_MATH_NS::FVector2 GetMousePos();
     SR_DLL_EXPORT extern std::string GetClipboardText();
     SR_DLL_EXPORT extern Path GetApplicationPath();
