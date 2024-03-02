@@ -79,7 +79,7 @@
 #define SR_ABS(x) (std::abs(x))
 #define SR_MAX(a, b) (a > b ? a : b)
 #define SR_MIN(a, b) (a < b ? a : b)
-#define SR_CLAMP(x, upper, lower) (SR_MIN(upper, SR_MAX(x, lower)))
+#define SR_CLAMP(x, lower, upper) (SR_MIN(upper, SR_MAX(x, lower)))
 
 #define RAD3(v) glm::vec3(RAD(v.x), RAD(v.y), RAD(v.z))
 #define DEG3(v) glm::vec3(DEG(v.x), DEG(v.y), DEG(v.z))
@@ -144,7 +144,7 @@ namespace SR_MATH_NS {
         return a + (b + -a) * t;
     }
 
-    template<typename Mask> static SR_FORCE_INLINE bool IsMaskIncludedSubMask(Mask mask, Mask subMask) {
+    template<typename MaskLeft, typename MakeRight> static SR_FORCE_INLINE bool IsMaskIncludedSubMask(MaskLeft mask, MakeRight subMask) {
         return (subMask & mask) == subMask;
     }
 

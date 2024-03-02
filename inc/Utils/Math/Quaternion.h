@@ -108,7 +108,7 @@ namespace SR_MATH_NS {
         SR_NODISCARD Unit SquaredNorm() const noexcept;
 
         SR_NODISCARD Unit Yaw() const noexcept {
-            return asin(SR_CLAMP(static_cast<Unit>(-2) * (x * z - w * y), static_cast<Unit>(1), static_cast<Unit>(-1)));
+            return asin(SR_CLAMP(static_cast<Unit>(-2) * (x * z - w * y), static_cast<Unit>(-1), static_cast<Unit>(1)));
         }
 
         SR_NODISCARD std::string ToString() const {

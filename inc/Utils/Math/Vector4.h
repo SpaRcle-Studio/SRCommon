@@ -139,6 +139,8 @@ namespace SR_MATH_NS {
             return res;
         }
 
+        SR_NODISCARD T SqrMagnitude() const { return x * x + y * y + z * z + w * w; }
+
         static constexpr Vector4<T> UnitX() { return Vector4(static_cast<T>(1), static_cast<T>(0), static_cast<T>(0), static_cast<T>(0)); }
         static constexpr Vector4<T> UnitY() { return Vector4(static_cast<T>(0), static_cast<T>(1), static_cast<T>(0), static_cast<T>(0)); }
         static constexpr Vector4<T> UnitZ() { return Vector4(static_cast<T>(0), static_cast<T>(0), static_cast<T>(1), static_cast<T>(0)); }
@@ -182,10 +184,10 @@ namespace SR_MATH_NS {
 
         template<typename U, typename Y> SR_NODISCARD Vector4 Clamp(U _max, Y _min) const {
             return Vector4(
-                SR_CLAMP(x, static_cast<T>(_max), static_cast<T>(_min)),
-                SR_CLAMP(y, static_cast<T>(_max), static_cast<T>(_min)),
-                SR_CLAMP(z, static_cast<T>(_max), static_cast<T>(_min)),
-                SR_CLAMP(w, static_cast<T>(_max), static_cast<T>(_min))
+                SR_CLAMP(x, static_cast<T>(_min), static_cast<T>(_max)),
+                SR_CLAMP(y, static_cast<T>(_min), static_cast<T>(_max)),
+                SR_CLAMP(z, static_cast<T>(_min), static_cast<T>(_max)),
+                SR_CLAMP(w, static_cast<T>(_min), static_cast<T>(_max))
             );
         }
     };
@@ -230,8 +232,28 @@ namespace SR_MATH_NS {
             return -(numer / denom);
         }
 
-        SR_NODISCARD SR_MATH_NS::FVector3 IntersectPlane(const SR_MATH_NS::FVector4& plane) const noexcept {
-            const float_t signedLength = IntersectPlaneDistance(plane);
+        SR_NODISCARD SR_MATH_NS::FVector3 RotationVector(const SR_MATH_NS::FVector4& plan, const SR_MATH_NS::FVector3& position) const noexcept {
+            const Unit len = IntersectPlaneDistance(plan);
+            auto&& localPos = origin + direction * len - position;
+            auto&& rotationVectorSource = localPos.Normalize();
+            return rotationVectorSource;
+        }
+
+
+        SR_NODISCARD Unit ComputeAngleOnPlan(const SR_MATH_NS::FVector4& plan, const SR_MATH_NS::FVector3& position, const SR_MATH_NS::FVector3& sourceRotationVector) const noexcept {
+            const Unit len = IntersectPlaneDistance(plan);
+            auto&& localPos = (origin + direction * len - position).Normalize();
+
+            auto&& perpendicularVector = sourceRotationVector.Cross(plan.XYZ()).Normalize();
+
+            const Unit acosAngle = SR_CLAMP(localPos.Dot(sourceRotationVector), -1.f, 1.f);
+            const Unit angle = acosf(acosAngle) * ((localPos.Dot(perpendicularVector) < 0.f) ? 1.f : -1.f);
+
+            return angle;
+        }
+
+        SR_NODISCARD SR_MATH_NS::FVector3 IntersectPlane(const SR_MATH_NS::FVector4& plan) const noexcept {
+            const float_t signedLength = IntersectPlaneDistance(plan);
             const float_t len = fabsf(signedLength);
             return origin + direction * len;
         }
@@ -242,6 +264,8 @@ namespace SR_MATH_NS {
         FVector3 origin;
         FVector3 direction;
     };
+
+
 
     static FVector4 BuildPlan(const FVector3& point, const FVector3& normal) {
         return SR_MATH_NS::FVector4(normal, normal.Normalize().Dot(point));

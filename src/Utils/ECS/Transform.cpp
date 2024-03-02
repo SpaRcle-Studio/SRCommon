@@ -237,4 +237,8 @@ namespace SR_UTILS_NS {
     SR_MATH_NS::FVector3 Transform::Forward() const {
         return GetMatrix().GetQuat() * SR_MATH_NS::FVector3::Forward();
     }
+
+    void Transform::GlobalRotate(const SR_MATH_NS::Quaternion& quaternion) {
+        SetRotation(GetQuaternion() * quaternion);
+    }
 }

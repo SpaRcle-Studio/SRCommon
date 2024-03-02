@@ -54,11 +54,12 @@ namespace SR_UTILS_NS {
         virtual void Scale(const SR_MATH_NS::FVector3& scale) { }
         virtual void Scale(SR_MATH_NS::Unit x, SR_MATH_NS::Unit y, SR_MATH_NS::Unit z);
 
-        virtual void GlobalTranslate(const Math::FVector3& translation);
-        virtual void GlobalRotate(const Math::FVector3& eulers);
-        virtual void GlobalRotate(Math::Unit x, Math::Unit y, Math::Unit z);
-        virtual void GlobalScale(const Math::FVector3& scale);
-        virtual void GlobalSkew(const Math::FVector3& skew);
+        virtual void GlobalTranslate(const SR_MATH_NS::FVector3& translation);
+        virtual void GlobalRotate(const SR_MATH_NS::FVector3& eulers);
+        virtual void GlobalRotate(const SR_MATH_NS::Quaternion& quaternion);
+        virtual void GlobalRotate(SR_MATH_NS::Unit x, SR_MATH_NS::Unit y, SR_MATH_NS::Unit z);
+        virtual void GlobalScale(const SR_MATH_NS::FVector3& scale);
+        virtual void GlobalSkew(const SR_MATH_NS::FVector3& skew);
 
         virtual void RotateAround(const Math::FVector3& point, const Math::FVector3& eulers) { }
         virtual void RotateAroundParent(const Math::FVector3& eulers) { }

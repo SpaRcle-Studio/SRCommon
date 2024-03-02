@@ -41,7 +41,7 @@ namespace SR_HTYPES_NS {
 
         auto&& count = static_cast<int32_t>(m_rawMesh->GetMeshesCount());
 
-        IRawMeshHolder::MeshIndex newIndex = SR_CLAMP(meshIndex, SR_MAX(count - 1, 0), 0);
+        IRawMeshHolder::MeshIndex newIndex = SR_CLAMP(meshIndex, 0, SR_MAX(count - 1, 0));
 
         if (m_meshId != newIndex) {
             m_meshId = newIndex;

@@ -276,7 +276,7 @@ namespace SR_HTYPES_NS {
         }
     }
 
-    template<class T> void SharedPtr<T>::Replace(const SharedPtr &ptr) {
+    template<class T> SR_DEPRECATED_EX("Use \"=\"") void SharedPtr<T>::Replace(const SharedPtr &ptr) {
         if (ptr.m_ptr == m_ptr && ptr.m_data == m_data) {
             return;
         }

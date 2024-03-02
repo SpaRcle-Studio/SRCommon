@@ -110,6 +110,92 @@ namespace SR_MATH_NS {
             return Matrix4x4(0.f, quaternion, 1.f);
         }
 
+        static Matrix4x4 RotationAxis(const SR_MATH_NS::FVector4& axis, Unit angle) {
+            const Unit length2 = axis.SqrMagnitude();
+            if (length2 < FLT_EPSILON) {
+                return Matrix4x4::Identity();
+            }
+
+            const SR_MATH_NS::FVector4 n = axis * (1.f / sqrtf(length2));
+            const Unit s = sinf(angle);
+            const Unit c = cosf(angle);
+            const Unit k = 1.f - c;
+
+            const Unit xx = n.x * n.x * k + c;
+            const Unit yy = n.y * n.y * k + c;
+            const Unit zz = n.z * n.z * k + c;
+            const Unit xy = n.x * n.y * k;
+            const Unit yz = n.y * n.z * k;
+            const Unit zx = n.z * n.x * k;
+            const Unit xs = n.x * s;
+            const Unit ys = n.y * s;
+            const Unit zs = n.z * s;
+
+            Matrix4x4 m;
+
+            m.m[0][0] = xx;
+            m.m[0][1] = xy + zs;
+            m.m[0][2] = zx - ys;
+            m.m[0][3] = 0.f;
+            m.m[1][0] = xy - zs;
+            m.m[1][1] = yy;
+            m.m[1][2] = yz + xs;
+            m.m[1][3] = 0.f;
+            m.m[2][0] = zx + ys;
+            m.m[2][1] = yz - xs;
+            m.m[2][2] = zz;
+            m.m[2][3] = 0.f;
+            m.m[3][0] = 0.f;
+            m.m[3][1] = 0.f;
+            m.m[3][2] = 0.f;
+            m.m[3][3] = 1.f;
+
+            return m;
+        }
+
+        static Matrix4x4 RotationAxis(const SR_MATH_NS::FVector3& axis, Unit angle) {
+            const Unit length2 = axis.SqrMagnitude();
+            if (length2 < FLT_EPSILON) {
+                return Matrix4x4::Identity();
+            }
+
+            const SR_MATH_NS::FVector3 n = axis * (1.f / sqrtf(length2));
+            const Unit s = sinf(angle);
+            const Unit c = cosf(angle);
+            const Unit k = 1.f - c;
+
+            const Unit xx = n.x * n.x * k + c;
+            const Unit yy = n.y * n.y * k + c;
+            const Unit zz = n.z * n.z * k + c;
+            const Unit xy = n.x * n.y * k;
+            const Unit yz = n.y * n.z * k;
+            const Unit zx = n.z * n.x * k;
+            const Unit xs = n.x * s;
+            const Unit ys = n.y * s;
+            const Unit zs = n.z * s;
+
+            Matrix4x4 m;
+
+            m.m[0][0] = xx;
+            m.m[0][1] = xy + zs;
+            m.m[0][2] = zx - ys;
+            m.m[0][3] = 0.f;
+            m.m[1][0] = xy - zs;
+            m.m[1][1] = yy;
+            m.m[1][2] = yz + xs;
+            m.m[1][3] = 0.f;
+            m.m[2][0] = zx + ys;
+            m.m[2][1] = yz - xs;
+            m.m[2][2] = zz;
+            m.m[2][3] = 0.f;
+            m.m[3][0] = 0.f;
+            m.m[3][1] = 0.f;
+            m.m[3][2] = 0.f;
+            m.m[3][3] = 1.f;
+
+            return m;
+        }
+
         static Matrix4x4 FromScale(const FVector3& scale) {
             return Matrix4x4(glm::scale(glm::mat4x4(1), scale.ToGLM()));
         }
@@ -408,15 +494,15 @@ namespace SR_MATH_NS {
         }
     };
 
-    static FVector4 CalcPlanNormal(const Matrix4x4& model, const SR_MATH_NS::FVector3& cameraEye, const SR_MATH_NS::FVector3& cameraDir, AxisFlag axis) {
+    static FVector4 CalcTranslationPlanNormal(const Matrix4x4& model, const SR_MATH_NS::FVector3& cameraEye, const SR_MATH_NS::FVector3& cameraDir, AxisFlag axis) {
         SR_MATH_NS::FVector4 movePlanNormal[] = {
-            model.v.right, // x
-            model.v.up,    // y
-            model.v.dir,   // z
-            model.v.right, // yz
-            model.v.up,    // zx
-            model.v.dir,   // xy
-            SR_MATH_NS::FVector4(-cameraDir, 0.f) // screen (xyz)
+            model.v.right, /// x
+            model.v.up,    /// y
+            model.v.dir,   /// z
+            model.v.right, /// yz
+            model.v.up,    /// zx
+            model.v.dir,   /// xy
+            SR_MATH_NS::FVector4(-cameraDir, 0.f) /// screen (xyz)
         };
 
         auto&& cameraToModelNormalized = SR_MATH_NS::FVector4((model.v.position.XYZ() - cameraEye).Normalize(), 0.f);
@@ -434,6 +520,50 @@ namespace SR_MATH_NS {
             case Axis::X: return movePlanNormal[0];
             case Axis::Y: return movePlanNormal[1];
             case Axis::Z: return movePlanNormal[2];
+            default:
+                break;
+        }
+
+        SRHalt("Unknown axis!");
+
+        return SR_MATH_NS::FVector4();
+    }
+
+    static FVector4 CalcRotationPlanNormal(const Matrix4x4& model, const SR_MATH_NS::FVector3& cameraDir, AxisFlag axis) {
+        SR_MATH_NS::FVector4 rotatePlanNormal[] = {
+            model.v.right, /// x
+            model.v.up,    /// y
+            model.v.dir,   /// z
+            SR_MATH_NS::FVector4(-cameraDir, 0.f) /// screen (xyz)
+        };
+
+        switch (axis) {
+            case Axis::X: return rotatePlanNormal[0];
+            case Axis::Y: return rotatePlanNormal[1];
+            case Axis::Z: return rotatePlanNormal[2];
+            case Axis::XYZ: return rotatePlanNormal[3];
+            default:
+                break;
+        }
+
+        SRHalt("Unknown axis!");
+
+        return SR_MATH_NS::FVector4();
+    }
+
+    static FVector4 CalcRotationPlanNormal(const SR_MATH_NS::FVector3& cameraDir, AxisFlag axis) {
+        SR_MATH_NS::FVector4 rotatePlanNormal[] = {
+            SR_MATH_NS::FVector4(SR_MATH_NS::FVector3::Right(), 0.f), /// x
+            SR_MATH_NS::FVector4(SR_MATH_NS::FVector3::Up(), 0.f), /// y
+            SR_MATH_NS::FVector4(SR_MATH_NS::FVector3::Forward(), 0.f), /// z
+            SR_MATH_NS::FVector4(-cameraDir, 0.f) /// screen (xyz)
+        };
+
+        switch (axis) {
+            case Axis::X: return rotatePlanNormal[0];
+            case Axis::Y: return rotatePlanNormal[1];
+            case Axis::Z: return rotatePlanNormal[2];
+            case Axis::XYZ: return rotatePlanNormal[3];
             default:
                 break;
         }

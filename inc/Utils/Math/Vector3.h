@@ -195,7 +195,7 @@ namespace SR_MATH_NS {
                 return static_cast<T>(0);
             }
 
-            const T dot = SR_CLAMP(Dot(to) / denominator, static_cast<T>(1), static_cast<T>(-1));
+            const T dot = SR_CLAMP(Dot(to) / denominator, static_cast<T>(-1), static_cast<T>(1));
             return static_cast<T>(std::acos(dot) * SR_RAD_2_DEG);
         }
 
@@ -410,9 +410,9 @@ namespace SR_MATH_NS {
 
         SR_NODISCARD Vector3<T> Clamp(const Vector3<T>& upper, const Vector3<T>& lover) const {
             return Vector3<T>(
-                SR_CLAMP(x, upper.x, lover.x),
-                SR_CLAMP(y, upper.y, lover.y),
-                SR_CLAMP(z, upper.z, lover.z)
+                SR_CLAMP(x, lover.x, upper.x),
+                SR_CLAMP(y, lover.y, upper.y),
+                SR_CLAMP(z, lover.z, upper.z)
             );
         }
 
