@@ -182,4 +182,14 @@ namespace SR_NETWORK_NS {
 
         return true;
     }
+
+    uint64_t AsioTCPSocket::AsyncReceive(void* data, std::function<void(uint64_t bytesReceived)> callback) {
+        SRHalt("AsioTCPSocket::AsyncReceive() : not yet implemented!");
+        return 0;
+    }
+
+    bool AsioTCPSocket::SendTo(const void *data, uint64_t size, const std::string &address, uint16_t port) {
+        SRHalt("AsioTCPSocket::SendTo() : not yet implemented!");
+        return false;
+    }
 }

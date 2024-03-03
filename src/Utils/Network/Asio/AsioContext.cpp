@@ -3,6 +3,7 @@
 //
 
 #include <Utils/Network/Asio/AsioContext.h>
+#include <Utils/Network/Asio/AsioPinger.h>
 #include <Utils/Network/Asio/AsioTCPSocket.h>
 #include <Utils/Network/Asio/AsioICMPSocket.h>
 #include <Utils/Network/Asio/AsioTCPAcceptor.h>
@@ -84,5 +85,16 @@ namespace SR_NETWORK_NS {
 
         m_context.stop();
         m_isRunning = false;
+    }
+
+    SR_HTYPES_NS::SharedPtr<Pinger> AsioContext::CreatePinger() {
+        auto&& pPinger = new AsioPinger();
+        /*pPinger->SetContext(GetThis());
+        pPinger->SetSocket(CreateSocket(SocketType::ICMP));*/
+
+        pPinger->SetContext(this);
+        pPinger->SetSocket(CreateSocket(SocketType::ICMP));
+
+        return pPinger;
     }
 }

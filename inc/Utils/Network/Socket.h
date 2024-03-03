@@ -25,7 +25,9 @@ namespace SR_NETWORK_NS {
         bool AsyncReceive(uint64_t size);
 
         virtual bool Send(const void* data, size_t size) = 0;
+        virtual bool SendTo(const void* data, uint64_t size, const std::string& address, uint16_t port) = 0;
         SR_NODISCARD virtual uint64_t Receive(void* data, size_t size) = 0;
+        SR_NODISCARD virtual uint64_t AsyncReceive(void* data, std::function<void(uint64_t bytesReceived)> callback) = 0;
         SR_NODISCARD virtual bool Connect(const std::string& address, uint16_t port) = 0;
         SR_NODISCARD virtual bool IsOpen() const = 0;
 

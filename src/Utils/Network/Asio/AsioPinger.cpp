@@ -4,30 +4,19 @@
 
 #include <Utils/Network/Asio/AsioPinger.h>
 #include <Utils/Network/Asio/AsioContext.h>
-
 #include <Utils/Network/Headers/ICMPHeader.h>
 #include <Utils/Network/Headers/IPV4Header.h>
-
-#include <asio/basic_deadline_timer.hpp>
-
 #include <Utils/Platform/Platform.h>
-
 #include <Utils/Common/EnumReflector.h>
 
+#include <asio.hpp>
+
 namespace SR_NETWORK_NS {
-    AsioPinger::AsioPinger(const std::string& destination)
-        // Nikita, resolver does not have a default constructor
-        : m_resolver(asio::ip::icmp::resolver(m_context.DynamicCast<AsioContext>()->GetContext()))
-    {
-        m_socket = m_context->CreateSocket(SocketType::ICMP);
-
-        auto&& connectionResult = m_socket->Connect(destination, 0);
-
-        asio::ip::icmp::resolver::query query(asio::ip::icmp::v4(), destination, "");
-        m_destination = *m_resolver.resolve(query);
-
-        StartSend();
-        StartReceive();
+    AsioPinger::~AsioPinger() {
+        m_receiveTimer.Cancel();
+        m_sendTimer.Cancel();
+        m_socket->Close();
+        m_context->Stop();
     }
 
     void AsioPinger::StartSend() {
@@ -35,8 +24,8 @@ namespace SR_NETWORK_NS {
 
         // Create an ICMP header for an echo request.
         ICMPHeader echoRequest;
-        echoRequest.Type(SR_UTILS_NS::EnumReflector::GetIndex(ICMPType::EchoRequest));
-        echoRequest.Code(0);
+        echoRequest.Type(ICMPType::EchoRequest);
+        echoRequest.Code(static_cast<ICMPType>(0));
         echoRequest.Identifier(SR_PLATFORM_NS::GetCurrentProcessId());
         echoRequest.SequenceNumber(++m_sequenceNumber);
         ComputeChecksum(echoRequest, body.begin(), body.end());
@@ -46,29 +35,33 @@ namespace SR_NETWORK_NS {
         std::ostream os(&requestBuffer);
         os << echoRequest << body;
 
-        // Send the request.
+        SR_LOG("AsioPinger::StartSend() : sending request.");
         m_sendTime = SR_UTILS_NS::TimePointType::clock::now();
-        auto&& sendResult = m_socket->Send(requestBuffer.data().data(), requestBuffer.size());
 
-        // Wait up to five seconds for a reply.
+        m_socket->SendTo(requestBuffer.data().data(), requestBuffer.size(), m_destination.address().to_string(), m_destination.port());
+
         m_RepliesNumber = 0;
-        ///m_timer.expires_at(time_sent_ + posix_time::seconds(5));
-        ///m_times.async_wait(boost::bind(&pinger::handle_timeout, this));
+        m_receiveTimer.AsyncWait([&](){HandleTimeout();}, std::chrono::seconds(5));
     }
 
     void AsioPinger::StartReceive() {
         // Discard any data already in the buffer.
+        SR_LOG("AsioPinger::StartReceive() : waiting for reply.");
         m_replyBuffer.consume(m_replyBuffer.size());
 
         // Wait for a reply. We prepare the buffer to receive up to 64KB.
-        //m_socket.async_receive(m_replyBuffer.prepare(65536),
-        //                      boost::bind(&pinger::handle_receive, this, _2));
+
+        m_replyBuffer.prepare(65536);
+
+        auto&& receivedSize = m_socket->AsyncReceive(&m_replyBuffer, [this](uint64_t bytesReceived){
+            HandleReceive(bytesReceived);
+        });
     }
 
-    void AsioPinger::HandleReceive(std::size_t length) {
-        // The actual number of bytes received is committed to the buffer so that we
-        // can extract it using a std::istream object.
-        m_replyBuffer.commit(length);
+    void AsioPinger::HandleReceive(uint64_t bytesReceived) {
+        SR_LOG("AsioPinger::HandleReceive() : handling received bytes.");
+
+        m_replyBuffer.commit(bytesReceived);
 
         // Decode the reply packet.
         std::istream is(&m_replyBuffer);
@@ -76,43 +69,44 @@ namespace SR_NETWORK_NS {
         ICMPHeader icmp_hdr;
         is >> ipv4_hdr >> icmp_hdr;
 
-        // We can receive all ICMP packets received by the host, so we need to
-        // filter out only the echo replies that match the our identifier and
-        // expected sequence number.
-        if (is && icmp_hdr.Type() == SR_UTILS_NS::EnumReflector::GetIndex(ICMPType::EchoReply)
+        //if (is && icmp_hdr.Type() == SR_UTILS_NS::EnumReflector::GetIndex(ICMPHeader::EchoReply)
+        if (is && icmp_hdr.Type() == static_cast<uint8_t>(ICMPType::EchoReply)
             && icmp_hdr.Identifier() == SR_PLATFORM_NS::GetCurrentProcessId()
             && icmp_hdr.SequenceNumber() == m_sequenceNumber)
         {
-            // If this is the first reply, interrupt the five second timeout.
             if (m_RepliesNumber++ == 0) {
-                //timer_.cancel(); /// TODO: TIMER!!!!!!!!!!!!!!!
+                ++m_successes;
+                m_receiveTimer.Cancel();
             }
-            // Print out some information about the reply packet.
-            //posix_time::ptime now = posix_time::microsec_clock::universal_time();
 
             std::string logMessage;
-            logMessage += &"Recieved " [ length] - ipv4_hdr.header_length() +
+            logMessage += &"Received " [bytesReceived] - ipv4_hdr.header_length() +
                             std::string(" bytes from ") + ipv4_hdr.source_address().to_string();
             SR_LOG(logMessage);
-
-
-            /*std::cout << length - ipv4_hdr.header_length()
-                      << " bytes from " << ipv4_hdr.source_address()
-                      << ": icmp_seq=" << icmp_hdr.sequence_number()
-                      << ", ttl=" << ipv4_hdr.time_to_live()
-                      << ", time=" << (now - time_sent_).total_milliseconds() << " ms"
-                      << std::endl;*/
         }
 
         StartReceive();
     }
 
     void AsioPinger::HandleTimeout() {
-        /*if (num_replies_ == 0)
-            std::cout << "Request timed out" << std::endl;
+        if (m_RepliesNumber == 0) {
+            std::cout << "AsioPinger::HandleTimeout() : request timed out" << std::endl;
+        }
 
-        // Requests must be sent no less than one second apart.
-        timer_.expires_at(time_sent_ + posix_time::seconds(1));
-        timer_.async_wait(boost::bind(&pinger::start_send, this));*/
+        m_sendTimer.AsyncWait([&](){AsioPinger::StartSend();}, std::chrono::seconds(1));
+    }
+
+    void AsioPinger::Ping(const std::string& destination) {
+        asio::ip::icmp::resolver::query query(asio::ip::icmp::v4(), destination, "");
+
+        asio::io_service io_service;
+        asio::ip::icmp::resolver resolver(io_service);
+
+        m_destination = *resolver.resolve(query);
+
+        while (m_successes < 5) {
+            StartSend();
+            StartReceive();
+        }
     }
 }

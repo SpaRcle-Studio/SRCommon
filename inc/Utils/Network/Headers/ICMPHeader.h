@@ -25,19 +25,20 @@ namespace SR_NETWORK_NS {
 
     class ICMPHeader {
     public:
+    public:
         ICMPHeader() { std::fill(rep_, rep_ + sizeof(rep_), 0); }
 
-        unsigned char Type() const { return rep_[0]; }
-        unsigned char Code() const { return rep_[1]; }
+        uint8_t Type() const { return rep_[0]; }
+        uint8_t Code() const { return rep_[1]; }
         uint16_t Checksum() const { return Decode(2, 3); }
         uint16_t Identifier() const { return Decode(4, 5); }
         uint16_t SequenceNumber() const { return Decode(6, 7); }
 
-        void Type(ICMPTypeFlag type) { rep_[0] = type; }
-        void Code(ICMPTypeFlag type) { rep_[1] = type; }
-        void Checksum(ICMPTypeFlag type) { Encode(2, 3, type); }
-        void Identifier(ICMPTypeFlag type) { Encode(4, 5, type); }
-        void SequenceNumber(ICMPTypeFlag type) { Encode(6, 7, type); }
+        void Type(ICMPType type) { rep_[0] = static_cast<uint8_t>(type); }
+        void Code(ICMPType type) { rep_[1] = static_cast<uint8_t>(type); }
+        void Checksum(uint16_t type) { Encode(2, 3, static_cast<uint8_t>(type)); }
+        void Identifier(uint16_t type) { Encode(4, 5, static_cast<uint8_t>(type)); }
+        void SequenceNumber(uint16_t type) { Encode(6, 7, static_cast<uint8_t>(type)); }
 
         friend std::istream& operator>>(std::istream& is, ICMPHeader& header)
         { return is.read(reinterpret_cast<char*>(header.rep_), 8); }

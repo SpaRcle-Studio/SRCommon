@@ -17,3 +17,4 @@
 #include "../../Utils/src/Utils/Types/LinkedList.cpp"
 #include "../../Utils/src/Utils/Types/Node.cpp"
 #include "../../Utils/src/Utils/Types/NodeDictionary.cpp"
+#include "../../Utils/src/Utils/Types/Timer.cpp"

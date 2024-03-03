@@ -26,9 +26,11 @@ namespace SR_NETWORK_NS {
     public:
         bool Connect(const std::string& address, uint16_t port) override;
         bool Send(const void* data, size_t size) override;
+        bool SendTo(const void* data, uint64_t size, const std::string& address, uint16_t port) override;
         bool Close() override;
 
         uint64_t Receive(void* data, size_t size) override;
+        uint64_t AsyncReceive(void* data, std::function<void(uint64_t bytesReceived)> callback) override;
 
         SR_NODISCARD bool IsOpen() const override;
 

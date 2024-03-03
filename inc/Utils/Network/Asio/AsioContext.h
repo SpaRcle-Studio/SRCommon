@@ -24,6 +24,7 @@ namespace SR_NETWORK_NS {
         void Stop() override;
 
         SR_NODISCARD SR_HTYPES_NS::SharedPtr<Socket> CreateSocket(SocketType type) override;
+        SR_NODISCARD SR_HTYPES_NS::SharedPtr<Pinger> CreatePinger() override;
         SR_NODISCARD SR_HTYPES_NS::SharedPtr<Acceptor> CreateAcceptor(SocketType type, const std::string& address, uint16_t port) override;
 
     private:

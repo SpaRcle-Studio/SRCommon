@@ -103,22 +103,41 @@ namespace SR_NETWORK_NS {
     }
 
     std::string AsioICMPSocket::GetLocalAddress() const {
+        SRHalt("AsioICMPSocket::GetLocalAddress() : not yet implemented!");
         return std::string();
     }
 
     std::string AsioICMPSocket::GetRemoteAddress() const {
+        SRHalt("AsioICMPSocket::GetRemoteAddress() : not yet implemented!");
         return std::string();
     }
 
     uint16_t AsioICMPSocket::GetLocalPort() const {
+        SRHalt("AsioICMPSocket::GetLocalPort() : not yet implemented!");
         return 0;
     }
 
     uint16_t AsioICMPSocket::GetRemotePort() const {
+        SRHalt("AsioICMPSocket::GetRemotePort() : not yet implemented!");
         return 0;
     }
 
     bool AsioICMPSocket::ReceiveAsyncInternal() {
+        SRHalt("AsioICMPSocket::ReceiveAsyncInternal() : not yet implemented!");
         return false;
+    }
+
+    uint64_t AsioICMPSocket::AsyncReceive(void* data, std::function<void(uint64_t bytesReceived)> callback) {
+        // TODO: Change the size to a variable
+        m_socket->async_receive(asio::buffer(data, 65536), [callback](const asio::error_code& error, uint64_t bytesReceived){
+            callback(bytesReceived);
+        });
+        return 0;
+    }
+
+    bool AsioICMPSocket::SendTo(const void *data, uint64_t size, const std::string &address, uint16_t port) {
+        m_socket->send_to(asio::buffer(data, size), asio::ip::icmp::endpoint(asio::ip::make_address(address), port));
+
+        return true;
     }
 }

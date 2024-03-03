@@ -11,6 +11,7 @@ namespace SR_NETWORK_NS {
     class Socket;
     class Acceptor;
     class PeerToPeer;
+    class Pinger;
 
     SR_ENUM_NS_CLASS_T(NetworkLib, uint8_t,
         Unknown,
@@ -50,6 +51,7 @@ namespace SR_NETWORK_NS {
         void AddAsyncSendKnownHostsSocket(const PeerToPeerPtr& pP2P, const SocketPtr& pSocket);
 
         SR_NODISCARD virtual SR_HTYPES_NS::SharedPtr<Socket> CreateSocket(SocketType type) = 0;
+        SR_NODISCARD virtual SR_HTYPES_NS::SharedPtr<Pinger> CreatePinger() = 0;
         SR_NODISCARD virtual SR_HTYPES_NS::SharedPtr<Acceptor> CreateAcceptor(SocketType type, const std::string& address, uint16_t port) = 0;
 
         SR_NODISCARD SR_HTYPES_NS::SharedPtr<PeerToPeer> CreateP2P(SocketType type, const std::string& address, uint16_t port);
