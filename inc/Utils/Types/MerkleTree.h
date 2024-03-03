@@ -20,6 +20,8 @@
 #include <stack>
 #include <vector>
 
+//#include "UintWide_t.h"
+
 #ifdef HAVE_OPENSSL
 #  include <openssl/evp.h>
 #  include <openssl/sha.h>

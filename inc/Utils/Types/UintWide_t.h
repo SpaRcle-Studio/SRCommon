@@ -2431,6 +2431,14 @@ namespace SR_TYPES_NS { // NOLINT(modernize-concat-nested-namespaces)
             return *this;
         }
 
+
+        constexpr auto operator=(const std::string& estr) -> uintwide_t&
+        {
+            *this = uintwide_t<Width2, LimbType, AllocatorType, IsSigned>{ estr.c_str() };
+
+            return *this;
+        }
+
 #if !defined(WIDE_INTEGER_DISABLE_FLOAT_INTEROP)
         explicit constexpr operator long double() const { return extract_builtin_floating_point_type<long double>(); }
         explicit constexpr operator double() const { return extract_builtin_floating_point_type<double>(); }

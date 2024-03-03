@@ -5,8 +5,10 @@
 #ifndef SR_ENGINE_UTILS_HASHES_H
 #define SR_ENGINE_UTILS_HASHES_H
 
-#include <openssl/include/openssl/sha.h>
 #include <Utils/stdInclude.h>
+#include <Utils/Types/MerkleTree.h>
+
+#include <openssl/include/openssl/sha.h>
 #include <xxHash/xxhash.h>
 
 
@@ -157,7 +159,7 @@ namespace SR_UTILS_NS {
     template <class T> SR_INLINE constexpr bool IsECharT = IsAnyOfV<T, char, wchar_t, char8_t, char16_t, char32_t>;
 
 
-    template<Hash::Detail::SHA256HashType T>
+    template<Hash::Detail::SHA256HashType T = SR_TYPES_NS::HashT<32>>
     T sha256(const std::string& msg) {
         std::array<unsigned char, SHA256_DIGEST_LENGTH> hash;
         SHA256_CTX ctx;
@@ -170,7 +172,7 @@ namespace SR_UTILS_NS {
         for (auto&& i : hash)
             sstream << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(i);
 
-        return T(sstream.str());
+        return T{ sstream.str() };
     }
 }
 
