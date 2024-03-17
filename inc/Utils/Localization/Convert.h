@@ -5,9 +5,9 @@
 #ifndef SR_ENGINE_CONVERT_H
 #define SR_ENGINE_CONVERT_H
 
-#include <Utils/Locale/Icu.h>
+#include <Utils/Localization/Icu.h>
 
-namespace SR_UTILS_NS::Locale {
+namespace SR_UTILS_NS::Localization {
     //std::string ConvertBetween(
     //     const char *begin,
     //     const char *end,
