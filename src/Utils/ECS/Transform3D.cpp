@@ -43,7 +43,7 @@ namespace SR_UTILS_NS {
     }
 
     void Transform3D::Translate(const SR_MATH_NS::FVector3& translation) {
-        const auto &&direction = TransformDirection(translation);
+        const auto&& direction = TransformDirection(translation);
         SetTranslation(m_translation + direction);
     }
 
@@ -167,6 +167,9 @@ namespace SR_UTILS_NS {
     }
 
     void Transform3D::Scale(const SR_MATH_NS::FVector3& scale) {
+        if (scale.HasZero()) {
+            return;
+        }
         SetScale(m_scale * scale);
     }
 

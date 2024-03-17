@@ -76,9 +76,19 @@ namespace SR_MATH_NS {
         static constexpr Vector3<T> UnitY() { return Vector3(static_cast<T>(0), static_cast<T>(1), static_cast<T>(0)); }
         static constexpr Vector3<T> UnitZ() { return Vector3(static_cast<T>(0), static_cast<T>(0), static_cast<T>(1)); }
 
-        static constexpr Vector3<T> Right() { return Vector3(static_cast<T>(1), static_cast<T>(0), static_cast<T>(0)); }
-        static constexpr Vector3<T> Up() { return Vector3(static_cast<T>(0), static_cast<T>(1), static_cast<T>(0)); }
-        static constexpr Vector3<T> Forward() { return Vector3(static_cast<T>(0), static_cast<T>(0), static_cast<T>(1)); }
+        static constexpr Vector3<T> Right() { return UnitX(); }
+        static constexpr Vector3<T> Up() { return UnitY(); }
+        static constexpr Vector3<T> Forward() { return UnitZ(); }
+
+        static constexpr Vector3<T> AxisByIndex(uint8_t axis) {
+            switch (axis) {
+                case 0: return UnitX();
+                case 1: return UnitY();
+                case 2: return UnitZ();
+                default:
+                    return Zero();
+            }
+        }
 
         template<typename U> static Vector3<T> XY(const Vector2<U>& v) { return XY(v, 0); }
         template<typename U> static Vector3<T> XZ(const Vector2<U>& v) { return XZ(v, 0); }

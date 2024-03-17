@@ -66,6 +66,11 @@ namespace SR_MATH_NS {
             );
         }
 
+        SR_NODISCARD bool IsFinite() const noexcept {
+            /// если будет inf или nan, то вернет false
+            return std::isfinite(x) && std::isfinite(y);
+        }
+
         SR_NODISCARD T Distance(const Vector2& vec) const noexcept {
             if constexpr (std::is_same_v<T, float_t> || std::is_same_v<T, float>) {
                 return static_cast<T>(sqrtf(powf(vec.x - x, 2) + powf(vec.y - y, 2)));
