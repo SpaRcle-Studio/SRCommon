@@ -13,8 +13,8 @@
 
 namespace SR_NETWORK_NS {
     AsioPinger::~AsioPinger() {
-        m_receiveTimer.Cancel();
-        m_sendTimer.Cancel();
+//        m_receiveTimer.Cancel();
+//        m_sendTimer.Cancel();
         m_socket->Close();
         m_context->Stop();
     }
@@ -41,7 +41,7 @@ namespace SR_NETWORK_NS {
         m_socket->SendTo(requestBuffer.data().data(), requestBuffer.size(), m_destination.address().to_string(), m_destination.port());
 
         m_RepliesNumber = 0;
-        m_receiveTimer.AsyncWait([&](){HandleTimeout();}, std::chrono::seconds(5));
+//        m_receiveTimer.AsyncWait([&](){HandleTimeout();}, std::chrono::seconds(5));
     }
 
     void AsioPinger::StartReceive() {
@@ -76,7 +76,7 @@ namespace SR_NETWORK_NS {
         {
             if (m_RepliesNumber++ == 0) {
                 ++m_successes;
-                m_receiveTimer.Cancel();
+//                m_receiveTimer.Cancel();
             }
 
             std::string logMessage;
@@ -93,7 +93,7 @@ namespace SR_NETWORK_NS {
             std::cout << "AsioPinger::HandleTimeout() : request timed out" << std::endl;
         }
 
-        m_sendTimer.AsyncWait([&](){AsioPinger::StartSend();}, std::chrono::seconds(1));
+//        m_sendTimer.AsyncWait([&](){AsioPinger::StartSend();}, std::chrono::seconds(1));
     }
 
     void AsioPinger::Ping(const std::string& destination) {

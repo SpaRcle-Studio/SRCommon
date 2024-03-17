@@ -6,28 +6,51 @@
 #define SR_UTILS_TIMER_H
 
 #include <Utils/Debug.h>
-#include <asio.hpp>
 
 namespace SR_HTYPES_NS {
-    class Timer {
+    class SR_DLL_EXPORT Timer {
     public:
-        ~Timer() {
-            if (m_thread.joinable()) {
-                m_thread.join();
+        explicit Timer(float_t updateFrequency)
+                : m_updateFrequency(updateFrequency)
+        { }
+
+        explicit Timer(uint32_t countInSecond)
+                : m_updateFrequency(
+                static_cast<float_t>(60) / static_cast<float_t>(countInSecond * 60)
+        )
+        { }
+
+        Timer()
+                : Timer(0.f)
+        { }
+
+    public:
+        bool Update() {
+            if (m_deltaTime > m_updateFrequency) {
+                m_frames = 0; m_deltaTime = 0;
             }
+
+            auto&& now = std::chrono::high_resolution_clock::now();
+
+            using ms = std::chrono::duration<double, std::milli>;
+
+            m_deltaTime += std::chrono::duration_cast<ms>(now - m_beginFrame).count() / (double_t) CLOCKS_PER_SEC;
+
+            m_frames++;
+            m_beginFrame = now;
+
+            return m_deltaTime > m_updateFrequency;
         }
-    public:
-        void AsyncWait(std::function<void()> callback, std::chrono::seconds duration);
-        void Cancel();
+
+        SR_NODISCARD float_t GetDeltaTime() const { return m_deltaTime; }
+        SR_NODISCARD uint32_t GetFrames() const { return m_frames; }
 
     private:
-        void WaitAndCall();
-    private:
-        std::chrono::seconds m_duration;
-        std::function<void()> m_callback;
-        std::mutex m_mutex;
-        std::thread m_thread;
-        std::condition_variable m_conditionVariable;
+        float_t   m_updateFrequency;
+        double_t  m_deltaTime = 0;
+        uint32_t  m_frames = 0;
+        TimePointType m_beginFrame{};
+
     };
 }
 
