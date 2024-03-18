@@ -49,7 +49,7 @@ namespace SR_UTILS_NS {
     class SR_DLL_EXPORT SingletonManager : public NonCopyable {
     public:
         void* GetSingleton(StringAtom name) noexcept;
-        std::recursive_mutex& GetMutex() noexcept { return m_mutex; }
+        std::recursive_mutex& GetCreationMutex(StringAtom name);
         void DestroyAll();
         void Remove(StringAtom name);
 
@@ -70,6 +70,7 @@ namespace SR_UTILS_NS {
         };
         ska::flat_hash_map<StringAtom, SingletonInfo> m_singletons;
         mutable std::recursive_mutex m_mutex;
+        std::map<StringAtom, std::recursive_mutex> m_creationMutexes;
 
     };
 
@@ -112,15 +113,19 @@ namespace SR_UTILS_NS {
 
         /// TODO: (Multi-threading) Refactor Singleton::Instance().
         SR_MAYBE_UNUSED static T& Instance() noexcept {
-            std::lock_guard lock(GetSingletonManager()->GetMutex());
-
             auto&& pSingleton = GetSingleton();
 
             if (!pSingleton) {
-                pSingleton = new T();
-                GetSingletonManager()->Register<T>(pSingleton);
-                pSingleton->InitSingleton();
-                return *static_cast<T*>(pSingleton);
+                std::lock_guard lock(GetSingletonManager()->GetCreationMutex(T::GetStaticSingletonName()));
+
+                pSingleton = GetSingleton();
+
+                if (!pSingleton) {
+                    pSingleton = new T();
+                    GetSingletonManager()->Register<T>(pSingleton);
+                    pSingleton->InitSingleton();
+                    return *static_cast<T*>(pSingleton);
+                }
             }
 
             return *static_cast<T*>(pSingleton);

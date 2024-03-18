@@ -72,7 +72,7 @@ public:
     }
 };
 
-std::ostringstream builder;
+std::string builder;
 
 #ifdef SR_MSVC
 DWORD getStack(EXCEPTION_POINTERS* ep) {
@@ -127,10 +127,15 @@ DWORD getStack(EXCEPTION_POINTERS* ep) {
     do {
         if ( frame.AddrPC.Offset != 0 ) {
             std::string fnName = symbol(process, frame.AddrPC.Offset).undecorated_name();
-            builder << fnName;
-            if (SymGetLineFromAddr64( process, frame.AddrPC.Offset, &offset_from_symbol, &line))
-                builder << "  " /*<< line.FileName*/ << "(" << line.LineNumber << ")\n";
-            else builder << "\n";
+            builder += fnName;
+            if (SymGetLineFromAddr64( process, frame.AddrPC.Offset, &offset_from_symbol, &line)) {
+                //builder << "  " /*<< line.FileName*/ << "(" << line.LineNumber << ")\n";
+                builder += " (" + std::to_string(line.LineNumber) + ")\n";
+            }
+            else {
+                builder += "\n";
+            }
+
             if (fnName == "main")
                 break;
             if (fnName == "RaiseException") {
@@ -138,8 +143,10 @@ DWORD getStack(EXCEPTION_POINTERS* ep) {
                 return EXCEPTION_EXECUTE_HANDLER;
             }
         }
-        else
-            builder << "(No Symbols: PC == 0)";
+        else {
+            builder += "(No Symbols: PC == 0)";
+        }
+
         if (!StackWalk64(image_type, process, hThread, &frame, context, NULL,
                          SymFunctionTableAccess64, SymGetModuleBase64, NULL))
             break;
@@ -164,18 +171,20 @@ void GetStacktraceImpl() {
 
 namespace SR_UTILS_NS {
     static bool g_stackStraceEnabled = true;
+    static std::mutex g_stackTraceMutex;
 
     void DisableStacktrace() {
         g_stackStraceEnabled = false;
     }
 
     std::string GetStacktrace() {
+        std::lock_guard lock(g_stackTraceMutex);
+
         if (!g_stackStraceEnabled) {
             return std::string();
         }
-        builder = std::ostringstream();
+        builder.clear();
         GetStacktraceImpl();
-        std::string str = builder.str();
-        return str;
+        return builder;
     }
 }

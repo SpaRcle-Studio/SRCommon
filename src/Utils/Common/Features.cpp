@@ -74,6 +74,8 @@ namespace SR_UTILS_NS {
 
         SR_LOG("Features::Reload() : features successfully reloaded!");
 
+        m_isInitialized = true;
+
         return true;
     }
 

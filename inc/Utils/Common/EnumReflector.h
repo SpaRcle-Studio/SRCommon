@@ -2,8 +2,8 @@
 // Created by Monika on 09.09.2022.
 //
 
-#ifndef SR_ENGINE_ENUMREFLECTOR_H
-#define SR_ENGINE_ENUMREFLECTOR_H
+#ifndef SR_ENGINE_ENUM_REFLECTOR_H
+#define SR_ENGINE_ENUM_REFLECTOR_H
 
 #include <Utils/Common/Singleton.h>
 #include <Utils/Common/HashManager.h>
@@ -252,6 +252,8 @@ namespace SR_UTILS_NS {
         else {
             return const_cast<EnumReflector*>(&_detail_reflector_(EnumType()));
         }
+
+        std::cerr << "EnumReflector::GetReflector() : unknown type!\n";
 
         return nullptr;
     }

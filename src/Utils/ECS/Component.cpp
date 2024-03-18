@@ -15,6 +15,7 @@ namespace SR_UTILS_NS {
         /// если срабатывает ассерт, значит, вероятнее всего, какой-то игровой объект до сих пор удерживает компонент,
         /// а значит, будет падение.
         SRAssert(!HasParent());
+        m_properties.ClearContainer();
     }
 
     SR_HTYPES_NS::Marshal::Ptr Component::Save(SavableContext data) const {

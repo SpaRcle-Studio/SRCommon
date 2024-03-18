@@ -2,13 +2,14 @@
 // Created by Monika on 23.08.2022.
 //
 
-#ifndef SR_ENGINE_SHAREDPTR_H
-#define SR_ENGINE_SHAREDPTR_H
+#ifndef SR_ENGINE_SHARED_PTR_H
+#define SR_ENGINE_SHARED_PTR_H
 
 #include <Utils/Common/StringFormat.h>
 #include <Utils/Types/Function.h>
 #include <Utils/Common/TypeInfo.h>
 #include <Utils/Debug.h>
+#include <Utils/Platform/Platform.h>
 
 namespace SR_UTILS_NS {
     enum class SharedPtrPolicy : uint8_t {
@@ -16,20 +17,39 @@ namespace SR_UTILS_NS {
     };
 }
 
+/// #define SR_SHARED_PTR_TRACE
+
 namespace SR_HTYPES_NS {
+    class SharedPtrDynamicData;
+
     class SR_DLL_EXPORT SharedPtrDynamicDataCounter : public Singleton<SharedPtrDynamicDataCounter> {
         SR_REGISTER_SINGLETON(SharedPtrDynamicDataCounter);
     public:
         SR_NODISCARD uint64_t GetCount() const { return m_count; }
 
-        void Increment() { ++m_count; }
-        void Decrement() { --m_count; }
+        void Increment(SharedPtrDynamicData* pData) {
+            #ifdef SR_SHARED_PTR_TRACE
+                m_data.insert(pData);
+            #endif
+            ++m_count;
+        }
+
+        void Decrement(SharedPtrDynamicData* pData) {
+            #ifdef SR_SHARED_PTR_TRACE
+                m_data.erase(pData);
+            #endif
+            --m_count;
+        }
+
+        SR_MAYBE_UNUSED static bool CheckMemoryLeaks();
 
     public:
         SR_NODISCARD bool IsSingletonCanBeDestroyed() const override { return false; }
+        SR_NODISCARD const std::set<SharedPtrDynamicData*>& GetData() const { return m_data; }
 
     private:
         uint64_t m_count = 0;
+        std::set<SharedPtrDynamicData*> m_data;
 
     };
 
@@ -40,12 +60,25 @@ namespace SR_HTYPES_NS {
             , valid(valid)
             , policy(policy)
         {
-            SharedPtrDynamicDataCounter::Instance().Increment();
+            SharedPtrDynamicDataCounter::Instance().Increment(this);
+        #ifdef SR_SHARED_PTR_TRACE
+            debugTrace = SR_UTILS_NS::GetStacktrace();
+        #endif
         }
 
         ~SharedPtrDynamicData() {
-            SharedPtrDynamicDataCounter::Instance().Decrement();
+            SharedPtrDynamicDataCounter::Instance().Decrement(this);
         }
+
+        SR_NODISCARD SR_UTILS_NS::StringAtom GetDebugTrace() const {
+            #ifdef SR_SHARED_PTR_TRACE
+                return debugTrace;
+            #else
+                return SR_UTILS_NS::StringAtom();
+            #endif
+        }
+
+        SR_NODISCARD uint16_t GetStrongCount() const { return strongCount; }
 
         void IncrementStrong() {
             SRAssert2(strongCount != SR_UINT16_MAX, "Strong count overflow!");
@@ -60,7 +93,12 @@ namespace SR_HTYPES_NS {
         uint16_t strongCount = 0;
         uint16_t weakCount = 0;
         bool valid = false;
+        bool deallocated = false;
         SharedPtrPolicy policy = SharedPtrPolicy::Automatic;
+
+    #ifdef SR_SHARED_PTR_TRACE
+        SR_UTILS_NS::StringAtom debugTrace;
+    #endif
 
     };
 
@@ -93,9 +131,7 @@ namespace SR_HTYPES_NS {
         SharedPtr<T>& operator=(const SharedPtr<T> &ptr);
         SharedPtr<T>& operator=(T *ptr);
         SharedPtr<T>& operator=(SharedPtr<T>&& ptr) noexcept {
-            if (m_data) {
-                m_data->DecrementStrong();
-            }
+            Reset();
 
             m_data = SR_UTILS_NS::Exchange(ptr.m_data, {});
 
@@ -120,7 +156,12 @@ namespace SR_HTYPES_NS {
             if constexpr (std::is_same_v<T, void>) {
                 return SharedPtr<U>();
             }
-            return SharedPtr<U>(dynamic_cast<U*>(m_ptr));
+
+            if (m_data && m_data->valid) {
+                return SharedPtr<U>(dynamic_cast<U*>(m_ptr));
+            }
+
+            return SharedPtr<U>();
         }
 
         template<typename U> U ReinterpretCast() {
@@ -138,8 +179,6 @@ namespace SR_HTYPES_NS {
         bool AutoFree(const SR_HTYPES_NS::Function<void(T *ptr)>& freeFun);
         bool AutoFree();
 
-        /// Оставляем методы для совместимости с SafePtr
-        void Replace(const SharedPtr &ptr);
         void Reset();
         SR_NODISCARD SR_FORCE_INLINE bool RecursiveLockIfValid() const noexcept;
         SR_NODISCARD SR_FORCE_INLINE bool TryRecursiveLockIfValid() const noexcept;
@@ -151,33 +190,52 @@ namespace SR_HTYPES_NS {
     private:
         SharedPtrDynamicData* m_data = nullptr;
         T* m_ptr = nullptr;
+        bool m_basicManually = false;
 
     };
 
-    template<class T> SharedPtr<T>::SharedPtr(const T* constPtr)
-        : SharedPtr(constPtr, SharedPtrPolicy::Automatic)
-    { }
+    template<class T> SharedPtr<T>::SharedPtr(const T* constPtr) {
+        T* ptr = const_cast<T*>(constPtr);
+        if (!ptr) {
+            return;
+        }
+
+        if constexpr (IsDerivedFrom<SharedPtr, T>::value) {
+            if ((m_data = ptr->GetPtrData())) {
+                m_data->IncrementStrong();
+                m_ptr = ptr;
+            }
+            else {
+                SRHalt("Class was inherit, but not initialized!");
+            }
+        }
+        else {
+            m_ptr = ptr;
+            m_data = new SharedPtrDynamicData(
+                    1, /// strong
+                    0,  /// weak
+                    true,    /// valid
+                    SharedPtrPolicy::Automatic /// policy
+            );
+        }
+    }
 
     template<class T> SharedPtr<T>::SharedPtr(const T* constPtr, SharedPtrPolicy policy) {
         T* ptr = const_cast<T*>(constPtr);
-        bool needAlloc = true;
+        SRAssert(ptr);
 
         if constexpr (IsDerivedFrom<SharedPtr, T>::value) {
-            if (ptr && (m_data = ptr->GetPtrData())) {
-                m_data->IncrementStrong();
-                needAlloc = false;
-                m_ptr = ptr;
-            }
+            SRAssert2(!ptr->GetPtrData(), "Class was inherit, but already initialized!");
         }
 
-        if (needAlloc && ptr) {
-            m_data = new SharedPtrDynamicData(
-                0,                   /// strong
-                0,                   /// weak
-                (bool)(m_ptr = ptr), /// valid
-                policy               /// policy
-            );
-        }
+        m_basicManually = true;
+        m_ptr = ptr;
+        m_data = new SharedPtrDynamicData(
+            0, /// strong
+            0,  /// weak
+            true,    /// valid
+            policy        /// policy
+        );
     }
 
     template<class T> SharedPtr<T>::SharedPtr(const SharedPtr &ptr) {
@@ -188,10 +246,18 @@ namespace SR_HTYPES_NS {
     }
 
     template<class T> SharedPtr<T>::~SharedPtr() {
+        if (!m_data || m_basicManually) {
+            return;
+        }
+
         Reset();
     }
 
-    template<class T> SharedPtr<T>& SharedPtr<T>::operator=(const SharedPtr<T> &ptr) {
+    template<class T> SharedPtr<T>& SharedPtr<T>::operator=(const SharedPtr<T>& ptr) {
+        if (this == &ptr){
+            return *this;
+        }
+
         Reset();
 
         m_ptr = ptr.m_ptr;
@@ -204,85 +270,67 @@ namespace SR_HTYPES_NS {
         return *this;
     }
 
-    template<class T> SharedPtr<T>& SharedPtr<T>::operator=(T *ptr) {
-        if (m_ptr != ptr) {
+    template<class T> SharedPtr<T>& SharedPtr<T>::operator=(T* ptr) {
+        if (!ptr) {
             Reset();
+            return *this;
+        }
 
-            bool needAlloc = true;
+        if (m_ptr == ptr) {
+            return *this;
+        }
 
-            if constexpr (IsDerivedFrom<SharedPtr, T>::value) {
-                if (ptr && (m_data = ptr->GetPtrData())) {
-                    m_data->IncrementStrong();
-                    needAlloc = false;
-                    m_ptr = ptr;
-                }
-                else if (ptr) {
-                    SR_SAFE_PTR_ASSERT(false, "Class was inherit, but not initialized!");
-                }
+        Reset();
+
+        if constexpr (IsDerivedFrom<SharedPtr, T>::value) {
+            if ((m_data = ptr->GetPtrData())) {
+                m_data->IncrementStrong();
+                m_ptr = ptr;
             }
+            else {
+                SR_SAFE_PTR_ASSERT(false, "Class was inherit, but not initialized!");
+            }
+        }
+        else {
+            m_ptr = ptr;
 
-            if (needAlloc && ptr) {
-                m_data = new SharedPtrDynamicData(
-                    0,    /// strong
+            m_data = new SharedPtrDynamicData(
+                    1,    /// strong
                     0,    /// weak
                     true, /// valid
                     SharedPtrPolicy::Automatic /// policy
-                );
-            }
-        }
-
-        m_ptr = ptr;
-
-        if (m_data) {
-            m_data->valid = bool(m_ptr);
+            );
         }
 
         return *this;
     }
 
     template<typename T> bool SharedPtr<T>::AutoFree(const SR_HTYPES_NS::Function<void(T *ptr)> &freeFun) {
-        SharedPtr<T> ptrCopy = SharedPtr<T>(*this);
-
-        /// чтобы при ручном освобождении не ругаться не не освобожденную память,
-        /// так как в последней копии все равно вызовется деструктор при наследовании, делаем вспомогательную копию.
-        SharedPtr<T> ptrCopy2 = ptrCopy;
-
-        /// после вызова FreeImpl this может потенциально инвалидироваться!
-
-        return ptrCopy.Valid() ? ptrCopy.FreeImpl(freeFun) : false;
+        return Valid() && FreeImpl(freeFun);
     }
 
     template<typename T> bool SharedPtr<T>::AutoFree() {
-        SharedPtr<T> ptrCopy = SharedPtr<T>(*this);
-
-        /// чтобы при ручном освобождении не ругаться не не освобожденную память,
-        /// так как в последней копии все равно вызовется деструктор при наследовании, делаем вспомогательную копию.
-        SharedPtr<T> ptrCopy2 = ptrCopy;
-
-        /// после вызова FreeImpl this может потенциально инвалидироваться!
-
-        return ptrCopy.Valid() ? ptrCopy.FreeImpl([](auto&& pData) { delete pData; }) : false;
+        return Valid() && FreeImpl([](auto&& pData) { delete pData; });
     }
 
-    template<typename T> bool SharedPtr<T>::FreeImpl(const SR_HTYPES_NS::Function<void(T *ptr)> &freeFun) {
-        if (m_data && m_data->valid) {
-            freeFun(m_ptr);
-            m_data->valid = false;
-            m_ptr = nullptr;
-            return true;
-        }
-        else {
+    template<typename T> bool SharedPtr<T>::FreeImpl(const SR_HTYPES_NS::Function<void(T* ptr)> &freeFun) {
+        if (m_data) {
+            const bool valid = m_data->valid;
+            const auto pPtr = m_ptr;
+            SharedPtrDynamicData* pData = m_data;
+
+            pData->valid = false;
+
+            if (valid) {
+                pData->deallocated = true;
+                freeFun(pPtr);
+                return true;
+            }
+
             return false;
         }
-    }
 
-    template<class T> SR_DEPRECATED_EX("Use \"=\"") void SharedPtr<T>::Replace(const SharedPtr &ptr) {
-        if (ptr.m_ptr == m_ptr && ptr.m_data == m_data) {
-            return;
-        }
-
-        SharedPtr copy = *this;
-        *this = ptr;
+        return false;
     }
 
     template<class T> bool SharedPtr<T>::RecursiveLockIfValid() const noexcept {
@@ -306,15 +354,16 @@ namespace SR_HTYPES_NS {
         }
 
         const auto strongCount = pData->strongCount;
-        if (strongCount <= 1) {
+
+        SR_SAFE_PTR_ASSERT(strongCount != 0, "SharedPtr is corrupted!");
+
+        if (strongCount == 1) {
             if (pData->policy == SharedPtrPolicy::Manually) {
                 SR_SAFE_PTR_ASSERT(!pData->valid, "Ptr was not freed!");
-                delete pData;
-                return;
             }
             else if (pData->policy == SharedPtrPolicy::Automatic && pData->valid) {
                 pData->valid = false;
-                SR_SAFE_DELETE_PTR(pPtr);
+                delete pPtr;
             }
 
             if (pData->weakCount == 0) {

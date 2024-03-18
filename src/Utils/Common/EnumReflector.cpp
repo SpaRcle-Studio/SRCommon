@@ -43,6 +43,11 @@ namespace SR_UTILS_NS {
     }
 
     std::optional<SR_UTILS_NS::StringAtom> EnumReflector::ToStringInternal(int64_t value) const {
+        if (!m_data) {
+            std::cerr << "EnumReflector::ToStringInternal() : reflector is empty!\n";
+            return std::optional<SR_UTILS_NS::StringAtom>();
+        }
+
         for (auto&& enumerator : m_data->values) {
             if (enumerator.value == value) {
                 return enumerator.name;
@@ -53,6 +58,11 @@ namespace SR_UTILS_NS {
     }
 
     std::optional<int64_t> EnumReflector::FromStringInternal(const SR_UTILS_NS::StringAtom& name) const {
+        if (!m_data) {
+            std::cerr << "EnumReflector::ToStringInternal() : reflector is empty!\n";
+            return std::optional<int64_t>();
+        }
+
         for (auto&& enumerator : m_data->values) {
             if (enumerator.hashName == name.GetHash()) {
                 return enumerator.value;

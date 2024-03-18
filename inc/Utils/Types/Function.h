@@ -48,7 +48,7 @@ namespace SR_HTYPES_NS {
         { }
 
         Function& operator=(const Function& other) {
-            mInvoker = other.mInvoker->clone();
+            mInvoker = (bool)other.mInvoker.get() ? other.mInvoker->clone() : invoker_t();
             return *this;
         }
 

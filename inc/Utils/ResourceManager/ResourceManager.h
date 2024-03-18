@@ -34,6 +34,7 @@ namespace SR_UTILS_NS {
 
         SR_NODISCARD const Path& GetResourcePath(Hash hashPath) const;
         SR_NODISCARD Hash RegisterResourcePath(const Path& path);
+        SR_NODISCARD bool IsWatchingEnabled() const;
 
         SR_NODISCARD SR_HTYPES_NS::SharedPtr<FileWatcher> StartWatch(const Path& path);
 

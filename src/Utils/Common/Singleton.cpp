@@ -59,4 +59,10 @@ namespace SR_UTILS_NS {
             m_singletons.erase(pIt);
         }
     }
+
+    std::recursive_mutex& SingletonManager::GetCreationMutex(StringAtom name) {
+        std::lock_guard lock(m_mutex);
+        std::recursive_mutex& mutex = m_creationMutexes[name];
+        return mutex;
+    }
 }

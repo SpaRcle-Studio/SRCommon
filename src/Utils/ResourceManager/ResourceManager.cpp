@@ -50,7 +50,7 @@ namespace SR_UTILS_NS {
         SR_SCOPED_LOCK;
         SR_TRACY_ZONE;
 
-        if (m_watchers.empty() || !m_isWatchingEnabled) {
+        if (m_watchers.empty() || !IsWatchingEnabled()) {
             return;
         }
 
@@ -58,6 +58,10 @@ namespace SR_UTILS_NS {
         SRAssert(pWatcher);
 
         m_watchers.erase(m_watchers.begin());
+
+        if (!pWatcher) {
+            return;
+        }
 
         /// Watcher может быть уничтожен в конце этой функции
         /// Так же, учитываем что его состояние может быть изменено сразу после IsActive
@@ -581,5 +585,13 @@ namespace SR_UTILS_NS {
         SR_WARN("ResourceManager::EnableStackTraceProfiling() : profiling was enabled! ONLY FOR DEV!");
 
         m_usePointStackTraceProfiling = true;
+    }
+
+    bool ResourceManager::IsWatchingEnabled() const {
+        if (!SR_UTILS_NS::Features::Instance().Enabled("FileWatching", true)) {
+            return false;
+        }
+
+        return m_isWatchingEnabled;
     }
 }

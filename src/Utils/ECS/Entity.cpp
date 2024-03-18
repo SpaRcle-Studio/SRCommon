@@ -101,6 +101,7 @@ namespace SR_UTILS_NS {
 
     Entity::~Entity() {
         EntityManager::Instance().Unregister(m_entityId);
+        m_entityMessages.ClearContainer();
     }
 
     void Entity::SetEntityPath(const EntityPath &path) {

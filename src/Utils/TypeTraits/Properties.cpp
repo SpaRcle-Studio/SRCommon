@@ -10,7 +10,7 @@ namespace SR_UTILS_NS {
     }
 
     PropertyContainer::~PropertyContainer() {
-        ClearContainer();
+        SRAssert2(m_properties.empty(), "PropertyContainer::~PropertyContainer() : properties are not empty!");
     }
 
     PropertyContainer& PropertyContainer::AddContainer(const char* name) {
@@ -29,14 +29,22 @@ namespace SR_UTILS_NS {
         return *pProperty;
     }
 
-    void PropertyContainer::ClearContainer() {
+    void PropertyContainer::ClearContainer() { /// NOLINT
+        SR_TRACY_ZONE;
+
         for (auto&& pProperty : m_properties) {
+            if (auto&& pContainer = dynamic_cast<PropertyContainer*>(pProperty)) {
+                pContainer->ClearContainer();
+            }
             delete pProperty;
         }
+
         m_properties.clear();
     }
 
     void PropertyContainer::SaveProperty(MarshalRef marshal) const noexcept {
+        SR_TRACY_ZONE;
+
         if (auto&& pBlock = AllocatePropertyBlock()) {
             SR_HTYPES_NS::Marshal propertiesMarshal;
             uint16_t count = 0;
@@ -85,6 +93,8 @@ namespace SR_UTILS_NS {
     }
 
     void PropertyContainer::LoadProperty(MarshalRef marshal) noexcept {
+        SR_TRACY_ZONE;
+
         if (auto&& pBlock = LoadPropertyBase(marshal)) {
             auto&& count = pBlock->Read<uint16_t>();
 

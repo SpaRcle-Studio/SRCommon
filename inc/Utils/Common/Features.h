@@ -44,6 +44,7 @@ namespace SR_UTILS_NS {
         bool Register(const std::string& group, const std::string& name, bool value);
 
     private:
+        bool m_isInitialized = false;
         std::unordered_map<std::string, FeatureGroup> m_features;
         Path m_path;
 

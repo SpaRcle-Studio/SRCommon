@@ -67,9 +67,13 @@ namespace SR_UTILS_NS {
         else {
             while (!m_children.empty()) {
                 auto&& pChild = *m_children.begin();
-                pChild.AutoFree([](auto&& pData) {
-                    pData->Destroy();
-                });
+                if (pChild) {
+                    pChild->Destroy();
+                }
+                else {
+                    SRHalt("GameObject::Destroy() : child is nullptr!");
+                    m_children.erase(m_children.begin());
+                }
             }
 
             DestroyComponents();
@@ -78,13 +82,9 @@ namespace SR_UTILS_NS {
     }
 
     void GameObject::DestroyImpl() {
-        GameObject::Ptr copy = GetThis().DynamicCast<GameObject>();
-
         /// это должно быть единственное место,
         /// где мы уничтожаем объект
-        copy.AutoFree([](GameObject* pGameObject) {
-            delete pGameObject;
-        });
+        AutoFree();
     }
 
     bool GameObject::AddChild(const GameObject::Ptr& child) {
