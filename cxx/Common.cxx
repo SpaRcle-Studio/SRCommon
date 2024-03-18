@@ -12,3 +12,4 @@
 #include "../../Utils/src/Utils/Common/Hashes.cpp"
 #include "../../Utils/src/Utils/Common/HashManager.cpp"
 #include "../../Utils/src/Utils/Common/Vertices.cpp"
+#include "../../Utils/src/Utils/Common/CmdOptions.cpp"

@@ -220,6 +220,7 @@ namespace SR_MATH_NS {
 
     typedef Vector2<Unit> FVector2;
     typedef Vector2<Unit> FPoint;
+    typedef Vector2<uint16_t> USVector2;
     typedef Vector2<int32_t> IVector2;
     typedef Vector2<int32_t> IPoint;
     typedef Vector2<uint32_t> UVector2;

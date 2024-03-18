@@ -5,6 +5,10 @@
 #ifndef GAMEENGINE_MACROS_H
 #define GAMEENGINE_MACROS_H
 
+#ifdef _WINDOWS_
+    #error "Windows.h was included before macros.h"
+#endif
+
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 
@@ -173,6 +177,7 @@
 #ifdef WIN32
     #define SR_WIN32_BOOL true
     #define SR_WIN32
+    #define WIN32_WINNT 0x0A00
     #define WIN32_LEAN_AND_MEAN /// Исключите редко используемые компоненты из заголовков Windows
     #define GLFW_EXPOSE_NATIVE_WIN32
     #define VK_USE_PLATFORM_WIN32_KHR
