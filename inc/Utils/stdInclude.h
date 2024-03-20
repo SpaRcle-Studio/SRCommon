@@ -59,6 +59,7 @@
 #include <iomanip>
 #include <concepts>
 #include <condition_variable>
+#include <numeric>
 
 #ifdef SR_SUPPORT_PARALLEL
     #include <omp.h>
