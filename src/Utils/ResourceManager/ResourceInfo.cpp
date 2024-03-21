@@ -21,23 +21,7 @@ namespace SR_UTILS_NS {
         }
 
         for (auto&& pResource : pIt->second) {
-            const bool skip = pResource->Execute([pResource](){
-                if (!pResource->IsDestroyed()) {
-                    return false;
-                }
-
-                if (pResource->IsAllowedToRevive()) {
-                    if (SR_UTILS_NS::Debug::Instance().GetLevel() >= SR_UTILS_NS::Debug::Level::Medium) {
-                        SR_LOG("ResourceType::Find() : revive resource \"" + pResource->GetResourceId().ToStringRef() + "\"");
-                    }
-                    pResource->ReviveResource();
-                    return false;
-                }
-
-                return true;
-            });
-
-            if (skip) {
+            if (!SR_UTILS_NS::ResourceManager::Instance().ReviveResource(pResource)) {
                 continue;
             }
 

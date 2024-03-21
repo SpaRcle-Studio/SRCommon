@@ -46,7 +46,8 @@ namespace SR_UTILS_NS {
         SR_NODISCARD GameObject::Ptr Copy(const ScenePtr& scene) const;
 
         SR_NODISCARD ScenePtr GetScene() const override { return m_scene; }
-        SR_NODISCARD StringAtom GetLayer() const noexcept { return m_layer; }
+        SR_NODISCARD StringAtom GetLayer() const noexcept { return m_cachedLayer; }
+        SR_NODISCARD StringAtom GetLocalLayer() const noexcept { return m_layer; }
         SR_NODISCARD Prefab* GetPrefab() const noexcept { return m_prefab.first; }
         SR_NODISCARD bool IsPrefab() const noexcept { return m_prefab.first; }
         SR_NODISCARD bool IsPrefabOwner() const noexcept { return m_prefab.second; }
@@ -119,6 +120,7 @@ namespace SR_UTILS_NS {
 
     private:
         void OnAttached();
+        void OnParentLayerChanged();
 
         bool UpdateEntityPath();
 
@@ -128,6 +130,8 @@ namespace SR_UTILS_NS {
         bool m_isDestroyed = false;
 
         StringAtom m_layer;
+        StringAtom m_cachedLayer;
+
         StringAtom m_tag;
 
         uint64_t m_hashName = 0;

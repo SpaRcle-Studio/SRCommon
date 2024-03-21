@@ -16,6 +16,7 @@ namespace SR_UTILS_NS {
     IResource::~IResource() {
         SRAssert2(GetCountUses() == 0, "Resource has uses!");
         SRAssert2(m_watchers.empty(), "Watchers has not stopped!");
+        SRAssert2(m_deleteVerifyFlag, "DeleteResource() was not called!");
     }
 
     bool IResource::Reload() {
@@ -62,6 +63,7 @@ namespace SR_UTILS_NS {
 
     void IResource::DeleteResource() {
         StopWatch();
+        m_deleteVerifyFlag = true;
         delete this;
     }
 
@@ -128,7 +130,7 @@ namespace SR_UTILS_NS {
                 }
                 else {
                     /// так и не зарегистрировали ресурс
-                    delete this;
+                    DeleteResource();
                     result = RemoveUPResult::Delete;
                     return;
                 }

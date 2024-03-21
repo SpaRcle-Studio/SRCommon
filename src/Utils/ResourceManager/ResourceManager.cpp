@@ -120,14 +120,23 @@ namespace SR_UTILS_NS {
         m_watchers.clear();
     }
 
-    bool ResourceManager::Destroy(IResource *resource) {
+    bool ResourceManager::Destroy(IResource* pResource) {
+        SR_TRACY_ZONE;
+
         if (Debug::Instance().GetLevel() >= Debug::Level::High) {
-            SR_LOG("ResourceManager::Destroy() : destroying \"" + std::string(resource->GetResourceName()) + "\"");
+            SR_LOG("ResourceManager::Destroy() : destroying \"" + std::string(pResource->GetResourceName()) + "\"");
         }
 
         SR_SCOPED_LOCK;
 
-        m_destroyed.emplace_back(resource);
+        for (auto&& pDestroyedResource : m_destroyed) {
+            if (pResource == pDestroyedResource) {
+                SRHalt("ResourceManager::Destroy() : resource is already destroyed!");
+                return false;
+            }
+        }
+
+        m_destroyed.emplace_back(pResource);
 
         return true;
     }
@@ -148,7 +157,9 @@ namespace SR_UTILS_NS {
         return true;
     }
 
-    void ResourceManager::Remove(IResource *pResource) {
+    void ResourceManager::Remove(IResource* pResource) {
+        SR_TRACY_ZONE;
+
         if (pResource->IsRegistered()) {
             auto&& pGroupIt = m_resources.find(pResource->GetResourceHashName());
             auto&& [name, resourcesGroup] = *pGroupIt;
@@ -593,5 +604,35 @@ namespace SR_UTILS_NS {
         }
 
         return m_isWatchingEnabled;
+    }
+
+    bool ResourceManager::ReviveResource(IResource* pResource) {
+        SR_LOCK_GUARD;
+
+        return pResource->Execute([pResource, this](){
+            if (!pResource->IsDestroyed()) {
+                return true;
+            }
+
+            if (pResource->IsAllowedToRevive()) {
+                auto&& pIt = std::find(m_destroyed.begin(), m_destroyed.end(), pResource);
+                if (pIt == m_destroyed.end()) {
+                    SRHalt("ResourceManager::ReviveResource() : resource not found!");
+                    return false;
+                }
+
+                m_destroyed.erase(pIt);
+
+                if (SR_UTILS_NS::Debug::Instance().GetLevel() >= SR_UTILS_NS::Debug::Level::Medium) {
+                    SR_LOG("ResourceManager::ReviveResource() : revive resource \"" + pResource->GetResourceId().ToStringRef() + "\"");
+                }
+
+                pResource->ReviveResource();
+
+                return true;
+            }
+
+            return false;
+        });
     }
 }

@@ -65,10 +65,12 @@ namespace SR_UTILS_NS {
         }
 
         /** \warning Call only from IResource parents \brief Register resource in resource manager */
-        void RegisterResource(IResource *resource);
+        void RegisterResource(IResource* pResource);
 
         /** \warning Call only from IResource parents \brief Register resource to destroy in resource manager */
-        bool Destroy(IResource *resource);
+        bool Destroy(IResource* pResource);
+
+        bool ReviveResource(IResource* pResource);
 
     public:
         bool Init(const SR_UTILS_NS::Path& resourcesFolder);

@@ -149,6 +149,9 @@ namespace SR_UTILS_NS {
         std::atomic<bool> m_isDestroyed = false;
         std::atomic<bool> m_isRegistered = false;
 
+        /// выставляем при удалении, защита от удаления не через DeleteResource()
+        bool m_deleteVerifyFlag = false;
+
     };
 }
 

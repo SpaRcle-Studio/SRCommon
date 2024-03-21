@@ -6,8 +6,6 @@
 
 namespace SR_UTILS_NS {
     bool Settings::Load() {
-        bool hasErrors = false;
-
         Path path = GetResourcePath();
         if (!path.IsAbs()) {
             path = GetAssociatedPath().Concat(path);

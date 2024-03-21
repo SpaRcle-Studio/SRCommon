@@ -5,6 +5,8 @@
 #include <Utils/ECS/LayerManager.h>
 
 namespace SR_UTILS_NS {
+    std::atomic<StringAtom> LayerManager::m_defaultLayer = StringAtom();
+
     SR_UTILS_NS::Path LayerManager::InitializeResourcePath() const {
         return "Engine/Configs/Layers.xml";
     }

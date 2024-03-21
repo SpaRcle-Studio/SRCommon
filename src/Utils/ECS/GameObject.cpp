@@ -18,7 +18,7 @@
 
 namespace SR_UTILS_NS {
     GameObject::GameObject(std::string name, Transform* pTransform) {
-        m_layer = SR_UTILS_NS::LayerManager::Instance().GetDefaultLayer();
+        SetLayer(SR_UTILS_NS::LayerManager::GetDefaultLayer());
         SetName(std::move(name));
         SetTransform(pTransform);
         UpdateEntityPath();
@@ -108,7 +108,9 @@ namespace SR_UTILS_NS {
             return false;
         }
 
-        m_children.push_back(child);
+        m_children.emplace_back(child);
+
+        child->OnParentLayerChanged();
 
         child->OnAttached();
 
@@ -338,8 +340,8 @@ namespace SR_UTILS_NS {
             data.pMarshal->Write<bool>(true);
             data.pMarshal->Write<std::string>(pPrefab->GetResourcePath().ToStringRef());
             data.pMarshal->Write<std::string>(GetName());
-            //data.pMarshal->Write<uint64_t>(GetTag().GetHash());
-            //data.pMarshal->Write<uint64_t>(GetLayer().GetHash());
+            //data.pMarshal->Write<uint64_t>(m_tag.GetHash());
+            //data.pMarshal->Write<uint64_t>(m_layer.GetHash());
             data.pMarshal->Write<bool>(IsEnabled());
 
             auto&& pTransformMarshal = GetTransform()->Save(transformSaveData);
@@ -601,8 +603,8 @@ namespace SR_UTILS_NS {
                     gameObject.Get()
             ));
 
-            gameObject->m_tag = tag;
-            gameObject->m_layer = layer;
+            gameObject->SetTag(tag);
+            gameObject->SetLayer(layer);
 
             /// ----------------------
 
@@ -631,8 +633,8 @@ namespace SR_UTILS_NS {
 
         gameObject->SetEnabled(IsEnabled());
 
-        gameObject->m_tag = m_tag;
-        gameObject->m_layer = m_layer;
+        gameObject->SetTag(m_tag);
+        gameObject->SetLayer(m_layer);
 
         if (scene) {
             scene->RegisterGameObject(gameObject);
@@ -743,12 +745,16 @@ namespace SR_UTILS_NS {
             return true;
         });
 
-        m_layer = layer;
+        m_cachedLayer = m_layer = layer;
 
         ForEachComponent([](Component* pComponent) -> bool {
             pComponent->OnLayerChanged();
             return true;
         });
+
+        for (auto&& pChild : m_children) {
+            pChild->OnParentLayerChanged();
+        }
     }
 
     GameObject::Ptr GameObject::Find(StringAtom name) const noexcept {
@@ -774,5 +780,34 @@ namespace SR_UTILS_NS {
             SRHalt("Something went wrong!");
         }
         return pGameObject;
+    }
+
+    void GameObject::OnParentLayerChanged() { /// NOLINT (recursion)
+        if (m_layer != LayerManager::GetDefaultLayer()) {
+            return;
+        }
+
+        SRAssert(m_parent);
+        SRAssert(!m_layer.Empty());
+
+        if (m_cachedLayer == m_parent->m_cachedLayer) {
+            return;
+        }
+
+        ForEachComponent([](Component* pComponent) -> bool {
+            pComponent->OnBeforeLayerChanged();
+            return true;
+        });
+
+        m_cachedLayer = m_parent->m_cachedLayer;
+
+        ForEachComponent([](Component* pComponent) -> bool {
+            pComponent->OnLayerChanged();
+            return true;
+        });
+
+        for (auto&& pChild : m_children) {
+            pChild->OnParentLayerChanged();
+        }
     }
 }

@@ -17,7 +17,8 @@ namespace SR_UTILS_NS {
         SR_NODISCARD bool HasLayer(StringAtom layer) const;
         SR_NODISCARD uint16_t GetLayerIndex(StringAtom layer) const;
         SR_NODISCARD std::vector<StringAtom> GetLayers() const { return m_layers; }
-        SR_NODISCARD StringAtom GetDefaultLayer() const noexcept { return m_defaultLayer; }
+
+        SR_NODISCARD static StringAtom GetDefaultLayer() { return m_defaultLayer; }
 
     protected:
         SR_NODISCARD SR_UTILS_NS::Path InitializeResourcePath() const override;
@@ -27,7 +28,7 @@ namespace SR_UTILS_NS {
 
     private:
         std::vector<StringAtom> m_layers;
-        StringAtom m_defaultLayer;
+        static std::atomic<StringAtom> m_defaultLayer;
 
     };
 }
