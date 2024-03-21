@@ -7,18 +7,7 @@
 #ifndef SR_UTILS_TYPES_MERKLE_TREE_H
 #define SR_UTILS_TYPES_MERKLE_TREE_H
 
-#include <array>
-#include <cassert>
-#include <cmath>
-#include <cstddef>
-#include <cstdint>
-#include <cstring>
-#include <functional>
-#include <list>
-#include <memory>
-#include <sstream>
-#include <stack>
-#include <vector>
+#include <Utils/stdInclude.h>
 
 //#include "UintWide_t.h"
 
@@ -122,21 +111,21 @@ namespace SR_TYPES_NS {
         uint8_t bytes[SIZE];
 
         /// @brief Constructs a Hash with all bytes set to zero
-        HashT<SIZE>()
+        HashT()
         {
             std::fill(bytes, bytes + SIZE, 0);
         }
 
         /// @brief Constructs a Hash from a byte buffer
         /// @param bytes Buffer with hash value
-        HashT<SIZE>(const uint8_t* bytes)
+        HashT(const uint8_t* bytes)
         {
             std::copy(bytes, bytes + SIZE, this->bytes);
         }
 
         /// @brief Constructs a Hash from a string
         /// @param s String to read the hash value from
-        HashT<SIZE>(const std::string& s)
+        HashT(const std::string& s)
         {
             if (s.length() != 2 * SIZE)
                 throw std::runtime_error("invalid hash string");
@@ -150,7 +139,7 @@ namespace SR_TYPES_NS {
 
         /// @brief Deserialises a Hash from a vector of bytes
         /// @param bytes Vector to read the hash value from
-        HashT<SIZE>(const std::vector<uint8_t>& bytes)
+        HashT(const std::vector<uint8_t>& bytes)
         {
             if (bytes.size() < SIZE)
                 throw std::runtime_error("not enough bytes");
@@ -160,7 +149,7 @@ namespace SR_TYPES_NS {
         /// @brief Deserialises a Hash from a vector of bytes
         /// @param bytes Vector to read the hash value from
         /// @param position Position of the first byte in @p bytes
-        HashT<SIZE>(const std::vector<uint8_t>& bytes, size_t& position)
+        HashT(const std::vector<uint8_t>& bytes, size_t& position)
         {
             if (bytes.size() - position < SIZE)
                 throw std::runtime_error("not enough bytes");
@@ -169,7 +158,7 @@ namespace SR_TYPES_NS {
 
         /// @brief Deserialises a Hash from an array of bytes
         /// @param bytes Array to read the hash value from
-        HashT<SIZE>(const std::array<uint8_t, SIZE>& bytes)
+        HashT(const std::array<uint8_t, SIZE>& bytes)
         {
             std::copy(bytes.data(), bytes.data() + SIZE, this->bytes);
         }

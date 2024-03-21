@@ -18,7 +18,7 @@ namespace SR_UTILS_NS {
         ChangeAspect,
         WidthControlsHeight,
         HeightControlsWidth,
-        SavePosition
+        SavePosition /// TODO: remove.
     );
 
     SR_ENUM_NS_CLASS_T(PositionMode, uint8_t,
