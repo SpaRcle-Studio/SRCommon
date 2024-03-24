@@ -5,14 +5,14 @@
 #include <Utils/ECS/LayerManager.h>
 
 namespace SR_UTILS_NS {
-    std::atomic<StringAtom> LayerManager::m_defaultLayer = StringAtom();
-
     SR_UTILS_NS::Path LayerManager::InitializeResourcePath() const {
         return "Engine/Configs/Layers.xml";
     }
 
     void LayerManager::ClearSettings() {
         SR_LOCK_GUARD;
+
+        SR_LOG("LayerManager::ClearSettings() : clearing settings...");
 
         m_defaultLayer = StringAtom();
         m_layers.clear();
@@ -23,9 +23,13 @@ namespace SR_UTILS_NS {
     bool LayerManager::LoadSettings(const SR_XML_NS::Node& node) {
         SR_LOCK_GUARD;
 
+        SR_LOG("LayerManager::LoadSettings() : loading settings...");
+
         m_layers.clear();
 
         m_defaultLayer = node.TryGetNode("Default").TryGetAttribute("Name").ToString("Default");
+
+        SRAssert2(!m_defaultLayer.load().Empty(), "Default layer is not set");
 
         if (auto&& layersNode = node.GetNode("Layers")) {
             for (auto&& layerNode : layersNode.GetNodes()) {
@@ -54,5 +58,9 @@ namespace SR_UTILS_NS {
         }
 
         return false;
+    }
+
+    StringAtom LayerManager::GetDefaultLayer() {
+        return LayerManager::Instance().m_defaultLayer;
     }
 }

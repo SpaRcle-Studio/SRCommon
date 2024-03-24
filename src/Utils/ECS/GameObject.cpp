@@ -535,8 +535,6 @@ namespace SR_UTILS_NS {
             if (marshal.Read<bool>()) { /// is prefab
                 auto&& prefabPath = marshal.Read<std::string>();
                 auto&& objectName = marshal.Read<std::string>();
-                //auto&& tag = marshal.Read<uint64_t>();
-                //auto&& layer = SR_HASH_TO_STR_ATOM(marshal.Read<uint64_t>());
                 auto&& isEnabled = marshal.Read<bool>();
 
                 SR_MAYBE_UNUSED auto&& transformBlockSize = marshal.Read<uint64_t>();
@@ -548,6 +546,7 @@ namespace SR_UTILS_NS {
                 }
 
                 if (auto&& pPrefab = Prefab::Load(prefabPath)) {
+                    /// Здесь загружается тег, и слой
                     gameObject = pPrefab->Instance(scene);
                     pPrefab->CheckResourceUsage();
                 }
@@ -560,8 +559,6 @@ namespace SR_UTILS_NS {
 
                 gameObject->SetName(objectName);
                 gameObject->SetEnabled(isEnabled);
-                //gameObject->m_tag = tag;
-                //gameObject->m_layer = layer;
                 gameObject->SetTransform(pTransform);
 
                 return gameObject;
@@ -572,6 +569,9 @@ namespace SR_UTILS_NS {
 
             auto&& tag = SR_HASH_TO_STR_ATOM(marshal.Read<uint64_t>());
             auto&& layer = SR_HASH_TO_STR_ATOM(marshal.Read<uint64_t>());
+            if (layer.Empty()) {
+                layer = LayerManager::GetDefaultLayer();
+            }
 
             if (entityId == UINT64_MAX) {
                 gameObject = new GameObject(name);
@@ -740,6 +740,8 @@ namespace SR_UTILS_NS {
     }
 
     void GameObject::SetLayer(StringAtom layer) {
+        SRAssert(!layer.Empty());
+
         ForEachComponent([](Component* pComponent) -> bool {
             pComponent->OnBeforeLayerChanged();
             return true;
