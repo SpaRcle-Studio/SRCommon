@@ -42,7 +42,7 @@
 #define MERKLECPP_VERSION_PATCH 0
 
 
-namespace SR_TYPES_NS {
+namespace SR_HTYPES_NS {
     namespace SHA256::Details {
         static constexpr std::array<uint32_t, 64> sha256_constants = {
             0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
@@ -110,20 +110,20 @@ namespace SR_TYPES_NS {
         /// Holds the hash bytes
         uint8_t bytes[SIZE];
 
-        /// @brief Constructs a Hash with all bytes set to zero
+        /// @brief Constructs a MerkleHash with all bytes set to zero
         HashT()
         {
             std::fill(bytes, bytes + SIZE, 0);
         }
 
-        /// @brief Constructs a Hash from a byte buffer
+        /// @brief Constructs a MerkleHash from a byte buffer
         /// @param bytes Buffer with hash value
         HashT(const uint8_t* bytes)
         {
             std::copy(bytes, bytes + SIZE, this->bytes);
         }
 
-        /// @brief Constructs a Hash from a string
+        /// @brief Constructs a MerkleHash from a string
         /// @param s String to read the hash value from
         HashT(const std::string& s)
         {
@@ -137,7 +137,7 @@ namespace SR_TYPES_NS {
             }
         }
 
-        /// @brief Deserialises a Hash from a vector of bytes
+        /// @brief Deserialises a MerkleHash from a vector of bytes
         /// @param bytes Vector to read the hash value from
         HashT(const std::vector<uint8_t>& bytes)
         {
@@ -146,7 +146,7 @@ namespace SR_TYPES_NS {
             deserialise(bytes);
         }
 
-        /// @brief Deserialises a Hash from a vector of bytes
+        /// @brief Deserialises a MerkleHash from a vector of bytes
         /// @param bytes Vector to read the hash value from
         /// @param position Position of the first byte in @p bytes
         HashT(const std::vector<uint8_t>& bytes, size_t& position)
@@ -156,7 +156,7 @@ namespace SR_TYPES_NS {
             deserialise(bytes, position);
         }
 
-        /// @brief Deserialises a Hash from an array of bytes
+        /// @brief Deserialises a MerkleHash from an array of bytes
         /// @param bytes Array to read the hash value from
         HashT(const std::array<uint8_t, SIZE>& bytes)
         {
@@ -197,14 +197,14 @@ namespace SR_TYPES_NS {
             return r;
         }
 
-        /// @brief Hash assignment operator
+        /// @brief MerkleHash assignment operator
         HashT<SIZE> operator=(const HashT<SIZE>& other)
         {
             std::copy(other.bytes, other.bytes + SIZE, bytes);
             return *this;
         }
 
-        /// @brief Hash equality operator
+        /// @brief MerkleHash equality operator
         bool operator==(const HashT<SIZE>& other) const
         {
             return memcmp(bytes, other.bytes, SIZE) == 0;
@@ -215,7 +215,7 @@ namespace SR_TYPES_NS {
             return *this == HashT<SIZE>(rawHash);
         }
 
-        /// @brief Hash inequality operator
+        /// @brief MerkleHash inequality operator
         bool operator!=(const HashT<SIZE>& other) const
         {
             return memcmp(bytes, other.bytes, SIZE) != 0;
@@ -272,14 +272,14 @@ namespace SR_TYPES_NS {
     class PathT
     {
     public:
-        /// @brief Path direction
+        /// @brief MerklePath direction
         typedef enum
         {
             PATH_LEFT,
             PATH_RIGHT
         } Direction;
 
-        /// @brief Path element
+        /// @brief MerklePath element
         typedef struct
         {
             /// @brief The hash of the path element
@@ -287,11 +287,11 @@ namespace SR_TYPES_NS {
 
             /// @brief The direction at which @p hash joins at this path element
             /// @note If @p direction == PATH_LEFT, @p hash joins at the left, i.e.
-            /// if t is the current hash, e.g. a leaf, then t' = Hash( @p hash, t );
+            /// if t is the current hash, e.g. a leaf, then t' = MerkleHash( @p hash, t );
             Direction direction;
         } Element;
 
-        /// @brief Path constructor
+        /// @brief MerklePath constructor
         /// @param leaf
         /// @param leaf_index
         /// @param elements
@@ -307,16 +307,16 @@ namespace SR_TYPES_NS {
             elements(elements)
         {}
 
-        /// @brief Path copy constructor
-        /// @param other Path to copy
+        /// @brief MerklePath copy constructor
+        /// @param other MerklePath to copy
         PathT(const PathT& other)
         {
             _leaf = other._leaf;
             elements = other.elements;
         }
 
-        /// @brief Path move constructor
-        /// @param other Path to move
+        /// @brief MerklePath move constructor
+        /// @param other MerklePath to move
         PathT(PathT&& other)
         {
             _leaf = std::move(other._leaf);
@@ -680,7 +680,7 @@ namespace SR_TYPES_NS {
                     size = height = 1;
             }
 
-            /// @brief The Hash of the node
+            /// @brief The MerkleHash of the node
             HashT<HASH_SIZE> hash;
 
             /// @brief The left child of the node
@@ -703,13 +703,13 @@ namespace SR_TYPES_NS {
 
     public:
         /// @brief The type of hashes in the tree
-        typedef HashT<HASH_SIZE> Hash;
+        typedef HashT<HASH_SIZE> MerkleHash;
 
         /// @brief The type of paths in the tree
-        typedef PathT<HASH_SIZE, HASH_FUNCTION> Path;
+        typedef PathT<HASH_SIZE, HASH_FUNCTION> MerklePath;
 
         /// @brief The type of the tree
-        typedef TreeT<HASH_SIZE, HASH_FUNCTION> Tree;
+        typedef TreeT<HASH_SIZE, HASH_FUNCTION> MerkleTree;
 
         /// @brief Constructs an empty tree
         TreeT() {}
@@ -721,7 +721,7 @@ namespace SR_TYPES_NS {
         }
 
         /// @brief Moves a tree
-        /// @param other Tree to move
+        /// @param other MerkleTree to move
         TreeT(TreeT&& other) :
             leaf_nodes(std::move(other.leaf_nodes)),
             uninserted_leaf_nodes(std::move(other.uninserted_leaf_nodes)),
@@ -749,7 +749,7 @@ namespace SR_TYPES_NS {
 
         /// @brief Constructs a tree containing one root hash
         /// @param root Root hash of the tree
-        TreeT(const Hash& root)
+        TreeT(const MerkleHash& root)
         {
             insert(root);
         }
@@ -769,15 +769,15 @@ namespace SR_TYPES_NS {
         }
 
         /// @brief Inserts a hash into the tree
-        /// @param hash Hash to insert
+        /// @param hash MerkleHash to insert
         void insert(const uint8_t* hash)
         {
-            insert(Hash(hash));
+            insert(MerkleHash(hash));
         }
 
         /// @brief Inserts a hash into the tree
-        /// @param hash Hash to insert
-        void insert(const Hash& hash)
+        /// @param hash MerkleHash to insert
+        void insert(const MerkleHash& hash)
         {
             MERKLECPP_TRACE(MERKLECPP_TOUT << "> insert "
                 << hash.to_string(TRACE_HASH_SIZE)
@@ -788,7 +788,7 @@ namespace SR_TYPES_NS {
 
         /// @brief Inserts multiple hashes into the tree
         /// @param hashes Vector of hashes to insert
-        void insert(const std::vector<Hash>& hashes)
+        void insert(const std::vector<MerkleHash>& hashes)
         {
             for (auto hash : hashes)
                 insert(hash);
@@ -796,7 +796,7 @@ namespace SR_TYPES_NS {
 
         /// @brief Inserts multiple hashes into the tree
         /// @param hashes List of hashes to insert
-        void insert(const std::list<Hash>& hashes)
+        void insert(const std::list<MerkleHash>& hashes)
         {
             for (auto hash : hashes)
                 insert(hash);
@@ -923,7 +923,7 @@ namespace SR_TYPES_NS {
         /// @brief Assigns a tree
         /// @param other The tree to assign
         /// @return The tree
-        Tree& operator=(const Tree& other)
+        MerkleTree& operator=(const MerkleTree& other)
         {
             leaf_nodes.clear();
             for (auto n : uninserted_leaf_nodes)
@@ -950,7 +950,7 @@ namespace SR_TYPES_NS {
 
         /// @brief Extracts the root hash of the tree
         /// @return The root hash
-        const Hash& root()
+        const MerkleHash& root()
         {
             MERKLECPP_TRACE(MERKLECPP_TOUT << "> root" << std::endl;);
             statistics.num_root++;
@@ -969,13 +969,13 @@ namespace SR_TYPES_NS {
         /// @p index was the last, right-most leaf index in the tree. It is
         /// equivalent to retracting the tree to @p index and then extracting the
         /// root.
-        std::shared_ptr<Hash> past_root(size_t index)
+        std::shared_ptr<MerkleHash> past_root(size_t index)
         {
             MERKLECPP_TRACE(MERKLECPP_TOUT << "> past_root " << index << std::endl;);
             statistics.num_past_root++;
 
             auto p = path(index);
-            auto result = std::make_shared<Hash>(p->leaf());
+            auto result = std::make_shared<MerkleHash>(p->leaf());
 
             MERKLECPP_TRACE(
                 MERKLECPP_TOUT << " - " << p->to_string(TRACE_HASH_SIZE) << std::endl;
@@ -983,7 +983,7 @@ namespace SR_TYPES_NS {
                 << std::endl;);
 
             for (auto e : *p)
-                if (e.direction == Path::Direction::PATH_LEFT)
+                if (e.direction == MerklePath::Direction::PATH_LEFT)
                     HASH_FUNCTION(e.hash, *result, *result);
 
             return result;
@@ -1047,21 +1047,21 @@ namespace SR_TYPES_NS {
         /// @brief Extracts the path from a leaf index to the root of the tree
         /// @param index The leaf index of the path to extract
         /// @return The path
-        std::shared_ptr<Path> path(size_t index)
+        std::shared_ptr<MerklePath> path(size_t index)
         {
             MERKLECPP_TRACE(MERKLECPP_TOUT << "> path from " << index << std::endl;);
             statistics.num_paths++;
-            std::list<typename Path::Element> elements;
+            std::list<typename MerklePath::Element> elements;
 
             walk_to(index, false, [&elements](Node* n, bool go_right) {
-                typename Path::Element e;
+                typename MerklePath::Element e;
                 e.hash = go_right ? n->left->hash : n->right->hash;
-                e.direction = go_right ? Path::PATH_LEFT : Path::PATH_RIGHT;
+                e.direction = go_right ? MerklePath::PATH_LEFT : MerklePath::PATH_RIGHT;
                 elements.push_front(std::move(e));
                 return true;
                 });
 
-            return std::make_shared<Path>(
+            return std::make_shared<MerklePath>(
                 leaf_node(index)->hash, index, std::move(elements), max_index());
         }
 
@@ -1072,7 +1072,7 @@ namespace SR_TYPES_NS {
         /// @note This extracts a path at a past state, when @p as_of was the last,
         /// right-most leaf index in the tree. It is equivalent to retracting the
         /// tree to @p as_of and then extracting the path of @p index.
-        std::shared_ptr<Path> past_path(size_t index, size_t as_of)
+        std::shared_ptr<MerklePath> past_path(size_t index, size_t as_of)
         {
             MERKLECPP_TRACE(MERKLECPP_TOUT << "> past_path from " << index
                 << " as of " << as_of << std::endl;);
@@ -1091,7 +1091,7 @@ namespace SR_TYPES_NS {
             // the node at which they fork (recorded in `root_to_fork`), then
             // separately to `index` and `as_of`, recording their paths
             // in `fork_to_index` and `fork_to_as_of`.
-            std::list<typename Path::Element> root_to_fork, fork_to_index,
+            std::list<typename MerklePath::Element> root_to_fork, fork_to_index,
                 fork_to_as_of;
             Node* fork_node = nullptr;
 
@@ -1138,9 +1138,9 @@ namespace SR_TYPES_NS {
                     {
                         if (go_right_i)
                         {
-                            typename Path::Element e;
+                            typename MerklePath::Element e;
                             e.hash = go_right_i ? cur_i->left->hash : cur_i->right->hash;
-                            e.direction = go_right_i ? Path::PATH_LEFT : Path::PATH_RIGHT;
+                            e.direction = go_right_i ? MerklePath::PATH_LEFT : MerklePath::PATH_RIGHT;
                             root_to_fork.push_back(std::move(e));
                         }
                         cur_i = cur_a = (go_right_i ? cur_i->right : cur_i->left);
@@ -1151,9 +1151,9 @@ namespace SR_TYPES_NS {
                     // After the fork, record paths to `index` and `as_of`.
                     if (cur_i->height == height)
                     {
-                        typename Path::Element e;
+                        typename MerklePath::Element e;
                         e.hash = go_right_i ? cur_i->left->hash : cur_i->right->hash;
-                        e.direction = go_right_i ? Path::PATH_LEFT : Path::PATH_RIGHT;
+                        e.direction = go_right_i ? MerklePath::PATH_LEFT : MerklePath::PATH_RIGHT;
                         fork_to_index.push_back(std::move(e));
                         cur_i = (go_right_i ? cur_i->right : cur_i->left);
                     }
@@ -1164,9 +1164,9 @@ namespace SR_TYPES_NS {
                         // `as_of`.
                         if (go_right_a)
                         {
-                            typename Path::Element e;
+                            typename MerklePath::Element e;
                             e.hash = go_right_a ? cur_a->left->hash : cur_a->right->hash;
-                            e.direction = go_right_a ? Path::PATH_LEFT : Path::PATH_RIGHT;
+                            e.direction = go_right_a ? MerklePath::PATH_LEFT : MerklePath::PATH_RIGHT;
                             fork_to_as_of.push_back(std::move(e));
                         }
                         cur_a = (go_right_a ? cur_a->right : cur_a->left);
@@ -1197,7 +1197,7 @@ namespace SR_TYPES_NS {
                 });
 
             // Reconstruct the past path from the three path segments recorded.
-            std::list<typename Path::Element> path;
+            std::list<typename MerklePath::Element> path;
 
             // The hashes along the path from the fork to `index` remain unchanged.
             if (!fork_to_index.empty())
@@ -1210,7 +1210,7 @@ namespace SR_TYPES_NS {
                 // The final hash of the path from the fork to `as_of` needs to be
                 // computed because that path skipped past tree nodes younger than
                 // `as_of`.
-                Hash as_of_hash = cur_a->hash;
+                MerkleHash as_of_hash = cur_a->hash;
                 if (!fork_to_as_of.empty())
                     fork_to_as_of.pop_front();
                 for (auto it = fork_to_as_of.rbegin(); it != fork_to_as_of.rend(); it++)
@@ -1221,9 +1221,9 @@ namespace SR_TYPES_NS {
                                  << as_of_hash.to_string(TRACE_HASH_SIZE) << std::endl;
                     });
 
-                typename Path::Element e;
+                typename MerklePath::Element e;
                 e.hash = as_of_hash;
-                e.direction = Path::PATH_RIGHT;
+                e.direction = MerklePath::PATH_RIGHT;
                 path.push_back(std::move(e));
             }
 
@@ -1232,7 +1232,7 @@ namespace SR_TYPES_NS {
             for (auto it = root_to_fork.rbegin(); it != root_to_fork.rend(); it++)
                 path.push_back(std::move(*it));
 
-            return std::make_shared<Path>(
+            return std::make_shared<MerklePath>(
                 leaf_node(index)->hash, index, std::move(path), as_of);
         }
 
@@ -1355,7 +1355,7 @@ namespace SR_TYPES_NS {
                 // Restore extra hashes on the left edge of the tree
                 if (it & 0x01)
                 {
-                    Hash h(bytes, position);
+                    MerkleHash h(bytes, position);
                     MERKLECPP_TRACE(MERKLECPP_TOUT << "+";);
                     auto n = Node::make(h);
                     n->height = level_no + 1;
@@ -1405,7 +1405,7 @@ namespace SR_TYPES_NS {
         /// @brief Operator to extract a leaf hash from the tree
         /// @param index Leaf index of the leaf to extract
         /// @return The leaf hash
-        const Hash& operator[](size_t index) const
+        const MerkleHash& operator[](size_t index) const
         {
             return leaf(index);
         }
@@ -1413,7 +1413,7 @@ namespace SR_TYPES_NS {
         /// @brief Extract a leaf hash from the tree
         /// @param index Leaf index of the leaf to extract
         /// @return The leaf hash
-        const Hash& leaf(size_t index) const
+        const MerkleHash& leaf(size_t index) const
         {
             MERKLECPP_TRACE(MERKLECPP_TOUT << "> leaf " << index << std::endl;);
             if (index >= num_leaves())
@@ -1489,7 +1489,7 @@ namespace SR_TYPES_NS {
             }
 
             return sizeof(leaf_nodes.size()) + sizeof(num_flushed) +
-                leaf_nodes.size() * sizeof(Hash) + num_extras * sizeof(Hash);
+                leaf_nodes.size() * sizeof(MerkleHash) + num_extras * sizeof(MerkleHash);
         }
 
         /// @brief The number of bytes required to serialise a segment of the tree
@@ -1506,7 +1506,7 @@ namespace SR_TYPES_NS {
                 });
 
             return sizeof(leaf_nodes.size()) + sizeof(num_flushed) +
-                (to - from + 1) * sizeof(Hash) + num_extras * sizeof(Hash);
+                (to - from + 1) * sizeof(MerkleHash) + num_extras * sizeof(MerkleHash);
         }
 
         /// @brief Structure to hold statistical information
@@ -1971,13 +1971,13 @@ namespace SR_TYPES_NS {
 #endif
 
     /// @brief Type of hashes in the default tree type
-    typedef HashT<32> Hash;
+    typedef HashT<32> MerkleHash;
 
     /// @brief Type of paths in the default tree type
-    typedef PathT<32, sha256_compress> Path;
+    typedef PathT<32, sha256_compress> MerklePath;
 
     /// @brief Default tree with default hash size and function
-    typedef TreeT<32, sha256_compress> Tree;
+    typedef TreeT<32, sha256_compress> MerkleTree;
 
 }
 

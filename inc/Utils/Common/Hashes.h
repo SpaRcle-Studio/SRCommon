@@ -159,20 +159,26 @@ namespace SR_UTILS_NS {
     template <class T> SR_INLINE constexpr bool IsECharT = IsAnyOfV<T, char, wchar_t, char8_t, char16_t, char32_t>;
 
 
-    template<Hash::Detail::SHA256HashType T = SR_TYPES_NS::HashT<32>>
-    T sha256(const std::string& msg) {
-        std::array<unsigned char, SHA256_DIGEST_LENGTH> hash;
+    template<Hash::Detail::SHA256HashType HashType, typename DataTypePtr>
+        requires std::is_pointer_v<DataTypePtr>
+        HashType sha256(const DataTypePtr data, uint32_t size) {
+        std::array<uint8_t, SHA256_DIGEST_LENGTH> hash{};
         SHA256_CTX ctx;
 
         SHA256_Init(&ctx);
-        SHA256_Update(&ctx, msg.c_str(), msg.size());
+        SHA256_Update(&ctx, data, size);
         SHA256_Final(hash.data(), &ctx);
 
         std::stringstream sstream;
         for (auto&& i : hash)
             sstream << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(i);
 
-        return T{ sstream.str() };
+        return HashType{ sstream.str() };
+    }
+
+    template<Hash::Detail::SHA256HashType T = SR_HTYPES_NS::HashT<32>>
+    T sha256(const std::string& msg) {
+        return sha256<T>(msg.data(), msg.size());
     }
 }
 

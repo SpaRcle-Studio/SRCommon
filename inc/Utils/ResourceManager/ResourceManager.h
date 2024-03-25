@@ -16,6 +16,8 @@ namespace SR_UTILS_NS {
     class IResourceReloader;
     class FileWatcher;
 
+    std::optional<Path> GetResourceFolder(const Path& appFolder);
+
     class SR_DLL_EXPORT ResourceManager final : public Singleton<ResourceManager> {
         SR_REGISTER_SINGLETON(ResourceManager)
         using Hash = uint64_t;
@@ -25,8 +27,8 @@ namespace SR_UTILS_NS {
     public:
         SR_NODISCARD bool IsLastResource(IResource* resource);
         SR_NODISCARD bool IsUsePointStackTraceProfilingEnabled() const { return m_usePointStackTraceProfiling; }
-        SR_NODISCARD Path GetResPath() const { return m_folder; }
-        SR_NODISCARD const Path& GetResPathRef() const { return m_folder; }
+        SR_NODISCARD Path GetResPath() const { return GetResPathRef(); }
+        SR_NODISCARD const Path& GetResPathRef() const;
         SR_NODISCARD Path GetCachePath() const { return m_folder.Concat("Cache"); }
         SR_NODISCARD std::string_view GetTypeName(Hash hashName) const;
 

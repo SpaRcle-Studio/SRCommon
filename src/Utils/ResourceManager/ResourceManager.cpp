@@ -9,8 +9,50 @@
 #include <Utils/Common/Features.h>
 #include <Utils/Common/StringFormat.h>
 #include <Utils/Common/Hashes.h>
+#include <Utils/Common/StringUtils.h>
 
 namespace SR_UTILS_NS {
+    std::optional<Path> GetResourceFolder(const Path& appFolder) {
+        for (int32_t i = 0; i < 5; i++) {
+            auto&& pathToConcat = StringUtils::MultiConcat("../", i) + "Resources";
+
+            auto&& resPath = appFolder.Concat(pathToConcat);
+            if (resPath.Exists(SR_UTILS_NS::Path::Type::Folder)) {
+                return resPath;
+            }
+        }
+
+        return std::nullopt;
+
+        /*auto&& resourcesPath = appFolder.Concat("Resources");
+        if (resourcesPath.Exists(SR_UTILS_NS::Path::Type::Folder)) {
+            return resourcesPath;
+        }
+
+        resourcesPath = appFolder.Concat("../Resources");
+        if (resourcesPath.Exists(SR_UTILS_NS::Path::Type::Folder)) {
+            return resourcesPath;
+        }
+
+        resourcesPath = appFolder.Concat("../../Resources");
+        if (resourcesPath.Exists(SR_UTILS_NS::Path::Type::Folder)) {
+            return resourcesPath;
+        }
+
+        resourcesPath = appFolder.Concat("../../../Resources");
+        if (resourcesPath.Exists(SR_UTILS_NS::Path::Type::Folder)) {
+            return resourcesPath;
+        }
+
+        resourcesPath = appFolder.Concat("../../../../Resources");
+        if (resourcesPath.Exists(SR_UTILS_NS::Path::Type::Folder)) {
+            return resourcesPath;
+        }
+
+        return std::nullopt;*/
+    }
+
+
     /// Seconds
     const uint64_t ResourceManager::ResourceLifeTime = 30 * SR_CLOCKS_PER_SEC;
 
@@ -175,6 +217,12 @@ namespace SR_UTILS_NS {
     bool ResourceManager::IsLastResource(IResource* pResource) {
         auto&& [name, resourcesGroup] = *m_resources.find(pResource->GetResourceHashName());
         return resourcesGroup->IsLast(pResource->GetResourceId());
+    }
+
+    const Path& ResourceManager::GetResPathRef() const {
+        SRAssert2(m_isInit, "Resource manager isn't initialized : " + m_folder.ToString());
+
+        return m_folder;
     }
 
     void ResourceManager::Thread() {

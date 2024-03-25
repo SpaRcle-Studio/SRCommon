@@ -77,6 +77,14 @@ namespace SR_UTILS_NS {
             return full_path;
         }
 
+        static SR_FORCE_INLINE std::string MultiConcat(const std::string& target, int32_t n) {
+            std::string out;
+            for (auto i = 0; i < n; i++) {
+                out += target;
+            }
+
+            return out;
+        }
 
         static SR_FORCE_INLINE std::string GetDirFromPath(const std::string &path) {
             return path.substr(0, path.find_last_of("/\\"));
