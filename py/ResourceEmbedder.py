@@ -1,8 +1,12 @@
 import os
 import re
 import sys
-import numpy as np
 
+try:
+    import numpy as np
+except ImportError:
+    subprocess.run([sys.executable, '-m', 'pip', 'install', 'numpy'])
+    import numpy as np
 
 def bytes_to_c_arr(data):
     return [format(b, '#04x') for b in data]
