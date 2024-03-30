@@ -48,6 +48,10 @@ namespace SR_UTILS_NS {
         void SetScale(const SR_MATH_NS::FVector3& scale) override;
         void SetSkew(const SR_MATH_NS::FVector3& skew) override;
 
+        void Translate(const SR_MATH_NS::FVector3& translation) override;
+        void Rotate(const SR_MATH_NS::Quaternion& quaternion) override;
+        void Scale(const SR_MATH_NS::FVector3& scale) override;
+
         void SetGlobalTranslation(const SR_MATH_NS::FVector3& translation) override;
         void SetGlobalRotation(const SR_MATH_NS::Quaternion& quaternion) override;
 

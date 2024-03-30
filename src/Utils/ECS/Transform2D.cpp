@@ -28,7 +28,6 @@ namespace SR_UTILS_NS {
 
     void Transform2D::SetRotation(const SR_MATH_NS::FVector3& euler) {
         m_rotation = euler.Limits(360);
-
         UpdateTree();
     }
 
@@ -43,6 +42,21 @@ namespace SR_UTILS_NS {
         m_scale = scale;
 
         UpdateTree();
+    }
+
+    void Transform2D::Translate(const SR_MATH_NS::FVector3& translation) {
+        SetTranslation(m_translation + translation);
+    }
+
+    void Transform2D::Rotate(const SR_MATH_NS::Quaternion& quaternion) {
+        SetRotation((SR_MATH_NS::Quaternion(m_rotation) * quaternion).EulerAngle());
+    }
+
+    void Transform2D::Scale(const SR_MATH_NS::FVector3& scale) {
+        if (scale.HasZero()) {
+            return;
+        }
+        SetScale(m_scale * scale);
     }
 
     void Transform2D::SetSkew(const SR_MATH_NS::FVector3& rawSkew) {
