@@ -6,6 +6,15 @@ set(CMAKE_CXX_STANDARD 20)
 option(SR_UTILS_CMAKE_ASSIMP "" ON)
 option(SR_UTILS_DLL_EXPORTS "" ON)
 
+## Call the function with the list of files to embed. Things not to forget:
+## add_dependencies() : add EmbedResourcesTarget to your project.
+## target_include_directories() : include the path to the ${CMAKE_CURRENT_BINARY_DIR}/Utils/include/Utils/EmbedResources.
+function(EmbedResources SR_EMBED_RESOURCES_LIST)
+    add_custom_target(EmbedResourcesTarget ALL
+            COMMAND python ResourceEmbedder.py ${CMAKE_CURRENT_BINARY_DIR}/libs/Utils/include/Utils ${SR_EMBED_RESOURCES_LIST}
+            WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/Engine/Core/libs/Utils/py")
+endfunction()
+
 if (SR_UTILS_DLL_EXPORTS)
     add_definitions(
         -DSR_DLL_EXPORTS=1

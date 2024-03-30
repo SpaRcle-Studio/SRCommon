@@ -76,7 +76,9 @@ def create_header(path, export_path):
     headerfile.write(header_contents)
     headerfile.close()
 
-
 export_path = sys.argv[1]
-resource_path = sys.argv[2]
-create_header(resource_path, export_path)
+arguments = sys.argv[2]
+for resource_path in arguments.split(" "):
+    print(f"ResourceEmbedder.py : creating header for '{resource_path}'")
+    create_header(resource_path, export_path)
+exit(0)
