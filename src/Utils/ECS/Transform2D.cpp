@@ -21,13 +21,15 @@ namespace SR_UTILS_NS {
 
     void Transform2D::SetTranslationAndRotation(const SR_MATH_NS::FVector3& translation, const SR_MATH_NS::FVector3& euler) {
         m_translation = translation;
-        m_rotation = euler.Limits(360);
+        m_quaternion = euler.Radians().ToQuat();
+        m_rotation = m_quaternion.EulerAngle();
 
         UpdateTree();
     }
 
     void Transform2D::SetRotation(const SR_MATH_NS::FVector3& euler) {
-        m_rotation = euler.Limits(360);
+        m_quaternion = euler.Radians().ToQuat();
+        m_rotation = m_quaternion.EulerAngle();
         UpdateTree();
     }
 
@@ -45,11 +47,11 @@ namespace SR_UTILS_NS {
     }
 
     void Transform2D::Translate(const SR_MATH_NS::FVector3& translation) {
-        SetTranslation(m_translation + translation);
+        SetTranslation(m_translation + GetQuaternion() * translation);
     }
 
     void Transform2D::Rotate(const SR_MATH_NS::Quaternion& quaternion) {
-        SetRotation((SR_MATH_NS::Quaternion(m_rotation) * quaternion).EulerAngle());
+        SetRotation((m_quaternion * quaternion).EulerAngle());
     }
 
     void Transform2D::Scale(const SR_MATH_NS::FVector3& scale) {
@@ -96,7 +98,7 @@ namespace SR_UTILS_NS {
             SR_MATH_NS::Quaternion::Identity(),
             m_scale * scale,
             m_skew
-        ) * SR_MATH_NS::Matrix4x4::FromEulers(m_rotation.Radians().ToQuat());
+        ) * SR_MATH_NS::Matrix4x4::FromQuaternion(m_quaternion);
 
         Transform::UpdateMatrix();
     }
@@ -165,6 +167,7 @@ namespace SR_UTILS_NS {
 
         pTransform->m_translation = m_translation;
         pTransform->m_rotation = m_rotation;
+        pTransform->m_quaternion = m_quaternion;
         pTransform->m_scale = m_scale;
         pTransform->m_skew = m_skew;
 

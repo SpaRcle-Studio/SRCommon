@@ -110,6 +110,8 @@ namespace SR_UTILS_NS {
         mutable SR_MATH_NS::Matrix4x4 m_localMatrix = SR_MATH_NS::Matrix4x4::Identity();
         mutable SR_MATH_NS::Matrix4x4 m_matrix = SR_MATH_NS::Matrix4x4::Identity();
 
+        SR_MATH_NS::Quaternion m_quaternion = SR_MATH_NS::Quaternion::Identity();
+
         SR_MATH_NS::FVector3 m_translation = SR_MATH_NS::FVector3::Zero();
         SR_MATH_NS::FVector3 m_rotation = SR_MATH_NS::FVector3::Zero();
         SR_MATH_NS::FVector3 m_scale = SR_MATH_NS::FVector3::One();
