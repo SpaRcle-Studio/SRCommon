@@ -2,8 +2,8 @@
 // Created by Monika on 20.01.2023.
 //
 
-#include <Utils/ResourceManager/ResourceContainer.h>
-#include <Utils/ResourceManager/IResource.h>
+#include <Utils/Resources/ResourceContainer.h>
+#include <Utils/Resources/IResource.h>
 
 namespace SR_UTILS_NS {
     ResourceContainer::~ResourceContainer() {

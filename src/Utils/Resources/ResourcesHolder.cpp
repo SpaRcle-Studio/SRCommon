@@ -2,7 +2,7 @@
 // Created by Monika on 18.03.2022.
 //
 
-#include <Utils/ResourceManager/ResourcesHolder.h>
+#include <Utils/Resources/ResourcesHolder.h>
 
 namespace SR_UTILS_NS {
     bool ResourcesHolder::Add(IResource *pResource) {

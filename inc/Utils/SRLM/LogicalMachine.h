@@ -8,9 +8,9 @@
 #include <Utils/Common/NonCopyable.h>
 #include <Utils/Common/Singleton.h>
 #include <Utils/Common/Hashes.h>
-#include <Utils/ResourceManager/IResource.h>
-#include <Utils/ResourceManager/FileWatcher.h>
-#include <Utils/ResourceManager/ResourceManager.h>
+#include <Utils/Resources/IResource.h>
+#include <Utils/Resources/FileWatcher.h>
+#include <Utils/Resources/ResourceManager.h>
 #include <Utils/SRLM/LogicalNode.h>
 #include <Utils/Xml.h>
 

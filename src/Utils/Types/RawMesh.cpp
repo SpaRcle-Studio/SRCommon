@@ -5,7 +5,7 @@
 #include <Utils/Types/RawMesh.h>
 #include <Utils/Common/Features.h>
 #include <Utils/FileSystem/FileSystem.h>
-#include <Utils/ResourceManager/ResourceManager.h>
+#include <Utils/Resources/ResourceManager.h>
 #include <Utils/FileSystem/AssimpCache.h>
 
 #ifdef SR_UTILS_ASSIMP

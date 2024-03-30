@@ -2,8 +2,8 @@
 // Created by Monika on 02.05.2022.
 //
 
-#include <Utils/ResourceManager/ResourceInfo.h>
-#include <Utils/ResourceManager/IResourceReloader.h>
+#include <Utils/Resources/ResourceInfo.h>
+#include <Utils/Resources/IResourceReloader.h>
 
 namespace SR_UTILS_NS {
     ResourceType::~ResourceType() {

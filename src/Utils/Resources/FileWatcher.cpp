@@ -2,7 +2,7 @@
 // Created by Monika on 05.08.2023.
 //
 
-#include <Utils/ResourceManager/FileWatcher.h>
+#include <Utils/Resources/FileWatcher.h>
 
 namespace SR_UTILS_NS {
     FileWatcher::FileWatcher(const SR_UTILS_NS::Path& path)

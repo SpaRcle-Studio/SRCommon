@@ -2,10 +2,10 @@
 // Created by Nikita on 16.11.2020.
 //
 
-#include <Utils/ResourceManager/ResourceManager.h>
+#include <Utils/Resources/ResourceManager.h>
 
-#include <Utils/ResourceManager/IResourceReloader.h>
-#include <Utils/ResourceManager/FileWatcher.h>
+#include <Utils/Resources/IResourceReloader.h>
+#include <Utils/Resources/FileWatcher.h>
 #include <Utils/Common/Features.h>
 #include <Utils/Common/StringFormat.h>
 #include <Utils/Common/Hashes.h>

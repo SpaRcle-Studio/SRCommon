@@ -5,7 +5,7 @@
 #ifndef SR_ENGINE_RESOURCESHOLDER_H
 #define SR_ENGINE_RESOURCESHOLDER_H
 
-#include <Utils/ResourceManager/IResource.h>
+#include <Utils/Resources/IResource.h>
 
 namespace SR_UTILS_NS {
     class SR_DLL_EXPORT ResourcesHolder : public NonCopyable {

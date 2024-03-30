@@ -5,7 +5,7 @@
 #include <Utils/SRLM/DataTypeManager.h>
 #include <Utils/SRLM/DataType.h>
 #include <Utils/Common/HashManager.h>
-#include <Utils/ResourceManager/ResourceManager.h>
+#include <Utils/Resources/ResourceManager.h>
 #include <Utils/Xml.h>
 
 namespace SR_SRLM_NS {

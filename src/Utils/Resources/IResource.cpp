@@ -2,9 +2,9 @@
 // Created by Nikita on 17.11.2020.
 //
 
-#include <Utils/ResourceManager/IResource.h>
-#include <Utils/ResourceManager/ResourceManager.h>
-#include <Utils/ResourceManager/FileWatcher.h>
+#include <Utils/Resources/IResource.h>
+#include <Utils/Resources/ResourceManager.h>
+#include <Utils/Resources/FileWatcher.h>
 
 namespace SR_UTILS_NS {
     IResource::IResource(uint64_t hashName)

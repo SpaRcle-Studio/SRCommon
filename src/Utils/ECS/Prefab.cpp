@@ -3,7 +3,7 @@
 //
 
 #include <Utils/ECS/Prefab.h>
-#include <Utils/ResourceManager/ResourceManager.h>
+#include <Utils/Resources/ResourceManager.h>
 
 namespace SR_UTILS_NS {
     Prefab::Prefab()

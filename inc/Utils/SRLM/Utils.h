@@ -9,7 +9,7 @@
 #include <Utils/Common/Singleton.h>
 #include <Utils/Types/Map.h>
 #include <Utils/Types/Function.h>
-#include <Utils/ResourceManager/FileWatcher.h>
+#include <Utils/Resources/FileWatcher.h>
 
 #define SR_LM_REGISTER_BASE(className, name)                                                                            \
         SR_INLINE_STATIC const std::string NAME = #name; /** NOLINT*/                                                   \

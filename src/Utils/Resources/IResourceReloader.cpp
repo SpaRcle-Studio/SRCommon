@@ -2,8 +2,8 @@
 // Created by Monika on 11.03.2023.
 //
 
-#include <Utils/ResourceManager/IResourceReloader.h>
-#include <Utils/ResourceManager/ResourceInfo.h>
+#include <Utils/Resources/IResourceReloader.h>
+#include <Utils/Resources/ResourceInfo.h>
 
 namespace SR_UTILS_NS {
     bool DefaultResourceReloader::Reload(const SR_UTILS_NS::Path& /** path */, ResourceInfo* pResourceInfo) {

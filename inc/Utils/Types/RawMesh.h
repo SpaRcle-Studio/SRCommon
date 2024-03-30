@@ -5,7 +5,7 @@
 #ifndef SR_ENGINE_RAWMESH_H
 #define SR_ENGINE_RAWMESH_H
 
-#include <Utils/ResourceManager/IResource.h>
+#include <Utils/Resources/IResource.h>
 #include <Utils/Types/SafePointer.h>
 #include <Utils/Types/Map.h>
 #include <Utils/Common/Vertices.h>

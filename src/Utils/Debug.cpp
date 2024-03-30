@@ -4,7 +4,7 @@
 
 #include <Utils/Debug.h>
 #include <Utils/FileSystem/FileSystem.h>
-#include <Utils/ResourceManager/ResourceManager.h>
+#include <Utils/Resources/ResourceManager.h>
 #include <Utils/Platform/Stacktrace.h>
 #include <Utils/Platform/Platform.h>
 

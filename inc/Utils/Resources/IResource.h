@@ -11,8 +11,8 @@
 #include <Utils/Common/Hashes.h>
 #include <Utils/Types/Function.h>
 #include <Utils/Types/SharedPtr.h>
-#include <Utils/ResourceManager/ResourceContainer.h>
-#include <Utils/ResourceManager/FileWatcher.h>
+#include <Utils/Resources/ResourceContainer.h>
+#include <Utils/Resources/FileWatcher.h>
 
 namespace SR_UTILS_NS {
     class ResourceManager;

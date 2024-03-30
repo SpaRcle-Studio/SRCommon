@@ -6,8 +6,8 @@
 #define SR_ENGINE_SETTINGS_H
 
 #include <Utils/Xml.h>
-#include <Utils/ResourceManager/IResource.h>
-#include <Utils/ResourceManager/ResourceManager.h>
+#include <Utils/Resources/IResource.h>
+#include <Utils/Resources/ResourceManager.h>
 #include <Utils/Common/Singleton.h>
 
 namespace SR_UTILS_NS {

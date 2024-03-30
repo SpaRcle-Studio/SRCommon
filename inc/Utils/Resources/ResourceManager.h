@@ -9,8 +9,8 @@
 #include <Utils/Types/Thread.h>
 #include <Utils/Types/SharedPtr.h>
 #include <Utils/Common/Singleton.h>
-#include <Utils/ResourceManager/IResource.h>
-#include <Utils/ResourceManager/ResourceInfo.h>
+#include <Utils/Resources/IResource.h>
+#include <Utils/Resources/ResourceInfo.h>
 
 namespace SR_UTILS_NS {
     class IResourceReloader;

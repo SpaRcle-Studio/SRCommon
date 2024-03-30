@@ -6,7 +6,7 @@
 #define SR_ENGINE_RESOURCEINFO_H
 
 #include <Utils/Debug.h>
-#include <Utils/ResourceManager/IResource.h>
+#include <Utils/Resources/IResource.h>
 #include <Utils/FileSystem/Path.h>
 #include <Utils/Types/Map.h>
 
