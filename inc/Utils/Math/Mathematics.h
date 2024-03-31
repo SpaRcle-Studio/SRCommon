@@ -148,6 +148,16 @@ namespace SR_MATH_NS {
         return (subMask & mask) == subMask;
     }
 
+    template<typename MaskLeft, typename MakeRight> static SR_FORCE_INLINE bool IsAnyMaskIncludedSubMask(MaskLeft mask, std::initializer_list<MakeRight> subMasks) {
+        bool included = false;
+
+        for (auto&& subMask : subMasks) {
+            included |= IsMaskIncludedSubMask(mask, subMask);
+        }
+
+        return included;
+    }
+
     static SR_FORCE_INLINE double_t SR_FASTCALL FastSqrt(double_t value) {
         return std::sqrt(value);
     }
