@@ -56,7 +56,7 @@ namespace SR_UTILS_NS {
             Platform::Delete(successfulPath);
     #endif
 
-        m_logPath = Path(log_path + "/log.txt");
+        m_logPath = Path(log_path + "/srengine-log.txt");
         if (m_logPath.Exists(Path::Type::File))
             Platform::Delete(m_logPath);
 
