@@ -211,4 +211,4 @@ add_custom_command(TARGET CopyUtilsFiles
 SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_BINARY_DIR}/include)
 SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_BINARY_DIR}/libs)
 
-add_dependencies(${PROJECT_NAME} CopyUtilsFiles)
+add_dependencies(${PROJECT_NAME} CopyUtilsFiles EmbedResourcesTarget)
