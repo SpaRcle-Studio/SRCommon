@@ -17,6 +17,13 @@ namespace SR_UTILS_NS {
             return instance;
         }
 
+    public:
+        struct EmbedResourceStructure {
+            const char* path;
+            const char* data;
+            uint64_t size;
+        };
+
         template<class T> bool RegisterResource() {
             const char* pData = reinterpret_cast<const char*>(&T::data[0]);
             uint64_t dataSize = T::size;
@@ -26,10 +33,18 @@ namespace SR_UTILS_NS {
             return true;
         }
 
-        bool ExportToFile(const SR_UTILS_NS::Path& path) {
-            auto&& it = m_resources.find(path.ToStringRef());
-            auto&& dataSize = it->second.first;
-            auto&& pData = it->second.second;
+        bool ExportAllResources() {
+            for (auto&& it : m_resources) {
+                ExportToFile(it.first);
+            }
+
+            return true;
+        }
+
+        static bool ExportToFile(const EmbedResourceStructure& resource) {
+            SR_UTILS_NS::Path path = resource.path;
+            auto&& dataSize = resource.size;
+            auto&& pData = resource.data;
 
             std::string buffer;
             buffer.resize(dataSize);
@@ -47,8 +62,12 @@ namespace SR_UTILS_NS {
 
             file.write(buffer.data(), buffer.size());
             file.close();
+        }
 
-            return true;
+        bool ExportToFile(const SR_UTILS_NS::Path& path) {
+            auto&& it = m_resources.find(path.ToStringRef());
+
+            return ExportToFile({path.CStr(), it->second.second, it->second.first});
         }
 
     private:
