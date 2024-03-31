@@ -33,7 +33,7 @@ namespace SR_UTILS_NS {
 
     class SR_DLL_EXPORT Transform : public ISavable {
         friend class GameObject;
-        SR_INLINE static const uint16_t VERSION = 1000;
+        SR_INLINE static const uint16_t VERSION = 1001;
     public:
         Transform() = default;
         ~Transform() override;

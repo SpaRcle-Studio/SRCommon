@@ -6,6 +6,11 @@
 
 namespace SR_UTILS_NS {
     bool Migration::Migrate(uint64_t hashName, SR_HTYPES_NS::Marshal& marshal, Version from, Version to) const {
+        if (from == to) {
+            SRHalt("Migration from and to versions are the same!");
+            return false;
+        }
+
         auto&& pIt = m_migrators.find(hashName);
         if (pIt == m_migrators.end()) {
             return false;
