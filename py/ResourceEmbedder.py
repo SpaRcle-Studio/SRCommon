@@ -44,11 +44,20 @@ def create_array(name, data, path):
     path = path.split(working_directory + '/')[1]
     static_content = (f"\t\tconstexpr static const uint64_t size = {size};"
                       f"\n\t\tconstexpr static const char path[] = \"{path}\";"
-                      f"\n\t\tconstexpr static const unsigned char data[") + size + "] ="
-    array_content = "{{{}}}\n".format(", ".join(bytes_to_c_arr(data)))
-    array_content = re.sub("(.{72})", "\t\t\t\\1\n", array_content, 0, re.DOTALL)
-    array_content = '\n' + array_content
-    final_content = static_content + array_content + ";"
+                      f"\n\t\tconstexpr static const unsigned char data[") + size + "] = "
+    array_content = "{\n\t\t\t"
+    byte_array = bytes_to_c_arr(data)
+    for i in range(0, len(byte_array)):
+        if i == len(byte_array) - 1:
+            array_content += f"{byte_array[i]}" + '\n\t\t};\n'
+        else:
+            array_content += f"{byte_array[i]}, "
+        if (i + 1) % 18 == 0:
+            array_content += "\n\t\t\t"
+
+
+    #array_content = '\n' + array_content
+    final_content = static_content + array_content
     return final_content
 
 
@@ -88,7 +97,8 @@ def create_header(path, export_path):
     header_contents += create_array(header_name, read_file(path), path)
 
     header_contents += "\n\tprivate:\n"
-    header_contents += f"\t\tSR_MAYBE_UNUSED SR_INLINE static bool codegenRegister = SR_UTILS_NS::ResourceEmbedder::Instance().RegisterResource<{header_name}>();\n"
+    header_contents += (f"\t\tSR_MAYBE_UNUSED SR_INLINE static bool codegenRegister = "
+                        f"SR_UTILS_NS::ResourceEmbedder::Instance().RegisterResource<{header_name}>();\n\n")
     header_contents += "\t};\n}\n\n"
     header_contents += f"#endif //{header_include_guard}\n"
 
