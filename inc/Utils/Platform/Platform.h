@@ -35,7 +35,8 @@ namespace SR_UTILS_NS::Platform {
     SR_DLL_EXPORT extern void WriteConsoleError(const std::string& msg);
     SR_DLL_EXPORT extern void WriteConsoleWarn(const std::string& msg);
     SR_DLL_EXPORT extern void Terminate();
-    SR_DLL_EXPORT extern void SelfOpen(std::string );
+    SR_DLL_EXPORT extern void SelfOpen();
+    SR_DLL_EXPORT extern void OpenFile(const SR_UTILS_NS::Path& path);
     SR_DLL_EXPORT extern void OpenWithAssociatedApp(const Path& filepath);
     SR_DLL_EXPORT extern bool CreateFolder(const std::string& path);
     SR_DLL_EXPORT extern bool Copy(const Path& from, const Path& to);
@@ -47,6 +48,7 @@ namespace SR_UTILS_NS::Platform {
     SR_DLL_EXPORT extern SR_MATH_NS::FVector2 GetMousePos();
     SR_DLL_EXPORT extern std::string GetClipboardText();
     SR_DLL_EXPORT extern Path GetApplicationPath();
+    SR_DLL_EXPORT extern Path GetApplicationDirectory();
     SR_DLL_EXPORT extern Path GetApplicationName();
     SR_DLL_EXPORT extern std::list<Path> GetInDirectory(const Path& dir, Path::Type type);
     SR_DLL_EXPORT extern FileMetadata GetFileMetadata(const Path& file);

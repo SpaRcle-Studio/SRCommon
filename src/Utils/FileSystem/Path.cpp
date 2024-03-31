@@ -238,6 +238,14 @@ namespace SR_UTILS_NS {
         return FileSystem::CreatePath(m_path.substr(0, m_path.size() - (m_name.size() + m_ext.size() + 1)));
     }
 
+    bool Path::CreateIfNotExists() const {
+        if (!Exists()) {
+            return Create();
+        }
+
+        return true;
+    }
+
     bool Path::Make(Type type) const {
         if (m_path.empty())
             return false;

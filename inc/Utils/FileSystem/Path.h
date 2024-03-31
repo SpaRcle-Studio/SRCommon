@@ -72,6 +72,7 @@ namespace SR_UTILS_NS {
     public:
         SR_DEPRECATED bool Make(Type type = Type::Undefined) const;
         bool Create() const;
+        bool CreateIfNotExists() const;
 
         SR_NODISCARD bool Copy(const Path& destination) const;
 

@@ -432,6 +432,10 @@ namespace SR_UTILS_NS::Platform {
         return s;
     }
 
+    Path GetApplicationDirectory() {
+        return GetApplicationPath().GetFolder();
+    }
+
     Path GetApplicationName() {
         const std::size_t buf_len = 260;
         auto s = new TCHAR[buf_len];
@@ -447,8 +451,7 @@ namespace SR_UTILS_NS::Platform {
         return false;
     }
 
-    void SelfOpen() {
-        auto&& exe = SR_PLATFORM_NS::GetApplicationPath();
+    void OpenFile(const SR_UTILS_NS::Path& path) {
         STARTUPINFO si;
         PROCESS_INFORMATION pi;
 
@@ -457,7 +460,7 @@ namespace SR_UTILS_NS::Platform {
         ZeroMemory(&pi, sizeof(pi));
 
         /// start the program up
-        CreateProcess( exe.c_str(), /// the path
+        CreateProcess(path.c_str(), /// the path
     NULL,
     NULL, /// Process handle not inheritable
     NULL, /// Thread handle not inheritable
@@ -472,6 +475,11 @@ namespace SR_UTILS_NS::Platform {
         // Close process and thread handles.
         CloseHandle(pi.hProcess);
         CloseHandle(pi.hThread);
+    }
+
+    void SelfOpen() {
+        auto&& exe = SR_PLATFORM_NS::GetApplicationPath();
+        OpenFile(exe);
     }
 
     FileMetadata GetFileMetadata(const Path& file) {

@@ -62,6 +62,7 @@ def create_array(name, data, path):
 
 
 def create_header(path, export_path):
+    print(f"ResourceEmbedder.py : creating header for '{path}'")
     if not os.path.exists(path):
         print(f"Path does not exist: {path}")
         return
@@ -77,7 +78,9 @@ def create_header(path, export_path):
     file_extension = file_extension[1:]
 
     header_name = f"{filename}{file_extension}"
+    class_name = header_name.replace("-", "_")
     header_include_guard = "CODEGEN_" + header_name.upper() + "_H"
+    header_include_guard = header_include_guard.replace("-", "_")
 
     if not os.path.exists(f"{export_path}/EmbedResources"):
         os.mkdir(f"{export_path}/EmbedResources")
@@ -90,15 +93,15 @@ def create_header(path, export_path):
     header_contents += f"#define {header_include_guard}\n\n"
     header_contents += "#include <Utils/Resources/ResourceEmbedder.h>\n\n"
     header_contents += "namespace ResourceEmbedder::Resources {\n"
-    header_contents += f"\tclass {header_name} " + " {\n"
+    header_contents += f"\tclass {class_name} " + " {\n"
     header_contents += "\tpublic:\n"
-    header_contents += f"\t\t{header_name}() = delete;\n"
+    header_contents += f"\t\t{class_name}() = delete;\n"
 
     header_contents += create_array(header_name, read_file(path), path)
 
     header_contents += "\n\tprivate:\n"
     header_contents += (f"\t\tSR_MAYBE_UNUSED SR_INLINE static bool codegenRegister = "
-                        f"SR_UTILS_NS::ResourceEmbedder::Instance().RegisterResource<{header_name}>();\n\n")
+                        f"SR_UTILS_NS::ResourceEmbedder::Instance().RegisterResource<{class_name}>();\n\n")
     header_contents += "\t};\n}\n\n"
     header_contents += f"#endif //{header_include_guard}\n"
 
@@ -116,7 +119,14 @@ args = parser.parse_args()
 working_directory = args.working_directory
 resources = filter(None, args.resources.split('|'))
 for resource_path in resources:
-    print(f"ResourceEmbedder.py : creating header for '{resource_path}'")
-    create_header(resource_path, args.export_directory)
+    resource_path = resource_path.replace("\\", "/")
+    if os.path.isdir(resource_path):
+        for filename in os.listdir(resource_path):
+            file_path = os.path.join(resource_path, filename)
+            if os.path.isfile(file_path):
+                create_header(file_path, args.export_directory)
+    else:
+        create_header(resource_path, args.export_directory)
+
 create_cxx(f"{args.export_directory}/EmbedResources")
 exit(0)

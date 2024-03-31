@@ -79,7 +79,7 @@ namespace SR_UTILS_NS {
         SRAssert(m_isRun);
 
         if (!path.Exists()) {
-            SRHalt("ResourceManager::StartWatch() : watching a non-existent file!");
+            SRHalt("ResourceManager::StartWatch() : watching a non-existent file! '{}'", path.ToStringRef());
             return nullptr;
         }
 

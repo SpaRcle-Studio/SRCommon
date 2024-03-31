@@ -34,15 +34,38 @@ namespace SR_UTILS_NS {
         }
 
         bool ExportAllResources() {
-            for (auto&& it : m_resources) {
-                ExportToFile(it.first);
-            }
-
-            return true;
+            return ExportAllResources(SR_UTILS_NS::Path());
         }
 
-        static bool ExportToFile(const EmbedResourceStructure& resource) {
-            SR_UTILS_NS::Path path = resource.path;
+        bool ExportAllResources(SR_UTILS_NS::Path newDirectory) {
+            bool result = true;
+
+            if (!newDirectory.Empty() && !newDirectory.Exists()) {
+                if (!newDirectory.Create()) {
+                    SR_ERROR("ResourceEmbedder::ExportAllResources() : failed to create new directory.");
+                    result = false;
+                }
+            }
+
+            for (auto&& it : m_resources) {
+                EmbedResourceStructure resource = {it.first.c_str(), it.second.second, it.second.first};
+
+
+                if (!ExportToFile(resource, newDirectory)) {
+                    result = false;
+                }
+            }
+
+            return result;
+        }
+
+        static bool ExportToFile(const EmbedResourceStructure& resource, const SR_UTILS_NS::Path& newDirectory) {
+            SR_UTILS_NS::Path path = newDirectory.Concat(resource.path);
+
+            if (newDirectory.Empty()) {
+                path = SR_UTILS_NS::Path(resource.path);
+            }
+
             auto&& dataSize = resource.size;
             auto&& pData = resource.data;
 
@@ -51,23 +74,28 @@ namespace SR_UTILS_NS {
             memcpy(buffer.data(), pData, dataSize);
 
             if (!path.Exists()) {
-                path.Create();
+                if (!path.Create()) {
+                    SR_ERROR("ResourceEmbedder::ExportToFile() : failed to create path.");
+                    return false;
+                }
             }
 
             std::ofstream file(path.CStr(), std::ios::out | std::ios::binary);
 
             if (!file.is_open()) {
+                SR_ERROR("ResourceEmbedder::ExportToFile() : failed to open file '{}'.", resource.path);
                 return false;
             }
 
             file.write(buffer.data(), buffer.size());
             file.close();
+
+            return true;
         }
 
         bool ExportToFile(const SR_UTILS_NS::Path& path) {
             auto&& it = m_resources.find(path.ToStringRef());
-
-            return ExportToFile({path.CStr(), it->second.second, it->second.first});
+            return ExportToFile({path.CStr(), it->second.second, it->second.first}, SR_UTILS_NS::Path());
         }
 
     private:
