@@ -278,6 +278,10 @@ namespace SR_UTILS_NS {
     }
 
     void IComponentable::OnPriorityChanged() {
+        if (!IsActive()) {
+            return;
+        }
+
         for (uint32_t i = 0; i < m_components.size(); ++i) {
             auto&& pComponent = m_components[i];
             pComponent->OnPriorityChanged();
@@ -285,6 +289,10 @@ namespace SR_UTILS_NS {
     }
 
     void IComponentable::OnMatrixDirty() {
+        if (!IsActive()) {
+            return;
+        }
+
         for (uint32_t i = 0; i < m_components.size(); ++i) {
             auto&& pComponent = m_components[i];
             pComponent->OnMatrixDirty();

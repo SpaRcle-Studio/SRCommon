@@ -133,7 +133,7 @@ namespace SR_UTILS_NS {
         return pMarshal;
     }
 
-    Transform* Transform::Load(SR_HTYPES_NS::Marshal& marshal, GameObject* pGameObject) {
+    Transform* Transform::Load(SR_HTYPES_NS::Marshal& marshal) {
         Transform* pTransform = nullptr;
 
         SR_MAYBE_UNUSED auto&& version = marshal.Read<uint16_t>();
@@ -170,8 +170,6 @@ namespace SR_UTILS_NS {
                 SRHalt("Unknown measurement \"{}\"!", static_cast<int32_t>(measurement));
                 return nullptr;
         }
-
-        pTransform->SetGameObject(pGameObject);
 
         switch (measurement) {
             case Measurement::SpaceZero:

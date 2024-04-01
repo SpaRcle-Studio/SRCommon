@@ -39,7 +39,7 @@ namespace SR_UTILS_NS {
         ~Transform() override;
 
     public:
-        static Transform* Load(SR_HTYPES_NS::Marshal& marshal, GameObject* pGameObject);
+        static Transform* Load(SR_HTYPES_NS::Marshal& marshal);
 
     public:
         SR_NODISCARD SR_HTYPES_NS::Marshal::Ptr Save(SavableContext data) const override;

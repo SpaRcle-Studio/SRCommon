@@ -170,7 +170,9 @@ namespace SR_UTILS_NS {
             m_scene->OnChanged();
         }
 
-        m_transform->OnHierarchyChanged();
+        if (!m_isDestroyed) {
+            m_transform->OnHierarchyChanged();
+        }
 
         return true;
     }
@@ -223,7 +225,7 @@ namespace SR_UTILS_NS {
     }
 
     bool GameObject::IsActive() const noexcept {
-        return m_isActive;
+        return m_isActive && !m_isDestroyed;
     }
 
     void GameObject::CheckActivity(bool force) noexcept {
@@ -538,7 +540,7 @@ namespace SR_UTILS_NS {
                 auto&& isEnabled = marshal.Read<bool>();
 
                 SR_MAYBE_UNUSED auto&& transformBlockSize = marshal.Read<uint64_t>();
-                auto&& pTransform = Transform::Load(marshal, nullptr);
+                auto&& pTransform = Transform::Load(marshal);
 
                 if (!pTransform) {
                     SRHalt("Failed to load transform!");
@@ -598,10 +600,7 @@ namespace SR_UTILS_NS {
 
             SR_MAYBE_UNUSED auto&& transformBlockSize = marshal.Read<uint64_t>();
 
-            gameObject->SetTransform(SR_UTILS_NS::Transform::Load(
-                    marshal,
-                    gameObject.Get()
-            ));
+            gameObject->SetTransform(SR_UTILS_NS::Transform::Load(marshal));
 
             gameObject->SetTag(tag);
             gameObject->SetLayer(layer);
