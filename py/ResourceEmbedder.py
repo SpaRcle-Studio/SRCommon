@@ -7,12 +7,14 @@ try:
     import numpy as np
 except ImportError:
     subprocess.run([sys.executable, 'pip', 'install', 'numpy'])
+    subprocess.run([sys.executable, '-m', 'pip', 'install', 'numpy'])
     import numpy as np
 
 try:
     import argparse
 except ImportError:
     subprocess.run([sys.executable, 'pip', 'install', 'argparse'])
+    subprocess.run([sys.executable, '-m', 'pip', 'install', 'argparse'])
     import argparse
 
 def create_cxx(path):
