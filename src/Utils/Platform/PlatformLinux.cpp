@@ -76,6 +76,10 @@ namespace SR_UTILS_NS::Platform {
         return nullptr;
     }
 
+    void OpenFile(const SR_UTILS_NS::Path& path) {
+        SRHaltOnce("Not implemented!");
+    }
+
     std::optional<std::string> ReadFile(const Path& path) {
         std::ifstream ifs(path.c_str());
 
