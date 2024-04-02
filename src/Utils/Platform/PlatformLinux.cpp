@@ -32,6 +32,10 @@ namespace SR_UTILS_NS::Platform {
         return true;
     }
 
+    void HideCursor(bool isHidden) {
+        SRHaltOnce("Not implemented!");
+    }
+
     void StdHandler() {
         SegmentationHandler(1);
     }

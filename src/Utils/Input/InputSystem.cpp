@@ -136,6 +136,7 @@ namespace SR_UTILS_NS {
     }
 
     void Input::LockCursor(bool isLock) {
+        SR_PLATFORM_NS::HideCursor(isLock);
         m_isLocked = isLock;
     }
 

@@ -575,6 +575,10 @@ namespace SR_UTILS_NS::Platform {
         ::SetCursorPos(static_cast<int32_t>(pos.x), static_cast<int32_t>(pos.y));
     }
 
+    void HideCursor(bool isHidden) {
+        ::ShowCursor(!isHidden);
+    }
+
     PlatformType GetType() {
         return PlatformType::Windows;
     }

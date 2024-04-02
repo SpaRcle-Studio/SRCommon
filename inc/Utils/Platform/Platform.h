@@ -43,6 +43,7 @@ namespace SR_UTILS_NS::Platform {
     SR_DLL_EXPORT extern bool Delete(const Path& path);
     SR_DLL_EXPORT extern bool WaitAndDelete(const Path& path);
     SR_DLL_EXPORT extern bool IsConsoleFocused();
+    SR_DLL_EXPORT extern void HideCursor(bool isHidden);
 
     SR_DLL_EXPORT extern uint64_t GetProcessUsedMemory();
     SR_DLL_EXPORT extern uint16_t GetCurrentProcessId();
