@@ -127,7 +127,7 @@ namespace SR_UTILS_NS {
 
     };
 
-    /// ------------------------------------------ PathProperty --------------------------------------------------------
+    /// ------------------------------------------ EnumProperty --------------------------------------------------------
 
     class EnumProperty : public Property {
         SR_REGISTER_TYPE_TRAITS_PROPERTY(EnumProperty, 1000)
@@ -155,6 +155,40 @@ namespace SR_UTILS_NS {
         SetterFn m_setter;
         GetterFn m_getter;
         FilterFn m_filter;
+
+    };
+
+    /// ------------------------------------------ ArrayReferenceProperty ----------------------------------------------
+
+    class ArrayReferenceProperty : public Property {
+        SR_REGISTER_TYPE_TRAITS_PROPERTY(ArrayReferenceProperty, 1000)
+        using Super = Property;
+        using OnChancedFn = SR_HTYPES_NS::Function<void()>;
+        using AddElementFn = SR_HTYPES_NS::Function<void(uint32_t index)>;
+        using RemoveElementFn = SR_HTYPES_NS::Function<void(uint32_t index)>;
+        using SaveArrayFn = SR_HTYPES_NS::Function<void(SR_HTYPES_NS::Marshal&)>;
+        using LoadArrayFn = SR_HTYPES_NS::Function<void(SR_HTYPES_NS::Marshal&)>;
+        using PropertyGetterFn = SR_HTYPES_NS::Function<Property*(uint32_t index)>;
+    public:
+        void SaveProperty(MarshalRef marshal) const noexcept override;
+        void LoadProperty(MarshalRef marshal) noexcept override;
+
+        ArrayReferenceProperty& SetOnChanged(const OnChancedFn& value) { m_onChanged = value; return *this; }
+        ArrayReferenceProperty& SetAddElement(const AddElementFn& value) { m_addElement = value; return *this; }
+        ArrayReferenceProperty& SetRemoveElement(const RemoveElementFn& value) { m_removeElement = value; return *this; }
+        ArrayReferenceProperty& SetSaveArray(const SaveArrayFn& value) { m_saveArray = value; return *this; }
+        ArrayReferenceProperty& SetLoadArray(const LoadArrayFn& value) { m_loadArray = value; return *this; }
+        ArrayReferenceProperty& SetIsProperty() { m_isProperty = true; return *this; }
+        ArrayReferenceProperty& SetPropertyGetter(const PropertyGetterFn& value) { m_propertyGetter = value; return *this; }
+
+    private:
+        SaveArrayFn m_saveArray;
+        LoadArrayFn m_loadArray;
+        OnChancedFn m_onChanged;
+        AddElementFn m_addElement;
+        RemoveElementFn m_removeElement;
+        PropertyGetterFn m_propertyGetter;
+        bool m_isProperty = false;
 
     };
 }

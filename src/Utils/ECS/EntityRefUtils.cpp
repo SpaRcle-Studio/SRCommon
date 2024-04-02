@@ -51,8 +51,13 @@ namespace SR_UTILS_NS::EntityRefUtils {
                             if (auto&& gm = owner.pEntity.DynamicCast<GameObject>()) {
                                 tree = &gm->GetChildrenRef();
                             }
+                            //else if (auto&& pComponent = owner.pEntity.DynamicCast<Component>()) {
+                            //    tree = &pComponent->GetScene()->GetRootGameObjects();
+                            //}
                             else if (auto&& pComponent = owner.pEntity.DynamicCast<Component>()) {
-                                tree = &pComponent->GetScene()->GetRootGameObjects();
+                                if (auto&& pGameObject = pComponent->GetGameObject()) {
+                                    tree = &pGameObject->GetChildrenRef();
+                                }
                             }
                         }
                         else if (owner.pScene) {

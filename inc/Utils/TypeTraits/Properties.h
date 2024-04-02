@@ -31,6 +31,7 @@ namespace SR_UTILS_NS {
 
         PropertyContainer& AddContainer(const char* name);
         EntityRefProperty& AddEntityRefProperty(SR_UTILS_NS::StringAtom name, const EntityRefUtils::OwnerRef& owner);
+        ArrayReferenceProperty& AddArrayReferenceProperty(const char* name);
         template<typename T, typename ...Args> T& AddCustomProperty(SR_UTILS_NS::StringAtom name, Args... args);
         template<typename T> StandardProperty& AddStandardProperty(const char* name, T* pRawProperty);
         template<typename T> EnumProperty& AddEnumProperty(const char* name, T* pRawProperty);

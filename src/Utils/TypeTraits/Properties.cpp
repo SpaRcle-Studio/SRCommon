@@ -114,4 +114,8 @@ namespace SR_UTILS_NS {
             }
         }
     }
+
+    ArrayReferenceProperty& PropertyContainer::AddArrayReferenceProperty(const char* name) {
+        return AddCustomProperty<ArrayReferenceProperty>(name);
+    }
 }

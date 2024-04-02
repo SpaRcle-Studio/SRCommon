@@ -114,4 +114,22 @@ namespace SR_UTILS_NS {
             SetEnum(pBlock->Read<StringAtom>());
         }
     }
+
+    void ArrayReferenceProperty::SaveProperty(SR_HTYPES_NS::Marshal& marshal) const noexcept {
+        if (auto&& pBlock = AllocatePropertyBlock()) {
+            if (m_saveArray) {
+                m_saveArray(*pBlock);
+            }
+            SavePropertyBase(marshal, std::move(pBlock));
+        }
+        Super::SaveProperty(marshal);
+    }
+
+    void ArrayReferenceProperty::LoadProperty(SR_HTYPES_NS::Marshal& marshal) noexcept {
+        if (auto&& pBlock = LoadPropertyBase(marshal)) {
+            if (m_loadArray) {
+                m_loadArray(*pBlock);
+            }
+        }
+    }
 }
