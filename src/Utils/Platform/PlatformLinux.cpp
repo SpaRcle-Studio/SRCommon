@@ -63,6 +63,10 @@ namespace SR_UTILS_NS::Platform {
         return false;
     }
 
+    bool IsFileDeletable(const SR_UTILS_NS::Path& path) {
+       SRHaltOnce("Not implemented!");
+   }
+
     void SetInstance(void* pInstance) {
         SRHaltOnce("Not implemented!");
     }
@@ -100,6 +104,11 @@ namespace SR_UTILS_NS::Platform {
 
     void WriteConsoleWarn(const std::string& msg) {
         std::cerr << msg << std::flush;
+    }
+
+    bool WaitAndDelete(const SR_UTILS_NS::Path& path) {
+        SRHaltOnce("Not implemented!");
+        return false;
     }
 
     void TextToClipboard(const std::string &text) {

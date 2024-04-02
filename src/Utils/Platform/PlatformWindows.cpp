@@ -271,6 +271,20 @@ namespace SR_UTILS_NS::Platform {
         return -1;
     }
 
+    bool IsFileDeletable(const SR_UTILS_NS::Path& path) {
+        if (!path.IsFile()) {
+            SR_WARN("Platform::CanBeDeleted() : path is no a file.");
+            return false;
+        }
+
+        if (auto&& file = std::ofstream((path.c_str()))) {
+            file.close();
+            return true;
+        }
+
+        return false;
+    }
+
     void SetThreadPriority(void *nativeHandle, ThreadPriority priority) {
         int32_t winPriority = 0;
 
@@ -423,6 +437,20 @@ namespace SR_UTILS_NS::Platform {
         }
 
         return result;
+    }
+
+    bool WaitAndDelete(const SR_UTILS_NS::Path& path) {
+        if (!path.IsFile()) {
+            SR_WARN("Platform::WaitAndDelete() : path is not a file. Path: '{}'", path.ToString());
+            return false;
+        }
+
+        SR_LOG("Platform::WaitAndDelete() : waiting for file to be deleted...");
+        while (true) {
+            if (IsFileDeletable(path)) {
+                return Delete(path);
+            }
+        }
     }
 
     Path GetApplicationPath() {
