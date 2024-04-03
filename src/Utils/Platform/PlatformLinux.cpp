@@ -32,7 +32,7 @@ namespace SR_UTILS_NS::Platform {
         return true;
     }
 
-    void HideCursor(bool isHidden) {
+    void SetCursorVisible(bool isVisible) {
         SRHaltOnce("Not implemented!");
     }
 

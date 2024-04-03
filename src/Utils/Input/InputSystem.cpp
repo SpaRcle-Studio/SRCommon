@@ -136,11 +136,17 @@ namespace SR_UTILS_NS {
     }
 
     void Input::LockCursor(bool isLock) {
-        SR_PLATFORM_NS::HideCursor(isLock);
         m_isLocked = isLock;
     }
 
     bool Input::IsMouseMoved() const {
         return GetMousePos() != GetPrevMousePos();
+    }
+
+    void Input::SetCursorVisible(bool isVisible) {
+        if (isVisible != m_isVisible) {
+            m_isVisible = isVisible;
+            SR_PLATFORM_NS::SetCursorVisible(isVisible);
+        }
     }
 }

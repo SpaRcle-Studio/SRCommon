@@ -47,6 +47,7 @@ namespace SR_UTILS_NS {
         bool GetKey(KeyCode key);
 
         void LockCursor(bool isLock);
+        void SetCursorVisible(bool isVisible);
 
     private:
         void Reset();
@@ -60,6 +61,7 @@ namespace SR_UTILS_NS {
 
         std::atomic<bool> m_init = false;
         std::atomic<bool> m_isLocked = false;
+        std::atomic<bool> m_isVisible = true;
 
         State m_keys[256] = { };
         uint8_t* m_arr = nullptr;

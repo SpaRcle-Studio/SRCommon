@@ -575,8 +575,17 @@ namespace SR_UTILS_NS::Platform {
         ::SetCursorPos(static_cast<int32_t>(pos.x), static_cast<int32_t>(pos.y));
     }
 
-    void HideCursor(bool isHidden) {
-        ::ShowCursor(!isHidden);
+    void SetCursorVisible(bool isVisible) {
+        //::ShowCursor(isVisible);
+
+        if (!isVisible) {
+            ::SetCursor(nullptr);
+            return;
+        }
+
+        HINSTANCE hInstance = ::GetModuleHandle(NULL);  // get a handle to the app's instance
+        HCURSOR hCursor = ::LoadCursor(hInstance, MAKEINTRESOURCE(IDC_ARROW));  // load a cursor
+        ::SetCursor(hCursor);
     }
 
     PlatformType GetType() {
