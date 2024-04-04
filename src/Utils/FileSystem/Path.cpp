@@ -194,7 +194,7 @@ namespace SR_UTILS_NS {
     }
 
     Path Path::Concat(const Path &path) const {
-        if ((!m_path.empty() && m_path.back() != '/') && (!path.Empty() && path.m_path.front() != '/'))
+        if ((!m_path.empty() && m_path.back() != '/') && (!path.IsEmpty() && path.m_path.front() != '/'))
             return m_path + "/" + path.m_path;
 
         return m_path + path.m_path;
@@ -211,10 +211,6 @@ namespace SR_UTILS_NS {
     void Path::NormalizeSelf() {
         m_path = FileSystem::NormalizePath(m_path);
         m_type = GetType();
-    }
-
-    bool Path::Empty() const {
-        return m_path.empty();
     }
 
     Path Path::ConcatExt(const std::string& ext) const {
@@ -355,7 +351,10 @@ namespace SR_UTILS_NS {
     }
 
     bool Path::IsEmpty() const {
-        /// TODO: optimize
+        return m_path.empty();
+    }
+
+    SR_NODISCARD bool Path::IsDirEmpty() const {
         return GetAll().empty();
     }
 

@@ -40,7 +40,7 @@ namespace SR_UTILS_NS {
         bool ExportAllResources(SR_UTILS_NS::Path newDirectory) {
             bool result = true;
 
-            if (!newDirectory.Empty() && !newDirectory.Exists()) {
+            if (!newDirectory.IsEmpty() && !newDirectory.Exists()) {
                 if (!newDirectory.Create()) {
                     SR_ERROR("ResourceEmbedder::ExportAllResources() : failed to create new directory.");
                     result = false;
@@ -62,7 +62,7 @@ namespace SR_UTILS_NS {
         static bool ExportToFile(const EmbedResourceStructure& resource, const SR_UTILS_NS::Path& newDirectory) {
             SR_UTILS_NS::Path path = newDirectory.Concat(resource.path);
 
-            if (newDirectory.Empty()) {
+            if (newDirectory.IsEmpty()) {
                 path = SR_UTILS_NS::Path(resource.path);
             }
 

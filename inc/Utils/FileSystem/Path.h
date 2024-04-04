@@ -97,8 +97,7 @@ namespace SR_UTILS_NS {
         SR_NODISCARD Path SelfRemoveSubPath(const Path& subPath) const;
 
         SR_NODISCARD bool Valid() const;
-        SR_NODISCARD bool Empty() const;
-        SR_NODISCARD bool empty() const { return Empty(); }
+        SR_NODISCARD bool empty() const { return IsEmpty(); }
         SR_NODISCARD bool IsSubPath(const Path& subPath) const;
         SR_NODISCARD bool Contains(const std::string& str) const;
         SR_NODISCARD bool IsHidden() const;
@@ -110,6 +109,7 @@ namespace SR_UTILS_NS {
         SR_NODISCARD bool IsFile() const;
         SR_NODISCARD bool IsAbs() const;
         SR_NODISCARD bool IsEmpty() const;
+        SR_NODISCARD bool IsDirEmpty() const;
 
         SR_NODISCARD std::list<Path> GetFiles() const;
         SR_NODISCARD std::list<Path> GetFolders() const;

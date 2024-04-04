@@ -40,7 +40,7 @@ namespace SR_UTILS_NS {
     void Features::SetPath(const SR_UTILS_NS::Path& path) {
         SR_LOCK_GUARD;
 
-        if (path.Empty() || !path.Exists()) {
+        if (path.IsEmpty() || !path.Exists()) {
             SR_ERROR("Features::Reload() : file not found! \n\tPath: {}", path.ToString());
             return;
         }
@@ -52,7 +52,7 @@ namespace SR_UTILS_NS {
         SR_LOCK_GUARD;
         SR_TRACY_ZONE;
 
-        if (m_path.Empty()) {
+        if (m_path.IsEmpty()) {
             SR_ERROR("Features::Reload() : path is empty!");
             return false;
         }

@@ -2,7 +2,7 @@
 #define SRENGINE_ATLASBUILDERTEST_H
 
 #include <Graphics/Utils/AtlasBuilder.h>
-#include <Utils/ResourceManager/ResourceManager.h>
+#include <Utils/Resources/ResourceManager.h>
 
 namespace SR_UTILS_NS {
 

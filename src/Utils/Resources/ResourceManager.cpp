@@ -509,7 +509,7 @@ namespace SR_UTILS_NS {
     ResourceManager::Hash ResourceManager::RegisterResourcePath(const Path &path) {
         SR_LOCK_GUARD;
 
-        if (path.Empty()) {
+        if (path.IsEmpty()) {
             SRHalt("ResourceManager::RegisterResourcePath() : empty path!");
         }
 
@@ -584,7 +584,7 @@ namespace SR_UTILS_NS {
 
             auto&& path = GetResourcePath(pHardPtr->m_pathHash);
 
-            if (path.Empty()) {
+            if (path.IsEmpty()) {
                 SR_ERROR("ResourceManager::ReloadResources() : resource have empty path!\n\tResource name: " +
                     pHardPtr->m_resourceType->GetName() + "\n\tHash name: " + std::to_string(pHardPtr->m_resourceHash) +
                     "\n\tPath hash: " + std::to_string(pHardPtr->m_pathHash)
