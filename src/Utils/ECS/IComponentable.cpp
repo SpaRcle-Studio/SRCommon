@@ -212,7 +212,7 @@ namespace SR_UTILS_NS {
             return;
         }
 
-        for (uint32_t i = 0; i < m_components.size(); ++i) {
+        for (uint32_t i = 0; i < m_components.size(); ++i) { /// NOLINT
             auto&& pComponent = m_components[i];
             if (!pComponent->IsAwake()) {
                 continue;
@@ -231,7 +231,7 @@ namespace SR_UTILS_NS {
             return;
         }
 
-        for (uint32_t i = 0; i < m_components.size(); ++i) {
+        for (uint32_t i = 0; i < m_components.size(); ++i) { /// NOLINT
             auto&& pComponent = m_components[i];
             if (!pComponent->IsAwake()) {
                 continue;
@@ -278,7 +278,7 @@ namespace SR_UTILS_NS {
     }
 
     void IComponentable::OnPriorityChanged() {
-        if (!IsDestroyed()) {
+        if (IsDestroyed()) {
             return;
         }
 
@@ -289,7 +289,7 @@ namespace SR_UTILS_NS {
     }
 
     void IComponentable::OnMatrixDirty() {
-        if (!IsDestroyed()) {
+        if (IsDestroyed()) {
             return;
         }
 

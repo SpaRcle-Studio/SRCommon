@@ -235,6 +235,9 @@ namespace SR_UTILS_NS {
     }
 
     uint64_t FileSystem::ReadHashFromFile(const Path& path) {
+        SR_TRACY_ZONE;
+        SR_TRACY_ZONE_TEXT(path.ToStringRef());
+
         std::ifstream file(path.ToString(), std::ios::binary);
 
         if (!file.is_open()) {

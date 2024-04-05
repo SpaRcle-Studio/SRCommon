@@ -5,6 +5,7 @@
 #include <Utils/Types/Marshal.h>
 #include <Utils/Common/StringUtils.h>
 #include <Utils/Resources/ResourceManager.h>
+#include <Utils/Profile/TracyContext.h>
 
 namespace SR_HTYPES_NS {
     Marshal::Marshal(std::ifstream& ifs)
@@ -57,6 +58,9 @@ namespace SR_HTYPES_NS {
     }
 
     Marshal::Ptr Marshal::LoadPtr(const Path& path) {
+        SR_TRACY_ZONE;
+        SR_TRACY_ZONE_TEXT(path.ToStringRef());
+
         std::ifstream file(path.ToString(), std::ios::binary);
         if (!file.is_open()) {
             return nullptr;
@@ -74,7 +78,10 @@ namespace SR_HTYPES_NS {
         return pMarshal;
     }
 
-    Marshal Marshal::Load(const Path &path) {
+    Marshal Marshal::Load(const Path& path) {
+        SR_TRACY_ZONE;
+        SR_TRACY_ZONE_TEXT(path.ToStringRef());
+
         std::ifstream file(path.ToString(), std::ios::binary);
         if (!file.is_open()) {
             return Marshal();

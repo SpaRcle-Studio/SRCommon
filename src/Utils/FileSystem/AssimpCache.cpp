@@ -37,6 +37,9 @@ namespace SR_UTILS_NS {
     }
 
     aiScene* AssimpCache::Load(const Path& path) const {
+        SR_TRACY_ZONE;
+        SR_TRACY_ZONE_TEXT(path.ToStringRef());
+
         auto&& marshal = SR_HTYPES_NS::Marshal::Load(path);
         if (!marshal.Valid()) {
             return nullptr;

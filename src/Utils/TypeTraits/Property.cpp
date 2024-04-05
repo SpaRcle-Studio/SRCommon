@@ -38,6 +38,8 @@ namespace SR_UTILS_NS {
     }
 
     Property::MarshalUniquePtr Property::LoadPropertyBase(MarshalRef marshal) const {
+        SR_TRACY_ZONE;
+
         if (m_dontSave) {
             return nullptr;
         }

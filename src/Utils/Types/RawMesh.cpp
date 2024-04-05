@@ -115,6 +115,9 @@ namespace SR_HTYPES_NS {
     }
 
     bool RawMesh::Load() {
+        SR_TRACY_ZONE;
+        SR_TRACY_ZONE_TEXT(GetResourcePath().ToStringRef());
+
         bool hasErrors = !IResource::Load();
 
         auto&& resPath = GetResourcePath();

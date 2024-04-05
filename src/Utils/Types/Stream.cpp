@@ -18,10 +18,16 @@ namespace SR_HTYPES_NS {
     Stream::Stream(std::ifstream& ifs)
         : m_pos(0)
     {
-        std::vector<unsigned char> buffer(std::istreambuf_iterator<char>(ifs), { });
-        m_size = m_capacity = buffer.size();
+        SR_TRACY_ZONE;
+
+        ifs.seekg(0, std::ios::end);
+        std::streamsize fileSize = ifs.tellg();
+        ifs.seekg(0, std::ios::beg);
+
+        m_size = m_capacity = fileSize;
         m_data = Allocate(m_capacity);
-        memcpy(m_data, buffer.data(), m_capacity);
+
+        ifs.read(m_data, fileSize);
     }
 
     Stream::Stream(const std::string& str)
