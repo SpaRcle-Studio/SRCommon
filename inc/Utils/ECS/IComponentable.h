@@ -42,6 +42,7 @@ namespace SR_UTILS_NS {
         virtual void Start(bool force) noexcept;
 
         SR_NODISCARD virtual bool IsActive() const noexcept { return true; }
+        SR_NODISCARD virtual bool IsDestroyed() const noexcept { return false; }
 
         virtual bool SetDirty(bool dirty) {
             if (!m_loadedComponents.empty()) {

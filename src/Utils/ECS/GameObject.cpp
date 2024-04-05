@@ -811,4 +811,8 @@ namespace SR_UTILS_NS {
             pChild->OnParentLayerChanged();
         }
     }
+
+    bool GameObject::IsDestroyed() const noexcept {
+        return m_isDestroyed;
+    }
 }

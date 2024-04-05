@@ -278,7 +278,7 @@ namespace SR_UTILS_NS {
     }
 
     void IComponentable::OnPriorityChanged() {
-        if (!IsActive()) {
+        if (!IsDestroyed()) {
             return;
         }
 
@@ -289,7 +289,7 @@ namespace SR_UTILS_NS {
     }
 
     void IComponentable::OnMatrixDirty() {
-        if (!IsActive()) {
+        if (!IsDestroyed()) {
             return;
         }
 
