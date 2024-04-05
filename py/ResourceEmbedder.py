@@ -1,23 +1,7 @@
-import os
-import re
-import sys
-import subprocess
-
-try:
-    import numpy as np
-except ImportError:
-    subprocess.run([sys.executable, 'pip', 'install', 'numpy'])
-    subprocess.run([sys.executable, '-m', 'pip', 'install', 'numpy'])
-    import numpy as np
-
-try:
-    import argparse
-except ImportError:
-    subprocess.run([sys.executable, 'pip', 'install', 'argparse'])
-    subprocess.run([sys.executable, '-m', 'pip', 'install', 'argparse'])
-    import argparse
+from Common import *
 
 def create_cxx(path):
+    print(f"ResourceEmbedder.py : creating cxx for '{path}'")
     files = [f for f in os.listdir(path) if os.path.isfile(os.path.join(path, f))]
 
     if not os.path.exists(path):
@@ -64,7 +48,7 @@ def create_array(name, data, path):
 
 
 def create_header(path, export_path):
-    print(f"ResourceEmbedder.py : creating header for '{path}'")
+    #print(f"ResourceEmbedder.py : creating header for '{path}'")
     if not os.path.exists(path):
         print(f"Path does not exist: {path}")
         return

@@ -72,6 +72,7 @@ if (SR_TRACY_ENABLE)
 endif()
 
 add_subdirectory(libs/rapidyaml)
+add_subdirectory(libs/cppcoro)
 
 list(APPEND SR_UTILS_LINK_LIBRARIES cxx/ICU.cxx)
 list(APPEND SR_UTILS_LINK_LIBRARIES cxx/Utils.cxx)
@@ -105,7 +106,8 @@ SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_SOURCE_DIR}/inc)
 SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_SOURCE_DIR}/libs)
 SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_SOURCE_DIR}/libs/glm)
 SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_SOURCE_DIR}/libs/fmt/include)
-SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_SOURCE_DIR}/libs/rapidyaml/src  )
+SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_SOURCE_DIR}/libs/cppcoro/include)
+SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_SOURCE_DIR}/libs/rapidyaml/src)
 
 SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_SOURCE_DIR}/libs/openssl/include)
 
@@ -178,7 +180,7 @@ else()
 endif()
 
 target_link_libraries(Utils asio)
-target_link_libraries(Utils ryml::ryml)
+target_link_libraries(Utils ryml::ryml cppcoro)
 
 get_property(SR_UTILS_INCLUDE_DIRECTORIES_CONTENT GLOBAL PROPERTY SR_UTILS_INCLUDE_DIRECTORIES)
 message("SpaRcle utils include directories: ${SR_UTILS_INCLUDE_DIRECTORIES_CONTENT}")
@@ -211,4 +213,4 @@ add_custom_command(TARGET CopyUtilsFiles
 SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_BINARY_DIR}/include)
 SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_BINARY_DIR}/libs)
 
-add_dependencies(${PROJECT_NAME} CopyUtilsFiles EmbedResourcesTarget)
+add_dependencies(${PROJECT_NAME} CopyUtilsFiles EmbedResourcesTarget) #SRUtilsCodegenTarget

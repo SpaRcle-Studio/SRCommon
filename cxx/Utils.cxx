@@ -54,6 +54,7 @@
 #include "../../Utils/src/Utils/TypeTraits/Property.cpp"
 #include "../../Utils/src/Utils/TypeTraits/Properties.cpp"
 #include "../../Utils/src/Utils/TypeTraits/StandardProperty.cpp"
+#include "../../Utils/src/Utils/TypeTraits/SRClass.cpp"
 
 #include "../../Utils/src/Utils/Game/LookAtComponent.cpp"
 #include "../../Utils/src/Utils/Game/DebugLogComponent.cpp"

@@ -10,6 +10,7 @@
 #include <Utils/Common/Numeric.h>
 #include <Utils/Types/SharedPtr.h>
 #include <Utils/TypeTraits/Properties.h>
+#include <Utils/TypeTraits/SRClass.h>
 
 #define SR_ENTITY_SET_VERSION(version)                                                       \
     public:                                                                                  \
@@ -86,7 +87,7 @@ namespace SR_UTILS_NS {
 
     };
 
-    class SR_DLL_EXPORT Entity : public SR_HTYPES_NS::SharedPtr<Entity>, public ISavable, public NonCopyable {
+    class SR_DLL_EXPORT Entity : public SR_HTYPES_NS::SharedPtr<Entity>, public ISavable, public SRClass, public NonCopyable {
     public:
         using Ptr = SR_HTYPES_NS::SharedPtr<Entity>;
 
