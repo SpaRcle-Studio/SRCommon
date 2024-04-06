@@ -219,7 +219,7 @@ if (NOT SR_UTILS_CI_BUILD)
         COMMENT "SpaRcle Engine: Copy utils source files to build directory"
     )
 
-    set(SR_UTILS_DEPENDENCIES  ${SR_UTILS_DEPENDENCIES} CopyUtilsFiles)
+    set(SR_UTILS_DEPENDENCIES  ${SR_UTILS_DEPENDENCIES} "CopyUtilsFiles ")
 endif()
 
 SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_BINARY_DIR}/include)
@@ -231,13 +231,15 @@ if (SR_UTILS_CI_BUILD)
     add_compile_definitions(SR_UTILS_CI_BUILD)
     include(cmake/ResourceEmbedder.cmake)
     EmbedResources(" " " " " ")
-    set(SR_UTILS_DEPENDENCIES  ${SR_UTILS_DEPENDENCIES} EmbedResourcesTarget)
+    set(SR_UTILS_DEPENDENCIES  ${SR_UTILS_DEPENDENCIES} "EmbedResourcesTarget ")
 
     file(WRITE cmake/main.cpp "int main() { return 0; }")
     add_executable(SR_UTILS_CI cmake/main.cpp)
     target_link_libraries(SR_UTILS_CI Utils)
 endif()
 
-set(SR_UTILS_DEPENDENCIES  ${SR_UTILS_DEPENDENCIES} EmbedResourcesTarget)
+#set(SR_UTILS_DEPENDENCIES  ${SR_UTILS_DEPENDENCIES} "EmbedResourcesTarget")
 
-add_dependencies(${PROJECT_NAME} ${SR_UTILS_DEPENDENCIES}) #SRUtilsCodegenTarget
+if (NOT SR_UTILS_CI_BUILD)
+    add_dependencies(${PROJECT_NAME} CopyUtilsFiles EmbedResourcesTarget) #SRUtilsCodegenTarget
+endif()
