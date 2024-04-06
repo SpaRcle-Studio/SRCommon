@@ -103,6 +103,10 @@ parser.add_argument('--resources', help='The resources to embed')
 
 args = parser.parse_args()
 working_directory = args.working_directory
+
+if working_directory == "" and args.export_directory == "":
+    exit(0)
+
 resources = filter(None, args.resources.split('|'))
 for resource_path in resources:
     resource_path = resource_path.replace("\\", "/")

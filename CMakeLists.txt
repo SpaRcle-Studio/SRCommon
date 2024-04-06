@@ -5,6 +5,11 @@ set(CMAKE_CXX_STANDARD 20)
 
 option(SR_UTILS_CMAKE_ASSIMP "" ON)
 option(SR_UTILS_DLL_EXPORTS "" ON)
+option(SR_UTILS_CI_BUILD "" OFF)
+
+if (WIN32)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNOMINMAX")
+endif()
 
 if (SR_UTILS_DLL_EXPORTS)
     add_definitions(
@@ -198,19 +203,41 @@ if (SR_UTILS_DLL_EXPORTS)
     )
 endif()
 
-add_custom_target(CopyUtilsFiles)
-add_custom_command(TARGET CopyUtilsFiles
-    PRE_BUILD
-    COMMAND ${CMAKE_COMMAND}
-        -DSR_UTILS_SOURCE_DIR=${SR_UTILS_SOURCE_DIR}
-        -DSR_UTILS_BINARY_DIR=${SR_UTILS_BINARY_DIR}
-        -DSR_ICU=${SR_ICU}
-        -DSR_TRACY_ENABLE=${SR_TRACY_ENABLE}
-        -P "${CMAKE_CURRENT_SOURCE_DIR}/cmake/CopyFiles.cmake"
-    COMMENT "SpaRcle Engine: Copy utils source files to build directory"
-)
+set(SR_UTILS_DEPENDENCIES "")
+
+if (NOT SR_UTILS_CI_BUILD)
+    include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/CopyFiles.cmake)
+    add_custom_target(CopyUtilsFiles)
+    add_custom_command(TARGET CopyUtilsFiles
+        PRE_BUILD
+        COMMAND ${CMAKE_COMMAND}
+            -DSR_UTILS_SOURCE_DIR=${SR_UTILS_SOURCE_DIR}
+            -DSR_UTILS_BINARY_DIR=${SR_UTILS_BINARY_DIR}
+            -DSR_ICU=${SR_ICU}
+            -DSR_TRACY_ENABLE=${SR_TRACY_ENABLE}
+            -P "${CMAKE_CURRENT_SOURCE_DIR}/cmake/CopyFiles.cmake"
+        COMMENT "SpaRcle Engine: Copy utils source files to build directory"
+    )
+
+    set(SR_UTILS_DEPENDENCIES  ${SR_UTILS_DEPENDENCIES} CopyUtilsFiles)
+endif()
 
 SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_BINARY_DIR}/include)
 SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_BINARY_DIR}/libs)
 
-add_dependencies(${PROJECT_NAME} CopyUtilsFiles EmbedResourcesTarget) #SRUtilsCodegenTarget
+if (SR_UTILS_CI_BUILD)
+    message("SRCommon is built as a part of CI build.")
+
+    add_compile_definitions(SR_UTILS_CI_BUILD)
+    include(cmake/ResourceEmbedder.cmake)
+    EmbedResources(" " " " " ")
+    set(SR_UTILS_DEPENDENCIES  ${SR_UTILS_DEPENDENCIES} EmbedResourcesTarget)
+
+    file(WRITE cmake/main.cpp "int main() { return 0; }")
+    add_executable(SR_UTILS_CI cmake/main.cpp)
+    target_link_libraries(SR_UTILS_CI Utils)
+endif()
+
+set(SR_UTILS_DEPENDENCIES  ${SR_UTILS_DEPENDENCIES} EmbedResourcesTarget)
+
+add_dependencies(${PROJECT_NAME} ${SR_UTILS_DEPENDENCIES}) #SRUtilsCodegenTarget
