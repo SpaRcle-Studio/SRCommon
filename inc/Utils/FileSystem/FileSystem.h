@@ -31,7 +31,7 @@ namespace SR_UTILS_NS {
         }
 
         static uint64_t ReadHashFromFile(const SR_UTILS_NS::Path& path);
-        static void WriteHashToFile(const SR_UTILS_NS::Path& path, uint64_t hash);
+        static bool WriteHashToFile(const SR_UTILS_NS::Path& path, uint64_t hash);
 
         static std::string ReadBinaryAsString(const std::string& path, bool checkError = true);
         static std::vector<char> ReadBinary(const std::string& path);

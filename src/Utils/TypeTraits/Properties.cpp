@@ -75,7 +75,7 @@ namespace SR_UTILS_NS {
         }
     }
 
-    EntityRefProperty& PropertyContainer::AddEntityRefProperty(SpaRcle::Utils::StringAtom name, const EntityRefUtils::OwnerRef& owner) {
+    EntityRefProperty& PropertyContainer::AddEntityRefProperty(SR_UTILS_NS::StringAtom name, const EntityRefUtils::OwnerRef& owner) {
         if (auto&& pProperty = Find(name)) {
             SRHalt("Properties::AddEntityRefProperty() : property \"" + name.ToStringRef() + "\" already exists!");
             return *dynamic_cast<EntityRefProperty*>(pProperty);
@@ -93,14 +93,16 @@ namespace SR_UTILS_NS {
     }
 
     void PropertyContainer::LoadProperty(MarshalRef marshal) noexcept {
-        SR_TRACY_ZONE;
-
         if (auto&& pBlock = LoadPropertyBase(marshal)) {
             auto&& count = pBlock->Read<uint16_t>();
 
             for (uint16_t i = 0; i < count; ++i) {
                 auto&& name = pBlock->Read<StringAtom>();
                 auto&& size = pBlock->Read<uint32_t>();
+
+                SR_TRACY_ZONE;
+                SR_TRACY_ZONE_TEXT(name.ToStringRef());
+
                 auto&& propertyMarshal = pBlock->ReadBytes(size);
 
                 if (auto&& pProperty = Find(name)) {

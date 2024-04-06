@@ -5,6 +5,7 @@
 #include <Utils/FileSystem/Path.h>
 #include <Utils/FileSystem/FileSystem.h>
 #include <Utils/Platform/Platform.h>
+#include <Utils/Profile/TracyContext.h>
 
 namespace SR_UTILS_NS {
     Path::Path()
@@ -117,6 +118,8 @@ namespace SR_UTILS_NS {
     }
 
     void Path::Update() {
+        SR_TRACY_ZONE;
+
         NormalizeSelf();
 
         m_type = GetType();
@@ -166,6 +169,7 @@ namespace SR_UTILS_NS {
     }
 
     Path::Type Path::GetType() const {
+        SR_TRACY_ZONE;
 #if defined(SR_MSVC) || defined (SR_LINUX)
         struct stat s{};
         if(stat(m_path.c_str(), &s) == 0) {
@@ -209,6 +213,7 @@ namespace SR_UTILS_NS {
     }
 
     void Path::NormalizeSelf() {
+        SR_TRACY_ZONE;
         m_path = FileSystem::NormalizePath(m_path);
         m_type = GetType();
     }
@@ -386,5 +391,21 @@ namespace SR_UTILS_NS {
 
     Path Path::EmplaceFront(const std::string &str) const {
         return str + m_path;
+    }
+
+    std::string Path::ConvertToFileName() const {
+        std::string str = ToString();
+
+        if (str.size() >= 2 && str[1] == ':') {
+            str[2] = '-';
+        }
+
+        for (auto&& c : str) {
+            if (c == '/' || c == '\\') {
+                c = '-';
+            }
+        }
+
+        return str;
     }
 }

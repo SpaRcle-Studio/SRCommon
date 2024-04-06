@@ -140,6 +140,8 @@ namespace SR_UTILS_NS {
     //}
 
     std::string FileSystem::NormalizePath(const std::string &path) {
+        SR_TRACY_ZONE;
+
         auto newPath = StringUtils::MakePath(path);
 
         do {
@@ -251,16 +253,22 @@ namespace SR_UTILS_NS {
         return hash;
     }
 
-    void FileSystem::WriteHashToFile(const Path& path, uint64_t hash) {
-        path.Make(Path::Type::File);
+    bool FileSystem::WriteHashToFile(const Path& path, uint64_t hash) {
+        if (!path.Create()) {
+            SR_ERROR("FileSystem::WriteHashToFile() : failed to create file!\n\tPath: " + path.ToString());
+            return false;
+        }
 
         std::ofstream file(path.ToString(), std::ios::binary);
 
         if (!file.is_open()) {
-            return;
+            SR_ERROR("FileSystem::WriteHashToFile() : failed to open file!\n\tPath: " + path.ToString());
+            return false;
         }
 
         file.write((char*)&hash, sizeof(uint64_t));
         file.close();
+
+        return true;
     }
 }

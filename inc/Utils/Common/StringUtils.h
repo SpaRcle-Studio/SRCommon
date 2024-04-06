@@ -7,7 +7,7 @@
 
 #include <Utils/Debug.h>
 #include <Utils/Math/Mathematics.h>
-#include <codecvt>
+#include <Utils/Profile/TracyContext.h>
 
 namespace SR_UTILS_NS {
     SR_MAYBE_UNUSED static std::wstring s2ws(const std::string& str)
@@ -385,6 +385,7 @@ namespace SR_UTILS_NS {
         }
 
         template<typename stringType> static stringType ReplaceAll(stringType const& original, stringType const& from, stringType const& to) noexcept {
+            SR_TRACY_ZONE;
             stringType results;
             typename stringType::const_iterator end = original.end();
             typename stringType::const_iterator current = original.begin();
@@ -405,6 +406,7 @@ namespace SR_UTILS_NS {
             return str;
         }
         inline static std::string MakePath(std::string str, bool toLower = false) noexcept {
+            SR_TRACY_ZONE;
             str = ReplaceAll<std::string>(str, "\\\\", "/");
             str = ReplaceAll<std::string>(str, "\\", "/");
             if (toLower) str = ToLower(str);

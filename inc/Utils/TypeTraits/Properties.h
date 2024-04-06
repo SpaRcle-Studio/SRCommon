@@ -95,6 +95,7 @@ namespace SR_UTILS_NS {
     }
 
     template<typename T> T* PropertyContainer::Find(const StringAtom& name) const noexcept {
+        SR_TRACY_ZONE;
         return Find<T>(name.GetHash());
     }
 

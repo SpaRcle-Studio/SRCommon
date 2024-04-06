@@ -89,6 +89,10 @@ namespace SR_HTYPES_NS {
     }
 
     Stream& Stream::Read(void* pDst, uint64_t count) noexcept {
+        if (count == 0) {
+            return *this;
+        }
+
         SRAssert(m_pos + count <= m_size);
 
         memcpy(pDst, m_data + m_pos, count);

@@ -443,6 +443,7 @@ namespace SR_UTILS_NS {
     }
 
     void ResourceManager::Execute(const SR_HTYPES_NS::Function<void()>& fun) {
+        SR_TRACY_ZONE;
         SR_LOCK_GUARD;
 
         fun();
@@ -487,7 +488,7 @@ namespace SR_UTILS_NS {
 
     const Path& ResourceManager::GetResourcePath(ResourceManager::Hash hashPath) const {
         SR_TRACY_ZONE;
-        SR_LOCK_GUARD;
+        std::lock_guard lock(m_hashPathsMutex);
 
         /// пустая строка
         if (hashPath == 0) {
@@ -507,7 +508,8 @@ namespace SR_UTILS_NS {
     }
 
     ResourceManager::Hash ResourceManager::RegisterResourcePath(const Path &path) {
-        SR_LOCK_GUARD;
+        SR_TRACY_ZONE;
+        std::lock_guard lock(m_hashPathsMutex);
 
         if (path.IsEmpty()) {
             SRHalt("ResourceManager::RegisterResourcePath() : empty path!");

@@ -11,6 +11,7 @@
 #include <Utils/Common/Singleton.h>
 #include <Utils/Resources/IResource.h>
 #include <Utils/Resources/ResourceInfo.h>
+#include <Utils/Profile/TracyContext.h>
 
 namespace SR_UTILS_NS {
     class IResourceReloader;
@@ -55,6 +56,7 @@ namespace SR_UTILS_NS {
         }
 
         template<typename T> T* Find(const Path& path) {
+            SR_TRACY_ZONE;
             return dynamic_cast<T*>(Find(SR_COMPILE_TIME_CRC32_TYPE_NAME(T), path.ToStringRef()));
         }
 
@@ -104,10 +106,13 @@ namespace SR_UTILS_NS {
 
         IResourceReloader* m_defaultReloader = nullptr;
 
-    private:
+        mutable std::recursive_mutex m_hashPathsMutex;
+
         std::list<SR_HTYPES_NS::SharedPtr<FileWatcher>> m_watchers;
         std::queue<SR_HTYPES_NS::SharedPtr<FileWatcher>> m_dirtyWatchers;
         std::queue<ResourceInfo::WeakPtr> m_dirtyResources;
+
+        std::unordered_map<Hash, SR_HTYPES_NS::Thread::Ptr> m_asyncTasks;
 
         std::atomic<bool> m_usePointStackTraceProfiling = false;
         std::atomic<bool> m_isWatchingEnabled = true;

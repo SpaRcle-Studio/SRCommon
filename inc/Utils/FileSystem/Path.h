@@ -77,6 +77,7 @@ namespace SR_UTILS_NS {
         SR_NODISCARD bool Copy(const Path& destination) const;
 
         SR_NODISCARD std::string ToString() const;
+        SR_NODISCARD std::string ConvertToFileName() const;
         SR_NODISCARD const std::string& ToStringRef() const;
         SR_NODISCARD std::string* ToStringPtr() { return &m_path; }
         SR_NODISCARD std::string_view ToStringView() const;
