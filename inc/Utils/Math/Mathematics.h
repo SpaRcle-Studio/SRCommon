@@ -183,15 +183,25 @@ namespace SR_MATH_NS {
         return abs(a - b) < tolerance;
     }
 
-    template<typename T> constexpr bool IsNumber() {
+    template<typename T> constexpr bool IsFloat() {
         if (!IsVolatile<T>()) {
-            return IsNumber<volatile T>();
+            return IsFloat<volatile T>();
         }
 
         return
-            std::is_same_v<T, volatile bool> ||
             std::is_same_v<T, volatile float> ||
             std::is_same_v<T, volatile double> ||
+            std::is_same_v<T, volatile float_t> ||
+            std::is_same_v<T, volatile double_t> ||
+            std::is_same_v<T, volatile Unit>;
+    }
+
+    template<typename T> constexpr bool IsInt() {
+        if (!IsVolatile<T>()) {
+            return IsInt<volatile T>();
+        }
+
+        return
             std::is_same_v<T, volatile int> ||
             std::is_same_v<T, volatile unsigned short> ||
             std::is_same_v<T, volatile short> ||
@@ -201,8 +211,6 @@ namespace SR_MATH_NS {
             std::is_same_v<T, volatile long long> ||
             std::is_same_v<T, volatile unsigned long long> ||
             std::is_same_v<T, volatile unsigned long> ||
-            std::is_same_v<T, volatile float_t> ||
-            std::is_same_v<T, volatile double_t> ||
             std::is_same_v<T, volatile int64_t> ||
             std::is_same_v<T, volatile uint64_t> ||
             std::is_same_v<T, volatile int32_t> ||
@@ -210,8 +218,15 @@ namespace SR_MATH_NS {
             std::is_same_v<T, volatile int8_t> ||
             std::is_same_v<T, volatile uint8_t> ||
             std::is_same_v<T, volatile int16_t> ||
-            std::is_same_v<T, volatile uint16_t> ||
-            std::is_same_v<T, volatile Unit>;
+            std::is_same_v<T, volatile uint16_t>;
+    }
+
+    template<typename T> constexpr bool IsNumber() {
+        if (!IsVolatile<T>()) {
+            return IsNumber<volatile T>();
+        }
+
+        return IsInt<T>() || IsFloat<T>() || std::is_same_v<T, volatile bool>;
     }
 }
 
