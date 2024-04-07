@@ -387,6 +387,7 @@ namespace SR_UTILS_NS {
         template<typename stringType> static stringType ReplaceAll(stringType const& original, stringType const& from, stringType const& to) noexcept {
             SR_TRACY_ZONE;
             stringType results;
+            results.reserve(original.size());
             typename stringType::const_iterator end = original.end();
             typename stringType::const_iterator current = original.begin();
             typename stringType::const_iterator next = std::search(current, end, from.begin(), from.end());
@@ -405,12 +406,11 @@ namespace SR_UTILS_NS {
                 t = tolower(t);
             return str;
         }
-        inline static std::string MakePath(std::string str, bool toLower = false) noexcept {
+        inline static std::string MakePath(const std::string& str, bool toLower = false) noexcept {
             SR_TRACY_ZONE;
-            str = ReplaceAll<std::string>(str, "\\\\", "/");
-            str = ReplaceAll<std::string>(str, "\\", "/");
-            if (toLower) str = ToLower(str);
-            return str;
+            auto&& replaced = ReplaceAll<std::string>(str, "\\", "/");
+            if (toLower) replaced = ToLower(replaced);
+            return replaced;
         }
         inline static std::string FromCharVector(const std::vector<char>& vs) noexcept {
             std::string result(begin(vs), end(vs));

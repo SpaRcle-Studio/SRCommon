@@ -105,6 +105,7 @@ namespace SR_HTYPES_NS {
 
         m_fromCache = false;
 
+        m_indices.clear();
         m_bones.clear();
         m_optimizedBones.clear();
 
@@ -314,41 +315,52 @@ namespace SR_HTYPES_NS {
         return vertices;
     }
 
-    std::vector<uint32_t> RawMesh::GetIndices(uint32_t id) const {
+    const std::vector<uint32_t>& RawMesh::GetIndices(uint32_t id) const {
+        SR_TRACY_ZONE;
+
+        static std::vector<uint32_t> empty;
+
+        if (id >= m_indices.size()) {
+            SRHalt("Out of range!");
+            return empty;
+        }
+
+        if (!m_indices[id].empty()) {
+            return m_indices[id];
+        }
+
         std::vector<uint32_t> indices;
 
     #ifdef SR_UTILS_ASSIMP
         if (!m_scene || id >= m_scene->mNumMeshes) {
-            SRAssert2(false, "Out of range or invalid scene!");
-            return {};
+            SRHalt("Out of range or invalid scene!");
+            static std::vector<uint32_t> empty;
         }
 
         auto&& mesh = m_scene->mMeshes[id];
 
-
-        indices.reserve(mesh->mNumFaces * 3);
+        indices.resize(mesh->mNumFaces * 3);
+        uint32_t count = 0;
 
         for (uint32_t i = 0; i < mesh->mNumFaces; ++i) {
-            aiFace face = mesh->mFaces[i];
+            const aiFace& face = mesh->mFaces[i];
 
-            SRAssert2(face.mNumIndices <= 3, "Mesh isn't triangulated!");
+            if (face.mNumIndices > 3) {
+                SRHalt("Mesh isn't triangulated!");
+                return empty;
+            }
 
-            if (face.mNumIndices == 1) {
-                indices.emplace_back(face.mIndices[0]);
-            }
-            else if (face.mNumIndices == 2) {
-                indices.emplace_back(face.mIndices[0]);
-                indices.emplace_back(face.mIndices[1]);
-            }
-            else {
-                indices.emplace_back(face.mIndices[0]);
-                indices.emplace_back(face.mIndices[1]);
-                indices.emplace_back(face.mIndices[2]);
-            }
+            memcpy(&indices[count], face.mIndices, sizeof(uint32_t) * face.mNumIndices);
+
+            count += face.mNumIndices;
         }
+
+        indices.resize(count);
     #endif
 
-        return indices;
+        m_indices[id] = std::move(indices);
+
+        return m_indices[id];
     }
 
     uint32_t RawMesh::GetVerticesCount(uint32_t id) const {
@@ -438,6 +450,7 @@ namespace SR_HTYPES_NS {
     void RawMesh::CalculateBones() {
     #ifdef SR_UTILS_ASSIMP
         m_bones.resize(m_scene->mNumMeshes);
+        m_indices.resize(m_scene->mNumMeshes);
 
         for (uint32_t meshId = 0; meshId < m_scene->mNumMeshes; ++meshId) {
             auto&& pMesh = m_scene->mMeshes[meshId];

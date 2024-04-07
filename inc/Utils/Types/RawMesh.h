@@ -54,7 +54,7 @@ namespace SR_HTYPES_NS {
         SR_NODISCARD std::string GetGeometryName(uint32_t id) const;
 
         SR_NODISCARD std::vector<SR_UTILS_NS::Vertex> GetVertices(uint32_t id) const;
-        SR_NODISCARD std::vector<uint32_t> GetIndices(uint32_t id) const;
+        SR_NODISCARD const std::vector<uint32_t>& GetIndices(uint32_t id) const;
         SR_NODISCARD const ska::flat_hash_map<uint64_t, uint32_t>& GetBones(uint32_t id) const;
         SR_NODISCARD const ska::flat_hash_map<Hash, uint16_t>& GetOptimizedBones() const { return m_optimizedBones; }
         SR_NODISCARD const SR_MATH_NS::Matrix4x4& GetBoneOffset(uint64_t hashName) const;
@@ -97,6 +97,7 @@ namespace SR_HTYPES_NS {
 
         ska::flat_hash_map<Hash, SR_MATH_NS::Matrix4x4> m_boneOffsetsMap;
         std::vector<SR_MATH_NS::Matrix4x4> m_boneOffsets;
+        mutable std::vector<std::vector<uint32_t>> m_indices;
 
         RawMeshParams m_params;
 

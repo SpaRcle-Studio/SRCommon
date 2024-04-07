@@ -129,11 +129,12 @@ namespace SR_UTILS_NS {
 
         Path Normalize();
         void NormalizeSelf();
+        void ExtractNameAndExt();
 
     private:
         std::string m_path;
-        std::string m_name;
-        std::string m_ext;
+        std::string_view m_name;
+        std::string_view m_ext;
         uint64_t    m_hash;
         Type        m_type;
 
