@@ -8,8 +8,13 @@ option(SR_UTILS_DLL_EXPORTS "" ON)
 option(SR_UTILS_CI_BUILD "" OFF)
 
 if (WIN32)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNOMINMAX -fPIC")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNOMINMAX")
 endif()
+
+if (UNIX)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
+endif()
+
 
 if (SR_UTILS_DLL_EXPORTS)
     add_definitions(
