@@ -436,4 +436,10 @@ namespace SR_WORLD_NS {
         m_sceneUpdater->SetDirty();
         return IComponentable::SetDirty(dirty);
     }
+
+    void Scene::Init() {
+        if (m_logic) {
+            m_logic->Init();
+        }
+    }
 }

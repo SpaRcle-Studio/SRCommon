@@ -16,59 +16,51 @@ namespace SR_UTILS_NS {
         , m_type(Type::Undefined)
     { }
 
-    Path::Path(std::string_view path, bool fast)
-        : Path(path.data(), fast)
+    Path::Path(std::string_view path)
+        : Path(path.data())
     { }
 
-    Path::Path(std::wstring path, bool fast)
+    Path::Path(std::wstring path)
         : m_path(SR_WS2S(path))
         , m_name()
         , m_ext()
         , m_hash(SR_UINT64_MAX)
         , m_type(Type::Undefined)
     {
-        if (!fast) {
-            Update();
-        }
+        Update();
         m_hash = SR_HASH_STR(m_path);
     }
 
-    Path::Path(SR_UTILS_NS::StringAtom stringAtom, bool fast)
+    Path::Path(SR_UTILS_NS::StringAtom stringAtom)
         : m_path(stringAtom)
         , m_name()
         , m_ext()
         , m_hash(SR_UINT64_MAX)
         , m_type(Type::Undefined)
     {
-        if (!fast) {
-            Update();
-        }
+        Update();
         m_hash = SR_HASH_STR(m_path);
     }
 
-    Path::Path(std::string path, bool fast)
+    Path::Path(std::string path)
         : m_path(std::move(path))
         , m_name()
         , m_ext()
         , m_hash(SR_UINT64_MAX)
         , m_type(Type::Undefined)
     {
-        if (!fast) {
-            Update();
-        }
+        Update();
         m_hash = SR_HASH_STR(m_path);
     }
 
-    Path::Path(const char* path, bool fast)
+    Path::Path(const char* path)
         : m_path(path)
         , m_name()
         , m_ext()
         , m_hash(SR_UINT64_MAX)
         , m_type(Type::Undefined)
     {
-        if (!fast) {
-            Update();
-        }
+        Update();
         m_hash = SR_HASH_STR(m_path);
     }
 

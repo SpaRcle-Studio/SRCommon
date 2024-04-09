@@ -107,9 +107,9 @@ namespace SR_HTYPES_NS {
         using Ptr = SharedPtr<T>;
 
         SharedPtr() = default;
-        SharedPtr(const T* constPtr); /** NOLINT */
-        SharedPtr(const T* constPtr, SharedPtrPolicy policy); /** NOLINT */
-        SharedPtr(SharedPtr const &ptr);
+        SharedPtr(const T* constPtr); /** NOLINT(google-explicit-constructor) */
+        SharedPtr(const T* constPtr, SharedPtrPolicy policy);
+        SharedPtr(SharedPtr const& ptr);
         SharedPtr(SharedPtr&& ptr) noexcept
             : m_data(SR_UTILS_NS::Exchange(ptr.m_data, nullptr))
             , m_ptr(SR_UTILS_NS::Exchange(ptr.m_ptr, nullptr))
@@ -128,8 +128,8 @@ namespace SR_HTYPES_NS {
         }
 
         SR_NODISCARD SR_FORCE_INLINE operator bool() const noexcept { return m_data && m_data->valid; } /** NOLINT */
-        SharedPtr<T>& operator=(const SharedPtr<T> &ptr);
-        SharedPtr<T>& operator=(T *ptr);
+        SharedPtr<T>& operator=(const SharedPtr<T>& ptr);
+        SharedPtr<T>& operator=(T* ptr);
         SharedPtr<T>& operator=(SharedPtr<T>&& ptr) noexcept {
             Reset();
 
@@ -144,12 +144,12 @@ namespace SR_HTYPES_NS {
 
             return *this;
         }
-        SR_NODISCARD SR_FORCE_INLINE T& operator*() const noexcept { return *m_ptr; }
-        SR_NODISCARD SR_FORCE_INLINE T* operator->() const noexcept { return m_ptr; }
-        SR_NODISCARD SR_INLINE bool operator==(const SharedPtr<T>& right) const noexcept {
+        SR_FORCE_INLINE T& operator*() const { return *m_ptr; }
+        SR_FORCE_INLINE T* operator->() const { return m_ptr; }
+        SR_INLINE bool operator==(const SharedPtr<T>& right) const {
             return m_ptr == right.m_ptr;
         }
-        SR_NODISCARD SR_INLINE bool operator!=(const SharedPtr<T>& right) const noexcept {
+        SR_INLINE bool operator!=(const SharedPtr<T>& right) const {
             return m_ptr != right.m_ptr;
         }
         template<typename U> SharedPtr<U> DynamicCast() const {
@@ -168,24 +168,32 @@ namespace SR_HTYPES_NS {
             return reinterpret_cast<U>(m_ptr);
         }
 
-        SR_NODISCARD SR_FORCE_INLINE T* Get() const noexcept { return m_ptr; }
-        SR_NODISCARD SR_FORCE_INLINE SharedPtrDynamicData* GetPtrData() const noexcept { return m_data; }
-        SR_NODISCARD SR_FORCE_INLINE void* GetRawPtr() const noexcept { return (void*)m_ptr; }
+        const T* Get() const { return m_ptr; }
+        T* Get() { return m_ptr; }
+
+        const SharedPtrDynamicData* GetPtrData() const { return m_data; } /// NOLINT(modernize-use-nodiscard)
+        SharedPtrDynamicData* GetPtrData() { return m_data; }
+
+        const void* GetRawPtr() const { return reinterpret_cast<const void*>(m_ptr); } /// NOLINT(modernize-use-nodiscard)
+        void* GetRawPtr() { return reinterpret_cast<void*>(m_ptr); }
+
         SR_NODISCARD SharedPtr<T> GetThis() const {
             return *this;
         }
-        SR_NODISCARD SR_FORCE_INLINE bool Valid() const noexcept { return m_data && m_data->valid; }
+
+        bool Valid() const { return m_data && m_data->valid; } /// NOLINT(modernize-use-nodiscard)
 
         bool AutoFree(const SR_HTYPES_NS::Function<void(T *ptr)>& freeFun);
         bool AutoFree();
 
         void Reset();
-        SR_NODISCARD SR_FORCE_INLINE bool RecursiveLockIfValid() const noexcept;
-        SR_NODISCARD SR_FORCE_INLINE bool TryRecursiveLockIfValid() const noexcept;
-        SR_FORCE_INLINE void Unlock() const noexcept { /** nothing */  }
+
+        SR_NODISCARD bool RecursiveLockIfValid() const noexcept;
+        SR_NODISCARD bool TryRecursiveLockIfValid() const noexcept;
+        void Unlock() const noexcept { /** nothing */  }
 
     private:
-        bool FreeImpl(const SR_HTYPES_NS::Function<void(T *ptr)> &freeFun);
+        bool FreeImpl(const SR_HTYPES_NS::Function<void(T *ptr)>& freeFun);
 
     private:
         SharedPtrDynamicData* m_data = nullptr;
@@ -212,10 +220,10 @@ namespace SR_HTYPES_NS {
         else {
             m_ptr = ptr;
             m_data = new SharedPtrDynamicData(
-                    1, /// strong
-                    0,  /// weak
-                    true,    /// valid
-                    SharedPtrPolicy::Automatic /// policy
+                1, /// strong
+                0, /// weak
+                true, /// valid
+                SharedPtrPolicy::Automatic /// policy
             );
         }
     }
@@ -232,9 +240,9 @@ namespace SR_HTYPES_NS {
         m_ptr = ptr;
         m_data = new SharedPtrDynamicData(
             0, /// strong
-            0,  /// weak
-            true,    /// valid
-            policy        /// policy
+            0, /// weak
+            true, /// valid
+            policy /// policy
         );
     }
 
@@ -295,10 +303,10 @@ namespace SR_HTYPES_NS {
             m_ptr = ptr;
 
             m_data = new SharedPtrDynamicData(
-                    1,    /// strong
-                    0,    /// weak
-                    true, /// valid
-                    SharedPtrPolicy::Automatic /// policy
+                1, /// strong
+                0, /// weak
+                true, /// valid
+                SharedPtrPolicy::Automatic /// policy
             );
         }
 
@@ -385,11 +393,11 @@ namespace std {
 
     template <typename T> struct less<SR_HTYPES_NS::SharedPtr<T>> {
         bool operator()(const SR_HTYPES_NS::SharedPtr<T> &lhs, const SR_HTYPES_NS::SharedPtr<T> &rhs) const {
-            void* a = lhs.GetRawPtr();
-            void* b = rhs.GetRawPtr();
+            const void* a = lhs.GetRawPtr();
+            const void* b = rhs.GetRawPtr();
             return a < b;
         }
     };
 }
 
-#endif //SR_ENGINE_SHAREDPTR_H
+#endif //SR_ENGINE_SHARED_PTR_H

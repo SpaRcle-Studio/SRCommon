@@ -118,6 +118,8 @@ namespace SR_WORLD_NS {
     }
 
     bool Chunk::PreLoad(SR_HTYPES_NS::Marshal* pMarshal) {
+        SR_TRACY_ZONE;
+
         /// TODO: add version and migration
 
         if (pMarshal && pMarshal->Valid()) {

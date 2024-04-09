@@ -16,6 +16,7 @@ namespace SR_WORLD_NS {
         ~SceneCubeChunkLogic() override;
 
     public:
+        void Init() override;
         bool Reload() override;
         void Destroy() override;
         void Update(float_t dt) override;
@@ -51,10 +52,16 @@ namespace SR_WORLD_NS {
         void UpdateScope(float_t dt);
         void SaveRegion(const SR_UTILS_NS::Path& path, Region* pRegion, SR_HTYPES_NS::DataStorage* pContext) const;
 
+        void ThreadFunction();
+
     private:
         std::list<int64_t> m_cubesIds;
         std::list<int64_t> m_planesIds;
         bool m_debugDirty = false;
+
+        std::atomic<bool> m_isAlive = false;
+
+        SR_HTYPES_NS::Thread::Ptr m_thread = nullptr;
 
         World::Tensor m_tensor;
 

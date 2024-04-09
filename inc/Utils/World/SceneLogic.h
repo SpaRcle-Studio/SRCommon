@@ -16,6 +16,7 @@ namespace SR_WORLD_NS {
     class Scene;
 
     class SceneLogic : public SR_HTYPES_NS::SafePtr<SceneLogic> {
+        using Super = SR_HTYPES_NS::SafePtr<SceneLogic>;
     public:
         using Ptr = SR_HTYPES_NS::SafePtr<SceneLogic>;
         using ScenePtr = SR_HTYPES_NS::SafePtr<Scene>;
@@ -33,6 +34,7 @@ namespace SR_WORLD_NS {
     public:
         SR_NODISCARD virtual bool IsDefault() const noexcept { return false; }
 
+        virtual void Init() { }
         virtual void Update(float_t dt) { }
         virtual void Destroy() { }
         virtual void PostLoad() { }

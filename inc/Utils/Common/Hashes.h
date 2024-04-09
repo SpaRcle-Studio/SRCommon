@@ -158,7 +158,6 @@ namespace SR_UTILS_NS {
     template <class T, class... Types> constexpr bool IsAnyOfV = std::disjunction_v<std::is_same<T, Types>...>;
     template <class T> SR_INLINE constexpr bool IsECharT = IsAnyOfV<T, char, wchar_t, char8_t, char16_t, char32_t>;
 
-
     template<Hash::Detail::SHA256HashType HashType, typename DataTypePtr>
         requires std::is_pointer_v<DataTypePtr>
         HashType sha256(const DataTypePtr data, uint32_t size) {
@@ -218,7 +217,6 @@ template<> struct SR_UTILS_NS::SRHash<nullptr_t> {
         return HashRepresentation(null);
     }
 };
-
 
 #define SR_COMBINE_HASHES(x1, x2) (SR_UTILS_NS::CombineTwoHashes(x1, x2))
 

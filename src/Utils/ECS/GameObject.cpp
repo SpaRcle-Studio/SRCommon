@@ -512,6 +512,8 @@ namespace SR_UTILS_NS {
     }
 
     GameObject::Ptr GameObject::Load(SR_HTYPES_NS::Marshal& marshal, const ScenePtr& scene) {
+        SR_TRACY_ZONE;
+
         SR_UTILS_NS::GameObject::Ptr gameObject;
 
         /// для экономии памяти стека при рекурсивном создании объектов, кладем все переменные в эту область видимости.

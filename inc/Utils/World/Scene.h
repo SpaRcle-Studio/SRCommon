@@ -51,6 +51,7 @@ namespace SR_WORLD_NS {
         static bool IsExists(const Path& path);
         static Path GetAbsPath(const Path& path);
 
+        void Init();
         void Prepare();
 
         bool Save();

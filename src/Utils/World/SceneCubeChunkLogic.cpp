@@ -17,6 +17,8 @@ namespace SR_WORLD_NS {
 
     SceneCubeChunkLogic::~SceneCubeChunkLogic() {
         SR_SAFE_DELETE_PTR(m_observer);
+        SRAssert(!m_isAlive);
+        SRAssert(!m_thread);
     }
 
     bool SceneCubeChunkLogic::ReloadConfig() {
@@ -443,6 +445,13 @@ namespace SR_WORLD_NS {
             SR_LOG("SceneCubeChunkLogic::Destroy() : unload " + std::to_string(m_regions.size()) + " regions...");
         }
 
+        m_isAlive = false;
+        if (m_thread) {
+            m_thread->Join();
+            m_thread->Free();
+            m_thread = nullptr;
+        }
+
         for (auto&& [position, region] : m_regions) {
             region->Unload(true);
             delete region;
@@ -615,6 +624,24 @@ namespace SR_WORLD_NS {
             pRegion->PostLoad();
         }
 
-        SceneLogic::PostLoad();
+        Super::PostLoad();
+    }
+
+    void SceneCubeChunkLogic::ThreadFunction() {
+        while (m_isAlive) {
+
+        }
+    }
+
+    void SceneCubeChunkLogic::Init() {
+        SRAssert(!m_isAlive);
+        SRAssert(!m_thread);
+
+        m_isAlive = true;
+
+        m_thread = SR_HTYPES_NS::Thread::Factory::Instance().Create(&SceneCubeChunkLogic::ThreadFunction, this);
+        m_thread->SetName("SceneCubeChunkLogic");
+
+        Super::Init();
     }
 }

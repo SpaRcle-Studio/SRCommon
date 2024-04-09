@@ -233,7 +233,7 @@ namespace SR_UTILS_NS {
     }
 
     Path IResource::InitializeResourcePath() const {
-        return SR_UTILS_NS::Path(GetResourceId(), false /** fast */);
+        return SR_UTILS_NS::Path(GetResourceId());
     }
 
     Path IResource::GetAssociatedPath() const {

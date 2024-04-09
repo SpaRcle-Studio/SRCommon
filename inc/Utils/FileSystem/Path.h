@@ -20,11 +20,11 @@ namespace SR_UTILS_NS {
     public:
         Path();
         Path(const Path& path);
-        Path(const char* path, bool fast = false);
-        Path(SR_UTILS_NS::StringAtom stringAtom, bool fast = false);
-        Path(std::string path, bool fast = false);
-        Path(std::string_view path, bool fast = false);
-        Path(std::wstring path, bool fast = false);
+        Path(const char* path);
+        Path(SR_UTILS_NS::StringAtom stringAtom);
+        Path(std::string path);
+        Path(std::string_view path);
+        Path(std::wstring path);
 
         Path(Path&& path) noexcept
             : m_path(SR_UTILS_NS::Exchange(path.m_path, {}))
@@ -44,7 +44,17 @@ namespace SR_UTILS_NS {
         }
 
         operator const std::string&() { return m_path; } /** NOLINT */
-        Path& operator=(const Path& path) = default;
+
+        Path& operator=(const Path& path) {
+            m_path = path.m_path;
+
+            ExtractNameAndExt();
+
+            m_hash = path.m_hash;
+            m_type = path.m_type;
+
+            return *this;
+        }
 
         bool operator==(const Path& path) const noexcept {
             return m_path == path.ToStringRef();

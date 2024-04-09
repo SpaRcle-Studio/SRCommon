@@ -44,10 +44,7 @@ namespace SR_HTYPES_NS {
 
     SR_UTILS_NS::Path RawMesh::InitializeResourcePath() const {
         auto&& resourceId = GetResourceId();
-        return SR_UTILS_NS::Path(
-                SR_UTILS_NS::StringUtils::SubstringView(resourceId, '|', 1),
-                true /** fast */
-        );
+        return SR_UTILS_NS::Path(SR_UTILS_NS::StringUtils::SubstringView(resourceId, '|', 1));
     }
 
     RawMesh::Ptr RawMesh::Load(const SR_UTILS_NS::Path &rawPath) {

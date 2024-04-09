@@ -134,6 +134,8 @@ namespace SR_UTILS_NS {
     }
 
     Transform* Transform::Load(SR_HTYPES_NS::Marshal& marshal) {
+        SR_TRACY_ZONE;
+
         Transform* pTransform = nullptr;
 
         SR_MAYBE_UNUSED auto&& version = marshal.Read<uint16_t>();
