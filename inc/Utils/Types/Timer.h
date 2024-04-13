@@ -6,6 +6,7 @@
 #define SR_UTILS_TIMER_H
 
 #include <Utils/Debug.h>
+#include <Utils/Profile/TracyContext.h>
 
 namespace SR_HTYPES_NS {
     class SR_DLL_EXPORT Timer {
