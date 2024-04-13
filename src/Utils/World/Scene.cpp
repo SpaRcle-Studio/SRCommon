@@ -357,6 +357,12 @@ namespace SR_WORLD_NS {
     }
 
     void Scene::Prepare() {
+        SR_TRACY_ZONE;
+
+        if (auto&& pLogic = GetLogicBase()) {
+            pLogic->PostLoad();
+        }
+
         if (!m_deleteQueue.empty() || !m_newQueue.empty() || !m_destroyedComponents.empty()) {
             SetDirty(true);
             OnChanged();

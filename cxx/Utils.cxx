@@ -32,6 +32,7 @@
 #include "../src/Utils/Math/Rect.cpp"
 
 #include "../src/Utils/TaskManager/TaskManager.cpp"
+#include "../src/Utils/TaskManager/ThreadWorker.cpp"
 
 #include "../src/Utils/Settings.cpp"
 #include "../src/Utils/DebugDraw.cpp"

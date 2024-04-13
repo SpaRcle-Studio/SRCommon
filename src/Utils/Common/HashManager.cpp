@@ -24,6 +24,7 @@ namespace SR_UTILS_NS {
 
     const std::string& HashManager::HashToString(HashManager::Hash hash) const {
         SR_LOCK_GUARD;
+
         static std::string gDefault;
         if (auto&& pIt = m_strings.find(hash); pIt != m_strings.end()) {
             return pIt->second->data;

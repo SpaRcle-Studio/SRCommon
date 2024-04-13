@@ -8,13 +8,14 @@
 #include <Utils/macros.h>
 
 namespace SR_UTILS_NS {
-    static inline void Breakpoint() {
-#if defined(SR_WIN32) and defined(SR_MSVC)
+    SR_INLINE_STATIC void Breakpoint() {
+    #if defined(SR_WIN32) and defined(SR_MSVC)
         __debugbreak();
-#endif
-#ifdef SR_LINUX
-    raise(SIGTRAP);
-#endif
+    #elif defined(SR_LINUX)
+        raise(SIGTRAP);
+    #else
+        #error "Breakpoint not implemented for this platform"
+    #endif
     }
 }
 

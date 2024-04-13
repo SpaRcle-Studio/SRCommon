@@ -34,8 +34,14 @@ namespace SR_UTILS_NS {
 
     };
 
-    class SR_DLL_EXPORT EnumReflector : public NonCopyable
-    {
+    class SR_DLL_EXPORT EnumReflector : public NonCopyable {
+    public:
+        struct Enumerator {
+            SR_UTILS_NS::StringAtom name;
+            uint64_t hashName = 0;
+            int64_t value = 0;
+        };
+
     public:
         template<typename Integral> EnumReflector(const Integral* values, size_t count, const char* name, const char* body);
         ~EnumReflector() override;
@@ -46,8 +52,10 @@ namespace SR_UTILS_NS {
         template<typename EnumType> SR_NODISCARD static SR_UTILS_NS::StringAtom ToStringAtom(EnumType value);
         template<typename EnumType> SR_NODISCARD static SR_UTILS_NS::StringAtom ToStringAtom(int64_t value);
         template<typename EnumType> SR_NODISCARD static EnumType FromString(const SR_UTILS_NS::StringAtom& value);
+        template<typename EnumType> SR_NODISCARD static EnumType FromStringLowerCase(const std::string& value);
 
         template<typename EnumType> SR_NODISCARD static const std::vector<SR_UTILS_NS::StringAtom>& GetNames();
+        template<typename EnumType> SR_NODISCARD static const std::vector<Enumerator>& GetValues();
         template<typename EnumType> SR_NODISCARD static std::vector<SR_UTILS_NS::StringAtom> GetNamesFilter(const std::function<bool(EnumType)>& filter);
 
         template<typename EnumType> SR_NODISCARD static int64_t GetIndex(EnumType value);
@@ -57,6 +65,7 @@ namespace SR_UTILS_NS {
 
         SR_NODISCARD SR_MAYBE_UNUSED std::optional<SR_UTILS_NS::StringAtom> ToStringInternal(int64_t value) const;
         SR_NODISCARD SR_MAYBE_UNUSED std::optional<int64_t> FromStringInternal(const SR_UTILS_NS::StringAtom& name) const;
+        SR_NODISCARD SR_MAYBE_UNUSED std::optional<int64_t> FromStringLowerCaseInternal(const std::string& value) const;
         SR_NODISCARD SR_MAYBE_UNUSED std::optional<int64_t> GetIndexInternal(int64_t value) const;
         SR_NODISCARD SR_MAYBE_UNUSED std::optional<int64_t> AtInternal(int64_t index) const;
         SR_NODISCARD SR_MAYBE_UNUSED const std::vector<SR_UTILS_NS::StringAtom>& GetNamesInternal() const { return m_data->names; }
@@ -70,12 +79,6 @@ namespace SR_UTILS_NS {
     private:
         struct Data
         {
-            struct Enumerator
-            {
-                SR_UTILS_NS::StringAtom name;
-                uint64_t hashName;
-                int64_t value;
-            };
             std::vector<Enumerator> values;
             std::vector<SR_UTILS_NS::StringAtom> names;
             SR_UTILS_NS::StringAtom enumName;
@@ -194,6 +197,10 @@ namespace SR_UTILS_NS {
         return GetReflector<EnumType>()->m_data->names;
     }
 
+    template<typename EnumType> const std::vector<SR_UTILS_NS::EnumReflector::Enumerator>& EnumReflector::GetValues() {
+        return GetReflector<EnumType>()->m_data->values;
+    }
+
     template<typename EnumType> std::vector<SR_UTILS_NS::StringAtom> EnumReflector::GetNamesFilter(const std::function<bool(EnumType)> &filter) {
         std::vector<SR_UTILS_NS::StringAtom> names;
 
@@ -210,6 +217,16 @@ namespace SR_UTILS_NS {
 
     template<typename EnumType> int64_t EnumReflector::GetIndex(EnumType value) {
         return GetIndex<EnumType>(static_cast<int64_t>(value));
+    }
+
+    template<typename EnumType> EnumType EnumReflector::FromStringLowerCase(const std::string &value) {
+        if (auto&& result = GetReflector<EnumType>()->FromStringLowerCaseInternal(value); result.has_value()) {
+            return static_cast<EnumType>(result.value());
+        }
+
+        ErrorInternal("EnumReflector::FromStringLowerCase() : unknown type! Value: " + value);
+
+        return static_cast<EnumType>(0);
     }
 
     template<typename EnumType> int64_t EnumReflector::GetIndex(int64_t value) {

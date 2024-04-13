@@ -154,6 +154,14 @@ namespace SR_UTILS_NS {
                 return source.substr(pos + offset, source.size() - 1);
         }
 
+        static std::string Substring(const std::string& source, const char* subStr) {
+            if (auto&& pos = source.find(subStr); pos == std::string::npos)
+                return source;
+            else {
+                return source.substr(pos, source.size() - 1);
+            }
+        }
+
         static std::string Substring(const std::string_view& source, char symbol, uint32_t offset = 0) {
             if (auto&& pos = source.find(symbol); pos == std::string::npos)
                 return std::string(source);
@@ -401,11 +409,13 @@ namespace SR_UTILS_NS {
             return results;
         }
 
-        inline static std::string ToLower(std::string str) noexcept {
-            for (char & t : str)
-                t = tolower(t);
+        SR_INLINE_STATIC std::string ToLower(std::string str) noexcept {
+            for (char& t : str) {
+                t = static_cast<char>(tolower(static_cast<char>(t)));
+            }
             return str;
         }
+
         inline static std::string MakePath(const std::string& str, bool toLower = false) noexcept {
             SR_TRACY_ZONE;
             auto&& replaced = ReplaceAll<std::string>(str, "\\", "/");

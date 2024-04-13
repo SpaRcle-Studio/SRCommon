@@ -43,7 +43,7 @@ namespace SR_UTILS_NS {
         return buffer;
     }
 
-    std::string FileSystem::ReadAllText(const std::string &path) {
+    std::string FileSystem::ReadAllText(const std::string& path) {
         std::string data = std::string();
         std::ifstream stream(path, std::ios::in);
         if (stream.is_open()) {

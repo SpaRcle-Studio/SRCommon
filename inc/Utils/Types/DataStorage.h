@@ -43,6 +43,8 @@ namespace SR_HTYPES_NS {
         template<typename T> T* GetPointerDef(const std::string& name, T* def) const;
         template<typename T> T* GetPointerDef(T* def) const;
 
+        template<typename T> T GetValue(const char* name) const;
+
         template<typename T> T GetValue(const std::string& name) const;
         template<typename T> T GetValue() const;
 
@@ -105,6 +107,10 @@ namespace SR_HTYPES_NS {
 
     template<typename T> void DataStorage::SetValue(const T &value) {
         SetValue(SR_HASH_TYPE_NAME_STR_REGISTER(T), value);
+    }
+
+    template<typename T> T DataStorage::GetValue(const char* name) const {
+        return GetValue<T>(SR_HASH_STR_REGISTER(name));
     }
 
     template<typename T> T DataStorage::GetValue(const std::string& name) const {
