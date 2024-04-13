@@ -11,21 +11,21 @@ namespace SR_HTYPES_NS {
     class SR_DLL_EXPORT Timer {
     public:
         explicit Timer(float_t updateFrequency)
-                : m_updateFrequency(updateFrequency)
+            : m_updateFrequency(updateFrequency)
         { }
 
         explicit Timer(uint32_t countInSecond)
-                : m_updateFrequency(
-                static_cast<float_t>(60) / static_cast<float_t>(countInSecond * 60)
-        )
+            : m_updateFrequency(static_cast<float_t>(60) / static_cast<float_t>(countInSecond * 60))
         { }
 
         Timer()
-                : Timer(0.f)
+            : Timer(0.f)
         { }
 
     public:
         bool Update() {
+            SR_TRACY_ZONE;
+
             if (m_deltaTime > m_updateFrequency) {
                 m_frames = 0; m_deltaTime = 0;
             }
@@ -42,14 +42,14 @@ namespace SR_HTYPES_NS {
             return m_deltaTime > m_updateFrequency;
         }
 
-        SR_NODISCARD float_t GetDeltaTime() const { return m_deltaTime; }
+        SR_NODISCARD float_t GetDeltaTime() const { return static_cast<float_t>(m_deltaTime); }
         SR_NODISCARD uint32_t GetFrames() const { return m_frames; }
 
     private:
-        float_t   m_updateFrequency;
-        double_t  m_deltaTime = 0;
-        uint32_t  m_frames = 0;
-        TimePointType m_beginFrame{};
+        float_t m_updateFrequency;
+        double_t m_deltaTime = 0;
+        uint32_t m_frames = 0;
+        TimePointType m_beginFrame = {};
 
     };
 }

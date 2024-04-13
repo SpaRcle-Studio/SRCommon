@@ -26,6 +26,8 @@ namespace SR_UTILS_NS {
     }
 
     ThreadWorkerResult ThreadWorkerStateBase::Execute() {
+        SR_TRACY_ZONE_S(GetName().ToStringRef().c_str());
+
         if (m_state == ThreadWorkerState::Idle) {
             bool isNeedToSkip = !m_skipConditions.empty();
 
@@ -73,7 +75,7 @@ namespace SR_UTILS_NS {
         m_skipConditions[name] = state;
     }
 
-    SR_HTYPES_NS::DataStorage &ThreadWorkerStateBase::GetContext() {
+    SR_HTYPES_NS::DataStorage& ThreadWorkerStateBase::GetContext() {
         return GetThreadWorker()->GetThreadsWorker()->GetContext();
     }
 
@@ -94,14 +96,13 @@ namespace SR_UTILS_NS {
 
     void ThreadWorker::Start() {
         SRAssert(!m_isActive);
-
         m_isActive = true;
+
         m_thread = SR_HTYPES_NS::Thread::Factory::Instance().Create(&ThreadWorker::Work, this);
     }
 
     void ThreadWorker::Stop() {
         SRAssert(m_isActive);
-
         m_isActive = false;
 
         if (m_thread) {
@@ -257,6 +258,7 @@ namespace SR_UTILS_NS {
     }
 
     void ThreadsWorker::Start() {
+        SR_TRACY_ZONE;
         SRAssert(!m_isActive);
         m_isActive = true;
 
@@ -266,6 +268,7 @@ namespace SR_UTILS_NS {
     }
 
     void ThreadsWorker::Stop() {
+        SR_TRACY_ZONE;
         SRAssert(m_isActive);
         m_isActive = false;
 
