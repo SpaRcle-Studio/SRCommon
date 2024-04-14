@@ -35,8 +35,9 @@ namespace SR_WORLD_NS {
         SR_NODISCARD const GameObjects& GetGameObjectsAtChunk(const SR_MATH_NS::IVector3& region, const SR_MATH_NS::IVector3& chunk) const;
         SR_NODISCARD Chunk* GetCurrentChunk() const;
         SR_NODISCARD Observer* GetObserver() const { return m_observer; }
-        SR_NODISCARD SR_MATH_NS::FVector3 GetWorldPosition(const SR_MATH_NS::IVector3& region, const SR_MATH_NS::IVector3& chunk);
-        SR_NODISCARD Region* GetRegion(const SR_MATH_NS::IVector3& region);
+        SR_NODISCARD SR_MATH_NS::FVector3 GetWorldPosition(const SR_MATH_NS::IVector3& region, const SR_MATH_NS::IVector3& chunk) const;
+        SR_NODISCARD Region* GetRegion(const SR_MATH_NS::IVector3& region) const;
+        SR_NODISCARD Region* GetOrLoadRegion(const SR_MATH_NS::IVector3& region);
         SR_NODISCARD bool IsChunkLoaded(const SR_MATH_NS::IVector3& region, const SR_MATH_NS::IVector3& chunk) const;
         SR_NODISCARD bool ScopeCheckFunction(int32_t x, int32_t y, int32_t z) const;
         SR_NODISCARD Path GetRegionsPath() const;
@@ -47,12 +48,14 @@ namespace SR_WORLD_NS {
 
         bool ReloadConfig();
 
+        void UpdateChunk(const SR_MATH_NS::IVector3& chunk, float_t dt);
+        void UpdateChunks(float_t dt);
+        void UpdateRegions(float_t dt);
+
         void CheckShift(const SR_MATH_NS::IVector3& chunk);
         void UpdateContainers();
         void UpdateScope(float_t dt);
         void SaveRegion(const SR_UTILS_NS::Path& path, Region* pRegion, SR_HTYPES_NS::DataStorage* pContext) const;
-
-        void ThreadFunction();
 
     private:
         std::list<int64_t> m_cubesIds;
@@ -60,8 +63,6 @@ namespace SR_WORLD_NS {
         bool m_debugDirty = false;
 
         std::atomic<bool> m_isAlive = false;
-
-        SR_HTYPES_NS::Thread::Ptr m_thread = nullptr;
 
         World::Tensor m_tensor;
 

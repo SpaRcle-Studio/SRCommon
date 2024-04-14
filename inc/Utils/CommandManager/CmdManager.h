@@ -26,7 +26,7 @@ namespace SR_UTILS_NS {
 
     public:
         CmdManager() = default;
-        ~CmdManager() override = default;
+        ~CmdManager() override;
 
     public:
         SR_NODISCARD std::string GetLastCmdName() const;
@@ -35,7 +35,6 @@ namespace SR_UTILS_NS {
         bool Cancel();
 
         void Update();
-        bool Close();
 
         void Clear();
 
@@ -43,6 +42,7 @@ namespace SR_UTILS_NS {
         bool ExecuteImpl(ReversibleCommand* cmd, SyncType sync);
         bool Execute(ReversibleCommand* cmd);
         bool DoCmd(const Cmd& cmd);
+        bool Close();
 
     private:
         std::queue<Cmd> m_commands;

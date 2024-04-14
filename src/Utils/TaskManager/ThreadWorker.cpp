@@ -79,6 +79,15 @@ namespace SR_UTILS_NS {
         return GetThreadWorker()->GetThreadsWorker()->GetContext();
     }
 
+    ThreadsWorker* ThreadWorkerStateBase::GetThreadsWorker() const {
+        return GetThreadWorker()->GetThreadsWorker();
+    }
+
+    void ThreadWorkerStateBase::Finalize() {
+        SR_TRACY_ZONE_S(GetName().ToStringRef().c_str());
+        FinalizeImpl();
+    }
+
     ThreadWorker::ThreadWorker(std::string name)
         : Super(this, SR_UTILS_NS::SharedPtrPolicy::Automatic)
         , m_name(std::move(name))
@@ -99,6 +108,7 @@ namespace SR_UTILS_NS {
         m_isActive = true;
 
         m_thread = SR_HTYPES_NS::Thread::Factory::Instance().Create(&ThreadWorker::Work, this);
+        m_thread->SetName(m_name);
     }
 
     void ThreadWorker::Stop() {
@@ -115,14 +125,29 @@ namespace SR_UTILS_NS {
     }
 
     void ThreadWorker::Work() {
-        while (m_isActive) {
+        while (true) {
             SR_TRACY_ZONE_S(m_name.c_str());
 
-            if (m_currentState >= m_states.size()) {
-                m_currentState = 0;
+            if (!m_isActive) {
+                break;
+            }
+
+            if (!GetThreadsWorker()->IsAlive()) {
+                for (auto&& pState : m_states) {
+                    if (GetThreadsWorker()->CheckFinalize(pState->GetName())) {
+                        SR_LOG("ThreadWorker::Work() : finalize state \"{}\"", pState->GetName().ToStringRef());
+                        pState->Finalize();
+                    }
+                }
                 continue;
             }
 
+            Update();
+        }
+    }
+
+    void ThreadWorker::Update() {
+        while (m_currentState < m_states.size()) {
             switch (m_states[m_currentState]->Execute()) {
                 case ThreadWorkerResult::Success:
                     break;
@@ -130,13 +155,21 @@ namespace SR_UTILS_NS {
                     continue;
                 case ThreadWorkerResult::Break:
                     m_currentState = 0;
-                    continue;
+                    return;
                 default:
                     SRHalt("ThreadWorker::Work() : unknown result!");
                     continue;
             }
 
+            if (!m_isActive || !GetThreadsWorker()->IsAlive()) {
+                return;
+            }
+
             ++m_currentState;
+        }
+
+        if (m_currentState >= m_states.size()) {
+            m_currentState = 0;
         }
     }
 
@@ -164,8 +197,9 @@ namespace SR_UTILS_NS {
         }
 
         ryml::ConstNodeRef root = tree.crootref();
-        if (!root.valid()) {
+        if (!root.valid() || !root.has_children()) {
             SR_ERROR("ThreadsWorker::Load() : failed to get root node from file \"{}\"", fullPath.ToStringRef());
+            return nullptr;
         }
 
         auto&& threadsNode = root.find_child("threads");
@@ -175,6 +209,26 @@ namespace SR_UTILS_NS {
         }
 
         ThreadsWorker::Ptr pThreadsWorker = new ThreadsWorker();
+
+        if (auto&& finalizeNode = root.find_child("finalize"); finalizeNode.valid()) {
+            for (auto&& item : finalizeNode) {
+                auto&& name = item.find_child("name");
+                if (!name.valid()) {
+                    continue;
+                }
+
+                auto&& finalizeStateName = std::string(name.val().begin(), name.val().end());
+                auto&& pIt = std::find_if(pThreadsWorker->m_finalize.begin(), pThreadsWorker->m_finalize.end(), [&finalizeStateName](const SR_UTILS_NS::StringAtom& atom) {
+                    return atom.ToStringRef() == finalizeStateName;
+                });
+                if (pIt != pThreadsWorker->m_finalize.end()) {
+                    SR_ERROR("ThreadsWorker::Load() : finalize state \"{}\" already exists!", finalizeStateName);
+                    continue;
+                }
+
+                pThreadsWorker->m_finalize.emplace_back(finalizeStateName);
+            }
+        }
 
         for (auto&& threadNode : threadsNode) {
             auto&& threadName = threadNode.find_child("name");
@@ -269,6 +323,19 @@ namespace SR_UTILS_NS {
 
     void ThreadsWorker::Stop() {
         SR_TRACY_ZONE;
+
+        SR_LOG("ThreadsWorker::Stop() : stopping threads...");
+
+        if (!m_finalize.empty()) {
+            SR_LOG("ThreadsWorker::Stop() : waiting for finalize {} states...", m_finalize.size());
+        }
+
+        m_isAlive = false;
+
+        while (!m_finalize.empty()) {
+            SR_NOOP;
+        }
+
         SRAssert(m_isActive);
         m_isActive = false;
 
@@ -285,6 +352,26 @@ namespace SR_UTILS_NS {
         }
 
         return pIt->second->GetState();
+    }
+
+    bool ThreadsWorker::IsAlive() const {
+        return m_isAlive;
+    }
+
+    bool ThreadsWorker::CheckFinalize(SR_UTILS_NS::StringAtom name) {
+        SR_TRACY_ZONE;
+        SR_LOCK_GUARD;
+
+        if (m_finalize.empty()) {
+            return false;
+        }
+
+        if (m_finalize.front() == name) {
+            m_finalize.pop_front();
+            return true;
+        }
+
+        return false;
     }
 
     bool ThreadWorkerStateRegistration::RegisterState(SR_UTILS_NS::StringAtom name, ThreadWorkerStateRegistration::AllocateFn&& allocateFn) {

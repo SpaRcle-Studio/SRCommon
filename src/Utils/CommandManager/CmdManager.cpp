@@ -7,6 +7,10 @@
 #include <Utils/Debug.h>
 
 namespace SR_UTILS_NS {
+    CmdManager::~CmdManager() {
+        Close();
+    }
+
     bool CmdManager::Execute(ReversibleCommand *cmd) {
         SR_TRACY_ZONE;
 
@@ -112,6 +116,7 @@ namespace SR_UTILS_NS {
     }
 
     bool CmdManager::Close() {
+        SR_INFO("CmdManager::Close() : close the command manager...");
         Clear();
         return true;
     }

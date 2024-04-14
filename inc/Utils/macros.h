@@ -66,6 +66,20 @@
     #define SR_MINGW
 #endif
 
+#ifdef __has_cpp_attribute
+    #define SR_HAS_ATTRIBUTE __has_cpp_attribute
+#else
+    #define SR_HAS_ATTRIBUTE(x) (0)
+#endif
+
+#if SR_HAS_ATTRIBUTE(likely) || defined(SR_MSVC)
+    #define SR_LIKELY_ATTRIBUTE [[likely]]
+    #define SR_UNLIKELY_ATTRIBUTE [[unlikely]]
+#else
+    #define SR_LIKELY_ATTRIBUTE
+    #define SR_UNLIKELY_ATTRIBUTE
+#endif
+
 #ifdef __GNUC__
     #define SR_LIKELY(x) __builtin_expect((x), 1)
     #define SR_UNLIKELY(x) __builtin_expect((x), 0)

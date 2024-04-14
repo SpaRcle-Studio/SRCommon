@@ -343,6 +343,11 @@ namespace SR_UTILS_NS::Platform {
 
             XCloseDisplay(pDisplay);
         }
+
+        if (resolutions.empty()) {
+            resolutions.emplace_back(SR_MATH_NS::UVector2(800, 800));
+        }
+
         return resolutions;
     }
 

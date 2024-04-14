@@ -18,7 +18,6 @@ namespace SR_WORLD_NS {
     SceneCubeChunkLogic::~SceneCubeChunkLogic() {
         SR_SAFE_DELETE_PTR(m_observer);
         SRAssert(!m_isAlive);
-        SRAssert(!m_thread);
     }
 
     bool SceneCubeChunkLogic::ReloadConfig() {
@@ -58,7 +57,7 @@ namespace SR_WORLD_NS {
 
         auto&& pContext = SR_THIS_THREAD->GetContext();
 
-        for (auto&& [position, pRegion] : m_regions) {
+        for (auto&& pRegion : m_regions) {
             SaveRegion(GetRegionsPath(), pRegion, pContext);
             pRegion->Reload();
         }
@@ -104,8 +103,8 @@ namespace SR_WORLD_NS {
     }
 
     Chunk* SceneCubeChunkLogic::GetCurrentChunk() const {
-        if (const auto& region = m_regions.find(m_observer->m_region); region != m_regions.end()) {
-            return region->second->Find(m_observer->m_chunk);
+        if (auto&& pRegion = GetRegion(m_observer->m_region)) {
+            return pRegion->Find(m_observer->m_chunk);
         }
 
         return nullptr;
@@ -127,24 +126,30 @@ namespace SR_WORLD_NS {
         return ((SR_SQUARE(x) / alpha) + (SR_SQUARE(y) / alpha) + SR_SQUARE(z) <= SR_SQUARE(m_observer->m_scope));
     }
 
-    SR_NODISCARD Region* SceneCubeChunkLogic::GetRegion(const SR_MATH_NS::IVector3& region) {
-        if (m_regions.find(region) == m_regions.end()) {
-            auto&& pRegion = Region::Allocate(m_observer, m_regionWidth, m_chunkSize, region);
-            m_regions.insert(std::pair(region, pRegion));
+    SR_NODISCARD Region* SceneCubeChunkLogic::GetRegion(const SR_MATH_NS::IVector3& region) const {
+        /// если объект находится за пределами загруженной области, то нужно ее загрузить и поместить туда его
+        auto&& pIt = std::find_if(m_regions.begin(), m_regions.end(), [&region](auto&& pRegion) {
+            return pRegion->GetPosition() == region;
+        });
+
+        return pIt == m_regions.end() ? nullptr : *pIt;
+    }
+
+    SR_NODISCARD Region* SceneCubeChunkLogic::GetOrLoadRegion(const SR_MATH_NS::IVector3& region) {
+        auto&& pRegion = GetRegion(region);
+
+        if (!pRegion) {
+            pRegion = Region::Allocate(m_observer, m_regionWidth, m_chunkSize, region);
+            m_regions.emplace_front(pRegion);
             pRegion->Load();
-			m_debugDirty = true;
-            return pRegion;
+            m_debugDirty = true;
         }
 
-        return m_regions.at(region);
+        return pRegion;
     }
 
     bool SceneCubeChunkLogic::IsChunkLoaded(const SR_MATH_NS::IVector3 &region, const SR_MATH_NS::IVector3 &chunk) const {
-        if (m_regions.find(region) == m_regions.end()) {
-            return false;
-        }
-
-        if (auto&& pRegion = m_regions.at(region)) {
+        if (auto&& pRegion = GetRegion(region)) {
             return pRegion->IsChunkLoaded(chunk);
         }
 
@@ -159,9 +164,8 @@ namespace SR_WORLD_NS {
         }
     }
 
-    SR_MATH_NS::FVector3 SceneCubeChunkLogic::GetWorldPosition(const SR_MATH_NS::IVector3 &region, const SR_MATH_NS::IVector3 &chunk) {
-        if (auto&& pRegionIt = m_regions.find(region); pRegionIt != m_regions.end()) {
-            auto&& [_, pRegion] = *pRegionIt;
+    SR_MATH_NS::FVector3 SceneCubeChunkLogic::GetWorldPosition(const SR_MATH_NS::IVector3 &region, const SR_MATH_NS::IVector3 &chunk) const {
+        if (auto&& pRegion = GetRegion(region)) {
             if (auto&& pChunk = pRegion->Find(chunk)) {
                 return pChunk->GetWorldPosition();
             }
@@ -194,7 +198,7 @@ namespace SR_WORLD_NS {
             gameObject->GetTransform()->GlobalTranslate(fOffset);
         }
 
-        for (const auto& [position, pRegion] : m_regions) {
+        for (const auto& pRegion : m_regions) {
             pRegion->ApplyOffset();
         }
 
@@ -211,54 +215,8 @@ namespace SR_WORLD_NS {
 
         SRAssert(!m_observer->m_region.HasZero());
 
-        const auto scope = m_observer->m_scope;
-
-        const auto& update = [&](const Math::IVector3& point) -> void {
-            const auto neighbour = m_observer->MathNeighbour(point);
-
-            /// если объект находится за пределами загруженной области, то нужно ее загрузить и поместить туда его
-            if (m_regions.find(neighbour.m_region) == m_regions.end()) {
-                auto&& pRegion = Region::Allocate(m_observer, m_regionWidth, m_chunkSize, neighbour.m_region);
-                m_regions.insert(std::pair(neighbour.m_region, pRegion));
-                pRegion->Load();
-				m_debugDirty = true;
-            }
-
-            if (auto chunk = m_regions.at(neighbour.m_region)->GetChunk(neighbour.m_chunk)) {
-                chunk->Access(dt);
-            }
-        };
-
-        for (int32_t x = -scope; x <= scope; ++x) {
-            for (int32_t y = -scope; y <= scope; ++y) {
-                for (int32_t z = -scope; z <= scope; ++z) {
-                    if (!ScopeCheckFunction(x, y, z)) {
-                        continue;
-                    }
-
-                    update(SR_MATH_NS::IVector3(x, y, z));
-                }
-            }
-        }
-
-        auto&& pContext = SR_THIS_THREAD->GetContext();
-
-        for (auto&& pIt = m_regions.begin(); pIt != m_regions.end(); ) {
-            const auto& pRegion = pIt->second;
-
-            pRegion->Update(dt);
-
-            if (pRegion->IsAlive()) {
-                ++pIt;
-            }
-            else {
-                SaveRegion(GetRegionsPath(), pRegion, pContext);
-                pRegion->Unload();
-                delete pRegion;
-                pIt = m_regions.erase(pIt);
-				m_debugDirty = true;
-            }
-        }
+        UpdateChunks(dt);
+        UpdateRegions(dt);
     }
 
     void SceneCubeChunkLogic::CheckShift(const SR_MATH_NS::IVector3 &chunk) {
@@ -326,7 +284,7 @@ namespace SR_WORLD_NS {
             else {
                 m_tensor[key].emplace_back(std::move(gameObject));
 
-                if (GetRegion(key.region)->GetChunk(key.chunk)) {
+                if (GetOrLoadRegion(key.region)->GetChunk(key.chunk)) {
                     /// подгружаем чанк, чтобы объект не остался висеть в пустоте
                 }
             }
@@ -393,11 +351,13 @@ namespace SR_WORLD_NS {
         m_observer->SetChunk(currentChunk);
 
         UpdateContainers();
-        UpdateScope(0.f);
+
+        /// Не грузим все чанки при сохранении.
+        /// UpdateScope(0.f);
 
         auto&& pContext = SR_THIS_THREAD->GetContext();
 
-        for (auto&& [position, pRegion] : m_regions) {
+        for (auto&& pRegion : m_regions) {
             SaveRegion(path.Concat("regions"), pRegion, pContext);
         }
 
@@ -446,16 +406,12 @@ namespace SR_WORLD_NS {
         }
 
         m_isAlive = false;
-        if (m_thread) {
-            m_thread->Join();
-            m_thread->Free();
-            m_thread = nullptr;
-        }
 
-        for (auto&& [position, region] : m_regions) {
-            region->Unload(true);
-            delete region;
+        for (auto&& pRegion : m_regions) {
+            pRegion->Unload(true);
+            delete pRegion;
         }
+        m_regions.clear();
 
 		m_debugDirty = true;
     }
@@ -481,8 +437,8 @@ namespace SR_WORLD_NS {
         auto&& currentChunk = CalculateCurrentChunk();
 
         if (lastChunk != currentChunk) {
-            if (m_regions.find(lastRegion) != m_regions.end()) {
-                auto&& pChunk = m_regions.at(lastRegion)->GetChunk(m_observer->m_chunk);
+            if (auto&& pRegion = GetRegion(lastRegion)) {
+                auto&& pChunk = pRegion->GetChunk(m_observer->m_chunk);
 
                 SRAssert(pChunk == m_currentChunk);
                 SRAssert(pChunk);
@@ -504,15 +460,16 @@ namespace SR_WORLD_NS {
                 SRAssert(!m_observer->m_region.HasZero());
             }
 
-            if (m_regions.find(m_observer->m_region) == m_regions.end()) {
-                auto pRegion = Region::Allocate(m_observer, m_regionWidth, m_chunkSize, m_observer->m_region);
+            auto&& pRegion = GetRegion(region);
+            if (!pRegion) {
+                pRegion = Region::Allocate(m_observer, m_regionWidth, m_chunkSize, m_observer->m_region);
                 pRegion->Load();
-                m_regions.insert(std::pair(m_observer->m_region, pRegion));
+                m_regions.emplace_front(pRegion);
 				m_debugDirty = true;
             }
 
-            if (auto &&regionIt = m_regions.at(m_observer->m_region)) {
-                if (auto&& pChunk = regionIt->GetChunk(m_observer->m_chunk)) {
+            if (pRegion) {
+                if (auto&& pChunk = pRegion->GetChunk(m_observer->m_chunk)) {
                     SRAssert(!m_currentChunk);
 
                     m_currentChunk = pChunk;
@@ -561,15 +518,15 @@ namespace SR_WORLD_NS {
         }
         m_planesIds.clear();
 
-        for (auto&& [regionPosition, pRegion] : m_regions) {
-            if (regionPosition.y != 1) {
+        for (auto&& pRegion : m_regions) {
+            if (pRegion->GetPosition().y != 1) {
                 continue;
             }
 
             const auto size = SR_MATH_NS::FVector3(m_regionWidth) * m_chunkSize.x;
             const SR_WORLD_NS::Offset offset = m_observer->m_offset;
 
-            auto fPos = SR_WORLD_NS::AddOffset(regionPosition.Cast<SR_MATH_NS::Unit>(), offset.m_region);
+            auto fPos = SR_WORLD_NS::AddOffset(pRegion->GetPosition().Cast<SR_MATH_NS::Unit>(), offset.m_region);
             fPos = fPos * size + (size / 2);
             fPos = fPos.DeSingular(size);
 
@@ -620,28 +577,68 @@ namespace SR_WORLD_NS {
     void SceneCubeChunkLogic::PostLoad() {
         SR_TRACY_ZONE;
 
-        for (auto&& [regionPos, pRegion] : m_regions) {
+        for (auto&& pRegion : m_regions) {
             pRegion->PostLoad();
         }
 
         Super::PostLoad();
     }
 
-    void SceneCubeChunkLogic::ThreadFunction() {
-        while (m_isAlive) {
-
-        }
-    }
-
     void SceneCubeChunkLogic::Init() {
         SRAssert(!m_isAlive);
-        SRAssert(!m_thread);
 
         m_isAlive = true;
 
-        m_thread = SR_HTYPES_NS::Thread::Factory::Instance().Create(&SceneCubeChunkLogic::ThreadFunction, this);
-        m_thread->SetName("SceneCubeChunkLogic");
-
         Super::Init();
+    }
+
+    void SceneCubeChunkLogic::UpdateChunk(const SR_MATH_NS::IVector3& chunk, float_t dt) {
+        const auto neighbour = m_observer->MathNeighbour(chunk);
+        auto&& pRegion = GetOrLoadRegion(neighbour.m_region);
+
+        if (auto&& pChunk = pRegion->GetChunk(neighbour.m_chunk)) {
+            pChunk->Access(dt);
+        }
+    }
+
+    void SceneCubeChunkLogic::UpdateChunks(float_t dt) {
+        SR_TRACY_ZONE;
+
+        const auto scope = m_observer->m_scope;
+
+        for (int32_t x = -scope; x <= scope; ++x) {
+            for (int32_t y = -scope; y <= scope; ++y) {
+                for (int32_t z = -scope; z <= scope; ++z) {
+                    if (!ScopeCheckFunction(x, y, z)) {
+                        continue;
+                    }
+
+                    UpdateChunk(SR_MATH_NS::IVector3(x, y, z), dt);
+                }
+            }
+        }
+    }
+
+    void SceneCubeChunkLogic::UpdateRegions(float_t dt) {
+        SR_TRACY_ZONE;
+
+        auto&& pContext = SR_THIS_THREAD->GetContext();
+
+        for (auto&& pIt = m_regions.begin(); pIt != m_regions.end(); ) {
+            const auto& pRegion = *pIt;
+
+            pRegion->Update(dt);
+
+            if (pRegion->IsAlive()) {
+                ++pIt;
+            }
+            else {
+                SaveRegion(GetRegionsPath(), pRegion, pContext);
+                pRegion->Unload();
+                delete pRegion;
+                pIt = m_regions.erase(pIt);
+                m_debugDirty = true;
+            }
+        }
     }
 }
