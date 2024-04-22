@@ -131,6 +131,10 @@ namespace SR_UTILS_NS::Platform {
         SRHaltOnce("Not implemented!");
     }
 
+    void SetCurrentProcessDirectory(const SR_UTILS_NS::Path& directory) {
+        SRHaltOnce("Not implemented!");
+    }
+
     void PasteFilesFromClipboard(const SR_UTILS_NS::Path &topath) {
         SRHaltOnce("Not implemented!");
     }
@@ -138,6 +142,10 @@ namespace SR_UTILS_NS::Platform {
     std::string GetClipboardText() {
         SRHaltOnce("Not implemented!");
         return std::string();
+    }
+
+    void InitializePlatform() {
+        SRHaltOnce("Not implemented!");
     }
 
     void ClearClipboard() {

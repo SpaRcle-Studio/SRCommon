@@ -20,6 +20,7 @@ namespace SR_UTILS_NS::Platform {
         uint64_t lastWriteTime = SR_UINT64_MAX;
     };
 
+    SR_DLL_EXPORT extern void InitializePlatform();
     SR_DLL_EXPORT extern void InitSegmentationHandler();
     SR_DLL_EXPORT extern void SetInstance(void* pInstance);
     SR_DLL_EXPORT extern void* GetInstance();
@@ -28,6 +29,7 @@ namespace SR_UTILS_NS::Platform {
     SR_DLL_EXPORT extern std::optional<std::string> ReadFile(const Path& path);
     SR_DLL_EXPORT extern void TextToClipboard(const std::string& text);
     SR_DLL_EXPORT extern void CopyFilesToClipboard(std::list<SR_UTILS_NS::Path> paths);
+    SR_DLL_EXPORT extern void SetCurrentProcessDirectory(const SR_UTILS_NS::Path& directory);
     SR_DLL_EXPORT extern void PasteFilesFromClipboard(const SR_UTILS_NS::Path& topath);
     SR_DLL_EXPORT extern void ClearClipboard();
     SR_DLL_EXPORT extern void Sleep(uint64_t milliseconds);

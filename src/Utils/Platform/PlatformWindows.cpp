@@ -15,12 +15,36 @@
 #include <shlobj.h>
 #include <ImageHlp.h>
 #include <csignal>
+#include <sddl.h>
 
 #ifdef SR_MINGW
     #include <ShObjIdl.h>
 #endif
 
 namespace SR_UTILS_NS::Platform {
+    std::wstring ConvertToUnicode(const std::string& str) {
+        UINT codePage = CP_ACP;
+        DWORD flags = 0;
+        int resultSize = MultiByteToWideChar
+                (codePage     // CodePage
+                        , flags        // dwFlags
+                        , str.c_str()  // lpMultiByteStr
+                        , str.length() // cbMultiByte
+                        , NULL         // lpWideCharStr
+                        , 0            // cchWideChar
+                );
+        std::vector<wchar_t> result(resultSize + 1);
+        MultiByteToWideChar
+                (codePage     // CodePage
+                        , flags        // dwFlags
+                        , str.c_str()  // lpMultiByteStr
+                        , str.length() // cbMultiByte
+                        , &result[0]   // lpWideCharStr
+                        , resultSize   // cchWideChar
+                );
+        return &result[0];
+    }
+
     void WriteConsoleLog(const std::string& msg) {
         std::cout << msg << std::flush;
     }
@@ -101,6 +125,67 @@ namespace SR_UTILS_NS::Platform {
         std::set_terminate(StdHandler);
     }
 
+    void InitializePlatform() {
+        HKEY hKey;
+        LPCTSTR lpSubKey = TEXT("Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\ComDlg32\\LastVisitedPidlMRU");
+        const LONG lResult = RegOpenKeyEx(HKEY_CURRENT_USER, lpSubKey, 0, KEY_READ, &hKey);
+
+        if (lResult != ERROR_SUCCESS) {
+            SR_PLATFORM_NS::WriteConsoleError("InitializePlatform() : failed to open registry key!");
+            return;
+        }
+
+        DWORD dwIndex = 0;
+
+        TCHAR szValueName[2048];
+        DWORD dwValueNameSize = 2048;
+
+        BYTE lpData[2048];
+        DWORD dwDataSize = 2048;
+
+        DWORD dwType;
+
+        std::vector<std::pair<std::string, std::wstring>> values;
+
+        while (true) {
+            const LSTATUS code = RegEnumValue(hKey, dwIndex, szValueName, &dwValueNameSize, NULL, &dwType, lpData, &dwDataSize);
+            if (code == ERROR_NO_MORE_ITEMS) {
+                break;
+            }
+
+            if (dwType == REG_BINARY) {
+                std::wstring strData;
+                for (DWORD i = 0; i < dwDataSize; i += 2) {
+                    const auto ch = static_cast<wchar_t>(lpData[i]);
+                    strData.push_back(ch);
+                }
+
+                values.emplace_back(std::string(szValueName, szValueName + dwValueNameSize), strData);
+            }
+
+            dwValueNameSize = 2048;
+            dwDataSize = 2048;
+            ++dwIndex;
+        }
+
+        auto&& appName = SR_PLATFORM_NS::GetApplicationName();
+        auto&& appNameW = ConvertToUnicode(appName);
+
+        for (const auto& [name, data] : values) {
+            if (data.find(appNameW) == 0) {
+                LONG lResult = RegSetKeyValue(HKEY_CURRENT_USER, lpSubKey,  const_cast<char*>(name.c_str()), REG_BINARY, NULL, 0);
+
+                if (lResult != ERROR_SUCCESS) {
+                    SR_PLATFORM_NS::WriteConsoleError("InitializePlatform() : failed to delete register value!");
+                }
+
+                break;
+            }
+        }
+
+        RegCloseKey(hKey);
+    }
+
     void SetInstance(void*) {
 
     }
@@ -145,6 +230,10 @@ namespace SR_UTILS_NS::Platform {
         operator HRESULT() const { return m_hr; }
         HRESULT m_hr;
     };
+
+    void SetCurrentProcessDirectory(const SR_UTILS_NS::Path& directory) {
+        SetCurrentDirectory(directory.CStr());
+    }
 
     ///функция для копирования файла/файлов в буфер обмена
     void CopyFilesToClipboard(std::list<SR_UTILS_NS::Path> paths) {
