@@ -345,7 +345,8 @@ namespace SR_UTILS_NS::Platform {
             );
 
             if (!result) {
-                SR_WARN("Platform::Copy() : {}\n\tFrom: {}\n\tTo: {}", GetLastErrorAsString().c_str(), from.CStr(), to.CStr());
+                auto&& message = GetLastErrorAsString();
+                SR_WARN("Platform::Copy() : {}\n\tFrom: {}\n\tTo: {}", message.c_str(), from.CStr(), to.CStr());
             }
 
             return result;
@@ -356,7 +357,7 @@ namespace SR_UTILS_NS::Platform {
             return false;
         }
 
-        CreateFolder(to.ToStringRef());
+        to.Create();
 
         for (auto&& item : GetInDirectory(from, Path::Type::Undefined)) {
             if (Copy(item, to.Concat(item.GetBaseNameAndExt()))) {

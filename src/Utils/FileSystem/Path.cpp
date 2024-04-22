@@ -349,6 +349,9 @@ namespace SR_UTILS_NS {
     }
 
     std::string Path::GetBaseNameAndExt() const {
+        if (m_ext.empty()) {
+            return std::string(m_name);
+        }
         return std::string(m_name) + "." + std::string(m_ext);
     }
 

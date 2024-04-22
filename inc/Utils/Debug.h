@@ -119,12 +119,12 @@ namespace SR_UTILS_NS {
     #define SRAssert2Once(expr, ...) ((!(expr) && SR_UTILS_NS::Debug::Instance().AssertOnceCheck(SR_MAKE_ASSERT(SR_FORMAT(__VA_ARGS__)))) || SRAssert2(expr, SR_FORMAT(__VA_ARGS__)))
 #else
     #define SR_CHECK_ERROR(fun, notEquals, errorMsg) fun
-    #define SRAssert2(expr, msg) (SR_NOOP)
+    #define SRAssert2(expr, ...) (SR_NOOP)
     #define SRAssert(expr) (SR_NOOP)
     #define SRAssert1(expr) SRAssert(expr)
     #define SR_SAFE_PTR_ASSERT(expr, msg) (SR_NOOP)
-    #define SRAssert2Once(expr, msg) (SR_NOOP)
-    #define SRVerifyFalse2(expr, msg) ((!(expr)))
+    #define SRAssert2Once(expr, ...) (SR_NOOP)
+    #define SRVerifyFalse2(expr, ...) ((!(expr)))
 #endif
 
 #define SRHalt(...) SR_UTILS_NS::Debug::Instance().Assert(SR_MAKE_ASSERT(SR_FORMAT(__VA_ARGS__)))
