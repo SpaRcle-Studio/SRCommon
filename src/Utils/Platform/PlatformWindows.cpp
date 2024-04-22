@@ -480,7 +480,7 @@ namespace SR_UTILS_NS::Platform {
         return false;
     }
 
-    void OpenFile(const SR_UTILS_NS::Path& path) {
+    void OpenFile(const SR_UTILS_NS::Path& path, const std::string& args) {
         STARTUPINFO si;
         PROCESS_INFORMATION pi;
 
@@ -490,15 +490,15 @@ namespace SR_UTILS_NS::Platform {
 
         /// start the program up
         CreateProcess(path.c_str(), /// the path
-    NULL,
-    NULL, /// Process handle not inheritable
-    NULL, /// Thread handle not inheritable
-    FALSE, /// Set handle inheritance to FALSE
-    0, /// No creation flags
-    NULL, /// Use parent's environment block
-    NULL, /// Use parent's starting directory
-    &si, /// Pointer to STARTUPINFO structure
-    &pi  /// Pointer to PROCESS_INFORMATION structure (removed extra parentheses)
+            const_cast<char*>(args.c_str()),
+            NULL, /// Process handle not inheritable
+            NULL, /// Thread handle not inheritable
+            FALSE, /// Set handle inheritance to FALSE
+            0, /// No creation flags
+            NULL, /// Use parent's environment block
+            NULL, /// Use parent's starting directory
+            &si, /// Pointer to STARTUPINFO structure
+            &pi  /// Pointer to PROCESS_INFORMATION structure (removed extra parentheses)
         );
 
         // Close process and thread handles.
@@ -508,7 +508,7 @@ namespace SR_UTILS_NS::Platform {
 
     void SelfOpen() {
         auto&& exe = SR_PLATFORM_NS::GetApplicationPath();
-        OpenFile(exe);
+        OpenFile(exe, "");
     }
 
     FileMetadata GetFileMetadata(const Path& file) {

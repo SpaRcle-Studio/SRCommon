@@ -31,6 +31,10 @@ namespace SR_UTILS_NS::Platform {
 
     }
 
+    void OpenFile(const SR_UTILS_NS::Path& path, const std::string& args) {
+        SRHaltOnce("Not implemented!");
+    }
+
     bool IsRunningUnderDebugger() {
         SRHaltOnce("Not implemented!");
         return false;

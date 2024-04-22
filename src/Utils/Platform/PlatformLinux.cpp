@@ -71,6 +71,10 @@ namespace SR_UTILS_NS::Platform {
        SRHaltOnce("Not implemented!");
    }
 
+    void OpenFile(const SR_UTILS_NS::Path& path, const std::string& args) {
+        SRHaltOnce("Not implemented!");
+    }
+
     void SetInstance(void* pInstance) {
         SRHaltOnce("Not implemented!");
     }

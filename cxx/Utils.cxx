@@ -46,6 +46,7 @@
 #include "../src/Utils/Resources/ResourceManager.cpp"
 #include "../src/Utils/Resources/ResourceContainer.cpp"
 #include "../src/Utils/Resources/IResourceReloader.cpp"
+#include "../src/Utils/Resources/ResourceEmbedder.cpp"
 
 #include "../src/Utils/CommandManager/ICommand.cpp"
 #include "../src/Utils/CommandManager/CmdManager.cpp"
