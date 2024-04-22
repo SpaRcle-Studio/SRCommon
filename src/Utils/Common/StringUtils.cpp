@@ -247,6 +247,8 @@ namespace SR_UTILS_NS {
     }
 
     std::string StringUtils::Base64Decode(const std::string & base64) {
+        SR_TRACY_ZONE;
+
         int in_len = base64.size();
         int i = 0;
         int j = 0;

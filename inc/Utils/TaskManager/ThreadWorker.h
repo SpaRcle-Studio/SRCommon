@@ -37,17 +37,20 @@ namespace SR_UTILS_NS {
         void AddSkipCondition(SR_UTILS_NS::StringAtom name, ThreadWorkerState state);
 
         ThreadWorkerResult Execute();
+        void Finalize();
 
         void SetThreadWorker(ThreadWorker* pThreadWorker) { m_threadWorker = pThreadWorker; }
 
         virtual StringAtom GetName() const = 0;
 
         SR_NODISCARD ThreadWorker* GetThreadWorker() const { return m_threadWorker; }
+        SR_NODISCARD ThreadsWorker* GetThreadsWorker() const;
         SR_NODISCARD ThreadWorkerState GetState() const { return m_state; }
         SR_NODISCARD SR_HTYPES_NS::DataStorage& GetContext();
 
     protected:
         virtual ThreadWorkerResult ExecuteImpl() = 0;
+        virtual void FinalizeImpl() { }
 
     private:
         ThreadWorker* m_threadWorker = nullptr;
@@ -75,6 +78,7 @@ namespace SR_UTILS_NS {
 
     private:
         void Work();
+        void Update();
 
     private:
         ThreadsWorker* m_threadsWorker = nullptr;
@@ -97,17 +101,24 @@ namespace SR_UTILS_NS {
         SR_NODISCARD ThreadWorkerState GetState(SR_UTILS_NS::StringAtom name) const;
         SR_NODISCARD bool IsActive() const { return m_isActive; }
         SR_NODISCARD SR_HTYPES_NS::DataStorage& GetContext() { return m_context; }
+        SR_NODISCARD bool IsAlive() const;
 
         void AddThread(ThreadWorker::Ptr pThread);
 
         void Start();
         void Stop();
+        void StopAsync() { m_isAlive = false; }
+
+        SR_NODISCARD bool CheckFinalize(SR_UTILS_NS::StringAtom name);
 
     private:
         std::map<SR_UTILS_NS::StringAtom, ThreadWorkerStateBase::Ptr> m_states;
+        std::list<SR_UTILS_NS::StringAtom> m_finalize;
         std::vector<ThreadWorker::Ptr> m_threadWorkers;
         bool m_isActive = false;
+        std::atomic<bool> m_isAlive = true;
         SR_HTYPES_NS::DataStorage m_context;
+        std::recursive_mutex m_mutex;
 
     };
 

@@ -541,7 +541,13 @@ namespace SR_UTILS_NS::Xml {
             if (!path.Exists()) {
                 path.Create();
             }
-            return m_document->save_file(path.CStr());
+
+            if (!m_document->save_file(path.CStr())) {
+                SR_ERROR("Document::Save() : failed save to file!\n\tPath: " + path.ToString());
+                return false;
+            }
+
+            return true;
         }
 
         SR_NODISCARD std::string Dump() const;

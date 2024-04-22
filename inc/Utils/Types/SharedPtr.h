@@ -54,7 +54,7 @@ namespace SR_HTYPES_NS {
     };
 
     struct SharedPtrDynamicData {
-        SharedPtrDynamicData(uint16_t strongCount, uint16_t weakCount, bool valid, SharedPtrPolicy policy)
+        SharedPtrDynamicData(uint16_t strongCount, uint16_t weakCount, bool valid, SR_UTILS_NS::SharedPtrPolicy policy)
             : strongCount(strongCount)
             , weakCount(weakCount)
             , valid(valid)
@@ -94,7 +94,7 @@ namespace SR_HTYPES_NS {
         uint16_t weakCount = 0;
         bool valid = false;
         bool deallocated = false;
-        SharedPtrPolicy policy = SharedPtrPolicy::Automatic;
+        SR_UTILS_NS::SharedPtrPolicy policy = SR_UTILS_NS::SharedPtrPolicy::Automatic;
 
     #ifdef SR_SHARED_PTR_TRACE
         SR_UTILS_NS::StringAtom debugTrace;
@@ -108,7 +108,7 @@ namespace SR_HTYPES_NS {
 
         SharedPtr() = default;
         SharedPtr(const T* constPtr); /** NOLINT(google-explicit-constructor) */
-        SharedPtr(const T* constPtr, SharedPtrPolicy policy);
+        SharedPtr(const T* constPtr, SR_UTILS_NS::SharedPtrPolicy policy);
         SharedPtr(SharedPtr const& ptr);
         SharedPtr(SharedPtr&& ptr) noexcept
             : m_data(SR_UTILS_NS::Exchange(ptr.m_data, nullptr))
@@ -208,13 +208,13 @@ namespace SR_HTYPES_NS {
             return;
         }
 
-        if constexpr (IsDerivedFrom<SharedPtr, T>::value) {
+        if constexpr (SR_UTILS_NS::IsDerivedFrom<SharedPtr, T>::value) {
             if ((m_data = ptr->GetPtrData())) {
                 m_data->IncrementStrong();
                 m_ptr = ptr;
             }
             else {
-                SRHalt("Class was inherit, but not initialized!");
+                SR_SAFE_PTR_ASSERT(false, "Class was inherit, but not initialized!");
             }
         }
         else {
@@ -223,17 +223,17 @@ namespace SR_HTYPES_NS {
                 1, /// strong
                 0, /// weak
                 true, /// valid
-                SharedPtrPolicy::Automatic /// policy
+                SR_UTILS_NS::SharedPtrPolicy::Automatic /// policy
             );
         }
     }
 
-    template<class T> SharedPtr<T>::SharedPtr(const T* constPtr, SharedPtrPolicy policy) {
+    template<class T> SharedPtr<T>::SharedPtr(const T* constPtr, SR_UTILS_NS::SharedPtrPolicy policy) {
         T* ptr = const_cast<T*>(constPtr);
-        SRAssert(ptr);
+        SR_SAFE_PTR_ASSERT(ptr, "Ptr is nullptr!");
 
-        if constexpr (IsDerivedFrom<SharedPtr, T>::value) {
-            SRAssert2(!ptr->GetPtrData(), "Class was inherit, but already initialized!");
+        if constexpr (SR_UTILS_NS::IsDerivedFrom<SharedPtr, T>::value) {
+            SR_SAFE_PTR_ASSERT(!ptr->GetPtrData(), "Class was inherit, but already initialized!");
         }
 
         m_basicManually = true;
@@ -290,7 +290,7 @@ namespace SR_HTYPES_NS {
 
         Reset();
 
-        if constexpr (IsDerivedFrom<SharedPtr, T>::value) {
+        if constexpr (SR_UTILS_NS::IsDerivedFrom<SharedPtr, T>::value) {
             if ((m_data = ptr->GetPtrData())) {
                 m_data->IncrementStrong();
                 m_ptr = ptr;
@@ -306,7 +306,7 @@ namespace SR_HTYPES_NS {
                 1, /// strong
                 0, /// weak
                 true, /// valid
-                SharedPtrPolicy::Automatic /// policy
+                SR_UTILS_NS::SharedPtrPolicy::Automatic /// policy
             );
         }
 
@@ -366,10 +366,10 @@ namespace SR_HTYPES_NS {
         SR_SAFE_PTR_ASSERT(strongCount != 0, "SharedPtr is corrupted!");
 
         if (strongCount == 1) {
-            if (pData->policy == SharedPtrPolicy::Manually) {
+            if (pData->policy == SR_UTILS_NS::SharedPtrPolicy::Manually) {
                 SR_SAFE_PTR_ASSERT(!pData->valid, "Ptr was not freed!");
             }
-            else if (pData->policy == SharedPtrPolicy::Automatic && pData->valid) {
+            else if (pData->policy == SR_UTILS_NS::SharedPtrPolicy::Automatic && pData->valid) {
                 pData->valid = false;
                 delete pPtr;
             }

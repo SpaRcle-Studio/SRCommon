@@ -34,7 +34,10 @@ namespace SR_WORLD_NS {
             , m_chunkSize(chunkSize)
             , m_position(position)
             , m_containsObserver(false)
-        { }
+        {
+            //m_cached.resize(width * width * width);
+            //m_loadedChunks.resize(width * width * width);
+        }
 
     public:
         ~Region() override;

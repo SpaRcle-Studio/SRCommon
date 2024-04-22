@@ -67,7 +67,7 @@ namespace SR_WORLD_NS {
         void SetWorldMetrics(const Math::IVector2& chunkSize, int32_t regionWidth);
         void SetScope(int32_t value) { m_scope = value; }
         void SetShiftDist(int32_t value) { m_shiftDistance = value; }
-        Offset MathNeighbour(const Math::IVector3& offset);
+        Offset MathNeighbour(const Math::IVector3& offset) const;
         Math::IVector3 WorldPosToChunkPos(const Math::FVector3& position);
 
         SR_NODISCARD int32_t GetScope() const noexcept { return m_scope; }

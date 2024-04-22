@@ -43,9 +43,9 @@ namespace SR_WORLD_NS {
                 pathsXml.AppendNode(name).AppendAttribute(value);
             }
 
-            auto&& seetingsPath = path.Concat("data/settings.xml");
-            if (!documentXml.Save(seetingsPath)) {
-                SR_ERROR("SceneLogic::Save() : failed save settings!\n\tPath: " + seetingsPath.ToStringRef());
+            auto&& settingsPath = path.Concat("data/settings.xml");
+            if (!documentXml.Save(settingsPath)) {
+                SR_ERROR("SceneLogic::Save() : failed save to settings!\n\tPath: " + settingsPath.ToStringRef());
                 return false;
             }
         }

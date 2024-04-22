@@ -109,7 +109,7 @@ namespace SR_WORLD_NS {
         m_regionWidth = regionWidth;
     }
 
-    Offset Observer::MathNeighbour(const SR_MATH_NS::IVector3 &offset) {
+    Offset Observer::MathNeighbour(const SR_MATH_NS::IVector3 &offset) const {
         SRAssert1Once(!m_chunk.HasZero());
 
         Math::IVector3 region;

@@ -80,10 +80,12 @@ namespace SR_UTILS_NS {
     }
 
     bool Features::Enabled(const std::string &name) const {
+        SR_TRACY_ZONE;
         return GetGroup("Common").Enabled(name);
     }
 
     bool Features::Enabled(const std::string &name, bool def) const {
+        SR_TRACY_ZONE;
         return GetGroup("Common").Enabled(name, def);
     }
 
