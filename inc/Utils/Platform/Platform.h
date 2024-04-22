@@ -37,6 +37,7 @@ namespace SR_UTILS_NS::Platform {
     SR_DLL_EXPORT extern void Terminate();
     SR_DLL_EXPORT extern void SelfOpen();
     SR_DLL_EXPORT extern void OpenFile(const SR_UTILS_NS::Path& path, const std::string& args);
+    SR_DLL_EXPORT extern void Unzip(const SR_UTILS_NS::Path& source, const SR_UTILS_NS::Path& destination);
     SR_DLL_EXPORT extern void OpenWithAssociatedApp(const Path& filepath);
     SR_DLL_EXPORT extern bool CreateFolder(const std::string& path);
     SR_DLL_EXPORT extern bool Copy(const Path& from, const Path& to);

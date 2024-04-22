@@ -27,6 +27,10 @@ namespace SR_UTILS_NS::Platform {
         pAndroidInstance = reinterpret_cast<android_app*>(pInstance);
     }
 
+    void Unzip(const SR_UTILS_NS::Path& source, const SR_UTILS_NS::Path& destination) {
+        SRHaltOnce("Not yet implemented!");
+    }
+
     void SetMousePos(const SR_MATH_NS::IVector2& pos) {
 
     }

@@ -5,8 +5,9 @@
 #define SRCOMMON_COMPRESSION_H
 
 #include <Utils/FileSystem/Path.h>
-//#include <assimp/contrib/zlib/zlib.h>
+
 #include <zlib/zlib.h>
+#include <zlib/contrib/minizip/unzip.h>
 
 namespace SR_UTILS_NS {
     /*SR_ENUM_NS_CLASS_T(ArchiveFormat, uint8_t,
@@ -18,9 +19,32 @@ namespace SR_UTILS_NS {
         ~Compression() = delete;
 
     public:
-        static bool Create(const Path& source, const Path& destination) {
-
+        /*static bool Create(const Path& source, const Path& destination) {
+            return true;
         }
+
+        static bool Unzip(const Path& source, const Path& destination) {
+            if (!source.Exists() || !destination.Exists()) {
+                SR_ERROR("Compression::Unzip() : either source or destination path does not exist.");
+                return false;
+            }
+
+            auto&& zipFile = unzOpen(source.c_str());
+            if (!zipFile) {
+                SR_ERROR("Compression::Unzip() : failed to open zip file.");
+                return false;
+            }
+
+            unz_global_info globalInfo;
+            if (unzGetGlobalInfo(zipFile, &globalInfo) != UNZ_OK) {
+                SR_ERROR("Compression::Unzip(): could not read file global info.");
+                unzClose(zipFile);
+                return false;
+            }
+
+            unzClose(zipFile);
+            return true;
+        }*/
     };
 }
 

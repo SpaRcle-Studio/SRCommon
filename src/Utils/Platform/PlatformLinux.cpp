@@ -75,6 +75,10 @@ namespace SR_UTILS_NS::Platform {
         SRHaltOnce("Not implemented!");
     }
 
+    void Unzip(const SR_UTILS_NS::Path& source, const SR_UTILS_NS::Path& destination) {
+        SRHaltOnce("Not yet implemented!");
+    }
+
     void SetInstance(void* pInstance) {
         SRHaltOnce("Not implemented!");
     }

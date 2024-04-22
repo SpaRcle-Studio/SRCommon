@@ -511,6 +511,12 @@ namespace SR_UTILS_NS::Platform {
         OpenFile(exe, "");
     }
 
+    void Unzip(const SR_UTILS_NS::Path& source, const SR_UTILS_NS::Path& destination) {
+        destination.CreateIfNotExists();
+        std::string command = "tar -xf "+ source.ToString() + " -C " + destination.ToString();
+        system(command.c_str());
+    }
+
     FileMetadata GetFileMetadata(const Path& file) {
         FileMetadata fileMetadata;
         WIN32_FIND_DATA fd;
