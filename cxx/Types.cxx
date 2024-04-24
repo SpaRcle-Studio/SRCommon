@@ -18,3 +18,7 @@
 #include "../src/Utils/Types/Node.cpp"
 #include "../src/Utils/Types/NodeDictionary.cpp"
 #include "../src/Utils/Types/SharedPtr.cpp"
+#include "../src/Utils/Types/SortedVector.cpp"
+#include "../src/Utils/Types/ForwardList.cpp"
+#include "../src/Utils/Types/Stack.cpp"
+#include "../src/Utils/Types/ObjectPool.cpp"

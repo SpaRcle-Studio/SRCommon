@@ -168,6 +168,7 @@
 #define GLM_ENABLE_EXPERIMENTAL
 #define SR_NOOP (void)0
 #define SR_FLT_EPSILON FLT_EPSILON
+#define SR_NORETURN [[noreturn]]
 
 #define SR_MAX_BONES_ON_VERTEX 8
 #define SR_HUMANOID_MAX_BONES 128

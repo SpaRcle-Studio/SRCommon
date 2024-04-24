@@ -20,6 +20,8 @@ namespace SR_UTILS_NS::Platform {
         uint64_t lastWriteTime = SR_UINT64_MAX;
     };
 
+    SR_NORETURN SR_DLL_EXPORT extern void Terminate();
+
     SR_DLL_EXPORT extern void InitializePlatform();
     SR_DLL_EXPORT extern void InitSegmentationHandler();
     SR_DLL_EXPORT extern void SetInstance(void* pInstance);
@@ -36,7 +38,6 @@ namespace SR_UTILS_NS::Platform {
     SR_DLL_EXPORT extern void WriteConsoleLog(const std::string& msg);
     SR_DLL_EXPORT extern void WriteConsoleError(const std::string& msg);
     SR_DLL_EXPORT extern void WriteConsoleWarn(const std::string& msg);
-    SR_DLL_EXPORT extern void Terminate();
     SR_DLL_EXPORT extern void SelfOpen();
     SR_DLL_EXPORT extern void OpenFile(const SR_UTILS_NS::Path& path, const std::string& args);
     SR_DLL_EXPORT extern void Unzip(const SR_UTILS_NS::Path& source, const SR_UTILS_NS::Path& destination);
