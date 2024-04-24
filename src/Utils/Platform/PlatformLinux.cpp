@@ -145,7 +145,7 @@ namespace SR_UTILS_NS::Platform {
     }
 
     void InitializePlatform() {
-        SRHaltOnce("Not implemented!");
+        SR_PLATFORM_NS::WriteConsoleLog("Platform::InitializePlatform() : initializing Linux platform...\n");
     }
 
     void ClearClipboard() {

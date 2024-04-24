@@ -4,6 +4,7 @@
 
 #include <Utils/Platform/LinuxStacktraceImpl.h>
 #include <Utils/Platform/Platform.h>
+#include <Utils/Profile/TracyContext.h>
 
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
@@ -686,6 +687,7 @@ int main(int argc, const char *argv[])
     }
 
     char* GetStacktraceImpl() {
+        SR_TRACY_ZONE;
         const uint MAX_LINES = 256;
         char* lines[MAX_LINES];
 
