@@ -6,6 +6,8 @@
 #include <Utils/Platform/Platform.h>
 #include <Utils/Profile/TracyContext.h>
 
+#include <cpptrace/cpptrace.hpp>
+
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
 #endif
@@ -688,7 +690,37 @@ int main(int argc, const char *argv[])
 
     char* GetStacktraceImpl() {
         SR_TRACY_ZONE;
-        const uint MAX_LINES = 256;
+
+/*      std::string stacktraceString("Stacktrace (most recent call first) : \n");
+        auto&& stacktrace = cpptrace::generate_trace();
+        if (stacktrace.frames.empty()) {
+            SR_PLATFORM_NS::WriteConsoleError("GetStacktraceImpl() : stacktrace frames are empty.");
+            return nullptr;
+        }
+
+        for (uint16_t i = 0; i < stacktrace.frames.size(); ++i) {
+            SR_UTILS_NS::Path filename(stacktrace.frames[i].filename);
+            filename.RemoveSubPath(SR_PLATFORM_NS::GetApplicationDirectory());
+
+            stacktraceString += "#" + i;
+            stacktraceString += " " + stacktrace.frames[i].symbol + " ";
+            stacktraceString += "at " + filename.ToStringRef();
+
+            if (stacktrace.frames[i].line.has_value() && stacktrace.frames[i].column.has_value()) {
+                stacktraceString += ":" + stacktrace.frames[i].line.value();
+                stacktraceString += ":" + stacktrace.frames[i].column.value();
+            }
+
+            stacktraceString += "\n";
+        }*/
+
+        //stacktrace.print();
+
+        /*char* result = (char*)malloc(stacktraceString.size() + 1);
+        result[stacktraceString.size() + 1] = '\0';
+        memcpy(result, stacktraceString.c_str(), stacktraceString.size() + 1);*/
+
+        /*const uint MAX_LINES = 256;
         char* lines[MAX_LINES];
 
         stackTraceCount = backtrace(stackTrace, 64);
@@ -723,6 +755,6 @@ int main(int argc, const char *argv[])
         }
 
         freeSymbolInfoLines(lines, lineCount);
-        return result;
+        return result;*/
     }
 }

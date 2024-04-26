@@ -292,6 +292,10 @@ namespace SR_UTILS_NS::Platform {
         return std::filesystem::current_path().string();
     }
 
+    Path GetApplicationDirectory() {
+        return GetApplicationPath().GetFolder();
+    }
+
     Path GetApplicationName() {
         std::string sp;
         std::ifstream("/proc/self/comm") >> sp;
