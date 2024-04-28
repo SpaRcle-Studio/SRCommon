@@ -1,7 +1,37 @@
 from Common import *
 
+def needs_update(path, export_path):
+    if not os.path.exists(path):
+        print(f"Path does not exist: {path}")
+        return
+
+    if not os.path.isfile(path):
+        print(f"Path is not a file: {path}")
+        return
+
+
+    filename, file_extension = os.path.splitext(os.path.basename(path))
+    file_extension = file_extension[1:]
+
+    header_name = f"{filename}{file_extension}"
+    header_path = f"{export_path}/EmbedResources/{header_name}.h"
+    if not os.path.exists(header_path):
+        print("ResourceEmbedder.py : header does not exist, creating a new one.")
+        return True
+
+    hash_path = f"{export_path}/EmbedResources/Hashes/{header_name}.hash"
+    if os.path.exists(hash_path):
+        current_hash = hashlib.md5(open(path,'rb').read()).hexdigest()
+        previous_hash = open(hash_path, "r").read()
+
+        if current_hash != previous_hash:
+            print(f"ResourceEmbedder.py : hashes are not equal, creating new header: '{hashlib.md5(open(path,'rb').read()).hexdigest()}' != {open(hash_path, "r").read()}")
+            return True
+
+    return False
+
 def create_cxx(path):
-    print(f"ResourceEmbedder.py : creating cxx for '{path}'")
+    print(f"ResourceEmbedder.py : creating cxx at '{path}'.")
     files = [f for f in os.listdir(path) if os.path.isfile(os.path.join(path, f))]
 
     if not os.path.exists(path):
@@ -94,6 +124,14 @@ def create_header(path, export_path):
     headerfile.write(header_contents)
     headerfile.close()
 
+    hash_path = f"{export_path}/EmbedResources/Hashes/{header_name}.hash"
+    if not os.path.exists(f"{export_path}/EmbedResources/Hashes"):
+        os.mkdir(f"{export_path}/EmbedResources/Hashes")
+
+    hash_file = open(hash_path, "w")
+    hash_file.write(hashlib.md5(open(path,'rb').read()).hexdigest())
+    hash_file.close()
+
 parser = argparse.ArgumentParser(
                     prog='ResourceEmbedder',
                     description='This program creates a header file with the binary content of a file')
@@ -108,15 +146,19 @@ if working_directory == "" and args.export_directory == "":
     exit(0)
 
 resources = filter(None, args.resources.split('|'))
+cxx_needs_update = False
 for resource_path in resources:
     resource_path = resource_path.replace("\\", "/")
     if os.path.isdir(resource_path):
         for filename in os.listdir(resource_path):
             file_path = os.path.join(resource_path, filename)
-            if os.path.isfile(file_path):
+            if os.path.isfile(file_path) and needs_update(file_path, args.export_directory):
                 create_header(file_path, args.export_directory)
-    else:
+                cxx_needs_update = True
+    elif needs_update(resource_path, args.export_directory):
         create_header(resource_path, args.export_directory)
+        cxx_needs_update = True
 
-create_cxx(f"{args.export_directory}/EmbedResources")
+if cxx_needs_update:
+    create_cxx(f"{args.export_directory}/EmbedResources")
 exit(0)

@@ -32,6 +32,13 @@ except Exception as e:
     subprocess.run([sys.executable, '-m', 'pip', 'install', 'clang'])
     import clang
 
+try:
+    import hashlib
+except Exception as e:
+    subprocess.run([sys.executable, 'pip', 'install', 'hashlib'])
+    subprocess.run([sys.executable, '-m', 'pip', 'install', 'hashlib'])
+    import hashlib
+
 import clang.cindex
 from clang.cindex import Config
 
