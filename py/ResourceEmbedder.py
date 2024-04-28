@@ -21,11 +21,11 @@ def needs_update(path, export_path):
 
     hash_path = f"{export_path}/EmbedResources/Hashes/{header_name}.hash"
     if os.path.exists(hash_path):
-        current_hash = hashlib.md5(open(path,'rb').read()).hexdigest()
+        current_hash = hashlib.md5(open(path,"rb").read()).hexdigest()
         previous_hash = open(hash_path, "r").read()
         if current_hash != previous_hash:
             print(f"ResourceEmbedder.py : hashes are not equal, creating new header: "
-                  f"'{hashlib.md5(open(path,'rb').read()).hexdigest()}' != '{open(hash_path, "r").read()}'.")
+                  f"'{hashlib.md5(open(path, "rb").read()).hexdigest()}' != '{open(hash_path, "r").read()}'.")
             return True
 
     return False
@@ -34,7 +34,7 @@ def create_cxx(path):
     print(f"ResourceEmbedder.py : creating cxx at '{path}'.")
     files = [f for f in os.listdir(path) if os.path.isfile(os.path.join(path, f))]
 
-    if not os.path.exists(path):
+    if os.path.exists(path):
         os.remove(f"{path}/EmbedResources.cxx")
 
     cxx_file = open(f"{path}/EmbedResources.cxx", "w")
@@ -129,7 +129,7 @@ def create_header(path, export_path):
         os.mkdir(f"{export_path}/EmbedResources/Hashes")
 
     hash_file = open(hash_path, "w")
-    hash_file.write(hashlib.md5(open(path,'rb').read()).hexdigest())
+    hash_file.write(hashlib.md5(open(path, "rb").read()).hexdigest())
     hash_file.close()
 
 parser = argparse.ArgumentParser(
