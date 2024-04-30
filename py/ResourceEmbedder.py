@@ -33,7 +33,7 @@ def create_cxx(path):
     print(f"ResourceEmbedder.py : creating cxx at '{path}'.")
     files = [f for f in os.listdir(path) if os.path.isfile(os.path.join(path, f))]
 
-    if os.path.exists(path):
+    if os.path.isfile(os.path.join(path, "EmbedResources.cxx")):
         os.remove(f"{path}/EmbedResources.cxx")
 
     cxx_file = open(f"{path}/EmbedResources.cxx", "w")
