@@ -13,6 +13,10 @@ namespace SR_HTYPES_NS {
     public:
         ObjectPool() = default;
 
+        SR_NODISCARD uint32_t GetAliveCount() const {
+            return m_objects.size() - m_freeIndices.Size();
+        }
+
         Index Add(T&& object) {
             Index index;
             if (m_freeIndices.IsEmpty()) SR_UNLIKELY_ATTRIBUTE {
@@ -40,31 +44,23 @@ namespace SR_HTYPES_NS {
         }
 
         T& At(Index index) {
-            if (index >= m_objects.size()) SR_UNLIKELY_ATTRIBUTE {
-                SR_PLATFORM_NS::WriteConsoleError(SR_FORMAT("ObjectPool::At() : index out of bounds!\n{}\n", SR_UTILS_NS::GetStacktrace()));
+            auto&& object = m_objects[index];
+            if (!object.first) SR_UNLIKELY_ATTRIBUTE {
+                SR_PLATFORM_NS::WriteConsoleError(SR_FORMAT("ObjectPool::At() : object is invalid!\n{}\n", SR_UTILS_NS::GetStacktrace()));
                 SR_PLATFORM_NS::Terminate();
             }
 
-            if (!m_objects[index].first) SR_UNLIKELY_ATTRIBUTE {
-                SR_PLATFORM_NS::WriteConsoleError(SR_FORMAT("ObjectPool::At() : object already removed!\n{}\n", SR_UTILS_NS::GetStacktrace()));
-                SR_PLATFORM_NS::Terminate();
-            }
-
-            return m_objects[index].second;
+            return object.second;
         }
 
         const T& At(Index index) const {
-            if (index >= m_objects.size()) SR_UNLIKELY_ATTRIBUTE {
-                SR_PLATFORM_NS::WriteConsoleError(SR_FORMAT("ObjectPool::At() : index out of bounds!\n{}\n", SR_UTILS_NS::GetStacktrace()));
+            auto&& object = m_objects[index];
+            if (!object.first) SR_UNLIKELY_ATTRIBUTE {
+                SR_PLATFORM_NS::WriteConsoleError(SR_FORMAT("ObjectPool::At() : object is invalid!\n{}\n", SR_UTILS_NS::GetStacktrace()));
                 SR_PLATFORM_NS::Terminate();
             }
 
-            if (!m_objects[index].first) SR_UNLIKELY_ATTRIBUTE {
-                SR_PLATFORM_NS::WriteConsoleError(SR_FORMAT("ObjectPool::At() : object already removed!\n{}\n", SR_UTILS_NS::GetStacktrace()));
-                SR_PLATFORM_NS::Terminate();
-            }
-
-            return m_objects[index].second;
+            return object.second;
         }
 
         void Clear() {
@@ -115,7 +111,7 @@ namespace SR_HTYPES_NS {
             return m_objects[index].first;
         }
 
-        T Remove(Index index) {
+        T RemoveByIndex(Index index) {
             if (index >= m_objects.size()) SR_UNLIKELY_ATTRIBUTE {
                 SR_PLATFORM_NS::WriteConsoleError(SR_FORMAT("ObjectPool::Remove() : index out of bounds!\n{}\n", SR_UTILS_NS::GetStacktrace()));
                 SR_PLATFORM_NS::Terminate();
@@ -132,7 +128,7 @@ namespace SR_HTYPES_NS {
             return std::move(m_objects[index].second);
         }
 
-        void Remove(const T& object) {
+        void RemoveByObject(const T& object) {
             for (uint64_t i = 0; i < m_objects.size(); ++i) {
                 if (m_objects[i].second == object) {
                     if (!m_objects[i].first) SR_UNLIKELY_ATTRIBUTE {
@@ -146,6 +142,20 @@ namespace SR_HTYPES_NS {
                     m_freeIndices.Push(i);
                     return;
                 }
+            }
+        }
+
+        void RemoveIf(const SR_HTYPES_NS::Function<bool(Index, T&)>& condition, const SR_HTYPES_NS::Function<void(T)>& deleter) {
+            Index index = 0;
+            for (auto&& [isAlive, object] : m_objects) {
+                if (isAlive) SR_LIKELY_ATTRIBUTE {
+                    if (condition(index, object)) {
+                        isAlive = false;
+                        deleter(std::move(object));
+                        m_freeIndices.Push(index);
+                    }
+                }
+                ++index;
             }
         }
 
