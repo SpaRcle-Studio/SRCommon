@@ -13,6 +13,10 @@ namespace SR_HTYPES_NS {
     public:
         ObjectPool() = default;
 
+        SR_NODISCARD uint32_t GetAliveCount() const {
+            return m_objects.size() - m_freeIndices.Size();
+        }
+
         Index Add(T&& object) {
             Index index;
             if (m_freeIndices.IsEmpty()) SR_UNLIKELY_ATTRIBUTE {
@@ -138,6 +142,20 @@ namespace SR_HTYPES_NS {
                     m_freeIndices.Push(i);
                     return;
                 }
+            }
+        }
+
+        void RemoveIf(const SR_HTYPES_NS::Function<bool(Index, T&)>& condition, const SR_HTYPES_NS::Function<void(T)>& deleter) {
+            Index index = 0;
+            for (auto&& [isAlive, object] : m_objects) {
+                if (isAlive) SR_LIKELY_ATTRIBUTE {
+                    if (condition(index, object)) {
+                        isAlive = false;
+                        deleter(std::move(object));
+                        m_freeIndices.Push(index);
+                    }
+                }
+                ++index;
             }
         }
 
