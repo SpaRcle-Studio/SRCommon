@@ -21,11 +21,10 @@ def needs_update(path, export_path):
 
     hash_path = f"{export_path}/EmbedResources/Hashes/{header_name}.hash"
     if os.path.exists(hash_path):
-        current_hash = hashlib.md5(open(path,"rb").read()).hexdigest()
+        current_hash = hashlib.md5(open(path, "rb").read()).hexdigest()
         previous_hash = open(hash_path, "r").read()
         if current_hash != previous_hash:
-            print(f"ResourceEmbedder.py : hashes are not equal, creating new header: "
-                  f"'{hashlib.md5(open(path, "rb").read()).hexdigest()}' != '{open(hash_path, "r").read()}'.")))
+            print(f"ResourceEmbedder.py : hashes are not equal, creating new header: '{current_hash}' != '{previous_hash}'.")
             return True
 
     return False
