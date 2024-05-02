@@ -22,7 +22,7 @@ namespace SR_WORLD_NS {
 
             pChunk->Update(dt);
 
-            if (pChunk->IsAlive()) {
+            if (true) {
                 ++pIt;
             }
             else {
@@ -63,7 +63,12 @@ namespace SR_WORLD_NS {
         Chunk* pChunk = nullptr;
 
         if (auto&& pChunkIt = m_loadedChunks.find(position); pChunkIt == m_loadedChunks.end()) {
-            pChunk = m_loadedChunks[position] = Chunk::Allocate(m_observer, this, position, m_chunkSize);
+            ChunkCreateInfo createInfo;
+            createInfo.dimensionInfo = m_chunkDimensionInfo;
+            createInfo.observer = m_observer;
+            createInfo.region = this;
+            createInfo.position = position;
+            pChunk = m_loadedChunks[position] = Chunk::Allocate(createInfo);
         }
         else {
             pChunk = pChunkIt->second;
@@ -146,11 +151,15 @@ namespace SR_WORLD_NS {
         g_allocator = allocator;
     }
 
-    Region* Region::Allocate(SRRegionAllocArgs) {
+    Region* Region::Allocate(
+        SR_WORLD_NS::Observer* observer, uint32_t width,
+        const ChunkDimensionInfo& chunkDimensionInfo, const SR_MATH_NS::IVector3& position
+    ) {
+        SR_TRACY_ZONE;
         if (g_allocator)
-            return g_allocator(SRRegionAllocVArgs);
+            return g_allocator(observer, width, chunkDimensionInfo, position);
 
-        return new Region(SRRegionAllocVArgs);
+        return new Region(observer, width, chunkDimensionInfo, position);
     }
 
     SR_MATH_NS::IVector3 Region::GetWorldPosition() const {
@@ -183,7 +192,7 @@ namespace SR_WORLD_NS {
     }
 
     Chunk* Region::GetChunk(const SR_MATH_NS::FVector3 &position) {
-        return GetChunk(MakeChunk(m_observer->WorldPosToChunkPos(position), m_width));
+        return GetChunk(MakeCubeChunk(m_observer->WorldPosToChunkPos(position), m_width));
     }
 
     void Region::Reload() {
@@ -247,7 +256,7 @@ namespace SR_WORLD_NS {
 
         SRAssert(!m_position.HasZero());
 
-        auto&& pLogic = m_observer->m_scene->GetLogicBase().DynamicCast<SceneCubeChunkLogic>();
+        auto&& pLogic = m_observer->m_scene->GetLogicBase().DynamicCast<SceneChunkLogic>();
         const auto&& path = pLogic->GetRegionsPath().Concat(m_position.ToString()).ConcatExt("dat");
 
         if (path.Exists()) {
@@ -306,5 +315,46 @@ namespace SR_WORLD_NS {
         }
 
         return true;
+    }
+
+    Chunk *Region::InitializeChunk(const Math::IVector3 &position, ChunkTicket ticket) {
+        if (position < 0 || position > static_cast<int32_t>(m_width)) {
+            SR_ERROR("Region::InitializeChunk() : incorrect position! "
+                     "\n\tWidth: {}\n\tRegion position: {}, {}, {}\n\tChunk position: {}, {}, {}",
+                     m_width, m_position.x, m_position.y, m_position.z, position.x, position.y, position.z
+            );
+            SRHalt0();
+            return nullptr;
+        }
+
+        Chunk* pChunk = nullptr;
+
+        if (auto&& pChunkIt = m_loadedChunks.find(position); pChunkIt == m_loadedChunks.end()) {
+            ChunkCreateInfo createInfo;
+            createInfo.dimensionInfo = m_chunkDimensionInfo;
+            createInfo.observer = m_observer;
+            createInfo.region = this;
+            createInfo.position = position;
+            pChunk = m_loadedChunks[position] = Chunk::Allocate(createInfo);
+            pChunk->AddTicket(ticket);
+        }
+        else {
+            SR_ERROR("Region::InitializeChunk() : chunk is already initialized!.");
+            return nullptr;
+        }
+
+        if (auto pCacheIt = m_cached.find(position); pCacheIt != m_cached.end()) {
+            /// TODO: OPTIMIZE!!!!!!!!!!!!!!!!!!!
+            SR_HTYPES_NS::Marshal copy = pCacheIt->second->Copy();
+            pChunk->PreLoad(&copy);
+
+            delete pCacheIt->second;
+            m_cached.erase(pCacheIt);
+        }
+        else {
+            pChunk->PreLoad(nullptr);
+        }
+
+        return pChunk;
     }
 }

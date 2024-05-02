@@ -15,6 +15,6 @@
 #include "../src/Utils/Common/CmdOptions.cpp"
 #include "../src/Utils/Common/Coroutine.cpp"
 
-#ifndef SR_UTILS_CI_BUILD
+#ifndef SR_UTILS_CI_BUILD /// For CI Builds in SRCommon repository.
     #include <EmbedResources.cxx>
 #endif

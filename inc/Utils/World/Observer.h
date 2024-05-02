@@ -10,6 +10,7 @@
 #include <Utils/Math/Vector3.h>
 #include <Utils/Common/StringFormat.h>
 #include <Utils/Common/NonCopyable.h>
+#include <Utils/World/ChunkInfo.h>
 
 namespace SR_UTILS_NS {
     class GameObject;
@@ -64,7 +65,7 @@ namespace SR_WORLD_NS {
         void SetTarget(const GameObjectPtr& target);
         void SetChunk(Math::IVector3 chunk);
         void MoveRegion(const Math::IVector3& value);
-        void SetWorldMetrics(const Math::IVector2& chunkSize, int32_t regionWidth);
+        void SetWorldMetrics(const ChunkDimensionInfo& chunkDimensionInfo, int32_t regionWidth);
         void SetScope(int32_t value) { m_scope = value; }
         void SetShiftDist(int32_t value) { m_shiftDistance = value; }
         Offset MathNeighbour(const Math::IVector3& offset) const;
@@ -76,11 +77,11 @@ namespace SR_WORLD_NS {
         SR_NODISCARD SR_MATH_NS::IVector3 GetChunk() const noexcept { return m_chunk; }
         SR_NODISCARD SR_MATH_NS::IVector3 GetRegion() const noexcept { return m_region; }
 
-        SR_NODISCARD SR_MATH_NS::IVector2 GetChunkSize() const noexcept { return m_chunkSize; }
+        SR_NODISCARD ChunkDimensionInfo GetDimensionInfo() const noexcept { return m_chunkDimensionInfo; }
         SR_NODISCARD int32_t GetRegionSize() const noexcept { return m_regionWidth; }
 
     public:
-        SR_MATH_NS::IVector2 m_chunkSize;
+        ChunkDimensionInfo m_chunkDimensionInfo;
         int32_t m_regionWidth;
         int32_t m_shiftDistance;
         int32_t m_scope;
@@ -99,7 +100,7 @@ namespace SR_WORLD_NS {
         GameObjectPtr m_target;
     };
 
-    SR_DLL_EXPORT Math::IVector3 MakeChunk(const Math::IVector3& rawChunkPos, int32_t width);
+    SR_DLL_EXPORT Math::IVector3 MakeCubeChunk(const Math::IVector3& rawChunkPos, int32_t width);
     SR_DLL_EXPORT Math::Unit AddOffset(const Math::Unit& value, const Math::Unit& offset);
     SR_DLL_EXPORT Math::FVector3 AddOffset(const Math::FVector3& chunk, const Math::FVector3& offset);
     SR_DLL_EXPORT Math::IVector3 AddOffset(const Math::IVector3& chunk, const Math::IVector3& offset);

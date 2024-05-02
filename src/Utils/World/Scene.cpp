@@ -93,7 +93,6 @@ namespace SR_WORLD_NS {
         }
 
         auto&& scene = SceneAllocator::Instance().Allocate();
-
         if (!scene) {
             SR_ERROR("Scene::New() : failed to allocate scene!");
             return Scene::Ptr();

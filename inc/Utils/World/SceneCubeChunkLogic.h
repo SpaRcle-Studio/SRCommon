@@ -8,6 +8,7 @@
 #include <Utils/World/SceneLogic.h>
 #include <Utils/World/TensorKey.h>
 
+/*
 namespace SR_WORLD_NS {
     class SceneCubeChunkLogic : public SceneLogic {
         using Super = SceneLogic;
@@ -67,11 +68,13 @@ namespace SR_WORLD_NS {
         World::Tensor m_tensor;
 
         Regions m_regions;
-        SR_MATH_NS::IVector2 m_chunkSize;
         uint32_t m_regionWidth = 0;
 
         Observer* m_observer = nullptr;
         Chunk* m_currentChunk = nullptr;
+
+        std::map<Chunk*, ChunkTicket> m_chunks;
+        ChunkDimensionInfo m_defaultDimensions;
 
         bool m_updateContainer = false;
         bool m_shiftEnabled = false;
@@ -79,5 +82,6 @@ namespace SR_WORLD_NS {
 
     };
 }
+*/
 
 #endif //SR_ENGINE_SCENECUBECHUNKLOGIC_H

@@ -17,6 +17,7 @@ namespace SR_WORLD_NS {
     public:
         SR_NODISCARD bool IsDefault() const noexcept override { return true; }
 
+        bool Load(const Path& path) override { return true; }
         bool Reload() override;
         void Destroy() override;
         void Update(float_t dt) override;

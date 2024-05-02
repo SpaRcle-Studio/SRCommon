@@ -9,9 +9,6 @@
 #include <Utils/World/Observer.h>
 #include <Utils/Xml.h>
 
-#define SRRegionAllocArgs SR_WORLD_NS::Observer* observer, uint32_t width, const SR_MATH_NS::IVector2& chunkSize, const SR_MATH_NS::IVector3& position
-#define SRRegionAllocVArgs observer, width, chunkSize, position
-
 namespace SR_UTILS_NS {
     class GameObject;
 }
@@ -28,10 +25,10 @@ namespace SR_WORLD_NS {
     class SR_DLL_EXPORT Region : public NonCopyable {
         using ScenePtr = SR_HTYPES_NS::SafePtr<Scene>;
     protected:
-        explicit Region(SRRegionAllocArgs)
+        explicit Region(SR_WORLD_NS::Observer* observer, uint32_t width, const ChunkDimensionInfo& chunkDimensionInfo, const SR_MATH_NS::IVector3& position)
             : m_observer(observer)
             , m_width(width)
-            , m_chunkSize(chunkSize)
+            , m_chunkDimensionInfo(chunkDimensionInfo)
             , m_position(position)
             , m_containsObserver(false)
         {
@@ -54,8 +51,9 @@ namespace SR_WORLD_NS {
         virtual void ApplyOffset();
 
     public:
-        Chunk* GetChunk(const Math::IVector3& position);
-        Chunk* GetChunk(const Math::FVector3& position);
+        Chunk* InitializeChunk(const SR_MATH_NS::IVector3& position, ChunkTicket ticket);
+        Chunk* GetChunk(const SR_MATH_NS::IVector3 &position);
+        Chunk* GetChunk(const SR_MATH_NS::FVector3& position);
 
         SR_NODISCARD const Chunks& GetChunks() const noexcept { return m_loadedChunks; }
         SR_NODISCARD Chunk* At(const Math::IVector3& position) const;
@@ -71,10 +69,10 @@ namespace SR_WORLD_NS {
         SR_NODISCARD SR_HTYPES_NS::Marshal::Ptr Save(SR_HTYPES_NS::DataStorage* pContext) const;
 
     public:
-        typedef std::function<Region*(SRRegionAllocArgs)> Allocator;
+        typedef std::function<Region*(SR_WORLD_NS::Observer* observer, uint32_t width, const ChunkDimensionInfo& chunkDimensionInfo, const SR_MATH_NS::IVector3& position)> Allocator;
 
         static void SetAllocator(const Allocator& allocator);
-        static Region* Allocate(SRRegionAllocArgs);
+        static Region* Allocate(SR_WORLD_NS::Observer* observer, uint32_t width, const ChunkDimensionInfo& chunkDimensionInfo, const SR_MATH_NS::IVector3& position);
 
     private:
         static Allocator g_allocator;
@@ -86,7 +84,7 @@ namespace SR_WORLD_NS {
         Chunks m_loadedChunks;
         CachedChunks m_cached;
         uint32_t m_width;
-        Math::IVector2 m_chunkSize;
+        ChunkDimensionInfo m_chunkDimensionInfo;
         Math::IVector3 m_position;
         std::atomic<bool> m_containsObserver;
 

@@ -363,7 +363,7 @@ namespace SR_UTILS_NS::Platform {
 
     bool IsFileDeletable(const SR_UTILS_NS::Path& path) {
         if (!path.IsFile()) {
-            SR_WARN("Platform::CanBeDeleted() : path is no a file.");
+            SR_WARN("Platform::CanBeDeleted() : path is not a file.");
             return false;
         }
 

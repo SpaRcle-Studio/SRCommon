@@ -6,6 +6,7 @@
 #include <Utils/ECS/ComponentManager.h>
 #include <Utils/Platform/Platform.h>
 #include <Utils/DebugDraw.h>
+#include <Utils/Math/Vector3.h>
 
 namespace SR_WORLD_NS {
     SceneCubeChunkLogic::SceneCubeChunkLogic(const ScenePtr& scene)
@@ -30,13 +31,32 @@ namespace SR_WORLD_NS {
         if (auto xml = SR_XML_NS::Document::Load(path); xml.Valid()) {
             const auto& configs = xml.Root().GetNode("Configs");
 
-            m_chunkSize = Math::IVector2(
-                    configs.TryGetNode("DefaultChunkWidth").TryGetAttribute("Value").ToInt(10),
-                    configs.TryGetNode("DefaultChunkHeight").TryGetAttribute("Value").ToInt(10)
-            );
+            ///TODO: move this chunk type logic somewhere else.
+            auto&& chunkType = configs.TryGetNode("ChunkType").TryGetAttribute("Value").ToString("Cube");
+            if (chunkType == "Cube") {
+                m_defaultDimensions.type = ChunkDimensionType::Cube;
+                m_defaultDimensions.dimension.cube = SR_MATH_NS::IVector3(
+                    configs.TryGetNode("DefaultCubeChunkWidth").TryGetAttribute("Value").ToInt(10),
+                    configs.TryGetNode("DefaultCubeChunkHeight").TryGetAttribute("Value").ToInt(10),
+                    configs.TryGetNode("DefaultCubeChunkDepth").TryGetAttribute("Value").ToInt(10)
+                );
+            }
+            else if (chunkType == "Square") {
+                SR_ERROR("SceneCubeChunkLogics::ReloadConfig() : chunk type is not Cube.");
+                return false;
+            }
+            else if (chunkType == "Hexagon") {
+                SR_ERROR("SceneCubeChunkLogics::ReloadConfig() : chunk type is not Cube.");
+                return false;
+            }
+            else {
+                SR_ERROR("SceneCubeChunkLogics::ReloadConfig() : unknown chunk type.");
+                return false;
+            }
+
             m_regionWidth = configs.TryGetNode("DefaultRegionWidth").TryGetAttribute("Value").ToInt(6);
 
-            m_observer->SetWorldMetrics(m_chunkSize, m_regionWidth);
+            m_observer->SetWorldMetrics(m_defaultDimensions, m_regionWidth);
             m_observer->SetShiftDist(configs.TryGetNode("DefaultShiftDistance").TryGetAttribute("Value").ToInt(10));
             m_observer->SetScope(configs.TryGetNode("DefaultScope").TryGetAttribute("Value").ToInt(10));
 
@@ -111,6 +131,8 @@ namespace SR_WORLD_NS {
     }
 
     bool SceneCubeChunkLogic::ScopeCheckFunction(int32_t x, int32_t y, int32_t z) const {
+        SR_TRACY_ZONE;
+
         if (!m_observer) {
             return false;
         }
@@ -139,7 +161,7 @@ namespace SR_WORLD_NS {
         auto&& pRegion = GetRegion(region);
 
         if (!pRegion) {
-            pRegion = Region::Allocate(m_observer, m_regionWidth, m_chunkSize, region);
+            pRegion = Region::Allocate(m_observer, m_regionWidth, m_defaultDimensions, region);
             m_regions.emplace_front(pRegion);
             pRegion->Load();
             m_debugDirty = true;
@@ -191,7 +213,7 @@ namespace SR_WORLD_NS {
         const auto deltaOffset = m_observer->m_offset - prevOffset;
 
         const auto fOffset = ((deltaOffset.m_region * m_regionWidth + deltaOffset.m_chunk)
-                              * Math::IVector3(m_chunkSize.x, m_chunkSize.y, m_chunkSize.x)).Cast<Math::Unit>();
+                              * Math::IVector3(m_defaultDimensions.dimension.cube)).Cast<Math::Unit>();
 
         auto&& root = m_scene->GetRootGameObjects();
         for (const GameObject::Ptr& gameObject : root) {
@@ -258,7 +280,7 @@ namespace SR_WORLD_NS {
         SR_TRACY_ZONE;
         SR_LOCK_GUARD;
 
-        const auto chunkSize = SR_MATH_NS::IVector3(m_chunkSize.x, m_chunkSize.y, m_chunkSize.x);
+        const auto chunkSize = SR_MATH_NS::IVector3(m_defaultDimensions.dimension.cube);
 
         const uint64_t reserved = m_tensor.size();
         m_tensor.clear();
@@ -276,7 +298,7 @@ namespace SR_WORLD_NS {
             auto chunk = AddOffset(SR_MATH_NS::IVector3(gmPosition.Singular(chunkSize.Cast<SR_MATH_NS::Unit>()) / chunkSize), -m_observer->m_offset.m_chunk);
             auto region = AddOffset(chunk.Singular(SR_MATH_NS::IVector3(m_regionWidth - 1)) / SR_MATH_NS::IVector3(m_regionWidth), -m_observer->m_offset.m_region);
 
-            const TensorKey key = TensorKey(region, MakeChunk(chunk, m_regionWidth));
+            const TensorKey key = TensorKey(region, MakeCubeChunk(chunk, m_regionWidth));
 
             if (auto&& pIt = m_tensor.find(key); pIt != m_tensor.end()) {
                 pIt->second.emplace_back(std::move(gameObject));
@@ -319,7 +341,7 @@ namespace SR_WORLD_NS {
     }
 
     std::pair<SR_MATH_NS::IVector3, SR_MATH_NS::IVector3> SceneCubeChunkLogic::GetRegionAndChunk(const SR_MATH_NS::FVector3& pos) const {
-        const auto chunkSize = Math::IVector3(m_chunkSize.x, m_chunkSize.y, m_chunkSize.x);
+        const auto chunkSize = Math::IVector3(m_defaultDimensions.dimension.cube);
         const World::Offset& offset = m_observer->m_offset;
 
         auto&& currentRegion = SR_MATH_NS::IVector3(pos / chunkSize);
@@ -420,7 +442,7 @@ namespace SR_WORLD_NS {
         SR_TRACY_ZONE;
         SR_LOCK_GUARD;
 
-        const auto chunkSize = Math::IVector3(m_chunkSize.x, m_chunkSize.y, m_chunkSize.x);
+        const auto chunkSize = Math::IVector3(m_defaultDimensions.dimension.cube);
         const auto regSize = Math::IVector3(m_regionWidth);
         const auto regSize2 = Math::IVector3(m_regionWidth - 1);
 
@@ -462,7 +484,7 @@ namespace SR_WORLD_NS {
 
             auto&& pRegion = GetRegion(region);
             if (!pRegion) {
-                pRegion = Region::Allocate(m_observer, m_regionWidth, m_chunkSize, m_observer->m_region);
+                pRegion = Region::Allocate(m_observer, m_regionWidth, m_defaultDimensions, m_observer->m_region);
                 pRegion->Load();
                 m_regions.emplace_front(pRegion);
 				m_debugDirty = true;
@@ -497,6 +519,7 @@ namespace SR_WORLD_NS {
     }
 
     SR_MATH_NS::IVector3 SceneCubeChunkLogic::CalculateCurrentChunk() const {
+        SR_TRACY_ZONE;
         auto&& [region, chunk] = GetRegionAndChunk(m_observer->m_targetPosition);
         return chunk;
     }
@@ -523,14 +546,14 @@ namespace SR_WORLD_NS {
                 continue;
             }
 
-            const auto size = SR_MATH_NS::FVector3(m_regionWidth) * m_chunkSize.x;
+            const auto size = SR_MATH_NS::FVector3(m_regionWidth) * m_defaultDimensions.dimension.cube.x;
             const SR_WORLD_NS::Offset offset = m_observer->m_offset;
 
             auto fPos = SR_WORLD_NS::AddOffset(pRegion->GetPosition().Cast<SR_MATH_NS::Unit>(), offset.m_region);
             fPos = fPos * size + (size / 2);
             fPos = fPos.DeSingular(size);
 
-            fPos += offset.m_chunk * m_chunkSize.x;
+            fPos += offset.m_chunk * m_defaultDimensions.dimension.cube.x;
 
             const uint64_t id = SR_UTILS_NS::DebugDraw::Instance().DrawPlane(
                     SR_MATH_NS::FVector3(fPos.x, static_cast<SR_MATH_NS::Unit>(0.1), fPos.z),
@@ -554,7 +577,7 @@ namespace SR_WORLD_NS {
                 m_planesIds.emplace_back(SR_UTILS_NS::DebugDraw::Instance().DrawPlane(
                     pChunk->GetWorldPosition(SR_MATH_NS::Axis::XZ),
                     SR_MATH_NS::Quaternion::Identity(),
-                    SR_MATH_NS::FVector3(m_chunkSize.x, m_chunkSize.y, m_chunkSize.x) / 2,
+                    SR_MATH_NS::FVector3(m_defaultDimensions.dimension.cube) / 2,
                     SR_MATH_NS::FColor(255, 255, 0, 255),
                     SR_FLOAT_MAX
                 ));
@@ -565,7 +588,7 @@ namespace SR_WORLD_NS {
             m_cubesIds.emplace_back(SR_UTILS_NS::DebugDraw::Instance().DrawCube(
                 m_currentChunk->GetWorldPosition(SR_MATH_NS::Axis::XYZ),
                 SR_MATH_NS::Quaternion::Identity(),
-                SR_MATH_NS::FVector3(m_chunkSize.x, m_chunkSize.y, m_chunkSize.x) / 2,
+                SR_MATH_NS::FVector3(m_defaultDimensions.dimension.cube) / 2,
                 SR_MATH_NS::FColor(0, 255, 0, 255),
                 SR_FLOAT_MAX
             ));
@@ -593,11 +616,15 @@ namespace SR_WORLD_NS {
     }
 
     void SceneCubeChunkLogic::UpdateChunk(const SR_MATH_NS::IVector3& chunk, float_t dt) {
+        SR_TRACY_ZONE;
         const auto neighbour = m_observer->MathNeighbour(chunk);
         auto&& pRegion = GetOrLoadRegion(neighbour.m_region);
 
         if (auto&& pChunk = pRegion->GetChunk(neighbour.m_chunk)) {
-            pChunk->Access(dt);
+            ChunkTicket ticket;
+            ticket.type = ChunkTicketType::Observer;
+            ticket.level = 1;
+            pChunk->AddTicket(ticket);
         }
     }
 

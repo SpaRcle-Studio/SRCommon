@@ -34,14 +34,14 @@ namespace SR_WORLD_NS {
     public:
         SR_NODISCARD virtual bool IsDefault() const noexcept { return false; }
 
-        virtual void Init() { }
+        virtual bool Init() { return true; }
         virtual void Update(float_t dt) { }
         virtual void Destroy() { }
         virtual void PostLoad() { }
 
         virtual bool Reload() { return true; }
 
-        virtual bool Load(const Path& path);
+        virtual bool Load(const Path& path) = 0;
         virtual bool Save(const Path& path);
 
     protected:

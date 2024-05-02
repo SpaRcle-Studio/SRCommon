@@ -16,7 +16,7 @@ namespace SR_WORLD_NS {
 
     SceneLogic::Ptr SceneLogic::CreateByExt(const SceneLogic::ScenePtr& pScene, const std::string& ext) {
         if (ext == "scene") {
-            return (new SceneCubeChunkLogic(pScene))->GetThis();
+            return (new SceneChunkLogic(pScene))->GetThis();
         }
 
         if (ext == SR_UTILS_NS::Prefab::EXTENSION) {
@@ -50,10 +50,6 @@ namespace SR_WORLD_NS {
             }
         }
 
-        return true;
-    }
-
-    bool SceneLogic::Load(const Path& path) {
         return true;
     }
 }

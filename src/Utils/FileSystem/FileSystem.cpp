@@ -271,4 +271,16 @@ namespace SR_UTILS_NS {
 
         return true;
     }
+
+    void FileSystem::ForEachInDirectory(const Path &path, std::function<void(const SR_UTILS_NS::Path& path)> callback) {
+        for (auto&& pathInDir : path.GetAll()) {
+            if (pathInDir.IsDir()) {
+                ForEachInDirectory(pathInDir, callback);
+            }
+            else {
+                callback(pathInDir);
+                return;
+            }
+        }
+    }
 }

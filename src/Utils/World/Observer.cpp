@@ -64,10 +64,10 @@ namespace SR_WORLD_NS {
         return result;
     }
 
-    SR_MATH_NS::IVector3 MakeChunk(const SR_MATH_NS::IVector3 &rawChunkPos, int32_t width) {
+    Math::IVector3 MakeCubeChunk(const SR_MATH_NS::IVector3 &rawChunkPos, int32_t width) {
         Math::IVector3 chunk = rawChunkPos;
 
-        #define SR_MAKE_CHUNK(value, width, chunk) {                                              \
+        #define SR_MAKE_CUBE_CHUNK(value, width, chunk) {                                         \
             SR_MATH_NS::IVector3 temp = chunk;                                                    \
             if (abs(chunk.value) > width || chunk.value < -width)                                 \
                 chunk.value %= width;                                                             \
@@ -77,9 +77,9 @@ namespace SR_WORLD_NS {
                 chunk.value = temp.value > 0 ? chunk.value : width - (abs(chunk.value) - 1);      \
         }                                                                                         \
 
-        SR_MAKE_CHUNK(x, width, chunk);
-        SR_MAKE_CHUNK(y, width, chunk);
-        SR_MAKE_CHUNK(z, width, chunk);
+        SR_MAKE_CUBE_CHUNK(x, width, chunk);
+        SR_MAKE_CUBE_CHUNK(y, width, chunk);
+        SR_MAKE_CUBE_CHUNK(z, width, chunk);
 
         SRAssert(abs(chunk.x) <= width && abs(chunk.y) <= width && abs(chunk.z) <= width);
 
@@ -87,7 +87,7 @@ namespace SR_WORLD_NS {
     }
 
     void Observer::SetChunk(SR_MATH_NS::IVector3 chunk) {
-        m_chunk = MakeChunk(chunk, m_regionWidth);
+        m_chunk = MakeCubeChunk(chunk, m_regionWidth);
         SRAssert(!m_chunk.HasZero());
     }
 
@@ -104,12 +104,14 @@ namespace SR_WORLD_NS {
             m_region.z = -(value.z / abs(value.z));
     }
 
-    void Observer::SetWorldMetrics(const SR_MATH_NS::IVector2 &chunkSize, int32_t regionWidth) {
-        m_chunkSize = chunkSize;
+    void Observer::SetWorldMetrics(const ChunkDimensionInfo& chunkDimensionInfo, int32_t regionWidth) {
+        m_chunkDimensionInfo = chunkDimensionInfo;
         m_regionWidth = regionWidth;
     }
 
     Offset Observer::MathNeighbour(const SR_MATH_NS::IVector3 &offset) const {
+        SR_TRACY_ZONE;
+
         SRAssert1Once(!m_chunk.HasZero());
 
         Math::IVector3 region;
@@ -124,17 +126,29 @@ namespace SR_WORLD_NS {
 
         return Offset(
                 AddOffset(m_region, region),
-                MakeChunk(chunk, m_regionWidth)
+                MakeCubeChunk(chunk, m_regionWidth)
         );
     }
 
     Math::IVector3 Observer::WorldPosToChunkPos(const Math::FVector3& position) {
-        const auto chunkSize = Math::IVector3(m_chunkSize.x, m_chunkSize.y, m_chunkSize.x);
+        switch (m_chunkDimensionInfo.type) {
+            case ChunkDimensionType::Cube: {
+                const auto chunkSize = m_chunkDimensionInfo.dimension.cube;
 
-        return AddOffset(
-                position.Singular(Math::FVector3(m_chunkSize.x, m_chunkSize.y, m_chunkSize.x)).Cast<int>() / chunkSize,
-                m_offset.m_chunk
-        );
+                return AddOffset(
+                        position.Singular(Math::FVector3(m_chunkDimensionInfo.dimension.cube)).Cast<int>() / chunkSize,
+                        m_offset.m_chunk
+                );
+            }
+            case ChunkDimensionType::Square:
+            case ChunkDimensionType::Hexagon:
+                SRHalt("Not yet implemented!");
+                SR_FALLTHROUGH;
+            default: {
+                SR_PLATFORM_NS::Terminate();
+                return {};
+            }
+        }
     }
 
     void Observer::SetTarget(const Observer::GameObjectPtr &target) {
