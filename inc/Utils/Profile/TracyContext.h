@@ -56,6 +56,7 @@ namespace SR_UTILS_NS {
 #endif
 
 #ifdef SR_TRACY_ENABLE
+    #define SR_TRACY_IS_PROFILER_CONNECTED (tracy::GetProfiler().IsConnected())
     #define SR_TRACY_TEXT_N(name, text) ZoneText(text.c_str(), text.size())
     #define SR_TRACY_ZONE ZoneScoped
     #define SR_TRACY_ZONE_VALUE(value) ZoneValue(value)
@@ -71,6 +72,7 @@ namespace SR_UTILS_NS {
     #define SR_TRACY_DESTROY(tracyType) SR_UTILS_NS::TracyContextManager::Instance().Destroy(tracyType);
 
 #else
+    #define SR_TRACY_IS_PROFILER_CONNECTED (false)
     #define SR_TRACY_TEXT_N(name, text)
     #define SR_TRACY_ZONE SR_NOOP
     #define SR_TRACY_ZONE_VALUE(value) SR_NOOP

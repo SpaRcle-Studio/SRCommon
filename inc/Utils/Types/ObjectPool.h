@@ -63,6 +63,14 @@ namespace SR_HTYPES_NS {
             return object.second;
         }
 
+        T& AtUnchecked(Index index) {
+            return m_objects[index].second;
+        }
+
+        const T& AtUnchecked(Index index) const {
+            return m_objects[index].second;
+        }
+
         void Clear() {
             m_objects.clear();
             m_freeIndices.Clear();
