@@ -10,6 +10,10 @@
     #include <Windows.h>
 #endif
 
+#ifdef SR_UTILS_USE_SDL
+    #include <SDL3/SDL.h>
+#endif
+
 namespace SR_UTILS_NS {
     void Input::Check() {
         SR_TRACY_ZONE;
@@ -37,6 +41,10 @@ namespace SR_UTILS_NS {
         if (!GetKeyboardState(m_arr)) {
             return;
         }
+    #elif defined(SR_UTILS_USE_SDL)
+        SDL_PumpEvents();
+        int32_t numkeys;
+        auto&& pArr = SDL_GetKeyboardState(&numkeys);
     #endif
 
         for (uint16_t i = 0; i < 256; ++i) {

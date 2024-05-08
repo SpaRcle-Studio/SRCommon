@@ -19,3 +19,6 @@
 [submodule "libs/cpptrace"]
 	path = libs/cpptrace
 	url = https://github.com/SpaRcle-Studio/cpptrace
+[submodule "libs/SDL"]
+	path = libs/SDL
+	url = https://github.com/SpaRcle-Studio/SDL.git

@@ -98,7 +98,8 @@ namespace SR_UTILS_NS {
         F10 = 121,
         F11 = 122,
         F12 = 123,
-        Plus = 187, Minus = 189,
+        Plus = 187,
+        Minus = 189,
         Dot = 190,
         Tilde = 192,
     };
@@ -167,7 +168,8 @@ namespace SR_UTILS_NS {
             KeyCode::F10,
             KeyCode::F11,
             KeyCode::F12,
-            KeyCode::Plus, KeyCode::Minus,
+            KeyCode::Plus,
+            KeyCode::Minus,
             KeyCode::Dot,
             KeyCode::Tilde,
     };

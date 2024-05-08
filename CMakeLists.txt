@@ -7,6 +7,11 @@ option(SR_UTILS_CMAKE_ZLIB "" ON)
 option(SR_UTILS_CMAKE_ASSIMP "" ON)
 option(SR_UTILS_DLL_EXPORTS "" ON)
 option(SR_UTILS_CI_BUILD "" OFF)
+option(SR_UTILS_USE_SDL "" ON)
+
+if (SR_UTILS_USE_SDL)
+    add_compile_definitions(SR_UTILS_USE_SDL)
+endif()
 
 macro(SR_UTILS_INCLUDE_DIRECTORIES_APPEND var)
     set_property(GLOBAL APPEND PROPERTY SR_UTILS_INCLUDE_DIRECTORIES "${var}")
@@ -70,6 +75,10 @@ if (UNIX AND NOT APPLE)
     find_package(X11 REQUIRED)
 endif()
 
+if (SR_UTILS_USE_SDL)
+    add_subdirectory(libs/SDL)
+endif()
+
 set(ICU_PREBUILT_VERSION "69.1")
 
 if (NOT ANDROID_NDK)
@@ -121,6 +130,10 @@ endif()
 if (SR_UTILS_CMAKE_ASSIMP)
     SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_BINARY_DIR}/libs/assimp/include)
     SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_SOURCE_DIR}/libs/assimp/include)
+endif()
+
+if (SR_UTILS_USE_SDL)
+    SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_SOURCE_DIR}/libs/SDL/include)
 endif()
 
 SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_BINARY_DIR}/libs/nativefiledialog/src/include)
@@ -180,6 +193,10 @@ if (UNIX AND NOT APPLE)
     endif()
 
     target_link_libraries(Utils bfd)
+endif()
+
+if (SR_UTILS_USE_SDL)
+    target_link_libraries(Utils SDL3::SDL3)
 endif()
 
 if (SR_UTILS_CMAKE_ZLIB)
