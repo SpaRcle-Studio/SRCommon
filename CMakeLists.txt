@@ -7,7 +7,7 @@ option(SR_UTILS_CMAKE_ZLIB "" ON)
 option(SR_UTILS_CMAKE_ASSIMP "" ON)
 option(SR_UTILS_DLL_EXPORTS "" ON)
 option(SR_UTILS_CI_BUILD "" OFF)
-option(SR_UTILS_USE_SDL "" ON)
+option(SR_UTILS_USE_SDL "" OFF)
 
 if (SR_UTILS_USE_SDL)
     add_compile_definitions(SR_UTILS_USE_SDL)
