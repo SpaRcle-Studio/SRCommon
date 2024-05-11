@@ -72,7 +72,15 @@ namespace SR_UTILS_NS::Platform {
    }
 
     void OpenFile(const SR_UTILS_NS::Path& path, const std::string& args) {
-        SRHaltOnce("Not implemented!");
+        std::string command;
+        if (path.IsAbs()) {
+            command = path.ToStringRef() + " " + args;
+        }
+        else {
+            command = "./" + path.ToStringRef() + " " + args;
+        }
+
+        system(command.c_str());
     }
 
     void Unzip(const SR_UTILS_NS::Path& source, const SR_UTILS_NS::Path& destination) {
@@ -93,7 +101,16 @@ namespace SR_UTILS_NS::Platform {
     }
 
     void OpenFile(const SR_UTILS_NS::Path& path) {
-        SRHaltOnce("Not implemented!");
+        std::string command;
+
+        if (path.IsAbs()) {
+            command = path.ToStringRef();
+        }
+        else {
+            command = "./" + path.ToStringRef();
+        }
+
+        std::system(command.c_str());
     }
 
     std::optional<std::string> ReadFile(const Path& path) {
@@ -199,8 +216,13 @@ namespace SR_UTILS_NS::Platform {
 
     bool Copy(const Path &from, const Path &to) {
         if (from.IsFile()) {
-            int source = open(from.c_str(), O_RDONLY, 0);
-            int dest = open(to.c_str(), O_WRONLY | O_CREAT /*| O_TRUNC/**/, 0644);
+            /// TODO: Find another way to copy a file without using system() function and WHILE preserving the current permissions.
+            std::string command = "cp " + from.ToStringRef() + " " + to.ToStringRef();
+            system(command.c_str());
+            return true;
+
+            /*int source = open(from.c_str(), O_RDONLY, 0);
+            int dest = open(to.c_str(), O_WRONLY | O_CREAT /*| O_TRUNC/*#1#, 0644);
 
             // struct required, rationale: function stat() exists also
             struct stat stat_source;
@@ -215,11 +237,11 @@ namespace SR_UTILS_NS::Platform {
                 SR_WARN("Platform::Copy() : failed to copy!\n\tFrom: {}\n\tTo: {}", from.CStr(), to.CStr());
             }
 
-            return result != -1;
+            return result != -1;*/
         }
 
         if (!from.IsDir()) {
-            SR_WARN("Platform::Copy() : \"{}\" is not directory!", from.c_str());
+            SR_WARN("Platform::Copy() : \"{}\" is not a directory!", from.c_str());
             return false;
         }
 
@@ -253,7 +275,13 @@ namespace SR_UTILS_NS::Platform {
     }
 
     bool CreateFolder(const std::string& path) {
-        return mkdir(path.c_str(), S_IRWXU);
+        const std::string command = "mkdir -p " + path;
+        if (system(command.c_str()) != 0) {
+            SR_LOG("Platform::CreateFolder() : failed to create folder!\n\tPath: {}", path);
+            return false;
+        }
+
+        return true;
     }
 
     bool Delete(const Path &path) {
@@ -289,7 +317,8 @@ namespace SR_UTILS_NS::Platform {
     }
 
     Path GetApplicationPath() {
-        return std::filesystem::current_path().string();
+        return std::filesystem::canonical("/proc/self/exe").string();
+        //return std::filesystem::current_path().string();
     }
 
     Path GetApplicationDirectory() {

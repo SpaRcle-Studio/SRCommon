@@ -46,10 +46,19 @@ namespace SR_UTILS_NS {
         memcpy(buffer.data(), pData, dataSize);
 
         if (!path.Exists()) {
+        #ifdef SR_LINUX
+            /// It is needed because on Linux there are files without extensions.
+            if (!SR_PLATFORM_NS::CreateFolder(path.GetPrevious().GetFolder())) {
+                SR_ERROR("ResourceEmbedder::ExportToFile() : failed to create path.");
+                return false;
+            }
+
+        #else
             if (!path.Create()) {
                 SR_ERROR("ResourceEmbedder::ExportToFile() : failed to create path.");
                 return false;
             }
+        #endif
         }
 
         std::ofstream file(path.CStr(), std::ios::out | std::ios::binary);
