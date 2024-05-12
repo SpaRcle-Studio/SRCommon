@@ -40,7 +40,7 @@ namespace SR_UTILS_NS::Platform {
     SR_DLL_EXPORT extern void WriteConsoleWarn(const std::string& msg);
     SR_DLL_EXPORT extern void SelfOpen();
     SR_DLL_EXPORT extern void OpenFile(const SR_UTILS_NS::Path& path, const std::string& args);
-    SR_DLL_EXPORT extern void Unzip(const SR_UTILS_NS::Path& source, const SR_UTILS_NS::Path& destination);
+    SR_DLL_EXPORT extern void Unzip(const SR_UTILS_NS::Path& source, const SR_UTILS_NS::Path& destination, bool replace = true);
     SR_DLL_EXPORT extern void OpenWithAssociatedApp(const Path& filepath);
     SR_DLL_EXPORT extern bool CreateFolder(const std::string& path);
     SR_DLL_EXPORT extern bool Copy(const Path& from, const Path& to);
@@ -67,6 +67,7 @@ namespace SR_UTILS_NS::Platform {
     SR_DLL_EXPORT extern void SetMousePos(const SR_MATH_NS::IVector2& pos);
     SR_DLL_EXPORT extern void SetCursorVisible(bool isVisible);
     SR_DLL_EXPORT extern void SetThreadPriority(void* nativeHandle, ThreadPriority priority);
+    SR_DLL_EXPORT extern void CopyPermissions(const SR_UTILS_NS::Path& source, const SR_UTILS_NS::Path& destination);
 
 }
 #endif //SR_ENGINE_UTILS_PLATFORM_H

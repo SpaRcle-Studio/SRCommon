@@ -362,17 +362,21 @@ namespace SR_UTILS_NS::Platform {
     }
 
     bool IsFileDeletable(const SR_UTILS_NS::Path& path) {
-        if (!path.IsFile()) {
-            SR_WARN("Platform::CanBeDeleted() : path is no a file.");
+        if (!path.Exists() || !path.IsFile()) {
+            SR_WARN("Platform::CanBeDeleted() : path does not exist or is not a file.");
             return false;
         }
 
-        if (auto&& file = std::ofstream((path.c_str()))) {
+        if (auto&& file = std::ofstream(path.c_str())) {
             file.close();
             return true;
         }
 
         return false;
+    }
+
+    void SetSamePermissions(const SR_UTILS_NS::Path& path) {
+        SRHaltOnce("Platform::SetSamePermissions() : is not implemented!");
     }
 
     void SetThreadPriority(void *nativeHandle, ThreadPriority priority) {
@@ -601,7 +605,8 @@ namespace SR_UTILS_NS::Platform {
         OpenFile(exe, "");
     }
 
-    void Unzip(const SR_UTILS_NS::Path& source, const SR_UTILS_NS::Path& destination) {
+    void Unzip(const SR_UTILS_NS::Path& source, const SR_UTILS_NS::Path& destination, bool replace) {
+		//TODO: Add support for the 'replace' argument.
         destination.CreateIfNotExists();
         std::string command = "tar -xf "+ source.ToString() + " -C " + destination.ToString();
         system(command.c_str());

@@ -68,7 +68,18 @@ namespace SR_UTILS_NS::Platform {
     }
 
     bool IsFileDeletable(const SR_UTILS_NS::Path& path) {
-       SRHaltOnce("Not implemented!");
+        if (!path.Exists() || !path.IsFile()) {
+            SR_WARN("Platform::CanBeDeleted() : path does not exist or is not a file.");
+            return false;
+        }
+
+        auto&& file = std::fstream(path.c_str(), std::ios::in);
+        if (file.is_open()) {
+            file.close();
+            return true;
+        }
+
+        return false;
    }
 
     void OpenFile(const SR_UTILS_NS::Path& path, const std::string& args) {
@@ -83,8 +94,49 @@ namespace SR_UTILS_NS::Platform {
         system(command.c_str());
     }
 
-    void Unzip(const SR_UTILS_NS::Path& source, const SR_UTILS_NS::Path& destination) {
-        SRHaltOnce("Not yet implemented!");
+    void Unzip(const SR_UTILS_NS::Path& source, const SR_UTILS_NS::Path& destination, bool replace) {
+        std::string command;
+        if (source.GetExtensionView() == "zip") {
+            if (replace) {
+                command = "unzip -q -o " + source.ToStringRef() + " -d " + destination.ToStringRef();
+            }
+            else {
+                command = "unzip -q -n" + source.ToStringRef() + " -d " + destination.ToStringRef();
+            }
+
+            system(command.c_str());
+        }
+        else if (source.GetExtensionView() == "tar" || source.GetExtensionView() == "gz") {
+            //TODO: Find a way to use 'replace' variable here.
+            command += "tar -xf " + source.ToStringRef() + " -C " + destination.ToStringRef();
+            system(command.c_str());
+        }
+        else {
+            SR_WARN("Platform::Unzip() : unknown file extension. Path: '{}'", source.ToString());
+        }
+    }
+
+    void CopyPermissions(const SR_UTILS_NS::Path& source, const SR_UTILS_NS::Path& destination) {
+        if (!source.Exists() || !destination.Exists()) {
+            SR_ERROR("Platform::CopyPermissions() : either source or destination path does not exist.");
+            return;
+        }
+
+        auto&& currentHandle = open(source.c_str(), O_RDONLY);
+        auto&& destinationHandle = open(destination.c_str(), O_RDONLY);
+
+        if (currentHandle == -1 || destinationHandle == -1) {
+            SR_ERROR("Platform::CopyPermissions() : failed to open file handles.");
+            return;
+        }
+
+        struct stat fst;
+        fstat(currentHandle, &fst);
+        fchown(destinationHandle, fst.st_uid, fst.st_gid);
+        fchmod(destinationHandle,fst.st_mode);
+
+        close(currentHandle);
+        close(destinationHandle);
     }
 
     void SetInstance(void* pInstance) {
@@ -136,8 +188,17 @@ namespace SR_UTILS_NS::Platform {
     }
 
     bool WaitAndDelete(const SR_UTILS_NS::Path& path) {
-        SRHaltOnce("Not implemented!");
-        return false;
+        if (!path.IsFile()) {
+            SR_WARN("Platform::WaitAndDelete() : path is not a file. Path: '{}'", path.ToString());
+            return false;
+        }
+
+        SR_LOG("Platform::WaitAndDelete() : waiting for file to be deleted...");
+        while (true) {
+            if (IsFileDeletable(path)) {
+                return Delete(path);
+            }
+        }
     }
 
     void TextToClipboard(const std::string &text) {
@@ -275,9 +336,14 @@ namespace SR_UTILS_NS::Platform {
     }
 
     bool CreateFolder(const std::string& path) {
+        if (path.empty()) {
+            SR_WARN("Platform::CreateFolder() : path is empty!");
+            return false;
+        }
+
         const std::string command = "mkdir -p " + path;
         if (system(command.c_str()) != 0) {
-            SR_LOG("Platform::CreateFolder() : failed to create folder!\n\tPath: {}", path);
+            SR_WARN("Platform::CreateFolder() : failed to create folder!\n\tPath: {}", path);
             return false;
         }
 

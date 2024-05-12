@@ -61,7 +61,7 @@ namespace SR_UTILS_NS {
         #endif
         }
 
-        std::ofstream file(path.CStr(), std::ios::out | std::ios::binary);
+        std::ofstream file(path.c_str(), std::ios::out | std::ios::binary);
         if (!file.is_open()) {
             SR_ERROR("ResourceEmbedder::ExportToFile() : failed to open file '{}'.", resource.path);
             return false;
@@ -69,6 +69,11 @@ namespace SR_UTILS_NS {
 
         file.write(buffer.data(), buffer.size());
         file.close();
+
+    #ifdef SR_LINUX
+        auto&& applicationPath = SR_PLATFORM_NS::GetApplicationPath();
+        Platform::CopyPermissions(applicationPath, path.c_str());
+    #endif
 
         return true;
     }
