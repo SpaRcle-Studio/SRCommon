@@ -168,6 +168,10 @@ namespace SR_HTYPES_NS {
         }
 
         void ForEach(const SR_HTYPES_NS::Function<void(Index, T&)>& func) {
+            if (IsEmpty()) SR_UNLIKELY_ATTRIBUTE {
+                return;
+            }
+
             Index index = 0;
             for (auto&& [isAlive, object] : m_objects) {
                 if (isAlive) SR_LIKELY_ATTRIBUTE {
@@ -178,6 +182,10 @@ namespace SR_HTYPES_NS {
         }
 
         void ForEach(const SR_HTYPES_NS::Function<void(Index, const T&)>& func) const {
+            if (IsEmpty()) SR_UNLIKELY_ATTRIBUTE {
+                return;
+            }
+
             Index index = 0;
             for (auto&& [isAlive, object] : m_objects) {
                 if (isAlive) SR_LIKELY_ATTRIBUTE {

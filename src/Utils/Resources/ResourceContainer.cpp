@@ -43,14 +43,14 @@ namespace SR_UTILS_NS {
     void ResourceContainer::UpdateResources(int32_t depth) {
         /// вверх по иерархии
         if (depth == 0 || depth > 0) {
-            for (auto &&pResource : m_parents) {
+            for (auto&& pResource : m_parents) {
                 pResource->OnResourceUpdated(this, depth + 1);
             }
         }
 
         /// вниз по иерархии
         if (depth == 0 || depth < 0) {
-            for (auto &&pResource : m_dependencies) {
+            for (auto&& pResource : m_dependencies) {
                 pResource->OnResourceUpdated(this, depth - 1);
             }
         }
