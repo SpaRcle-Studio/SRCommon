@@ -7,7 +7,7 @@
 
 namespace SR_UTILS_NS {
     ResourceContainer::~ResourceContainer() {
-        SRAssert(m_dependencies.empty());
+        SRAssert2(m_dependencies.empty(), "ResourceContainer::~ResourceContainer() : dependencies are not empty!");
 
         while (!m_parents.empty()) {
             (*m_parents.begin())->RemoveDependency(this);

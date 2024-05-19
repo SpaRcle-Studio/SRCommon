@@ -109,10 +109,13 @@ namespace SR_UTILS_NS {
     }
 
     IResource::RemoveUPResult IResource::RemoveUsePoint() {
+        SR_TRACY_ZONE;
+
         RemoveUPResult result;
 
         /// тут нужно делать синхронно, иначе может произойти deadlock
         /// TODO: а вообще опасное место, нужно переделать
+        /// TODO 2: здесь какой-то пиздец. нужно оптимизировать.
         ResourceManager::Instance().Execute([this, &result]() {
             if (m_countUses == 0) {
                 SRHalt("Count use points is zero!");
@@ -138,6 +141,7 @@ namespace SR_UTILS_NS {
 
             result = RemoveUPResult::Success;
 
+            /// TODO: получение синглтона дорогая операция, нужно оптимизировать
             if (SR_UTILS_NS::ResourceManager::Instance().IsUsePointStackTraceProfilingEnabled()) {
                 m_debugUnUseStackTraces.emplace_back(SR_UTILS_NS::GetStacktrace());
             }
@@ -147,6 +151,8 @@ namespace SR_UTILS_NS {
     }
 
     void IResource::AddUsePoint() {
+        SR_TRACY_ZONE;
+
         SRAssert(m_countUses != SR_UINT16_MAX);
 
         if (m_isRegistered && m_countUses == 0 && m_isDestroyed) {
@@ -155,6 +161,7 @@ namespace SR_UTILS_NS {
 
         ++m_countUses;
 
+        /// TODO: получение синглтона дорогая операция, нужно оптимизировать
         if (SR_UTILS_NS::ResourceManager::Instance().IsUsePointStackTraceProfilingEnabled()) {
             m_debugUseStackTraces.emplace_back(SR_UTILS_NS::GetStacktrace());
         }
