@@ -149,7 +149,7 @@
     #define SR_FORCE_INLINE __forceinline
 #endif
 
-#define SR_CLOCKS_PER_SEC CLOCKS_PER_SEC
+#define SR_CLOCKS_PER_SEC 1000
 #define SR_NODISCARD [[nodiscard]]
 #define SR_FALLTHROUGH [[fallthrough]]
 #define SR_MAYBE_UNUSED [[maybe_unused]]

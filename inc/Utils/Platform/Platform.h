@@ -20,6 +20,11 @@ namespace SR_UTILS_NS::Platform {
         uint64_t lastWriteTime = SR_UINT64_MAX;
     };
 
+    struct MouseState {
+        SR_MATH_NS::FVector2 position;
+        bool buttonStates[5] { };
+    };
+
     SR_NORETURN SR_DLL_EXPORT extern void Terminate();
 
     SR_DLL_EXPORT extern void InitializePlatform();
@@ -51,6 +56,8 @@ namespace SR_UTILS_NS::Platform {
     SR_DLL_EXPORT extern uint64_t GetProcessUsedMemory();
     SR_DLL_EXPORT extern uint16_t GetCurrentProcessId();
     SR_DLL_EXPORT extern SR_MATH_NS::FVector2 GetMousePos();
+    SR_DLL_EXPORT extern MouseState GetMouseState();
+    SR_DLL_EXPORT extern void GetKeyboardState(uint8_t* pKeyCodes);
     SR_DLL_EXPORT extern std::string GetClipboardText();
     SR_DLL_EXPORT extern Path GetApplicationPath();
     SR_DLL_EXPORT extern Path GetApplicationDirectory();

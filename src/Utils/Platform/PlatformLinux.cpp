@@ -8,6 +8,7 @@
 
 #include <X11/Xlib.h>
 #include <X11/extensions/Xrandr.h>
+//#include <X11/extensions/XInput.h>
 #include <X11/Xlib-xcb.h>
 
 #include <xcb/randr.h>
@@ -16,7 +17,10 @@
 
 #include <spawn.h>
 #include <fcntl.h>
+#include <termios.h>
 #include <unistd.h>
+
+#include <Utils/Platform/XKeySymToKeyCode.h>
 
 #include <sys/sendfile.h>
 
@@ -230,9 +234,91 @@ namespace SR_UTILS_NS::Platform {
         SRHaltOnce("Not implemented!");
     }
 
+    MouseState GetMouseState() {
+        static Display* pDisplay = nullptr;
+
+        if (!pDisplay) {
+            pDisplay = XOpenDisplay(nullptr);
+        }
+
+        if (!pDisplay) {
+            SR_ERROR("Platform::GetMousePos() : failed to open display.");
+            return { };
+        }
+
+        Window root = DefaultRootWindow(pDisplay);
+        Window root_return, child_return;
+        int root_x_return, root_y_return, win_x_return, win_y_return;
+        unsigned int mask_return;
+
+        XQueryPointer(pDisplay, root, &root_return, &child_return, &root_x_return, &root_y_return, &win_x_return, &win_y_return, &mask_return);
+
+        MouseState mouseState;
+        mouseState.position = { static_cast<float>(root_x_return), static_cast<float>(root_y_return) };
+
+        mouseState.buttonStates[0] = mask_return & Button1Mask;
+        mouseState.buttonStates[1] = mask_return & Button3Mask;
+        mouseState.buttonStates[2] = mask_return & Button2Mask;
+        mouseState.buttonStates[3] = mask_return & Button4Mask;
+        mouseState.buttonStates[4] = mask_return & Button5Mask;
+
+        return mouseState;
+    }
+
     SR_MATH_NS::FVector2 GetMousePos() {
-        SRHaltOnce("Not implemented!");
-        return SR_MATH_NS::FVector2();
+        static Display* pDisplay = nullptr;
+
+        if (!pDisplay) {
+            pDisplay = XOpenDisplay(nullptr);
+        }
+
+        if (!pDisplay) {
+            SR_ERROR("Platform::GetMousePos() : failed to open display.");
+            return { };
+        }
+
+        Window root = DefaultRootWindow(pDisplay);
+        Window child;
+        int root_x, root_y, win_x, win_y;
+        unsigned int mask;
+        XQueryPointer(pDisplay, root, &root, &child, &root_x, &root_y, &win_x, &win_y, &mask);
+
+        return { static_cast<float>(root_x), static_cast<float>(root_y) };
+    }
+
+    void GetKeyboardState(uint8_t* pKeyCodes) {
+        static Display* pDisplay = nullptr;
+
+        if (!pDisplay) {
+            pDisplay = XOpenDisplay(nullptr);
+        }
+
+        if (!pDisplay) {
+            SR_ERROR("Platform::GetMousePos() : failed to open display.");
+            return;
+        }
+
+        char keys_return[32];
+        XQueryKeymap(pDisplay, keys_return);
+
+        for (int i = 0; i < 32; i++) {
+            for (int j = 0; j < 8; j++) {
+                if (keys_return[i] & (1 << j)) {
+                    int keycode = i * 8 + j;
+                    KeySym keysym = XKeycodeToKeysym(pDisplay, keycode, 0);
+
+                    auto it = keysymToIndex.find(keysym);
+                    if (it != keysymToIndex.end()) {
+                        if (pKeyCodes[it->second] == 0) { // Is State::Dowm?
+                            pKeyCodes[it->second] = 1; // Then set State::Pressed
+                        }
+                        else if (pKeyCodes[it->second] == 1) { // Is State::UnPressed?
+                            pKeyCodes[it->second] = 2; // Then set State::Down
+                        }
+                    }
+                }
+            }
+        }
     }
 
     void Sleep(uint64_t milliseconds) {

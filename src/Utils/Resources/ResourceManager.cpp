@@ -184,10 +184,10 @@ namespace SR_UTILS_NS {
     }
 
     bool ResourceManager::RegisterType(const std::string& name, uint64_t hashTypeName) {
-        SR_INFO("ResourceManager::RegisterType() : register new \"" + name + "\" type...");
+        SR_INFO("ResourceManager::RegisterType() : registering new \"" + name + "\" type...");
 
         if (m_resources.count(hashTypeName) == 1) {
-            SRHalt("ResourceManager::RegisterType() : type already registered!");
+            SRHalt("ResourceManager::RegisterType() : type is already registered!");
             return false;
         }
 
