@@ -300,6 +300,11 @@ namespace SR_UTILS_NS::Platform {
         }
     }
 
+    bool GetSystemKeyboardState(uint8_t* pKeyCodes) {
+        GetKeyState(0);
+        return ::GetKeyboardState(pKeyCodes);
+    }
+
     std::string GetClipboardText() {
         std::string text{};
 
@@ -338,10 +343,21 @@ namespace SR_UTILS_NS::Platform {
             SR_ERROR("Platform::ClearClipboard() : failed to open clipboard!");
     }
 
-    Math::FVector2 GetMousePos() {
+    SR_MATH_NS::FVector2 GetMousePos() {
         POINT p;
         GetCursorPos(&p);
         return Math::FVector2(p.x, p.y);
+    }
+
+    MouseState GetMouseState() {
+        MouseState state;
+        state.position = GetMousePos();
+        state.buttonStates[0] = GetKeyState(VK_LBUTTON) & 0x8000;
+        state.buttonStates[1] = GetKeyState(VK_RBUTTON) & 0x8000;
+        state.buttonStates[2] = GetKeyState(VK_MBUTTON) & 0x8000;
+        state.buttonStates[3] = GetKeyState(VK_XBUTTON1) & 0x8000;
+        state.buttonStates[4] = GetKeyState(VK_XBUTTON2) & 0x8000;
+        return state;
     }
 
     void Sleep(uint64_t milliseconds) {

@@ -286,7 +286,7 @@ namespace SR_UTILS_NS::Platform {
         return { static_cast<float>(root_x), static_cast<float>(root_y) };
     }
 
-    void GetKeyboardState(uint8_t* pKeyCodes) {
+    bool GetSystemKeyboardState(uint8_t* pKeyCodes) {
         static Display* pDisplay = nullptr;
 
         if (!pDisplay) {
@@ -295,7 +295,7 @@ namespace SR_UTILS_NS::Platform {
 
         if (!pDisplay) {
             SR_ERROR("Platform::GetMousePos() : failed to open display.");
-            return;
+            return false;
         }
 
         char keys_return[32];
@@ -319,6 +319,7 @@ namespace SR_UTILS_NS::Platform {
                 }
             }
         }
+        return true;
     }
 
     void Sleep(uint64_t milliseconds) {

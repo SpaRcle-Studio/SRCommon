@@ -22,7 +22,12 @@ namespace SR_UTILS_NS::Platform {
 
     struct MouseState {
         SR_MATH_NS::FVector2 position;
-        bool buttonStates[5] { };
+        /**
+           0 - Left, 1 - Right, 2 - Middle,
+           3 - X1,
+           4 - X2
+        */
+        bool buttonStates[5] { false, false, false, false, false };
     };
 
     SR_NORETURN SR_DLL_EXPORT extern void Terminate();
@@ -57,7 +62,7 @@ namespace SR_UTILS_NS::Platform {
     SR_DLL_EXPORT extern uint16_t GetCurrentProcessId();
     SR_DLL_EXPORT extern SR_MATH_NS::FVector2 GetMousePos();
     SR_DLL_EXPORT extern MouseState GetMouseState();
-    SR_DLL_EXPORT extern void GetKeyboardState(uint8_t* pKeyCodes);
+    SR_DLL_EXPORT extern bool GetSystemKeyboardState(uint8_t* pKeyCodes);
     SR_DLL_EXPORT extern std::string GetClipboardText();
     SR_DLL_EXPORT extern Path GetApplicationPath();
     SR_DLL_EXPORT extern Path GetApplicationDirectory();

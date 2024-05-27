@@ -36,7 +36,6 @@ namespace SR_UTILS_NS {
         SR_NODISCARD bool IsMouseMoved() const;
 
         int32_t GetMouseWheel();
-        int32_t DebugKey();
 
         bool GetMouseDown(MouseCode code) { return GetKeyDown(static_cast<KeyCode>(code)); }
         bool GetMouseUp(MouseCode code) { return GetKeyUp(static_cast<KeyCode>(code)); }

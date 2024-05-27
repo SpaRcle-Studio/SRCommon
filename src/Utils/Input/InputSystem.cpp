@@ -6,10 +6,6 @@
 #include <Utils/Platform/Platform.h>
 #include <Utils/Profile/TracyContext.h>
 
-#ifdef SR_WIN32
-    #include <Windows.h>
-#endif
-
 namespace SR_UTILS_NS {
     void Input::Check() {
         SR_TRACY_ZONE;
@@ -20,26 +16,25 @@ namespace SR_UTILS_NS {
         }
 
         m_mouseScroll = m_mouseScrollCurrent;
-        m_mouseScrollCurrent = glm::vec2(0, 0);
+        m_mouseScrollCurrent = SR_MATH_NS::FVector2(0, 0);
 
         m_mousePrev = m_mouse;
-
-    #ifdef SR_WIN32
-        m_mouse = SR_PLATFORM_NS::GetMousePos();
-    #endif
 
         if (!m_arr) {
             m_arr = new uint8_t[256];
             memset(m_arr, 0, 256);
         }
 
-    #ifdef SR_WIN32
-        GetKeyState(0);
-        if (!GetKeyboardState(m_arr)) {
+        if (!SR_PLATFORM_NS::GetSystemKeyboardState(m_arr)) {
             return;
         }
 
-        for (uint16_t i = 0; i < 256; ++i) {
+        auto&& mouseState = SR_PLATFORM_NS::GetMouseState();
+
+        m_mouse = mouseState.position;
+
+    #if defined(SR_WIN32)
+        for (uint16_t i = 5; i < 256; ++i) {
             if (m_arr[i] >> 7 != 0) {
                 switch (m_keys[i]) {
                 case State::UnPressed:
@@ -74,8 +69,6 @@ namespace SR_UTILS_NS {
             }
         }
     #elif defined(SR_LINUX)
-        Platform::GetKeyboardState(m_arr);
-
         for (uint16_t i = 5; i < 256; ++i) {
             if (m_arr[i] == 0 && (m_keys[i] == State::Down || m_keys[i] == State::Pressed)) {
                 m_keys[i] = State::Up; // If a key was already Pressed or Down and now is not pressed, then it's Up
@@ -86,44 +79,30 @@ namespace SR_UTILS_NS {
         }
 
         memset(m_arr, 0, 256);
-
-        auto&& mouseState = Platform::GetMouseState();
-        m_mouse = mouseState.position;
+    #endif
 
         for (uint8_t i = 0; i < 5; ++i) {
             if (mouseState.buttonStates[i]) {
                 switch (m_keys[i]) {
-                case State::UnPressed:
-                    m_keys[i] = State::Down;
-                    break;
-                case State::Down:
-                    m_keys[i] = State::Pressed;
-                    break;
-                case State::Pressed:
-                    //skip
-                    break;
-                case State::Up:
-                    m_keys[i] = State::Down;
-                    break;
+                    case State::UnPressed: m_keys[i] = State::Down; break;
+                    case State::Down: m_keys[i] = State::Pressed; break;
+                    case State::Pressed: break; /// skip
+                    case State::Up: m_keys[i] = State::Down; break;
                 }
             }
             else {
                 switch (m_keys[i]) {
-                case State::UnPressed:
-                    //skip
-                    break;
-                case State::Down:
-                case State::Pressed:
-                    m_keys[i] = State::Up;
-                    break;
-                case State::Up:
-                    m_keys[i] = State::UnPressed;
-                    break;
+                    case State::UnPressed: break; /// skip
+                    case State::Down:
+                    case State::Pressed:
+                        m_keys[i] = State::Up;
+                        break;
+                    case State::Up:
+                        m_keys[i] = State::UnPressed;
+                        break;
                 }
             }
         }
-
-    #endif
 
         m_mouseDrag = m_mouse - m_mousePrev;
     }
@@ -146,28 +125,6 @@ namespace SR_UTILS_NS {
 
     int32_t Input::GetMouseWheel() {
         return m_mouseScroll.y;
-    }
-
-    int32_t Input::DebugKey() {
-        if (!m_arr) {
-            m_arr = new uint8_t[256];
-            memset(m_arr, 0, sizeof(256));
-        }
-
-    #ifdef SR_WIN32
-        GetKeyState(0);
-        if (!GetKeyboardState(m_arr)) {
-            return -1;
-        }
-    #endif
-
-        for (uint16_t i = 0; i < 256; ++i) {
-            if (m_arr[i] >> 7 != 0) {
-                return i;
-            }
-        }
-
-        return -1;
     }
 
     void Input::Reset() {
