@@ -344,6 +344,8 @@ namespace SR_UTILS_NS {
         }
     #endif
 
+        pResource->StartWatch();
+
         auto&& pGroupIt = m_resources.find(pResource->GetResourceHashName());
         auto&& [name, resourcesGroup] = *pGroupIt;
 

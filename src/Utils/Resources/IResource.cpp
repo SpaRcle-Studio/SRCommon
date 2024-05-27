@@ -85,8 +85,6 @@ namespace SR_UTILS_NS {
 
             m_resourceHashPath = resourcesManager.RegisterResourcePath(path);
 
-            StartWatch();
-
             if (autoRegister) {
                 resourcesManager.RegisterResource(this);
             }
