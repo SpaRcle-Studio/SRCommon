@@ -22,12 +22,12 @@ namespace SR_UTILS_NS {
         { }
 
         uint32_t index = SR_ID_INVALID;
-        SR_HTYPES_NS::Function<void()> callback = nullptr;
+        SR_HTYPES_NS::Function<void()> callback;
         SubscriptionHolder* pHolder = nullptr;
         StringAtom id;
     };
 
-    class Subscription : SR_UTILS_NS::NonCopyable {
+    class Subscription final : SR_UTILS_NS::NonCopyable {
     public:
         Subscription() = default;
         ~Subscription() override;
@@ -56,16 +56,7 @@ namespace SR_UTILS_NS {
     public:
         virtual ~SubscriptionHolder();
 
-        Subscription Subscribe(const StringAtom id, SR_HTYPES_NS::Function<void()>&& callback) {
-            SRAssert(callback);
-            auto& pool = m_subscriptions[id];
-            auto&& pSubsciprtionInfo = new SubscriptionInternalInfo(std::move(callback), this);
-            const auto index = pool.Add(pSubsciprtionInfo);
-            pSubsciprtionInfo->index = index;
-            pSubsciprtionInfo->id = id;
-            ++m_count;
-            return Subscription(pSubsciprtionInfo);
-        }
+        SR_NODISCARD Subscription Subscribe(StringAtom id, SR_HTYPES_NS::Function<void()>&& callback);
 
         void Unsubscribe(const SubscriptionInternalInfo* pSubscription) {
             if (auto it = m_subscriptions.find(pSubscription->id); it != m_subscriptions.end()) {
