@@ -11,8 +11,10 @@ namespace SR_HTYPES_NS {
         , m_size(size)
         , m_pos(0)
     {
-        m_data = Allocate(m_capacity);
-        memcpy(m_data, pData, size);
+        if (m_capacity > 0) {
+            m_data = Allocate(m_capacity);
+            memcpy(m_data, pData, size);
+        }
     }
 
     Stream::Stream(std::ifstream& ifs)
@@ -93,7 +95,10 @@ namespace SR_HTYPES_NS {
             return *this;
         }
 
-        SRAssert(m_pos + count <= m_size);
+        if (m_pos + count > m_size) {
+            SRHalt("Stream::Read() : out of bounds!");
+            return *this;
+        }
 
         memcpy(pDst, m_data + m_pos, count);
 

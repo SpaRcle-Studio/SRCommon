@@ -13,6 +13,17 @@ namespace SR_HTYPES_NS {
     public:
         ObjectPool() = default;
 
+        ObjectPool(ObjectPool&& other) noexcept
+            : m_objects(SR_EXCHANGE(other.m_objects, { }))
+            , m_freeIndices(SR_EXCHANGE(other.m_freeIndices, { }))
+        { }
+
+        ObjectPool& operator=(ObjectPool&& other) noexcept {
+            m_objects = SR_EXCHANGE(other.m_objects, { });
+            m_freeIndices = SR_EXCHANGE(other.m_freeIndices, { });
+            return *this;
+        }
+
         SR_NODISCARD uint32_t GetAliveCount() const {
             return m_objects.size() - m_freeIndices.Size();
         }

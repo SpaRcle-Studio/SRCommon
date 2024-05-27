@@ -50,11 +50,12 @@ namespace SR_UTILS_NS {
         auto&& size = marshal.Read<uint32_t>();
         auto&& pBlock = std::unique_ptr<SR_HTYPES_NS::Marshal>(marshal.ReadBytesPtr(size));
 
-        if (version != GetPropertyVersion()) {
+        if (typeName != GetPropertyTypeName()) {
+            SRHalt("Property type mismatch!");
             return nullptr;
         }
 
-        if (typeName != GetPropertyTypeName()) {
+        if (version != GetPropertyVersion()) {
             return nullptr;
         }
 

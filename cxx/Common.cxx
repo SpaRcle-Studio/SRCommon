@@ -14,6 +14,7 @@
 #include "../src/Utils/Common/Vertices.cpp"
 #include "../src/Utils/Common/CmdOptions.cpp"
 #include "../src/Utils/Common/Coroutine.cpp"
+#include "../src/Utils/Common/SubscriptionHolder.cpp"
 
 #ifndef SR_UTILS_CI_BUILD
     #include <EmbedResources.cxx>

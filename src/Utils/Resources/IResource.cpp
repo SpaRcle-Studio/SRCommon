@@ -61,6 +61,10 @@ namespace SR_UTILS_NS {
         return ResourceManager::Instance().GetTypeName(m_resourceHashName);
     }
 
+    void IResource::OnReloadDone() {
+        Broadcast(RELOAD_DONE_EVENT);
+    }
+
     void IResource::DeleteResource() {
         StopWatch();
         m_deleteVerifyFlag = true;

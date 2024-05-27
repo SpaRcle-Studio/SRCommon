@@ -8,8 +8,6 @@
 #include <Utils/Common/NonCopyable.h>
 
 namespace SR_UTILS_NS {
-    class IResource;
-
     class ResourceContainer : public SR_UTILS_NS::NonCopyable {
     protected:
         ~ResourceContainer() override;

@@ -116,7 +116,7 @@
     #endif
 #else
     #ifdef SR_ANDROID
-        #define SR_RELEASE
+        #define SR_RELEASE /// TODO: wtf
     #endif
 #endif
 

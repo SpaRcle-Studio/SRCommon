@@ -17,8 +17,8 @@
     static SR_UTILS_NS::Property* AllocateBase() { return (SR_UTILS_NS::Property*)new className(); }                    \
     SR_INLINE_STATIC const uint16_t VESION = version;                                                                   \
     SR_INLINE_STATIC const SR_UTILS_NS::StringAtom PROPERTY_TYPE_NAME = #className;                                     \
-    SR_NODISCARD SR_UTILS_NS::StringAtom GetPropertyTypeName() const noexcept final { return PROPERTY_TYPE_NAME; }      \
-    SR_NODISCARD uint16_t GetPropertyVersion() const noexcept final { return VESION; }                                  \
+    SR_NODISCARD SR_UTILS_NS::StringAtom GetPropertyTypeName() const noexcept override { return PROPERTY_TYPE_NAME; }   \
+    SR_NODISCARD uint16_t GetPropertyVersion() const noexcept override { return VESION; }                               \
 
 namespace SR_UTILS_NS {
     SR_ENUM_NS_CLASS_T(PropertyPublicity, uint8_t,
