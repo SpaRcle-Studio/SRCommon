@@ -186,11 +186,14 @@ namespace SR_UTILS_NS {
     }
 
     bool Path::Exists() const {
-        return Exists(m_type);
+        return GetType() != Type::Undefined;
     }
 
     bool Path::Exists(Type type) const {
-        return SR_PLATFORM_NS::IsExists(m_path);
+        if (type == Type::Undefined) {
+            return false;
+        }
+        return GetType() == type;
     }
 
     void Path::NormalizeSelf() {

@@ -312,7 +312,7 @@ namespace SR_UTILS_NS {
     }
 
     void IResource::StartWatch() {
-        if (IsResourceFromMemory()) {
+        if (IsResourceFromMemory() || !IsFileResource()) {
             return;
         }
 

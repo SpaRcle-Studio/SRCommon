@@ -78,8 +78,13 @@ namespace SR_UTILS_NS {
         SR_SCOPED_LOCK;
         SRAssert(m_isRun);
 
-        if (!path.Exists()) {
+        if (!path.Exists(Path::Type::File)) {
             SRHalt("ResourceManager::StartWatch() : watching a non-existent file! '{}'", path.ToStringRef());
+            return nullptr;
+        }
+
+        if (path == GetResPath()) {
+            SRHalt("ResourceManager::StartWatch() : watching the resource folder is prohibited!");
             return nullptr;
         }
 
