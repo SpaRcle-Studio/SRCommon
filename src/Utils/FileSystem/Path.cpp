@@ -94,7 +94,7 @@ namespace SR_UTILS_NS {
     }
 
     std::list<Path> Path::GetAll() const {
-        return SR_PLATFORM_NS::GetInDirectory(*this, Path::Type::Undefined);
+        return SR_PLATFORM_NS::GetAllInDirectory(*this);
     }
 
     std::list<Path> Path::GetFolders() const {
@@ -142,9 +142,7 @@ namespace SR_UTILS_NS {
     if (m_path.size() < 2 || m_path[1] != ':') {
         return Type::Undefined;
     }
-#endif
-
-#ifdef SR_LINUX
+#elif defined(SR_LINUX)
     if (m_path.empty() || m_path[0] != '/') {
         return Type::Undefined;
     }

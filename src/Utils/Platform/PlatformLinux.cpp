@@ -23,8 +23,11 @@
 #include <Utils/Platform/XKeySymToKeyCode.h>
 
 #include <sys/sendfile.h>
+#include <X11/extensions/Xfixes.h>
 
-namespace SR_UTILS_NS::Platform {
+namespace SR_PLATFORM_NS {
+    static Display* gLinuxPlatformDisplayPtr = nullptr;
+
     void SegmentationHandler(int sig) {
         WriteConsoleError("Crash stacktrace: \n" + SR_UTILS_NS::GetStacktrace());
         Breakpoint();
@@ -37,7 +40,23 @@ namespace SR_UTILS_NS::Platform {
     }
 
     void SetCursorVisible(bool isVisible) {
-        SRHaltOnce("Not implemented!");
+        if (!gLinuxPlatformDisplayPtr) {
+            gLinuxPlatformDisplayPtr = XOpenDisplay(nullptr);
+        }
+
+        if (!gLinuxPlatformDisplayPtr) {
+            SR_ERROR("Platform::SetMousePos() : failed to open display.");
+            return;
+        }
+
+        Window root = DefaultRootWindow(gLinuxPlatformDisplayPtr);
+
+        if (isVisible) {
+            XFixesShowCursor(gLinuxPlatformDisplayPtr, root);
+        }
+        else {
+            XFixesHideCursor(gLinuxPlatformDisplayPtr, root);
+        }
     }
 
     void StdHandler() {
@@ -143,17 +162,31 @@ namespace SR_UTILS_NS::Platform {
         close(destinationHandle);
     }
 
+    void* GetInstance() {
+        SRHaltOnce("Not implemented!");
+        return nullptr;
+    }
+
     void SetInstance(void* pInstance) {
         SRHaltOnce("Not implemented!");
     }
 
     void SetMousePos(const SR_MATH_NS::IVector2& pos) {
-        SRHaltOnce("Not implemented!");
-    }
+        if (!gLinuxPlatformDisplayPtr) {
+            gLinuxPlatformDisplayPtr = XOpenDisplay(nullptr);
+        }
 
-    void* GetInstance() {
-        SRHaltOnce("Not implemented!");
-        return nullptr;
+        if (!gLinuxPlatformDisplayPtr) {
+            SR_ERROR("Platform::SetMousePos() : failed to open display.");
+            return;
+        }
+
+        Window root = DefaultRootWindow(gLinuxPlatformDisplayPtr);
+        XSelectInput(gLinuxPlatformDisplayPtr, root, KeyReleaseMask);
+
+        XWarpPointer(gLinuxPlatformDisplayPtr, None, root, 0, 0, 0, 0, pos.x, pos.y);
+
+        XFlush(gLinuxPlatformDisplayPtr);
     }
 
     void OpenFile(const SR_UTILS_NS::Path& path) {
@@ -235,23 +268,21 @@ namespace SR_UTILS_NS::Platform {
     }
 
     MouseState GetMouseState() {
-        static Display* pDisplay = nullptr;
-
-        if (!pDisplay) {
-            pDisplay = XOpenDisplay(nullptr);
+        if (!gLinuxPlatformDisplayPtr) {
+            gLinuxPlatformDisplayPtr = XOpenDisplay(nullptr);
         }
 
-        if (!pDisplay) {
+        if (!gLinuxPlatformDisplayPtr) {
             SR_ERROR("Platform::GetMousePos() : failed to open display.");
             return { };
         }
 
-        Window root = DefaultRootWindow(pDisplay);
+        Window root = DefaultRootWindow(gLinuxPlatformDisplayPtr);
         Window root_return, child_return;
         int root_x_return, root_y_return, win_x_return, win_y_return;
         unsigned int mask_return;
 
-        XQueryPointer(pDisplay, root, &root_return, &child_return, &root_x_return, &root_y_return, &win_x_return, &win_y_return, &mask_return);
+        XQueryPointer(gLinuxPlatformDisplayPtr, root, &root_return, &child_return, &root_x_return, &root_y_return, &win_x_return, &win_y_return, &mask_return);
 
         MouseState mouseState;
         mouseState.position = { static_cast<float>(root_x_return), static_cast<float>(root_y_return) };
@@ -266,46 +297,42 @@ namespace SR_UTILS_NS::Platform {
     }
 
     SR_MATH_NS::FVector2 GetMousePos() {
-        static Display* pDisplay = nullptr;
-
-        if (!pDisplay) {
-            pDisplay = XOpenDisplay(nullptr);
+        if (!gLinuxPlatformDisplayPtr) {
+            gLinuxPlatformDisplayPtr = XOpenDisplay(nullptr);
         }
 
-        if (!pDisplay) {
+        if (!gLinuxPlatformDisplayPtr) {
             SR_ERROR("Platform::GetMousePos() : failed to open display.");
             return { };
         }
 
-        Window root = DefaultRootWindow(pDisplay);
+        Window root = DefaultRootWindow(gLinuxPlatformDisplayPtr);
         Window child;
         int root_x, root_y, win_x, win_y;
         unsigned int mask;
-        XQueryPointer(pDisplay, root, &root, &child, &root_x, &root_y, &win_x, &win_y, &mask);
+        XQueryPointer(gLinuxPlatformDisplayPtr, root, &root, &child, &root_x, &root_y, &win_x, &win_y, &mask);
 
         return { static_cast<float>(root_x), static_cast<float>(root_y) };
     }
 
     bool GetSystemKeyboardState(uint8_t* pKeyCodes) {
-        static Display* pDisplay = nullptr;
-
-        if (!pDisplay) {
-            pDisplay = XOpenDisplay(nullptr);
+        if (!gLinuxPlatformDisplayPtr) {
+            gLinuxPlatformDisplayPtr = XOpenDisplay(nullptr);
         }
 
-        if (!pDisplay) {
+        if (!gLinuxPlatformDisplayPtr) {
             SR_ERROR("Platform::GetMousePos() : failed to open display.");
             return false;
         }
 
         char keys_return[32];
-        XQueryKeymap(pDisplay, keys_return);
+        XQueryKeymap(gLinuxPlatformDisplayPtr, keys_return);
 
         for (int i = 0; i < 32; i++) {
             for (int j = 0; j < 8; j++) {
                 if (keys_return[i] & (1 << j)) {
                     int keycode = i * 8 + j;
-                    KeySym keysym = XKeycodeToKeysym(pDisplay, keycode, 0);
+                    KeySym keysym = XKeycodeToKeysym(gLinuxPlatformDisplayPtr, keycode, 0);
 
                     auto it = keysymToIndex.find(keysym);
                     if (it != keysymToIndex.end()) {
@@ -319,6 +346,7 @@ namespace SR_UTILS_NS::Platform {
                 }
             }
         }
+
         return true;
     }
 
@@ -364,13 +392,13 @@ namespace SR_UTILS_NS::Platform {
 
     bool Copy(const Path &from, const Path &to) {
         if (from.IsFile()) {
-            /// TODO: Find another way to copy a file without using system() function and WHILE preserving the current permissions.
+            /*/// TODO: Find another way to copy a file without using system() function WHILE preserving the current permissions.
             std::string command = "cp " + from.ToStringRef() + " " + to.ToStringRef();
             system(command.c_str());
-            return true;
+            return true;*/
 
-            /*int source = open(from.c_str(), O_RDONLY, 0);
-            int dest = open(to.c_str(), O_WRONLY | O_CREAT /*| O_TRUNC/*#1#, 0644);
+            int source = open(from.c_str(), O_RDONLY, 0);
+            int dest = open(to.c_str(), O_WRONLY | O_CREAT /*| O_TRUNC/**/, 0644);
 
             // struct required, rationale: function stat() exists also
             struct stat stat_source;
@@ -385,7 +413,9 @@ namespace SR_UTILS_NS::Platform {
                 SR_WARN("Platform::Copy() : failed to copy!\n\tFrom: {}\n\tTo: {}", from.CStr(), to.CStr());
             }
 
-            return result != -1;*/
+            CopyPermissions(from, to);
+
+            return result != -1;
         }
 
         if (!from.IsDir()) {
@@ -395,7 +425,7 @@ namespace SR_UTILS_NS::Platform {
 
         CreateFolder(to.ToStringRef());
 
-        for (auto&& item : GetInDirectory(from, Path::Type::Undefined)) {
+        for (auto&& item : from.GetAll()) {
             if (Copy(item, to.Concat(item.GetBaseNameAndExt()))) {
                 continue;
             }
@@ -415,6 +445,22 @@ namespace SR_UTILS_NS::Platform {
 
         for (const auto& entry : std::filesystem::directory_iterator(dir.ToStringRef())) {
             if ((entry.is_directory() && type == Path::Type::Folder) || (entry.is_regular_file() && type == Path::Type::File)) {
+                result.emplace_back(entry.path());
+            }
+        }
+
+        return result;
+    }
+
+    std::list<Path> GetAllInDirectory(const Path& dir) {
+        std::list<Path> result;
+
+        if (!IsExists(dir)) {
+            return result;
+        }
+
+        for (const auto& entry : std::filesystem::directory_iterator(dir.ToStringRef())) {
+            if (entry.is_directory() || entry.is_regular_file()) {
                 result.emplace_back(entry.path());
             }
         }
@@ -452,7 +498,7 @@ namespace SR_UTILS_NS::Platform {
             return false;
         }
 
-        for (auto&& item : GetInDirectory(path, Path::Type::Undefined)) {
+        for (auto&& item : GetAllInDirectory(path)) {
             if (Delete(item)) {
                 continue;
             }
