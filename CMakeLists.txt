@@ -165,10 +165,6 @@ if (SR_TRACY_ENABLE)
     SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_SOURCE_DIR}/libs/tracy/tracy)
 endif()
 
-if (UNIX)
-    list(APPEND SR_UTILS_LINK_LIBRARIES src/Utils/Platform/LinuxStacktraceImpl.cpp)
-endif()
-
 if (SR_UTILS_STATIC_LIBRARY)
     add_library(Utils STATIC ${SR_UTILS_LINK_LIBRARIES})
 

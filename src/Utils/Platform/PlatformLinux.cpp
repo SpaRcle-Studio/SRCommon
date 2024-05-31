@@ -68,7 +68,6 @@ namespace SR_PLATFORM_NS {
     }
 
     void InitSegmentationHandler() {
-        StacktraceInit();
         signal(SIGSEGV, SegmentationHandler);
         std::set_terminate(StdHandler);
     }
@@ -383,7 +382,9 @@ namespace SR_PLATFORM_NS {
     }
 
     void Terminate() {
-        SRHaltOnce("Not implemented!");
+        SR_PLATFORM_NS::WriteConsoleError("Function \"Terminate\" has been called... >_<\n" + SR_UTILS_NS::GetStacktrace());
+        SR_UTILS_NS::Breakpoint();
+        std::terminate(); // TODO: std::terminate() or abort()?
     }
 
     void OpenWithAssociatedApp(const Path &filepath) {
@@ -532,8 +533,7 @@ namespace SR_PLATFORM_NS {
     }
 
     bool FileIsHidden(const Path &path) {
-        SRHaltOnce("Not implemented!");
-        return false;
+        return path.GetBaseNameView()[0] == '.';
     }
 
     FileMetadata GetFileMetadata(const Path& file) {

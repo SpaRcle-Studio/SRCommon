@@ -3,14 +3,9 @@
 //
 
 #include <Utils/Platform/Stacktrace.h>
-//#include <Utils/Platform/LinuxStacktraceImpl.h>
 #include <cpptrace/cpptrace.hpp>
 
 namespace SR_UTILS_NS {
-    void StacktraceInit() {
-        //StacktraceInitImpl();
-    }
-
     static bool g_stackStraceEnabled = true;
 
     void DisableStacktrace() {
@@ -21,19 +16,6 @@ namespace SR_UTILS_NS {
         if (!g_stackStraceEnabled) {
             return std::string();
         }
-
-/*
-        static bool stackStaceLoaded = false;
-        if (stackStaceLoaded) {
-            SR_PLATFORM_NS::WriteConsoleError("GetStacktrace() : loading stacktrace...\n");
-            stackStaceLoaded = true;
-        }
-
-        auto&& stacktrace = GetStacktraceImpl();
-        std::string result = stacktrace;
-
-        free(stacktrace);
-*/
 
         auto&& stacktrace = cpptrace::generate_trace();
         auto&& result = stacktrace.to_string(true);
