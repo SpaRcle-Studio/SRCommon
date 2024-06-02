@@ -13,8 +13,21 @@ namespace SR_UTILS_NS {
         constexpr NonCopyable() = default;
         virtual ~NonCopyable() = default;
 
+    public:
         NonCopyable(const NonCopyable&) = delete;
-        NonCopyable& operator=(const NonCopyable&) = delete;
+        virtual NonCopyable& operator=(const NonCopyable&) = delete;
+
+    };
+
+    class SR_DLL_EXPORT NonMovable {
+    protected:
+        constexpr NonMovable() = default;
+        virtual ~NonMovable() = default;
+
+    public:
+        NonMovable(NonMovable&&) = delete;
+        virtual NonMovable& operator=(NonMovable&&) = delete;
+
     };
 }
 
