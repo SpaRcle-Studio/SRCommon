@@ -17,6 +17,8 @@
 #include <csignal>
 #include <sddl.h>
 
+#include <filesystem>
+
 #ifdef SR_MINGW
     #include <ShObjIdl.h>
 #endif
@@ -573,6 +575,22 @@ namespace SR_UTILS_NS::Platform {
 
     Path GetApplicationDirectory() {
         return GetApplicationPath().GetFolder();
+    }
+
+    std::list<Path> GetAllInDirectory(const Path& dir) {
+        std::list<Path> result;
+
+        if (!IsExists(dir)) {
+            return result;
+        }
+
+        for (const auto& entry : std::filesystem::directory_iterator(dir.ToStringRef())) {
+            if (entry.is_directory() || entry.is_regular_file()) {
+                result.emplace_back(entry.path());
+            }
+        }
+
+        return result;
     }
 
     Path GetApplicationName() {
