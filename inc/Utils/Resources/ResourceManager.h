@@ -30,7 +30,7 @@ namespace SR_UTILS_NS {
         SR_NODISCARD bool IsUsePointStackTraceProfilingEnabled() const { return m_usePointStackTraceProfiling; }
         SR_NODISCARD Path GetResPath() const { return GetResPathRef(); }
         SR_NODISCARD const Path& GetResPathRef() const;
-        SR_NODISCARD Path GetCachePath() const { return m_folder.Concat("Cache"); }
+        SR_NODISCARD Path GetCachePath() const { return GetResPathRef().Concat("Cache"); }
         SR_NODISCARD std::string_view GetTypeName(Hash hashName) const;
 
         SR_NODISCARD const std::string& GetResourceId(Hash hashId) const;
