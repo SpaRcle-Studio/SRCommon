@@ -183,8 +183,8 @@ if (UNIX AND NOT APPLE)
     target_link_libraries(Utils ${X11_Xrandr_LIB})
     SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${X11_Xrandr_INCLUDE_PATH})
 
-    target_link_libraries(Utils ${XFIXES_LIBRARIES})
-    SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${XFIXES_INCLUDE_DIRS})
+    target_link_libraries(Utils ${X11_Xfixes_LIB})
+    SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${X11_Xfixes_INCLUDE_PATH})
 
     if (X11_xcb_randr_FOUND)
         target_link_libraries(Utils ${X11_xcb_randr_LIB})
