@@ -13,6 +13,18 @@ namespace SR_HTYPES_NS {
         using Iterator = typename std::vector<T>::iterator;
         using ConstIterator = typename std::vector<T>::const_iterator;
 
+        SortedVector() = default;
+        SortedVector(SortedVector&& other) noexcept
+            : m_data(SR_UTILS_NS::Exchange(other.m_data, { }))
+        { }
+
+        SortedVector& operator=(SortedVector&& other) noexcept {
+            if (this != &other) {
+                m_data = SR_UTILS_NS::Exchange(other.m_data, { });
+            }
+            return *this;
+        }
+
         SR_NODISCARD SR_CONSTEXPR bool Empty() const { return m_data.empty(); }
         SR_NODISCARD SR_CONSTEXPR bool empty() const { return m_data.empty(); }
 
