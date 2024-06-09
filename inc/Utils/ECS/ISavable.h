@@ -6,7 +6,7 @@
 #define SR_ENGINE_UTILS_ISAVABLE_H
 
 #include <Utils/Types/Marshal.h>
-#include <Utils/Xml.h>
+#include <Utils/Resources/Xml.h>
 
 namespace SR_UTILS_NS {
     typedef uint64_t SavableFlags;

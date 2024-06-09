@@ -7,7 +7,7 @@
 
 #include <Utils/Math/Vector3.h>
 #include <Utils/World/Observer.h>
-#include <Utils/Xml.h>
+#include <Utils/Resources/Xml.h>
 
 #define SRRegionAllocArgs SR_WORLD_NS::Observer* observer, uint32_t width, const SR_MATH_NS::IVector2& chunkSize, const SR_MATH_NS::IVector3& position
 #define SRRegionAllocVArgs observer, width, chunkSize, position

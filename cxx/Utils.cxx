@@ -37,7 +37,6 @@
 #include "../src/Utils/Settings.cpp"
 #include "../src/Utils/DebugDraw.cpp"
 #include "../src/Utils/Debug.cpp"
-#include "../src/Utils/Xml.cpp"
 
 #include "../src/Utils/Resources/FileWatcher.cpp"
 #include "../src/Utils/Resources/IResource.cpp"
@@ -47,6 +46,8 @@
 #include "../src/Utils/Resources/ResourceContainer.cpp"
 #include "../src/Utils/Resources/IResourceReloader.cpp"
 #include "../src/Utils/Resources/ResourceEmbedder.cpp"
+#include "../src/Utils/Resources/Xml.cpp"
+#include "../src/Utils/Resources/Yaml.cpp"
 
 #include "../src/Utils/CommandManager/ICommand.cpp"
 #include "../src/Utils/CommandManager/CmdManager.cpp"

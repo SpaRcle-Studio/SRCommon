@@ -3,7 +3,7 @@
 //
 
 #include <Utils/Common/Features.h>
-#include <Utils/Xml.h>
+#include <Utils/Resources/Xml.h>
 #include <Utils/Types/Thread.h>
 #include <Utils/Profile/TracyContext.h>
 

@@ -210,6 +210,7 @@
 #define SR_INADDR_ANY (ULONG)0x00000000
 
 #define SR_XML_NS SpaRcle::Utils::Xml
+#define SR_YAML_NS SpaRcle::Utils::Yaml
 #define SR_PHYSICS_NS SpaRcle::Physics
 #define SR_PTYPES_NS SR_PHYSICS_NS::Types
 #define SR_PHYSICS_UTILS_NS SR_PHYSICS_NS::Utils

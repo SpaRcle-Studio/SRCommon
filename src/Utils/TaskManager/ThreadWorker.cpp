@@ -3,7 +3,10 @@
 //
 
 #include <Utils/TaskManager/ThreadWorker.h>
+
 #include <Utils/Resources/ResourceManager.h>
+#include <Utils/Resources/Yaml.h>
+
 #include <Utils/Debug.h>
 #include <Utils/Platform/Platform.h>
 
@@ -184,43 +187,39 @@ namespace SR_UTILS_NS {
             return nullptr;
         }
 
-        std::string fileContents = FileSystem::ReadAllText(fullPath.ToStringRef());
-        if (fileContents.empty()) {
-            SR_ERROR("ThreadsWorker::Load() : failed to read file \"{}\"", fullPath.ToStringRef());
+        Yaml::Document document = Yaml::Document::Load(fullPath);
+        if (!document.IsValid()) {
+            SR_ERROR("ThreadsWorker::Load() : failed to load file \"{}\"", fullPath.ToStringRef());
             return nullptr;
         }
 
-        ryml::Tree tree = ryml::parse_in_arena(ryml::to_csubstr(fileContents));
-        if (tree.empty()) {
-            SR_ERROR("ThreadsWorker::Load() : failed to parse file \"{}\"", fullPath.ToStringRef());
-            return nullptr;
-        }
+        auto&& root = document.GetRoot();
+        auto&& threadsNode = root.GetChild("threads");
 
-        ryml::ConstNodeRef root = tree.crootref();
-        if (!root.valid() || !root.has_children()) {
-            SR_ERROR("ThreadsWorker::Load() : failed to get root node from file \"{}\"", fullPath.ToStringRef());
-            return nullptr;
-        }
-
-        auto&& threadsNode = root.find_child("threads");
-        if (!threadsNode.valid()) {
+        if (!threadsNode.IsValid()) {
             SR_ERROR("ThreadsWorker::Load() : failed to get \"threads\" node from file \"{}\"", fullPath.ToStringRef());
             return nullptr;
         }
 
         ThreadsWorker::Ptr pThreadsWorker = new ThreadsWorker();
 
-        if (auto&& finalizeNode = root.find_child("finalize"); finalizeNode.valid()) {
-            for (auto&& item : finalizeNode) {
-                auto&& name = item.find_child("name");
-                if (!name.valid()) {
+        if (auto&& finalizeNode = root.GetChild("finalize"); finalizeNode.IsValid()) {
+            for (auto&& item : finalizeNode.GetChildren()) {
+                if (!item.IsValid()) {
                     continue;
                 }
 
-                auto&& finalizeStateName = std::string(name.val().begin(), name.val().end());
+                auto&& name = item.GetChild("name");
+                if (!name.IsValid()) {
+                    continue;
+                }
+
+                auto&& finalizeStateName = name.GetValue();
+
                 auto&& pIt = std::find_if(pThreadsWorker->m_finalize.begin(), pThreadsWorker->m_finalize.end(), [&finalizeStateName](const SR_UTILS_NS::StringAtom& atom) {
                     return atom.ToStringRef() == finalizeStateName;
                 });
+
                 if (pIt != pThreadsWorker->m_finalize.end()) {
                     SR_ERROR("ThreadsWorker::Load() : finalize state \"{}\" already exists!", finalizeStateName);
                     continue;
@@ -230,39 +229,39 @@ namespace SR_UTILS_NS {
             }
         }
 
-        for (auto&& threadNode : threadsNode) {
-            auto&& threadName = threadNode.find_child("name");
-            if (!threadName.valid()) {
+        for (auto&& threadNode : threadsNode.GetChildren()) {
+            auto&& threadName = threadNode.GetChild("name");
+            if (!threadName.IsValid()) {
                 continue;
             }
 
-            auto&& states = threadNode.find_child("states");
-            if (!states.valid()) {
+            auto&& states = threadNode.GetChild("states");
+            if (!states.IsValid()) {
                 continue;
             }
 
-            std::string threadNameStr(threadName.val().begin(), threadName.val().end());
+           auto&& threadNameStr = threadName.GetValue();
             ThreadWorker::Ptr pThreadWorker = new ThreadWorker(threadNameStr);
 
-            static auto processCondition = [](int type, ryml::ConstNodeRef conditionNode, const ThreadWorkerStateBase::Ptr& pState) {
-                if (!conditionNode.valid()) {
+            static auto processCondition = [](int type, SR_YAML_NS::Node conditionNode, const ThreadWorkerStateBase::Ptr& pState) {
+                if (!conditionNode.IsValid()) {
                     return;
                 }
 
                 for (auto&& state : SR_UTILS_NS::EnumReflector::GetValues<ThreadWorkerState>()) {
                     auto&& stateName = SR_UTILS_NS::StringUtils::ToLower(state.name);
 
-                    if (auto&& stateNode = conditionNode.find_child(stateName.c_str()); stateNode.valid()) {
-                        for (auto&& item : stateNode) {
+                    if (auto&& stateNode = conditionNode.GetChild(stateName.c_str()); stateNode.IsValid()) {
+                        for (auto&& item : stateNode.GetChildren()) {
                             switch (type) {
                             case 0:
-                                pState->AddSkipCondition(std::string(item.val().begin(), item.val().end()), static_cast<ThreadWorkerState>(state.value));
+                                pState->AddSkipCondition(item.GetValue(), static_cast<ThreadWorkerState>(state.value));
                                 break;
                             case 1:
-                                pState->AddStartCondition(std::string(item.val().begin(), item.val().end()), static_cast<ThreadWorkerState>(state.value));
+                                pState->AddStartCondition(item.GetValue(), static_cast<ThreadWorkerState>(state.value));
                                 break;
                             case 2:
-                                pState->AddFinishCondition(std::string(item.val().begin(), item.val().end()), static_cast<ThreadWorkerState>(state.value));
+                                pState->AddFinishCondition(item.GetValue(), static_cast<ThreadWorkerState>(state.value));
                                 break;
                             default:
                                 SRHalt("ThreadsWorker::Load() : unknown condition type!");
@@ -272,13 +271,13 @@ namespace SR_UTILS_NS {
                 }
             };
 
-            for (auto&& state : states) {
-                auto&& stateName = state.find_child("name");
-                if (!stateName.valid()) {
+            for (auto&& state : states.GetChildren()) {
+                auto&& stateName = state.GetChild("name");
+                if (!stateName.IsValid()) {
                     continue;
                 }
 
-                std::string stateNameStr(stateName.val().begin(), stateName.val().end());
+                auto&& stateNameStr = stateName.GetValue();
 
                 ThreadWorkerStateBase::Ptr pState = ThreadWorkerStateRegistration::Instance().AllocateState(stateNameStr);
                 if (!pState) {
@@ -286,9 +285,9 @@ namespace SR_UTILS_NS {
                     continue;
                 }
 
-                processCondition(0, state.find_child("start_condition"), pState);
-                processCondition(1, state.find_child("skip_condition"), pState);
-                processCondition(2, state.find_child("finish_condition"), pState);
+                processCondition(0, state.GetChild("start_condition"), pState);
+                processCondition(1, state.GetChild("skip_condition"), pState);
+                processCondition(2, state.GetChild("finish_condition"), pState);
 
                 pThreadWorker->AddState(pState);
             }

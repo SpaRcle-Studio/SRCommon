@@ -6,7 +6,7 @@
 #include <Utils/SRLM/DataType.h>
 #include <Utils/Common/HashManager.h>
 #include <Utils/Resources/ResourceManager.h>
-#include <Utils/Xml.h>
+#include <Utils/Resources/Xml.h>
 
 namespace SR_SRLM_NS {
     DataType* DataTypeManager::CreateByName(const std::string& name) {

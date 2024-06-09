@@ -9,7 +9,7 @@
 #include <Utils/Common/Hashes.h>
 #include <Utils/Common/Enumerations.h>
 #include <Utils/Common/ToString.h>
-#include <Utils/Xml.h>
+#include <Utils/Resources/Xml.h>
 
 namespace SR_SRLM_NS {
     class DataType;

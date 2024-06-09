@@ -6,7 +6,7 @@
 #define SR_ENGINE_REVERSIBLECOMMAND_H
 
 #include <Utils/CommandManager/ICommand.h>
-#include <Utils/Xml.h>
+#include <Utils/Resources/Xml.h>
 
 namespace SR_UTILS_NS {
     class CmdManager;
