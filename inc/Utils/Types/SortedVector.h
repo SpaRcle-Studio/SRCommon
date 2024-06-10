@@ -63,6 +63,22 @@ namespace SR_HTYPES_NS {
             return pStart;
         }
 
+        template<class Ty> SR_NODISCARD Iterator LowerBound(const Ty& value) {
+            return std::lower_bound(m_data.begin(), m_data.end(), value, m_predicate);
+        }
+
+        template<class Ty, typename CustomPred = Predicate> SR_NODISCARD Iterator LowerBound(const Ty& value, const CustomPred& predicate) {
+            return std::lower_bound(m_data.begin(), m_data.end(), value, predicate);
+        }
+
+        void Insert(Iterator it, const T& value) {
+            m_data.insert(it, value);
+        }
+
+        void Erase(Iterator it) {
+            m_data.erase(it);
+        }
+
         SR_NODISCARD SR_CONSTEXPR Iterator begin() { return m_data.begin(); }
         SR_NODISCARD SR_CONSTEXPR ConstIterator begin() const { return m_data.begin(); }
 
@@ -103,6 +119,7 @@ namespace SR_HTYPES_NS {
         }
 
         void Clear() {
+            SR_TRACY_ZONE;
             m_data.clear();
         }
 
