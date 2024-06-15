@@ -74,6 +74,14 @@ namespace SR_MATH_NS {
             return coord[axis];
         }
 
+        SR_FORCE_INLINE bool operator==(const Vector4& v) const {
+            return SR_EQUALS(x, v.x) && SR_EQUALS(y, v.y) && SR_EQUALS(z, v.z) && SR_EQUALS(w, v.w);
+        }
+
+        SR_FORCE_INLINE bool operator!=(const Vector4& v) const {
+            return !(*this == v);
+        }
+
         template<typename U> SR_FORCE_INLINE Vector4 &operator*=(U p_scalar) {
             x *= p_scalar;
             y *= p_scalar;
