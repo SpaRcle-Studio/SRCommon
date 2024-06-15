@@ -2,8 +2,8 @@
 // Created by Monika on 03.09.2021.
 //
 
-#ifndef GAMEENGINE_XML_H
-#define GAMEENGINE_XML_H
+#ifndef SR_COMMON_XML_H
+#define SR_COMMON_XML_H
 
 #include <Utils/Debug.h>
 
@@ -602,4 +602,4 @@ namespace SR_UTILS_NS::Xml {
     }
 }
 
-#endif //GAMEENGINE_XML_H
+#endif //SR_COMMON_XML_H

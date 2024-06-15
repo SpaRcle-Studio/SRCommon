@@ -17,6 +17,8 @@
 #include <csignal>
 #include <sddl.h>
 
+#include <filesystem>
+
 #ifdef SR_MINGW
     #include <ShObjIdl.h>
 #endif
@@ -300,6 +302,11 @@ namespace SR_UTILS_NS::Platform {
         }
     }
 
+    bool GetSystemKeyboardState(uint8_t* pKeyCodes) {
+        GetKeyState(0);
+        return ::GetKeyboardState(pKeyCodes);
+    }
+
     std::string GetClipboardText() {
         std::string text{};
 
@@ -338,10 +345,21 @@ namespace SR_UTILS_NS::Platform {
             SR_ERROR("Platform::ClearClipboard() : failed to open clipboard!");
     }
 
-    Math::FVector2 GetMousePos() {
+    SR_MATH_NS::FVector2 GetMousePos() {
         POINT p;
         GetCursorPos(&p);
         return Math::FVector2(p.x, p.y);
+    }
+
+    MouseState GetMouseState() {
+        MouseState state;
+        state.position = GetMousePos();
+        state.buttonStates[0] = GetKeyState(VK_LBUTTON) & 0x8000;
+        state.buttonStates[1] = GetKeyState(VK_RBUTTON) & 0x8000;
+        state.buttonStates[2] = GetKeyState(VK_MBUTTON) & 0x8000;
+        state.buttonStates[3] = GetKeyState(VK_XBUTTON1) & 0x8000;
+        state.buttonStates[4] = GetKeyState(VK_XBUTTON2) & 0x8000;
+        return state;
     }
 
     void Sleep(uint64_t milliseconds) {
@@ -362,17 +380,21 @@ namespace SR_UTILS_NS::Platform {
     }
 
     bool IsFileDeletable(const SR_UTILS_NS::Path& path) {
-        if (!path.IsFile()) {
-            SR_WARN("Platform::CanBeDeleted() : path is not a file.");
+        if (!path.Exists() || !path.IsFile()) {
+            SR_WARN("Platform::CanBeDeleted() : path does not exist or is not a file.");
             return false;
         }
 
-        if (auto&& file = std::ofstream((path.c_str()))) {
+        if (auto&& file = std::ofstream(path.c_str())) {
             file.close();
             return true;
         }
 
         return false;
+    }
+
+    void SetSamePermissions(const SR_UTILS_NS::Path& path) {
+        SRHaltOnce("Platform::SetSamePermissions() : is not implemented!");
     }
 
     void SetThreadPriority(void *nativeHandle, ThreadPriority priority) {
@@ -555,6 +577,22 @@ namespace SR_UTILS_NS::Platform {
         return GetApplicationPath().GetFolder();
     }
 
+    std::list<Path> GetAllInDirectory(const Path& dir) {
+        std::list<Path> result;
+
+        if (!IsExists(dir)) {
+            return result;
+        }
+
+        for (const auto& entry : std::filesystem::directory_iterator(dir.ToStringRef())) {
+            if (entry.is_directory() || entry.is_regular_file()) {
+                result.emplace_back(entry.path());
+            }
+        }
+
+        return result;
+    }
+
     Path GetApplicationName() {
         const std::size_t buf_len = 260;
         auto s = new TCHAR[buf_len];
@@ -601,7 +639,8 @@ namespace SR_UTILS_NS::Platform {
         OpenFile(exe, "");
     }
 
-    void Unzip(const SR_UTILS_NS::Path& source, const SR_UTILS_NS::Path& destination) {
+    void Unzip(const SR_UTILS_NS::Path& source, const SR_UTILS_NS::Path& destination, bool replace) {
+		//TODO: Add support for the 'replace' argument.
         destination.CreateIfNotExists();
         std::string command = "tar -xf "+ source.ToString() + " -C " + destination.ToString();
         system(command.c_str());

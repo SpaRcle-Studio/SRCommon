@@ -30,8 +30,14 @@ namespace SR_UTILS_NS {
         auto&& memoryUsage = m_showUseMemory ? SR_FORMAT("<{} KB> ", static_cast<uint32_t>(SR_PLATFORM_NS::GetProcessUsedMemory() / 1024)) : std::string();
 
         fmt::print(fmt::fg(fmt::color::dark_gray) | fmt::emphasis::faint, memoryUsage);
-        fmt::print(GetTextStyleColorByLogType(type),prefix);
-        fmt::print(fmt::emphasis::bold, " " + msg);
+        fmt::print(GetTextStyleColorByLogType(type), prefix);
+
+        try {
+            fmt::print(fmt::emphasis::bold, " " + msg);
+        }
+        catch (const std::exception& ex) {
+            std::cout << "Error while printing message: " << ex.what() << "\nMessage: " << msg << std::endl;
+        }
 
         std::cout << std::flush;
 

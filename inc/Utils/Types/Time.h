@@ -26,8 +26,13 @@ namespace SR_HTYPES_NS {
 
         SR_NODISCARD TimePointType Now() const noexcept { return m_timeInfo.load().m_point; }
         SR_NODISCARD uint64_t Count() const noexcept { return m_timeInfo.load().m_point.time_since_epoch().count(); }
-        SR_NODISCARD float_t FClock() const noexcept { return static_cast<float_t>(Count()) / CLOCKS_PER_SEC / CLOCKS_PER_SEC; }
-        SR_NODISCARD clock_t Clock() const noexcept { return static_cast<clock_t>(m_timeInfo.load().m_clock); }
+        SR_NODISCARD float_t FClock() const noexcept { return static_cast<float_t>(Count()) / SR_CLOCKS_PER_SEC / SR_CLOCKS_PER_SEC; }
+
+#ifdef SR_LINUX
+        SR_NODISCARD uint64_t Clock() const noexcept { return static_cast<uint64_t>(m_timeInfo.load().m_clock) / SR_CLOCKS_PER_SEC; }
+#else
+        SR_NODISCARD uint64_t Clock() const noexcept { return static_cast<uint64_t>(m_timeInfo.load().m_clock); }
+#endif
 
     private:
         struct TimeInfo {

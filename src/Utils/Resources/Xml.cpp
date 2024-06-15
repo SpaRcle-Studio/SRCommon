@@ -2,7 +2,7 @@
 // Created by Monika on 03.09.2021.
 //
 
-#include <Utils/Xml.h>
+#include <Utils/Resources/Xml.h>
 
 namespace SR_UTILS_NS {
     std::string Xml::Attribute::ToString() const {

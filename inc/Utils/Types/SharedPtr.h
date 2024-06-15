@@ -123,7 +123,8 @@ namespace SR_HTYPES_NS {
                 return pData->GetThis();
             }
             else {
-                return pData->GetThis().template DynamicCast<R>();
+                SR_STATIC_ASSERT2((std::is_base_of_v<T, R> || std::is_base_of_v<R, T>), "Invalid type!");
+                return pData->GetThis().template StaticCast<R>();
             }
         }
 
@@ -152,6 +153,7 @@ namespace SR_HTYPES_NS {
         SR_INLINE bool operator!=(const SharedPtr<T>& right) const {
             return m_ptr != right.m_ptr;
         }
+
         template<typename U> SharedPtr<U> DynamicCast() const {
             if constexpr (std::is_same_v<T, void>) {
                 return SharedPtr<U>();
@@ -159,6 +161,18 @@ namespace SR_HTYPES_NS {
 
             if (m_data && m_data->valid) {
                 return SharedPtr<U>(dynamic_cast<U*>(m_ptr));
+            }
+
+            return SharedPtr<U>();
+        }
+
+        template<typename U> SharedPtr<U> StaticCast() const {
+            if constexpr (std::is_same_v<T, void>) {
+                return SharedPtr<U>();
+            }
+
+            if (m_data && m_data->valid) {
+                return SharedPtr<U>(static_cast<U*>(m_ptr));
             }
 
             return SharedPtr<U>();

@@ -116,7 +116,7 @@
     #endif
 #else
     #ifdef SR_ANDROID
-        #define SR_RELEASE
+        #define SR_RELEASE /// TODO: wtf
     #endif
 #endif
 
@@ -149,7 +149,7 @@
     #define SR_FORCE_INLINE __forceinline
 #endif
 
-#define SR_CLOCKS_PER_SEC CLOCKS_PER_SEC
+#define SR_CLOCKS_PER_SEC 1000
 #define SR_NODISCARD [[nodiscard]]
 #define SR_FALLTHROUGH [[fallthrough]]
 #define SR_MAYBE_UNUSED [[maybe_unused]]
@@ -210,6 +210,7 @@
 #define SR_INADDR_ANY (ULONG)0x00000000
 
 #define SR_XML_NS SpaRcle::Utils::Xml
+#define SR_YAML_NS SpaRcle::Utils::Yaml
 #define SR_PHYSICS_NS SpaRcle::Physics
 #define SR_PTYPES_NS SR_PHYSICS_NS::Types
 #define SR_PHYSICS_UTILS_NS SR_PHYSICS_NS::Utils
@@ -235,7 +236,7 @@
 
 #define SR_GLOBAL_LOCK static std::mutex codegenGlobalMutex##__LINE__; std::lock_guard<std::mutex> codegenLock##__LINE__(codegenGlobalMutex##__LINE__);
 
-#define SR_STATIC_ASSERT2(expr, msg) static_assert(expr, msg);
+#define SR_STATIC_ASSERT2(expr, msg) static_assert(expr, msg)
 
 #if defined(SR_MINGW) || (SR_MSC_VERSION > 1929) || defined(SR_ANDROID) || defined(SR_LINUX)
     #define SR_STATIC_ASSERT(msg) static_assert(msg);

@@ -13,6 +13,17 @@ namespace SR_HTYPES_NS {
     public:
         ObjectPool() = default;
 
+        ObjectPool(ObjectPool&& other) noexcept
+            : m_objects(SR_EXCHANGE(other.m_objects, { }))
+            , m_freeIndices(SR_EXCHANGE(other.m_freeIndices, { }))
+        { }
+
+        ObjectPool& operator=(ObjectPool&& other) noexcept {
+            m_objects = SR_EXCHANGE(other.m_objects, { });
+            m_freeIndices = SR_EXCHANGE(other.m_freeIndices, { });
+            return *this;
+        }
+
         SR_NODISCARD uint32_t GetAliveCount() const {
             return m_objects.size() - m_freeIndices.Size();
         }
@@ -168,6 +179,10 @@ namespace SR_HTYPES_NS {
         }
 
         void ForEach(const SR_HTYPES_NS::Function<void(Index, T&)>& func) {
+            if (IsEmpty()) SR_UNLIKELY_ATTRIBUTE {
+                return;
+            }
+
             Index index = 0;
             for (auto&& [isAlive, object] : m_objects) {
                 if (isAlive) SR_LIKELY_ATTRIBUTE {
@@ -178,6 +193,10 @@ namespace SR_HTYPES_NS {
         }
 
         void ForEach(const SR_HTYPES_NS::Function<void(Index, const T&)>& func) const {
+            if (IsEmpty()) SR_UNLIKELY_ATTRIBUTE {
+                return;
+            }
+
             Index index = 0;
             for (auto&& [isAlive, object] : m_objects) {
                 if (isAlive) SR_LIKELY_ATTRIBUTE {

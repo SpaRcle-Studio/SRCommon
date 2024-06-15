@@ -119,14 +119,23 @@ namespace SR_UTILS_NS {
         if (path.back() != '/')
             path.append("/");
 
+    #ifdef SR_LINUX
+        return SR_PLATFORM_NS::CreateFolder(path);
+    #else
         auto pos = path.find('/', offset);
         if (pos != std::string::npos) {
-            auto dir = path.substr(0, pos);
+            auto&& dir = path.substr(0, pos);
+            if (dir.back() != '/') {
+                dir.append("/");
+
+            }
+
             SR_PLATFORM_NS::CreateFolder(dir);
             return CreatePath(std::move(path), pos + 1);
         }
 
         return true;
+    #endif
     }
 
     //std::string FileSystem::GetFullPath(const std::string& path) {

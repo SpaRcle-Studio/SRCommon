@@ -57,7 +57,7 @@ namespace SR_HTYPES_NS {
 
         auto&& pThread = new Thread(std::move(thread));
 
-        SR_LOG("Thread::Factory::Create() : create new \"{}\" thread...", pThread->m_id);
+        SR_LOG("Thread::Factory::Create() : creating new \"{}\" thread...", pThread->m_id);
 
         m_threads.insert(std::make_pair(pThread->GetId(), pThread));
 

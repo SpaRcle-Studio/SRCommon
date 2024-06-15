@@ -90,6 +90,10 @@ namespace SR_UTILS_NS {
 
 
     void Transform3D::SetRotation(const SR_MATH_NS::Quaternion& quaternion) {
+        if (m_quaternion == quaternion) {
+            return;
+        }
+
     #ifdef SR_DEBUG
         if (!quaternion.IsFinite()) {
             SRHaltOnce("Rotation is broke!");
@@ -122,6 +126,10 @@ namespace SR_UTILS_NS {
     }
 
     void Transform3D::SetScale(const SR_MATH_NS::FVector3& rawScale) {
+        if (rawScale == m_scale) {
+            return;
+        }
+
         SR_MATH_NS::FVector3 scale = rawScale;
 
         if (!scale.IsFinite()) {

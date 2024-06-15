@@ -9,6 +9,7 @@
 #include <Utils/Common/Singleton.h>
 #include <Utils/Common/Enumerations.h>
 #include <Utils/Common/StringFormat.h>
+#include <Utils/Common/CastUtils.h>
 
 namespace SR_UTILS_NS {
     SR_ENUM_NS_CLASS_T(DebugLogType, uint8_t,

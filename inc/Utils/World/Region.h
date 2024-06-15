@@ -7,7 +7,7 @@
 
 #include <Utils/Math/Vector3.h>
 #include <Utils/World/Observer.h>
-#include <Utils/Xml.h>
+#include <Utils/Resources/Xml.h>
 
 namespace SR_UTILS_NS {
     class GameObject;

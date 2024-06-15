@@ -6,7 +6,7 @@
 #define SR_ENGINE_DATATYPE_H
 
 #include <Utils/SRLM/Utils.h>
-#include <Utils/Xml.h>
+#include <Utils/Resources/Xml.h>
 
 namespace SR_UTILS_NS {
     class EnumReflector;

@@ -7,6 +7,11 @@ option(SR_UTILS_CMAKE_ZLIB "" ON)
 option(SR_UTILS_CMAKE_ASSIMP "" ON)
 option(SR_UTILS_DLL_EXPORTS "" ON)
 option(SR_UTILS_CI_BUILD "" OFF)
+option(SR_UTILS_USE_SDL "" OFF)
+
+if (SR_UTILS_USE_SDL)
+    add_compile_definitions(SR_UTILS_USE_SDL)
+endif()
 
 macro(SR_UTILS_INCLUDE_DIRECTORIES_APPEND var)
     set_property(GLOBAL APPEND PROPERTY SR_UTILS_INCLUDE_DIRECTORIES "${var}")
@@ -69,6 +74,10 @@ if (UNIX AND NOT APPLE)
     find_package(X11 REQUIRED)
 endif()
 
+if (SR_UTILS_USE_SDL)
+    add_subdirectory(libs/SDL)
+endif()
+
 set(ICU_PREBUILT_VERSION "69.1")
 
 if (NOT ANDROID_NDK)
@@ -122,6 +131,10 @@ if (SR_UTILS_CMAKE_ASSIMP)
     SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_SOURCE_DIR}/libs/assimp/include)
 endif()
 
+if (SR_UTILS_USE_SDL)
+    SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_SOURCE_DIR}/libs/SDL/include)
+endif()
+
 SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_BINARY_DIR}/libs/nativefiledialog/src/include)
 SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_SOURCE_DIR}/libs/nativefiledialog/src/include)
 
@@ -151,10 +164,6 @@ if (SR_TRACY_ENABLE)
     SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_SOURCE_DIR}/libs/tracy/tracy)
 endif()
 
-if (UNIX)
-    list(APPEND SR_UTILS_LINK_LIBRARIES src/Utils/Platform/LinuxStacktraceImpl.cpp)
-endif()
-
 if (SR_UTILS_STATIC_LIBRARY)
     add_library(Utils STATIC ${SR_UTILS_LINK_LIBRARIES})
 
@@ -173,12 +182,19 @@ if (UNIX AND NOT APPLE)
     target_link_libraries(Utils ${X11_Xrandr_LIB})
     SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${X11_Xrandr_INCLUDE_PATH})
 
+    target_link_libraries(Utils ${X11_Xfixes_LIB})
+    SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${X11_Xfixes_INCLUDE_PATH})
+
     if (X11_xcb_randr_FOUND)
         target_link_libraries(Utils ${X11_xcb_randr_LIB})
         SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${X11_xcb_randr_INCLUDE_PATH})
     endif()
 
     target_link_libraries(Utils bfd)
+endif()
+
+if (SR_UTILS_USE_SDL)
+    target_link_libraries(Utils SDL3::SDL3)
 endif()
 
 if (SR_UTILS_CMAKE_ZLIB)

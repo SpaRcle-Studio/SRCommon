@@ -8,6 +8,7 @@
 
 #include <X11/Xlib.h>
 #include <X11/extensions/Xrandr.h>
+//#include <X11/extensions/XInput.h>
 #include <X11/Xlib-xcb.h>
 
 #include <xcb/randr.h>
@@ -16,11 +17,17 @@
 
 #include <spawn.h>
 #include <fcntl.h>
+#include <termios.h>
 #include <unistd.h>
 
-#include <sys/sendfile.h>
+#include <Utils/Platform/XKeySymToKeyCode.h>
 
-namespace SR_UTILS_NS::Platform {
+#include <sys/sendfile.h>
+#include <X11/extensions/Xfixes.h>
+
+namespace SR_PLATFORM_NS {
+    static Display* gLinuxPlatformDisplayPtr = nullptr;
+
     void SegmentationHandler(int sig) {
         WriteConsoleError("Crash stacktrace: \n" + SR_UTILS_NS::GetStacktrace());
         Breakpoint();
@@ -33,7 +40,23 @@ namespace SR_UTILS_NS::Platform {
     }
 
     void SetCursorVisible(bool isVisible) {
-        SRHaltOnce("Not implemented!");
+        if (!gLinuxPlatformDisplayPtr) {
+            gLinuxPlatformDisplayPtr = XOpenDisplay(nullptr);
+        }
+
+        if (!gLinuxPlatformDisplayPtr) {
+            SR_ERROR("Platform::SetMousePos() : failed to open display.");
+            return;
+        }
+
+        Window root = DefaultRootWindow(gLinuxPlatformDisplayPtr);
+
+        if (isVisible) {
+            XFixesShowCursor(gLinuxPlatformDisplayPtr, root);
+        }
+        else {
+            XFixesHideCursor(gLinuxPlatformDisplayPtr, root);
+        }
     }
 
     void StdHandler() {
@@ -45,7 +68,6 @@ namespace SR_UTILS_NS::Platform {
     }
 
     void InitSegmentationHandler() {
-        StacktraceInit();
         signal(SIGSEGV, SegmentationHandler);
         std::set_terminate(StdHandler);
     }
@@ -68,23 +90,75 @@ namespace SR_UTILS_NS::Platform {
     }
 
     bool IsFileDeletable(const SR_UTILS_NS::Path& path) {
-       SRHaltOnce("Not implemented!");
+        if (!path.Exists() || !path.IsFile()) {
+            SR_WARN("Platform::CanBeDeleted() : path does not exist or is not a file.");
+            return false;
+        }
+
+        auto&& file = std::fstream(path.c_str(), std::ios::in);
+        if (file.is_open()) {
+            file.close();
+            return true;
+        }
+
+        return false;
    }
 
     void OpenFile(const SR_UTILS_NS::Path& path, const std::string& args) {
-        SRHaltOnce("Not implemented!");
+        std::string command;
+        if (path.IsAbs()) {
+            command = path.ToStringRef() + " " + args;
+        }
+        else {
+            command = "./" + path.ToStringRef() + " " + args;
+        }
+
+        system(command.c_str());
     }
 
-    void Unzip(const SR_UTILS_NS::Path& source, const SR_UTILS_NS::Path& destination) {
-        SRHaltOnce("Not yet implemented!");
+    void Unzip(const SR_UTILS_NS::Path& source, const SR_UTILS_NS::Path& destination, bool replace) {
+        std::string command;
+        if (source.GetExtensionView() == "zip") {
+            if (replace) {
+                command = "unzip -q -o " + source.ToStringRef() + " -d " + destination.ToStringRef();
+            }
+            else {
+                command = "unzip -q -n" + source.ToStringRef() + " -d " + destination.ToStringRef();
+            }
+
+            system(command.c_str());
+        }
+        else if (source.GetExtensionView() == "tar" || source.GetExtensionView() == "gz") {
+            //TODO: Find a way to use 'replace' variable here.
+            command += "tar -xf " + source.ToStringRef() + " -C " + destination.ToStringRef();
+            system(command.c_str());
+        }
+        else {
+            SR_WARN("Platform::Unzip() : unknown file extension. Path: '{}'", source.ToString());
+        }
     }
 
-    void SetInstance(void* pInstance) {
-        SRHaltOnce("Not implemented!");
-    }
+    void CopyPermissions(const SR_UTILS_NS::Path& source, const SR_UTILS_NS::Path& destination) {
+        if (!source.Exists() || !destination.Exists()) {
+            SR_ERROR("Platform::CopyPermissions() : either source or destination path does not exist.");
+            return;
+        }
 
-    void SetMousePos(const SR_MATH_NS::IVector2& pos) {
-        SRHaltOnce("Not implemented!");
+        auto&& currentHandle = open(source.c_str(), O_RDONLY);
+        auto&& destinationHandle = open(destination.c_str(), O_RDONLY);
+
+        if (currentHandle == -1 || destinationHandle == -1) {
+            SR_ERROR("Platform::CopyPermissions() : failed to open file handles.");
+            return;
+        }
+
+        struct stat fst;
+        fstat(currentHandle, &fst);
+        fchown(destinationHandle, fst.st_uid, fst.st_gid);
+        fchmod(destinationHandle,fst.st_mode);
+
+        close(currentHandle);
+        close(destinationHandle);
     }
 
     void* GetInstance() {
@@ -92,8 +166,39 @@ namespace SR_UTILS_NS::Platform {
         return nullptr;
     }
 
-    void OpenFile(const SR_UTILS_NS::Path& path) {
+    void SetInstance(void* pInstance) {
         SRHaltOnce("Not implemented!");
+    }
+
+    void SetMousePos(const SR_MATH_NS::IVector2& pos) {
+        if (!gLinuxPlatformDisplayPtr) {
+            gLinuxPlatformDisplayPtr = XOpenDisplay(nullptr);
+        }
+
+        if (!gLinuxPlatformDisplayPtr) {
+            SR_ERROR("Platform::SetMousePos() : failed to open display.");
+            return;
+        }
+
+        Window root = DefaultRootWindow(gLinuxPlatformDisplayPtr);
+        XSelectInput(gLinuxPlatformDisplayPtr, root, KeyReleaseMask);
+
+        XWarpPointer(gLinuxPlatformDisplayPtr, None, root, 0, 0, 0, 0, pos.x, pos.y);
+
+        XFlush(gLinuxPlatformDisplayPtr);
+    }
+
+    void OpenFile(const SR_UTILS_NS::Path& path) {
+        std::string command;
+
+        if (path.IsAbs()) {
+            command = path.ToStringRef();
+        }
+        else {
+            command = "./" + path.ToStringRef();
+        }
+
+        std::system(command.c_str());
     }
 
     std::optional<std::string> ReadFile(const Path& path) {
@@ -119,8 +224,17 @@ namespace SR_UTILS_NS::Platform {
     }
 
     bool WaitAndDelete(const SR_UTILS_NS::Path& path) {
-        SRHaltOnce("Not implemented!");
-        return false;
+        if (!path.IsFile()) {
+            SR_WARN("Platform::WaitAndDelete() : path is not a file. Path: '{}'", path.ToString());
+            return false;
+        }
+
+        SR_LOG("Platform::WaitAndDelete() : waiting for file to be deleted...");
+        while (true) {
+            if (IsFileDeletable(path)) {
+                return Delete(path);
+            }
+        }
     }
 
     void TextToClipboard(const std::string &text) {
@@ -152,9 +266,87 @@ namespace SR_UTILS_NS::Platform {
         SRHaltOnce("Not implemented!");
     }
 
+    MouseState GetMouseState() {
+        if (!gLinuxPlatformDisplayPtr) {
+            gLinuxPlatformDisplayPtr = XOpenDisplay(nullptr);
+        }
+
+        if (!gLinuxPlatformDisplayPtr) {
+            SR_ERROR("Platform::GetMousePos() : failed to open display.");
+            return { };
+        }
+
+        Window root = DefaultRootWindow(gLinuxPlatformDisplayPtr);
+        Window root_return, child_return;
+        int root_x_return, root_y_return, win_x_return, win_y_return;
+        unsigned int mask_return;
+
+        XQueryPointer(gLinuxPlatformDisplayPtr, root, &root_return, &child_return, &root_x_return, &root_y_return, &win_x_return, &win_y_return, &mask_return);
+
+        MouseState mouseState;
+        mouseState.position = { static_cast<float>(root_x_return), static_cast<float>(root_y_return) };
+
+        mouseState.buttonStates[0] = mask_return & Button1Mask;
+        mouseState.buttonStates[1] = mask_return & Button3Mask;
+        mouseState.buttonStates[2] = mask_return & Button2Mask;
+        mouseState.buttonStates[3] = mask_return & Button4Mask;
+        mouseState.buttonStates[4] = mask_return & Button5Mask;
+
+        return mouseState;
+    }
+
     SR_MATH_NS::FVector2 GetMousePos() {
-        SRHaltOnce("Not implemented!");
-        return SR_MATH_NS::FVector2();
+        if (!gLinuxPlatformDisplayPtr) {
+            gLinuxPlatformDisplayPtr = XOpenDisplay(nullptr);
+        }
+
+        if (!gLinuxPlatformDisplayPtr) {
+            SR_ERROR("Platform::GetMousePos() : failed to open display.");
+            return { };
+        }
+
+        Window root = DefaultRootWindow(gLinuxPlatformDisplayPtr);
+        Window child;
+        int root_x, root_y, win_x, win_y;
+        unsigned int mask;
+        XQueryPointer(gLinuxPlatformDisplayPtr, root, &root, &child, &root_x, &root_y, &win_x, &win_y, &mask);
+
+        return { static_cast<float>(root_x), static_cast<float>(root_y) };
+    }
+
+    bool GetSystemKeyboardState(uint8_t* pKeyCodes) {
+        if (!gLinuxPlatformDisplayPtr) {
+            gLinuxPlatformDisplayPtr = XOpenDisplay(nullptr);
+        }
+
+        if (!gLinuxPlatformDisplayPtr) {
+            SR_ERROR("Platform::GetMousePos() : failed to open display.");
+            return false;
+        }
+
+        char keys_return[32];
+        XQueryKeymap(gLinuxPlatformDisplayPtr, keys_return);
+
+        for (int i = 0; i < 32; i++) {
+            for (int j = 0; j < 8; j++) {
+                if (keys_return[i] & (1 << j)) {
+                    int keycode = i * 8 + j;
+                    KeySym keysym = XKeycodeToKeysym(gLinuxPlatformDisplayPtr, keycode, 0);
+
+                    auto it = keysymToIndex.find(keysym);
+                    if (it != keysymToIndex.end()) {
+                        if (pKeyCodes[it->second] == 0) { // Is State::Dowm?
+                            pKeyCodes[it->second] = 1; // Then set State::Pressed
+                        }
+                        else if (pKeyCodes[it->second] == 1) { // Is State::UnPressed?
+                            pKeyCodes[it->second] = 2; // Then set State::Down
+                        }
+                    }
+                }
+            }
+        }
+
+        return true;
     }
 
     void Sleep(uint64_t milliseconds) {
@@ -190,7 +382,9 @@ namespace SR_UTILS_NS::Platform {
     }
 
     void Terminate() {
-        SRHaltOnce("Not implemented!");
+        SR_PLATFORM_NS::WriteConsoleError("Function \"Terminate\" has been called... >_<\n" + SR_UTILS_NS::GetStacktrace());
+        SR_UTILS_NS::Breakpoint();
+        std::terminate(); // TODO: std::terminate() or abort()?
     }
 
     void OpenWithAssociatedApp(const Path &filepath) {
@@ -199,6 +393,11 @@ namespace SR_UTILS_NS::Platform {
 
     bool Copy(const Path &from, const Path &to) {
         if (from.IsFile()) {
+            /*/// TODO: Find another way to copy a file without using system() function WHILE preserving the current permissions.
+            std::string command = "cp " + from.ToStringRef() + " " + to.ToStringRef();
+            system(command.c_str());
+            return true;*/
+
             int source = open(from.c_str(), O_RDONLY, 0);
             int dest = open(to.c_str(), O_WRONLY | O_CREAT /*| O_TRUNC/**/, 0644);
 
@@ -215,17 +414,19 @@ namespace SR_UTILS_NS::Platform {
                 SR_WARN("Platform::Copy() : failed to copy!\n\tFrom: {}\n\tTo: {}", from.CStr(), to.CStr());
             }
 
+            CopyPermissions(from, to);
+
             return result != -1;
         }
 
         if (!from.IsDir()) {
-            SR_WARN("Platform::Copy() : \"{}\" is not directory!", from.c_str());
+            SR_WARN("Platform::Copy() : \"{}\" is not a directory!", from.c_str());
             return false;
         }
 
         CreateFolder(to.ToStringRef());
 
-        for (auto&& item : GetInDirectory(from, Path::Type::Undefined)) {
+        for (auto&& item : from.GetAll()) {
             if (Copy(item, to.Concat(item.GetBaseNameAndExt()))) {
                 continue;
             }
@@ -252,8 +453,35 @@ namespace SR_UTILS_NS::Platform {
         return result;
     }
 
+    std::list<Path> GetAllInDirectory(const Path& dir) {
+        std::list<Path> result;
+
+        if (!IsExists(dir)) {
+            return result;
+        }
+
+        for (const auto& entry : std::filesystem::directory_iterator(dir.ToStringRef())) {
+            if (entry.is_directory() || entry.is_regular_file()) {
+                result.emplace_back(entry.path());
+            }
+        }
+
+        return result;
+    }
+
     bool CreateFolder(const std::string& path) {
-        return mkdir(path.c_str(), S_IRWXU);
+        if (path.empty()) {
+            SR_WARN("Platform::CreateFolder() : path is empty!");
+            return false;
+        }
+
+        const std::string command = "mkdir -p " + path;
+        if (system(command.c_str()) != 0) {
+            SR_WARN("Platform::CreateFolder() : failed to create folder!\n\tPath: {}", path);
+            return false;
+        }
+
+        return true;
     }
 
     bool Delete(const Path &path) {
@@ -271,7 +499,7 @@ namespace SR_UTILS_NS::Platform {
             return false;
         }
 
-        for (auto&& item : GetInDirectory(path, Path::Type::Undefined)) {
+        for (auto&& item : GetAllInDirectory(path)) {
             if (Delete(item)) {
                 continue;
             }
@@ -289,7 +517,8 @@ namespace SR_UTILS_NS::Platform {
     }
 
     Path GetApplicationPath() {
-        return std::filesystem::current_path().string();
+        return std::filesystem::canonical("/proc/self/exe").string();
+        //return std::filesystem::current_path().string();
     }
 
     Path GetApplicationDirectory() {
@@ -304,8 +533,7 @@ namespace SR_UTILS_NS::Platform {
     }
 
     bool FileIsHidden(const Path &path) {
-        SRHaltOnce("Not implemented!");
-        return false;
+        return path.GetBaseNameView()[0] == '.';
     }
 
     FileMetadata GetFileMetadata(const Path& file) {

@@ -3,7 +3,7 @@
 //
 
 #include <Utils/Common/Features.h>
-#include <Utils/Xml.h>
+#include <Utils/Resources/Xml.h>
 #include <Utils/Types/Thread.h>
 #include <Utils/Profile/TracyContext.h>
 
@@ -72,7 +72,7 @@ namespace SR_UTILS_NS {
             return false;
         }
 
-        SR_LOG("Features::Reload() : features successfully reloaded!");
+        SR_LOG("Features::Reload() : features are successfully reloaded!");
 
         m_isInitialized = true;
 

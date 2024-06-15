@@ -11,7 +11,11 @@
 namespace SR_UTILS_NS {
     class PropertyContainer : public Property {
         SR_REGISTER_TYPE_TRAITS_PROPERTY(PropertyContainer, 1000)
-        using PropertyList = std::vector<Property*>;
+        struct PropertyInfo {
+            bool isExternal = false;
+            Property* pProperty = nullptr;
+        };
+        using PropertyList = std::vector<PropertyInfo>;
     public:
         PropertyContainer();
         ~PropertyContainer() override;
@@ -32,6 +36,9 @@ namespace SR_UTILS_NS {
         PropertyContainer& AddContainer(const char* name);
         EntityRefProperty& AddEntityRefProperty(SR_UTILS_NS::StringAtom name, const EntityRefUtils::OwnerRef& owner);
         ArrayReferenceProperty& AddArrayReferenceProperty(const char* name);
+
+        void AddExternalProperty(Property* pProperty);
+
         template<typename T, typename ...Args> T& AddCustomProperty(SR_UTILS_NS::StringAtom name, Args... args);
         template<typename T> StandardProperty& AddStandardProperty(const char* name, T* pRawProperty);
         template<typename T> EnumProperty& AddEnumProperty(const char* name, T* pRawProperty);
@@ -48,8 +55,8 @@ namespace SR_UTILS_NS {
     };
 
     template<typename T> bool PropertyContainer::ForEachPropertyRet(const SR_HTYPES_NS::Function<bool(T*)>& function) const {
-        for (auto&& pProperty : m_properties) {
-            if (auto&& pCastedProperty = dynamic_cast<T*>(pProperty)) {
+        for (auto&& propertyInfo : m_properties) {
+            if (auto&& pCastedProperty = dynamic_cast<T*>(propertyInfo.pProperty)) {
                 if (!function(pCastedProperty)) {
                     return false;
                 }
@@ -60,8 +67,8 @@ namespace SR_UTILS_NS {
     }
 
     template<typename T> PropertyContainer& PropertyContainer::ForEachProperty(const SR_HTYPES_NS::Function<void(T*)>& function) {
-        for (auto&& pProperty : m_properties) {
-            if (auto&& pCastedProperty = dynamic_cast<T*>(pProperty)) {
+        for (auto&& propertyInfo : m_properties) {
+            if (auto&& pCastedProperty = dynamic_cast<T*>(propertyInfo.pProperty)) {
                 function(pCastedProperty);
             }
         }
@@ -69,8 +76,8 @@ namespace SR_UTILS_NS {
     }
 
     template<typename T> const PropertyContainer& PropertyContainer::ForEachProperty(const SR_HTYPES_NS::Function<void(T*)>& function) const {
-        for (auto&& pProperty : m_properties) {
-            if (auto&& pCastedProperty = dynamic_cast<T*>(pProperty)) {
+        for (auto&& propertyInfo : m_properties) {
+            if (auto&& pCastedProperty = dynamic_cast<T*>(propertyInfo.pProperty)) {
                 function(pCastedProperty);
             }
         }
@@ -78,16 +85,16 @@ namespace SR_UTILS_NS {
     }
 
     template<typename T> T* PropertyContainer::Find(uint64_t hashName) const noexcept {
-        for (auto&& pProperty : m_properties) {
-            if (pProperty->GetName().GetHash() != hashName) {
+        for (auto&& propertyInfo : m_properties) {
+            if (propertyInfo.pProperty->GetName().GetHash() != hashName) {
                 continue;
             }
 
             if constexpr (std::is_same_v<T, SR_UTILS_NS::Property>) {
-                return pProperty;
+                return propertyInfo.pProperty;
             }
 
-            if (auto&& pCasted = dynamic_cast<T*>(pProperty)) {
+            if (auto&& pCasted = dynamic_cast<T*>(propertyInfo.pProperty)) {
                 return pCasted;
             }
         }
@@ -109,7 +116,11 @@ namespace SR_UTILS_NS {
 
         pProperty->SetName(name);
 
-        m_properties.emplace_back(pProperty);
+        PropertyInfo info;
+
+        info.pProperty = pProperty;
+        m_properties.emplace_back(info);
+
         OnPropertyAdded(pProperty);
 
         return *pProperty;
@@ -127,14 +138,18 @@ namespace SR_UTILS_NS {
         pProperty->SetType(GetStandardType<T>());
 
         pProperty->SetGetter([pRawProperty](void *pData) {
-            *reinterpret_cast<T *>(pData) = *pRawProperty;
+            *reinterpret_cast<T*>(pData) = *pRawProperty;
         });
 
         pProperty->SetSetter([pRawProperty](void *pData) {
-            *pRawProperty = *reinterpret_cast<T *>(pData);
+            *pRawProperty = *reinterpret_cast<T*>(pData);
         });
 
-        m_properties.emplace_back(pProperty);
+        PropertyInfo info;
+
+        info.pProperty = pProperty;
+        m_properties.emplace_back(info);
+
         OnPropertyAdded(pProperty);
 
         return *pProperty;
@@ -159,7 +174,11 @@ namespace SR_UTILS_NS {
             *pRawProperty = SR_UTILS_NS::EnumReflector::FromString<T>(value);
         });
 
-        m_properties.emplace_back(pProperty);
+        PropertyInfo info;
+
+        info.pProperty = pProperty;
+        m_properties.emplace_back(info);
+
         OnPropertyAdded(pProperty);
 
         return *pProperty;
@@ -176,7 +195,11 @@ namespace SR_UTILS_NS {
         pProperty->SetName(name);
         pProperty->SetEnumReflector(SR_UTILS_NS::EnumReflector::GetReflector<T>());
 
-        m_properties.emplace_back(pProperty);
+        PropertyInfo info;
+
+        info.pProperty = pProperty;
+        m_properties.emplace_back(info);
+
         OnPropertyAdded(pProperty);
 
         return *pProperty;
