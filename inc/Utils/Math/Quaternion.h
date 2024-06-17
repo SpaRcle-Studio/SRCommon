@@ -84,6 +84,28 @@ namespace SR_MATH_NS {
             return Quaternion(glm::inverse(self));
         }
 
+        SR_NODISCARD bool IsEquals(const Quaternion& value, Unit tolerance) const noexcept {
+            if (!SR_EQUALS_T(x, value.x, tolerance)) {
+                return false;
+            }
+
+            if (!SR_EQUALS_T(y, value.y, tolerance)) {
+                return false;
+            }
+
+            if (!SR_EQUALS_T(z, value.z, tolerance)) {
+                return false;
+            }
+
+            if (!SR_EQUALS_T(w, value.w, tolerance)) {
+                return false;
+            }
+
+            SR_NOOP;
+
+            return true;
+        }
+
         SR_NODISCARD Quaternion Slerp(const Quaternion& q, Unit t) const {
             // SRAssertOnce(t >= 0.f || t <= 1.f);
             return Quaternion(glm::slerp(self, q.self, static_cast<float_t>(t)));
