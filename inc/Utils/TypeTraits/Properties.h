@@ -40,6 +40,7 @@ namespace SR_UTILS_NS {
         void AddExternalProperty(Property* pProperty);
 
         template<typename T, typename ...Args> T& AddCustomProperty(SR_UTILS_NS::StringAtom name, Args... args);
+        template<typename T> StandardProperty& AddStandardProperty(const char* name);
         template<typename T> StandardProperty& AddStandardProperty(const char* name, T* pRawProperty);
         template<typename T> EnumProperty& AddEnumProperty(const char* name, T* pRawProperty);
         template<typename T> EnumProperty& AddEnumProperty(const char* name);
@@ -104,6 +105,27 @@ namespace SR_UTILS_NS {
     template<typename T> T* PropertyContainer::Find(const StringAtom& name) const noexcept {
         SR_TRACY_ZONE;
         return Find<T>(name.GetHash());
+    }
+
+    template<typename T> StandardProperty& PropertyContainer::AddStandardProperty(const char* name) {
+        if (auto&& pProperty = Find(name)) {
+            SRHalt("Properties::AddStandardProperty() : property \"" + std::string(name) + "\" already exists!");
+            return *dynamic_cast<StandardProperty*>(pProperty);
+        }
+
+        auto&& pProperty = new StandardProperty();
+
+        pProperty->SetName(name);
+        pProperty->SetType(GetStandardType<T>());
+
+        PropertyInfo info;
+
+        info.pProperty = pProperty;
+        m_properties.emplace_back(info);
+
+        OnPropertyAdded(pProperty);
+
+        return *pProperty;
     }
 
     template<typename T, typename ...Args> T& PropertyContainer::AddCustomProperty(SR_UTILS_NS::StringAtom name, Args... args)  {

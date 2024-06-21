@@ -743,6 +743,14 @@ namespace SR_UTILS_NS {
     void GameObject::SetLayer(StringAtom layer) {
         SRAssert(!layer.Empty());
 
+        if (LayerManager::GetDefaultLayer() == layer && m_parent) {
+            layer = m_parent->GetLayer();
+        }
+
+        if (layer == m_layer && m_cachedLayer == m_layer) {
+            return;
+        }
+
         ForEachComponent([](Component* pComponent) -> bool {
             pComponent->OnBeforeLayerChanged();
             return true;

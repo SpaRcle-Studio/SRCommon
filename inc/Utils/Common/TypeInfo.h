@@ -11,6 +11,7 @@
 #include <Utils/Math/Vector3.h>
 #include <Utils/Math/Vector4.h>
 #include <Utils/Math/Vector6.h>
+#include <Utils/Types/UnicodeString.h>
 
 namespace SR_UTILS_NS {
     SR_ENUM_NS_CLASS_T(StandardType, uint16_t,
@@ -29,6 +30,7 @@ namespace SR_UTILS_NS {
 
         String,
         StringAtom,
+        UnicodeString,
 
         Enum,
         Class,
@@ -116,11 +118,14 @@ namespace SR_UTILS_NS {
         else if constexpr (std::is_same<T, std::string>() || std::is_same<T, const char*>()) {
             return StandardType::String;
         }
-        else if constexpr (std::is_same<T, std::string>() || std::is_same<T, const char*>()) {
-            return StandardType::String;
+        else if constexpr (std::is_same<T, SR_HTYPES_NS::UnicodeString>()) {
+            return StandardType::UnicodeString;
         }
         else if constexpr (std::is_same<T, SR_MATH_NS::FVector2>() || std::is_same<T, SR_MATH_NS::Vector2<float>>() || std::is_same<T, SR_MATH_NS::Vector2<float_t>>()) {
             return StandardType::FVector2;
+        }
+        else if constexpr (std::is_same<T, SR_MATH_NS::UVector2>() || std::is_same<T, SR_MATH_NS::Vector2<uint32_t>>() || std::is_same<T, SR_MATH_NS::Vector2<unsigned int>>()) {
+            return StandardType::UVector2;
         }
         else if constexpr (std::is_same<T, SR_MATH_NS::FVector3>() || std::is_same<T, SR_MATH_NS::Vector3<float>>() || std::is_same<T, SR_MATH_NS::Vector3<float_t>>()) {
             return StandardType::FVector3;
