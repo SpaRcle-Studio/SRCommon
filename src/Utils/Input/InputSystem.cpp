@@ -32,6 +32,17 @@ namespace SR_UTILS_NS {
         auto&& mouseState = SR_PLATFORM_NS::GetMouseState();
 
         m_mouse = mouseState.position;
+        m_mouseDrag = m_mouse - m_mousePrev;
+
+        if (m_counterLock > 0 && m_lockCursorCallback) {
+            if(m_isVisible) {
+                SetCursorVisible(false);
+            }
+            m_lockCursorCallback();
+        }
+        else if(!m_isVisible) {
+            SetCursorVisible(true);
+        }
 
     #if defined(SR_WIN32)
         for (uint16_t i = 5; i < 256; ++i) {
@@ -103,8 +114,6 @@ namespace SR_UTILS_NS {
                 }
             }
         }
-
-        m_mouseDrag = m_mouse - m_mousePrev;
     }
 
     bool Input::GetKeyDown(KeyCode key) {
@@ -145,10 +154,6 @@ namespace SR_UTILS_NS {
         Reset();
     }
 
-    void Input::LockCursor(bool isLock) {
-        m_isLocked = isLock;
-    }
-
     bool Input::IsMouseMoved() const {
         return GetMousePos() != GetPrevMousePos();
     }
@@ -158,5 +163,17 @@ namespace SR_UTILS_NS {
             m_isVisible = isVisible;
             SR_PLATFORM_NS::SetCursorVisible(isVisible);
         }
+    }
+
+    void Input::SetCursorLockCallback(CursorLockCallback&& callback) {
+        m_lockCursorCallback = std::move(callback);
+    }
+
+    void Input::LockCursor(){
+        ++m_counterLock;
+    }
+
+    void Input::UnlockCursor(){
+        --m_counterLock;
     }
 }
