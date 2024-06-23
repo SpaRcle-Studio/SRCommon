@@ -714,14 +714,14 @@ namespace SR_UTILS_NS::Platform {
     void SetCursorVisible(bool isVisible) {
         ::ShowCursor(isVisible);
 
-        if (!isVisible) {
-            ::SetCursor(nullptr);
-            return;
-        }
-
-        HINSTANCE hInstance = ::GetModuleHandle(NULL);  // get a handle to the app's instance
-        HCURSOR hCursor = ::LoadCursor(hInstance, MAKEINTRESOURCE(IDC_ARROW));  // load a cursor
-        ::SetCursor(hCursor);
+        // if (!isVisible) {
+        //     ::SetCursor(nullptr);
+        //     return;
+        // }
+        //
+        // HINSTANCE hInstance = ::GetModuleHandle(NULL);  // get a handle to the app's instance
+        // HCURSOR hCursor = ::LoadCursor(hInstance, MAKEINTRESOURCE(IDC_ARROW));  // load a cursor
+        // ::SetCursor(hCursor);
     }
 
     PlatformType GetType() {

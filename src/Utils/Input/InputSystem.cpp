@@ -34,7 +34,7 @@ namespace SR_UTILS_NS {
         m_mouse = mouseState.position;
         m_mouseDrag = m_mouse - m_mousePrev;
 
-        if (m_counterLock > 0 && m_lockCursorCallback) {
+        if (m_counterLock >= 1 && m_lockCursorCallback) {
             if(m_isVisible) {
                 SetCursorVisible(false);
             }
