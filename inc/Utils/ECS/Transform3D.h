@@ -10,6 +10,7 @@
 namespace SR_UTILS_NS {
     class SR_DLL_EXPORT Transform3D : public Transform {
         friend class GameObject;
+        using Super = Transform;
     public:
         Transform3D() = default;
 

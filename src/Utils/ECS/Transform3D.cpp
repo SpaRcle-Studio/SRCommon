@@ -7,14 +7,23 @@
 
 namespace SR_UTILS_NS {
     void Transform3D::UpdateMatrix() const {
-        m_localMatrix = SR_MATH_NS::Matrix4x4(
+        if (m_skew.IsEqualsLikely(SR_MATH_NS::FVector3::One(), SR_EPSILON)) SR_LIKELY_ATTRIBUTE {
+            m_localMatrix = SR_MATH_NS::Matrix4x4(
+                m_translation,
+                m_quaternion,
+                m_scale
+            );
+        }
+        else {
+            m_localMatrix = SR_MATH_NS::Matrix4x4(
                 m_translation,
                 m_quaternion,
                 m_scale,
                 m_skew
-        );
+            );
+        }
 
-        Transform::UpdateMatrix();
+        Super::UpdateMatrix();
     }
 
     void Transform3D::Rotate(const SR_MATH_NS::FVector3& eulers) {
@@ -26,12 +35,10 @@ namespace SR_UTILS_NS {
     }
 
     const SR_MATH_NS::Matrix4x4& Transform3D::GetMatrix() const {
-        if (IsDirty()) {
-            SR_TRACY_ZONE;
-
+        if (IsDirty()) SR_UNLIKELY_ATTRIBUTE {
             UpdateMatrix();
 
-            if (auto&& pTransform = m_gameObject->GetParentTransform()) {
+            if (auto&& pTransform = m_gameObject->GetParentTransform()) SR_LIKELY_ATTRIBUTE {
                 m_matrix = pTransform->GetMatrix() * m_localMatrix;
             }
             else {

@@ -62,7 +62,7 @@ namespace SR_UTILS_NS {
 
         auto&& marshal = SR_HTYPES_NS::Marshal::Load(path);
         if (!marshal.Valid()) {
-            SR_ERROR("Prefab::Load() : failed to load marshal data!");
+            SR_ERROR("Prefab::Load() : failed to load marshal data!\n\tPath: " + path.ToString());
             return false;
         }
 

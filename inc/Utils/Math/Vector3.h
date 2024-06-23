@@ -294,6 +294,24 @@ namespace SR_MATH_NS {
             return true;
         }
 
+        SR_NODISCARD bool IsEqualsLikely(const Vector3& value, Unit tolerance) const noexcept {
+            if (!SR_EQUALS_T(x, value.x, tolerance)) SR_UNLIKELY_ATTRIBUTE {
+                return false;
+            }
+
+            if (!SR_EQUALS_T(y, value.y, tolerance)) SR_UNLIKELY_ATTRIBUTE {
+                return false;
+            }
+
+            if (!SR_EQUALS_T(z, value.z, tolerance)) SR_UNLIKELY_ATTRIBUTE {
+                return false;
+            }
+
+            SR_NOOP;
+
+            return true;
+        }
+
         SR_NODISCARD Vector3 Limits(int lim) const {
             int xi = (int)x / lim;
             int yi = (int)y / lim;

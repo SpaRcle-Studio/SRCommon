@@ -9,19 +9,19 @@ namespace SR_MATH_NS {
     Matrix4x4::Matrix4x4(const FVector3& translate, const Quaternion& rotation, const FVector3& scale) noexcept
         : Matrix4x4()
     {
-        GLMTranslateMat4x4(self, translate.ToGLM());
+        GLMTranslateMat4x4(self, translate);
         GLMRotateMat4x4(self, rotation.ToGLM());
-        GLMScaleMat4x4(self, scale.ToGLM());
+        GLMScaleMat4x4(self, scale);
     }
 
     Matrix4x4::Matrix4x4(const FVector3& translate, const Quaternion& rotation, const FVector3& scale, const FVector3& skew) noexcept
         : Matrix4x4()
     {
-        GLMTranslateMat4x4(self, translate.ToGLM());
+        GLMTranslateMat4x4(self, translate);
 
-        GLMScaleMat4x4(self, skew.ToGLM());
+        GLMScaleMat4x4(self, skew);
         GLMRotateMat4x4(self, rotation.ToGLM());
-        GLMScaleMat4x4(self, scale.ToGLM());
+        GLMScaleMat4x4(self, scale);
     }
 
     Matrix4x4 Matrix4x4::operator*(const Matrix4x4& mat) const {
@@ -31,7 +31,7 @@ namespace SR_MATH_NS {
     Matrix4x4::Matrix4x4(const FVector3& translate, const Quaternion& rotation) noexcept
         : Matrix4x4()
     {
-        GLMTranslateMat4x4(self, translate.ToGLM());
+        GLMTranslateMat4x4(self, translate);
         GLMRotateMat4x4(self, rotation.ToGLM());
     }
 }

@@ -189,6 +189,10 @@ namespace SR_UTILS_NS {
 
         for (uint32_t i = 0; i < m_components.size(); ++i) {
             auto&& pComponent = m_components[i];
+            if (!pComponent->IsEnabled()) {
+                continue;
+            }
+
             if (isPaused && !pComponent->ExecuteInEditMode()) {
                 continue;
             }
@@ -214,6 +218,10 @@ namespace SR_UTILS_NS {
 
         for (uint32_t i = 0; i < m_components.size(); ++i) { /// NOLINT
             auto&& pComponent = m_components[i];
+            if (!pComponent->IsEnabled()) {
+                continue;
+            }
+
             if (!pComponent->IsAwake()) {
                 continue;
             }
