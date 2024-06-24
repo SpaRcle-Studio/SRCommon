@@ -22,12 +22,12 @@
 [submodule "libs/SDL"]
 	path = libs/SDL
 	url = https://github.com/SpaRcle-Studio/SDL.git
-[submodule "libs/curl"]
-	path = libs/curl
-	url = https://github.com/SpaRcle-Studio/curl
 [submodule "libs/json"]
 	path = libs/json
 	url = https://github.com/SpaRcle-Studio/json
 [submodule "libs/openssl"]
 	path = libs/openssl
 	url = https://github.com/SpaRcle-Studio/openssl-cmake
+[submodule "libs/curl"]
+	path = libs/curl
+	url = https://github.com/SpaRcle-Studio/curl
