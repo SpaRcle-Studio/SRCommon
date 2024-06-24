@@ -11,6 +11,7 @@ option(SR_COMMON_CURL "" OFF)
 option(SR_COMMON_JSON "" OFF)
 
 option(SR_COMMON_DLL_EXPORTS "" ON)
+option(SR_COMMON_STATIC_LIBRARY "" ON)
 option(SR_COMMON_EMBED_RESOURCES "" OFF)
 option(SR_COMMON_CI_BUILD "" OFF)
 
@@ -109,6 +110,11 @@ if (SR_COMMON_CURL)
     set(BUILD_SHARED_LIBS OFF CACHE INTERNAL "" FORCE)
     set(USE_OPENSSL ON CACHE INTERNAL "" FORCE)
     set(CURL_USE_OPENSSL ON CACHE INTERNAL "" FORCE)
+    set(BUILD_STATIC_CURL ON CACHE INTERNAL "" FORCE)
+
+    if(WIN32)
+        add_definitions("-DCURL_STATICLIB")
+    endif()
 
     add_subdirectory(libs/curl)
 endif()
@@ -209,14 +215,8 @@ if (SR_TRACY_ENABLE)
     SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_SOURCE_DIR}/libs/tracy/tracy)
 endif()
 
-if (SR_UTILS_STATIC_LIBRARY)
+if (SR_COMMON_STATIC_LIBRARY)
     add_library(Utils STATIC ${SR_UTILS_LINK_LIBRARIES})
-
-    if (CYGWIN)
-
-    else()
-
-    endif()
 else()
     add_library(Utils SHARED ${SR_UTILS_LINK_LIBRARIES})
     add_library(Utils::lib ALIAS Utils)
@@ -251,7 +251,7 @@ if (SR_COMMON_ASSIMP)
 endif()
 
 if (SR_COMMON_CURL)
-    target_link_libraries(Utils curl)
+    target_link_libraries(Utils libcurl)
 endif()
 
 if (SR_COMMON_JSON)

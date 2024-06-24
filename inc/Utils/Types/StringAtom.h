@@ -14,9 +14,7 @@ namespace SR_UTILS_NS {
         SR_INLINE_STATIC std::string DEFAULT = std::string();
         static StringHashInfo* DEFAULT_STRING_INFO;
     public:
-        StringAtom() {
-            m_info = DEFAULT_STRING_INFO;
-        }
+        StringAtom();
 
         StringAtom(const StringAtom& str) = default;
 
@@ -59,13 +57,7 @@ namespace SR_UTILS_NS {
             Clear();
         }
 
-        void Clear() {
-            if (!m_info) {
-                return;
-            }
-
-            m_info = DEFAULT_STRING_INFO;
-        }
+        void Clear();
 
     private:
         StringHashInfo* m_info = nullptr;
