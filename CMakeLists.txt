@@ -99,11 +99,10 @@ if (SR_COMMON_JSON)
 endif()
 
 if (SR_COMMON_CURL OR SR_COMMON_OPENSSL)
-    add_subdirectory(libs/openssl)
+    add_compile_definitions(SR_COMMON_OPENSSL)
 endif()
 
 if (SR_COMMON_CURL)
-    set(CMAKE_CXX_STANDARD 20)
     set(USE_MANUAL OFF CACHE INTERNAL "" FORCE)
     set(BUILD_CURL_EXE OFF CACHE INTERNAL "" FORCE)
     set(BUILD_TESTING OFF CACHE INTERNAL "" FORCE)
@@ -249,10 +248,6 @@ endif()
 
 if (SR_COMMON_ASSIMP)
     target_link_libraries(Utils assimp)
-endif()
-
-if (SR_COMMON_CURL OR SR_COMMON_OPENSSL)
-    target_link_libraries(Utils crypto ssl)
 endif()
 
 if (SR_COMMON_CURL)

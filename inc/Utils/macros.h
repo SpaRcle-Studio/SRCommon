@@ -2,8 +2,8 @@
 // Created by Nikita on 21.03.2021.
 //
 
-#ifndef GAMEENGINE_MACROS_H
-#define GAMEENGINE_MACROS_H
+#ifndef SR_COMMON_MACROS_H
+#define SR_COMMON_MACROS_H
 
 #ifdef _WINDOWS_
     #error "Windows.h was included before macros.h"
@@ -276,4 +276,4 @@
 
 #define SR_OFFSETOF(s,m) ((::size_t)&reinterpret_cast<char const volatile&>((((s*)0)->m)))
 
-#endif //GAMEENGINE_MACROS_H
+#endif //SR_COMMON_MACROS_H
