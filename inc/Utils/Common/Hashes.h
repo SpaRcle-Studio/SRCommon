@@ -8,9 +8,8 @@
 #include <Utils/stdInclude.h>
 #include <Utils/Types/MerkleTree.h>
 
-#include <openssl/include/openssl/sha.h>
+#include <openssl/sha.h>
 #include <xxHash/xxhash.h>
-
 
 namespace SR_UTILS_NS {
     namespace Hash::Detail {
