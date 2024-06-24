@@ -3,14 +3,23 @@ project(Utils)
 
 set(CMAKE_CXX_STANDARD 20)
 
-option(SR_UTILS_CMAKE_ZLIB "" ON)
-option(SR_UTILS_CMAKE_ASSIMP "" ON)
-option(SR_UTILS_DLL_EXPORTS "" ON)
-option(SR_UTILS_CI_BUILD "" OFF)
-option(SR_UTILS_USE_SDL "" OFF)
+option(SR_COMMON_ZLIB "" ON)
+option(SR_COMMON_ASSIMP "" ON)
+option(SR_COMMON_OPENSSL "" OFF)
+option(SR_COMMON_SDL "" OFF)
+option(SR_COMMON_CURL "" OFF)
+option(SR_COMMON_JSON "" OFF)
 
-if (SR_UTILS_USE_SDL)
-    add_compile_definitions(SR_UTILS_USE_SDL)
+option(SR_COMMON_DLL_EXPORTS "" ON)
+option(SR_COMMON_EMBED_RESOURCES "" OFF)
+option(SR_COMMON_CI_BUILD "" OFF)
+
+if (SR_COMMON_SDL)
+    add_compile_definitions(SR_COMMON_SDL)
+endif()
+
+if (SR_COMMON_EMBED_RESOURCES)
+    add_compile_definitions(SR_COMMON_EMBED_RESOURCES)
 endif()
 
 macro(SR_UTILS_INCLUDE_DIRECTORIES_APPEND var)
@@ -30,7 +39,7 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
 endif()
 
 
-if (SR_UTILS_DLL_EXPORTS)
+if (SR_COMMON_DLL_EXPORTS)
     add_definitions(
         -DSR_DLL_EXPORTS=1
     )
@@ -40,7 +49,7 @@ if (SR_UTILS_DLL_EXPORTS)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DSR_DLL_EXPORTS")
 endif()
 
-if (SR_UTILS_CMAKE_ZLIB)
+if (SR_COMMON_ZLIB)
     set(ZLIB_BUILD_EXAMPLES OFF)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DASSIMP_BUILD_ZLIB=OFF")
     set(ASSIMP_BUILD_ZLIB OFF CACHE INTERNAL "" FORCE)
@@ -48,8 +57,8 @@ if (SR_UTILS_CMAKE_ZLIB)
     add_subdirectory(libs/zlib)
 endif()
 
-if (SR_UTILS_CMAKE_ASSIMP)
-    message("SpaRcle utils will be using Assimp")
+if (SR_COMMON_ASSIMP)
+    message("SRCommon will be using Assimp")
 
     add_definitions(
         -DSR_UTILS_ASSIMP=1
@@ -79,8 +88,30 @@ if (UNIX AND NOT APPLE)
     find_package(X11 REQUIRED)
 endif()
 
-if (SR_UTILS_USE_SDL)
+if (SR_COMMON_SDL)
     add_subdirectory(libs/SDL)
+endif()
+
+if (SR_COMMON_JSON)
+    set(JSON_BuildTests OFF CACHE INTERNAL "" FORCE)
+
+    add_subdirectory(libs/json)
+endif()
+
+if (SR_COMMON_CURL OR SR_COMMON_OPENSSL)
+    add_subdirectory(libs/openssl)
+endif()
+
+if (SR_COMMON_CURL)
+    set(CMAKE_CXX_STANDARD 20)
+    set(USE_MANUAL OFF CACHE INTERNAL "" FORCE)
+    set(BUILD_CURL_EXE OFF CACHE INTERNAL "" FORCE)
+    set(BUILD_TESTING OFF CACHE INTERNAL "" FORCE)
+    set(BUILD_SHARED_LIBS OFF CACHE INTERNAL "" FORCE)
+    set(USE_OPENSSL ON CACHE INTERNAL "" FORCE)
+    set(CURL_USE_OPENSSL ON CACHE INTERNAL "" FORCE)
+
+    add_subdirectory(libs/curl)
 endif()
 
 set(ICU_PREBUILT_VERSION "69.1")
@@ -127,17 +158,29 @@ define_property(GLOBAL PROPERTY SR_UTILS_INCLUDE_DIRECTORIES
 
 set_property(GLOBAL PROPERTY SR_UTILS_INCLUDE_DIRECTORIES "")
 
-if (SR_UTILS_CMAKE_ZLIB)
+if (SR_COMMON_ZLIB)
     SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_SOURCE_DIR}/libs/zlib)
 endif()
 
-if (SR_UTILS_CMAKE_ASSIMP)
+if (SR_COMMON_ASSIMP)
     SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_BINARY_DIR}/libs/assimp/include)
     SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_SOURCE_DIR}/libs/assimp/include)
 endif()
 
-if (SR_UTILS_USE_SDL)
+if (SR_COMMON_SDL)
     SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_SOURCE_DIR}/libs/SDL/include)
+endif()
+
+if (SR_COMMON_JSON)
+    SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_SOURCE_DIR}/libs/json/include)
+endif()
+
+if (SR_COMMON_CURL OR SR_COMMON_OPENSSL)
+    SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_SOURCE_DIR}/libs/openssl/include)
+endif()
+
+if (SR_COMMON_CURL)
+    SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_SOURCE_DIR}/libs/curl/include)
 endif()
 
 SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_BINARY_DIR}/libs/nativefiledialog/src/include)
@@ -150,8 +193,6 @@ SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_SOURCE_DIR}/libs/fmt/include
 SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_SOURCE_DIR}/libs/cppcoro/include)
 SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_SOURCE_DIR}/libs/cpptrace/include)
 SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_SOURCE_DIR}/libs/rapidyaml/src)
-
-SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_SOURCE_DIR}/libs/openssl/include)
 
 SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_BINARY_DIR}/include/Utils/EmbedResources)
 
@@ -198,16 +239,28 @@ if (UNIX AND NOT APPLE)
     target_link_libraries(Utils bfd)
 endif()
 
-if (SR_UTILS_USE_SDL)
+if (SR_COMMON_SDL)
     target_link_libraries(Utils SDL3::SDL3)
 endif()
 
-if (SR_UTILS_CMAKE_ZLIB)
+if (SR_COMMON_ZLIB)
     target_link_libraries(Utils zlibstatic)
 endif()
 
-if (SR_UTILS_CMAKE_ASSIMP)
+if (SR_COMMON_ASSIMP)
     target_link_libraries(Utils assimp)
+endif()
+
+if (SR_COMMON_CURL OR SR_COMMON_OPENSSL)
+    target_link_libraries(Utils crypto ssl)
+endif()
+
+if (SR_COMMON_CURL)
+    target_link_libraries(Utils curl)
+endif()
+
+if (SR_COMMON_JSON)
+    target_link_libraries(Utils nlohmann_json)
 endif()
 
 if (ANDROID_NDK)
@@ -232,7 +285,7 @@ target_link_libraries(Utils asio)
 target_link_libraries(Utils ryml::ryml cppcoro cpptrace::cpptrace)
 
 get_property(SR_UTILS_INCLUDE_DIRECTORIES_CONTENT GLOBAL PROPERTY SR_UTILS_INCLUDE_DIRECTORIES)
-message("SpaRcle utils include directories: ${SR_UTILS_INCLUDE_DIRECTORIES_CONTENT}")
+message("SRCommon include directories: ${SR_UTILS_INCLUDE_DIRECTORIES_CONTENT}")
 target_include_directories(Utils PUBLIC ${SR_UTILS_INCLUDE_DIRECTORIES_CONTENT})
 
 set(SR_UTILS_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
@@ -240,8 +293,8 @@ set(SR_UTILS_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR})
 
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/CopyFiles.cmake)
 
-if (SR_UTILS_DLL_EXPORTS)
-    message("SpaRcle utils will be using DLL exports")
+if (SR_COMMON_DLL_EXPORTS)
+    message("SRCommon will be using DLL exports")
     target_compile_definitions(Utils PUBLIC
         SR_DLL_EXPORTS
     )
@@ -249,7 +302,7 @@ endif()
 
 set(SR_UTILS_DEPENDENCIES "")
 
-if (NOT SR_UTILS_CI_BUILD)
+if (NOT SR_COMMON_CI_BUILD)
     include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/CopyFiles.cmake)
     add_custom_target(CopyUtilsFiles)
     add_custom_command(TARGET CopyUtilsFiles
@@ -260,7 +313,7 @@ if (NOT SR_UTILS_CI_BUILD)
             -DSR_ICU=${SR_ICU}
             -DSR_TRACY_ENABLE=${SR_TRACY_ENABLE}
             -P "${CMAKE_CURRENT_SOURCE_DIR}/cmake/CopyFiles.cmake"
-        COMMENT "SpaRcle Engine: Copy utils source files to build directory"
+        COMMENT "SRCommon: Copy utils source files to build directory"
     )
 
     set(SR_UTILS_DEPENDENCIES  ${SR_UTILS_DEPENDENCIES} "CopyUtilsFiles ")
@@ -269,13 +322,8 @@ endif()
 SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_BINARY_DIR}/include)
 SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_BINARY_DIR}/libs)
 
-if (SR_UTILS_CI_BUILD)
+if (SR_COMMON_CI_BUILD)
     message("SRCommon is built as a part of CI build.")
-
-    add_compile_definitions(SR_UTILS_CI_BUILD)
-    include(cmake/ResourceEmbedder.cmake)
-    EmbedResources(" " " " " ")
-    set(SR_UTILS_DEPENDENCIES  ${SR_UTILS_DEPENDENCIES} "EmbedResourcesTarget ")
 
     file(WRITE cmake/main.cpp "int main() { return 0; }")
     add_executable(SR_UTILS_CI cmake/main.cpp)
@@ -284,6 +332,6 @@ endif()
 
 #set(SR_UTILS_DEPENDENCIES  ${SR_UTILS_DEPENDENCIES} "EmbedResourcesTarget")
 
-if (NOT SR_UTILS_CI_BUILD)
+if (SR_COMMON_EMBED_RESOURCES)
     add_dependencies(${PROJECT_NAME} CopyUtilsFiles EmbedResourcesTarget) #SRUtilsCodegenTarget
 endif()

@@ -16,6 +16,6 @@
 #include "../src/Utils/Common/Coroutine.cpp"
 #include "../src/Utils/Common/SubscriptionHolder.cpp"
 
-#ifndef SR_UTILS_CI_BUILD
+#ifdef SR_COMMON_EMBED_RESOURCES
     #include <EmbedResources.cxx>
 #endif
