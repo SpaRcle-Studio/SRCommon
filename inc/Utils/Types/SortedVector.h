@@ -6,6 +6,7 @@
 #define SR_ENGINE_UTILS_SORTED_VECTOR_H
 
 #include <Utils/Types/Stack.h>
+#include <Utils/Profile/TracyContext.h>
 
 namespace SR_HTYPES_NS {
     template<typename T, typename Predicate = std::less<T>> class SortedVector {
@@ -30,6 +31,9 @@ namespace SR_HTYPES_NS {
 
         SR_NODISCARD SR_CONSTEXPR uint64_t Size() const { return m_data.size(); }
         SR_NODISCARD SR_CONSTEXPR uint64_t size() const { return m_data.size(); }
+
+        SR_NODISCARD SR_CONSTEXPR uint64_t Capacity() const { return m_data.capacity(); }
+        SR_NODISCARD SR_CONSTEXPR uint64_t capacity() const { return m_data.capacity(); }
 
         SR_NODISCARD SR_CONSTEXPR T* Data() { return m_data.data(); }
         SR_NODISCARD SR_CONSTEXPR const T* Data() const { return m_data.data(); }

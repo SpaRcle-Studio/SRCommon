@@ -14,7 +14,7 @@
 namespace SR_UTILS_NS {
     SR_ENUM_NS_CLASS_T(DebugLogType, uint8_t,
         Log, Info, Debug, Graph, Shader, Script, System, Warn,
-        Error, ScriptError, ScriptLog, Vulkan, VulkanLog, VulkanError, Assert
+        Error, ScriptError, ScriptLog, Vulkan, VulkanLog, VulkanError, Assert, Success
     );
 
     static fmt::text_style GetTextStyleColorByLogType(DebugLogType type);
@@ -50,6 +50,7 @@ namespace SR_UTILS_NS {
 
     public:
         void Log(const std::string& msg) { Print(msg, DebugLogType::Log); }
+        void Success(const std::string& msg) { Print(msg, DebugLogType::Success); }
         void VulkanLog(const std::string& msg) { Print(msg, DebugLogType::VulkanLog); }
         void Info(const std::string& msg) { Print(msg, DebugLogType::Info); }
         void Graph(const std::string& msg) { Print(msg, DebugLogType::Graph); }
@@ -89,6 +90,7 @@ namespace SR_UTILS_NS {
 #define SR_WARN(...) SR_UTILS_NS::Debug::Instance().Warn(SR_FORMAT(__VA_ARGS__))
 #define SR_ERROR(...) SR_UTILS_NS::Debug::Instance().Error(SR_FORMAT(__VA_ARGS__))
 #define SR_GRAPH(...) SR_UTILS_NS::Debug::Instance().Graph(SR_FORMAT(__VA_ARGS__))
+#define SR_SUCCESS(...) SR_UTILS_NS::Debug::Instance().Success(SR_FORMAT(__VA_ARGS__))
 #define SR_GRAPH_LOG(...) SR_GRAPH(SR_FORMAT(__VA_ARGS__))
 #define SR_SHADER(...) SR_UTILS_NS::Debug::Instance().Shader(SR_FORMAT(__VA_ARGS__))
 #define SR_SHADER_LOG(...) SR_UTILS_NS::Debug::Instance().Shader(SR_FORMAT(__VA_ARGS__))

@@ -157,6 +157,7 @@ namespace SR_UTILS_NS {
             case DebugLogType::VulkanLog: return fmt::fg(fmt::color::deep_sky_blue);
             case DebugLogType::VulkanError: return fmt::fg(fmt::color::red) | errorWarnStyle;
             case DebugLogType::Assert: return fmt::fg(fmt::color::orange_red) | errorWarnStyle;
+            case DebugLogType::Success: return fmt::fg(fmt::color::lime_green);
             default:
                 return fmt::text_style(); /// NOLINT
         }
