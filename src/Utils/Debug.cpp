@@ -8,6 +8,10 @@
 #include <Utils/Platform/Stacktrace.h>
 #include <Utils/Platform/Platform.h>
 
+#ifdef SR_COMMON_GIT_METADATA
+    #include <git.h>
+#endif
+
 namespace SR_UTILS_NS {
     void Debug::Print(std::string msg, DebugLogType type) {
         SR_LOCK_GUARD;
@@ -75,6 +79,20 @@ namespace SR_UTILS_NS {
         m_showUseMemory = ShowUsedMemory;
 
         Print("Debugger has been initialized. \n\tLog path: " + m_logPath.ToString(), DebugLogType::Debug);
+
+    #ifdef SR_COMMON_GIT_METADATA
+        std::string gitMetadata;
+        std::string dirty = git_AnyUncommittedChanges() ? "true" : "false";
+
+        std::time_t timestamp = std::stoll(git_CommitDate());
+        std::tm* timeUTC = std::gmtime(&timestamp);
+
+        gitMetadata += "Build Info: '" + std::string(git_CommitSHA1()).substr(0, 7) + "' in '" + git_Branch() + "' (dirty: " + dirty + ") "
+            "by '" +
+            + git_AuthorName() + "' on\n\t" + std::asctime(timeUTC);
+
+        Print(gitMetadata, DebugLogType::Info);
+    #endif
     }
 
     void Debug::OnSingletonDestroy() {

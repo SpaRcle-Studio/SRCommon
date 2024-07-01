@@ -11,6 +11,7 @@ option(SR_COMMON_CURL "" OFF)
 option(SR_COMMON_JSON "" OFF)
 
 option(SR_COMMON_DLL_EXPORTS "" ON)
+option(SR_COMMON_GIT_METADATA "" ON)
 option(SR_COMMON_STATIC_LIBRARY "" ON)
 option(SR_COMMON_EMBED_RESOURCES "" OFF)
 option(SR_COMMON_CI_BUILD "" OFF)
@@ -21,6 +22,10 @@ endif()
 
 if (SR_COMMON_EMBED_RESOURCES)
     add_compile_definitions(SR_COMMON_EMBED_RESOURCES)
+endif()
+
+if (SR_COMMON_GIT_METADATA)
+    add_compile_definitions(SR_COMMON_GIT_METADATA)
 endif()
 
 macro(SR_UTILS_INCLUDE_DIRECTORIES_APPEND var)
@@ -99,6 +104,10 @@ if (SR_COMMON_JSON)
     add_subdirectory(libs/json)
 endif()
 
+if (SR_COMMON_GIT_METADATA)
+    add_subdirectory(libs/cmake-git-version-tracking)
+endif()
+
 if (SR_COMMON_CURL OR SR_COMMON_OPENSSL)
     add_compile_definitions(SR_COMMON_OPENSSL)
 endif()
@@ -165,6 +174,10 @@ set_property(GLOBAL PROPERTY SR_UTILS_INCLUDE_DIRECTORIES "")
 
 if (SR_COMMON_ZLIB)
     SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_SOURCE_DIR}/libs/zlib)
+endif()
+
+if (SR_COMMON_GIT_METADATA)
+    SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_SOURCE_DIR}/libs/cmake-get-version-tracking)
 endif()
 
 if (SR_COMMON_ASSIMP)
@@ -252,6 +265,10 @@ endif()
 
 if (SR_COMMON_CURL)
     target_link_libraries(Utils libcurl)
+endif()
+
+if (SR_COMMON_GIT_METADATA)
+    target_link_libraries(Utils cmake_git_version_tracking)
 endif()
 
 if (SR_COMMON_JSON)
