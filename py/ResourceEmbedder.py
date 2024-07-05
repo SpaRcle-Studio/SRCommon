@@ -56,7 +56,10 @@ def read_file(file_name):
 
 def create_array(name, data, path):
     size = str(len(data))
-    path = path.split(working_directory + '/')[1]
+    print(f'Working directory: {working_directory}, Path: {path}')
+    path = path.split(working_directory + '/')
+    print(f'Path: {path}')
+    path = path[1]
     static_content = (f"\t\tconstexpr static const uint64_t size = {size};"
                       f"\n\t\tconstexpr static const char path[] = \"{path}\";"
                       f"\n\t\tconstexpr static const unsigned char data[") + size + "] = "
