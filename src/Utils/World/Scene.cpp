@@ -328,8 +328,16 @@ namespace SR_WORLD_NS {
         return GameObject::Ptr();
     }
 
-    GameObject::Ptr Scene::Find(const std::string &name) {
+    Scene::GameObjectPtr Scene::Find(SR_UTILS_NS::StringAtom name) {
+        return Find(name.GetHash());
+    }
+
+    GameObject::Ptr Scene::Find(const std::string& name) {
         return Find(SR_HASH_STR(name));
+    }
+
+    GameObject::Ptr Scene::Find(const char* name) {
+        return Find(SR_UTILS_NS::StringAtom(name));
     }
 
     std::string Scene::GetName() const {

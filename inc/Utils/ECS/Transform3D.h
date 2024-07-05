@@ -26,6 +26,10 @@ namespace SR_UTILS_NS {
         /// Transforms direction from local space to world space
         SR_NODISCARD SR_MATH_NS::FVector3 TransformDirection(const SR_MATH_NS::FVector3& direction) const;
 
+        void SetMatrix(const std::optional<SR_MATH_NS::FVector3>& translation,
+                       const std::optional<SR_MATH_NS::Quaternion>& rotation,
+                       const std::optional<SR_MATH_NS::FVector3>& scale) override;
+
         void SetGlobalTranslation(const SR_MATH_NS::FVector3& translation) override;
         void SetGlobalRotation(const SR_MATH_NS::Quaternion& quaternion) override;
 

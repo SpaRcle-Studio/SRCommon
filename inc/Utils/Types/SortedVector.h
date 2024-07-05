@@ -109,7 +109,20 @@ namespace SR_HTYPES_NS {
             m_data.insert(it, std::move(value));
         }
 
+        template<class Ty, typename CustomPred = Predicate> SR_NODISCARD Iterator GetOrCreate(const Ty& value, const CustomPred& predicate) {
+            auto it = std::lower_bound(m_data.begin(), m_data.end(), value, predicate);
+            if (it == m_data.end() || *it != value) {
+                return m_data.insert(it, T());
+            }
+            return it;
+        }
+
         bool Remove(const T& value) {
+            if (m_data.empty()) {
+                SRHalt("SortedVector is empty");
+                return false;
+            }
+
             auto it = std::lower_bound(m_data.begin(), m_data.end(), value, m_predicate);
             if (it != m_data.end() && *it == value) {
                 m_data.erase(it);

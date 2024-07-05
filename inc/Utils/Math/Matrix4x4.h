@@ -61,7 +61,9 @@ namespace SR_MATH_NS {
         { }
 
         Matrix4x4(const FVector3& translate, const Quaternion& rotation) noexcept;
+        Matrix4x4(const FVector3& translate, const FVector3& scale) noexcept;
         Matrix4x4(const FVector3& translate, const Quaternion& rotation, const FVector3& scale) noexcept;
+        Matrix4x4(const Quaternion& rotation, const FVector3& scale) noexcept;
         Matrix4x4(const FVector3& translate, const Quaternion& rotation, const FVector3& scale, const FVector3& skew) noexcept;
 
         static constexpr Matrix4x4 Identity() {

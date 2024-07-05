@@ -80,6 +80,14 @@ namespace SR_UTILS_NS {
     }
 
     Component* IComponentable::GetComponent(StringAtom name) {
+        for (auto&& pComponent : m_loadedComponents) {
+            if (pComponent->GetComponentName() != name) {
+                continue;
+            }
+
+            return pComponent;
+        }
+
         for (auto&& pComponent : m_components) {
             if (pComponent->GetComponentName() != name) {
                 continue;

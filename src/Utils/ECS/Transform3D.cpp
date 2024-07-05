@@ -58,6 +58,34 @@ namespace SR_UTILS_NS {
         return m_quaternion * direction;
     }
 
+    void Transform3D::SetMatrix(
+        const std::optional<SR_MATH_NS::FVector3>& translation,
+        const std::optional<SR_MATH_NS::Quaternion>& rotation,
+        const std::optional<SR_MATH_NS::FVector3>& scale
+    ) {
+        bool changed = false;
+
+        if (translation.has_value()) {
+            m_translation = translation.value();
+            changed = true;
+        }
+
+        if (rotation.has_value()) {
+            m_quaternion = rotation.value();
+            m_rotation = m_quaternion.EulerAngle();
+            changed = true;
+        }
+
+        if (scale.has_value()) {
+            m_scale = scale.value();
+            changed = true;
+        }
+
+        if (changed) {
+            UpdateTree();
+        }
+    }
+
     void Transform3D::SetTranslation(const SR_MATH_NS::FVector3& translation) {
         const SR_MATH_NS::FVector3 delta = translation - m_translation;
 

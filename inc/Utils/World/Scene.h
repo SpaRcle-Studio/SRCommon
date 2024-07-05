@@ -78,7 +78,9 @@ namespace SR_WORLD_NS {
 
         GameObjectPtr FindByComponent(const std::string& name);
         GameObjectPtr Find(const std::string& name);
+        GameObjectPtr Find(const char* name);
         GameObjectPtr Find(uint64_t hashName);
+        GameObjectPtr Find(SR_UTILS_NS::StringAtom name);
 
         void RegisterGameObject(const GameObjectPtr& ptr);
 
