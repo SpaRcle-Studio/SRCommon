@@ -84,31 +84,99 @@ namespace SR_MATH_NS {
             return Quaternion(glm::inverse(self));
         }
 
-        SR_NODISCARD bool IsEquals(const Quaternion& value, Unit tolerance) const noexcept {
-            if (!SR_EQUALS_T(x, value.x, tolerance)) {
+        SR_FORCE_INLINE SR_NODISCARD bool SR_FASTCALL IsEquals(const Quaternion& q, Unit tolerance) const noexcept {
+        #if SR_SIMD_SUPPORT
+            // Загружаем компоненты текущего кватерниона и значения в SIMD регистры
+            __m128 this_vec = _mm_set_ps(w, z, y, x);
+            __m128 value_vec = _mm_set_ps(q.w, q.z, q.y, q.x);
+
+            // Вычисляем разницу между компонентами
+            __m128 diff_vec = _mm_sub_ps(this_vec, value_vec);
+
+            // Загружаем допуск в SIMD регистр
+            __m128 tolerance_vec = _mm_set1_ps(tolerance);
+
+            // Вычисляем абсолютное значение разницы
+            __m128 abs_diff_vec = _mm_andnot_ps(_mm_set1_ps(-0.0f), diff_vec); // получаем abs
+            abs_diff_vec = _mm_cmpge_ps(abs_diff_vec, tolerance_vec); // сравниваем на больше или равно по модулю
+
+            // Проверяем, все ли компоненты проходят проверку на равенство
+            int mask = _mm_movemask_ps(abs_diff_vec); // применяем маску
+            return mask == 0; // если все 0, то результаты совпадают
+        #else
+            if (!SR_EQUALS_T(x, q.x, tolerance)) {
                 return false;
             }
 
-            if (!SR_EQUALS_T(y, value.y, tolerance)) {
+            if (!SR_EQUALS_T(y, q.y, tolerance)) {
                 return false;
             }
 
-            if (!SR_EQUALS_T(z, value.z, tolerance)) {
+            if (!SR_EQUALS_T(z, q.z, tolerance)) {
                 return false;
             }
 
-            if (!SR_EQUALS_T(w, value.w, tolerance)) {
+            if (!SR_EQUALS_T(w, q.w, tolerance)) {
                 return false;
             }
 
             SR_NOOP;
 
             return true;
+        #endif
         }
 
         SR_NODISCARD Quaternion Slerp(const Quaternion& q, Unit t) const {
-            // SRAssertOnce(t >= 0.f || t <= 1.f);
-            return Quaternion(glm::slerp(self, q.self, static_cast<float_t>(t)));
+        #if SR_SIMD_SUPPORT
+            // Load q1 and q2 into SIMD registers
+            __m128 q1_vec = _mm_set_ps(w, z, y, x); // Загрузка в обратном порядке для корректного выравнивания
+            __m128 q2_vec = _mm_set_ps(q.w, q.z, q.y, q.x); // Загрузка в обратном порядке для корректного выравнивания
+
+            // Compute the dot product
+            __m128 dot_vec = _mm_dp_ps(q1_vec, q2_vec, 0xFF); // Вычисление dot product с использованием SIMD
+
+            // Распаковка результатов
+            float dot_result;
+            _mm_store_ss(&dot_result, dot_vec);
+
+            // Если dot product отрицателен, инвертируем один кватернион
+            __m128 q2_copy = q2_vec;
+            if (dot_result < 0.0f) {
+                q2_copy = _mm_mul_ps(q2_vec, _mm_set1_ps(-1.0f));
+                dot_result = -dot_result;
+            }
+
+            const float DOT_THRESHOLD = 0.9995f;
+            if (dot_result > DOT_THRESHOLD) {
+                // Если кватернионы слишком близки, выполняем линейную интерполяцию и нормализацию результата
+                __m128 result_vec = _mm_add_ps(q1_vec, _mm_mul_ps(_mm_sub_ps(q2_copy, q1_vec), _mm_set1_ps(t)));
+                float result_array[4];
+                _mm_store_ps(result_array, result_vec);
+                Quaternion result(result_array[0], result_array[1], result_array[2], result_array[3]);
+                return result.Normalized();
+            }
+
+            // Вычисляем угол и sin(theta)
+            float theta_0 = std::acos(dot_result); // Угол между входными векторами
+            float theta = theta_0 * t;      // Угол между q1 и результатом
+            float sin_theta = std::sin(theta);        // Вычисляем значение только один раз
+            float sin_theta_0 = std::sin(theta_0);    // Вычисляем значение только один раз
+
+            float s0 = std::cos(theta) - dot_result * sin_theta / sin_theta_0;  // == sin(theta_0 - theta) / sin(theta_0)
+            float s1 = sin_theta / sin_theta_0;
+
+            // Интерполируем
+            __m128 s0_vec = _mm_set1_ps(s0);
+            __m128 s1_vec = _mm_set1_ps(s1);
+            __m128 interp_vec = _mm_add_ps(_mm_mul_ps(q1_vec, s0_vec), _mm_mul_ps(q2_copy, s1_vec));
+
+            // Сохраняем результат
+            float result_array[4];
+            _mm_store_ps(result_array, interp_vec);
+            return Quaternion(result_array[0], result_array[1], result_array[2], result_array[3]);
+        #else
+            return glm::slerp(self, q.self, static_cast<float_t>(t));
+        #endif
         }
 
         SR_NODISCARD static Quaternion LookAt(const Vector3<Unit>& direction);

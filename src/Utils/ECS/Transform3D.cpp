@@ -65,18 +65,18 @@ namespace SR_UTILS_NS {
     ) {
         bool changed = false;
 
-        if (translation.has_value()) {
+        if (translation.has_value()) SR_LIKELY_ATTRIBUTE {
             m_translation = translation.value();
             changed = true;
         }
 
-        if (rotation.has_value()) {
+        if (rotation.has_value()) SR_LIKELY_ATTRIBUTE {
             m_quaternion = rotation.value();
-            m_rotation = m_quaternion.EulerAngle();
+            m_eulersDirty = true;
             changed = true;
         }
 
-        if (scale.has_value()) {
+        if (scale.has_value()) SR_LIKELY_ATTRIBUTE {
             m_scale = scale.value();
             changed = true;
         }
@@ -114,8 +114,8 @@ namespace SR_UTILS_NS {
         }
         else {
     #endif
-            m_rotation = euler.Limits(360);
             m_quaternion = euler.Radians().ToQuat();
+            m_rotation = euler;
     #ifdef SR_DEBUG
         }
     #endif
@@ -132,12 +132,12 @@ namespace SR_UTILS_NS {
     #ifdef SR_DEBUG
         if (!quaternion.IsFinite()) {
             SRHaltOnce("Rotation is broke!");
-            m_rotation = SR_MATH_NS::FVector3::Zero();
+            m_eulersDirty = true;
             m_quaternion = SR_MATH_NS::Quaternion::Identity();
         }
         else {
     #endif
-            m_rotation = quaternion.EulerAngle();
+            m_eulersDirty = true;
             m_quaternion = quaternion;
     #ifdef SR_DEBUG
         }
@@ -148,8 +148,7 @@ namespace SR_UTILS_NS {
 
     void Transform3D::SetTranslationAndRotation(const SR_MATH_NS::FVector3 &translation, const SR_MATH_NS::FVector3 &euler) {
         SR_MATH_NS::FVector3 deltaTranslation = translation - m_translation;
-        SR_MATH_NS::FVector3 deltaRotation = (SR_MATH_NS::Quaternion::FromEuler(euler) *
-                SR_MATH_NS::Quaternion::FromEuler(m_rotation).Inverse()).EulerAngle();
+        SR_MATH_NS::FVector3 deltaRotation = (SR_MATH_NS::Quaternion::FromEuler(euler) * GetQuaternion().Inverse()).EulerAngle();
 
         m_translation = translation;
         SetRotation(euler);
@@ -192,7 +191,7 @@ namespace SR_UTILS_NS {
 
     void Transform3D::RotateAround(const SR_MATH_NS::FVector3& point, const SR_MATH_NS::FVector3& eulers) {
         const SR_MATH_NS::Quaternion&& q = SR_MATH_NS::Quaternion::FromEuler(eulers);
-        const SR_MATH_NS::Quaternion&& rotation = q * SR_MATH_NS::Quaternion::FromEuler(m_rotation);
+        const SR_MATH_NS::Quaternion&& rotation = q * GetQuaternion();
 
         const SR_MATH_NS::FVector3&& worldPos = m_translation - point;
         const SR_MATH_NS::FVector3&& rotatedPos = q * worldPos;
@@ -220,7 +219,7 @@ namespace SR_UTILS_NS {
         if (auto&& pParent = GetParentTransform()) {
             auto matrix = SR_MATH_NS::Matrix4x4::FromTranslate(translation);
             matrix *= SR_MATH_NS::Matrix4x4::FromScale(m_skew);
-            matrix *= SR_MATH_NS::Matrix4x4::FromEulers(m_rotation.Inverse());
+            matrix *= SR_MATH_NS::Matrix4x4::FromEulers(GetRotation().Inverse());
             matrix *= SR_MATH_NS::Matrix4x4::FromScale(m_scale);
 
             matrix = pParent->GetMatrix().Inverse() * matrix;
@@ -259,7 +258,6 @@ namespace SR_UTILS_NS {
         pTransform->m_quaternion = m_quaternion;
 
         pTransform->m_translation = m_translation;
-        pTransform->m_rotation = m_rotation;
         pTransform->m_scale = m_scale;
         pTransform->m_skew = m_skew;
 

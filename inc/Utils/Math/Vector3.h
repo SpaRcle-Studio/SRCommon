@@ -277,6 +277,25 @@ namespace SR_MATH_NS {
         }
 
         SR_NODISCARD bool IsEquals(const Vector3& value, Unit tolerance) const noexcept {
+        #if SR_SIMD_SUPPORT
+            // Загружаем компоненты текущего вектора и значения в SIMD регистры
+            __m128 this_vec = _mm_set_ps(0.0f, z, y, x); // загружаем в обратном порядке для корректного выравнивания
+            __m128 value_vec = _mm_set_ps(0.0f, value.z, value.y, value.x); // загружаем в обратном порядке для корректного выравнивания
+
+            // Вычисляем разницу между компонентами
+            __m128 diff_vec = _mm_sub_ps(this_vec, value_vec);
+
+            // Загружаем допуск в SIMD регистр
+            __m128 tolerance_vec = _mm_set1_ps(tolerance);
+
+            // Вычисляем абсолютное значение разницы
+            __m128 abs_diff_vec = _mm_andnot_ps(_mm_set1_ps(-0.0f), diff_vec); // получаем abs
+            abs_diff_vec = _mm_cmpge_ps(abs_diff_vec, tolerance_vec); // сравниваем на больше или равно по модулю
+
+            // Проверяем, все ли компоненты проходят проверку на равенство
+            const int mask = _mm_movemask_ps(abs_diff_vec); // применяем маску
+            return mask == 0; // если все 0, то результаты совпадают
+        #else
             if (!SR_EQUALS_T(x, value.x, tolerance)) {
                 return false;
             }
@@ -292,6 +311,7 @@ namespace SR_MATH_NS {
             SR_NOOP;
 
             return true;
+        #endif
         }
 
         SR_NODISCARD bool IsEqualsLikely(const Vector3& value, Unit tolerance) const noexcept {
@@ -405,7 +425,22 @@ namespace SR_MATH_NS {
         }
 
         SR_NODISCARD SR_FORCE_INLINE Vector3 SR_FASTCALL Lerp(const Vector3& vector3, Unit t) const noexcept {
-            return (Vector3)(*this + (vector3 - *this) * t);
+        #if SR_SIMD_SUPPORT
+            const __m128 t_vec = _mm_set1_ps(t);
+            const __m128 this_vec = _mm_set_ps(0.0f, z, y, x); // Вектор this, добавляем 0.0f для выравнивания
+            const __m128 other_vec = _mm_set_ps(0.0f, vector3.z, vector3.y, vector3.x); // Вектор vector3, добавляем 0.0f для выравнивания
+
+            const __m128 diff_vec = _mm_sub_ps(other_vec, this_vec); // vector3 - *this
+            const __m128 mul_vec = _mm_mul_ps(diff_vec, t_vec); // (vector3 - *this) * t
+            const __m128 result_vec = _mm_add_ps(this_vec, mul_vec); // *this + ((vector3 - *this) * t)
+
+            alignas(16) float result_array[4];
+            _mm_store_ps(result_array, result_vec); // Сохраняем результат в массив
+
+            return { result_array[0], result_array[1], result_array[2] }; // Извлекаем значения из массива
+        #else
+            return static_cast<Vector3>(*this + (vector3 - *this) * t);
+        #endif
         }
 
         SR_NODISCARD Vector3 Normalized() const {

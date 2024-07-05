@@ -45,7 +45,13 @@ namespace SR_UTILS_NS {
         SR_NODISCARD SR_MATH_NS::Quaternion GetQuaternion() const override { return m_quaternion; }
 
         SR_NODISCARD SR_MATH_NS::FVector3 GetTranslation() const override { return m_translation; }
-        SR_NODISCARD SR_MATH_NS::FVector3 GetRotation() const override { return m_rotation; }
+        SR_NODISCARD SR_MATH_NS::FVector3 GetRotation() const override {
+            if (m_eulersDirty) {
+                m_rotation = m_quaternion.EulerAngle();
+                m_eulersDirty = false;
+            }
+            return m_rotation;
+        }
         SR_NODISCARD SR_MATH_NS::FVector3 GetScale() const override { return m_scale; }
         SR_NODISCARD SR_MATH_NS::FVector3 GetSkew() const override { return m_skew; }
 
@@ -70,8 +76,10 @@ namespace SR_UTILS_NS {
 
         SR_MATH_NS::Quaternion m_quaternion = SR_MATH_NS::Quaternion::Identity();
 
+        mutable bool m_eulersDirty = true;
+        mutable SR_MATH_NS::FVector3 m_rotation = SR_MATH_NS::FVector3::Zero();
+
         SR_MATH_NS::FVector3 m_translation = SR_MATH_NS::FVector3::Zero();
-        SR_MATH_NS::FVector3 m_rotation = SR_MATH_NS::FVector3::Zero();
         SR_MATH_NS::FVector3 m_scale = SR_MATH_NS::FVector3::One();
         SR_MATH_NS::FVector3 m_skew = SR_MATH_NS::FVector3::One();
 

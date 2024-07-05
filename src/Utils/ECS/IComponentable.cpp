@@ -305,7 +305,7 @@ namespace SR_UTILS_NS {
     }
 
     void IComponentable::OnMatrixDirty() {
-        if (IsDestroyed()) {
+        if (IsDestroyed()) SR_UNLIKELY_ATTRIBUTE {
             return;
         }
 

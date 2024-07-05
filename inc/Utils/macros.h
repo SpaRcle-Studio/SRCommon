@@ -149,6 +149,8 @@
     #define SR_FORCE_INLINE __forceinline
 #endif
 
+#define SR_SIMD_SUPPORT 1
+
 #define SR_CLOCKS_PER_SEC 1000
 #define SR_NODISCARD [[nodiscard]]
 #define SR_FALLTHROUGH [[fallthrough]]
