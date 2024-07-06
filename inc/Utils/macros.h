@@ -149,8 +149,6 @@
     #define SR_FORCE_INLINE __forceinline
 #endif
 
-#define SR_SIMD_SUPPORT 1
-
 #define SR_CLOCKS_PER_SEC 1000
 #define SR_NODISCARD [[nodiscard]]
 #define SR_FALLTHROUGH [[fallthrough]]
@@ -200,6 +198,13 @@
     #define VK_USE_PLATFORM_WIN32_KHR
 #else
     #define SR_WIN32_BOOL false
+#endif
+
+
+#ifdef WIN32
+    #define SR_SIMD_SUPPORT 1
+#else
+    #define SR_SIMD_SUPPORT 0
 #endif
 
 #define SR_MACRO_CONCAT_UTIL(a, b) a ## b
