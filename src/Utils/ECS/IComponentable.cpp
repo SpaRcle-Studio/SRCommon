@@ -309,7 +309,8 @@ namespace SR_UTILS_NS {
             return;
         }
 
-        for (uint32_t i = 0; i < m_components.size(); ++i) {
+        const auto size = static_cast<uint32_t>(m_components.size());
+        for (uint32_t i = 0; i < size; ++i) {
             auto&& pComponent = m_components[i];
             pComponent->OnMatrixDirty();
         }
