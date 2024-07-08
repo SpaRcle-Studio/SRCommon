@@ -66,6 +66,7 @@ namespace SR_HTYPES_NS {
         SR_NODISCARD uint32_t GetVerticesCount(uint32_t id) const;
         SR_NODISCARD uint32_t GetIndicesCount(uint32_t id) const;
         SR_NODISCARD uint32_t GetAnimationsCount() const;
+        SR_NODISCARD std::vector<SR_UTILS_NS::StringAtom> GetAnimationNames() const;
         SR_UTILS_NS::Path InitializeResourcePath() const override;
         SR_NODISCARD int32_t GetMeshId(SR_UTILS_NS::StringAtom name) const;
 

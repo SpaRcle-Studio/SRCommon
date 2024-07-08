@@ -123,7 +123,7 @@ namespace SR_UTILS_NS {
         GameObject* m_gameObject = nullptr;
 
     private:
-        mutable bool m_dirtyMatrix = true;
+        mutable bool m_dirtyMatrix = false;
 
     };
 }

@@ -474,65 +474,6 @@ namespace SR_UTILS_NS {
         return "Unknown";
     }
 
-    const std::string& ResourceManager::GetResourceId(ResourceManager::Hash hashId) const {
-        SR_LOCK_GUARD;
-
-        static std::string defaultId;
-
-        /// пустая строка
-        if (hashId == 0) {
-            return defaultId;
-        }
-
-        if (auto&& id = SR_UTILS_NS::HashManager::Instance().HashToString(hashId); !id.empty()) {
-            return id;
-        }
-
-        SRHalt("ResourceManager::GetResourceId() : id is not registered!");
-
-        return defaultId;
-    }
-
-    const Path& ResourceManager::GetResourcePath(ResourceManager::Hash hashPath) const {
-        SR_TRACY_ZONE;
-        std::lock_guard lock(m_hashPathsMutex);
-
-        /// пустая строка
-        if (hashPath == 0) {
-            static SR_UTILS_NS::Path emptyPath;
-            return emptyPath;
-        }
-
-        auto&& pIt = m_hashPaths.find(hashPath);
-
-        if (pIt == m_hashPaths.end()) {
-            SRHalt("ResourceManager::GetResourcePath() : path is not registered!");
-            static Path defaultPath;
-            return defaultPath;
-        }
-
-        return pIt->second;
-    }
-
-    ResourceManager::Hash ResourceManager::RegisterResourcePath(const Path &path) {
-        SR_TRACY_ZONE;
-        std::lock_guard lock(m_hashPathsMutex);
-
-        if (path.IsEmpty()) {
-            SRHalt("ResourceManager::RegisterResourcePath() : empty path!");
-        }
-
-        const ResourceManager::Hash hash = path.GetHash();
-
-        auto&& pIt = m_hashPaths.find(hash);
-
-        if (pIt == m_hashPaths.end()) {
-            m_hashPaths.insert(std::make_pair(hash, path));
-        }
-
-        return hash;
-    }
-
     bool ResourceManager::Run() {
         if (m_isRun) {
             SRHalt("ResourceManager::Run() : is already ran!");
@@ -591,18 +532,15 @@ namespace SR_UTILS_NS {
                 pResourceReloader = m_defaultReloader;
             }
 
-            auto&& path = GetResourcePath(pHardPtr->m_pathHash);
-
-            if (path.IsEmpty()) {
+            if (pHardPtr->m_path.empty()) {
                 SR_ERROR("ResourceManager::ReloadResources() : resource have empty path!\n\tResource name: " +
-                    pHardPtr->m_resourceType->GetName() + "\n\tHash name: " + std::to_string(pHardPtr->m_resourceHash) +
-                    "\n\tPath hash: " + std::to_string(pHardPtr->m_pathHash)
+                    pHardPtr->m_resourceType->GetName() + "\n\tHash state: " + std::to_string(pHardPtr->m_resourceHash)
                 );
                 continue;
             }
 
-            if (pResourceReloader && !pResourceReloader->Reload(path, pHardPtr.get())) {
-                SR_ERROR("ResourceManager::ReloadResources() : failed to reload resource!\n\tPath: " + path.ToStringRef());
+            if (pResourceReloader && !pResourceReloader->Reload(pHardPtr->m_path, pHardPtr.get())) {
+                SR_ERROR("ResourceManager::ReloadResources() : failed to reload resource!\n\tPath: " + pHardPtr->m_path.ToStringRef());
             }
         }
     }
@@ -619,9 +557,7 @@ namespace SR_UTILS_NS {
         SR_LOCK_GUARD;
 
         while (!m_dirtyWatchers.empty()) {
-            FileWatcher::Ptr pWatcher = m_dirtyWatchers.front();
-
-            if (pWatcher) {
+            if (const FileWatcher::Ptr pWatcher = m_dirtyWatchers.front()) {
                 std::lock_guard lockWatcher(pWatcher->GetMutex());
 
                 if (!pWatcher->IsActive()) {

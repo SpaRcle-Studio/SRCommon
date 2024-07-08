@@ -179,6 +179,15 @@ namespace SR_UTILS_NS {
             }
         }
 
+        static std::string_view SubstringView(const std::string_view& source, StringAtom substr, uint32_t offset = 0) {
+            if (auto&& pos = source.find(substr.ToStringView()); pos == std::string::npos) {
+                return source;
+            }
+            else {
+                return source.substr(pos + offset, source.size() - 1);
+            }
+        }
+
         static SR_FORCE_INLINE std::string BackRead(const std::string& str, const char c, const int offset = 0) {
             std::string result = std::string();
 

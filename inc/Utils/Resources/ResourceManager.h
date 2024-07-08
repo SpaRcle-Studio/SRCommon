@@ -17,6 +17,8 @@ namespace SR_UTILS_NS {
     class IResourceReloader;
     class FileWatcher;
 
+    SR_INLINE_STATIC SR_UTILS_NS::StringAtom RESOURCE_ID_SEPARATOR = "→→→";
+
     std::optional<Path> GetResourceFolder(const Path& appFolder);
 
     class SR_DLL_EXPORT ResourceManager final : public Singleton<ResourceManager> {
@@ -33,10 +35,6 @@ namespace SR_UTILS_NS {
         SR_NODISCARD Path GetCachePath() const { return GetResPathRef().Concat("Cache"); }
         SR_NODISCARD std::string_view GetTypeName(Hash hashName) const;
 
-        SR_NODISCARD const std::string& GetResourceId(Hash hashId) const;
-
-        SR_NODISCARD const Path& GetResourcePath(Hash hashPath) const;
-        SR_NODISCARD Hash RegisterResourcePath(const Path& path);
         SR_NODISCARD bool IsWatchingEnabled() const;
 
         SR_NODISCARD SR_HTYPES_NS::SharedPtr<FileWatcher> StartWatch(const Path& path);
@@ -102,11 +100,7 @@ namespace SR_UTILS_NS {
         ResourcesList m_destroyed;
         ResourcesTypes m_resources;
 
-        ska::flat_hash_map<Hash, Path> m_hashPaths;
-
         IResourceReloader* m_defaultReloader = nullptr;
-
-        mutable std::recursive_mutex m_hashPathsMutex;
 
         std::list<SR_HTYPES_NS::SharedPtr<FileWatcher>> m_watchers;
         std::queue<SR_HTYPES_NS::SharedPtr<FileWatcher>> m_dirtyWatchers;

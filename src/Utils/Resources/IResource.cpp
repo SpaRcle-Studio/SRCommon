@@ -75,18 +75,13 @@ namespace SR_UTILS_NS {
         SRAssert2(!id.empty(), "Invalid id!");
 
         if (m_resourceId.empty()) {
-            auto&& resourcesManager = ResourceManager::Instance();
+            SRAssert2(m_resourcePath.Empty(), "Resource path already set!");
 
             m_resourceId = id;
-
-            SRAssert(m_resourceHashPath == 0);
-
-            auto&& path = InitializeResourcePath();
-
-            m_resourceHashPath = resourcesManager.RegisterResourcePath(path);
+            m_resourcePath = InitializeResourcePath();
 
             if (autoRegister) {
-                resourcesManager.RegisterResource(this);
+                ResourceManager::Instance().RegisterResource(this);
             }
         }
         else {
@@ -173,14 +168,13 @@ namespace SR_UTILS_NS {
         return m_countUses;
     }
 
-    IResource* IResource::CopyResource(IResource *destination) const {
-        /// destination->m_lifetime = m_lifetime;
-        destination->m_resourceHashPath = m_resourceHashPath;
-        destination->m_loadState.store(m_loadState);
+    IResource* IResource::CopyResource(IResource* pDestination) const {
+        pDestination->m_resourcePath = m_resourcePath;
+        pDestination->m_loadState.store(m_loadState);
 
-        destination->SetId(m_resourceId, true /** auto register */);
+        pDestination->SetId(m_resourceId, true /** auto register */);
 
-        return destination;
+        return pDestination;
     }
 
     bool IResource::Destroy() {
@@ -237,8 +231,8 @@ namespace SR_UTILS_NS {
         m_resourceHash = hash;
     }
 
-    const Path& IResource::GetResourcePath() const {
-        return SR_UTILS_NS::ResourceManager::Instance().GetResourcePath(m_resourceHashPath);
+    StringAtom IResource::GetResourcePath() const {
+        return m_resourcePath;
     }
 
     Path IResource::InitializeResourcePath() const {

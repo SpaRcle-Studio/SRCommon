@@ -66,13 +66,12 @@ namespace SR_UTILS_NS {
         SR_NODISCARD uint64_t GetResourceHashName() const noexcept { return m_resourceHashName; }
         SR_NODISCARD SR_UTILS_NS::StringAtom GetResourceId() const noexcept { return m_resourceId; }
         SR_NODISCARD LoadState GetResourceLoadState() const { return m_loadState; }
-        SR_NODISCARD uint64_t GetResourceHashPath() const noexcept { return m_resourceHashPath; }
         SR_NODISCARD uint64_t GetResourceHash() const noexcept { return m_resourceHash; }
         SR_NODISCARD ResourceInfoWeakPtr GetResourceInfo() const noexcept { return m_resourceInfo; }
         SR_NODISCARD bool IsResourceFromMemory() const noexcept { return m_isFromMemory; }
 
         SR_NODISCARD std::string_view GetResourceName() const;
-        SR_NODISCARD const Path& GetResourcePath() const;
+        SR_NODISCARD StringAtom GetResourcePath() const;
         SR_NODISCARD uint16_t GetCountUses() const noexcept;
 
         SR_NODISCARD virtual IResource* CopyResource(IResource* destination) const;
@@ -140,9 +139,11 @@ namespace SR_UTILS_NS {
     private:
         ResourceInfoWeakPtr m_resourceInfo;
 
-        SR_UTILS_NS::StringAtom m_resourceId;
+        /// хещ-состояние ресурса
         uint64_t m_resourceHash = 0;
-        uint64_t m_resourceHashPath = 0;
+
+        SR_UTILS_NS::StringAtom m_resourceId;
+        SR_UTILS_NS::StringAtom m_resourcePath;
 
         uint16_t m_reloadCount = 0;
 

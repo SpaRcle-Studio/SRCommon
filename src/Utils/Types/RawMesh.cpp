@@ -427,6 +427,25 @@ namespace SR_HTYPES_NS {
         return 0;
     }
 
+    std::vector<SR_UTILS_NS::StringAtom> RawMesh::GetAnimationNames() const {
+    #ifdef SR_UTILS_ASSIMP
+        if (!m_scene) {
+            SRHalt("Invalid scene!");
+            return {};
+        }
+
+        std::vector<SR_UTILS_NS::StringAtom> names;
+        names.reserve(m_scene->mNumAnimations);
+
+        for (uint32_t i = 0; i < m_scene->mNumAnimations; ++i) {
+            names.emplace_back(m_scene->mAnimations[i]->mName.C_Str());
+        }
+
+        return names;
+    #endif
+        return {};
+    }
+
     const ska::flat_hash_map<SR_UTILS_NS::StringAtom, uint32_t>& RawMesh::GetBones(uint32_t id) const {
         static const auto&& def = ska::flat_hash_map<SR_UTILS_NS::StringAtom, uint32_t>();
 
