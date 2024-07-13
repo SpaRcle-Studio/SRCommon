@@ -91,7 +91,7 @@ namespace SR_HTYPES_NS {
         });
     }
 
-    const SR_UTILS_NS::Path& IRawMeshHolder::GetMeshPath() const noexcept {
+    SR_UTILS_NS::Path IRawMeshHolder::GetMeshPath() const noexcept {
         if (m_rawMesh) {
             return m_rawMesh->GetResourcePath();
         }
