@@ -25,6 +25,7 @@ namespace SR_UTILS_NS {
                 case StandardType::UVector2: pBlock->Write<SR_MATH_NS::UVector2>(GetUVector2()); break;
                 case StandardType::FVector3: pBlock->Write<SR_MATH_NS::FVector3>(GetFVector3()); break;
                 case StandardType::FVector4: pBlock->Write<SR_MATH_NS::FVector4>(GetFVector4()); break;
+                case StandardType::BVector3: pBlock->Write<SR_MATH_NS::BVector3>(GetBVector3()); break;
                 default:
                     SRHalt("Unsupported type! Type: \"" + SR_UTILS_NS::EnumReflector::ToStringAtom(GetStandardType()).ToStringRef() + "\"");
                     return;
@@ -60,6 +61,7 @@ namespace SR_UTILS_NS {
                 case StandardType::FVector2: SetFVector2(pBlock->Read<SR_MATH_NS::FVector2>()); break;
                 case StandardType::FVector3: SetFVector3(pBlock->Read<SR_MATH_NS::FVector3>()); break;
                 case StandardType::FVector4: SetFVector4(pBlock->Read<SR_MATH_NS::FVector4>()); break;
+                case StandardType::BVector3: SetBVector3(pBlock->Read<SR_MATH_NS::BVector3>()); break;
                 default:
                     SRHalt("Unsupported type! Type: \"" + SR_UTILS_NS::EnumReflector::ToStringAtom(GetStandardType()).ToStringRef() + "\"");
                     return;

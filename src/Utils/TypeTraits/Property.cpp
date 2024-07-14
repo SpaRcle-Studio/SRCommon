@@ -51,7 +51,7 @@ namespace SR_UTILS_NS {
         auto&& pBlock = std::unique_ptr<SR_HTYPES_NS::Marshal>(marshal.ReadBytesPtr(size));
 
         if (typeName != GetPropertyTypeName()) {
-            SRHalt("Property type mismatch!");
+            SRHalt("Property type mismatch! Expected: " + GetPropertyTypeName().ToStringRef() + ", got: " + typeName.ToStringRef());
             return nullptr;
         }
 

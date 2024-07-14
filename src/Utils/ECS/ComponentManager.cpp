@@ -134,7 +134,10 @@ namespace SR_UTILS_NS {
                 }
 
                 if (lostBytes > 0 && loadResult != ComponentLoadResult::Migrated) {
-                    SR_WARN("ComponentManager::LoadComponents() : bytes were lost when loading the component!\n\tBytes count: " + std::to_string(lostBytes));
+                    SR_WARN("ComponentManager::LoadComponents() : bytes were lost when loading the component!\n\tBytes count: {}, Component: {}",
+                        lostBytes, m_lastComponent.ToStringRef()
+                    );
+
                     if (lostBytes >= UINT16_MAX) {
                         SRHalt("Something went wrong!");
                         continue;

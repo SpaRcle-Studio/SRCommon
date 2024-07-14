@@ -26,14 +26,6 @@ namespace SR_UTILS_NS {
         Super::UpdateMatrix();
     }
 
-    void Transform3D::Rotate(const SR_MATH_NS::FVector3& eulers) {
-        Rotate(eulers.Radians().ToQuat());
-    }
-
-    void Transform3D::Rotate(const SR_MATH_NS::Quaternion &q) {
-        SetRotation((m_quaternion * q).EulerAngle());
-    }
-
     const SR_MATH_NS::Matrix4x4& Transform3D::GetMatrix() const {
         if (IsDirty()) SR_UNLIKELY_ATTRIBUTE {
             UpdateMatrix();
@@ -47,6 +39,14 @@ namespace SR_UTILS_NS {
         }
 
         return m_matrix;
+    }
+
+    void Transform3D::Rotate(const SR_MATH_NS::FVector3& eulers) {
+        Rotate(eulers.Radians().ToQuat());
+    }
+
+    void Transform3D::Rotate(const SR_MATH_NS::Quaternion &q) {
+        SetRotation((m_quaternion * q).EulerAngle());
     }
 
     void Transform3D::Translate(const SR_MATH_NS::FVector3& translation) {

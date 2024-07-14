@@ -89,6 +89,24 @@ namespace SR_WORLD_NS {
         }
     }
 
+    void SceneUpdater::LateUpdate(bool isPaused) {
+        SR_TRACY_ZONE;
+        SR_LOCK_GUARD;
+
+        for (uint32_t i = 0; i < m_componentsPoolSize; ++i) {
+            auto&& pComponent = m_updatableComponents[i];
+            if (!pComponent) {
+                continue;
+            }
+
+            if (isPaused && !pComponent->ExecuteInEditMode()) {
+                continue;
+            }
+
+            pComponent->LateUpdate();
+        }
+    }
+
     void SceneUpdater::SetDirty() {
         m_dirty = true;
     }
