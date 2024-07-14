@@ -170,7 +170,7 @@
 #define SR_FLT_EPSILON FLT_EPSILON
 #define SR_NORETURN [[noreturn]]
 
-#define SR_MAX_BONES_ON_VERTEX 8
+#define SR_MAX_BONES_ON_VERTEX 16
 #define SR_HUMANOID_MAX_BONES 128
 
 #define SR_FAST_CONSTRUCTOR SR_FORCE_INLINE SR_CONSTEXPR
@@ -198,6 +198,13 @@
     #define VK_USE_PLATFORM_WIN32_KHR
 #else
     #define SR_WIN32_BOOL false
+#endif
+
+
+#ifdef WIN32
+    #define SR_SIMD_SUPPORT 1
+#else
+    #define SR_SIMD_SUPPORT 0
 #endif
 
 #define SR_MACRO_CONCAT_UTIL(a, b) a ## b

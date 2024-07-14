@@ -53,7 +53,7 @@ namespace SR_WORLD_NS {
         }
     }
 
-    void SceneUpdater::Update(float_t dt) {
+    void SceneUpdater::Update(float_t dt, bool isPaused) {
         SR_TRACY_ZONE;
         SR_LOCK_GUARD;
 
@@ -62,11 +62,16 @@ namespace SR_WORLD_NS {
             if (!pComponent) {
                 continue;
             }
+
+            if (isPaused && !pComponent->ExecuteInEditMode()) {
+                continue;
+            }
+
             pComponent->Update(dt);
         }
     }
 
-    void SceneUpdater::FixedUpdate() {
+    void SceneUpdater::FixedUpdate(bool isPaused) {
         SR_TRACY_ZONE;
         SR_LOCK_GUARD;
 
@@ -75,6 +80,11 @@ namespace SR_WORLD_NS {
             if (!pComponent) {
                 continue;
             }
+
+            if (isPaused && !pComponent->ExecuteInEditMode()) {
+                continue;
+            }
+
             pComponent->FixedUpdate();
         }
     }

@@ -78,13 +78,13 @@ namespace SR_UTILS_NS {
 
 namespace std {
     template<> struct hash<SR_UTILS_NS::StringAtom> {
-        size_t operator()(SR_UTILS_NS::StringAtom const& object) const {
+        size_t operator()(SR_UTILS_NS::StringAtom const& object) const noexcept {
             return object.GetHash();
         }
     };
 
     template<> struct less<SR_UTILS_NS::StringAtom> {
-        bool operator()(const SR_UTILS_NS::StringAtom& lhs, const SR_UTILS_NS::StringAtom& rhs) const {
+        bool operator()(const SR_UTILS_NS::StringAtom& lhs, const SR_UTILS_NS::StringAtom& rhs) const noexcept {
             return lhs.GetHash() < rhs.GetHash();
         }
     };

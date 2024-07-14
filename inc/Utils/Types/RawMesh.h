@@ -55,15 +55,18 @@ namespace SR_HTYPES_NS {
 
         SR_NODISCARD std::vector<SR_UTILS_NS::Vertex> GetVertices(uint32_t id) const;
         SR_NODISCARD const std::vector<uint32_t>& GetIndices(uint32_t id) const;
-        SR_NODISCARD const ska::flat_hash_map<uint64_t, uint32_t>& GetBones(uint32_t id) const;
-        SR_NODISCARD const ska::flat_hash_map<Hash, uint16_t>& GetOptimizedBones() const { return m_optimizedBones; }
-        SR_NODISCARD const SR_MATH_NS::Matrix4x4& GetBoneOffset(uint64_t hashName) const;
-        SR_NODISCARD uint16_t GetBoneIndex(uint64_t hashName) const;
+        SR_NODISCARD const ska::flat_hash_map<SR_UTILS_NS::StringAtom, uint32_t>& GetBones(uint32_t id) const;
+        SR_NODISCARD const ska::flat_hash_map<SR_UTILS_NS::StringAtom, uint16_t>& GetOptimizedBones() const { return m_optimizedBones; }
+        SR_NODISCARD const SR_MATH_NS::Matrix4x4& GetBoneOffset(SR_UTILS_NS::StringAtom name) const;
+        SR_NODISCARD const SR_MATH_NS::Matrix4x4& GetBoneTransform(uint32_t index) const;
+        SR_NODISCARD const SR_MATH_NS::Matrix4x4& GetBoneTransform(SR_UTILS_NS::StringAtom name) const;
+        SR_NODISCARD uint32_t GetBoneIndex(SR_UTILS_NS::StringAtom name) const;
         SR_NODISCARD const std::vector<SR_MATH_NS::Matrix4x4>& GetBoneOffsets() const { return m_boneOffsets; }
 
         SR_NODISCARD uint32_t GetVerticesCount(uint32_t id) const;
         SR_NODISCARD uint32_t GetIndicesCount(uint32_t id) const;
         SR_NODISCARD uint32_t GetAnimationsCount() const;
+        SR_NODISCARD std::vector<SR_UTILS_NS::StringAtom> GetAnimationNames() const;
         SR_UTILS_NS::Path InitializeResourcePath() const override;
         SR_NODISCARD int32_t GetMeshId(SR_UTILS_NS::StringAtom name) const;
 
@@ -85,6 +88,7 @@ namespace SR_HTYPES_NS {
         void CalculateBones();
         void OptimizeSkeleton();
         void CalculateOffsets();
+        void CalculateTransforms();
         void CalculateAnimations();
 
     #ifdef SR_UTILS_ASSIMP
@@ -92,11 +96,15 @@ namespace SR_HTYPES_NS {
     #endif
 
     private:
-        std::vector<ska::flat_hash_map<Hash, uint32_t>> m_bones;
-        ska::flat_hash_map<Hash, uint16_t> m_optimizedBones;
+        std::vector<ska::flat_hash_map<SR_UTILS_NS::StringAtom, uint32_t>> m_bones;
+        ska::flat_hash_map<SR_UTILS_NS::StringAtom, uint16_t> m_optimizedBones;
 
-        ska::flat_hash_map<Hash, SR_MATH_NS::Matrix4x4> m_boneOffsetsMap;
+        ska::flat_hash_map<SR_UTILS_NS::StringAtom, SR_MATH_NS::Matrix4x4> m_boneOffsetsMap;
+        ska::flat_hash_map<SR_UTILS_NS::StringAtom, SR_MATH_NS::Matrix4x4> m_boneTransformsMap;
+
         std::vector<SR_MATH_NS::Matrix4x4> m_boneOffsets;
+        std::vector<SR_MATH_NS::Matrix4x4> m_boneTransforms;
+
         mutable std::vector<std::vector<uint32_t>> m_indices;
 
         RawMeshParams m_params;

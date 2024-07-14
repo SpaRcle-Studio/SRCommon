@@ -80,6 +80,14 @@ namespace SR_UTILS_NS {
     }
 
     Component* IComponentable::GetComponent(StringAtom name) {
+        for (auto&& pComponent : m_loadedComponents) {
+            if (pComponent->GetComponentName() != name) {
+                continue;
+            }
+
+            return pComponent;
+        }
+
         for (auto&& pComponent : m_components) {
             if (pComponent->GetComponentName() != name) {
                 continue;
@@ -297,11 +305,12 @@ namespace SR_UTILS_NS {
     }
 
     void IComponentable::OnMatrixDirty() {
-        if (IsDestroyed()) {
+        if (IsDestroyed()) SR_UNLIKELY_ATTRIBUTE {
             return;
         }
 
-        for (uint32_t i = 0; i < m_components.size(); ++i) {
+        const auto size = static_cast<uint32_t>(m_components.size());
+        for (uint32_t i = 0; i < size; ++i) {
             auto&& pComponent = m_components[i];
             pComponent->OnMatrixDirty();
         }

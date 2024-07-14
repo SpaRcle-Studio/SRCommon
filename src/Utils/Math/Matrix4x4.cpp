@@ -34,4 +34,18 @@ namespace SR_MATH_NS {
         GLMTranslateMat4x4(self, translate);
         GLMRotateMat4x4(self, rotation.ToGLM());
     }
+
+    Matrix4x4::Matrix4x4(const FVector3& translate, const FVector3& scale) noexcept
+        : Matrix4x4()
+    {
+        GLMTranslateMat4x4(self, translate);
+        GLMScaleMat4x4(self, scale);
+    }
+
+    Matrix4x4::Matrix4x4(const Quaternion& rotation, const FVector3& scale) noexcept
+        : Matrix4x4()
+    {
+        GLMRotateMat4x4(self, rotation.ToGLM());
+        GLMScaleMat4x4(self, scale);
+    }
 }

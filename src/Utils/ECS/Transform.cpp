@@ -214,11 +214,14 @@ namespace SR_UTILS_NS {
     }
 
     void Transform::UpdateTree() {
-        m_dirtyMatrix = true;
-
-        if (!m_gameObject) {
+        if (!m_gameObject) SR_UNLIKELY_ATTRIBUTE {
             return;
         }
+
+        if (m_dirtyMatrix) {
+            return;
+        }
+        m_dirtyMatrix = true;
 
         m_gameObject->OnMatrixDirty();
 

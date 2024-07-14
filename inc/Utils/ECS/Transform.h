@@ -64,7 +64,9 @@ namespace SR_UTILS_NS {
         virtual void RotateAround(const Math::FVector3& point, const Math::FVector3& eulers) { }
         virtual void RotateAroundParent(const Math::FVector3& eulers) { }
 
-        virtual void SetMatrix(const SR_MATH_NS::Matrix4x4& matrix) { }
+        virtual void SetMatrix(const std::optional<SR_MATH_NS::FVector3>& translation,
+                               const std::optional<SR_MATH_NS::Quaternion>& rotation,
+                               const std::optional<SR_MATH_NS::FVector3>& scale) { }
 
         virtual void SetGlobalTranslation(const SR_MATH_NS::FVector3& translation) { }
 
@@ -121,7 +123,7 @@ namespace SR_UTILS_NS {
         GameObject* m_gameObject = nullptr;
 
     private:
-        mutable bool m_dirtyMatrix = true;
+        mutable bool m_dirtyMatrix = false;
 
     };
 }
