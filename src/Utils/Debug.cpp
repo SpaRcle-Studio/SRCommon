@@ -40,7 +40,7 @@ namespace SR_UTILS_NS {
             fmt::print(fmt::emphasis::bold, " " + msg);
         }
         catch (const std::exception& ex) {
-            std::cout << "Error while printing message: " << ex.what() << "\nMessage: " << msg << std::endl;
+            std::cout << " Error while printing message: " << ex.what() << "\nMessage: " << msg << std::endl;
         }
 
         std::cout << std::flush;

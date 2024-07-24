@@ -29,8 +29,13 @@ namespace SR_HTYPES_NS {
         friend class Factory;
     public:
         using Ptr = Thread*;
-        using ThreadId = std::string;
+        using ThreadId = SR_UTILS_NS::StringAtom;
         using ThreadsMap = std::unordered_map<ThreadId, Thread::Ptr>;
+
+        SR_FORCE_INLINE static ThreadId EmptyThreadId() {
+            static const auto id = SR_UTILS_NS::StringAtom("[EMPTY]");
+            return id;
+        }
 
         class SR_DLL_EXPORT Factory : public Singleton<Factory> {
             SR_REGISTER_SINGLETON(Factory)
@@ -48,15 +53,38 @@ namespace SR_HTYPES_NS {
             SR_NODISCARD Ptr GetMainThread();
             SR_NODISCARD Ptr GetThisThread();
             SR_NODISCARD Ptr TryGetThisThread();
-            SR_NODISCARD Ptr Create(std::thread thread);
-            SR_NODISCARD Ptr Create(const std::function<void()>& fn);
+            SR_NODISCARD SR_DEPRECATED_EX("Not safe, use Create(Ptr& pThread, Functor&& fn, Args&&... args)") Ptr Create(std::thread thread);
+            SR_NODISCARD SR_DEPRECATED_EX("Not safe, use Create(Ptr& pThread, Functor&& fn, Args&&... args)") Ptr Create(const std::function<void()>& fn);
             SR_NODISCARD uint32_t GetThreadsCount();
 
             SR_NODISCARD Ptr CreateEmpty();
 
-            template<class Functor, typename... Args> SR_NODISCARD Ptr Create(Functor&& fn, Args&&... args) {
-                std::thread thread(fn, std::forward<Args>(args)...);
-                return Create(std::move(thread));
+            template<class Functor, typename... Args> bool Create(Ptr& pThread, Functor&& fn, Args&&... args) {
+                SR_LOCK_GUARD;
+
+                pThread = new Thread();
+
+                std::thread thread([fn = std::forward<Functor>(fn), pThread, argsTuple = std::make_tuple(args...)]() mutable {
+                    while (!pThread->m_isCreated || !pThread->HasId()) {
+                        pThread->m_id = SR_UTILS_NS::GetThreadId(pThread->m_thread);
+                    }
+
+                    std::apply(fn, std::forward<decltype(argsTuple)>(argsTuple));
+                });
+
+                while (!pThread->HasId()) {
+                    pThread->m_id = SR_UTILS_NS::GetThreadId(thread);
+                }
+
+                m_threads.insert(std::make_pair(pThread->GetId(), pThread));
+
+                pThread->m_thread = std::move(thread);
+                pThread->m_isRan = true;
+                pThread->m_isCreated = true;
+
+                SR_LOG("Thread::Factory::Create() : creating new \"{}\" thread...", pThread->m_id.c_str());
+
+                return true;
             }
 
         private:
@@ -78,7 +106,7 @@ namespace SR_HTYPES_NS {
 
     public:
         SR_NODISCARD bool Joinable() const { return m_thread.joinable(); }
-        SR_NODISCARD ThreadId GetId();
+        SR_NODISCARD ThreadId GetId() const;
         SR_NODISCARD DataStorage* GetContext() { return m_context; }
 
         void SetName(const std::string& name);
@@ -119,13 +147,29 @@ namespace SR_HTYPES_NS {
         bool Execute(const SR_HTYPES_NS::Function<bool()>& function) const;
 
         void Join() {
-            SR_LOG("Thead::Join() : join thread \"{}\" with id \"{}\"...", m_name, m_id);
+            SR_LOG("Thead::Join() : join thread \"{}\" with id \"{}\"...", m_name, m_id.c_str());
             m_thread.join();
         }
 
         bool TryJoin();
 
         void Free();
+
+        bool HasId() const {
+            if (m_id.empty()) {
+                return false;
+            }
+
+            if (m_id == "0") {
+                return false;
+            }
+
+            if (m_id == EmptyThreadId()) {
+                return false;
+            }
+
+            return true;
+        }
 
         void Detach() { m_thread.detach(); }
 

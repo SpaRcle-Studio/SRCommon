@@ -110,7 +110,7 @@ namespace SR_UTILS_NS {
         SRAssert(!m_isActive);
         m_isActive = true;
 
-        m_thread = SR_HTYPES_NS::Thread::Factory::Instance().Create(&ThreadWorker::Work, this);
+        SR_HTYPES_NS::Thread::Factory::Instance().Create(m_thread, &ThreadWorker::Work, this);
         m_thread->SetName(m_name);
     }
 

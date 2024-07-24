@@ -57,7 +57,7 @@ namespace SR_HTYPES_NS {
 
         auto&& pThread = new Thread(std::move(thread));
 
-        SR_LOG("Thread::Factory::Create() : creating new \"{}\" thread...", pThread->m_id);
+        SR_LOG("Thread::Factory::Create() : creating new \"{}\" thread...", pThread->m_id.c_str());
 
         m_threads.insert(std::make_pair(pThread->GetId(), pThread));
 
@@ -94,7 +94,7 @@ namespace SR_HTYPES_NS {
     #ifdef SR_DEBUG
         SR_MAYBE_UNUSED std::string threads;
         for (auto&& [id, pThread] : m_threads) {
-            threads.append("\tThread [" + id + "]\n");
+            threads.append("\tThread [" + id.ToStringRef() + "]\n");
         }
         SRHalt("Thread::Factory::GetThisThread() : unknown thread!\n" + threads);
     #endif
@@ -105,7 +105,7 @@ namespace SR_HTYPES_NS {
     void Thread::Factory::Remove(Thread* pThread) {
         SR_SCOPED_LOCK;
 
-        SR_LOG("Thread::Free() : free \"{}\" thread...", pThread->GetId());
+        SR_LOG("Thread::Free() : free \"{}\" thread...", pThread->GetId().c_str());
 
         if (pThread == m_main) {
             m_main = nullptr;
@@ -115,7 +115,7 @@ namespace SR_HTYPES_NS {
         }
     }
 
-    Thread::ThreadId Thread::GetId() {
+    Thread::ThreadId Thread::GetId() const {
         return m_id;
     }
 
@@ -144,10 +144,13 @@ namespace SR_HTYPES_NS {
     }
 
     bool Thread::Execute(const SR_HTYPES_NS::Function<bool()>& function) const {
+        if (GetId() == SR_UTILS_NS::GetThisThreadId()) {
+            return function();
+        }
+
         /// сначала дожидаемся предыдущей работы. Операция атомарная.
         while (m_function) {
             SR_NOOP;
-            continue;
         }
 
         /// синхронно записываем
@@ -159,7 +162,6 @@ namespace SR_HTYPES_NS {
         /// синхронно ждем выволнения работы. Операция атомарная.
         while (m_function) {
             SR_NOOP;
-            continue;
         }
 
         return m_executeResult;
@@ -185,7 +187,7 @@ namespace SR_HTYPES_NS {
 
         m_main = new Thread(SR_UTILS_NS::GetThisThreadId());
 
-        SR_LOG("Thread::Factory::SetMainThread() : main thread id: \"{}\"", m_main->GetId());
+        SR_LOG("Thread::Factory::SetMainThread() : main thread id: \"{}\"", m_main->GetId().c_str());
     }
 
     void Thread::Factory::PrintThreads() {
@@ -202,10 +204,10 @@ namespace SR_HTYPES_NS {
                 log += "\tThread [Main]\n";
             }
             else if (!pThread->m_name.empty()) {
-                log += "\tThread [" + id + "] - " + pThread->m_name + "\n";
+                log += "\tThread [" + id.ToStringRef() + "] - " + pThread->m_name + "\n";
             }
             else {
-                log += "\tThread [" + id + "]\n";
+                log += "\tThread [" + id.ToStringRef() + "]\n";
             }
         }
 
