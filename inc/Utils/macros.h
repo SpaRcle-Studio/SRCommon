@@ -150,7 +150,13 @@
 #endif
 
 #define SR_CLOCKS_PER_SEC 1000
-#define SR_NODISCARD [[nodiscard]]
+
+#ifdef SR_GCC
+    #define SR_NODISCARD __attribute__ ((__warn_unused_result__))
+#else
+    #define SR_NODISCARD [[nodiscard]]
+#endif
+
 #define SR_FALLTHROUGH [[fallthrough]]
 #define SR_MAYBE_UNUSED [[maybe_unused]]
 #define SR_DEPRECATED_EX(text) [[deprecated(text)]]
@@ -160,10 +166,10 @@
 #define SR_NULL 0
 #define SR_MARSHAL_USE_LIST 1
 #define SR_MARSHAL_ENCODE_AND_DECODE 0
-#define SR_INVALID_STR_POS -1
-#define SR_ID_INVALID -1
+#define SR_INVALID_STR_POS (-1)
+#define SR_ID_INVALID (-1)
 #define SR_SHADER_PROGRAM int32_t
-#define SR_NULL_SHADER -1
+#define SR_NULL_SHADER (-1)
 #define SR_VERTEX_DESCRIPTION size_t
 #define GLM_ENABLE_EXPERIMENTAL
 #define SR_NOOP (void)0
