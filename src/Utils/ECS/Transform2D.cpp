@@ -155,6 +155,11 @@ namespace SR_UTILS_NS {
         UpdateTree();
     }
 
+    void Transform2D::SetFixedSize(FixedSize fixedSize) {
+        m_fixedSize = fixedSize;
+        UpdateTree();
+    }
+
     Transform *Transform2D::Copy() const {
         auto&& pTransform = new Transform2D();
 
@@ -194,6 +199,13 @@ namespace SR_UTILS_NS {
         auto&& fitHeight = [&]() {
             scale.y *= aspect;
         };
+
+        //if (GetGameObject()->GetName() == "Top") {
+        ////if (m_fixedSize != FixedSize::None) {
+        //    auto&& matrix = pParent->GetMatrix();
+        //    auto&& parentScale = matrix.GetScale();
+        //    scale /= parentScale;
+        //}
 
         /// Компенсация растяжения родительской ноды
         switch (m_stretch) {

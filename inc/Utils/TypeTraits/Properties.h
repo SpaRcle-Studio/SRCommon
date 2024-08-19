@@ -50,7 +50,10 @@ namespace SR_UTILS_NS {
 
         template<typename T> bool ForEachPropertyRet(const SR_HTYPES_NS::Function<bool(T*)>& function) const;
 
+        void SetShowErrors(bool value) noexcept { m_showErrors = value; }
+
     private:
+        bool m_showErrors = true;
         PropertyList m_properties;
 
     };

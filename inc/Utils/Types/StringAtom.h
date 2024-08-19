@@ -76,6 +76,10 @@ namespace SR_UTILS_NS {
     }
 }
 
+SR_INLINE SR_UTILS_NS::StringAtom operator"" _atom(const char* str, size_t) {
+    return SR_UTILS_NS::StringAtom(str);
+}
+
 namespace std {
     template<> struct hash<SR_UTILS_NS::StringAtom> {
         size_t operator()(SR_UTILS_NS::StringAtom const& object) const noexcept {

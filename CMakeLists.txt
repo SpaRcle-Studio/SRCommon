@@ -9,6 +9,7 @@ option(SR_COMMON_OPENSSL "" OFF)
 option(SR_COMMON_SDL "" OFF)
 option(SR_COMMON_CURL "" OFF)
 option(SR_COMMON_JSON "" OFF)
+option(SR_COMMON_MYHTML "" ON)
 
 option(SR_COMMON_DLL_EXPORTS "" ON)
 option(SR_COMMON_GIT_METADATA "" ON)
@@ -164,6 +165,7 @@ list(APPEND SR_UTILS_LINK_LIBRARIES cxx/Platform.cxx)
 list(APPEND SR_UTILS_LINK_LIBRARIES cxx/Types.cxx)
 list(APPEND SR_UTILS_LINK_LIBRARIES cxx/Common.cxx)
 list(APPEND SR_UTILS_LINK_LIBRARIES cxx/Network.cxx)
+list(APPEND SR_UTILS_LINK_LIBRARIES cxx/Web.cxx)
 
 define_property(GLOBAL PROPERTY SR_UTILS_INCLUDE_DIRECTORIES
     BRIEF_DOCS "Contains linkable libraries"
@@ -249,6 +251,17 @@ if (UNIX AND NOT APPLE)
     endif()
 
     target_link_libraries(Utils bfd)
+endif()
+
+if (SR_COMMON_MYHTML)
+    set(MyHTML_BUILD_WITHOUT_THREADS ON CACHE INTERNAL "" FORCE)
+    set(MyCORE_BUILD_WITHOUT_THREADS ON CACHE INTERNAL "" FORCE)
+    set(MyHTML_BUILD_SHARED OFF CACHE INTERNAL "" FORCE)
+    set(PROJECT_OPTIMIZATION_LEVEL "" CACHE INTERNAL "" FORCE)
+
+    add_subdirectory(libs/myhtml)
+    SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_SOURCE_DIR}/libs/myhtml/include)
+    target_link_libraries(Utils myhtml_static)
 endif()
 
 if (SR_COMMON_SDL)

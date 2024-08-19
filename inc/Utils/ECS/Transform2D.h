@@ -26,6 +26,13 @@ namespace SR_UTILS_NS {
         ProportionalX,
         ProportionalY,
         ProportionalXY
+    )
+
+    SR_ENUM_NS_CLASS_T(FixedSize, uint8_t,
+        None,
+        FixedWidth,
+        FixedHeight,
+        All
     );
 
     SR_ENUM_NS_CLASS_T(Anchor, uint8_t,
@@ -58,6 +65,7 @@ namespace SR_UTILS_NS {
         void SetAnchor(Anchor anchorType);
         void SetStretch(Stretch stretch);
         void SetPositionMode(PositionMode positionMode);
+        void SetFixedSize(FixedSize fixedSize);
 
         void SetLocalPriority(int32_t priority);
         void SetRelativePriority(bool relative);
@@ -76,6 +84,7 @@ namespace SR_UTILS_NS {
         SR_NODISCARD Anchor GetAnchor() const { return m_anchor; }
         SR_NODISCARD Stretch GetStretch() const { return m_stretch; }
         SR_NODISCARD PositionMode GetPositionMode() const { return m_positionMode; }
+        SR_NODISCARD FixedSize GetFixedSize() const { return m_fixedSize; }
 
         SR_NODISCARD int32_t GetPriority();
         SR_NODISCARD int32_t GetLocalPriority() const noexcept { return m_localPriority; }
@@ -101,6 +110,7 @@ namespace SR_UTILS_NS {
         Anchor m_anchor = Anchor::None;
         Stretch m_stretch = Stretch::ShowAll;
         PositionMode m_positionMode = PositionMode::ProportionalXY;
+        FixedSize m_fixedSize = FixedSize::None;
 
         int32_t m_priority = 0;
         int32_t m_localPriority = 0;

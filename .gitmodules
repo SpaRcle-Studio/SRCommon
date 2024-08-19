@@ -31,3 +31,6 @@
 [submodule "libs/cmake-git-version-tracking"]
 	path = libs/cmake-git-version-tracking
 	url = https://github.com/SpaRcle-Studio/cmake-git-version-tracking
+[submodule "libs/myhtml"]
+	path = libs/myhtml
+	url = https://github.com/SpaRcle-Studio/myhtml

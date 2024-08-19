@@ -30,6 +30,8 @@ namespace SR_UTILS_NS::Platform {
         bool buttonStates[5] { false, false, false, false, false };
     };
 
+    extern std::mutex g_platformLogMutex;
+
     SR_NORETURN SR_DLL_EXPORT extern void Terminate();
 
     SR_DLL_EXPORT extern void InitializePlatform();

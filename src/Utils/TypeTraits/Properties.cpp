@@ -118,23 +118,12 @@ namespace SR_UTILS_NS {
                 if (auto&& pProperty = Find(name)) {
                     pProperty->LoadProperty(propertyMarshal);
                 }
-                else {
+                else if (m_showErrors) {
                     SR_WARN("PropertyContainer::LoadProperty() : property not found!\n\tContainer: {}\n\tProperty name: {}",
                         GetName().ToCStr(), name.ToCStr()
                     );
                 }
             }
         }
-    }
-
-    ArrayReferenceProperty& PropertyContainer::AddArrayReferenceProperty(const char* name) {
-        return AddCustomProperty<ArrayReferenceProperty>(name);
-    }
-
-    void PropertyContainer::AddExternalProperty(Property* pProperty) {
-        PropertyInfo propertyInfo;
-        propertyInfo.pProperty = pProperty;
-        propertyInfo.isExternal = true;
-        m_properties.emplace_back(propertyInfo);
     }
 }

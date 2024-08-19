@@ -15,3 +15,5 @@
     #include "../src/Utils/Platform/PlatformAndroid.cpp"
     #include "../src/Utils/Platform/AndroidNativeAppGlue.c"
 #endif
+
+#include "../src/Utils/Platform/PlatformSharedVars.cpp"

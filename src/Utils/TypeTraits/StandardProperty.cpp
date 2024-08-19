@@ -138,4 +138,15 @@ namespace SR_UTILS_NS {
             }
         }
     }
+
+    ArrayReferenceProperty& PropertyContainer::AddArrayReferenceProperty(const char* name) {
+        return AddCustomProperty<ArrayReferenceProperty>(name);
+    }
+
+    void PropertyContainer::AddExternalProperty(Property* pProperty) {
+        PropertyInfo propertyInfo;
+        propertyInfo.pProperty = pProperty;
+        propertyInfo.isExternal = true;
+        m_properties.emplace_back(propertyInfo);
+    }
 }

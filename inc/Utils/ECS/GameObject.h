@@ -55,6 +55,7 @@ namespace SR_UTILS_NS {
         SR_NODISCARD Transform* GetTransform() const noexcept { return m_transform; }
         SR_NODISCARD GameObject::Ptr GetParent() const noexcept { return m_parent; }
         SR_NODISCARD GameObject::Ptr GetRoot() const noexcept;
+        SR_NODISCARD GameObject::Ptr Find(const char* str) const noexcept;
         SR_NODISCARD GameObject::Ptr Find(uint64_t hashName) const noexcept;
         SR_NODISCARD GameObject::Ptr Find(const std::string& name) const noexcept;
         SR_NODISCARD GameObject::Ptr Find(StringAtom name) const noexcept;

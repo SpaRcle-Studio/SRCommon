@@ -179,12 +179,12 @@ namespace SR_UTILS_NS {
         return true;
     }
 
-    std::string FileSystem::ReadBinaryAsString(const std::string& path, bool checkError) {
-        std::ifstream file(path, std::ios::ate | std::ios::binary);
+    std::string FileSystem::ReadBinaryAsString(const Path& path, bool checkError) {
+        std::ifstream file(path.ToStringRef(), std::ios::ate | std::ios::binary);
 
         if (!file.is_open()) {
             SR_UNUSED_VARIABLE(checkError);
-            SRAssert2(!checkError, "FileSystem::ReadBinaryAsString() : failed to open \"" + path + "\" file!");
+            SRAssert2(!checkError, "FileSystem::ReadBinaryAsString() : failed to open \"" + path.ToStringRef() + "\" file!");
             return std::string();
         }
 

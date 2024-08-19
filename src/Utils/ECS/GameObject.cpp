@@ -692,7 +692,11 @@ namespace SR_UTILS_NS {
         return DynamicCast<GameObject>();
     }
 
-    GameObject::Ptr GameObject::Find(const std::string &name) const noexcept {
+    GameObject::Ptr GameObject::Find(const char* str) const noexcept {
+        return Find(SR_UTILS_NS::StringAtom(str));
+    }
+
+    GameObject::Ptr GameObject::Find(const std::string& name) const noexcept {
         return Find(SR_HASH_STR(name));
     }
 
