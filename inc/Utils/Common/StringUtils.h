@@ -5,9 +5,7 @@
 #ifndef GAMEENGINE_STRINGUTILS_H
 #define GAMEENGINE_STRINGUTILS_H
 
-#include <Utils/Debug.h>
 #include <Utils/Math/Mathematics.h>
-#include <Utils/Profile/TracyContext.h>
 
 namespace SR_UTILS_NS {
     SR_MAYBE_UNUSED static std::wstring s2ws(const std::string& str)
@@ -402,7 +400,6 @@ namespace SR_UTILS_NS {
         }
 
         template<typename stringType> static stringType ReplaceAll(stringType const& original, stringType const& from, stringType const& to) noexcept {
-            SR_TRACY_ZONE;
             stringType results;
             results.reserve(original.size());
             typename stringType::const_iterator end = original.end();
@@ -426,7 +423,6 @@ namespace SR_UTILS_NS {
         }
 
         inline static std::string MakePath(const std::string& str, bool toLower = false) noexcept {
-            SR_TRACY_ZONE;
             auto&& replaced = ReplaceAll<std::string>(str, "\\", "/");
             if (toLower) replaced = ToLower(replaced);
             return replaced;

@@ -6,6 +6,7 @@
 #define SR_COMMON_WEB_HTML_TAG_H
 
 #include <Utils/Common/Enumerations.h>
+#include <Utils/Common/StringAtomLiterals.h>
 
 namespace SR_UTILS_NS::Web {
     enum class HTMLTag {

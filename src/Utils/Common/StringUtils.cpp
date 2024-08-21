@@ -3,6 +3,8 @@
 //
 
 #include <Utils/Common/StringUtils.h>
+#include <Utils/Profile/TracyContext.h>
+#include <Utils/Debug.h>
 
 namespace SR_UTILS_NS {
     std::string StringUtils::GetExtensionFromFilePath(std::string path) {

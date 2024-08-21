@@ -6,6 +6,7 @@
 #define SR_ENGINE_STRING_ATOM_H
 
 #include <Utils/stdInclude.h>
+#include <Utils/Common/Hashes.h>
 
 namespace SR_UTILS_NS {
     class StringHashInfo;
@@ -74,10 +75,6 @@ namespace SR_UTILS_NS {
             std::is_same_v<T, volatile std::string_view> ||
             std::is_same_v<T, volatile StringAtom>;
     }
-}
-
-SR_INLINE SR_UTILS_NS::StringAtom operator"" _atom(const char* str, size_t) {
-    return SR_UTILS_NS::StringAtom(str);
 }
 
 namespace std {

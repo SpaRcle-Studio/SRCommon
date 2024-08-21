@@ -10,14 +10,6 @@
 #include <Utils/Types/SharedPtr.h>
 
 namespace SR_UTILS_NS::Web {
-    class HTMLClass {
-        CSSBoxModelProperties boxModelProperties;
-        CSSPosition position = CSSPosition::Static;
-        CSSColor color;
-        CSSColor backgroundColor;
-        CSSDisplay display = CSSDisplay::Inline;
-    };
-
     class HTMLAttribute : public SR_UTILS_NS::NonCopyable {
     public:
         void SetName(std::string&& name) { m_name = std::move(name); }
@@ -56,22 +48,11 @@ namespace SR_UTILS_NS::Web {
     private:
         HTMLNode* m_pParent = nullptr;
         HTMLTag m_tag = HTMLTag::Undefined;
+        //CSSStyle m_style;
         std::string m_nodeName;
         std::string m_text;
         std::vector<HTMLNode*> m_children;
         std::vector<HTMLAttribute*> m_attributes;
-
-    };
-
-    class HTMLImage : public HTMLClass {
-
-    };
-
-    class HTMLHead : public HTMLClass {
-
-    };
-
-    class HTMLBody : public HTMLClass {
 
     };
 

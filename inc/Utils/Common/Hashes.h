@@ -178,6 +178,8 @@ namespace SR_UTILS_NS {
     T sha256(const std::string& msg) {
         return sha256<T>(msg.data(), msg.size());
     }
+
+    using SRHashType = uint64_t;
 }
 
 template <class Elem, class Alloc> struct SR_UTILS_NS::SRHash<std::basic_string<Elem, std::char_traits<Elem>, Alloc>> : SR_UTILS_NS::SRConditionallyEnabledHash<std::basic_string<Elem, std::char_traits<Elem>, Alloc>, IsECharT<Elem>> {

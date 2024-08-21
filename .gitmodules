@@ -34,3 +34,6 @@
 [submodule "libs/myhtml"]
 	path = libs/myhtml
 	url = https://github.com/SpaRcle-Studio/myhtml
+[submodule "libs/cssparser"]
+	path = libs/cssparser
+	url = https://github.com/SpaRcle-Studio/cssparser
