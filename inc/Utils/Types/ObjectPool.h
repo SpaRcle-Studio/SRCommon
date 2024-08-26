@@ -7,6 +7,7 @@
 
 #include <Utils/Types/Stack.h>
 #include <Utils/Types/Function.h>
+#include <Utils/Common/StringFormat.h>
 
 namespace SR_HTYPES_NS {
     template<typename T, typename Index = uint64_t> class ObjectPool : SR_UTILS_NS::NonCopyable {

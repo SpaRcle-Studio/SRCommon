@@ -3,10 +3,12 @@
 //
 
 #include <Utils/Web/HTML/HTMLParser.h>
+#include <Utils/Web/CSS/CSSParser.h>
+#include <Utils/FileSystem/FileSystem.h>
 #include <Utils/Debug.h>
+#include <Utils/Resources/ResourceManager.h>
 
 #include <myhtml/api.h>
-#include <Utils/FileSystem/FileSystem.h>
 
 namespace SR_UTILS_NS::Web {
     HTMLPage::Ptr HTMLParser::Parse(const Path& path) {
@@ -28,9 +30,13 @@ namespace SR_UTILS_NS::Web {
 
         myhtml_parse(pTree, MyENCODING_UTF_8, htmlData.c_str(), htmlData.size());
 
-        const HTMLPage::Ptr pPage = ParseTree(pTree);
+        HTMLPage::Ptr pPage = ParseTree(pTree);
         if (!pPage) {
             SR_ERROR("HTMLParser::Parse() : failed to parse HTML file: {}", path.c_str());
+        }
+
+        if (!ProcessCSS(pPage.Get())) {
+            SR_ERROR("HTMLParser::Parse() : failed to process CSS");
         }
 
         myhtml_tree_destroy(pTree);
@@ -68,7 +74,8 @@ namespace SR_UTILS_NS::Web {
             result.append(SR_FORMAT("<{}", pNode->GetNodeName()));
         }
 
-        for (const auto& pAttribute : pNode->GetAttributes()) {
+        for (const auto& attributeId : pNode->GetAttributes()) {
+            auto&& pAttribute = pNode->GetPage()->GetAttributeById(attributeId);
             result.append(SR_FORMAT(" {}", DebugAttributeTostring(pAttribute)));
         }
 
@@ -79,7 +86,8 @@ namespace SR_UTILS_NS::Web {
             result.append(">\n");
         }
 
-        for (const auto& pChild : pNode->GetChildren()) {
+        for (const auto& childId : pNode->GetChildren()) {
+            auto&& pChild = pNode->GetPage()->GetNodeById(childId);
             result.append(DebugNodeTostring(pChild, depth + 1));
         }
 
@@ -117,7 +125,7 @@ namespace SR_UTILS_NS::Web {
         }
 
         auto&& pPage = HTMLPage::MakeShared();
-        if (!ParseNode(pTree, pNode, pPage.Get(), nullptr)) {
+        if (!ParseNode(pTree, pNode, pPage.Get(), SR_ID_INVALID)) {
             SR_ERROR("HTMLParser::ParseTree() : failed to parse node");
             return nullptr;
         }
@@ -125,7 +133,7 @@ namespace SR_UTILS_NS::Web {
         return pPage;
     }
 
-    bool HTMLParser::ParseNode(myhtml_tree* pTree, myhtml_tree_node* pRawNode, HTMLPage* pPage, HTMLNode* pNodeParent) const {
+    bool HTMLParser::ParseNode(myhtml_tree* pTree, myhtml_tree_node* pRawNode, HTMLPage* pPage, uint64_t parentNodeId) const {
         if (!pRawNode || !pTree) {
             return false;
         }
@@ -133,7 +141,7 @@ namespace SR_UTILS_NS::Web {
         while (pRawNode) {
             const myhtml_tag_id_t tagId = myhtml_node_tag_id(pRawNode);
 
-            if ((tagId == MyHTML_TAG_HTML || tagId == MyHTML_TAG__UNDEF) && !pNodeParent) {
+            if ((tagId == MyHTML_TAG_HTML || tagId == MyHTML_TAG__UNDEF) && parentNodeId == SR_ID_INVALID) {
                 SRAssert(!pPage->GetHead() && !pPage->GetBody());
                 pRawNode = myhtml_node_child(pRawNode);
                 continue;
@@ -144,10 +152,9 @@ namespace SR_UTILS_NS::Web {
                 continue;
             }
 
-            auto&& pNode = new HTMLNode();
+            auto&& pNode = pPage->AllocateNode();
 
             pNode->SetTag(MyHTMLTagToHTMLTag(tagId));
-            pNode->SetParent(pNodeParent);
 
             if (tagId == MyHTML_TAG__UNDEF) {
                 pNode->SetNodeName(myhtml_tag_name_by_id(pTree, tagId, nullptr));
@@ -160,8 +167,9 @@ namespace SR_UTILS_NS::Web {
                 pNode->SetText(myhtml_node_text(pRawNode, nullptr));
             }
 
-            if (pNodeParent) {
-                pNodeParent->AddChild(pNode);
+            if (parentNodeId != SR_ID_INVALID) {
+                pNode->SetParent(parentNodeId);
+                pPage->GetNodeById(parentNodeId)->AddChild(pNode);
             }
             else if (tagId == MyHTML_TAG_HEAD) {
                 SRAssert(!pPage->GetHead());
@@ -173,14 +181,14 @@ namespace SR_UTILS_NS::Web {
             }
             else {
                 SR_WARN("HTMLParser::ParseNode() : cannot add node to parent with name: {}", pNode->GetNodeName().c_str());
-                delete pNode;
+                pPage->FreeNode(pNode);
                 pRawNode = myhtml_node_next(pRawNode);
                 continue;
             }
 
             ParseNodeAttributes(pRawNode, pNode);
 
-            ParseNode(pTree, myhtml_node_child(pRawNode), pPage, pNode);
+            ParseNode(pTree, myhtml_node_child(pRawNode), pPage, pNode->GetId());
 
             pRawNode = myhtml_node_next(pRawNode);
         }
@@ -188,25 +196,102 @@ namespace SR_UTILS_NS::Web {
         return true;
     }
 
-    bool HTMLParser::ParseNodeAttributes(myhtml_tree_node* pNode, HTMLNode* pClass) const {
-        if (!pNode || !pClass) {
+    bool HTMLParser::ParseNodeAttributes(myhtml_tree_node* pRawNode, HTMLNode* pNode) const {
+        if (!pRawNode || !pNode) {
             SRHalt("HTMLParser::ParseNodeAttributes() : invalid arguments");
             return false;
         }
-        myhtml_tree_attr_t* pRawAttribute = myhtml_node_attribute_first(pNode);
+        myhtml_tree_attr_t* pRawAttribute = myhtml_node_attribute_first(pRawNode);
 
         while (pRawAttribute) {
             if (const char* name = myhtml_attribute_key(pRawAttribute, nullptr)) {
                 if (const char* value = myhtml_attribute_value(pRawAttribute, nullptr)) {
-                    auto&& pAttribute = new HTMLAttribute();
+                    auto&& pAttribute = pNode->GetPage()->AllocateAttribute();
                     pAttribute->SetName(name);
                     pAttribute->SetValue(value);
-                    pClass->AddAttribute(pAttribute);
+                    pNode->AddAttribute(pAttribute);
                 }
             }
 
             pRawAttribute = myhtml_attribute_next(pRawAttribute);
         }
+
+        return true;
+    }
+
+    bool HTMLParser::ProcessCSS(HTMLPage* pPage) const {
+        SR_TRACY_ZONE;
+
+        if (!pPage->GetHead()) {
+            SR_WARN("HTMLParser::ProcessCSS() : no head node!");
+            return false;
+        }
+
+        for (const auto& nodeId : pPage->GetHead()->GetChildren()) {
+            auto&& pNode = pPage->GetNodeById(nodeId);
+            if (pNode->GetTag() == HTMLTag::Style) {
+                HTMLAttribute* pRelAttribute = pNode->GetAttributeByName("type");
+                if (!pRelAttribute || pRelAttribute->GetValue() != "text/css") {
+                    continue;
+                }
+
+                if (pNode->GetChildren().size() != 1) {
+                    SR_WARN("HTMLParser::ProcessCSS() : invalid CSS node!");
+                    continue;
+                }
+
+                pNode = pPage->GetNodeById(pNode->GetChildren().front());
+                const std::string css = pNode->GetText();
+                if (css.empty()) {
+                    SR_WARN("HTMLParser::ProcessCSS() : empty CSS");
+                    continue;
+                }
+                if (auto&& pStyle = CSSParser::Instance().Parse(css)) {
+                    pPage->AddStyle(pStyle);
+                }
+                continue;
+            }
+
+            if (pNode->GetTag() == HTMLTag::Link) {
+                HTMLAttribute* pRelAttribute = pNode->GetAttributeByName("rel");
+                if (!pRelAttribute || pRelAttribute->GetValue() != "stylesheet") {
+                    continue;
+                }
+
+                HTMLAttribute* pAttribute = pNode->GetAttributeByName("href");
+                if (!pAttribute) {
+                    SR_WARN("HTMLParser::ProcessCSS() : empty href!");
+                    continue;
+                }
+
+                const Path cssPath = SR_UTILS_NS::ResourceManager::Instance().GetResPath().Concat(pAttribute->GetValue());
+                if (auto&& pStyle = CSSParser::Instance().Parse(cssPath)) {
+                    pPage->AddStyle(pStyle);
+                }
+                continue;
+            }
+        }
+
+        std::function <void(HTMLNode*)> processChildren;
+
+        processChildren = [&](HTMLNode* pNode) {
+            for (const auto& attributeId : pNode->GetAttributes()) {
+                auto&& pAttribute = pNode->GetPage()->GetAttributeById(attributeId);
+                if (pAttribute->GetName() == "class") {
+                    if (const auto& style = pPage->GetStyle(pAttribute->GetValue())) {
+                        pNode->SetStyle(style.value());
+                        break;
+                    }
+                }
+            }
+
+            for (const auto& childId : pNode->GetChildren()) {
+                auto&& pChild = pNode->GetPage()->GetNodeById(childId);
+                processChildren(pChild);
+            }
+        };
+
+        processChildren(pPage->GetBody());
 
         return true;
     }

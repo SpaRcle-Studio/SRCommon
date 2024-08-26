@@ -19,7 +19,10 @@ namespace SR_UTILS_NS::Web {
 
         SR_NODISCARD std::string ToString(uint16_t depth = 0) const;
 
-        CSSOptionalSizeValue width, height; /// content size
+        CSSOptionalSizeValue /// content size
+            width, // = CSSSizeValue(0.f, CSSSizeValue::Unit::Percent),
+            height; // = CSSSizeValue(0.f, CSSSizeValue::Unit::Percent);
+
         CSSOptionalSizeValue minWidth, minHeight;
         CSSOptionalSizeValue maxWidth, maxHeight;
 
@@ -67,6 +70,11 @@ namespace SR_UTILS_NS::Web {
 
     public:
         SR_NODISCARD std::string ToString(uint16_t depth = 0) const;
+
+        SR_NODISCARD const CSSStyle* GetStyle(const std::string& token) const {
+            const auto it = m_tokens.find(token);
+            return it != m_tokens.end() ? &it->second : nullptr;
+        }
 
         void AddStyle(std::string&& token, const CSSStyle& style) {
             m_tokens.emplace(std::move(token), style);

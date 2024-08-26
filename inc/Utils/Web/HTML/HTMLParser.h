@@ -21,8 +21,10 @@ namespace SR_UTILS_NS::Web {
 
     private:
         SR_NODISCARD HTMLPage::Ptr ParseTree(myhtml_tree* pTree) const;
-        bool ParseNode(myhtml_tree* pTree, myhtml_tree_node* pRawNode, HTMLPage* pPage, HTMLNode* pNode) const;
-        bool ParseNodeAttributes(myhtml_tree_node* pNode, HTMLNode* pClass) const;
+        bool ParseNode(myhtml_tree* pTree, myhtml_tree_node* pRawNode, HTMLPage* pPage, uint64_t parentNodeId) const;
+        bool ParseNodeAttributes(myhtml_tree_node* pRawNode, HTMLNode* pNode) const;
+
+        bool ProcessCSS(HTMLPage* pPage) const;
 
         std::string DebugNodeTostring(const HTMLNode* pNode, uint16_t depth) const;
         std::string DebugAttributeTostring(const HTMLAttribute* pAttribute) const;

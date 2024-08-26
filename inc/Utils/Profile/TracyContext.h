@@ -58,7 +58,7 @@ namespace SR_UTILS_NS {
 #ifdef SR_TRACY_ENABLE
     #define SR_TRACY_IS_PROFILER_CONNECTED (tracy::GetProfiler().IsConnected())
     #define SR_TRACY_TEXT_N(name, text) ZoneText(text.c_str(), text.size())
-    #define SR_TRACY_ZONE ZoneScoped
+    #define SR_TRACY_ZONE ZoneScoped /** NOLINT */
     #define SR_TRACY_ZONE_VALUE(value) ZoneValue(value)
     #define SR_TRACY_ZONE_TEXT(value) ZoneText(value.c_str(), value.size())
     #define SR_TRACY_ZONE_TEXT_C(value) ZoneText(value, strlen(value))
