@@ -2,8 +2,8 @@
 // Created by Monika on 30.09.2021.
 //
 
-#ifndef GAMEENGINE_REGION_H
-#define GAMEENGINE_REGION_H
+#ifndef SR_ENGINE_REGION_H
+#define SR_ENGINE_REGION_H
 
 #include <Utils/Math/Vector3.h>
 #include <Utils/World/Observer.h>
@@ -93,4 +93,4 @@ namespace SR_WORLD_NS {
     };
 }
 
-#endif //GAMEENGINE_REGION_H
+#endif //SR_ENGINE_REGION_H

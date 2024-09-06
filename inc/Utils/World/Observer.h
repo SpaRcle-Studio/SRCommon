@@ -2,8 +2,8 @@
 // Created by mantsurov-n on 03.12.2021.
 //
 
-#ifndef GAMEENGINE_OBSERVER_H
-#define GAMEENGINE_OBSERVER_H
+#ifndef SR_ENGINE_OBSERVER_H
+#define SR_ENGINE_OBSERVER_H
 
 #include <Utils/Types/SafePointer.h>
 #include <Utils/Types/SharedPtr.h>
@@ -106,4 +106,4 @@ namespace SR_WORLD_NS {
     SR_DLL_EXPORT Math::FVector3 AddOffset(const Math::FVector3& region, const Math::IVector3& offset);
 }
 
-#endif //GAMEENGINE_OBSERVER_H
+#endif //SR_ENGINE_OBSERVER_H

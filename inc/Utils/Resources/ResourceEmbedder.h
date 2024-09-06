@@ -2,8 +2,8 @@
 // Created by innerviewer on 2024-03-24.
 //
 
-#ifndef SRENGINE_RESOURCEEMBEDDER_H
-#define SRENGINE_RESOURCEEMBEDDER_H
+#ifndef SR_ENGINE_RESOURCEEMBEDDER_H
+#define SR_ENGINE_RESOURCEEMBEDDER_H
 
 #include <Utils/stdInclude.h>
 #include <Utils/FileSystem/Path.h>
@@ -46,4 +46,4 @@ namespace SR_UTILS_NS {
     };
 }
 
-#endif //SRENGINE_RESOURCEEMBEDDER_H
+#endif //SR_ENGINE_RESOURCEEMBEDDER_H

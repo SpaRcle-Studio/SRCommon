@@ -2,8 +2,8 @@
 // Created by Nikita on 01.03.2021.
 //
 
-#ifndef GAMEENGINE_MATRIX3X3_H
-#define GAMEENGINE_MATRIX3X3_H
+#ifndef SR_ENGINE_MATRIX3X3_H
+#define SR_ENGINE_MATRIX3X3_H
 
 #include <Utils/Math/Quaternion.h>
 #include <Utils/Math/Vector3.h>
@@ -67,4 +67,4 @@ namespace SR_MATH_NS {
     };
 }
 
-#endif //GAMEENGINE_MATRIX3X3_H
+#endif //SR_ENGINE_MATRIX3X3_H

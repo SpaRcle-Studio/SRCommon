@@ -2,8 +2,8 @@
 // Created by Nikita on 17.11.2020.
 //
 
-#ifndef GAMEENGINE_STRINGUTILS_H
-#define GAMEENGINE_STRINGUTILS_H
+#ifndef SR_ENGINE_STRINGUTILS_H
+#define SR_ENGINE_STRINGUTILS_H
 
 #include <Utils/Math/Mathematics.h>
 
@@ -466,4 +466,4 @@ namespace SR_UTILS_NS {
     };
 }
 
-#endif //GAMEENGINE_STRINGUTILS_H
+#endif //SR_ENGINE_STRINGUTILS_H

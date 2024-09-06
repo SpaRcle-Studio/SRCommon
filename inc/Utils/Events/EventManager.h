@@ -2,8 +2,8 @@
 // Created by Nikita on 27.01.2021.
 //
 
-#ifndef GAMEENGINE_EVENTMANAGER_H
-#define GAMEENGINE_EVENTMANAGER_H
+#ifndef SR_ENGINE_EVENTMANAGER_H
+#define SR_ENGINE_EVENTMANAGER_H
 
 #include <Utils/Debug.h>
 #include <Utils/Types/Function.h>
@@ -43,4 +43,4 @@ namespace SR_UTILS_NS {
     };
 }
 
-#endif //GAMEENGINE_EVENTMANAGER_H
+#endif //SR_ENGINE_EVENTMANAGER_H

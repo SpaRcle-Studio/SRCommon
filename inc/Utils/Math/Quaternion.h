@@ -2,8 +2,8 @@
 // Created by Nikita on 01.03.2021.
 //
 
-#ifndef GAMEENGINE_QUATERNION_H
-#define GAMEENGINE_QUATERNION_H
+#ifndef SR_ENGINE_QUATERNION_H
+#define SR_ENGINE_QUATERNION_H
 
 #include <Utils/Math/Mathematics.h>
 
@@ -284,4 +284,4 @@ namespace SR_MATH_NS {
     inline static const Quaternion InfinityQuaternion = Quaternion { UnitMAX, UnitMAX, UnitMAX, UnitMAX };
 }
 
-#endif //GAMEENGINE_QUATERNION_H
+#endif //SR_ENGINE_QUATERNION_H
