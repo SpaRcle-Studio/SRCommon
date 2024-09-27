@@ -2,8 +2,8 @@
 // Created by Monika on 17.11.2021.
 //
 
-#ifndef GAMEENGINE_THREAD_H
-#define GAMEENGINE_THREAD_H
+#ifndef SR_ENGINE_THREAD_H
+#define SR_ENGINE_THREAD_H
 
 #include <Utils/Debug.h>
 #include <Utils/Common/ThreadUtils.h>
@@ -193,4 +193,4 @@ namespace SR_HTYPES_NS {
     };
 }
 
-#endif //GAMEENGINE_THREAD_H
+#endif //SR_ENGINE_THREAD_H

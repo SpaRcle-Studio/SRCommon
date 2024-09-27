@@ -2,8 +2,8 @@
 // Created by Monika on 30.09.2021.
 //
 
-#ifndef GAMEENGINE_CHUNK_H
-#define GAMEENGINE_CHUNK_H
+#ifndef SR_ENGINE_CHUNK_H
+#define SR_ENGINE_CHUNK_H
 
 #include <Utils/Math/Vector2.h>
 #include <Utils/Types/SharedPtr.h>
@@ -88,4 +88,4 @@ namespace SR_WORLD_NS {
     };
 }
 
-#endif //GAMEENGINE_CHUNK_H
+#endif //SR_ENGINE_CHUNK_H

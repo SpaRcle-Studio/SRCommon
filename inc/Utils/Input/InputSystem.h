@@ -2,8 +2,8 @@
 // Created by Nikita on 30.12.2020.
 //
 
-#ifndef GAMEENGINE_INPUTSYSTEM_H
-#define GAMEENGINE_INPUTSYSTEM_H
+#ifndef SR_ENGINE_INPUTSYSTEM_H
+#define SR_ENGINE_INPUTSYSTEM_H
 
 #include <Utils/Math/Vector2.h>
 #include <Utils/Input/KeyCodes.h>
@@ -101,4 +101,4 @@ namespace SR_UTILS_NS {
 
 }
 
-#endif //GAMEENGINE_INPUTSYSTEM_H
+#endif //SR_ENGINE_INPUTSYSTEM_H

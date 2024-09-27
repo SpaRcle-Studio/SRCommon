@@ -2,8 +2,8 @@
 // Created by Nikita on 16.11.2020.
 //
 
-#ifndef GAMEENGINE_IRESOURCE_H
-#define GAMEENGINE_IRESOURCE_H
+#ifndef SR_ENGINE_IRESOURCE_H
+#define SR_ENGINE_IRESOURCE_H
 
 #include <Utils/Debug.h>
 #include <Utils/FileSystem/Path.h>
@@ -159,4 +159,4 @@ namespace SR_UTILS_NS {
     };
 }
 
-#endif //GAMEENGINE_IRESOURCE_H
+#endif //SR_ENGINE_IRESOURCE_H

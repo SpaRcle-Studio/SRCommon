@@ -2,8 +2,8 @@
 // Created by Nikita on 27.11.2020.
 //
 
-#ifndef GAMEENGINE_TRANSFORM_H
-#define GAMEENGINE_TRANSFORM_H
+#ifndef SR_ENGINE_TRANSFORM_H
+#define SR_ENGINE_TRANSFORM_H
 
 #include <Utils/ECS/ISavable.h>
 #include <Utils/Common/Measurement.h>
@@ -128,4 +128,4 @@ namespace SR_UTILS_NS {
     };
 }
 
-#endif //GAMEENGINE_TRANSFORM_H
+#endif //SR_ENGINE_TRANSFORM_H

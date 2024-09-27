@@ -2,8 +2,8 @@
 // Created by Monika on 01.10.2021.
 //
 
-#ifndef GAMEENGINE_ENUMERATIONS_H
-#define GAMEENGINE_ENUMERATIONS_H
+#ifndef SR_ENGINE_ENUMERATIONS_H
+#define SR_ENGINE_ENUMERATIONS_H
 
 #include <Utils/Common/EnumReflector.h>
 
@@ -55,4 +55,4 @@ namespace SR_UTILS_NS {
     );
 }
 
-#endif //GAMEENGINE_ENUMERATIONS_H
+#endif //SR_ENGINE_ENUMERATIONS_H

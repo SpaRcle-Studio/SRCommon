@@ -2,8 +2,8 @@
 // Created by Nikita on 27.11.2020.
 //
 
-#ifndef GAMEENGINE_GAMEOBJECT_H
-#define GAMEENGINE_GAMEOBJECT_H
+#ifndef SR_ENGINE_GAMEOBJECT_H
+#define SR_ENGINE_GAMEOBJECT_H
 
 #include <Utils/ECS/EntityManager.h>
 #include <Utils/ECS/IComponentable.h>
@@ -152,4 +152,4 @@ namespace SR_UTILS_NS {
     };
 }
 
-#endif //GAMEENGINE_GAMEOBJECT_H
+#endif //SR_ENGINE_GAMEOBJECT_H

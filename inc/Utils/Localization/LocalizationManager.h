@@ -1,8 +1,8 @@
 //
 // Created by innerviewer on 2024-03-17.
 //
-#ifndef SRENGINE_LOCALIZATIONMANAGER_H
-#define SRENGINE_LOCALIZATIONMANAGER_H
+#ifndef SR_ENGINE_LOCALIZATIONMANAGER_H
+#define SR_ENGINE_LOCALIZATIONMANAGER_H
 
 ///#include <Graphics/Font/ITextComponent.h>
 #include <Utils/Types/UnicodeString.h>
@@ -78,4 +78,4 @@ namespace SR_UTILS_NS::Localization {
 
 }
 
-#endif //SRENGINE_LOCALIZATIONMANAGER_H
+#endif //SR_ENGINE_LOCALIZATIONMANAGER_H

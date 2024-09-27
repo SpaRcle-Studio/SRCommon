@@ -2,8 +2,8 @@
 // Created by Nikita on 11.07.2021.
 //
 
-#ifndef GAMEENGINE_VECTOR2_H
-#define GAMEENGINE_VECTOR2_H
+#ifndef SR_ENGINE_VECTOR2_H
+#define SR_ENGINE_VECTOR2_H
 
 #include <Utils/Math/Mathematics.h>
 #include <Utils/Math/Axis.h>
@@ -248,4 +248,4 @@ namespace std {
     };
 }
 
-#endif //GAMEENGINE_VECTOR2_H
+#endif //SR_ENGINE_VECTOR2_H

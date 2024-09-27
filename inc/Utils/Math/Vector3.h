@@ -2,8 +2,8 @@
 // Created by Nikita on 01.03.2021.
 //
 
-#ifndef GAMEENGINE_VECTOR3_H
-#define GAMEENGINE_VECTOR3_H
+#ifndef SR_ENGINE_VECTOR3_H
+#define SR_ENGINE_VECTOR3_H
 
 #include <Utils/Math/Vector2.h>
 #include <Utils/Math/Quaternion.h>
@@ -711,4 +711,4 @@ namespace std {
     };
 }
 
-#endif //GAMEENGINE_VECTOR3_H
+#endif //SR_ENGINE_VECTOR3_H
