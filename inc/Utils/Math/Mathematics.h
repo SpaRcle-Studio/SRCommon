@@ -63,7 +63,7 @@
 #define SR_DOUBLE_MAX std::numeric_limits<double_t>::max()
 #define SR_FLOAT_MAX std::numeric_limits<float_t>::max()
 
-#define SR_GRAV_CONST (9.81) // Gravitational Conctant (m/s^2)
+#define SR_EARTH_GRAVITY_CONST (9.81) // Gravitational Conctant (m/s^2)
 
 #define SR_SQUARE(value) (value * value)
 #define SR_POW(x, n) std::pow(x, n)

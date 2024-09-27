@@ -60,6 +60,7 @@
 #include <concepts>
 #include <condition_variable>
 #include <numeric>
+#include <numbers>
 
 #ifdef SR_SUPPORT_PARALLEL
     #include <omp.h>
