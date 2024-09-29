@@ -7,12 +7,13 @@
 #include <cssparser/cssparser/CSSParser.h>
 
 namespace SR_UTILS_NS::Web {
-    CSS::Ptr CSSParser::Parse(const Path& path, CSSParserContext context) {
-        const std::string data = SR_UTILS_NS::FileSystem::ReadBinaryAsString(path);
+    CSS::Ptr CSSParser::Parse(const Path& path, const CSSParserContext& context) {
+        const SR_UTILS_NS::Path fullPath = SR_UTILS_NS::ResourceManager::Instance().GetResPath().Concat(path);
+        const std::string data = SR_UTILS_NS::FileSystem::ReadBinaryAsString(fullPath);
         return Parse(data);
     }
 
-    CSS::Ptr CSSParser::Parse(const std::string& data, CSSParserContext context) {
+    CSS::Ptr CSSParser::Parse(const std::string& data, const CSSParserContext& context) {
         if (data.empty()) {
             SRHalt("CSSParser::Parse() : empty data");
             return {};

@@ -12,9 +12,10 @@
 
 namespace SR_UTILS_NS::Web {
     HTMLPage::Ptr HTMLParser::Parse(const Path& path) {
-        const std::string htmlData = SR_UTILS_NS::FileSystem::ReadBinaryAsString(path);
+        const SR_UTILS_NS::Path& fullPath = SR_UTILS_NS::ResourceManager::Instance().GetResPath().Concat(path);
+        const std::string htmlData = SR_UTILS_NS::FileSystem::ReadBinaryAsString(fullPath);
         if (htmlData.empty()) {
-            SR_ERROR("HTMLParser::Parse() : failed to read HTML file: {}", path.c_str());
+            SR_ERROR("HTMLParser::Parse() : failed to read HTML file: {}", fullPath.c_str());
             return nullptr;
         }
 
@@ -32,8 +33,10 @@ namespace SR_UTILS_NS::Web {
 
         HTMLPage::Ptr pPage = ParseTree(pTree);
         if (!pPage) {
-            SR_ERROR("HTMLParser::Parse() : failed to parse HTML file: {}", path.c_str());
+            SR_ERROR("HTMLParser::Parse() : failed to parse HTML file: {}", fullPath.c_str());
         }
+
+        pPage->AddPath(path);
 
         if (!ProcessCSS(pPage.Get())) {
             SR_ERROR("HTMLParser::Parse() : failed to process CSS");
@@ -267,6 +270,7 @@ namespace SR_UTILS_NS::Web {
                 const Path cssPath = SR_UTILS_NS::ResourceManager::Instance().GetResPath().Concat(pAttribute->GetValue());
                 if (auto&& pStyle = CSSParser::Instance().Parse(cssPath)) {
                     pPage->AddStyle(pStyle);
+                    pPage->AddPath(pAttribute->GetValue());
                 }
                 continue;
             }

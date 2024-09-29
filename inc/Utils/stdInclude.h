@@ -36,6 +36,7 @@
 #include <string>
 #include <cassert>
 #include <cmath>
+#include <ranges>
 #include <atomic>
 #include <utility>
 #include <array>

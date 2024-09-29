@@ -173,6 +173,8 @@ namespace SR_UTILS_NS::Web {
         SR_NODISCARD const HTMLNode* GetHead() const { return m_headId != SR_ID_INVALID ? &m_nodePool.AtUnchecked(m_headId) : nullptr; }
         SR_NODISCARD const HTMLNode* GetBody() const { return m_bodyId != SR_ID_INVALID ? &m_nodePool.AtUnchecked(m_bodyId) : nullptr; }
 
+        SR_NODISCARD const std::vector<SR_UTILS_NS::Path>& GetPaths() const { return m_paths; }
+
         SR_NODISCARD SR_MATH_NS::UVector2 GetSize() const;
 
         SR_NODISCARD HTMLNode* GetNodeById(uint64_t id);
@@ -193,6 +195,9 @@ namespace SR_UTILS_NS::Web {
         void SetHead(const HTMLNode* pHead) { m_headId = pHead->GetId(); }
         void SetBody(const HTMLNode* pBody) { m_bodyId = pBody->GetId(); }
 
+        void AddPath(SR_UTILS_NS::Path&& path) { m_paths.emplace_back(std::move(path)); }
+        void AddPath(const SR_UTILS_NS::Path& path) { m_paths.emplace_back(path); }
+
         void RemoveUserDataRecursively();
 
     private:
@@ -203,6 +208,8 @@ namespace SR_UTILS_NS::Web {
         SR_HTYPES_NS::ObjectPool<HTMLAttribute> m_attributePool;
 
         std::vector<CSS::Ptr> m_styles;
+
+        std::vector<SR_UTILS_NS::Path> m_paths;
 
     };
 }
