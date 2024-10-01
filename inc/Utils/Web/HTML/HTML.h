@@ -182,9 +182,18 @@ namespace SR_UTILS_NS::Web {
 
         void AddStyle(const CSS::Ptr& pStyle) { m_styles.emplace_back(pStyle); }
 
-        SR_NODISCARD std::optional<CSSStyle> GetStyle(const std::string& selector) const {
+        SR_NODISCARD std::optional<CSSStyle> GetClassStyle(const std::string& selector) const {
             for (const auto& pStyle : m_styles) {
-                if (const auto pStyleValue = pStyle->GetStyle(selector)) {
+                if (const auto pStyleValue = pStyle->GetClassStyle(selector)) {
+                    return *pStyleValue;
+                }
+            }
+            return std::nullopt;
+        }
+
+        SR_NODISCARD std::optional<CSSStyle> GetTagStyle(const std::string& selector) const {
+            for (const auto& pStyle : m_styles) {
+                if (const auto pStyleValue = pStyle->GetTagStyle(selector)) {
                     return *pStyleValue;
                 }
             }

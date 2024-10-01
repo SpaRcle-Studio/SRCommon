@@ -11,37 +11,12 @@ namespace SR_UTILS_NS::Web {
             return {};
         }
 
-        const static std::unordered_map<SRHashType, CSSRGBAColor> palette = {
-            { "transparent"_atom_hash, { 0, 0, 0, 0 } },
-            { "black"_atom_hash, { 0, 0, 0, 255 } },
-            { "silver"_atom_hash, { 192, 192, 192, 255 } },
-            { "gray"_atom_hash, { 128, 128, 128, 255 } },
-            { "white"_atom_hash, { 255, 255, 255, 255 } },
-            { "maroon"_atom_hash, { 128, 0, 0, 255 } },
-            { "red"_atom_hash, { 255, 0, 0, 255 } },
-            { "purple"_atom_hash, { 128, 0, 128, 255 } },
-            { "fuchsia"_atom_hash, { 255, 0, 255, 255 } },
-            { "green"_atom_hash, { 0, 128, 0, 255 } },
-            { "lime"_atom_hash, { 0, 255, 0, 255 } },
-            { "olive"_atom_hash, { 128, 128, 0, 255 } },
-            { "yellow"_atom_hash, { 255, 255, 0, 255 } },
-            { "navy"_atom_hash, { 0, 0, 128, 255 } },
-            { "blue"_atom_hash, { 0, 0, 255, 255 } },
-            { "teal"_atom_hash, { 0, 128, 128, 255 } },
-            { "aqua"_atom_hash, { 0, 255, 255, 255 } },
-        };
-
-        const SRHashType hash = SR_HASH_STR_VIEW(data);
-        if (const auto it = palette.find(hash); it != palette.end()) {
-            return it->second;
-        }
-
         const auto color = SR_UTILS_NS::LexicalCast<SR_MATH_NS::FColor>(data);
         return {
-            static_cast<uint8_t>(color.r * 255),
-            static_cast<uint8_t>(color.g * 255),
-            static_cast<uint8_t>(color.b * 255),
-            static_cast<uint8_t>(color.a * 255)
+            static_cast<uint8_t>(color.r * 255.f),
+            static_cast<uint8_t>(color.g * 255.f),
+            static_cast<uint8_t>(color.b * 255.f),
+            static_cast<uint8_t>(color.a * 255.f)
         };
     }
 

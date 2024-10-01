@@ -273,6 +273,7 @@ namespace SR_UTILS_NS {
             return result;
         }
 
+        static std::vector<std::string_view> SplitView(std::string_view source, std::string_view delimiter);
         static std::vector<std::string> Split(std::string source, const std::string& delimiter);
 
         inline static char** Split(const char* source, char chr, unsigned short start, unsigned short count_strs) {
@@ -420,6 +421,18 @@ namespace SR_UTILS_NS {
                 t = static_cast<char>(tolower(static_cast<char>(t)));
             }
             return str;
+        }
+
+        SR_INLINE_STATIC void ToLowerRef(std::string_view str) noexcept {
+            for (auto t = const_cast<char*>(str.data()); *t != '\0'; t++) {
+                *t = static_cast<char>(tolower(static_cast<char>(*t)));
+            }
+        }
+
+        SR_INLINE_STATIC void ToUpperRef(std::string_view str) noexcept {
+            for (auto t = const_cast<char*>(str.data()); *t != '\0'; t++) {
+                *t = static_cast<char>(toupper(static_cast<char>(*t)));
+            }
         }
 
         inline static std::string MakePath(const std::string& str, bool toLower = false) noexcept {

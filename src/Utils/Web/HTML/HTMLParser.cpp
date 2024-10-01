@@ -157,13 +157,14 @@ namespace SR_UTILS_NS::Web {
 
             auto&& pNode = pPage->AllocateNode();
 
-            pNode->SetTag(MyHTMLTagToHTMLTag(tagId));
-
             if (tagId == MyHTML_TAG__UNDEF) {
                 pNode->SetNodeName(myhtml_tag_name_by_id(pTree, tagId, nullptr));
             }
+            else if (const HTMLTag tag = MyHTMLTagToHTMLTag(tagId); tag != HTMLTag::Undefined) {
+                pNode->SetTag(tag);
+            }
             else {
-                SR_NOOP;
+                SRHalt("HTMLParser::ParseNode() : invalid tag id: {}", tagId);
             }
 
             if (tagId == MyHTML_TAG__TEXT) {
@@ -234,7 +235,7 @@ namespace SR_UTILS_NS::Web {
             auto&& pNode = pPage->GetNodeById(nodeId);
             if (pNode->GetTag() == HTMLTag::Style) {
                 HTMLAttribute* pRelAttribute = pNode->GetAttributeByName("type");
-                if (!pRelAttribute || pRelAttribute->GetValue() != "text/css") {
+                if (pRelAttribute && pRelAttribute->GetValue() != "text/css") {
                     continue;
                 }
 
@@ -279,10 +280,21 @@ namespace SR_UTILS_NS::Web {
         std::function <void(HTMLNode*)> processChildren;
 
         processChildren = [&](HTMLNode* pNode) {
+            if (pNode->GetTag() != HTMLTag::Undefined) {
+                if (auto&& style = pPage->GetTagStyle(HTMLTagToStringAtom(pNode->GetTag()))) {
+                    pNode->SetStyle(style.value());
+                }
+            }
+            else {
+                if (auto&& style = pPage->GetTagStyle(pNode->GetNodeName())) {
+                    pNode->SetStyle(style.value());
+                }
+            }
+
             for (const auto& attributeId : pNode->GetAttributes()) {
                 auto&& pAttribute = pNode->GetPage()->GetAttributeById(attributeId);
                 if (pAttribute->GetName() == "class") {
-                    if (const auto& style = pPage->GetStyle(pAttribute->GetValue())) {
+                    if (const auto& style = pPage->GetClassStyle(pAttribute->GetValue())) {
                         pNode->SetStyle(style.value());
                         break;
                     }

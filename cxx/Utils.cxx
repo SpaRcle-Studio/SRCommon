@@ -27,6 +27,7 @@
 #include "../src/Utils/Math/Matrix4x4.cpp"
 #include "../src/Utils/Math/Quaternion.cpp"
 #include "../src/Utils/Math/Vector3.cpp"
+#include "../src/Utils/Math/Vector4.cpp"
 #include "../src/Utils/Math/Vector6.cpp"
 #include "../src/Utils/Math/Noise.cpp"
 #include "../src/Utils/Math/Rect.cpp"

@@ -17,6 +17,32 @@
 #include <fmt/color.h>
 
 namespace SR_UTILS_NS {
+    /// Функция для преобразования hex символа в целое число
+    SR_INLINE_STATIC uint8_t HexCharToUInt8(const char c) {
+        if (c >= '0' && c <= '9') return c - '0';
+        if (c >= 'A' && c <= 'F') return c - 'A' + 10;
+        if (c >= 'a' && c <= 'f') return c - 'a' + 10;
+        return 0;
+    }
+
+    SR_INLINE_STATIC bool IsHexString(const std::string_view str) {
+        for (const char c : str) {
+            if (!((c >= '0' && c <= '9') || (c >= 'A' && c <= 'F') || (c >= 'a' && c <= 'f'))) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /// Функция для преобразования двух символов hex в байт (8 бит)
+    SR_INLINE_STATIC uint8_t HexToByte(const char* str) {
+        return (HexCharToUInt8(str[0]) << 4) | HexCharToUInt8(str[1]);
+    }
+
+    SR_INLINE_STATIC uint8_t HexToByte(const std::string_view str) {
+        return HexToByte(str.data());
+    }
+
     template<typename T> T LexicalCast(std::string_view str) {
         try {
             if constexpr (std::is_same<T, bool>()) {
@@ -86,6 +112,9 @@ namespace SR_UTILS_NS {
                         if (index < values.size() && a) {
                             color.a = (LexicalCast<float_t>(values[index++])) / 255.0f;
                         }
+                        else {
+                            color.a = 1.0f;
+                        }
                         return color;
                     }
                 }
@@ -97,21 +126,35 @@ namespace SR_UTILS_NS {
                 }
 
                 const bool hasSharp = str[0] == '#';
-                SR_MATH_NS::FColor color; /// FF0000FF
-                if (str.size() >= 2 + hasSharp) {
-                    color.r = static_cast<float_t>(LexicalCast<uint8_t>(str.substr(hasSharp + 0, 2))) / 255.0f;
-                }
-                if (str.size() >= 4 + hasSharp) {
-                    color.g = static_cast<float_t>(LexicalCast<uint8_t>(str.substr(hasSharp + 2, 2))) / 255.0f;
-                }
-                if (str.size() >= 6 + hasSharp) {
-                    color.b = static_cast<float_t>(LexicalCast<uint8_t>(str.substr(hasSharp + 4, 2))) / 255.0f;
-                }
-                if (str.size() >= 8 + hasSharp) {
-                    color.a = static_cast<float_t>(LexicalCast<uint8_t>(str.substr(hasSharp + 6, 2))) / 255.0f;
+
+                if (!hasSharp && !IsHexString(str)) {
+                    const auto&& pIt = SR_MATH_NS::SR_COLOR_PALETTE.find(SR_HASH_STR_VIEW(str));
+                    if (pIt != SR_MATH_NS::SR_COLOR_PALETTE.end()) {
+                        return pIt->second;
+                    }
+                    SR_PLATFORM_NS::WriteConsoleError("LexicalCast: invalid hex string!\n");
+                    SR_MAKE_BREAKPOINT;
+                    return T();
                 }
 
-                return color;
+                SR_MATH_NS::FColor color; /// RRGGBBAA format
+                if (str.size() >= 2 + hasSharp) {
+                    color.r = static_cast<float_t>(HexToByte(str.substr(hasSharp + 0, 2)));
+                }
+                if (str.size() >= 4 + hasSharp) {
+                    color.g = static_cast<float_t>(HexToByte(str.substr(hasSharp + 2, 2)));
+                }
+                if (str.size() >= 6 + hasSharp) {
+                    color.b = static_cast<float_t>(HexToByte(str.substr(hasSharp + 4, 2)));
+                }
+                if (str.size() >= 8 + hasSharp) {
+                    color.a = static_cast<float_t>(HexToByte(str.substr(hasSharp + 6, 2)));
+                }
+                else {
+                    color.a = 255.0f;
+                }
+
+                return color / 255.0f;
             }
             else {
                 SR_PLATFORM_NS::WriteConsoleError("LexicalCast: unsupported type!\n");

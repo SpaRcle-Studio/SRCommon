@@ -94,6 +94,8 @@
 /// C++98 - 199711L
 
 namespace SR_UTILS_NS {
+    using SRHashType = uint64_t;
+
     #ifdef SR_LINUX
         using TimePointType = std::chrono::time_point<std::chrono::system_clock>;
     #else

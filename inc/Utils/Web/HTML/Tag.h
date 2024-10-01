@@ -15,7 +15,7 @@ namespace SR_UTILS_NS::Web {
         P, H1, H2, H3, H4, H5, H6, A,
         Img, Input, Button, Form, Label, Select, Option, Textarea, Table,
         Tr, Td, Th, Thead, Tbody, Tfoot, Ul, Ol, Li, Dl, Dt, Dd,
-        Br, Hr, Meta, Link, Style, Script, Title, Head, Body, Html, Text,
+        Br, Hr, Meta, Link, Style, Script, Title, Head, Body, Html, Text, Header,
         MAX_SIZE
     };
 
@@ -33,7 +33,7 @@ namespace SR_UTILS_NS::Web {
             {"tfoot"_atom, HTMLTag::Tfoot}, {"ul"_atom, HTMLTag::Ul}, {"ol"_atom, HTMLTag::Ol}, {"li"_atom, HTMLTag::Li}, {"dl"_atom, HTMLTag::Dl},
             {"dt"_atom, HTMLTag::Dt}, {"dd"_atom, HTMLTag::Dd},{"br"_atom, HTMLTag::Br}, {"hr"_atom, HTMLTag::Hr}, {"meta"_atom, HTMLTag::Meta}, {"link"_atom, HTMLTag::Link},
             {"style"_atom, HTMLTag::Style}, {"script"_atom, HTMLTag::Script}, {"title"_atom, HTMLTag::Title}, {"head"_atom, HTMLTag::Head}, {"body"_atom, HTMLTag::Body}, {"html"_atom, HTMLTag::Html},
-            {"text"_atom, HTMLTag::Text},
+            {"text"_atom, HTMLTag::Text}, {"header"_atom, HTMLTag::Header}
         };
 
         if (const auto it = HTMLTags.find(tag); it != HTMLTags.end()) {
@@ -47,7 +47,8 @@ namespace SR_UTILS_NS::Web {
             "div"_atom, "span"_atom, "p"_atom, "h1"_atom, "h2"_atom, "h3"_atom, "h4"_atom, "h5"_atom, "h6"_atom, "a"_atom,
             "img"_atom, "input"_atom, "button"_atom, "form"_atom, "label"_atom, "select"_atom, "option"_atom, "textarea"_atom, "table"_atom,
             "tr"_atom, "td"_atom, "th"_atom, "thead"_atom, "tbody"_atom, "tfoot"_atom, "ul"_atom, "ol"_atom, "li"_atom, "dl"_atom, "dt"_atom, "dd"_atom,
-            "br"_atom, "hr"_atom, "meta"_atom, "link"_atom, "style"_atom, "script"_atom, "title"_atom, "head"_atom, "body"_atom, "html"_atom, "text"_atom
+            "br"_atom, "hr"_atom, "meta"_atom, "link"_atom, "style"_atom, "script"_atom, "title"_atom, "head"_atom, "body"_atom, "html"_atom, "text"_atom,
+            "header"_atom,
         };
 
         if ((static_cast<uint32_t>(tag) - 1) < HTMLTags.size()) {

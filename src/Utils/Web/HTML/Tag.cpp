@@ -18,7 +18,7 @@ namespace SR_UTILS_NS::Web {
             {MyHTML_TAG_TFOOT, HTMLTag::Tfoot}, {MyHTML_TAG_UL, HTMLTag::Ul}, {MyHTML_TAG_OL, HTMLTag::Ol}, {MyHTML_TAG_LI, HTMLTag::Li}, {MyHTML_TAG_DL, HTMLTag::Dl},
             {MyHTML_TAG_DT, HTMLTag::Dt}, {MyHTML_TAG_DD, HTMLTag::Dd}, {MyHTML_TAG_BR, HTMLTag::Br}, {MyHTML_TAG_HR, HTMLTag::Hr}, {MyHTML_TAG_META, HTMLTag::Meta}, {MyHTML_TAG_LINK, HTMLTag::Link},
             {MyHTML_TAG_STYLE, HTMLTag::Style}, {MyHTML_TAG_SCRIPT, HTMLTag::Script}, {MyHTML_TAG_TITLE, HTMLTag::Title}, {MyHTML_TAG_HEAD, HTMLTag::Head}, {MyHTML_TAG_BODY, HTMLTag::Body},
-            {MyHTML_TAG_HTML, HTMLTag::Html}, {MyHTML_TAG__TEXT, HTMLTag::Text},
+            {MyHTML_TAG_HTML, HTMLTag::Html}, {MyHTML_TAG__TEXT, HTMLTag::Text}, {MyHTML_TAG_HEADER, HTMLTag::Header},
         };
 
         if (const auto it = myhtmlToHTMLTag.find(myhtmlTag); it != myhtmlToHTMLTag.end()) {

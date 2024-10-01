@@ -31,20 +31,21 @@ namespace SR_UTILS_NS::Web {
         const std::vector<std::string> infos = parser.get_parse_info();
 
         for (const auto& error : errors) {
-            SR_ERROR("CSSParser::Parse() : {}", error.c_str());
+            SR_ERROR("CSSParser::Parse() : parser error \"{}\"", error.c_str());
         }
 
         for (const auto& warning : warnings) {
-            SR_WARN("CSSParser::Parse() : {}", warning.c_str());
+            SR_WARN("CSSParser::Parse() : parser warning \"{}\"", warning.c_str());
         }
 
         for (const auto& info : infos) {
-            SR_INFO("CSSParser::Parse() : {}", info.c_str());
+            SR_INFO("CSSParser::Parse() : parser info \"{}\"", info.c_str());
         }
 
         ::CSSParser::token token = parser.get_next_token();
 
-        std::optional<CSSStyle> style;
+        CSSStyle* pStyle = nullptr;
+        bool isClass = false;
         std::string styleName;
         std::string propertyName;
 
@@ -57,15 +58,11 @@ namespace SR_UTILS_NS::Web {
             /** propery value */
 
             if (!propertyName.empty()) {
-                if (!style.has_value()) {
-                    SRHalt("CSSParser::Parse() : unexpected PROPERTY!");
-                    propertyName.clear();
-                    token = parser.get_next_token();
-                    continue;
-                }
+                pStyle = m_pCSS->GetOrCreateStyle(styleName, isClass);
 
                 if (token.type == ::CSSParser::VALUE) {
-                    style->ParseProperty(propertyName, token.data);
+                    SR_UTILS_NS::StringUtils::ToLower(propertyName);
+                    pStyle->ParseProperty(propertyName, token.data);
                     propertyName.clear();
                 }
                 else {
@@ -77,13 +74,11 @@ namespace SR_UTILS_NS::Web {
             }
 
             if (token.type == ::CSSParser::SEL_END) {
-                if (style.has_value()) {
-                    m_pCSS->AddStyle(SR_EXCHANGE(styleName, {}), style.value());
-                    style.reset();
+                if (styleName.empty()) {
+                    SRHalt("CSSParser::Parse() : unexpected SEL_END!");
                 }
-                else {
-                    SR_WARN("CSSParser::Parse() : unexpected SEL_END!");
-                }
+                styleName.clear();
+                pStyle = nullptr;
                 token = parser.get_next_token();
                 continue;
             }
@@ -107,13 +102,22 @@ namespace SR_UTILS_NS::Web {
             /** styles */
 
             if (token.type == ::CSSParser::SEL_START) {
+                styleName.clear();
+                isClass = false;
                 if (token.data.starts_with(".")) {
-                    style = CSSStyle();
                     styleName = token.data.substr(1);
+                    isClass = true;
+                }
+                else if (token.data == "*") {
+                    styleName = token.data;
+                }
+                else if (!token.data.empty() && styleName.empty() && propertyName.empty() && !pStyle) {
+                    styleName = token.data;
                 }
                 else {
-                    SR_WARN("CSSParser::Parse() : unexpected SEL_START!");
+                    SRHalt("CSSParser::Parse() : unexpected SEL_START!");
                 }
+                SR_UTILS_NS::StringUtils::ToLower(styleName);
                 token = parser.get_next_token();
                 continue;
             }

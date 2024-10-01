@@ -240,6 +240,8 @@ namespace SR_MATH_NS {
 
     };
 
+    extern std::unordered_map<SRHashType, FColor> SR_COLOR_PALETTE;
+
     typedef Vector4<Unit>     FVector4;
     typedef Vector4<int32_t>  IVector4;
     typedef Vector4<uint32_t> UVector4;

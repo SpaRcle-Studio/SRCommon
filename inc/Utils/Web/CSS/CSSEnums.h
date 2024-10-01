@@ -11,6 +11,10 @@
 #include <Utils/Common/StringAtomLiterals.h>
 
 namespace SR_UTILS_NS::Web {
+    enum class CSSBoxSizing : uint8_t {
+        ContentBox, BorderBox, Inherit
+    };
+
     enum class CSSPosition : uint8_t {
         Absolute,
         Relative,
@@ -54,8 +58,9 @@ namespace SR_UTILS_NS::Web {
 
     SR_INLINE_STATIC CSSDisplay DEFAULT_CSS_DISPLAY = CSSDisplay::Inline;
     SR_INLINE_STATIC CSSPosition DEFAULT_CSS_POSITION = CSSPosition::Static;
+    SR_INLINE_STATIC CSSBoxSizing DEFAULT_CSS_BOX_SIZING = CSSBoxSizing::ContentBox;
 
-    static CSSPosition StringToCSSPosition(std::string_view str) {
+    static CSSPosition StringToCSSPosition(const std::string_view str) {
         static std::unordered_map<SRHashType, CSSPosition> map = {
             { "absolute"_atom_hash, CSSPosition::Absolute },
             { "relative"_atom_hash, CSSPosition::Relative },
@@ -70,7 +75,20 @@ namespace SR_UTILS_NS::Web {
         return DEFAULT_CSS_POSITION;
     }
 
-    static CSSDisplay StringToCSSDisplay(std::string_view str) {
+    static CSSBoxSizing StringToCSSBoxSizing(const std::string_view str) {
+        static std::unordered_map<SRHashType, CSSBoxSizing> map = {
+            { "content-box"_atom_hash, CSSBoxSizing::ContentBox },
+            { "border-box"_atom_hash, CSSBoxSizing::BorderBox },
+            { "inherit"_atom_hash, CSSBoxSizing::Inherit },
+        };
+
+        if (auto it = map.find(SR_HASH_STR_VIEW(str)); it != map.end()) {
+            return it->second;
+        }
+        return DEFAULT_CSS_BOX_SIZING;
+    }
+
+    static CSSDisplay StringToCSSDisplay(const std::string_view str) {
         static std::unordered_map<SRHashType, CSSDisplay> map = {
             { "block"_atom_hash, CSSDisplay::Block },
             { "inline"_atom_hash, CSSDisplay::Inline },
@@ -134,6 +152,20 @@ namespace SR_UTILS_NS::Web {
         }
         SRHalt("Unknown CSSPosition value: %d", static_cast<uint32_t>(position));
         return CSSPositionToString(DEFAULT_CSS_POSITION);
+    }
+
+    static SR_UTILS_NS::StringAtom CSSBoxSizingToString(CSSBoxSizing boxSizing) { /// NOLINT
+        static std::array<SR_UTILS_NS::StringAtom, static_cast<uint32_t>(CSSBoxSizing::Inherit) + 1> strings = {
+            "content-box"_atom,
+            "border-box"_atom,
+            "inherit"_atom,
+        };
+
+        if (static_cast<uint32_t>(boxSizing) < strings.size()) {
+            return strings[static_cast<uint32_t>(boxSizing)];
+        }
+        SRHalt("Unknown CSSBoxSizing value: %d", static_cast<uint32_t>(boxSizing));
+        return CSSBoxSizingToString(DEFAULT_CSS_BOX_SIZING);
     }
 
     static SR_UTILS_NS::StringAtom CSSDisplayToString(CSSDisplay display) { /// NOLINT

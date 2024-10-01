@@ -39,6 +39,48 @@ namespace SR_UTILS_NS::Web {
         if (nameHash == "position"_atom_hash_cexpr) {
             position = StringToCSSPosition(data);
         }
+        else if (nameHash == "box-sizing"_atom_hash_cexpr) {
+            boxSizing = StringToCSSBoxSizing(data);
+        }
+        else if (nameHash == "padding"_atom_hash_cexpr) {
+            const auto& values = SR_UTILS_NS::StringUtils::SplitView(data, " ");
+            if (values.size() == 1) {
+                const auto result = CSSSizeValue::Parse(values[0]);
+                if (result) {
+                    paddingTop = paddingRight = paddingBottom = paddingLeft = result.value();
+                }
+            }
+            else if (values.size() == 2) {
+                const auto result1 = CSSSizeValue::Parse(values[0]);
+                const auto result2 = CSSSizeValue::Parse(values[1]);
+                if (result1 && result2) {
+                    paddingTop = paddingBottom = result1.value();
+                    paddingRight = paddingLeft = result2.value();
+                }
+            }
+            else if (values.size() == 3) {
+                const auto result1 = CSSSizeValue::Parse(values[0]);
+                const auto result2 = CSSSizeValue::Parse(values[1]);
+                const auto result3 = CSSSizeValue::Parse(values[2]);
+                if (result1 && result2 && result3) {
+                    paddingTop = result1.value();
+                    paddingRight = paddingLeft = result2.value();
+                    paddingBottom = result3.value();
+                }
+            }
+            else if (values.size() == 4) {
+                const auto result1 = CSSSizeValue::Parse(values[0]);
+                const auto result2 = CSSSizeValue::Parse(values[1]);
+                const auto result3 = CSSSizeValue::Parse(values[2]);
+                const auto result4 = CSSSizeValue::Parse(values[3]);
+                if (result1 && result2 && result3 && result4) {
+                    paddingTop = result1.value();
+                    paddingRight = result2.value();
+                    paddingBottom = result3.value();
+                    paddingLeft = result4.value();
+                }
+            }
+        }
         else if (nameHash == "display"_atom_hash_cexpr) {
             display = StringToCSSDisplay(data);
         }
@@ -76,6 +118,9 @@ namespace SR_UTILS_NS::Web {
         result += SR_FORMAT("display: {};\n", SR_HASH_TO_STR(CSSDisplayToString(display)));
 
         if (depth > 0) { result += std::string(depth, '\t'); }
+        result += SR_FORMAT("box-sizing: {};\n", SR_HASH_TO_STR(CSSBoxSizingToString(boxSizing)));
+
+        if (depth > 0) { result += std::string(depth, '\t'); }
         result += SR_FORMAT("position: {};\n", SR_HASH_TO_STR(CSSPositionToString(position)));
 
         if (const auto str = color.ToString(); !str.empty()) {
@@ -102,9 +147,17 @@ namespace SR_UTILS_NS::Web {
         if (depth > 0) {
             result += std::string(depth, '\t');
         }
-        for (const auto& [token, style] : m_tokens) {
+
+        result = "* {\n" + m_globalStyle.ToString(depth + 1) + "}\n";
+
+        for (const auto& [token, style] : m_styles) {
             std::string body = "{\n" + style.ToString(depth + 1) + "}";
-            result += SR_FORMAT("{} {}\n", token.c_str(), body);
+            if (token.second) {
+                result += SR_FORMAT(".{} {}\n", token.first.c_str(), body);
+            }
+            else {
+                result += SR_FORMAT("{} {}\n", token.first.c_str(), body);
+            }
         }
         return result;
     }
