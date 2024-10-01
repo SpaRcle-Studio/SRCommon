@@ -18,14 +18,14 @@
 
 namespace SR_UTILS_NS {
     /// Функция для преобразования hex символа в целое число
-    SR_INLINE_STATIC uint8_t HexCharToUInt8(const char c) {
+    SR_NODISCARD SR_INLINE_STATIC uint8_t HexCharToUInt8(const char c) {
         if (c >= '0' && c <= '9') return c - '0';
         if (c >= 'A' && c <= 'F') return c - 'A' + 10;
         if (c >= 'a' && c <= 'f') return c - 'a' + 10;
         return 0;
     }
 
-    SR_INLINE_STATIC bool IsHexString(const std::string_view str) {
+    SR_NODISCARD SR_INLINE_STATIC bool IsHexString(const std::string_view str) {
         for (const char c : str) {
             if (!((c >= '0' && c <= '9') || (c >= 'A' && c <= 'F') || (c >= 'a' && c <= 'f'))) {
                 return false;
@@ -35,15 +35,15 @@ namespace SR_UTILS_NS {
     }
 
     /// Функция для преобразования двух символов hex в байт (8 бит)
-    SR_INLINE_STATIC uint8_t HexToByte(const char* str) {
+    SR_NODISCARD SR_INLINE_STATIC uint8_t HexToByte(const char* str) {
         return (HexCharToUInt8(str[0]) << 4) | HexCharToUInt8(str[1]);
     }
 
-    SR_INLINE_STATIC uint8_t HexToByte(const std::string_view str) {
+    SR_NODISCARD SR_INLINE_STATIC uint8_t HexToByte(const std::string_view str) {
         return HexToByte(str.data());
     }
 
-    template<typename T> T LexicalCast(std::string_view str) {
+    template<typename T> SR_NODISCARD T LexicalCast(std::string_view str) {
         try {
             if constexpr (std::is_same<T, bool>()) {
                 const char c = str.front();
@@ -169,7 +169,7 @@ namespace SR_UTILS_NS {
         }
     }
 
-    template <class... Args> std::string Format(const char* fmt, Args&&... args) {
+    template <class... Args> SR_NODISCARD std::string Format(const char* fmt, Args&&... args) {
         try {
             return fmt::format(fmt::runtime(fmt), args...);
         }
@@ -180,7 +180,7 @@ namespace SR_UTILS_NS {
         }
     }
 
-    template <class... Args> std::string SPrintF(const char* fmt, Args&&... args) {
+    template <class... Args> SR_NODISCARD std::string SPrintF(const char* fmt, Args&&... args) {
         try {
             return fmt::sprintf(fmt, args...);
         }
@@ -191,7 +191,7 @@ namespace SR_UTILS_NS {
         }
     }
 
-    template <class... Args> std::string Format(const std::string& fmt, Args&&... args) {
+    template <class... Args> SR_NODISCARD std::string Format(const std::string& fmt, Args&&... args) {
         return Format<Args...>(fmt.c_str(), args...);
     }
 }

@@ -61,7 +61,7 @@ namespace SR_UTILS_NS::Web {
                 pStyle = m_pCSS->GetOrCreateStyle(styleName, isClass);
 
                 if (token.type == ::CSSParser::VALUE) {
-                    SR_UTILS_NS::StringUtils::ToLower(propertyName);
+                    SR_UTILS_NS::StringUtils::ToLowerRef(propertyName);
                     pStyle->ParseProperty(propertyName, token.data);
                     propertyName.clear();
                 }
@@ -117,7 +117,7 @@ namespace SR_UTILS_NS::Web {
                 else {
                     SRHalt("CSSParser::Parse() : unexpected SEL_START!");
                 }
-                SR_UTILS_NS::StringUtils::ToLower(styleName);
+                SR_UTILS_NS::StringUtils::ToLowerRef(styleName);
                 token = parser.get_next_token();
                 continue;
             }
