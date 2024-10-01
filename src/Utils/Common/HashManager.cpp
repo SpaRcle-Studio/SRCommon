@@ -22,13 +22,18 @@ namespace SR_UTILS_NS {
         return GetOrAddInfo(str)->hash;
     }
 
-    const std::string& HashManager::HashToString(HashManager::Hash hash) const {
+    const std::string_view& HashManager::HashToString(HashManager::Hash hash) const {
         SR_LOCK_GUARD;
 
-        static std::string gDefault;
+        static std::string_view gDefault;
         if (auto&& pIt = m_strings.find(hash); pIt != m_strings.end()) {
-            return pIt->second->data;
+            return pIt->second->view;
         }
+
+        if (const auto str = g_StringRegistry.FindConstexprStringByHash(hash)) {
+            return str.value();
+        }
+
         return gDefault;
     }
 
@@ -53,6 +58,7 @@ namespace SR_UTILS_NS {
         pInfo->size = str.size();
         pInfo->data = std::move(str);
         pInfo->hash = hash;
+        pInfo->view = pInfo->data;
 
         m_strings.insert(std::make_pair(hash, pInfo));
 

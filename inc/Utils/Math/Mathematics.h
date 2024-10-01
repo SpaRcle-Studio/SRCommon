@@ -87,38 +87,45 @@
 #include <glm/gtc/quaternion.hpp>
 
 namespace SR_MATH_NS {
-    static SR_FORCE_INLINE bool IsNumber(const std::string& str) {
+    static SR_FORCE_INLINE bool IsNumber(std::string_view str) {
         bool hasDot = false;
+        bool hasNumber = false;
 
-        for (auto&& c : str) {
-            switch (c) {
-                case '0':
-                case '1':
-                case '2':
-                case '3':
-                case '4':
-                case '5':
-                case '6':
-                case '7':
-                case '8':
-                case '9':
-                    break;
-
-                case '.':
-                case ',': {
-                    if (hasDot) {
-                        return false;
-                    }
-                    hasDot = true;
-                    break;
-                }
-
-                default:
-                    return false;
+        for (const char* c = str.data(); *c; c++) {
+            if (*c == '-' && c == str.data()) {
+                continue;
             }
+
+            if (*c == '.' || *c == ',') {
+                if (hasDot) {
+                    return false;
+                }
+                hasDot = true;
+                continue;
+            }
+
+            if (*c < '0' || *c > '9') {
+                return false;
+            }
+            hasNumber = true;
         }
 
-        return true;
+        return hasNumber;
+    }
+
+    static SR_FORCE_INLINE bool IsIntegerNumber(std::string_view str) {
+        bool hasNumber = false;
+        for (const char* c = str.data(); *c; c++) {
+            if (*c == '-' && c == str.data()) {
+                continue;
+            }
+            if (*c < '0' || *c > '9') {
+                return false;
+            }
+            hasNumber = true;
+        }
+
+        return hasNumber;
     }
 
     typedef float Unit; //! can broke render

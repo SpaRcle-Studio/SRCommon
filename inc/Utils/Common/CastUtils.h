@@ -8,13 +8,17 @@
 #include <Utils/Platform/Platform.h>
 
 namespace SR_UTILS_NS {
-    template<typename B, typename A> B* PolymorphicCast(A* pA) {
+    template<typename B, typename A> B PolymorphicCast(A pA) {
+        if constexpr (std::is_same_v<void*, A>) {
+            return static_cast<B>(pA);
+        }
+
     #if defined(SR_DEBUG)
-        if (!dynamic_cast<B*>(pA)) {
+        if (!dynamic_cast<B>(pA)) {
             SR_PLATFORM_NS::Terminate();
         }
     #endif
-        return static_cast<B*>(pA);
+        return static_cast<B>(pA);
     }
 }
 

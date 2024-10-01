@@ -11,6 +11,14 @@
 #include <Utils/Common/StringAtomLiterals.h>
 
 namespace SR_UTILS_NS::Web {
+    enum class CSSPosition : uint8_t {
+        Absolute,
+        Relative,
+        Fixed,
+        Static,
+        Sticky,
+    };
+
     enum class CSSDisplay : uint8_t {
         /** <display-outside> values */
         Block, Inline, RunIn,
@@ -45,6 +53,22 @@ namespace SR_UTILS_NS::Web {
     };
 
     SR_INLINE_STATIC CSSDisplay DEFAULT_CSS_DISPLAY = CSSDisplay::Inline;
+    SR_INLINE_STATIC CSSPosition DEFAULT_CSS_POSITION = CSSPosition::Static;
+
+    static CSSPosition StringToCSSPosition(std::string_view str) {
+        static std::unordered_map<SRHashType, CSSPosition> map = {
+            { "absolute"_atom_hash, CSSPosition::Absolute },
+            { "relative"_atom_hash, CSSPosition::Relative },
+            { "fixed"_atom_hash, CSSPosition::Fixed },
+            { "static"_atom_hash, CSSPosition::Static },
+            { "sticky"_atom_hash, CSSPosition::Sticky },
+        };
+
+        if (auto it = map.find(SR_HASH_STR_VIEW(str)); it != map.end()) {
+            return it->second;
+        }
+        return DEFAULT_CSS_POSITION;
+    }
 
     static CSSDisplay StringToCSSDisplay(std::string_view str) {
         static std::unordered_map<SRHashType, CSSDisplay> map = {
@@ -94,6 +118,22 @@ namespace SR_UTILS_NS::Web {
             return it->second;
         }
         return DEFAULT_CSS_DISPLAY;
+    }
+
+    static SR_UTILS_NS::StringAtom CSSPositionToString(CSSPosition position) { /// NOLINT
+        static std::array<SR_UTILS_NS::StringAtom, static_cast<uint32_t>(CSSPosition::Sticky) + 1> strings = {
+            "absolute"_atom,
+            "relative"_atom,
+            "fixed"_atom,
+            "static"_atom,
+            "sticky"_atom,
+        };
+
+        if (static_cast<uint32_t>(position) < strings.size()) {
+            return strings[static_cast<uint32_t>(position)];
+        }
+        SRHalt("Unknown CSSPosition value: %d", static_cast<uint32_t>(position));
+        return CSSPositionToString(DEFAULT_CSS_POSITION);
     }
 
     static SR_UTILS_NS::StringAtom CSSDisplayToString(CSSDisplay display) { /// NOLINT

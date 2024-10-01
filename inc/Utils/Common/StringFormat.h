@@ -21,7 +21,7 @@ namespace SR_UTILS_NS {
         try {
             if constexpr (std::is_same<T, bool>()) {
                 const char c = str.front();
-                return c == 't' || c == 'T' || c == 'y' || c == 'Y' || c == '1'; /// NOLINT
+                return c == 't' || c == 'T' || c == 'y' || c == 'Y' || c == '1';
             }
             else if constexpr (std::is_same<T, int8_t>()) {
                 return static_cast<int8_t>(str.front());

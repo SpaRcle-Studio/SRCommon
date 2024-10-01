@@ -13,11 +13,11 @@ namespace SR_SRLM_NS {
     }
 
     std::string ConvertorNode::GetInputTypeName() const noexcept {
-        return SR_HASH_TO_STR(GetInputHashName());
+        return std::string(SR_HASH_TO_STR(GetInputHashName()));
     }
 
     std::string ConvertorNode::GetOutputTypeName() const noexcept {
-        return SR_HASH_TO_STR(GetOutputHashName());
+        return std::string(SR_HASH_TO_STR(GetOutputHashName()));
     }
 
     uint64_t ConvertorNode::GetInputHashName() const noexcept {

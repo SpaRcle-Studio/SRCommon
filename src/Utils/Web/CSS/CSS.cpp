@@ -36,13 +36,16 @@ namespace SR_UTILS_NS::Web {
     void CSSStyle::ParseProperty(std::string_view name, std::string_view data) {
         const SRHashType nameHash = SR_HASH_STR_VIEW(name);
 
-        if (nameHash == "display"_atom_hash) {
+        if (nameHash == "position"_atom_hash_cexpr) {
+            position = StringToCSSPosition(data);
+        }
+        else if (nameHash == "display"_atom_hash_cexpr) {
             display = StringToCSSDisplay(data);
         }
-        else if (nameHash == "color"_atom_hash) {
+        else if (nameHash == "color"_atom_hash_cexpr) {
             color = CSSColor::Parse(data);
         }
-        else if (nameHash == "background-color"_atom_hash || nameHash == "background"_atom_hash) {
+        else if (nameHash == "background-color"_atom_hash_cexpr || nameHash == "background"_atom_hash_cexpr) {
             backgroundColor = CSSColor::Parse(data);
         }
         else if (const auto& it = CSS_CLASS_SIZE_PROPERTIES.find(nameHash); it != CSS_CLASS_SIZE_PROPERTIES.end()) {
@@ -66,11 +69,14 @@ namespace SR_UTILS_NS::Web {
             if (depth > 0) {
                 result += std::string(depth, '\t');
             }
-            result += SR_FORMAT("{}: {};\n", SR_HASH_TO_STR(hash).c_str(), value.ToString());
+            result += SR_FORMAT("{}: {};\n", SR_HASH_TO_STR(hash), value.ToString());
         }
 
         if (depth > 0) { result += std::string(depth, '\t'); }
-        result += SR_FORMAT("display: {};\n", SR_HASH_TO_STR(CSSDisplayToString(display)).c_str());
+        result += SR_FORMAT("display: {};\n", SR_HASH_TO_STR(CSSDisplayToString(display)));
+
+        if (depth > 0) { result += std::string(depth, '\t'); }
+        result += SR_FORMAT("position: {};\n", SR_HASH_TO_STR(CSSPositionToString(position)));
 
         if (const auto str = color.ToString(); !str.empty()) {
             if (depth > 0) { result += std::string(depth, '\t'); }

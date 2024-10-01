@@ -48,16 +48,10 @@ namespace SR_UTILS_NS::Web {
 
         CSSDisplay display = DEFAULT_CSS_DISPLAY;
 
+        CSSPosition position = CSSPosition::Static;
+
         CSSColor color = DEFAULT_CSS_COLOR;
         CSSColor backgroundColor = DEFAULT_CSS_COLOR;
-    };
-
-    enum class CSSPosition : uint8_t {
-        Absolute,
-        Relative,
-        Fixed,
-        Static,
-        Sticky,
     };
 
     class CSS : public SR_HTYPES_NS::SharedPtr<CSS> {

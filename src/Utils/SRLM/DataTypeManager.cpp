@@ -29,7 +29,7 @@ namespace SR_SRLM_NS {
         }
 
         if (auto&& stringName = SR_UTILS_NS::HashManager::Instance().HashToString(hashName); !stringName.empty()) {
-            SR_ERROR("DataTypeManager::CreateByName() : failed to create \"" + stringName + "\"!");
+            SR_ERROR("DataTypeManager::CreateByName() : failed to create \"{}\"!", stringName);
         }
         else {
             SRHalt("Type by hash \"" + SR_UTILS_NS::ToString(hashName) + "\" not found!");

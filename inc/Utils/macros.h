@@ -252,9 +252,9 @@
 #define SR_STATIC_ASSERT2(expr, msg) static_assert(expr, msg)
 
 #if defined(SR_MINGW) || (SR_MSC_VERSION > 1929) || defined(SR_ANDROID) || defined(SR_LINUX)
-    #define SR_STATIC_ASSERT(msg) static_assert(msg);
+    #define SR_STATIC_ASSERT(msg) static_assert(msg)
 #else
-    #define SR_STATIC_ASSERT(msg) static_assert(false, msg);
+    #define SR_STATIC_ASSERT(msg) static_assert(false, msg)
 #endif
 
 #ifdef SR_LINUX

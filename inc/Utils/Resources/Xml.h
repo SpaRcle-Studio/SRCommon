@@ -420,6 +420,9 @@ namespace SR_UTILS_NS::Xml {
             else if constexpr (std::is_same<T, SR_UTILS_NS::Path>()) {
                 attrib.set_value(value.CStr());
             }
+            else if constexpr (std::is_same<T, std::string_view>()) {
+                attrib.set_value(value.data());
+            }
             else {
                 attrib.set_value(value);
             }
