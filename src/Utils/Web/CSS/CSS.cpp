@@ -42,6 +42,45 @@ namespace SR_UTILS_NS::Web {
         else if (nameHash == "box-sizing"_atom_hash_cexpr) {
             boxSizing = StringToCSSBoxSizing(data);
         }
+        else if (nameHash == "margin"_atom_hash_cexpr) {
+            const auto& values = SR_UTILS_NS::StringUtils::SplitView(data, " ");
+            if (values.size() == 1) {
+                const auto result = CSSSizeValue::Parse(values[0]);
+                if (result) {
+                    marginTop = marginRight = marginBottom = marginLeft = result.value();
+                }
+            }
+            else if (values.size() == 2) {
+                const auto result1 = CSSSizeValue::Parse(values[0]);
+                const auto result2 = CSSSizeValue::Parse(values[1]);
+                if (result1 && result2) {
+                    marginTop = marginBottom = result1.value();
+                    marginRight = marginLeft = result2.value();
+                }
+            }
+            else if (values.size() == 3) {
+                const auto result1 = CSSSizeValue::Parse(values[0]);
+                const auto result2 = CSSSizeValue::Parse(values[1]);
+                const auto result3 = CSSSizeValue::Parse(values[2]);
+                if (result1 && result2 && result3) {
+                    marginTop = result1.value();
+                    marginRight = marginLeft = result2.value();
+                    marginBottom = result3.value();
+                }
+            }
+            else if (values.size() == 4) {
+                const auto result1 = CSSSizeValue::Parse(values[0]);
+                const auto result2 = CSSSizeValue::Parse(values[1]);
+                const auto result3 = CSSSizeValue::Parse(values[2]);
+                const auto result4 = CSSSizeValue::Parse(values[3]);
+                if (result1 && result2 && result3 && result4) {
+                    marginTop = result1.value();
+                    marginRight = result2.value();
+                    marginBottom = result3.value();
+                    marginLeft = result4.value();
+                }
+            }
+        }
         else if (nameHash == "padding"_atom_hash_cexpr) {
             const auto& values = SR_UTILS_NS::StringUtils::SplitView(data, " ");
             if (values.size() == 1) {

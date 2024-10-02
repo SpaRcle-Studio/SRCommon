@@ -25,7 +25,7 @@ namespace SR_UTILS_NS::Web {
 
     enum class CSSDisplay : uint8_t {
         /** <display-outside> values */
-        Block, Inline, RunIn,
+       Block , Inline, RunIn,
 
         /** <display-inside> values */
         Flow, FlowRoot, Table, Flex, Grid, Ruby,
@@ -57,6 +57,7 @@ namespace SR_UTILS_NS::Web {
     };
 
     SR_INLINE_STATIC CSSDisplay DEFAULT_CSS_DISPLAY = CSSDisplay::Inline;
+    SR_INLINE_STATIC CSSDisplay DEFAULT_CSS_DISPLAY_BODY = CSSDisplay::Block;
     SR_INLINE_STATIC CSSPosition DEFAULT_CSS_POSITION = CSSPosition::Static;
     SR_INLINE_STATIC CSSBoxSizing DEFAULT_CSS_BOX_SIZING = CSSBoxSizing::ContentBox;
 

@@ -47,7 +47,7 @@ namespace SR_UTILS_NS::Web {
         CSSOptionalSizeValue opacity;
         CSSOptionalSizeValue zIndex;
 
-        CSSDisplay display = DEFAULT_CSS_DISPLAY;
+        CSSOptionalEnum<CSSDisplay> display = CSSOptionalEnum<CSSDisplay>::CreateDefault(DEFAULT_CSS_DISPLAY);
 
         CSSPosition position = CSSPosition::Static;
 

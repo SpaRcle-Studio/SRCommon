@@ -280,14 +280,21 @@ namespace SR_UTILS_NS::Web {
         std::function <void(HTMLNode*)> processChildren;
 
         processChildren = [&](HTMLNode* pNode) {
-            if (pNode->GetTag() != HTMLTag::Undefined) {
-                if (auto&& style = pPage->GetTagStyle(HTMLTagToStringAtom(pNode->GetTag()))) {
+            if (pNode->GetTag() == HTMLTag::Undefined) {
+                if (auto&& style = pPage->GetTagStyle(pNode->GetNodeName())) {
                     pNode->SetStyle(style.value());
                 }
             }
             else {
-                if (auto&& style = pPage->GetTagStyle(pNode->GetNodeName())) {
+                if (auto&& style = pPage->GetTagStyle(HTMLTagToStringAtom(pNode->GetTag()))) {
                     pNode->SetStyle(style.value());
+                }
+                auto&& style = pNode->GetStyle();
+                if (pNode->GetTag() == HTMLTag::Body) {
+                    if (style.display.IsDefault()) {
+                        style.display = DEFAULT_CSS_DISPLAY_BODY;
+                        style.display.SetAsDefault();
+                    }
                 }
             }
 
