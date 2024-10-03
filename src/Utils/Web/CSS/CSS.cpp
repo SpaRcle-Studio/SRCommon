@@ -175,6 +175,69 @@ namespace SR_UTILS_NS::Web {
         return result;
     }
 
+    CSSStyle CSSStyle::Merge(const CSSStyle& main, const CSSStyle& other) {
+        CSSStyle result = main;
+        if (!other.width.IsDefault()) {
+            result.width = other.width;
+        }
+        if (!other.height.IsDefault()) {
+            result.height = other.height;
+        }
+        if (!other.marginTop.IsDefault()) {
+            result.marginTop = other.marginTop;
+        }
+        if (!other.marginRight.IsDefault()) {
+            result.marginRight = other.marginRight;
+        }
+        if (!other.marginBottom.IsDefault()) {
+            result.marginBottom = other.marginBottom;
+        }
+        if (!other.marginLeft.IsDefault()) {
+            result.marginLeft = other.marginLeft;
+        }
+        if (!other.paddingTop.IsDefault()) {
+            result.paddingTop = other.paddingTop;
+        }
+        if (!other.paddingRight.IsDefault()) {
+            result.paddingRight = other.paddingRight;
+        }
+        if (!other.paddingBottom.IsDefault()) {
+            result.paddingBottom = other.paddingBottom;
+        }
+        if (!other.paddingLeft.IsDefault()) {
+            result.paddingLeft = other.paddingLeft;
+        }
+        if (!other.borderTop.IsDefault()) {
+            result.borderTop = other.borderTop;
+        }
+        if (other.borderRight.IsDefault()) {
+            result.borderRight = other.borderRight;
+        }
+        if (!other.borderBottom.IsDefault()) {
+            result.borderBottom = other.borderBottom;
+        }
+        if (!other.borderLeft.IsDefault()) {
+            result.borderLeft = other.borderLeft;
+        }
+        if (!other.opacity.IsDefault()) {
+            result.opacity = other.opacity;
+        }
+        if (!other.zIndex.IsDefault()) {
+            result.zIndex = other.zIndex;
+        }
+        if (other.display.IsDefault()) {
+            result.display = other.display;
+        }
+
+        /// TODO: need merge instead of replace
+        result.color = other.color;
+        result.backgroundColor = other.backgroundColor;
+        result.boxSizing = other.boxSizing;
+        result.position = other.position;
+
+        return result;
+    }
+
     /// ----------------------------------------------------------------------------------------------------------------
 
     CSS::CSS()

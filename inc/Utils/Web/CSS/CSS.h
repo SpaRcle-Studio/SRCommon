@@ -20,6 +20,8 @@ namespace SR_UTILS_NS::Web {
 
         SR_NODISCARD std::string ToString(uint16_t depth = 0) const;
 
+        static CSSStyle Merge(const CSSStyle& main, const CSSStyle& other);
+
         CSSOptionalSizeValue /// content size
             width, // = CSSSizeValue(0.f, CSSSizeValue::Unit::Percent),
             height; // = CSSSizeValue(0.f, CSSSizeValue::Unit::Percent);

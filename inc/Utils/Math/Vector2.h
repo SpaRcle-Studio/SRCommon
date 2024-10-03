@@ -139,6 +139,12 @@ namespace SR_MATH_NS {
             return *this;
         }
 
+        template<typename U> SR_FORCE_INLINE Vector2 operator*=(const Vector2<U>& value) {
+            this->x *= value.x;
+            this->y *= value.y;
+            return *this;
+        }
+
         template<typename U> SR_FORCE_INLINE bool operator==(const Vector2<U> &p_v) const {
             return SR_EQUALS(x, p_v.x) && SR_EQUALS(y, p_v.y);
         }
@@ -162,6 +168,12 @@ namespace SR_MATH_NS {
         template<typename U> SR_FORCE_INLINE Vector2 &operator/=(U p_scalar) {
             x /= p_scalar;
             y /= p_scalar;
+            return *this;
+        }
+
+        template<typename U> SR_FORCE_INLINE Vector2 &operator/=(const Vector2<U> &p_v) {
+            x /= p_v.x;
+            y /= p_v.y;
             return *this;
         }
 

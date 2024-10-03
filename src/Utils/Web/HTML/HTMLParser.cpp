@@ -295,6 +295,28 @@ namespace SR_UTILS_NS::Web {
                         style.display = DEFAULT_CSS_DISPLAY_BODY;
                         style.display.SetAsDefault();
                     }
+                    if (style.marginLeft.IsDefault()) {
+                        style.marginLeft = CSSSizeValue(8);
+                        style.marginLeft.SetAsDefault();
+                    }
+                    if (style.marginRight.IsDefault()) {
+                        style.marginRight = CSSSizeValue(8);
+                        style.marginRight.SetAsDefault();
+                    }
+                    if (style.marginTop.IsDefault()) {
+                        style.marginTop = CSSSizeValue(8);
+                        style.marginTop.SetAsDefault();
+                    }
+                    if (style.marginBottom.IsDefault()) {
+                        style.marginBottom = CSSSizeValue(8);
+                        style.marginBottom.SetAsDefault();
+                    }
+                }
+                else if (pNode->GetTag() == HTMLTag::Div) {
+                    if (style.width.IsDefault()) {
+                        style.width = CSSSizeValue(100.f); // 100%
+                        style.width.SetAsDefault();
+                    }
                 }
             }
 
@@ -302,7 +324,7 @@ namespace SR_UTILS_NS::Web {
                 auto&& pAttribute = pNode->GetPage()->GetAttributeById(attributeId);
                 if (pAttribute->GetName() == "class") {
                     if (const auto& style = pPage->GetClassStyle(pAttribute->GetValue())) {
-                        pNode->SetStyle(style.value());
+                        pNode->SetStyle(CSSStyle::Merge(pNode->GetStyle(), style.value()));
                         break;
                     }
                 }

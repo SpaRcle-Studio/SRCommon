@@ -49,8 +49,8 @@ namespace SR_UTILS_NS::Web {
                 result.SetDpi(SR_UTILS_NS::LexicalCast<uint16_t>(value.substr(0, value.size() - 3)));
             } else if (value.ends_with("deg")) {
                 result.SetDeg(SR_UTILS_NS::LexicalCast<float_t>(value.substr(0, value.size() - 1)));
-            } else if (SR_MATH_NS::IsIntegerNumber(value)) {
-                result.SetPx(SR_UTILS_NS::LexicalCast<uint16_t>(value));
+            } else if (value == "0") {
+                result.SetPx(0);
             } else if (value == "auto") {
                 result.autoValue = true;
             }
