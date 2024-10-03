@@ -576,6 +576,16 @@ namespace SR_PLATFORM_NS {
         return (stat(path.c_str(), &buffer) == 0);
     }
 
+    SR_MATH_NS::UVector2 GetScreenResolution() {
+        SRHaltOnce("Not implemented!");
+        return SR_MATH_NS::UVector2();
+    }
+
+    double_t GetScreenDPI() {
+        SRHaltOnce("Not implemented!");
+        return 0.0;
+    }
+
     std::vector<SR_MATH_NS::UVector2> GetScreenResolutions() {
         std::vector<SR_MATH_NS::UVector2> resolutions;
         if (auto&& pDisplay = XOpenDisplay(":0")) {

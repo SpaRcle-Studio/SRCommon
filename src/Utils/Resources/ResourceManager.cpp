@@ -23,33 +23,6 @@ namespace SR_UTILS_NS {
         }
 
         return std::nullopt;
-
-        /*auto&& resourcesPath = appFolder.Concat("Resources");
-        if (resourcesPath.Exists(SR_UTILS_NS::Path::Type::Folder)) {
-            return resourcesPath;
-        }
-
-        resourcesPath = appFolder.Concat("../Resources");
-        if (resourcesPath.Exists(SR_UTILS_NS::Path::Type::Folder)) {
-            return resourcesPath;
-        }
-
-        resourcesPath = appFolder.Concat("../../Resources");
-        if (resourcesPath.Exists(SR_UTILS_NS::Path::Type::Folder)) {
-            return resourcesPath;
-        }
-
-        resourcesPath = appFolder.Concat("../../../Resources");
-        if (resourcesPath.Exists(SR_UTILS_NS::Path::Type::Folder)) {
-            return resourcesPath;
-        }
-
-        resourcesPath = appFolder.Concat("../../../../Resources");
-        if (resourcesPath.Exists(SR_UTILS_NS::Path::Type::Folder)) {
-            return resourcesPath;
-        }
-
-        return std::nullopt;*/
     }
 
 
@@ -78,7 +51,7 @@ namespace SR_UTILS_NS {
         SR_SCOPED_LOCK;
         SRAssert(m_isRun);
 
-        if (!path.Exists(Path::Type::File)) {
+        if (!path.IsFile()) {
             SRHalt("ResourceManager::StartWatch() : watching a non-existent file! '{}'", path.ToStringRef());
             return nullptr;
         }

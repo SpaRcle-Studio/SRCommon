@@ -11,214 +11,94 @@
 #include <Utils/Types/SharedPtr.h>
 #include <Utils/Common/PassKey.h>
 
+#include <litehtml.h>
+
 namespace SR_UTILS_NS::Web {
-    class HTMLPage;
-    class HTMLNode;
+	class HTMLPage;
 
-    class HTMLAttribute : public SR_UTILS_NS::NonCopyable {
+    class HTMLContainerInterface : public SR_HTYPES_NS::SharedPtr<HTMLContainerInterface>, public litehtml::document_container {
+    	using Super = SR_HTYPES_NS::SharedPtr<HTMLContainerInterface>;
     public:
-        HTMLAttribute(HTMLPage* pPage, Passkey<HTMLPage>)
-            : m_pPage(pPage)
+	    using Ptr = SR_HTYPES_NS::SharedPtr<HTMLContainerInterface>;
+
+        HTMLContainerInterface()
+    		: Super(this, SR_UTILS_NS::SharedPtrPolicy::Automatic)
         { }
 
-        HTMLAttribute(HTMLAttribute&& other) noexcept
-            : m_pPage(SR_EXCHANGE(other.m_pPage, nullptr))
-            , m_pNode(SR_EXCHANGE(other.m_pNode, nullptr))
-            , m_name(SR_EXCHANGE(other.m_name, { }))
-            , m_value(SR_EXCHANGE(other.m_value, { }))
-            , m_id(SR_EXCHANGE(other.m_id, SR_ID_INVALID))
-        { }
-
-        ~HTMLAttribute() override;
-
-        HTMLAttribute& operator=(HTMLAttribute&& other) noexcept {
-            m_pPage = SR_EXCHANGE(other.m_pPage, nullptr);
-            m_pNode = SR_EXCHANGE(other.m_pNode, nullptr);
-            m_name = SR_EXCHANGE(other.m_name, { });
-            m_value = SR_EXCHANGE(other.m_value, { });
-            m_id = SR_EXCHANGE(other.m_id, SR_ID_INVALID);
-            return *this;
-        }
+        ~HTMLContainerInterface() override = default;
 
     public:
-        void SetName(std::string&& name) { m_name = std::move(name); }
-        void SetValue(std::string&& value) { m_value = std::move(value); }
+	    litehtml::uint_ptr create_font(const char* faceName, int size, int weight, litehtml::font_style italic, unsigned int decoration, litehtml::font_metrics* fm) override { return 0; }
+    	void delete_font(litehtml::uint_ptr hFont) override { }
+    	int					text_width(const char* text, litehtml::uint_ptr hFont) override { return 0; }
+    	void				draw_text(litehtml::uint_ptr hdc, const char* text, litehtml::uint_ptr hFont, litehtml::web_color color, const litehtml::position& pos) override { }
+    	int pt_to_px(int pt) const override;
+    	int get_default_font_size() const override;
+    	const char* get_default_font_name() const override;
+    	void				draw_list_marker(litehtml::uint_ptr hdc, const litehtml::list_marker& marker) override { }
+    	void				load_image(const char* src, const char* baseurl, bool redraw_on_ready) override { }
+    	void				get_image_size(const char* src, const char* baseurl, litehtml::size& sz) override { }
+    	void				draw_image(litehtml::uint_ptr hdc, const litehtml::background_layer& layer, const std::string& url, const std::string& base_url) override { }
+    	void draw_solid_fill(litehtml::uint_ptr hdc, const litehtml::background_layer& layer, const litehtml::web_color& color) override { }
+    	void				draw_linear_gradient(litehtml::uint_ptr hdc, const litehtml::background_layer& layer, const litehtml::background_layer::linear_gradient& gradient) override { }
+    	void				draw_radial_gradient(litehtml::uint_ptr hdc, const litehtml::background_layer& layer, const litehtml::background_layer::radial_gradient& gradient) override { }
+    	void				draw_conic_gradient(litehtml::uint_ptr hdc, const litehtml::background_layer& layer, const litehtml::background_layer::conic_gradient& gradient) override { }
+    	void				draw_borders(litehtml::uint_ptr hdc, const litehtml::borders& borders, const litehtml::position& draw_pos, bool root) override { }
 
-        void SetNode(HTMLNode* pNode, Passkey<HTMLNode>) { m_pNode = pNode; }
-        void SetId(const uint64_t id, Passkey<HTMLPage>) { m_id = id; }
+    	void				set_caption(const char* caption) override { }
+    	void				set_base_url(const char* base_url) override { }
+    	void				link(const std::shared_ptr<litehtml::document>& doc, const litehtml::element::ptr& el) override { }
+    	void				on_anchor_click(const char* url, const litehtml::element::ptr& el) override { }
+    	void				on_mouse_event(const litehtml::element::ptr& el, litehtml::mouse_event event) override { }
+    	void				set_cursor(const char* cursor) override { }
+    	void				transform_text(litehtml::string& text, litehtml::text_transform tt) override { }
+    	void import_css(litehtml::string& text, const litehtml::string& url, litehtml::string& baseurl) override;
+    	void				set_clip(const litehtml::position& pos, const litehtml::border_radiuses& bdr_radius) override { }
+    	void				del_clip() override { }
+    	void				get_client_rect(litehtml::position& client) const override { }
+    	litehtml::element::ptr	create_element( const char* tag_name,
+												const litehtml::string_map& attributes,
+												const std::shared_ptr<litehtml::document>& doc) override { return nullptr; }
 
-        SR_NODISCARD const std::string& GetName() const { return m_name; }
-        SR_NODISCARD const std::string& GetValue() const { return m_value; }
+    	void get_media_features(litehtml::media_features& media) const override { }
+    	void get_language(litehtml::string& language, litehtml::string& culture) const override { }
 
-        SR_NODISCARD HTMLNode* GetNode() const { return m_pNode; }
-        SR_NODISCARD uint64_t GetId() const { return m_id; }
+    public:
+    	void AddPath(const SR_UTILS_NS::Path& path);
+    	void SetPage(HTMLPage* page) { m_page = page; }
+
+    	SR_NODISCARD const std::vector<SR_UTILS_NS::Path>& GetPaths() const { return m_paths; }
+    	SR_NODISCARD const SR_UTILS_NS::Path& GetPath() const;
+    	SR_NODISCARD HTMLPage* GetPage() const { return m_page; }
 
     private:
-        std::string m_name;
-        std::string m_value;
-
-        HTMLPage* m_pPage = nullptr;
-        HTMLNode* m_pNode = nullptr;
-
-        uint64_t m_id = SR_ID_INVALID;
-
-    };
-
-    class HTMLNode : public SR_UTILS_NS::NonCopyable {
-        using Super = SR_UTILS_NS::NonCopyable;
-    public:
-        HTMLNode(HTMLPage* pPage, Passkey<HTMLPage>)
-            : Super()
-            , m_pPage(pPage)
-        { }
-
-        HTMLNode(HTMLNode&& other) noexcept
-            : m_pPage(SR_EXCHANGE(other.m_pPage, { }))
-            , m_parentId(SR_EXCHANGE(other.m_parentId, { }))
-            , m_tag(SR_EXCHANGE(other.m_tag, HTMLTag::Undefined))
-            , m_style(SR_EXCHANGE(other.m_style, { }))
-            , m_nodeName(SR_EXCHANGE(other.m_nodeName, { }))
-            , m_text(SR_EXCHANGE(other.m_text, { }))
-            , m_children(SR_EXCHANGE(other.m_children, { }))
-            , m_attributes(SR_EXCHANGE(other.m_attributes, { }))
-            , m_id(SR_EXCHANGE(other.m_id, SR_ID_INVALID))
-        { }
-
-        HTMLNode& operator=(HTMLNode&& other) noexcept {
-            m_pPage = SR_EXCHANGE(other.m_pPage, { });
-            m_parentId = SR_EXCHANGE(other.m_parentId, { });
-            m_tag = SR_EXCHANGE(other.m_tag, HTMLTag::Undefined);
-            m_style = SR_EXCHANGE(other.m_style, { });
-            m_nodeName = SR_EXCHANGE(other.m_nodeName, { });
-            m_text = SR_EXCHANGE(other.m_text, { });
-            m_children = SR_EXCHANGE(other.m_children, { });
-            m_attributes = SR_EXCHANGE(other.m_attributes, { });
-            m_id = SR_EXCHANGE(other.m_id, SR_ID_INVALID);
-            return *this;
-        }
-
-        ~HTMLNode() override;
-
-    public:
-        void SetParent(const HTMLNode* pParent) { m_parentId = pParent->GetId(); }
-        void SetParent(const uint64_t parentId) { m_parentId = parentId; }
-        void SetTag(const HTMLTag tag) { m_tag = tag; }
-        void SetNodeName(std::string&& nodeName) { m_nodeName = std::move(nodeName); }
-        void SetText(std::string&& text) { m_text = std::move(text); }
-
-        void AddChild(const HTMLNode* pChild) { m_children.emplace_back(pChild->GetId()); }
-        void AddAttribute(const HTMLAttribute* pAttribute) { m_attributes.emplace_back(pAttribute->GetId()); }
-
-        void SetStyle(const CSSStyle& style) { m_style = style; }
-
-        SR_NODISCARD HTMLNode* GetParent() const;
-        SR_NODISCARD HTMLTag GetTag() const { return m_tag; }
-        SR_NODISCARD const std::string& GetNodeName() const;
-        SR_NODISCARD const std::string& GetText() const { return m_text; }
-
-        SR_NODISCARD CSSStyle& GetStyle() { return m_style; }
-        SR_NODISCARD const CSSStyle& GetStyle() const { return m_style; }
-
-        SR_NODISCARD const std::vector<uint64_t>& GetChildren() const { return m_children; }
-        SR_NODISCARD const std::vector<uint64_t>& GetAttributes() const { return m_attributes; }
-
-        SR_NODISCARD HTMLAttribute* GetAttributeByName(const std::string& name) const;
-
-        SR_NODISCARD HTMLPage* GetPage() const { return m_pPage; }
-
-        SR_NODISCARD uint64_t GetId() const { return m_id; }
-        void SetId(const uint64_t id, Passkey<HTMLPage>) { m_id = id; }
-
-        void SetUserData(void* pUserData) { m_pUserData = pUserData; }
-        SR_NODISCARD void* GetUserData() const { return m_pUserData; }
-
-        void RemoveUserDataRecursively();
-
-    private:
-        HTMLPage* m_pPage = nullptr;
-        uint64_t m_parentId = SR_ID_INVALID;
-        HTMLTag m_tag = HTMLTag::Undefined;
-        CSSStyle m_style;
-        std::string m_nodeName;
-        std::string m_text;
-        std::vector<uint64_t> m_children;
-        std::vector<uint64_t> m_attributes;
-
-        uint64_t m_id = SR_ID_INVALID;
-
-        void* m_pUserData = nullptr;
+    	HTMLPage* m_page = nullptr;
+    	std::vector<SR_UTILS_NS::Path> m_paths;
 
     };
 
     class HTMLPage final : public SR_HTYPES_NS::SharedPtr<HTMLPage> {
         using Super = SR_HTYPES_NS::SharedPtr<HTMLPage>;
+    private:
+        HTMLPage();
+
     public:
         using Ptr = SR_HTYPES_NS::SharedPtr<HTMLPage>;
 
-    public:
-        HTMLPage();
-        ~HTMLPage();
-
-        SR_NODISCARD HTMLNode* AllocateNode();
-        void FreeNode(HTMLNode* pNode);
-        void FreeNode(const uint64_t id) { FreeNode(GetNodeById(id)); }
-
-        SR_NODISCARD HTMLAttribute* AllocateAttribute();
-        void FreeAttribute(HTMLAttribute* pAttribute);
-        void FreeAttribute(const uint64_t id) { FreeAttribute(GetAttributeById(id)); }
+    	~HTMLPage();
 
     public:
-        SR_NODISCARD HTMLNode* GetHead() { return m_headId != SR_ID_INVALID ? &m_nodePool.AtUnchecked(m_headId) : nullptr; }
-        SR_NODISCARD HTMLNode* GetBody() { return m_bodyId != SR_ID_INVALID ? &m_nodePool.AtUnchecked(m_bodyId) : nullptr; }
-        SR_NODISCARD const HTMLNode* GetHead() const { return m_headId != SR_ID_INVALID ? &m_nodePool.AtUnchecked(m_headId) : nullptr; }
-        SR_NODISCARD const HTMLNode* GetBody() const { return m_bodyId != SR_ID_INVALID ? &m_nodePool.AtUnchecked(m_bodyId) : nullptr; }
+        static Ptr Load(const SR_UTILS_NS::Path& path, const HTMLContainerInterface::Ptr& pContainer = nullptr);
 
-        SR_NODISCARD const std::vector<SR_UTILS_NS::Path>& GetPaths() const { return m_paths; }
+        SR_NODISCARD const std::vector<SR_UTILS_NS::Path>& GetPaths() const;
+		SR_NODISCARD HTMLContainerInterface::Ptr GetContainer() const { return m_container; }
+    	SR_NODISCARD litehtml::document::ptr GetDocument() const { return m_document; }
 
-        SR_NODISCARD SR_MATH_NS::UVector2 GetSize() const;
-
-        SR_NODISCARD HTMLNode* GetNodeById(uint64_t id);
-        SR_NODISCARD HTMLAttribute* GetAttributeById(uint64_t id);
-
-        void AddStyle(const CSS::Ptr& pStyle) { m_styles.emplace_back(pStyle); }
-
-        SR_NODISCARD std::optional<CSSStyle> GetClassStyle(const std::string& selector) const {
-            for (const auto& pStyle : m_styles) {
-                if (const auto pStyleValue = pStyle->GetClassStyle(selector)) {
-                    return *pStyleValue;
-                }
-            }
-            return std::nullopt;
-        }
-
-        SR_NODISCARD std::optional<CSSStyle> GetTagStyle(const std::string& selector) const {
-            for (const auto& pStyle : m_styles) {
-                if (const auto pStyleValue = pStyle->GetTagStyle(selector)) {
-                    return *pStyleValue;
-                }
-            }
-            return std::nullopt;
-        }
-
-        void SetSize(const SR_MATH_NS::UVector2& size);
-        void SetHead(const HTMLNode* pHead) { m_headId = pHead->GetId(); }
-        void SetBody(const HTMLNode* pBody) { m_bodyId = pBody->GetId(); }
-
-        void AddPath(SR_UTILS_NS::Path&& path) { m_paths.emplace_back(std::move(path)); }
-        void AddPath(const SR_UTILS_NS::Path& path) { m_paths.emplace_back(path); }
-
-        void RemoveUserDataRecursively();
+    protected:
 
     private:
-        uint64_t m_headId = SR_ID_INVALID;
-        uint64_t m_bodyId = SR_ID_INVALID;
-
-        SR_HTYPES_NS::ObjectPool<HTMLNode> m_nodePool;
-        SR_HTYPES_NS::ObjectPool<HTMLAttribute> m_attributePool;
-
-        std::vector<CSS::Ptr> m_styles;
-
-        std::vector<SR_UTILS_NS::Path> m_paths;
+    	HTMLContainerInterface::Ptr m_container;
+    	litehtml::document::ptr m_document;
 
     };
 }

@@ -6,44 +6,57 @@
 #include <Utils/Web/HTML/HTML.h>
 
 namespace SR_UTILS_NS::Web {
-    HTMLAttribute::~HTMLAttribute() {
-        SRAssert2(m_id == SR_ID_INVALID, "Incorrect attribute destruction!");
+    int HTMLContainerInterface::pt_to_px(int pt) const {
+        const double_t dpi = SR_PLATFORM_NS::GetScreenDPI();
+        return static_cast<int>(static_cast<double>(pt) * dpi / 72.0);
     }
 
-    HTMLNode::~HTMLNode() {
-        SRAssert2(m_id == SR_ID_INVALID, "Incorrect node destruction!");
+    int HTMLContainerInterface::get_default_font_size() const {
+        return pt_to_px(12);
+    }
 
-        for (auto&& pChild : m_children) {
-            m_pPage->FreeNode(pChild);
+    const char* HTMLContainerInterface::get_default_font_name() const {
+        return "Times New Roman";
+    }
+
+    void HTMLContainerInterface::import_css(litehtml::string& text, const litehtml::string& url, litehtml::string& baseurl) {
+        baseurl = url;
+
+        /// try found file in resource path
+        SR_UTILS_NS::Path fullPath = SR_UTILS_NS::ResourceManager::Instance().GetResPath().Concat(baseurl);
+        if (!fullPath.IsFile()) {
+            /// try found file in page folder
+            fullPath = GetPath().GetFolder().Concat(baseurl);
         }
-        m_children.clear();
 
-        for (auto&& pAttribute : m_attributes) {
-            m_pPage->FreeAttribute(pAttribute);
+        if (!fullPath.IsFile()) {
+            SR_ERROR("HTMLContainerInterface::import_css() : file not found: {}", fullPath.c_str());
+            return;
         }
-        m_attributes.clear();
-    }
 
-    HTMLNode* HTMLNode::GetParent() const {
-        return m_parentId != SR_ID_INVALID ? m_pPage->GetNodeById(m_parentId) : nullptr;
-    }
-
-    const std::string& HTMLNode::GetNodeName() const {
-        if (m_nodeName.empty()) {
-            const SR_UTILS_NS::StringAtom tagName = HTMLTagToStringAtom(m_tag);
-            return tagName.ToStringRef();
+        text = SR_UTILS_NS::FileSystem::ReadBinaryAsString(fullPath.View());
+        if (text.empty()) {
+            SR_ERROR("HTMLContainerInterface::import_css() : failed to read file: {}", fullPath.c_str());
         }
-        return m_nodeName;
+        else {
+            AddPath(fullPath);
+        }
     }
 
-    HTMLAttribute* HTMLNode::GetAttributeByName(const std::string &name) const {
-        for (const auto& attributeId : m_attributes) {
-            auto&& pAttribute = m_pPage->GetAttributeById(attributeId);
-            if (pAttribute->GetName() == name) {
-                return pAttribute;
+    void HTMLContainerInterface::AddPath(const SR_UTILS_NS::Path& path) {
+        for (const SR_UTILS_NS::Path& p : m_paths) {
+            if (p == path) {
+                return;
             }
         }
-        return nullptr;
+        if (SRVerify2(path.IsFile(), "HTMLContainerInterface::AddPath() : path is not a file: {}", path.c_str())) {
+            m_paths.emplace_back(path);
+        }
+    }
+
+    const SR_UTILS_NS::Path& HTMLContainerInterface::GetPath() const {
+        static SR_UTILS_NS::Path empty;
+        return m_paths.empty() ? empty : m_paths.front();
     }
 
     HTMLPage::HTMLPage()
@@ -51,82 +64,37 @@ namespace SR_UTILS_NS::Web {
     { }
 
     HTMLPage::~HTMLPage() {
-        FreeNode(m_headId);
-        FreeNode(m_bodyId);
+        /// строгий порядок удаления
+        m_document.reset();
+        m_container.AutoFree();
     }
 
-    HTMLNode* HTMLPage::AllocateNode() {
-        const uint64_t index = m_nodePool.Add(HTMLNode(this, Passkey(this)));
-        auto&& pNode = &m_nodePool.AtUnchecked(index);
-        pNode->SetId(index, Passkey(this));
-        return pNode;
-    }
+    HTMLPage::Ptr HTMLPage::Load(const SR_UTILS_NS::Path& path, const HTMLContainerInterface::Ptr& pContainer) {
+        HTMLPage::Ptr pPage = new HTMLPage();
 
-    void HTMLPage::FreeNode(HTMLNode* pNode) {
-        if (SRVerify(pNode)) {
-            /// pNode is already valid here
-            const uint64_t index = pNode->GetId(); /// NOLINT
-            pNode->SetId(SR_ID_INVALID, Passkey(this));
-            m_nodePool.RemoveByIndex(index);
+        const auto& fullPath = SR_UTILS_NS::ResourceManager::Instance().GetResPath().Concat(path);
+        auto&& data = SR_UTILS_NS::FileSystem::ReadBinaryAsString(fullPath.View());
+        if (data.empty()) {
+            SR_ERROR("HTMLPage::Load() : failed to read file: {}", fullPath.c_str());
+            return nullptr;
         }
-    }
 
-    HTMLAttribute* HTMLPage::AllocateAttribute() {
-        const uint64_t index = m_attributePool.Add(HTMLAttribute(this, Passkey(this)));
-        auto&& pAttribute = &m_attributePool.AtUnchecked(index);
-        pAttribute->SetId(index, Passkey(this));
-        return pAttribute;
-    }
-
-    void HTMLPage::FreeAttribute(HTMLAttribute* pAttribute) {
-        if (SRVerify(pAttribute)) {
-            /// pAttribute is already valid here
-            const uint64_t index = pAttribute->GetId(); /// NOLINT
-            pAttribute->SetId(SR_ID_INVALID, Passkey(this));
-            m_attributePool.RemoveByIndex(index);
+        pPage->m_container = pContainer;
+        if (!pPage->m_container) {
+            pPage->m_container = new HTMLContainerInterface();
         }
+
+        pPage->m_container->SetPage(pPage.Get());
+        pPage->m_container->AddPath(fullPath);
+
+        static std::string masterStyles = "html,div,body { display: block; } head,style { display: none; }";
+        pPage->m_document = litehtml::document::createFromString(data, pPage->m_container.Get(), masterStyles);
+
+        return pPage;
     }
 
-    SR_MATH_NS::UVector2 HTMLPage::GetSize() const {
-        if (auto&& pBody = GetBody()) {
-            return SR_MATH_NS::UVector2(pBody->GetStyle().width.GetPx(), pBody->GetStyle().height.GetPx());
-        }
-        return SR_MATH_NS::UVector2(0, 0);
-    }
-
-    HTMLNode* HTMLPage::GetNodeById(const uint64_t id) {
-        return &m_nodePool.AtUnchecked(id);
-    }
-
-    HTMLAttribute* HTMLPage::GetAttributeById(const uint64_t id) {
-        return &m_attributePool.AtUnchecked(id);
-    }
-
-    void HTMLPage::SetSize(const SR_MATH_NS::UVector2& size) {
-        if (auto&& pBody = GetBody()) {
-            pBody->GetStyle().width = CSSSizeValue(static_cast<float>(size.x), CSSSizeValue::Unit::Px);
-            pBody->GetStyle().height = CSSSizeValue(static_cast<float>(size.y), CSSSizeValue::Unit::Px);
-        }
-    }
-
-    void HTMLPage::RemoveUserDataRecursively() {
-        SR_TRACY_ZONE;
-
-        if (m_headId != SR_ID_INVALID) {
-            GetNodeById(m_headId)->RemoveUserDataRecursively();
-        }
-        if (m_bodyId != SR_ID_INVALID) {
-            GetNodeById(m_bodyId)->RemoveUserDataRecursively();
-        }
-    }
-
-    void HTMLNode::RemoveUserDataRecursively() { /// NOLINT
-        SR_TRACY_ZONE;
-
-        m_pUserData = nullptr;
-
-        for (auto&& pChild : m_children) {
-            m_pPage->GetNodeById(pChild)->RemoveUserDataRecursively();
-        }
+    const std::vector<SR_UTILS_NS::Path>& HTMLPage::GetPaths() const {
+        static std::vector<SpaRcle::Utils::Path> empty;
+        return m_container ? m_container->GetPaths() : empty;
     }
 }

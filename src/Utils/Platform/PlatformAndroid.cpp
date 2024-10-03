@@ -178,6 +178,16 @@ namespace SR_UTILS_NS::Platform {
         SRHaltOnce("Not implemented!");
     }
 
+    SR_MATH_NS::UVector2 GetScreenResolution() {
+        SRHaltOnce("Not implemented!");
+        return SR_MATH_NS::UVector2();
+    }
+
+    double_t GetScreenDPI() {
+        SRHaltOnce("Not implemented!");
+        return 0.0;
+    }
+
     bool IsExists(const Path &path) {
         AAssetDir* assetDir = AAssetManager_openDir(pAndroidInstance->activity->assetManager, "");
         if (AAsset* asset = AAssetManager_open(pAndroidInstance->activity->assetManager, path.c_str(), AASSET_MODE_STREAMING)) {

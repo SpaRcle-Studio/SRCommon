@@ -154,6 +154,15 @@ namespace SR_HTYPES_NS {
             return m_ptr != right.m_ptr;
         }
 
+        template<typename U> SharedPtr<U> PolymorphicCast() const {
+        #ifdef SR_DEBUG
+            if (!DynamicCast<U>()) {
+                SR_SAFE_PTR_ASSERT(false, "Invalid cast!");
+            }
+        #endif
+            return StaticCast<U>();
+        }
+
         template<typename U> SharedPtr<U> DynamicCast() const {
             if constexpr (std::is_same_v<T, void>) {
                 return SharedPtr<U>();
