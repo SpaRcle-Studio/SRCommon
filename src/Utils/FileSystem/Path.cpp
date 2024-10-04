@@ -17,7 +17,7 @@ namespace SR_UTILS_NS {
     { }
 
     Path::Path(std::string_view path)
-        : Path(path.data())
+        : Path(std::string(path))
     { }
 
     Path::Path(std::wstring path)

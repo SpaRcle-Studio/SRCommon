@@ -87,8 +87,8 @@ namespace SR_UTILS_NS::Web {
         pPage->m_container->SetPage(pPage.Get());
         pPage->m_container->AddPath(fullPath);
 
-        static std::string masterStyles = "html,div,body { display: block; } head,style { display: none; }";
-        pPage->m_document = litehtml::document::createFromString(data, pPage->m_container.Get(), masterStyles);
+        //static std::string masterStyles = "html,div,body { display: block; } head,style { display: none; }";
+        pPage->m_document = litehtml::document::createFromString(data, pPage->m_container.Get(), litehtml::master_css);
 
         return pPage;
     }
