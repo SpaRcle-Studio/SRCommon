@@ -59,9 +59,7 @@ namespace SR_UTILS_NS {
             if (AddComponent(pComponent)) {
                 return pComponent;
             }
-            else {
-                SRHalt("IComponentable::GetOrCreateComponent() : failed to add component!");
-            }
+            SRHalt("IComponentable::GetOrCreateComponent() : failed to add component!");
         }
 
         return nullptr;

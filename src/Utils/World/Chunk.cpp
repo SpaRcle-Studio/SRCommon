@@ -63,11 +63,11 @@ namespace SR_WORLD_NS {
          * блокируют другие потоки. Придумать как исправить */
 
         auto&& pLogic = m_observer->m_scene->GetLogicBase().DynamicCast<SceneCubeChunkLogic>();
-        auto&& gameObjects = pLogic->GetGameObjectsAtChunk(m_regionPosition, m_position);
+        auto&& sceneObjects = pLogic->GetGameObjectsAtChunk(m_regionPosition, m_position);
 
-        for (auto&& gameObject : gameObjects) {
-            if (gameObject) {
-                gameObject->Destroy();
+        for (auto&& pObject : sceneObjects) {
+            if (pObject) {
+                pObject->Destroy();
             }
         }
 
@@ -155,7 +155,7 @@ namespace SR_WORLD_NS {
         SRAssert(m_loadState == LoadState::PreLoaded);
 
         for (auto&& gameObject : m_preloaded) {
-            m_observer->m_scene->RegisterGameObject(gameObject);
+            m_observer->m_scene->RegisterSceneObject(gameObject.StaticCast<SceneObject>());
         }
 
         m_preloaded.clear();

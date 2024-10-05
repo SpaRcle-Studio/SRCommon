@@ -20,8 +20,8 @@ namespace SR_WORLD_NS {
     public:
         using Ptr = SR_HTYPES_NS::SafePtr<SceneLogic>;
         using ScenePtr = SR_HTYPES_NS::SafePtr<Scene>;
-        using GameObjectPtr = SR_HTYPES_NS::SharedPtr<GameObject>;
-        using GameObjects = std::vector<GameObjectPtr>;
+        using SceneObjectPtr = SR_HTYPES_NS::SharedPtr<SceneObject>;
+        using SceneObjects = std::vector<SceneObjectPtr>;
 
     public:
         explicit SceneLogic(const ScenePtr& scene);

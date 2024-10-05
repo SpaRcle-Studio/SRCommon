@@ -23,49 +23,49 @@ namespace SR_UTILS_NS::EntityRefUtils {
         for (const PathItem& item : path) {
             switch (item.action) {
                 case Action::Action_Parent: {
-                    GameObject::Ptr pGameObject = pEntity.DynamicCast<GameObject>();
+                    SceneObject::Ptr pObject = pEntity.DynamicCast<SceneObject>();
 
-                    if (!pGameObject && owner.pEntity) {
+                    if (!pObject && owner.pEntity) {
                         if (auto&& pComponent = owner.pEntity.DynamicCast<Component>()) {
                             if (!pComponent->IsComponentValid()) {
                                 return nullptr;
                             }
-                            pGameObject = pComponent->GetGameObject();
+                            pObject = pComponent->GetSceneObject();
                         }
-                        else if (auto&& pOwnerGameObject = owner.pEntity.DynamicCast<GameObject>()) {
-                            pGameObject = pOwnerGameObject->GetParent();
+                        else if (auto&& pOwnerObject = owner.pEntity.DynamicCast<SceneObject>()) {
+                            pObject = pOwnerObject->GetParent();
                         }
                     }
 
-                    if (pGameObject) {
-                        pEntity = pGameObject->GetParent().DynamicCast<Entity>();
+                    if (pObject) {
+                        pEntity = pObject->GetParent().DynamicCast<Entity>();
                     }
 
                     break;
                 }
                 case Action::Action_Child: {
-                    const std::vector<SR_UTILS_NS::GameObject::Ptr>* tree = nullptr;
+                    const std::vector<SR_UTILS_NS::SceneObject::Ptr>* tree = nullptr;
 
                     if (!pEntity) {
                         if (owner.pEntity) {
-                            if (auto&& gm = owner.pEntity.DynamicCast<GameObject>()) {
-                                tree = &gm->GetChildrenRef();
+                            if (auto&& pSceneObject = owner.pEntity.DynamicCast<SceneObject>()) {
+                                tree = &pSceneObject->GetChildrenRef();
                             }
                             //else if (auto&& pComponent = owner.pEntity.DynamicCast<Component>()) {
-                            //    tree = &pComponent->GetScene()->GetRootGameObjects();
+                            //    tree = &pComponent->GetScene()->GetRootSceneObjects();
                             //}
                             else if (auto&& pComponent = owner.pEntity.DynamicCast<Component>()) {
-                                if (auto&& pGameObject = pComponent->GetGameObject()) {
-                                    tree = &pGameObject->GetChildrenRef();
+                                if (auto&& pObject = pComponent->GetSceneObject()) {
+                                    tree = &pObject->GetChildrenRef();
                                 }
                             }
                         }
                         else if (owner.pScene) {
-                            tree = &owner.pScene->GetRootGameObjects();
+                            tree = &owner.pScene->GetRootSceneObjects();
                         }
                     }
-                    else if (auto&& pGameObject = pEntity.DynamicCast<GameObject>()) {
-                        tree = &pGameObject->GetChildrenRef();
+                    else if (auto&& pObject = pEntity.DynamicCast<SceneObject>()) {
+                        tree = &pObject->GetChildrenRef();
                     }
 
                     if (!tree) {
@@ -94,7 +94,7 @@ namespace SR_UTILS_NS::EntityRefUtils {
                     return nullptr;
                 }
                 case Action::Action_Component: {
-                    const std::vector<Component*>& components = pEntity ? pEntity.DynamicCast<GameObject>()->GetComponents() : GetSceneFromOwner(owner)->GetComponents();
+                    const std::vector<Component*>& components = pEntity ? pEntity.DynamicCast<SceneObject>()->GetComponents() : GetSceneFromOwner(owner)->GetComponents();
 
                     if (components.empty()) {
                         return nullptr;
@@ -158,8 +158,8 @@ namespace SR_UTILS_NS::EntityRefUtils {
 
                     refPath.emplace_back(item);
 
-                    if (auto&& pGameObject = dynamic_cast<GameObject*>(pParent)) {
-                        pFromEntity = pGameObject;
+                    if (auto&& pObject = dynamic_cast<SceneObject*>(pParent)) {
+                        pFromEntity = pObject;
                     }
                     else {
                         pFromEntity = nullptr;
@@ -170,24 +170,24 @@ namespace SR_UTILS_NS::EntityRefUtils {
                 }
             }
                 /// --------------------- [ Game Object ] ---------------------
-            else if (auto&& pGameObject = pFromEntity.DynamicCast<GameObject>()) {
-                auto&& pParent = pGameObject->GetParent();
+            else if (auto&& pObject = pFromEntity.DynamicCast<SceneObject>()) {
+                auto&& pParent = pObject->GetParent();
 
-                auto&& tree = pParent ? pParent->GetChildrenRef() : pGameObject->GetScene()->GetRootGameObjects();
+                auto&& tree = pParent ? pParent->GetChildrenRef() : pObject->GetScene()->GetRootSceneObjects();
 
                 uint16_t objectIndex = 0;
 
                 for (auto&& pChild : tree) {
-                    if (pChild == pGameObject) {
+                    if (pChild == pObject) {
                         break;
                     }
-                    if (pChild->GetHashName() == pGameObject->GetHashName()) {
+                    if (pChild->GetName() == pObject->GetName()) {
                         ++objectIndex;
                     }
                 }
 
                 PathItem item = {
-                    .name = pGameObject->GetName(),
+                    .name = pObject->GetName(),
                     .index = objectIndex,
                     .action = Action::Action_Child
                 };
@@ -252,8 +252,8 @@ namespace SR_UTILS_NS::EntityRefUtils {
             return pComponent->HasParent();
         }
 
-        if (auto&& pGameObject = owner.pEntity.DynamicCast<GameObject>()) {
-            return pGameObject->GetScene();
+        if (auto&& pObject = owner.pEntity.DynamicCast<SceneObject>()) {
+            return pObject->GetScene();
         }
 
         return false;
@@ -267,10 +267,11 @@ namespace SR_UTILS_NS::EntityRefUtils {
                 if (!pComponent->IsComponentValid()) {
                     return SR_WORLD_NS::Scene::Ptr();
                 }
-                return pComponent->GetGameObject()->GetScene()->GetThis();
+                return pComponent->GetSceneObject()->GetScene()->GetThis();
             }
-            else if (auto&& pGameObject = pEntity.DynamicCast<GameObject>()) {
-                return pGameObject->GetScene()->GetThis();
+
+            if (auto&& pObject = pEntity.DynamicCast<SceneObject>()) {
+                return pObject->GetScene()->GetThis();
             }
         }
 

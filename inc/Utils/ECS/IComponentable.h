@@ -2,8 +2,8 @@
 // Created by Monika on 12.12.2022.
 //
 
-#ifndef SR_ENGINE_ICOMPONENTABLE_H
-#define SR_ENGINE_ICOMPONENTABLE_H
+#ifndef SR_ENGINE_I_COMPONENTABLE_H
+#define SR_ENGINE_I_COMPONENTABLE_H
 
 #include <Utils/Types/Marshal.h>
 #include <Utils/ECS/ISavable.h>
@@ -26,8 +26,8 @@ namespace SR_UTILS_NS {
         virtual ~IComponentable();
 
     public:
-        SR_NODISCARD SR_INLINE const Components& GetComponents() const noexcept { return m_components; }
-        SR_NODISCARD SR_INLINE const std::list<Component*>& GetLoadedComponents() const noexcept { return m_loadedComponents; }
+        SR_NODISCARD SR_FORCE_INLINE const Components& GetComponents() const noexcept { return m_components; }
+        SR_NODISCARD SR_FORCE_INLINE const std::list<Component*>& GetLoadedComponents() const noexcept { return m_loadedComponents; }
         SR_NODISCARD bool IsDirty() const noexcept;
 
     public:
@@ -87,4 +87,4 @@ namespace SR_UTILS_NS {
     };
 }
 
-#endif //SR_ENGINE_ICOMPONENTABLE_H
+#endif //SR_ENGINE_I_COMPONENTABLE_H

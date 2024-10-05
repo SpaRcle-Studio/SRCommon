@@ -153,9 +153,11 @@ namespace SR_UTILS_NS {
         m_translation = translation;
         SetRotation(euler);
 
-        for (auto&& child : m_gameObject->GetChildrenRef()) {
-            child->GetTransform()->GlobalTranslate(deltaTranslation);
-            child->GetTransform()->RotateAroundParent(deltaRotation);
+        for (auto&& pChild : m_gameObject->GetChildrenRef()) {
+            if (auto&& pGameObject = pChild.DynamicCast<GameObject>()) {
+                pGameObject->GetTransform()->GlobalTranslate(deltaTranslation);
+                pGameObject->GetTransform()->RotateAroundParent(deltaRotation);
+            }
         }
     }
 

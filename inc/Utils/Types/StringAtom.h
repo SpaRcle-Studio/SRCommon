@@ -25,7 +25,7 @@ namespace SR_UTILS_NS {
         StringAtom(const std::string_view& str); /// NOLINT
 
     public:
-        operator std::string() const noexcept; /// NOLINT
+        operator const std::string&() const noexcept; /// NOLINT
         operator std::string_view() const noexcept; /// NOLINT
         bool operator==(const StringAtom& rhs) const noexcept;
         bool operator==(const std::string& rhs) const noexcept;

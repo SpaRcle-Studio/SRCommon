@@ -38,7 +38,7 @@ namespace SR_UTILS_NS {
         m_info = DEFAULT_STRING_INFO;
     }
 
-    StringAtom::operator std::string() const noexcept { /// NOLINT
+    StringAtom::operator const std::string&() const noexcept { /// NOLINT
         return m_info ? m_info->data : DEFAULT;
     }
 

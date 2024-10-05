@@ -29,27 +29,27 @@ namespace SR_WORLD_NS {
 
         m_lastBuildTimePoint = SR_HTYPES_NS::Time::Instance().Now();
 
-        auto&& root = m_scene->GetRootGameObjects();
+        auto&& root = m_scene->GetRootSceneObjects();
 
         m_scene->PostLoad(false);
         m_scene->Awake(false, isPaused);
         m_scene->CheckActivity(false);
         m_scene->Start(false);
 
-        for (auto&& gameObject : root) {
-            gameObject->PostLoad(false);
+        for (auto&& pObject : root) {
+            pObject->PostLoad(false);
         }
 
-        for (auto&& gameObject : root) {
-            gameObject->Awake(false, isPaused);
+        for (auto&& pObject : root) {
+            pObject->Awake(false, isPaused);
         }
 
-        for (auto&& gameObject : root) {
-            gameObject->CheckActivity(false);
+        for (auto&& pObject : root) {
+            pObject->CheckActivity(false);
         }
 
-        for (auto&& gameObject : root) {
-            gameObject->Start(false);
+        for (auto&& pObject : root) {
+            pObject->Start(false);
         }
     }
 

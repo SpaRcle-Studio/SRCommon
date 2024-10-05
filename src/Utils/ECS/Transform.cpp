@@ -24,7 +24,9 @@ namespace SR_UTILS_NS {
         }
 
         if (auto&& pParent = m_gameObject->GetParent()) {
-            return pParent->GetTransform();
+            if (auto&& pGameObject = pParent.DynamicCast<GameObject>()) {
+                return pGameObject->GetTransform();
+            }
         }
 
         return nullptr;
@@ -225,8 +227,10 @@ namespace SR_UTILS_NS {
 
         m_gameObject->OnMatrixDirty();
 
-        for (auto&& child : m_gameObject->GetChildrenRef()) {
-            child->GetTransform()->UpdateTree();
+        for (auto&& pChild : m_gameObject->GetChildrenRef()) {
+            if (auto&& pGameObject = pChild.DynamicCast<GameObject>()) {
+                pGameObject->GetTransform()->UpdateTree();
+            }
         }
     }
 

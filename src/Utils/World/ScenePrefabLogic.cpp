@@ -36,7 +36,7 @@ namespace SR_WORLD_NS {
 
         pMarshal = m_scene->SaveComponents(SR_UTILS_NS::SavableContext(pMarshal, SAVABLE_FLAG_ECS_NO_ID));
 
-        auto&& root = m_scene->GetRootGameObjects();
+        auto&& root = m_scene->GetRootSceneObjects();
 
         uint16_t childrenNum = 0;
         for (auto&& gameObject : root) {
@@ -81,7 +81,7 @@ namespace SR_WORLD_NS {
 
         for (auto&& gameObject : pPrefab->GetData()->GetChildrenRef()) {
             /// при копировании объекта на сцену, он автоматически инстанциируется на ней
-            SR_MAYBE_UNUSED auto&& copy = gameObject->Copy(m_scene->Get());
+            SR_MAYBE_UNUSED auto&& copy = gameObject->Copy(m_scene->Get(), nullptr);
         }
 
         pPrefab->RemoveUsePoint();

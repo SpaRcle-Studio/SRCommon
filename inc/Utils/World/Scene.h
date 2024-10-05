@@ -16,7 +16,7 @@
 #include <Utils/World/TensorKey.h>
 
 namespace SR_UTILS_NS {
-    class GameObject;
+    class SceneObject;
 }
 
 namespace SR_HTYPES_NS {
@@ -32,8 +32,9 @@ namespace SR_WORLD_NS {
         using Ptr = SR_HTYPES_NS::SafePtr<Scene>;
         using SceneLogicPtr = SR_HTYPES_NS::SafePtr<SceneLogic>;
         using Super = Ptr;
+        using SceneObjectPtr = SR_HTYPES_NS::SharedPtr<SceneObject>;
+        using SceneObjects = std::vector<SceneObjectPtr>;
         using GameObjectPtr = SR_HTYPES_NS::SharedPtr<GameObject>;
-        using GameObjects = std::vector<GameObjectPtr>;
 
         SR_MAYBE_UNUSED SR_INLINE_STATIC const Path RuntimeScenePath = "Scenes/Runtime-cache-scene"; /// NOLINT
         SR_MAYBE_UNUSED SR_INLINE_STATIC const Path NewScenePath = "Scenes/New-cache-scene"; /// NOLINT
@@ -74,26 +75,27 @@ namespace SR_WORLD_NS {
         /// На паузе ли сцена (если запущена)
         SR_NODISCARD virtual bool IsPausedMode() const { return false; }
 
-        GameObjects& GetRootGameObjects();
+        SceneObjects& GetRootSceneObjects();
 
-        GameObjectPtr FindByComponent(const std::string& name);
-        GameObjectPtr Find(const std::string& name);
-        GameObjectPtr Find(const char* name);
-        GameObjectPtr Find(uint64_t hashName);
-        GameObjectPtr Find(SR_UTILS_NS::StringAtom name);
+        SceneObjectPtr FindByComponent(const std::string& name);
+        SceneObjectPtr Find(const std::string& name);
+        SceneObjectPtr Find(const char* name);
+        SceneObjectPtr Find(uint64_t hashName);
+        SceneObjectPtr Find(SR_UTILS_NS::StringAtom name);
 
-        void RegisterGameObject(const GameObjectPtr& ptr);
+        void RegisterSceneObject(const SceneObjectPtr& ptr);
 
-        virtual GameObjectPtr InstanceFromFile(const std::string& path);
-        virtual GameObjectPtr FindOrInstance(const std::string& name);
-        virtual GameObjectPtr Instance(const std::string& name);
-        virtual GameObjectPtr Instance(const Types::RawMesh* rawMesh);
-        virtual GameObjectPtr Instance(SR_HTYPES_NS::Marshal& marshal);
+        virtual SceneObjectPtr InstanceFromFile(const std::string& path);
+        virtual SceneObjectPtr Instance(const Types::RawMesh* rawMesh);
+        virtual SceneObjectPtr Instance(SR_HTYPES_NS::Marshal& marshal);
+
+        virtual GameObjectPtr FindOrInstanceGameObject(SR_UTILS_NS::StringAtom name);
+        virtual GameObjectPtr InstanceGameObject(SR_UTILS_NS::StringAtom name);
 
         IComponentable::ScenePtr GetScene() const override { return const_cast<ScenePtr>(this); }
 
     public:
-        bool Remove(const GameObjectPtr& gameObject);
+        bool Remove(const SceneObjectPtr& gameObject);
         void Remove(Component* pComponent);
 
         void OnChanged();
@@ -112,13 +114,13 @@ namespace SR_WORLD_NS {
         SR_HTYPES_NS::DataStorage m_dataStorage;
 
         std::list<uint64_t> m_freeObjIndices;
-        std::list<GameObjectPtr> m_newQueue;
-        std::list<GameObjectPtr> m_deleteQueue;
+        std::list<SceneObjectPtr> m_newQueue;
+        std::list<SceneObjectPtr> m_deleteQueue;
 
         std::list<Component*> m_destroyedComponents;
 
-        GameObjects m_gameObjects;
-        GameObjects m_rootObjects;
+        SceneObjects m_sceneObjects;
+        SceneObjects m_rootObjects;
 
         Path m_path;
         Path m_absPath;

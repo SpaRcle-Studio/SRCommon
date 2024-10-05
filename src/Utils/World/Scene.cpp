@@ -36,33 +36,34 @@ namespace SR_WORLD_NS {
         SRAssert(m_newQueue.empty());
         SRAssert(m_deleteQueue.empty());
         SRAssert(m_destroyedComponents.empty());
-        SRAssert(m_freeObjIndices.size() == m_gameObjects.size());
+        SRAssert(m_freeObjIndices.size() == m_sceneObjects.size());
 
         SR_SAFE_DELETE_PTR(m_sceneUpdater);
     }
 
-    GameObject::Ptr Scene::Instance(const std::string& name) {
+    GameObject::Ptr Scene::InstanceGameObject(SR_UTILS_NS::StringAtom name) {
         if (Debug::Instance().GetLevel() >= Debug::Level::High) {
-            SR_LOG("Scene::Instance() : instance \"" + name + "\" game object at \"" + GetName() + "\" scene.");
+            SR_LOG("Scene::Instance() : instance \"" + name.ToStringRef() + "\" game object at \"" + GetName() + "\" scene.");
         }
 
-        GameObject::Ptr gm = new GameObject(name);
+        const GameObject::Ptr pGameObject = new GameObject(name);
+        const SceneObject::Ptr pSceneObject = pGameObject.StaticCast<SceneObject>();
 
-        RegisterGameObject(gm);
-
-        return gm;
+        RegisterSceneObject(pSceneObject);
+        return pGameObject;
     }
 
-    Scene::GameObjectPtr Scene::FindOrInstance(const std::string &name) {
-        if (auto&& pFound = Find(name)) {
+    GameObject::Ptr Scene::FindOrInstanceGameObject(SR_UTILS_NS::StringAtom name) {
+        if (auto&& pFound = Find(name).DynamicCast<GameObject>()) {
             return pFound;
         }
 
-        return Instance(name);
+        return InstanceGameObject(name);
     }
 
-    Scene::GameObjectPtr Scene::Instance(SR_HTYPES_NS::Marshal &marshal) {
-        return GameObject::Load(marshal, this);
+    Scene::SceneObjectPtr Scene::Instance(SR_HTYPES_NS::Marshal& marshal) {
+        /// TODO: Implement laod other types of objects
+        return GameObject::Load(marshal, this).StaticCast<SceneObject>();
     }
 
     Scene::Ptr Scene::Empty() {
@@ -156,20 +157,20 @@ namespace SR_WORLD_NS {
         });
 
         if (Debug::Instance().GetLevel() > Debug::Level::None) {
-            const uint64_t count = m_gameObjects.size() - m_freeObjIndices.size();
+            const uint64_t count = m_sceneObjects.size() - m_freeObjIndices.size();
             SR_LOG("Scene::Destroy() : complete unloading!");
             SR_LOG("Scene::Destroy() : destroying \"" + GetName() + "\" scene contains "+ std::to_string(count) +" game objects...");
         }
 
-        for (auto gameObject : GetRootGameObjects()) {
-            gameObject->Destroy();
+        for (const auto pObject : GetRootSceneObjects()) { // NOLINT нужно удалять только по копии
+            pObject->Destroy();
         }
 
         Prepare();
 
-        if (m_gameObjects.size() != m_freeObjIndices.size()) {
+        if (m_sceneObjects.size() != m_freeObjIndices.size()) {
             SRHalt("Scene::Destroy() : after destroying the root objects, "
-                                       "there are {} objects left!", m_gameObjects.size() - m_freeObjIndices.size());
+                                       "there are {} objects left!", m_sceneObjects.size() - m_freeObjIndices.size());
         }
 
         m_isDestroyed = true;
@@ -182,15 +183,15 @@ namespace SR_WORLD_NS {
         return true;
     }
 
-    Scene::GameObjects & Scene::GetRootGameObjects() {
+    Scene::SceneObjects& Scene::GetRootSceneObjects() {
         if (!m_isHierarchyChanged) {
             return m_rootObjects;
         }
 
         m_rootObjects.clear();
-        m_rootObjects.reserve(m_gameObjects.size() / 2);
+        m_rootObjects.reserve(m_sceneObjects.size() / 2);
 
-        for (auto&& gameObject : m_gameObjects) {
+        for (auto&& gameObject : m_sceneObjects) {
             if (!gameObject) {
                 continue;
             }
@@ -205,14 +206,14 @@ namespace SR_WORLD_NS {
         return m_rootObjects;
     }
 
-    GameObject::Ptr Scene::FindByComponent(const std::string &name) {
-        for (auto&& gameObject : m_gameObjects) {
-            if (gameObject->ContainsComponent(name)) {
-                return gameObject;
+    SceneObject::Ptr Scene::FindByComponent(const std::string &name) {
+        for (auto&& pObject : m_sceneObjects) {
+            if (pObject->ContainsComponent(name)) {
+                return pObject;
             }
         }
 
-        return GameObject::Ptr();
+        return SceneObject::Ptr();
     }
 
     void Scene::OnChanged() {
@@ -241,14 +242,14 @@ namespace SR_WORLD_NS {
         return true;
     }
 
-    bool Scene::Remove(const GameObject::Ptr& gameObject) {
+    bool Scene::Remove(const SceneObjectPtr& gameObject) {
         SRAssert(!m_isDestroyed);
 
         m_deleteQueue.emplace_back(gameObject);
 
         const uint64_t idInScene = gameObject->GetIdInScene();
 
-        if (idInScene >= m_gameObjects.size()) {
+        if (idInScene >= m_sceneObjects.size()) {
             for (auto pIt = m_newQueue.begin(); pIt != m_newQueue.end(); ++pIt) {
                 if (*pIt == gameObject) {
                     m_newQueue.erase(pIt);
@@ -264,12 +265,12 @@ namespace SR_WORLD_NS {
             return false;
         }
 
-        if (m_gameObjects.at(idInScene) != gameObject) {
+        if (m_sceneObjects.at(idInScene) != gameObject) {
             SRHalt("Scene::Remove() : game objects do not match!");
             return false;
         }
 
-        m_gameObjects.at(idInScene) = GameObject::Ptr();
+        m_sceneObjects.at(idInScene) = SceneObject::Ptr();
         m_freeObjIndices.emplace_back(idInScene);
 
         SetDirty(true);
@@ -278,12 +279,12 @@ namespace SR_WORLD_NS {
         return true;
     }
 
-    GameObject::Ptr Scene::Instance(const SR_HTYPES_NS::RawMesh *rawMesh) {
+    SceneObject::Ptr Scene::Instance(const SR_HTYPES_NS::RawMesh* pRawMesh) {
         SRHalt("Method isn't implemented!");
-        return GameObject::Ptr();
+        return SceneObject::Ptr();
     }
 
-    GameObject::Ptr Scene::InstanceFromFile(const std::string &path) {
+    SceneObject::Ptr Scene::InstanceFromFile(const std::string& path) {
         auto&& extension = SR_UTILS_NS::StringUtils::GetExtensionFromFilePath(path);
 
         if (extension == Prefab::EXTENSION) {
@@ -295,11 +296,11 @@ namespace SR_WORLD_NS {
                 return instanced;
             }
 
-            return GameObject::Ptr();
+            return SceneObject::Ptr();
         }
 
         if (auto&& raw = SR_HTYPES_NS::RawMesh::Load(path)) {
-            GameObject::Ptr root = Instance(raw);
+            SceneObject::Ptr root = Instance(raw);
 
             if (raw->GetCountUses() == 0) {
                 raw->Destroy();
@@ -308,7 +309,7 @@ namespace SR_WORLD_NS {
             return root;
         }
 
-        return GameObject::Ptr();
+        return SceneObject::Ptr();
     }
 
     bool Scene::Reload() {
@@ -316,27 +317,27 @@ namespace SR_WORLD_NS {
         return m_logic->Reload();
     }
 
-    GameObject::Ptr Scene::Find(uint64_t hashName) {
-        for (auto&& object : m_gameObjects) {
+    SceneObject::Ptr Scene::Find(uint64_t hashName) {
+        for (auto&& pObject : m_sceneObjects) {
             /// блокировать объекты не нужно, так как уничтожиться они могут только из сцены
             /// Но стоит предусмотреть защиту от одновременного изменения имени
-            if (object && object->GetHashName() == hashName) {
-                return object;
+            if (pObject && pObject->GetName() == hashName) {
+                return pObject;
             }
         }
 
-        return GameObject::Ptr();
+        return SceneObject::Ptr();
     }
 
-    Scene::GameObjectPtr Scene::Find(SR_UTILS_NS::StringAtom name) {
+    Scene::SceneObjectPtr Scene::Find(SR_UTILS_NS::StringAtom name) {
         return Find(name.GetHash());
     }
 
-    GameObject::Ptr Scene::Find(const std::string& name) {
+    SceneObject::Ptr Scene::Find(const std::string& name) {
         return Find(SR_HASH_STR(name));
     }
 
-    GameObject::Ptr Scene::Find(const char* name) {
+    SceneObject::Ptr Scene::Find(const char* name) {
         return Find(SR_UTILS_NS::StringAtom(name));
     }
 
@@ -348,7 +349,7 @@ namespace SR_WORLD_NS {
         return m_logic.DynamicCast<ScenePrefabLogic>();
     }
 
-    void Scene::RegisterGameObject(const Scene::GameObjectPtr& ptr) {
+    void Scene::RegisterSceneObject(const Scene::SceneObjectPtr& ptr) {
         SRAssert(!m_isPreDestroyed);
         SRAssert(!ptr->GetScene());
 
@@ -356,8 +357,8 @@ namespace SR_WORLD_NS {
 
         ptr->SetScene(this);
 
-        for (auto&& child : ptr->GetChildrenRef()) {
-            RegisterGameObject(child);
+        for (auto&& pChild : ptr->GetChildrenRef()) {
+            RegisterSceneObject(pChild);
         }
 
         SetDirty(true);
@@ -390,15 +391,15 @@ namespace SR_WORLD_NS {
         } 
         else {
             for (auto&& gameObject : m_newQueue) {
-                const uint64_t id = m_freeObjIndices.empty() ? m_gameObjects.size() : m_freeObjIndices.front();
+                const uint64_t id = m_freeObjIndices.empty() ? m_sceneObjects.size() : m_freeObjIndices.front();
 
                 gameObject->SetIdInScene(id);
 
                 if (m_freeObjIndices.empty()) {
-                    m_gameObjects.emplace_back(gameObject);
+                    m_sceneObjects.emplace_back(gameObject);
                 }
                 else {
-                    m_gameObjects[m_freeObjIndices.front()] = gameObject;
+                    m_sceneObjects[m_freeObjIndices.front()] = gameObject;
                     m_freeObjIndices.erase(m_freeObjIndices.begin());
                 }
             }
