@@ -20,7 +20,7 @@ namespace SR_UTILS_NS {
         GameObject = 0
     )
 
-    class SceneObject : public IComponentable, public Entity {
+    class SceneObject : public IComponentable {
         friend class Component;
     public:
         using Ptr = SR_HTYPES_NS::SharedPtr<SceneObject>;
@@ -33,7 +33,7 @@ namespace SR_UTILS_NS {
         ~SceneObject() override;
 
     public:
-        SR_NODISCARD SR_HTYPES_NS::Marshal::Ptr Save(SavableContext data) const override;
+        SR_NODISCARD SR_HTYPES_NS::Marshal::Ptr SaveLegacy(SavableContext data) const override;
         SR_NODISCARD virtual SceneObject::Ptr Copy(const ScenePtr& pScene, const SceneObject::Ptr& pObject) const;
 
         SR_NODISCARD SR_FORCE_INLINE const ObjectNameT& GetName() const { return m_name; }

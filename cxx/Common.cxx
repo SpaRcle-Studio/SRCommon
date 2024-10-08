@@ -16,6 +16,8 @@
 #include "../src/Utils/Common/Coroutine.cpp"
 #include "../src/Utils/Common/SubscriptionHolder.cpp"
 
+#include "../src/Utils/Serialization/ISerializable.cpp"
+
 #ifdef SR_COMMON_EMBED_RESOURCES
     #include <EmbedResources.cxx>
 #endif

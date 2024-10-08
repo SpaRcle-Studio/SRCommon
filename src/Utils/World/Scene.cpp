@@ -22,7 +22,7 @@
 
 namespace SR_WORLD_NS {
     Scene::Scene()
-        : Super(this)
+        : Super()
         , m_sceneUpdater(new SR_WORLD_NS::SceneUpdater(this))
     { }
 
@@ -71,16 +71,16 @@ namespace SR_WORLD_NS {
             SR_LOG("Scene::Empty() : creating new empty scene...");
         }
 
-        auto&& scene = SceneAllocator::Instance().Allocate();
+        auto&& pScene = SceneAllocator::Instance().Allocate();
 
-        if (!scene) {
+        if (!pScene) {
             SR_ERROR("Scene::New() : failed to allocate scene!");
             return Scene::Ptr();
         }
 
-        scene->m_logic = new SceneDefaultLogic(scene);
+        pScene->m_logic = new SceneDefaultLogic(pScene);
 
-        return scene;
+        return pScene;
     }
 
     Scene::Ptr Scene::New(const Path& path) {

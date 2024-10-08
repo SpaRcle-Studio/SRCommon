@@ -30,7 +30,7 @@ namespace SR_WORLD_NS {
         pMarshal->Write<uint64_t>(m_tag.GetHash());
         pMarshal->Write<uint64_t>(m_layer.GetHash());
 
-        auto&& pTransformMarshal = Transform3D().Save(SR_UTILS_NS::SavableContext(nullptr, SAVABLE_FLAG_ECS_NO_ID));
+        auto&& pTransformMarshal = Transform3D().SaveLegacy(SR_UTILS_NS::SavableContext(nullptr, SAVABLE_FLAG_ECS_NO_ID));
         pMarshal->Write<uint64_t>(pTransformMarshal->Size());
         pMarshal->Append(pTransformMarshal);
 
@@ -39,8 +39,8 @@ namespace SR_WORLD_NS {
         auto&& root = m_scene->GetRootSceneObjects();
 
         uint16_t childrenNum = 0;
-        for (auto&& gameObject : root) {
-            if (gameObject->IsDontSave()) {
+        for (auto&& pObject : root) {
+            if (pObject->HasSerializationFlags(ObjectSerializationFlags::DontSave)) {
                 continue;
             }
             ++childrenNum;
@@ -48,12 +48,12 @@ namespace SR_WORLD_NS {
 
         pMarshal->Write(static_cast<uint16_t>(childrenNum));
 
-        for (auto&& gameObject : root) {
-            if (gameObject->IsDontSave()) {
+        for (auto&& pObject : root) {
+            if (pObject->HasSerializationFlags(ObjectSerializationFlags::DontSave)) {
                 continue;
             }
 
-            pMarshal = gameObject->Save(SR_UTILS_NS::SavableContext(pMarshal, SAVABLE_FLAG_ECS_NO_ID));
+            pMarshal = pObject->SaveLegacy(SR_UTILS_NS::SavableContext(pMarshal, SAVABLE_FLAG_ECS_NO_ID));
         }
 
         const bool result = pMarshal->Save(path);
@@ -81,7 +81,7 @@ namespace SR_WORLD_NS {
 
         for (auto&& gameObject : pPrefab->GetData()->GetChildrenRef()) {
             /// при копировании объекта на сцену, он автоматически инстанциируется на ней
-            SR_MAYBE_UNUSED auto&& copy = gameObject->Copy(m_scene->Get(), nullptr);
+            SR_MAYBE_UNUSED auto&& pUnusedCopy = gameObject->Copy(m_scene.Get(), nullptr);
         }
 
         pPrefab->RemoveUsePoint();

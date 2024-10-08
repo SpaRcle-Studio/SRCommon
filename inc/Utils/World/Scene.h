@@ -27,11 +27,12 @@ namespace SR_WORLD_NS {
     class SceneLogic;
     class SceneUpdater;
 
-    class SR_DLL_EXPORT Scene : public SR_HTYPES_NS::SafePtr<Scene>, public SR_UTILS_NS::IComponentable {
+    class SR_DLL_EXPORT Scene : public SR_UTILS_NS::IComponentable {
+        SR_ENTITY_SET_VERSION(1000)
     public:
-        using Ptr = SR_HTYPES_NS::SafePtr<Scene>;
+        using Ptr = SR_HTYPES_NS::SharedPtr<Scene>;
         using SceneLogicPtr = SR_HTYPES_NS::SafePtr<SceneLogic>;
-        using Super = Ptr;
+        using Super = SR_UTILS_NS::IComponentable;
         using SceneObjectPtr = SR_HTYPES_NS::SharedPtr<SceneObject>;
         using SceneObjects = std::vector<SceneObjectPtr>;
         using GameObjectPtr = SR_HTYPES_NS::SharedPtr<GameObject>;

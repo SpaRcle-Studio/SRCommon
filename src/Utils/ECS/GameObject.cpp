@@ -44,8 +44,8 @@ namespace SR_UTILS_NS {
         return pChild.StaticCast<GameObject>();
     }
 
-    SR_HTYPES_NS::Marshal::Ptr GameObject::Save(SavableContext data) const {
-        if (!(data.pMarshal = Entity::Save(data))) {
+    SR_HTYPES_NS::Marshal::Ptr GameObject::SaveLegacy(SavableContext data) const {
+        if (!(data.pMarshal = Entity::SaveLegacy(data))) {
             return data.pMarshal;
         }
 
@@ -63,7 +63,7 @@ namespace SR_UTILS_NS {
             //data.pMarshal->Write<uint64_t>(m_layer.GetHash());
             data.pMarshal->Write<bool>(IsEnabled());
 
-            auto&& pTransformMarshal = GetTransform()->Save(transformSaveData);
+            auto&& pTransformMarshal = GetTransform()->SaveLegacy(transformSaveData);
             data.pMarshal->Write<uint64_t>(pTransformMarshal->Size());
             data.pMarshal->Append(pTransformMarshal);
 
@@ -79,7 +79,7 @@ namespace SR_UTILS_NS {
         data.pMarshal->Write<uint64_t>(GetTag().GetHash());
         data.pMarshal->Write<uint64_t>(GetLayer().GetHash());
 
-        auto&& pTransformMarshal = GetTransform()->Save(transformSaveData);
+        auto&& pTransformMarshal = GetTransform()->SaveLegacy(transformSaveData);
         data.pMarshal->Write<uint64_t>(pTransformMarshal->Size());
         data.pMarshal->Append(pTransformMarshal);
 
@@ -90,20 +90,20 @@ namespace SR_UTILS_NS {
         /// save children
 
         uint16_t childrenNum = 0;
-        for (auto&& child : GetChildrenRef()) {
-            if (child->IsDontSave()) {
+        for (auto&& pChild : GetChildrenRef()) {
+            if (pChild->HasSerializationFlags(ObjectSerializationFlags::DontSave)) {
                 continue;
             }
             ++childrenNum;
         }
 
         data.pMarshal->Write(static_cast<uint16_t>(childrenNum));
-        for (auto&& child : GetChildrenRef()) {
-            if (child->IsDontSave()) {
+        for (auto&& pChild : GetChildrenRef()) {
+            if (pChild->HasSerializationFlags(ObjectSerializationFlags::DontSave)) {
                 continue;
             }
 
-            data.pMarshal = child->Save(data);
+            data.pMarshal = pChild->SaveLegacy(data);
         }
 
         return data.pMarshal;

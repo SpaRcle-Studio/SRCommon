@@ -56,7 +56,7 @@ namespace SR_WORLD_NS {
 
     class SR_DLL_EXPORT Observer : public NonCopyable {
         using GameObjectPtr = SR_HTYPES_NS::SharedPtr<SR_UTILS_NS::SceneObject>;
-        using ScenePtr = SR_HTYPES_NS::SafePtr<Scene>;
+        using ScenePtr = SR_HTYPES_NS::SharedPtr<Scene>;
     public:
         explicit Observer(const ScenePtr& scene);
         ~Observer() override = default;

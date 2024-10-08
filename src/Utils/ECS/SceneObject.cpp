@@ -22,12 +22,12 @@ namespace SR_UTILS_NS {
         SRAssert(!GetPrefab());
     }
 
-    SR_HTYPES_NS::Marshal::Ptr SceneObject::Save(SavableContext data) const {
-        if (!(data.pMarshal = Entity::Save(data))) {
+    SR_HTYPES_NS::Marshal::Ptr SceneObject::SaveLegacy(SavableContext data) const {
+        if (!(data.pMarshal = Entity::SaveLegacy(data))) {
             return data.pMarshal;
         }
 
-        return Entity::Save(data);
+        return Entity::SaveLegacy(data);
     }
 
     SceneObject::Ptr SceneObject::Copy(const ScenePtr& pScene, const SceneObject::Ptr& pObject) const {

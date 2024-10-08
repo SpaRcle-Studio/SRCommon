@@ -6,6 +6,7 @@
 #define SR_ENGINE_UTILS_ISAVABLE_H
 
 #include <Utils/Types/Marshal.h>
+#include <Utils/TypeTraits/SRClass.h>
 #include <Utils/Resources/Xml.h>
 
 namespace SR_UTILS_NS {
@@ -32,30 +33,21 @@ namespace SR_UTILS_NS {
 
     };
 
-    class SR_DLL_EXPORT ISavable {
+    class SR_DLL_EXPORT ISerializable {
     protected:
-        ISavable() = default;
-        virtual ~ISavable() = default;
+        ISerializable() = default;
+        virtual ~ISerializable() = default;
 
     public:
-        void SetDontSave(bool value) { m_dontSave = value; }
+        void AddSerializationFlags(SerializationFlagsFlag flags) noexcept { m_flags |= flags; }
+        void RemoveSerializationFlags(SerializationFlagsFlag flags) noexcept { m_flags &= ~flags; }
 
-        SR_NODISCARD bool IsDontSave() const noexcept { return m_dontSave; }
+        SR_NODISCARD bool HasSerializationFlags(SerializationFlagsFlag flags) const noexcept;
 
-        SR_NODISCARD virtual SR_HTYPES_NS::Marshal::Ptr Save(SavableContext data) const {
-            if (IsDontSave()) {
-                return nullptr;
-            }
-
-            if (data.pMarshal) {
-                return data.pMarshal;
-            }
-            
-            return new SR_HTYPES_NS::Marshal();
-        }
+        SR_DEPRECATED SR_NODISCARD virtual SR_HTYPES_NS::Marshal::Ptr SaveLegacy(SavableContext data) const;
 
     private:
-        bool m_dontSave = false;
+        SerializationFlagsFlag m_flags = SerializationFlags::None;
 
     };
 }

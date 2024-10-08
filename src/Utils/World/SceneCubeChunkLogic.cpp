@@ -8,9 +8,9 @@
 #include <Utils/DebugDraw.h>
 
 namespace SR_WORLD_NS {
-    SceneCubeChunkLogic::SceneCubeChunkLogic(const ScenePtr& scene)
-        : Super(scene)
-        , m_observer(new Observer(scene))
+    SceneCubeChunkLogic::SceneCubeChunkLogic(const ScenePtr& pScene)
+        : Super(pScene)
+        , m_observer(new Observer(pScene))
     {
         ReloadConfig();
     }

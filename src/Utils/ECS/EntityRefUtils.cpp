@@ -13,7 +13,7 @@ namespace SR_UTILS_NS::EntityRefUtils {
         : pEntity(ptr)
     { }
 
-    EntityRefUtils::OwnerRef::OwnerRef(const SR_HTYPES_NS::SafePtr<SR_WORLD_NS::Scene>& ptr)
+    EntityRefUtils::OwnerRef::OwnerRef(const SR_HTYPES_NS::SharedPtr<SR_WORLD_NS::Scene>& ptr)
         : pScene(ptr)
     { }
 
@@ -267,11 +267,11 @@ namespace SR_UTILS_NS::EntityRefUtils {
                 if (!pComponent->IsComponentValid()) {
                     return SR_WORLD_NS::Scene::Ptr();
                 }
-                return pComponent->GetSceneObject()->GetScene()->GetThis();
+                return pComponent->GetSceneObject()->GetScene();
             }
 
             if (auto&& pObject = pEntity.DynamicCast<SceneObject>()) {
-                return pObject->GetScene()->GetThis();
+                return pObject->GetScene();
             }
         }
 

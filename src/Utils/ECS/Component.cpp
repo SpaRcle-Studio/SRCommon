@@ -18,8 +18,8 @@ namespace SR_UTILS_NS {
         m_properties.ClearContainer();
     }
 
-    SR_HTYPES_NS::Marshal::Ptr Component::Save(SavableContext data) const {
-        if (!(data.pMarshal = Entity::Save(data))) {
+    SR_HTYPES_NS::Marshal::Ptr Component::SaveLegacy(SavableContext data) const {
+        if (!(data.pMarshal = Entity::SaveLegacy(data))) {
             return data.pMarshal;
         }
 

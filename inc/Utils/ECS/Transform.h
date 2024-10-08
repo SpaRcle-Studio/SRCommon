@@ -5,7 +5,7 @@
 #ifndef SR_ENGINE_TRANSFORM_H
 #define SR_ENGINE_TRANSFORM_H
 
-#include <Utils/ECS/ISavable.h>
+#include <Utils/Serialization/ISerializable.h>
 #include <Utils/Common/Measurement.h>
 
 #include <Utils/Math/Mathematics.h>
@@ -31,7 +31,7 @@ namespace SR_UTILS_NS {
         InvAxisZ
     );
 
-    class SR_DLL_EXPORT Transform : public ISavable {
+    class SR_DLL_EXPORT Transform : public ISerializable {
         friend class GameObject;
         SR_INLINE static const uint16_t VERSION = 1001;
     public:
@@ -42,7 +42,7 @@ namespace SR_UTILS_NS {
         static Transform* Load(SR_HTYPES_NS::Marshal& marshal);
 
     public:
-        SR_NODISCARD SR_HTYPES_NS::Marshal::Ptr Save(SavableContext data) const override;
+        SR_NODISCARD SR_HTYPES_NS::Marshal::Ptr SaveLegacy(SavableContext data) const override;
 
         void SetGameObject(GameObject *gameObject);
 

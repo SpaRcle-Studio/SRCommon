@@ -5,7 +5,6 @@
 #include "../src/Utils/ECS/IComponentable.cpp"
 #include "../src/Utils/ECS/ComponentManager.cpp"
 #include "../src/Utils/ECS/GameObject.cpp"
-#include "../src/Utils/ECS/ISavable.cpp"
 #include "../src/Utils/ECS/Transform.cpp"
 #include "../src/Utils/ECS/Entity.cpp"
 #include "../src/Utils/ECS/EntityManager.cpp"

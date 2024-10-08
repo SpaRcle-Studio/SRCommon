@@ -29,13 +29,13 @@ namespace SR_UTILS_NS {
         const auto componentSaveData = SR_UTILS_NS::SavableContext(nullptr, data.flags);
 
         for (auto&& pComponent : m_components) {
-            if (auto&& pMarshalComponent = pComponent->Save(componentSaveData)) {
+            if (auto&& pMarshalComponent = pComponent->SaveLegacy(componentSaveData)) {
                 components.emplace_back(pMarshalComponent);
             }
         }
 
         for (auto&& pComponent : m_loadedComponents) {
-            if (auto&& pMarshalComponent = pComponent->Save(componentSaveData)) {
+            if (auto&& pMarshalComponent = pComponent->SaveLegacy(componentSaveData)) {
                 components.emplace_back(pMarshalComponent);
             }
         }

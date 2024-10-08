@@ -6,7 +6,8 @@
 #define SR_ENGINE_I_COMPONENTABLE_H
 
 #include <Utils/Types/Marshal.h>
-#include <Utils/ECS/ISavable.h>
+#include <Utils/Serialization/ISerializable.h>
+#include <Utils/ECS/Entity.h>
 
 namespace SR_WORLD_NS {
     class Scene;
@@ -15,7 +16,7 @@ namespace SR_WORLD_NS {
 namespace SR_UTILS_NS {
     class Component;
 
-    class IComponentable {
+    class IComponentable : public Entity {
     public:
         using Components = std::vector<Component*>;
         using ComponentList = std::list<Component*>;
@@ -23,7 +24,7 @@ namespace SR_UTILS_NS {
 
     protected:
         IComponentable() = default;
-        virtual ~IComponentable();
+        ~IComponentable() override;
 
     public:
         SR_NODISCARD SR_FORCE_INLINE const Components& GetComponents() const noexcept { return m_components; }

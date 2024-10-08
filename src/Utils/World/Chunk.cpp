@@ -190,7 +190,7 @@ namespace SR_WORLD_NS {
 
         for (auto&& gameObject : gameObjects) {
             if (gameObject.RecursiveLockIfValid()) {
-                if (auto&& gameObjectMarshal = gameObject->Save(gameObjectSaveData); gameObjectMarshal) {
+                if (auto&& gameObjectMarshal = gameObject->SaveLegacy(gameObjectSaveData); gameObjectMarshal) {
                     if (gameObjectMarshal->Valid()) {
                         marshaled.emplace_back(gameObjectMarshal);
                     }
@@ -205,7 +205,7 @@ namespace SR_WORLD_NS {
 
         for (auto&& gameObject : m_preloaded) {
             if (gameObject.RecursiveLockIfValid()) {
-                if (auto &&gameObjectMarshal = gameObject->Save(gameObjectSaveData); gameObjectMarshal) {
+                if (auto &&gameObjectMarshal = gameObject->SaveLegacy(gameObjectSaveData); gameObjectMarshal) {
                     if (gameObjectMarshal->Valid()) {
                         marshaled.emplace_back(gameObjectMarshal);
                     }

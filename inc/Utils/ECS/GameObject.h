@@ -34,7 +34,7 @@ namespace SR_UTILS_NS {
     public:
         SR_NODISCARD SceneObjectType GetSceneObjectType() const noexcept final { return SceneObjectType::GameObject; }
         SR_NODISCARD SceneObject::Ptr Copy(const ScenePtr& pScene, const SceneObject::Ptr& pObject) const override;
-        SR_NODISCARD SR_HTYPES_NS::Marshal::Ptr Save(SavableContext data) const override;
+        SR_NODISCARD SR_HTYPES_NS::Marshal::Ptr SaveLegacy(SavableContext data) const override;
         SR_NODISCARD Transform* GetTransform() const noexcept { return m_transform; }
         SR_NODISCARD Transform* GetParentTransform() const noexcept;
 

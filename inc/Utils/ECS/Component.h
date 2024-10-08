@@ -137,7 +137,7 @@ namespace SR_UTILS_NS {
         SR_NODISCARD std::string GetEntityInfo() const override;
 
     protected:
-        SR_NODISCARD SR_HTYPES_NS::Marshal::Ptr Save(SavableContext data) const override;
+        SR_NODISCARD SR_HTYPES_NS::Marshal::Ptr SaveLegacy(SavableContext data) const override;
 
         void SetParent(IComponentable* pParent);
 
