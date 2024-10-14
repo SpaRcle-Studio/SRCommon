@@ -5,7 +5,7 @@
 #ifndef SR_ENGINE_TRANSFORM_H
 #define SR_ENGINE_TRANSFORM_H
 
-#include <Utils/Serialization/ISerializable.h>
+#include <Utils/Serialization/Serializable.h>
 #include <Utils/Common/Measurement.h>
 
 #include <Utils/Math/Mathematics.h>
@@ -31,9 +31,11 @@ namespace SR_UTILS_NS {
         InvAxisZ
     );
 
-    class SR_DLL_EXPORT Transform : public ISerializable {
+    class SR_DLL_EXPORT Transform : public Serializable {
+        SR_CLASS();
         friend class GameObject;
         SR_INLINE static const uint16_t VERSION = 1001;
+        using Super = Serializable;
     public:
         Transform() = default;
         ~Transform() override;

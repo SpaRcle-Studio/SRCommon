@@ -6,8 +6,8 @@
 #define SR_ENGINE_I_COMPONENTABLE_H
 
 #include <Utils/Types/Marshal.h>
-#include <Utils/Serialization/ISerializable.h>
 #include <Utils/ECS/Entity.h>
+#include <Utils/Types/Vector.h>
 
 namespace SR_WORLD_NS {
     class Scene;
@@ -17,9 +17,8 @@ namespace SR_UTILS_NS {
     class Component;
 
     class IComponentable : public Entity {
+        SR_CLASS()
     public:
-        using Components = std::vector<Component*>;
-        using ComponentList = std::list<Component*>;
         using ScenePtr = SR_WORLD_NS::Scene*;
 
     protected:
@@ -27,8 +26,7 @@ namespace SR_UTILS_NS {
         ~IComponentable() override;
 
     public:
-        SR_NODISCARD SR_FORCE_INLINE const Components& GetComponents() const noexcept { return m_components; }
-        SR_NODISCARD SR_FORCE_INLINE const std::list<Component*>& GetLoadedComponents() const noexcept { return m_loadedComponents; }
+        SR_NODISCARD SR_FORCE_INLINE const std::vector<Component*>& GetComponents() const noexcept { return m_components; }
         SR_NODISCARD bool IsDirty() const noexcept;
 
     public:
@@ -45,13 +43,7 @@ namespace SR_UTILS_NS {
         SR_NODISCARD virtual bool IsActive() const noexcept { return true; }
         SR_NODISCARD virtual bool IsDestroyed() const noexcept { return false; }
 
-        virtual bool SetDirty(bool dirty) {
-            if (!m_loadedComponents.empty()) {
-                m_dirty = true;
-                return true;
-            }
-            return (m_dirty = dirty);
-        };
+        virtual bool SetDirty(bool dirty);
 
         virtual Component* GetOrCreateComponent(const std::string& name);
         virtual Component* GetOrCreateComponent(StringAtom name);
@@ -79,10 +71,11 @@ namespace SR_UTILS_NS {
         void DestroyComponent(Component* pComponent);
 
     protected:
-        Components m_components = { };
-        ComponentList m_loadedComponents = { };
+        /// @property
+        std::vector<Component*> m_components;
 
     private:
+        bool m_hasNotAttachedComponents = false;
         bool m_dirty = true;
 
     };

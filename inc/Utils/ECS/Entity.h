@@ -5,7 +5,7 @@
 #ifndef SR_ENGINE_UTILS_ENTITY_H
 #define SR_ENGINE_UTILS_ENTITY_H
 
-#include <Utils/Serialization/ISerializable.h>
+#include <Utils/Serialization/Serializable.h>
 #include <Utils/ECS/EntityRef.h>
 #include <Utils/Common/Numeric.h>
 #include <Utils/Types/SharedPtr.h>
@@ -87,8 +87,9 @@ namespace SR_UTILS_NS {
 
     };
 
-    class SR_DLL_EXPORT Entity : public SR_HTYPES_NS::SharedPtr<Entity>, public ISerializable {
-        SR_CLASS(Entity, SR_HTYPES_NS::SharedPtr<Entity>)
+    class SR_DLL_EXPORT Entity : public Serializable, public SR_HTYPES_NS::SharedPtr<Entity> {
+        SR_CLASS()
+        using Super = Serializable;
     public:
         using Ptr = SR_HTYPES_NS::SharedPtr<Entity>;
 
@@ -117,7 +118,7 @@ namespace SR_UTILS_NS {
         SR_NODISCARD virtual std::list<EntityBranch> GetEntityBranches() const { return {}; }
 
         SR_NODISCARD SR_HTYPES_NS::Marshal::Ptr SaveLegacy(SavableContext data) const override {
-            if (!(data.pMarshal = ISerializable::SaveLegacy(data))) {
+            if (!(data.pMarshal = Super::SaveLegacy(data))) {
                 return data.pMarshal;
             }
 
@@ -135,7 +136,9 @@ namespace SR_UTILS_NS {
         SR_UTILS_NS::PropertyContainer m_entityMessages;
 
     private:
+        /// @property
         EntityId m_entityId;
+
         EntityPath m_entityPath;
 
     };

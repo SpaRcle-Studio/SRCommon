@@ -73,7 +73,7 @@ namespace SR_WORLD_NS {
         m_tag = pPrefab->GetData()->GetTag();
         m_layer = pPrefab->GetData()->GetLayer();
 
-        for (auto&& pComponent : pPrefab->GetData()->GetLoadedComponents()) {
+        for (auto&& pComponent : pPrefab->GetData()->GetComponents()) {
             if (auto&& pCopy = pComponent->CopyComponent()) {
                 m_scene->AddComponent(pCopy);
             }

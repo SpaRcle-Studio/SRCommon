@@ -7,6 +7,8 @@
 #include <Utils/ECS/TransformZero.h>
 #include <Utils/Profile/TracyContext.h>
 
+#include <Codegen/Transform.generated.hpp>
+
 namespace SR_UTILS_NS {
     Transform::~Transform() {
         m_gameObject = nullptr;
@@ -85,7 +87,7 @@ namespace SR_UTILS_NS {
     }
 
     SR_HTYPES_NS::Marshal::Ptr Transform::SaveLegacy(SavableContext data) const {
-        auto&& pMarshal = ISerializable::SaveLegacy(data);
+        auto&& pMarshal = Super::SaveLegacy(data);
         pMarshal->Write<uint16_t>(VERSION);
         pMarshal->Write(static_cast<uint8_t>(GetMeasurement()));
 

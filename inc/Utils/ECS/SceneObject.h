@@ -21,7 +21,7 @@ namespace SR_UTILS_NS {
     )
 
     class SceneObject : public IComponentable {
-        friend class Component;
+        SR_CLASS()
     public:
         using Ptr = SR_HTYPES_NS::SharedPtr<SceneObject>;
         using ScenePtr = SR_WORLD_NS::Scene*;
@@ -118,21 +118,26 @@ namespace SR_UTILS_NS {
 
         SceneObject::Ptr m_root;
         SceneObject::Ptr m_parent;
-        ChildrenType m_children;
 
-        bool m_isEnabled = true;
         bool m_isActive = false;
         bool m_isDestroyed = false;
 
-        StringAtom m_layer;
         StringAtom m_cachedLayer;
-
-        StringAtom m_tag;
-
-        ObjectNameT m_name;
 
         ScenePtr m_scene = nullptr;
         SRHashType m_idInScene = SR_ID_INVALID;
+
+    private:
+        /// @property
+        SR_UTILS_NS::StringAtom m_tag;
+        /// @property
+        SR_UTILS_NS::StringAtom m_name;
+        /// @property
+        std::vector<SceneObject::Ptr> m_children;
+        /// @property
+        bool m_isEnabled = true;
+        /// @property
+        StringAtom m_layer;
 
     };
 }

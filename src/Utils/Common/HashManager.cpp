@@ -6,8 +6,17 @@
 
 namespace SR_UTILS_NS {
     HashManager& HashManager::Instance() {
-        static HashManager instance;
-        return instance;
+        static std::atomic<HashManager*> pInstance = nullptr;
+        HashManager* pTmp = pInstance.load(std::memory_order_acquire);
+        if (pTmp == nullptr) {
+            auto&& pNewInstance = new HashManager();
+            if (!pInstance.compare_exchange_strong(pTmp, pNewInstance, std::memory_order_release, std::memory_order_relaxed)) {
+                delete pNewInstance;
+            } else {
+                pTmp = pNewInstance;
+            }
+        }
+        return *pTmp;
     }
 
     HashManager::Hash HashManager::AddHash(const char* str) {

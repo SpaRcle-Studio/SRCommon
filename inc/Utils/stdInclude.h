@@ -93,7 +93,28 @@
 /// C++11 - 201103L
 /// C++98 - 199711L
 
+inline std::string_view SRGetClassName(std::string_view func_signature) {
+    // Для GCC/Clang
+#ifdef __GNUC__
+    auto start = func_signature.find("] ") + 2;
+    auto end = func_signature.find_last_of(";");
+#else  // Для MSVC
+    auto start = func_signature.find("SRGetClassName<") + 15;
+    auto end = func_signature.find_last_of('>');
+#endif
+    return func_signature.substr(start, end - start);
+}
+
+#ifdef _MSC_VER
+    #define SR_GET_CLASS_NAME() SRGetClassName(__FUNCSIG__)
+#else
+    #define SR_GET_CLASS_NAME() SRGetClassName(__PRETTY_FUNCTION__)
+#endif
+
 namespace SR_UTILS_NS {
+    template <class Alloc, class ValueType>
+    using RebindAllocT = typename std::allocator_traits<Alloc>::template rebind_alloc<ValueType>;
+
     using SRHashType = uint64_t;
 
     #ifdef SR_LINUX

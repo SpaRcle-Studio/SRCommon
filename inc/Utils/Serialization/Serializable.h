@@ -2,12 +2,10 @@
 // Created by Monika on 21.09.2021.
 //
 
-#ifndef SR_ENGINE_UTILS_ISAVABLE_H
-#define SR_ENGINE_UTILS_ISAVABLE_H
+#ifndef SR_ENGINE_UTILS_SERIALIZABLE_H
+#define SR_ENGINE_UTILS_SERIALIZABLE_H
 
-#include <Utils/Types/Marshal.h>
 #include <Utils/TypeTraits/SRClass.h>
-#include <Utils/Resources/Xml.h>
 
 namespace SR_UTILS_NS {
     typedef uint64_t SavableFlags;
@@ -29,16 +27,35 @@ namespace SR_UTILS_NS {
         SavableFlags flags = SAVABLE_FLAG_NONE;
     };
 
-    struct SavableLoadData {
+    /// Флаги для сериализатора объектов
+    SR_ENUM_NS_STRUCT_T(SerializationFlags, uint64_t,
+        None = 1 << 0,
+        Compress = 1 << 1,
+        Editor = 1 << 2,
+        NoUID = 1 << 3
+    )
+
+    /// Флаги самого сериализируемого объекта
+    SR_ENUM_NS_STRUCT_T(ObjectSerializationFlags, uint64_t,
+        None = 1 << 0,
+        DontSave = 1 << 1,
+        DontSaveRecursive = 1 << 2
+    )
+
+    class ISerializer {
 
     };
 
-    class SR_DLL_EXPORT ISerializable {
-    protected:
-        ISerializable() = default;
-        virtual ~ISerializable() = default;
+    class IDeserializer {
 
+    };
+
+    class Serializable : public SRClass {
+        SR_CLASS()
     public:
+        void Save(ISerializer& serializer) const;
+        void Load(IDeserializer& deserializer);
+
         void AddSerializationFlags(SerializationFlagsFlag flags) noexcept { m_flags |= flags; }
         void RemoveSerializationFlags(SerializationFlagsFlag flags) noexcept { m_flags &= ~flags; }
 
@@ -52,4 +69,4 @@ namespace SR_UTILS_NS {
     };
 }
 
-#endif //SR_ENGINE_UTILS_ISAVABLE_H
+#endif //SR_ENGINE_UTILS_SERIALIZABLE_H

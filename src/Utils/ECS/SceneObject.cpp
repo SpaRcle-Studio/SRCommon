@@ -8,6 +8,8 @@
 #include <Utils/ECS/SceneObject.h>
 #include <Utils/World/SceneUpdater.h>
 
+#include <Codegen/SceneObject.generated.hpp>
+
 namespace SR_UTILS_NS {
     SceneObject::SceneObject(ObjectNameT name) {
         SetName(name);
@@ -41,10 +43,6 @@ namespace SR_UTILS_NS {
         }
 
         for (auto&& pComponent : m_components) {
-            pObject->AddComponent(pComponent->CopyComponent());
-        }
-
-        for (auto&& pComponent : m_loadedComponents) {
             pObject->AddComponent(pComponent->CopyComponent());
         }
 

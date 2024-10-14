@@ -59,6 +59,7 @@
 #include "../src/Utils/TypeTraits/Properties.cpp"
 #include "../src/Utils/TypeTraits/StandardProperty.cpp"
 #include "../src/Utils/TypeTraits/SRClass.cpp"
+#include "../src/Utils/TypeTraits/ClassDB.cpp"
 
 #include "../src/Utils/Game/LookAtComponent.cpp"
 #include "../src/Utils/Game/DebugLogComponent.cpp"

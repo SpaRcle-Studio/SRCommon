@@ -5,7 +5,6 @@
 #ifndef SR_ENGINE_SHARED_PTR_H
 #define SR_ENGINE_SHARED_PTR_H
 
-#include <Utils/TypeTraits/SRClass.h>
 #include <Utils/Common/StringFormat.h>
 #include <Utils/Types/Function.h>
 #include <Utils/Common/TypeInfo.h>
@@ -103,7 +102,7 @@ namespace SR_HTYPES_NS {
 
     };
 
-    template<class T> class SR_DLL_EXPORT SharedPtr : public SR_UTILS_NS::SRClass {
+    template<class T> class SR_DLL_EXPORT SharedPtr {
     public:
         using Ptr = SharedPtr<T>;
 
