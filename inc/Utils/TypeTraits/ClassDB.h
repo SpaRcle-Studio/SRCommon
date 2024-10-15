@@ -31,6 +31,7 @@ namespace SR_UTILS_NS {
         /// RegisterClass conflicts with fucking WinAPI macroses
         bool RegisterNewClass(StringAtom className);
         bool RegisterInheritance(StringAtom className, StringAtom inherits);
+        bool RegisterProperty(StringAtom className, StringAtom propertyType, StringAtom propertyName);
 
     private:
         bool m_inheritanceResolved = false;

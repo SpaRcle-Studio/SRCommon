@@ -350,13 +350,14 @@ namespace SR_HTYPES_NS {
             const auto pPtr = m_ptr;
             SharedPtrDynamicData* pData = m_data;
 
-            pData->valid = false;
-
             if (valid) {
                 pData->deallocated = true;
                 freeFun(pPtr);
+                pData->valid = false;
                 return true;
             }
+
+            pData->valid = false;
 
             return false;
         }
@@ -390,7 +391,7 @@ namespace SR_HTYPES_NS {
 
         if (strongCount == 1) {
             if (pData->policy == SR_UTILS_NS::SharedPtrPolicy::Manually) {
-                SR_SAFE_PTR_ASSERT(!pData->valid, "Ptr was not freed!");
+                SR_SAFE_PTR_ASSERT(pData->deallocated, "Ptr was not freed!");
             }
             else if (pData->policy == SR_UTILS_NS::SharedPtrPolicy::Automatic && pData->valid) {
                 pData->valid = false;

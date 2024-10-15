@@ -62,7 +62,16 @@ namespace SR_WORLD_NS {
         /*TODO: это потенциальное место для дедлоков, так как при уничтожении компоненты
          * блокируют другие потоки. Придумать как исправить */
 
-        auto&& pLogic = m_observer->m_scene->GetLogicBase().DynamicCast<SceneCubeChunkLogic>();
+        auto&& pLogicBase = m_observer->m_scene->GetLogicBase();
+        auto&& pLogic = pLogicBase.DynamicCast<SceneCubeChunkLogic>();
+        if (!pLogic) {
+            if (!pLogicBase) {
+                SRHalt("Chunk::Unload() : logic is nullptr!");
+                return false;
+            }
+            SRHalt("Chunk::Unload() : logic is not SceneCubeChunkLogic!");
+            return false;
+        }
         auto&& sceneObjects = pLogic->GetGameObjectsAtChunk(m_regionPosition, m_position);
 
         for (auto&& pObject : sceneObjects) {

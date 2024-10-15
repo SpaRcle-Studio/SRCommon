@@ -42,14 +42,6 @@ namespace SR_UTILS_NS {
         DontSaveRecursive = 1 << 2
     )
 
-    class ISerializer {
-
-    };
-
-    class IDeserializer {
-
-    };
-
     class Serializable : public SRClass {
         SR_CLASS()
     public:

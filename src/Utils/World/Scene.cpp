@@ -20,6 +20,8 @@
 
 #include <Utils/Platform/Platform.h>
 
+#include <Codegen/Scene.generated.hpp>
+
 namespace SR_WORLD_NS {
     Scene::Scene()
         : Super()
@@ -185,11 +187,11 @@ namespace SR_WORLD_NS {
 
     Scene::SceneObjects& Scene::GetRootSceneObjects() {
         if (!m_isHierarchyChanged) {
-            return m_rootObjects;
+            return m_root;
         }
 
-        m_rootObjects.clear();
-        m_rootObjects.reserve(m_sceneObjects.size() / 2);
+        m_root.clear();
+        m_root.reserve(m_sceneObjects.size() / 2);
 
         for (auto&& gameObject : m_sceneObjects) {
             if (!gameObject) {
@@ -197,13 +199,13 @@ namespace SR_WORLD_NS {
             }
 
             if (!gameObject->GetParent()) {
-                m_rootObjects.emplace_back(gameObject);
+                m_root.emplace_back(gameObject);
             }
         }
 
         m_isHierarchyChanged = false;
 
-        return m_rootObjects;
+        return m_root;
     }
 
     SceneObject::Ptr Scene::FindByComponent(const std::string &name) {

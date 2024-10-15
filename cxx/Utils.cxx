@@ -54,6 +54,7 @@
 #include "../src/Utils/CommandManager/CmdManager.cpp"
 #include "../src/Utils/CommandManager/ReversibleCommand.cpp"
 
+#include "../src/Utils/TypeTraits/SRProperty.cpp"
 #include "../src/Utils/TypeTraits/PropertyManager.cpp"
 #include "../src/Utils/TypeTraits/Property.cpp"
 #include "../src/Utils/TypeTraits/Properties.cpp"

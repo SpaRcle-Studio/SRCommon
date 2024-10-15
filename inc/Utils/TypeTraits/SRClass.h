@@ -10,6 +10,30 @@
 #include <Utils/TypeTraits/ClassDB.h>
 
 namespace SR_UTILS_NS {
+    class ISerializer {
+
+    };
+
+    class IDeserializer {
+
+    };
+
+    class XMLSerializer : public ISerializer {
+
+    };
+
+    class XMLDeserializer : public IDeserializer {
+
+    };
+
+    class SRClassMeta {
+    public:
+        virtual ~SRClassMeta() = default;
+
+        virtual void Save(SR_UTILS_NS::ISerializer& serializer) const = 0;
+        virtual void Load(SR_UTILS_NS::IDeserializer& deserializer) const = 0;
+    };
+
     struct PropertyInfo {
         StringAtom name;
         StringAtom className;
@@ -46,10 +70,17 @@ namespace SR_UTILS_NS {
     private:                                                                                                            \
         void SR_CLANG_CODEGEN_MARKER() { }                                                                              \
                                                                                                                         \
-        template<typename TSerializeType> friend struct ::Codegen::SRClassMeta;                                         \
+        template<typename TSerializeType> friend struct ::Codegen::SRClassMetaTemplate;                                 \
         friend class SR_UTILS_NS::SRClass;                                                                              \
                                                                                                                         \
     public:                                                                                                             \
+        static const SR_UTILS_NS::SRClassMeta* GetMetaStatic() noexcept;                                                \
+        virtual const SR_UTILS_NS::SRClassMeta* GetMeta() const noexcept {                                              \
+            auto&& pStaticMetaFromClass = GetMetaStatic();                                                              \
+            SRAssert2(pStaticMetaFromClass, std::string("No static meta for: ") + typeid(*this).name());                \
+            return pStaticMetaFromClass;                                                                                \
+        }                                                                                                               \
+                                                                                                                        \
         static SR_UTILS_NS::StringAtom GetClassStaticName() {                                                           \
             static SR_UTILS_NS::StringAtom name = SR_GET_CLASS_NAME();                                                  \
             return name;                                                                                                \
@@ -61,12 +92,16 @@ namespace SR_UTILS_NS {
     private:
 
 
+#define SR_CLASS_REGISTER_PROPERTY_BASE(className, propertyName, propertyType)                                          \
+
+
+
 template<class T, typename ...Args> static T* SRNew(Args&& ...args) {
     return PostAllocationInitialize(new T(std::forward<Args>(args)...));
 }
 
 namespace Codegen {
-    template<class T> struct SRClassMeta : public SR_UTILS_NS::SRClass { };
+    template<class T> struct SRClassMetaTemplate : public SR_UTILS_NS::SRClassMeta { };
 }
 
 #endif //SR_ENGINE_UTILS_TYPE_TRAITS_SR_CLASS_H

@@ -4,6 +4,8 @@
 
 #include <Utils/World/SceneDefaultLogic.h>
 
+#include <Codegen/SceneDefaultLogic.generated.hpp>
+
 namespace SR_WORLD_NS {
     SceneDefaultLogic::SceneDefaultLogic(const Super::ScenePtr& scene)
         : Super(scene)
@@ -21,7 +23,19 @@ namespace SR_WORLD_NS {
         Super::Update(dt);
     }
 
+    bool SceneDefaultLogic::Load(const Path& path) {
+        return false;
+    }
+
     bool SceneDefaultLogic::Save(const Path& path) {
-        return Super::Save(path);
+        XMLSerializer serializer;
+
+        auto&& rootObjects = m_scene->GetRootSceneObjects();
+        for (auto&& object : rootObjects) {
+            object->Save(serializer);
+        }
+
+        //return serializer.Save(path);
+        return false;
     }
 }

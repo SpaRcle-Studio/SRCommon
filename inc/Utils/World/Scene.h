@@ -28,10 +28,11 @@ namespace SR_WORLD_NS {
     class SceneUpdater;
 
     class SR_DLL_EXPORT Scene : public SR_UTILS_NS::IComponentable {
+        SR_CLASS()
         SR_ENTITY_SET_VERSION(1000)
     public:
         using Ptr = SR_HTYPES_NS::SharedPtr<Scene>;
-        using SceneLogicPtr = SR_HTYPES_NS::SafePtr<SceneLogic>;
+        using SceneLogicPtr = SR_HTYPES_NS::SharedPtr<SceneLogic>;
         using Super = SR_UTILS_NS::IComponentable;
         using SceneObjectPtr = SR_HTYPES_NS::SharedPtr<SceneObject>;
         using SceneObjects = std::vector<SceneObjectPtr>;
@@ -104,7 +105,6 @@ namespace SR_WORLD_NS {
         bool Reload();
 
     private:
-        SceneLogicPtr m_logic;
         SceneUpdater* m_sceneUpdater = nullptr;
 
         bool m_isPreDestroyed = false;
@@ -121,10 +121,14 @@ namespace SR_WORLD_NS {
         std::list<Component*> m_destroyedComponents;
 
         SceneObjects m_sceneObjects;
-        SceneObjects m_rootObjects;
+        SceneObjects m_root;
 
         Path m_path;
         Path m_absPath;
+
+    private:
+        /// @property
+        SR_HTYPES_NS::SharedPtr<SceneLogic> m_logic;
 
     };
 }
