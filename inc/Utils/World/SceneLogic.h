@@ -15,8 +15,7 @@ namespace SR_UTILS_NS {
 namespace SR_WORLD_NS {
     class Scene;
 
-    /// @abstract
-    class SceneLogic : public SR_HTYPES_NS::SharedPtr<SceneLogic>, public SR_UTILS_NS::Serializable {
+    class SceneLogic : public SR_UTILS_NS::Serializable, public SR_HTYPES_NS::SharedPtr<SceneLogic> {
         SR_CLASS()
         using Super = SR_HTYPES_NS::SharedPtr<SceneLogic>;
     public:
@@ -24,6 +23,7 @@ namespace SR_WORLD_NS {
         using ScenePtr = SR_HTYPES_NS::SharedPtr<Scene>;
         using SceneObjectPtr = SR_HTYPES_NS::SharedPtr<SceneObject>;
         using SceneObjects = std::vector<SceneObjectPtr>;
+        using OriginType = SceneLogic;
 
     public:
         explicit SceneLogic(const ScenePtr& scene);

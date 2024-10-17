@@ -4,21 +4,8 @@
 
 #include <Utils/TypeTraits/SRClass.h>
 
-namespace SR_UTILS_NS {
-
-}
+#include <Codegen/SRClass.generated.hpp>
 
 namespace SR_UTILS_NS {
-    namespace Codegen {
-        //template<> static bool RegisterProperties<SRClass>() {
-        //    return true;
-        //}
-        //template<> static bool RegisterMethods<SRClass>() {
-        //    return true;
-        //}
-    }
 
-    bool RegisterPropertiesSRClass() {
-        return true;
-    }
 }

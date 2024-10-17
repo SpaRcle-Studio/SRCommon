@@ -11,6 +11,25 @@
 #include <Utils/Types/StringAtom.h>
 
 namespace SR_UTILS_NS {
+    enum class EnumVariant : uint8_t {
+        Undefined, List, Flags
+    };
+}
+
+namespace Codegen {
+    template <typename EnumType> struct EnumSelector {};
+
+    template<typename T>
+    constexpr SR_UTILS_NS::EnumVariant GetEnumVariant(T) noexcept {
+        return SR_UTILS_NS::EnumVariant::Undefined;
+    }
+
+    template<typename T> constexpr size_t GetEnumItemsCount(T) noexcept {
+        return 0;
+    }
+}
+
+namespace SR_UTILS_NS {
     class EnumReflector;
 
     class IEnumStructBase { };
@@ -32,6 +51,16 @@ namespace SR_UTILS_NS {
     private:
         Reflectors m_reflectors;
 
+    };
+
+    template<typename EnumType> struct EnumTraits {
+    public:
+        using EnumResultType = typename std::conditional_t<std::is_enum_v<EnumType>, EnumType, void>;
+        static constexpr bool IsDeclaredInNamespace = (Codegen::GetEnumVariant(static_cast<const EnumResultType*>(nullptr)) != EnumVariant::Undefined);
+        using EnumSelectorType = typename std::conditional_t<IsDeclaredInNamespace, const EnumResultType*, Codegen::EnumSelector<EnumType>>;
+        static constexpr bool IsEnum = Codegen::GetEnumVariant(EnumSelectorType{}) != EnumVariant::Undefined;
+        static constexpr bool IsFlags = Codegen::GetEnumVariant(EnumSelectorType{}) == EnumVariant::Flags;
+        static constexpr size_t NumItems = Codegen::GetEnumItemsCount(EnumSelectorType{});
     };
 
     class SR_DLL_EXPORT EnumReflector : public NonCopyable {
@@ -260,14 +289,14 @@ namespace SR_UTILS_NS {
     template<typename EnumType> EnumReflector* EnumReflector::GetReflector() {
         if constexpr (std::is_class_v<EnumType>) {
             if constexpr (std::is_enum_v<EnumType>) {
-                return const_cast<EnumReflector*>(&_detail_reflector_(EnumType()));
+                return const_cast<EnumReflector*>(&sr_detail_reflector_(EnumType()));
             }
             else {
-                return const_cast<EnumReflector*>(&_detail_reflector_(EnumType::TypeT()));
+                return const_cast<EnumReflector*>(&sr_detail_reflector_(EnumType::TypeT()));
             }
         }
         else {
-            return const_cast<EnumReflector*>(&_detail_reflector_(EnumType()));
+            return const_cast<EnumReflector*>(&sr_detail_reflector_(EnumType()));
         }
 
         std::cerr << "EnumReflector::GetReflector() : unknown type!\n";
@@ -281,13 +310,16 @@ namespace SR_UTILS_NS {
     SR_INLINE
 #define SR_ENUM_DETAIL_SPEC_class friend
 #define SR_ENUM_DETAIL_STR(x) #x
-#define SR_ENUM_DETAIL_MAKE(enumClass, spec, enumName, enumNameStr, integral, ...)                                      \
+#define SR_ENUM_DETAIL_MAKE(enumVariant, enumClass, spec, enumName, enumNameStr, integral, ...)                         \
     enumClass enumName : integral                                                                                       \
     {                                                                                                                   \
         __VA_ARGS__, SR_MACRO_CONCAT(enumName, MAX)                                                                     \
     };                                                                                                                  \
-    SR_ENUM_DETAIL_SPEC_##spec const SR_UTILS_NS::EnumReflector& _detail_reflector_(enumName)                           \
+    SR_ENUM_DETAIL_SPEC_##spec const SR_UTILS_NS::EnumReflector& sr_detail_reflector_(enumName)                         \
     {                                                                                                                   \
+        static SR_UTILS_NS::EnumVariant CODEGEN_ENUM_VARIANT = enumVariant;                                             \
+        /*static uint64_t CODEGEN_ENUM_COUNT = SR_COUNT_ARGS(__VA_ARGS__);*/                                            \
+        static const char* CODEGEN_ENUM_NAME = #enumName;                                                               \
         static const SR_UTILS_NS::EnumReflector _reflector( []{                                                         \
             static integral _detail_sval;                                                                               \
             _detail_sval = 0;                                                                                           \
@@ -313,6 +345,7 @@ namespace SR_UTILS_NS {
     }                                                                                                                   \
     SR_INLINE_STATIC const bool SR_MACRO_CONCAT(enumName, RegistrationCodegenResult) =                    /** NOLINT */ \
         SR_UTILS_NS::EnumReflectorManager::Instance()                                                     /** NOLINT */ \
-            .RegisterReflector(const_cast<SR_UTILS_NS::EnumReflector*>(&_detail_reflector_(enumName()))); /** NOLINT */ \
+            .RegisterReflector(                                                                           /** NOLINT */ \
+                const_cast<SR_UTILS_NS::EnumReflector*>(&sr_detail_reflector_(enumName())));              /** NOLINT */ \
 
 #endif //SR_ENGINE_ENUMREFLECTOR_H

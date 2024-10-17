@@ -10,6 +10,8 @@
 
 namespace SR_UTILS_NS {
     class SRPropertyVariant {
+        ~SRPropertyVariant() = default;
+
         SR_ENUM_CLASS_T(Type, uint8_t,
             Float, Double, String, StringAtom, Bool,
             Int8, Int16, Int32, Int64,
@@ -22,7 +24,7 @@ namespace SR_UTILS_NS {
             SR_UTILS_NS::Serializable value;
         };
 
-        union SRPropertyData {
+        /*union SRPropertyData {
             float m_float;
             double m_double;
             std::string m_string;
@@ -36,7 +38,7 @@ namespace SR_UTILS_NS {
             uint16_t m_uint16;
             uint32_t m_uint32;
             uint64_t m_uint64;
-        };
+        };*/
     };
 
     class SRProperty {

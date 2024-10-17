@@ -28,12 +28,12 @@ namespace SR_WORLD_NS {
     }
 
     bool SceneDefaultLogic::Save(const Path& path) {
-        XMLSerializer serializer;
+        /*XMLSerializer serializer;
 
         auto&& rootObjects = m_scene->GetRootSceneObjects();
         for (auto&& object : rootObjects) {
             object->Save(serializer);
-        }
+        }*/
 
         //return serializer.Save(path);
         return false;

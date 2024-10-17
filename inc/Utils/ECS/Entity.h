@@ -92,6 +92,7 @@ namespace SR_UTILS_NS {
         using Super = Serializable;
     public:
         using Ptr = SR_HTYPES_NS::SharedPtr<Entity>;
+        using OriginType = Entity;
 
     public:
         ~Entity() override;

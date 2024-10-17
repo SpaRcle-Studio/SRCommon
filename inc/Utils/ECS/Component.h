@@ -14,8 +14,8 @@
 #include <Utils/Common/StringUtils.h>
 #include <Utils/Types/Marshal.h>
 #include <Utils/Types/SafeVariable.h>
-#include <Utils/World/Scene.h>
 #include <Utils/Common/CollisionData.h>
+#include <Utils/Types/SharedPtr.h>
 #include <Utils/TypeTraits/Properties.h>
 
 /**
@@ -47,6 +47,7 @@ namespace SR_UTILS_NS {
         friend class ComponentManager;
     public:
         using Ptr = SR_HTYPES_NS::SharedPtr<Component>;
+        using OriginType = Component;
         using ScenePtr = SR_WORLD_NS::Scene*;
         using GameObjectPtr = SR_HTYPES_NS::SharedPtr<GameObject>;
         using SceneObjectPtr = SR_HTYPES_NS::SharedPtr<SceneObject>;

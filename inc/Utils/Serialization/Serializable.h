@@ -6,6 +6,9 @@
 #define SR_ENGINE_UTILS_SERIALIZABLE_H
 
 #include <Utils/TypeTraits/SRClass.h>
+#include <Utils/TypeTraits/Factory.h>
+
+#include <Utils/Serialization/Serialization.h>
 
 namespace SR_UTILS_NS {
     typedef uint64_t SavableFlags;
@@ -44,6 +47,9 @@ namespace SR_UTILS_NS {
 
     class Serializable : public SRClass {
         SR_CLASS()
+    public:
+        using OriginType = Serializable;
+
     public:
         void Save(ISerializer& serializer) const;
         void Load(IDeserializer& deserializer);

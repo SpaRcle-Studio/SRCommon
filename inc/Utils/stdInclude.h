@@ -111,7 +111,32 @@ inline std::string_view SRGetClassName(std::string_view func_signature) {
     #define SR_GET_CLASS_NAME() SRGetClassName(__PRETTY_FUNCTION__)
 #endif
 
+#define SR_GET_COMPILE_TIME_CLASS_NAME(T) SR_UTILS_NS::GetCompileTimeTypeName<T>()
+
+#define SR_IGNORE_UNUSED(...) SR_UTILS_NS::IgnoreUnused(__VA_ARGS__)
+
 namespace SR_UTILS_NS {
+    template<size_t N1, size_t N2> constexpr auto CompileTimeConcatStrings(const char(&s1)[N1], const char(&s2)[N2]) {
+        char result[N1 + N2 - 1] = {};
+        for (size_t i = 0; i < N1 - 1; ++i) {
+            result[i] = s1[i];
+        }
+        for (size_t i = 0; i < N2; ++i) {
+            result[N1 - 1 + i] = s2[i];
+        }
+        return result;
+    }
+
+    template<typename T> constexpr const char* GetCompileTimeTypeName() {
+    #ifdef _MSC_VER
+        return __FUNCSIG__;
+    #else
+        return __PRETTY_FUNCTION__;
+    #endif
+    }
+
+    template <typename... T> SR_CONSTEXPR void IgnoreUnused(const T&...) { }
+
     template <class Alloc, class ValueType>
     using RebindAllocT = typename std::allocator_traits<Alloc>::template rebind_alloc<ValueType>;
 

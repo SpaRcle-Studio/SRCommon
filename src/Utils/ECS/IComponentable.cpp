@@ -45,7 +45,7 @@ namespace SR_UTILS_NS {
         return data.pMarshal;
     }
 
-    Component* IComponentable::GetOrCreateComponent(StringAtom name) {
+    Component::Ptr IComponentable::GetOrCreateComponent(StringAtom name) {
         if (auto&& pComponent = GetComponent(name)) {
             return pComponent;
         }
@@ -60,7 +60,7 @@ namespace SR_UTILS_NS {
         return nullptr;
     }
 
-    Component* IComponentable::GetComponent(const std::string& name) {
+    Component::Ptr IComponentable::GetComponent(const std::string& name) {
         return GetComponent(StringAtom(name));
     }
 
@@ -76,11 +76,11 @@ namespace SR_UTILS_NS {
         return (m_dirty = dirty);
     }
 
-    Component* IComponentable::GetOrCreateComponent(const std::string& name) {
+    Component::Ptr IComponentable::GetOrCreateComponent(const std::string& name) {
         return GetOrCreateComponent(StringAtom(name));
     }
 
-    Component* IComponentable::GetComponent(StringAtom name) {
+    Component::Ptr IComponentable::GetComponent(StringAtom name) {
         for (auto&& pComponent : m_components) {
             if (pComponent->GetComponentName() != name) {
                 continue;
@@ -92,7 +92,7 @@ namespace SR_UTILS_NS {
         return nullptr;
     }
 
-    void IComponentable::ForEachComponent(const std::function<bool(Component *)> &fun) {
+    void IComponentable::ForEachComponent(const std::function<bool(const Component::Ptr&)> &fun) const {
         for (uint32_t i = 0; i < m_components.size(); ++i) {
             auto&& pComponent = m_components[i];
             if (!fun(pComponent)) {
@@ -101,7 +101,16 @@ namespace SR_UTILS_NS {
         }
     }
 
-    bool IComponentable::AddComponent(Component* pComponent) {
+    void IComponentable::ForEachComponent(const std::function<bool(Component::Ptr&)> &fun) {
+        for (uint32_t i = 0; i < m_components.size(); ++i) {
+            auto&& pComponent = m_components[i];
+            if (!fun(pComponent)) {
+                break;
+            }
+        }
+    }
+
+    bool IComponentable::AddComponent(const Component::Ptr& pComponent) {
         if (!pComponent) {
             SRHalt("pComponent is nullptr!");
             return false;
@@ -125,7 +134,7 @@ namespace SR_UTILS_NS {
         return true;
     }
 
-    bool IComponentable::RemoveComponent(Component* pComponent) {
+    bool IComponentable::RemoveComponent(const Component::Ptr& pComponent) {
         auto&& pIt = std::find(m_components.begin(), m_components.end(), pComponent);
 
         if (pIt == m_components.end()) {
@@ -262,7 +271,7 @@ namespace SR_UTILS_NS {
         m_components.clear();
     }
 
-    void IComponentable::DestroyComponent(Component* pComponent) {
+    void IComponentable::DestroyComponent(const Component::Ptr& pComponent) {
         if (pComponent->IsAttached()) {
             pComponent->OnDetached();
         }

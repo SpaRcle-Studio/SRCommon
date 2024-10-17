@@ -98,7 +98,7 @@ namespace SR_WORLD_NS {
 
     public:
         bool Remove(const SceneObjectPtr& gameObject);
-        void Remove(Component* pComponent);
+        void Remove(const Component::Ptr& pComponent);
 
         void OnChanged();
 
@@ -118,7 +118,7 @@ namespace SR_WORLD_NS {
         std::list<SceneObjectPtr> m_newQueue;
         std::list<SceneObjectPtr> m_deleteQueue;
 
-        std::list<Component*> m_destroyedComponents;
+        std::list<Component::Ptr> m_destroyedComponents;
 
         SceneObjects m_sceneObjects;
         SceneObjects m_root;

@@ -92,6 +92,26 @@ namespace SR_UTILS_NS {
             std::constructible_from<T, std::string> &&
             requires(T type) { type.to_string(); } ||
             requires(T type) { type.ToString(); };
+
+        static constexpr SRHashType InitialHash() noexcept { return 0xcbf29ce484222325; }
+        static constexpr SRHashType MagicPrime() noexcept { return 0x100000001b3; }
+
+        template<size_t S, size_t N> struct Encoder {
+            static constexpr SRHashType EncodeChar(SRHashType hash, const char (&text)[S]) noexcept {
+                hash = (hash ^ static_cast<SRHashType>(static_cast<uint8_t>(text[S - N - 1]))) * MagicPrime();
+                return Encoder<S, N - 1>::EncodeChar(hash, text);
+            }
+        };
+
+        template<size_t S> struct Encoder<S, 0> {
+            static constexpr SRHashType EncodeChar(SRHashType hash, const char (&)[S]) noexcept {
+                return hash;
+            }
+        };
+    }
+
+    template<size_t S> static constexpr uint64_t ComputeHashConstexpr(const char (&text)[S]) noexcept {
+        return static_cast<uint64_t>(Hash::Detail::Encoder<S, S - 1>::EncodeChar(Hash::Detail::InitialHash(), text));
     }
 
     SR_INLINE_STATIC constexpr uint64_t SR_FNV_OFFSET_BASIS = 14695981039346656037ULL;

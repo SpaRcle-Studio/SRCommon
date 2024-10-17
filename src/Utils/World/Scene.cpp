@@ -426,7 +426,7 @@ namespace SR_WORLD_NS {
         m_deleteQueue.clear();
     }
 
-    void Scene::Remove(Component* pComponent) {
+    void Scene::Remove(const Component::Ptr& pComponent) {
         m_destroyedComponents.emplace_back(pComponent);
     }
 

@@ -7,6 +7,7 @@
 #include <Utils/ECS/Prefab.h>
 #include <Utils/ECS/SceneObject.h>
 #include <Utils/World/SceneUpdater.h>
+#include <Utils/World/Scene.h>
 
 #include <Codegen/SceneObject.generated.hpp>
 
@@ -195,14 +196,14 @@ namespace SR_UTILS_NS {
             return;
         }
 
-        ForEachComponent([](Component* pComponent) -> bool {
+        ForEachComponent([](const Component::Ptr& pComponent) -> bool {
             pComponent->OnBeforeLayerChanged();
             return true;
         });
 
         m_cachedLayer = m_layer = layer;
 
-        ForEachComponent([](Component* pComponent) -> bool {
+        ForEachComponent([](const Component::Ptr& pComponent) -> bool {
             pComponent->OnLayerChanged();
             return true;
         });
@@ -303,14 +304,14 @@ namespace SR_UTILS_NS {
             return;
         }
 
-        ForEachComponent([](Component* pComponent) -> bool {
+        ForEachComponent([](const Component::Ptr& pComponent) -> bool {
             pComponent->OnBeforeLayerChanged();
             return true;
         });
 
         m_cachedLayer = m_parent->m_cachedLayer;
 
-        ForEachComponent([](Component* pComponent) -> bool {
+        ForEachComponent([](const Component::Ptr& pComponent) -> bool {
             pComponent->OnLayerChanged();
             return true;
         });

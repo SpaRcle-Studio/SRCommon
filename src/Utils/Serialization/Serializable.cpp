@@ -8,11 +8,11 @@
 
 namespace SR_UTILS_NS {
     void Serializable::Save(ISerializer& serializer) const {
-        GetMeta()->Save(serializer);
+        GetMeta()->Save(serializer, *this);
     }
 
     void Serializable::Load(IDeserializer& deserializer) {
-        GetMeta()->Load(deserializer);
+        GetMeta()->Load(deserializer, *this);
     }
 
     bool Serializable::HasSerializationFlags(const ObjectSerializationFlagsFlag flags) const noexcept {

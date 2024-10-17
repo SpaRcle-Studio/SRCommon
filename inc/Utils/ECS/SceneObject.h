@@ -27,6 +27,7 @@ namespace SR_UTILS_NS {
         using ScenePtr = SR_WORLD_NS::Scene*;
         using ObjectNameT = SR_UTILS_NS::StringAtom;
         using ChildrenType = std::vector<SceneObject::Ptr>;
+        using OriginType = SceneObject;
 
     public:
         explicit SceneObject(ObjectNameT name);
