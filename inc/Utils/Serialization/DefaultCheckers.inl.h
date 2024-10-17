@@ -20,7 +20,7 @@ template<class T> struct DefaultChecker<std::optional<T>> {
     }
 };
 
-// Specialization for types with empty method (std::vector, std::string, ...)
+/// Specialization for types with "empty" method (std::vector, std::string, std::array, etc...)
 template<class T>
 struct DefaultChecker<T, std::enable_if_t<SerializationTraits<T>::HasEmpty && !IsTypeFromStdArrayTemplateV<T>>> {
     static bool IsDefault(const T& value) {

@@ -19,6 +19,7 @@
 #include "../src/Utils/Serialization/Serializable.cpp"
 #include "../src/Utils/Serialization/Serializer.cpp"
 #include "../src/Utils/Serialization/Deserializer.cpp"
+#include "../src/Utils/Serialization/SRASerialization.cpp"
 
 #ifdef SR_COMMON_EMBED_RESOURCES
     #include <EmbedResources.cxx>
