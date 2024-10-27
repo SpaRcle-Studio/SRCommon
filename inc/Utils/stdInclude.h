@@ -116,6 +116,9 @@ inline std::string_view SRGetClassName(std::string_view func_signature) {
 #define SR_IGNORE_UNUSED(...) SR_UTILS_NS::IgnoreUnused(__VA_ARGS__)
 
 namespace SR_UTILS_NS {
+    using namespace std::literals::string_literals;
+    using namespace std::literals::string_view_literals;
+
     template<size_t N1, size_t N2> constexpr auto CompileTimeConcatStrings(const char(&s1)[N1], const char(&s2)[N2]) {
         char result[N1 + N2 - 1] = {};
         for (size_t i = 0; i < N1 - 1; ++i) {

@@ -45,11 +45,11 @@ namespace SR_HTYPES_NS {
 
     public:
         SR_NODISCARD bool IsSingletonCanBeDestroyed() const override { return false; }
-        SR_NODISCARD const std::set<SharedPtrDynamicData*>& GetData() const { return m_data; }
+        SR_NODISCARD const std::unordered_set<SharedPtrDynamicData*>& GetData() const { return m_data; }
 
     private:
         uint64_t m_count = 0;
-        std::set<SharedPtrDynamicData*> m_data;
+        std::unordered_set<SharedPtrDynamicData*> m_data;
 
     };
 

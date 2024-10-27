@@ -19,8 +19,8 @@ namespace SR_UTILS_NS {
         static bool WriteToFile(const std::string& path, const std::string& text);
         static std::string NormalizePath(const std::string& path);
 
-        static std::vector<std::string> ReadAllLines(const std::string& path) {
-            std::ifstream file(path);
+        static std::vector<std::string> ReadAllLines(const SR_UTILS_NS::Path& path) {
+            std::ifstream file(path.c_str());
             std::vector<std::string> lines = { };
             while (file.good()) {
                 std::string line;

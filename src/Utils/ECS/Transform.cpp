@@ -10,6 +10,10 @@
 #include <Codegen/Transform.generated.hpp>
 
 namespace SR_UTILS_NS {
+    Transform::Transform()
+        : Ptr(this, SR_UTILS_NS::SharedPtrPolicy::Manually)
+    { }
+
     Transform::~Transform() {
         m_gameObject = nullptr;
     }
@@ -240,7 +244,7 @@ namespace SR_UTILS_NS {
         return m_dirtyMatrix;
     }
 
-    Transform *Transform::Copy() const {
+    Transform::Ptr Transform::Copy() const {
         SRHalt("Not implemented!");
         return nullptr;
     }

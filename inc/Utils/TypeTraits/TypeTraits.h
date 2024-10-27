@@ -5,21 +5,47 @@
 #ifndef SR_COMMON_TYPE_TRAITS_H
 #define SR_COMMON_TYPE_TRAITS_H
 
-#include <Utils/stdInclude.h>
+#include <Utils/Common/Hashes.h>
 
 namespace SR_UTILS_NS {
 	struct SerializationId {
-		SR_CONSTEXPR SerializationId(char const* name, const uint64_t hash)
-			: name(name)
-			, hash(hash)
-		{ }
+		SR_CONSTEXPR SerializationId() noexcept = default;
 
-		template<size_t S> static constexpr SerializationId Create(const char (&text)[S]) noexcept {
-			return SerializationId(text, ComputeHashConstexpr(text));
+		SR_CONSTEXPR ~SerializationId() noexcept = default;
+
+		template<uint64_t S> static constexpr SerializationId Create(const char (&text)[S]) noexcept {
+			SerializationId id;
+			for (uint64_t i = 0; i < S - 1; ++i) {
+				id.name[i] = text[i];
+			}
+			id.name[S - 1] = '\0';
+			id.hash = ComputeHashConstexpr(text);
+			return id;
 		}
 
-		const char* name = nullptr;
+		static SerializationId CreateFromCStr(const char* text) noexcept {
+			SerializationId id;
+			strncpy_s(id.name, text, MaxNameLength - 1);
+			id.name[MaxNameLength - 1] = '\0';
+			id.hash = ComputeHash(text);
+			return id;
+		}
+
+		static SerializationId CreateFromString(const std::string_view text) noexcept {
+			SerializationId id;
+			strncpy_s(id.name, text.data(), std::min(text.size(), MaxNameLength - 1));
+			id.name[MaxNameLength - 1] = '\0';
+			id.hash = ComputeHash(text);
+			return id;
+		}
+
+		SR_NODISCARD const char* GetName() const noexcept { return name; }
+		SR_NODISCARD uint64_t GetHash() const noexcept { return hash; }
+
+	private:
+		static constexpr uint64_t MaxNameLength = 256;
 		uint64_t hash = 0;
+		char name[MaxNameLength]{};
 	};
 
 	template<template<typename, size_t> typename Tmpl1>

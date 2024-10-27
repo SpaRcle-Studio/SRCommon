@@ -138,17 +138,18 @@ private:
 
 public:
 	static void Save(ISerializer& serializer, const T& value, const SerializationId& id) {
-		serializer.BeginArray(value.size(), id, nullptr);
+		serializer.BeginArray(value.size(), id);
 
+		SR_CONSTEXPR SerializationId itemId = SerializationId::Create("item");
 		for (ConstRef item : value) {
-			Serialization::Save(serializer, item, id);
+			Serialization::Save(serializer, item, itemId);
 		}
 
 		serializer.EndArray();
 	}
 
 	static void Load(IDeserializer& deserializer, T& value, const SerializationId& id) {
-		const uint64_t size = deserializer.BeginArray(id, nullptr);
+		const uint64_t size = deserializer.BeginArray(id);
 
 		if (!deserializer.IsPreserveMode()) {
 			value.clear();
@@ -161,7 +162,7 @@ public:
 				--i;
 
 				const fmt::format_int index(i);
-				if (deserializer.ShouldSetDefaults(SerializationId(index.c_str(), 0))) {
+				if (deserializer.ShouldSetDefaults(SerializationId::CreateFromCStr(index.c_str()))) {
 					it = value.erase(it);
 				}
 			}
@@ -211,17 +212,14 @@ struct ObjectDataAccessor<std::vector<T, TOther...>> : ObjectDataAccessorVector<
 
 template<typename T, size_t N> struct ObjectDataAccessor<std::array<T, N>> {
 	static void Save(ISerializer& serializer, const std::array<T, N>& value, const SerializationId& id) {
-		serializer.BeginArray(value.size(), id, "index");
+		serializer.BeginArray(value.size(), id);
 
 		for (uint64_t i = 0; i < value.size(); ++i) {
 			const auto& item = value[i];
 			if (IsValidValue(item) && (serializer.IsWriteDefaults() || !IsDefault(item))) {
 				serializer.BeginObject(id);
 
-				serializer.BeginSpecialWrite(ISerializer::SpecialWriteType::ArrayIndex);
-				Serialization::Save(serializer, i, SerializationId::Create("index"));
-				serializer.EndSpecialWrite();
-				Serialization::Save(serializer, item, SerializationId::Create("value"));
+				Serialization::Save(serializer, item, SerializationId::Create("item"));
 
 				serializer.EndObject();
 			}
@@ -231,12 +229,12 @@ template<typename T, size_t N> struct ObjectDataAccessor<std::array<T, N>> {
 	}
 
 	static void Load(IDeserializer& deserializer, std::array<T, N>& value, const SerializationId& id) {
-		deserializer.BeginArray(id, "index");
+		deserializer.BeginArray(id);
 
 		if (deserializer.IsPreserveMode() && deserializer.ShouldSetDefaults()) {
 			for (size_t i = 0; i < value.size(); ++i) {
 				const fmt::format_int index(i);
-				if (deserializer.ShouldSetDefaults(SerializationId(index.c_str(), 0))) {
+				if (deserializer.ShouldSetDefaults(SerializationId::CreateFromCStr(index.c_str()))) {
 					if constexpr (DefaultObjectMaker<T>::value) {
 						DefaultObjectMaker<T>::MakeDefault(value[i]);
 					}
@@ -247,15 +245,14 @@ template<typename T, size_t N> struct ObjectDataAccessor<std::array<T, N>> {
 			}
 		}
 
+		std::uint64_t index = 0;
+
 		while (deserializer.NextItem(id)) {
 			deserializer.BeginObject(id);
 
-			std::uint64_t loadIndex = 0;
-			Serialization::Load(deserializer, loadIndex, SerializationId::Create("index"));
-			const std::uint64_t index = loadIndex;
-
 			if (index < N) {
-				Serialization::Load(deserializer, value[index], SerializationId::Create("value"));
+				Serialization::Load(deserializer, value[index], SerializationId::Create("item"));
+				++index;
 			}
 			else {
 				SRHalt("Array index out of range!");
@@ -275,10 +272,16 @@ struct ObjectDataAccessor<std::map<T, U, Compare, Allocator>> {
 	static_assert(std::is_arithmetic_v<T> || IsSREnumV<T> || std::is_same_v<T, std::string> || std::is_same_v<T, SR_UTILS_NS::StringAtom>, "Custom types and structs are not supported as id of map");
 
 	static void Save(ISerializer& serializer, const MapType& value, const SerializationId& id) {
-		serializer.BeginArray(value.size(), id, "first");
+		serializer.BeginArray(value.size(), id);
 
 		for (auto&& item : value) {
-			SaveMapItem(serializer, item, id);
+			SR_CONSTEXPR SerializationId itemId = SerializationId::Create("item");
+			serializer.BeginObject(itemId);
+
+			Serialization::Save(serializer, item.first, SerializationId::Create("first"));
+			Serialization::Save(serializer, item.second, SerializationId::Create("second"));
+
+			serializer.EndObject();
 		}
 
 		serializer.EndArray();
@@ -286,7 +289,7 @@ struct ObjectDataAccessor<std::map<T, U, Compare, Allocator>> {
 
 	template<typename MapT>
 	static void Load(IDeserializer& deserializer, MapT& value, const SerializationId& id) {
-		const uint64_t size = deserializer.BeginArray(id, "first");
+		const uint64_t size = deserializer.BeginArray(id);
 
 		if (!deserializer.IsPreserveMode()) {
 			value.clear();
@@ -337,19 +340,6 @@ struct ObjectDataAccessor<std::map<T, U, Compare, Allocator>> {
 
 		deserializer.EndArray();
 	}
-
-	static void SaveMapItem(ISerializer& serializer, const ValueType& item, const SerializationId& id)
-	{
-		serializer.BeginObject(id);
-
-		serializer.BeginSpecialWrite(ISerializer::SpecialWriteType::MapKey);
-		Serialization::Save(serializer, item.first, SerializationId::Create("first"));
-		serializer.EndSpecialWrite();
-
-		Serialization::Save(serializer, item.second, SerializationId::Create("second"));
-
-		serializer.EndObject();
-	}
 };
 
 template<typename T, typename Less, typename Allocator>
@@ -358,12 +348,11 @@ struct ObjectDataAccessor<std::set<T, Less, Allocator>> {
 	using ValueType = typename SetType::value_type;
 
 	static void Save(ISerializer& serializer, const SetType& value, const SerializationId& id) {
-		serializer.BeginArray(value.size(), id, "first");
+		serializer.BeginArray(value.size(), id);
 
 		for (auto&& item : value) {
-			serializer.BeginObject(id);
-			Serialization::Save(serializer, item.second, SerializationId::Create("item"));
-			serializer.EndObject();
+			SR_CONSTEXPR SerializationId itemId = SerializationId::Create("item");
+			Serialization::Save(serializer, item.second, itemId);
 		}
 
 		serializer.EndArray();
@@ -371,7 +360,7 @@ struct ObjectDataAccessor<std::set<T, Less, Allocator>> {
 
 	template<typename SetT>
 	static void Load(IDeserializer& deserializer, SetT& value, const SerializationId& id) {
-		const uint64_t size = deserializer.BeginArray(id, "first");
+		const uint64_t size = deserializer.BeginArray(id);
 
 		if (!deserializer.IsPreserveMode()) {
 			value.clear();
@@ -435,60 +424,60 @@ template<typename T, typename U> struct ObjectDataAccessor<std::pair<T, U>> {
 };
 
 #define SR_DATA_ACCESSOR_VECTOR2(Type)																					\
-template<> struct ObjectDataAccessor<Type> {																					\
-	static void Save(ISerializer& serializer, const Type& value, const SerializationId& id) {						\
-		serializer.BeginObject(id);																					\
-		Serialization::Save(serializer, value.x, SerializationId::Create("x"));									\
-		Serialization::Save(serializer, value.y, SerializationId::Create("y"));									\
+template<> struct ObjectDataAccessor<Type> {																			\
+	static void Save(ISerializer& serializer, const Type& value, const SerializationId& id) {							\
+		serializer.BeginObject(id);																						\
+		Serialization::SaveCheckDefault(serializer, value.x, SerializationId::Create("x"));								\
+		Serialization::SaveCheckDefault(serializer, value.y, SerializationId::Create("y"));								\
 		serializer.EndObject();																							\
 	}																													\
 																														\
-	static void Load(IDeserializer& deserializer, Type& value, const SerializationId& id) {						\
+	static void Load(IDeserializer& deserializer, Type& value, const SerializationId& id) {								\
 		deserializer.BeginObject(id);																					\
-		Serialization::Load(deserializer, value.x, SerializationId::Create("x"));									\
-		Serialization::Load(deserializer, value.y, SerializationId::Create("y"));									\
+		Serialization::Load(deserializer, value.x, SerializationId::Create("x"));										\
+		Serialization::Load(deserializer, value.y, SerializationId::Create("y"));										\
 		deserializer.EndObject();																						\
 	}							 																						\
 };								 																						\
 
 
 #define SR_DATA_ACCESSOR_VECTOR3(Type)																					\
-template<> struct ObjectDataAccessor<Type> {																					\
-	static void Save(ISerializer& serializer, const Type& value, const SerializationId& id) {						\
-		serializer.BeginObject(id);																					\
-		Serialization::Save(serializer, value.x, SerializationId::Create("x"));									\
-		Serialization::Save(serializer, value.y, SerializationId::Create("y"));									\
-		Serialization::Save(serializer, value.y, SerializationId::Create("z"));									\
+template<> struct ObjectDataAccessor<Type> {																			\
+	static void Save(ISerializer& serializer, const Type& value, const SerializationId& id) {							\
+		serializer.BeginObject(id);																						\
+		Serialization::SaveCheckDefault(serializer, value.x, SerializationId::Create("x"));								\
+		Serialization::SaveCheckDefault(serializer, value.y, SerializationId::Create("y"));								\
+		Serialization::SaveCheckDefault(serializer, value.z, SerializationId::Create("z"));								\
 		serializer.EndObject();																							\
 	}																													\
 																														\
-	static void Load(IDeserializer& deserializer, Type& value, const SerializationId& id) {						\
+	static void Load(IDeserializer& deserializer, Type& value, const SerializationId& id) {								\
 		deserializer.BeginObject(id);																					\
-		Serialization::Load(deserializer, value.x, SerializationId::Create("x"));									\
-		Serialization::Load(deserializer, value.y, SerializationId::Create("y"));									\
-		Serialization::Load(deserializer, value.y, SerializationId::Create("z"));									\
+		Serialization::Load(deserializer, value.x, SerializationId::Create("x"));										\
+		Serialization::Load(deserializer, value.y, SerializationId::Create("y"));										\
+		Serialization::Load(deserializer, value.z, SerializationId::Create("z"));										\
 		deserializer.EndObject();																						\
 	}							 																						\
 };								 																						\
 
 
 #define SR_DATA_ACCESSOR_VECTOR4(Type)																					\
-template<> struct ObjectDataAccessor<Type> {																					\
-	static void Save(ISerializer& serializer, const Type& value, const SerializationId& id) {						\
-		serializer.BeginObject(id);																					\
-		Serialization::Save(serializer, value.x, SerializationId::Create("x"));									\
-		Serialization::Save(serializer, value.y, SerializationId::Create("y"));									\
-		Serialization::Save(serializer, value.y, SerializationId::Create("z"));									\
-		Serialization::Save(serializer, value.y, SerializationId::Create("w"));									\
+template<> struct ObjectDataAccessor<Type> {																			\
+	static void Save(ISerializer& serializer, const Type& value, const SerializationId& id) {							\
+		serializer.BeginObject(id);																						\
+		Serialization::SaveCheckDefault(serializer, value.x, SerializationId::Create("x"));								\
+		Serialization::SaveCheckDefault(serializer, value.y, SerializationId::Create("y"));								\
+		Serialization::SaveCheckDefault(serializer, value.z, SerializationId::Create("z"));								\
+		Serialization::SaveCheckDefault(serializer, value.w, SerializationId::Create("w"));								\
 		serializer.EndObject();																							\
 	}																													\
 																														\
-	static void Load(IDeserializer& deserializer, Type& value, const SerializationId& id) {						\
+	static void Load(IDeserializer& deserializer, Type& value, const SerializationId& id) {								\
 		deserializer.BeginObject(id);																					\
-		Serialization::Load(deserializer, value.x, SerializationId::Create("x"));									\
-		Serialization::Load(deserializer, value.y, SerializationId::Create("y"));									\
-		Serialization::Load(deserializer, value.y, SerializationId::Create("z"));									\
-		Serialization::Load(deserializer, value.y, SerializationId::Create("w"));									\
+		Serialization::Load(deserializer, value.x, SerializationId::Create("x"));										\
+		Serialization::Load(deserializer, value.y, SerializationId::Create("y"));										\
+		Serialization::Load(deserializer, value.z, SerializationId::Create("z"));										\
+		Serialization::Load(deserializer, value.w, SerializationId::Create("w"));										\
 		deserializer.EndObject();																						\
 	}							 																						\
 };								 																						\
@@ -508,6 +497,25 @@ SR_DATA_ACCESSOR_VECTOR4(SR_MATH_NS::BVector4)
 SR_DATA_ACCESSOR_VECTOR4(SR_MATH_NS::IVector4)
 SR_DATA_ACCESSOR_VECTOR4(SR_MATH_NS::UVector4)
 
+template<> struct ObjectDataAccessor<SR_MATH_NS::Quaternion> {
+	static void Save(ISerializer& serializer, const SR_MATH_NS::Quaternion& value, const SerializationId& id) {
+		serializer.BeginObject(id);
+		Serialization::SaveCheckDefault(serializer, value.x, SerializationId::Create("x"));
+		Serialization::SaveCheckDefault(serializer, value.y, SerializationId::Create("y"));
+		Serialization::SaveCheckDefault(serializer, value.z, SerializationId::Create("z"));
+		Serialization::SaveCheckDefault(serializer, value.w, SerializationId::Create("w"));
+		serializer.EndObject();
+	}
+
+	static void Load(IDeserializer& deserializer, SR_MATH_NS::Quaternion& value, const SerializationId& id) {
+		deserializer.BeginObject(id);
+		Serialization::Load(deserializer, value.x, SerializationId::Create("x"));
+		Serialization::Load(deserializer, value.y, SerializationId::Create("y"));
+		Serialization::Load(deserializer, value.z, SerializationId::Create("z"));
+		Serialization::Load(deserializer, value.w, SerializationId::Create("w"));
+		deserializer.EndObject();
+	}
+};
 
 template<typename T> struct ObjectDataAccessor<std::optional<T>> {
 	static void Save(ISerializer& serializer, const std::optional<T>& value, const SerializationId& id) {
@@ -555,26 +563,25 @@ struct ObjectDataAccessor<T, typename std::enable_if<SerializationTraits<T>::IsS
 
 template<typename T>
 struct ObjectDataAccessor<SR_HTYPES_NS::SharedPtr<T>, std::enable_if_t<SerializationTraits<T>::HasOriginType>> {
-	using FactoryType = SR_UTILS_NS::Factory<typename T::OriginType>;
+	using ObjectFactoryType = SR_UTILS_NS::Factory<typename T::OriginType>;
 
 	static void Save(ISerializer& serializer, const SR_HTYPES_NS::SharedPtr<T>& value, const SerializationId& id) {
 		if (!value) {
 			return;
 		}
 
+		if (value->GetMeta()->IsEditorOnly()) {
+			if (!serializer.IsEditorAllowed()) {
+				return;
+			}
+		}
+
 		auto typeName = value->GetMeta()->GetFactoryName();
 		serializer.BeginObject(id);
 
-		if (value->GetMeta()->IsEditorOnly()) {
-			serializer.BeginSpecialWrite(ISerializer::SpecialWriteType::PointerEditorOnly);
-			serializer.WriteBool(true, SerializationId::Create("_editorOnly_"));
-			serializer.EndSpecialWrite();
-		}
-		serializer.BeginSpecialWrite(ISerializer::SpecialWriteType::PointerType);
 		serializer.WriteString(typeName, SerializationId::Create("type"));
-		serializer.EndSpecialWrite();
-
 		Serialization::Save(serializer, *value, SerializationId::Create("ptr"));
+
 		serializer.EndObject();
 	}
 
@@ -591,23 +598,23 @@ struct ObjectDataAccessor<SR_HTYPES_NS::SharedPtr<T>, std::enable_if_t<Serializa
 		if (!type.empty()) {
 			if (!deserializer.IsPreserveMode()) {
 				if constexpr (std::is_same_v<T, typename T::OriginType>) {
-					value = FactoryType::Instance().Create(type);
+					value = ObjectFactoryType::Instance().Create(type);
 				}
 				else {
-					value = FactoryType::Instance().Create(type).template DynamicCast<T>();
+					value = ObjectFactoryType::Instance().Create(type).template DynamicCast<T>();
 				}
-				SRAssert2(value, "Unknown item's type: " + type);
+				SRAssert2(value, "Unknown object's type: " + type);
 			}
 			else {
-				auto needReload = !value || type != FactoryType::Instance().GetName(value.Get());
-				if (needReload && deserializer.AllowReloadPointer(value ? IDeserializer::ReloadPointerReason::HasDifferentType : IDeserializer::ReloadPointerReason::IsNull)) {
+				const bool isNeedReAlloc = !value || type != ObjectFactoryType::Instance().GetName(value.Get());
+				if (isNeedReAlloc && deserializer.AllowReAllocPointer(value ? IDeserializer::ReAllocPointerReason::HasDifferentType : IDeserializer::ReAllocPointerReason::IsNull)) {
 					if constexpr (std::is_same_v<T, typename T::OriginType>) {
-						value = FactoryType::Instance().Create(type);
+						value = ObjectFactoryType::Instance().Create(type);
 					}
 					else {
-						value = FactoryType::Instance().Create(type).template DynamicCast<T>();
+						value = ObjectFactoryType::Instance().Create(type).template DynamicCast<T>();
 					}
-					SRAssert2(value, "Unknown item's type: " + type);
+					SRAssert2(value, "Unknown object's type: " + type);
 				}
 			}
 		}

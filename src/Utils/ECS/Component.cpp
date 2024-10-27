@@ -10,6 +10,8 @@
 #include <Utils/World/Scene.h>
 #include <Utils/World/SceneUpdater.h>
 
+#include <Codegen/Component.generated.hpp>
+
 namespace SR_UTILS_NS {
     Component::~Component() {
         /// если срабатывает ассерт, значит, вероятнее всего, какой-то игровой объект до сих пор удерживает компонент,

@@ -5,6 +5,8 @@
 #include <Utils/ECS/Transform3D.h>
 #include <Utils/ECS/GameObject.h>
 
+#include <Codegen/Transform3D.generated.hpp>
+
 namespace SR_UTILS_NS {
     void Transform3D::UpdateMatrix() const {
         if (m_skew.IsEqualsLikely(SR_MATH_NS::FVector3::One(), SR_EPSILON)) SR_LIKELY_ATTRIBUTE {
@@ -254,7 +256,7 @@ namespace SR_UTILS_NS {
         }
     }
 
-    Transform *Transform3D::Copy() const {
+    Transform::Ptr Transform3D::Copy() const {
         auto&& pTransform = new Transform3D();
 
         pTransform->m_quaternion = m_quaternion;

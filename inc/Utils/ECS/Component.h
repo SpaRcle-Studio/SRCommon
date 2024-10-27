@@ -42,6 +42,7 @@ namespace SR_UTILS_NS {
     class GameObject;
 
     class SR_DLL_EXPORT Component : public Entity {
+        SR_CLASS()
         friend class GameObject;
         friend class IComponentable;
         friend class ComponentManager;
@@ -145,10 +146,12 @@ namespace SR_UTILS_NS {
     protected:
         bool m_isComponentLoaded = false;
         bool m_isAttached = false;
-        bool m_isEnabled = true;
         bool m_isActive = false;
         bool m_isAwake = false;
         bool m_isStarted = false;
+
+        /// @property
+        bool m_isEnabled = true;
 
         int32_t m_indexInSceneUpdater = SR_ID_INVALID;
 

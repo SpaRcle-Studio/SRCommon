@@ -87,6 +87,13 @@ namespace SR_UTILS_NS {
 			SR_UTILS_NS::ObjectDataAccessor<T>::Save(serializer, value, key);
 		}
 
+		template<typename T> void SaveCheckDefault(ISerializer& serializer, const T& value, const SerializationId& key) {
+			if (!serializer.IsWriteDefaults() && IsDefault(value)) {
+				return;
+			}
+			SR_UTILS_NS::ObjectDataAccessor<T>::Save(serializer, value, key);
+		}
+
 		template<typename T> bool Load(IDeserializer& deserializer, T& value, const SerializationId& key) {
 			if (!deserializer.IsDefault(key)) {
 				ObjectDataAccessor<T>::Load(deserializer, value, key);

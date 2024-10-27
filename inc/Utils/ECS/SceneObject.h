@@ -6,6 +6,7 @@
 #define SR_ENGINE_UTILS_SCENE_OBJECT_H
 
 #include <Utils/ECS/EntityManager.h>
+#include <Utils/ECS/LayerManager.h>
 #include <Utils/ECS/IComponentable.h>
 
 namespace SR_UTILS_NS::World {
@@ -138,7 +139,7 @@ namespace SR_UTILS_NS {
         /// @property
         bool m_isEnabled = true;
         /// @property
-        StringAtom m_layer;
+        StringAtom m_layer = LayerManager::GetDefaultLayer();
 
     };
 }

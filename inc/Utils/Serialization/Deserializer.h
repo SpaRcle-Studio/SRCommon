@@ -10,7 +10,8 @@
 namespace SR_UTILS_NS {
     class IDeserializer {
     public:
-        enum class ReloadPointerReason : uint8_t {
+        /// Если обнаружена проблема при загрузке указателя, то нужно его пересоздать
+        enum class ReAllocPointerReason : uint8_t {
             None,
             IsNull,
             HasDifferentType
@@ -19,19 +20,22 @@ namespace SR_UTILS_NS {
     public:
         virtual ~IDeserializer() = default;
 
-        SR_NODISCARD virtual bool IsDefault(const SerializationId&) const noexcept = 0;
-        SR_NODISCARD virtual bool ShouldSetDefaults(const SerializationId&) const noexcept = 0;
+        SR_NODISCARD virtual bool SaveToFile(const SR_UTILS_NS::Path& path) const = 0;
+        SR_NODISCARD virtual bool LoadFromFile(const SR_UTILS_NS::Path& path) = 0;
+
+        SR_NODISCARD virtual bool IsDefault(const SerializationId& name) const noexcept = 0;
+        SR_NODISCARD virtual bool ShouldSetDefaults(const SerializationId& name) const noexcept = 0;
         SR_NODISCARD virtual bool ShouldSetDefaults() const noexcept = 0;
         SR_NODISCARD virtual bool AllowNewMapKeys() const noexcept = 0;
         SR_NODISCARD virtual bool IsPreserveMode() const noexcept = 0;
-        SR_NODISCARD virtual bool AllowReloadPointer(ReloadPointerReason reason) const noexcept = 0;
+        SR_NODISCARD virtual bool AllowReAllocPointer(ReAllocPointerReason reason) const noexcept = 0;
 
-        virtual bool NextItem(const SerializationId& key) noexcept = 0;
+        virtual bool NextItem(const SerializationId& name) noexcept = 0;
 
-        virtual void BeginObject(const SerializationId& key) = 0;
+        virtual void BeginObject(const SerializationId& name) = 0;
         virtual void EndObject() = 0;
 
-        virtual uint64_t BeginArray(const SerializationId& key, const char* associativeKey) = 0;
+        virtual uint64_t BeginArray(const SerializationId& name) = 0;
         virtual void EndArray() = 0;
 
         virtual void ReadString(std::string& value, const SerializationId& name) = 0;

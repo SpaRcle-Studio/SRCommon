@@ -160,7 +160,7 @@ namespace SR_UTILS_NS {
         UpdateTree();
     }
 
-    Transform *Transform2D::Copy() const {
+    Transform::Ptr Transform2D::Copy() const {
         auto&& pTransform = new Transform2D();
 
         pTransform->m_anchor = m_anchor;

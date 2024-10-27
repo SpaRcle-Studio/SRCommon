@@ -10,18 +10,13 @@
 namespace SR_UTILS_NS {
     class ISerializer {
     public:
-        enum class SpecialWriteType : uint8_t {
-            None,
-            PointerType,
-            PointerEditorOnly,
-            MapKey,
-            ArrayIndex
-        };
-
-    public:
         virtual ~ISerializer() = default;
 
-        SR_NODISCARD virtual bool IsWriteDefaults() const noexcept = 0;
+        SR_NODISCARD virtual bool IsWriteDefaults() const noexcept { return m_isNeedWriteDefaults; }
+        SR_NODISCARD virtual bool IsEditorAllowed() const noexcept { return m_isEditorAllowed; }
+
+        void SetWriteDefaults(const bool value) noexcept { m_isNeedWriteDefaults = value; }
+        void SetEditorAllowed(const bool value) noexcept { m_isEditorAllowed = value; }
 
         virtual void WriteString(std::string_view value, const SerializationId& name) = 0;
         virtual void WriteBool(bool value, const SerializationId& name) = 0;
@@ -39,11 +34,14 @@ namespace SR_UTILS_NS {
         virtual void BeginObject(const SerializationId& name) = 0;
         virtual void EndObject() = 0;
 
-        virtual void BeginSpecialWrite(SpecialWriteType type) = 0;
-        virtual void EndSpecialWrite() = 0;
-
-        virtual void BeginArray(uint64_t size, const SerializationId& name, const char* associativeKey) = 0;
+        virtual void BeginArray(uint64_t size, const SerializationId& name) = 0;
         virtual void EndArray() = 0;
+
+        SR_NODISCARD virtual bool SaveToFile(const SR_UTILS_NS::Path& path) const { return false; }
+
+    private:
+        bool m_isNeedWriteDefaults = false;
+        bool m_isEditorAllowed = false;
 
     };
 }

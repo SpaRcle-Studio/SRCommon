@@ -14,19 +14,21 @@
 #include <Utils/Math/Matrix4x4.h>
 #include <Utils/Math/Mathematics.h>
 
+#include <Codegen/GameObject.generated.hpp>
+
 namespace SR_UTILS_NS {
-    GameObject::GameObject(ObjectNameT name, Transform* pTransform)
+    GameObject::GameObject(const ObjectNameT name, SR_HTYPES_NS::SharedPtr<Transform> pTransform)
         : Super(name)
     {
         if (!pTransform) {
-            pTransform = new Transform3D();
+            pTransform = Transform3D::MakeShared<Transform3D, Transform>();
         }
         SetLayer(SR_UTILS_NS::LayerManager::GetDefaultLayer());
         SetTransform(pTransform);
     }
 
     GameObject::~GameObject() {
-        delete m_transform;
+        m_transform.AutoFree();
     }
 
     GameObject::Ptr GameObject::GetOrCreateChild(StringAtom name) {
@@ -109,7 +111,15 @@ namespace SR_UTILS_NS {
         return data.pMarshal;
     }
 
-    void GameObject::SetTransform(Transform* pTransform) {
+    Transform* GameObject::GetTransform() noexcept {
+        return m_transform.Get();
+    }
+
+    const Transform* GameObject::GetTransform() const noexcept {
+        return m_transform.Get();
+    }
+
+    void GameObject::SetTransform(const SR_HTYPES_NS::SharedPtr<Transform>& pTransform) {
         if (!pTransform) {
             SRHalt("pTransform is nullptr!");
             return;
@@ -124,7 +134,7 @@ namespace SR_UTILS_NS {
             SR_WARN("GameObject::SetTransform() : invalid transform!");
         }
         else {
-            SR_SAFE_DELETE_PTR(m_transform);
+            m_transform.AutoFree();
             m_transform = pTransform;
             m_transform->SetGameObject(this);
             SetDirty(true);

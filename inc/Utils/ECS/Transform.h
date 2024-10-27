@@ -31,13 +31,16 @@ namespace SR_UTILS_NS {
         InvAxisZ
     );
 
-    class SR_DLL_EXPORT Transform : public Serializable {
+    class SR_DLL_EXPORT Transform : public Serializable, public SR_HTYPES_NS::SharedPtr<Transform> {
         SR_CLASS();
         friend class GameObject;
         SR_INLINE static const uint16_t VERSION = 1001;
         using Super = Serializable;
     public:
-        Transform() = default;
+        using Ptr = SR_HTYPES_NS::SharedPtr<Transform>;
+
+    public:
+        Transform();
         ~Transform() override;
 
     public:
@@ -108,7 +111,7 @@ namespace SR_UTILS_NS {
         SR_NODISCARD virtual SR_MATH_NS::FVector2 GetTranslation2D() const;
         SR_NODISCARD virtual SR_MATH_NS::FVector2 GetScale2D() const;
 
-        SR_NODISCARD virtual Transform* Copy() const;
+        SR_NODISCARD virtual Transform::Ptr Copy() const;
         SR_NODISCARD Transform* GetParentTransform() const;
         SR_NODISCARD SR_HTYPES_NS::SharedPtr<GameObject> GetGameObject() const;
 

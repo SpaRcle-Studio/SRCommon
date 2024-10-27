@@ -15,14 +15,14 @@ namespace SR_UTILS_NS {
         SR_INLINE_STATIC std::string DEFAULT = std::string();
         static StringHashInfo* DEFAULT_STRING_INFO;
     public:
-        StringAtom();
+        constexpr StringAtom();
 
-        StringAtom(const StringAtom& str) = default;
+        constexpr StringAtom(const StringAtom& str) = default;
 
-        StringAtom(StringHashInfo* pInfo); /// NOLINT
-        StringAtom(const char* str); /// NOLINT
-        StringAtom(const std::string& str); /// NOLINT
-        StringAtom(const std::string_view& str); /// NOLINT
+        constexpr StringAtom(StringHashInfo* pInfo); /// NOLINT
+        constexpr StringAtom(const char* str); /// NOLINT
+        constexpr StringAtom(const std::string& str); /// NOLINT
+        constexpr StringAtom(const std::string_view& str); /// NOLINT
 
     public:
         operator const std::string&() const noexcept; /// NOLINT

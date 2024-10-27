@@ -13,16 +13,38 @@
 namespace SR_UTILS_NS {
     class SubscriptionHolder;
 
+    class SubscriptionMessage final : SR_UTILS_NS::NonCopyable {
+    public:
+        void SetInt(StringAtom id, uint64_t value) {
+            m_ints[id] = value;
+        }
+
+        SR_NODISCARD uint64_t GetInt(StringAtom id, const std::optional<uint64_t> def = std::nullopt) const {
+            if (const auto it = m_ints.find(id); it != m_ints.end()) {
+                return it->second;
+            }
+            if (def.has_value()) {
+                return def.value();
+            }
+            SRHalt("SubscriptionMessage::GetInt() : id \"{}\" not found!", id.ToStringView());
+            return 0;
+        }
+
+    private:
+        std::map<StringAtom, uint64_t> m_ints;
+
+    };
+
     class SubscriptionInternalInfo : SR_UTILS_NS::NonCopyable {
     public:
-        explicit SubscriptionInternalInfo(SR_HTYPES_NS::Function<void()>&& callback, SubscriptionHolder* pHolder)
+        explicit SubscriptionInternalInfo(SR_HTYPES_NS::Function<void(const SubscriptionMessage&)>&& callback, SubscriptionHolder* pHolder)
             : SR_UTILS_NS::NonCopyable()
             , callback(std::move(callback))
             , pHolder(pHolder)
         { }
 
         uint32_t index = SR_ID_INVALID;
-        SR_HTYPES_NS::Function<void()> callback;
+        SR_HTYPES_NS::Function<void(const SubscriptionMessage&)> callback;
         SubscriptionHolder* pHolder = nullptr;
         StringAtom id;
     };
@@ -56,7 +78,11 @@ namespace SR_UTILS_NS {
     public:
         virtual ~SubscriptionHolder();
 
-        SR_NODISCARD Subscription Subscribe(StringAtom id, SR_HTYPES_NS::Function<void()>&& callback);
+        SR_NODISCARD Subscription Subscribe(StringAtom id, SR_HTYPES_NS::Function<void(const SubscriptionMessage&)>&& callback);
+
+        SR_NODISCARD bool HasSubscriptions() const noexcept {
+            return m_count > 0;
+        }
 
         void Unsubscribe(const SubscriptionInternalInfo* pSubscription) {
             if (auto it = m_subscriptions.find(pSubscription->id); it != m_subscriptions.end()) {
@@ -67,14 +93,23 @@ namespace SR_UTILS_NS {
                 --m_count;
             }
             else {
-                SRHalt("SubscriptionHolder::Unsubscribe() : Subscription not found!");
+                SRHalt("SubscriptionHolder::Unsubscribe() : subscription not found!");
             }
         }
 
         void Broadcast(const StringAtom id) {
+            static SubscriptionMessage message;
             if (const auto it = m_subscriptions.find(id); it != m_subscriptions.end()) {
                 it->second.ForEach([](uint32_t, auto&& pSubscription) {
-                    pSubscription->callback();
+                    pSubscription->callback(message);
+                });
+            }
+        }
+
+        void Broadcast(const StringAtom id, const SubscriptionMessage& message) {
+            if (const auto it = m_subscriptions.find(id); it != m_subscriptions.end()) {
+                it->second.ForEach([&message](uint32_t, auto&& pSubscription) {
+                    pSubscription->callback(message);
                 });
             }
         }
