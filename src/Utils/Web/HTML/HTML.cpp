@@ -6,6 +6,18 @@
 #include <Utils/Web/HTML/HTML.h>
 
 namespace SR_UTILS_NS::Web {
+    HTMLPage::HTMLPage()
+        : Super(this, SR_UTILS_NS::SharedPtrPolicy::Automatic)
+    { }
+
+    HTMLPage::~HTMLPage() {
+        /// строгий порядок удаления
+    #ifdef SR_COMMON_LITEHTML
+        m_document.reset();
+    #endif
+        m_container.AutoFree();
+    }
+
 #ifdef SR_COMMON_LITEHTML
     int HTMLContainerInterface::pt_to_px(int pt) const {
         const double_t dpi = SR_PLATFORM_NS::GetScreenDPI();
@@ -58,16 +70,6 @@ namespace SR_UTILS_NS::Web {
     const SR_UTILS_NS::Path& HTMLContainerInterface::GetPath() const {
         static SR_UTILS_NS::Path empty;
         return m_paths.empty() ? empty : m_paths.front();
-    }
-
-    HTMLPage::HTMLPage()
-        : Super(this, SR_UTILS_NS::SharedPtrPolicy::Automatic)
-    { }
-
-    HTMLPage::~HTMLPage() {
-        /// строгий порядок удаления
-        m_document.reset();
-        m_container.AutoFree();
     }
 
     HTMLPage::Ptr HTMLPage::Load(const SR_UTILS_NS::Path& path, const HTMLContainerInterface::Ptr& pContainer) {
