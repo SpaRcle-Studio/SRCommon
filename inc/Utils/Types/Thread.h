@@ -26,7 +26,6 @@ namespace SR_HTYPES_NS {
     class Thread;
 
     class SR_DLL_EXPORT Thread : public NonCopyable {
-        friend class Factory;
     public:
         using Ptr = Thread*;
         using ThreadId = SR_UTILS_NS::StringAtom;
@@ -88,6 +87,8 @@ namespace SR_HTYPES_NS {
             }
 
         private:
+            friend class Thread::Factory;
+
             void Remove(Thread* pThread);
 
         private:

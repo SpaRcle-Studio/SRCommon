@@ -4,6 +4,8 @@
 
 #include <Utils/ECS/Entity.h>
 
+#include <Codegen/Entity.generated.hpp>
+
 namespace SR_UTILS_NS {
     EntityBranch::EntityBranch(EntityId entityId, std::list<EntityBranch> branches)
         : m_branches(std::move(branches))

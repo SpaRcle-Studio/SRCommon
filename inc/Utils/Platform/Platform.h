@@ -72,6 +72,8 @@ namespace SR_UTILS_NS::Platform {
     SR_DLL_EXPORT extern std::list<Path> GetInDirectory(const Path& dir, Path::Type type);
     SR_DLL_EXPORT extern std::list<Path> GetAllInDirectory(const Path& dir);
     SR_DLL_EXPORT extern FileMetadata GetFileMetadata(const Path& file);
+    SR_DLL_EXPORT extern SR_MATH_NS::UVector2 GetScreenResolution();
+    SR_DLL_EXPORT extern double_t GetScreenDPI();
     SR_DLL_EXPORT extern std::vector<SR_MATH_NS::UVector2> GetScreenResolutions();
     SR_DLL_EXPORT extern bool FileIsHidden(const Path& path);
     SR_DLL_EXPORT extern bool IsExists(const Path& path);

@@ -17,7 +17,7 @@ namespace SR_UTILS_NS {
     { }
 
     Path::Path(std::string_view path)
-        : Path(path.data())
+        : Path(std::string(path))
     { }
 
     Path::Path(std::wstring path)
@@ -82,11 +82,11 @@ namespace SR_UTILS_NS {
     }
 
     bool Path::IsDir() const {
-        return m_type == Type::Folder;
+        return GetType() == Type::Folder;
     }
 
     bool Path::IsFile() const {
-        return m_type == Type::File;
+        return GetType() == Type::File;
     }
 
     std::list<Path> Path::GetFiles() const {

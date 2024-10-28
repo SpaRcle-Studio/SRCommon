@@ -13,6 +13,8 @@ namespace SR_MATH_NS {
 
     template<typename T> struct SR_DLL_EXPORT Vector4 {
     public:
+        using ValueType = T;
+
         union {
             struct {
                 T x;
@@ -240,9 +242,12 @@ namespace SR_MATH_NS {
 
     };
 
+    extern std::unordered_map<SRHashType, FColor> SR_COLOR_PALETTE;
+
     typedef Vector4<Unit>     FVector4;
     typedef Vector4<int32_t>  IVector4;
     typedef Vector4<uint32_t> UVector4;
+    typedef Vector4<bool>     BVector4;
 
     SR_INLINE static const FVector4 InfinityFV4 = FVector4 { UnitMAX, UnitMAX, UnitMAX, UnitMAX };
 

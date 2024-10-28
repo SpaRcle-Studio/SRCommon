@@ -14,13 +14,23 @@
 #include <Utils/Types/SafePtrLockGuard.h>
 #include <Utils/Types/Map.h>
 
-#define SR_REGISTER_SINGLETON(name)                                                                                     \
+#define SR_REGISTER_SINGLETON(className)                                                                                \
     private:                                                                                                            \
-        friend class SR_UTILS_NS::Singleton<name>;                                                                      \
+        friend class SR_UTILS_NS::Singleton<className>;                                                                 \
         static SR_UTILS_NS::StringAtom GetStaticSingletonName() {                                                       \
-            static SR_UTILS_NS::StringAtom staticSingletonName = #name;                                                 \
+            static SR_UTILS_NS::StringAtom staticSingletonName = #className;                                            \
             return staticSingletonName;                                                                                 \
         }                                                                                                               \
+        SR_UTILS_NS::StringAtom GetSingletonName() const noexcept final { return GetStaticSingletonName(); };           \
+
+#define SR_REGISTER_TEMPLATE_SINGLETON(className, T)                                                                    \
+    private:                                                                                                            \
+        friend class SR_UTILS_NS::Singleton<className>;                                                                 \
+        /** TODO: replace typeid(T).name() with something more stable **/                                               \
+        SR_NODISCARD static SR_UTILS_NS::StringAtom GetStaticTemplatedSingletonName() noexcept {                        \
+            return SR_FORMAT("{}<{}>", #className, typeid(T).name());                                                   \
+        }                                                                                                               \
+        static SR_UTILS_NS::StringAtom GetStaticSingletonName() { return GetStaticTemplatedSingletonName(); }           \
         SR_UTILS_NS::StringAtom GetSingletonName() const noexcept final { return GetStaticSingletonName(); };           \
 
 namespace SR_UTILS_NS {

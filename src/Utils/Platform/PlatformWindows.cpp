@@ -664,6 +664,21 @@ namespace SR_UTILS_NS::Platform {
         return fileMetadata; ///TODO: std::move в будущем, когда FileMetadata станет больше?
     }
 
+    SR_MATH_NS::UVector2 GetScreenResolution() {
+        const HDC hdc = GetDC(NULL);
+        const int32_t w = GetDeviceCaps(hdc, HORZRES);
+        const int32_t h = GetDeviceCaps(hdc, VERTRES);
+        ReleaseDC(NULL, hdc);
+        return SR_MATH_NS::UVector2(w, h);
+    }
+
+    double_t GetScreenDPI() {
+        const HDC hdc = GetDC(NULL);
+        const int32_t ret = GetDeviceCaps(hdc, LOGPIXELSX);
+        ReleaseDC(NULL, hdc);
+        return ret;
+    }
+
     bool IsAbsolutePath(const Path &path) {
         auto&& view = path.View();
         return view.size() >= 2 && view[1] == ':';

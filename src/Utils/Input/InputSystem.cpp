@@ -5,6 +5,7 @@
 #include <Utils/Input/InputSystem.h>
 #include <Utils/Platform/Platform.h>
 #include <Utils/Profile/TracyContext.h>
+#include <Utils/Common/StringAtomLiterals.h>
 
 namespace SR_UTILS_NS {
     void Input::Check() {
@@ -49,32 +50,28 @@ namespace SR_UTILS_NS {
             if (m_arr[i] >> 7 != 0) {
                 switch (m_keys[i]) {
                 case State::UnPressed:
-                    m_keys[i] = State::Down;
+                case State::Up:
+                    SetState(i, State::Down);
                     break;
                 case State::Down:
-                    m_keys[i] = State::Pressed;
+                    SetState(i, State::Pressed);
                     break;
                 case State::Pressed:
-                    //skip
-                        break;
-                case State::Up:
-                    m_keys[i] = State::Down;
+                    /// skip
                     break;
                 }
             }
             else {
                 switch (m_keys[i]) {
                 case State::UnPressed:
-                    //skip
-                        break;
-                case State::Down:
-                    m_keys[i] = State::Up;
+                    /// skip
                     break;
+                case State::Down:
                 case State::Pressed:
-                    m_keys[i] = State::Up;
+                    SetState(i, State::Up);
                     break;
                 case State::Up:
-                    m_keys[i] = State::UnPressed;
+                    SetState(i, State::UnPressed);
                     break;
                 }
             }
@@ -82,10 +79,12 @@ namespace SR_UTILS_NS {
     #elif defined(SR_LINUX)
         for (uint16_t i = 5; i < 256; ++i) {
             if (m_arr[i] == 0 && (m_keys[i] == State::Down || m_keys[i] == State::Pressed)) {
-                m_keys[i] = State::Up; // If a key was already Pressed or Down and now is not pressed, then it's Up
+                /// If a key was already Pressed or Down and now is not pressed, then it's Up
+                SetState(i, State::Up);
             }
             else {
-                m_keys[i] = static_cast<State>(m_arr[i]); // Otherwise, set the key state to the current state
+                /// Otherwise, set the key state to the current state
+                SetState(i, static_cast<State>(m_arr[i]));
             }
         }
 
@@ -95,10 +94,10 @@ namespace SR_UTILS_NS {
         for (uint8_t i = 0; i < 5; ++i) {
             if (mouseState.buttonStates[i]) {
                 switch (m_keys[i]) {
-                    case State::UnPressed: m_keys[i] = State::Down; break;
-                    case State::Down: m_keys[i] = State::Pressed; break;
+                    case State::UnPressed: SetState(i, State::Down); break;
+                    case State::Down: SetState(i, State::Pressed); break;
                     case State::Pressed: break; /// skip
-                    case State::Up: m_keys[i] = State::Down; break;
+                    case State::Up: SetState(i, State::Down); break;
                 }
             }
             else {
@@ -106,10 +105,10 @@ namespace SR_UTILS_NS {
                     case State::UnPressed: break; /// skip
                     case State::Down:
                     case State::Pressed:
-                        m_keys[i] = State::Up;
+                        SetState(i, State::Up);
                         break;
                     case State::Up:
-                        m_keys[i] = State::UnPressed;
+                        SetState(i, State::UnPressed);
                         break;
                 }
             }
@@ -142,6 +141,25 @@ namespace SR_UTILS_NS {
         }
 
         ResetMouse();
+    }
+
+    void Input::SetState(uint16_t keyIndex, State state) {
+        if (m_keys[keyIndex] == state) {
+            return;
+        }
+
+        m_keys[keyIndex] = state;
+
+        if (state == State::Down && HasSubscriptions()) {
+            SubscriptionMessage msg;
+            msg.SetInt("KeyCode"_atom, keyIndex);
+            Broadcast("Down"_atom, msg);
+        }
+        else if (state == State::Up && HasSubscriptions()) {
+            SubscriptionMessage msg;
+            msg.SetInt("KeyCode"_atom, keyIndex);
+            Broadcast("Up"_atom, msg);
+        }
     }
 
     void Input::ResetMouse() {

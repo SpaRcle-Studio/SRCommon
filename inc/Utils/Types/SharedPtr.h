@@ -46,11 +46,11 @@ namespace SR_HTYPES_NS {
 
     public:
         SR_NODISCARD bool IsSingletonCanBeDestroyed() const override { return false; }
-        SR_NODISCARD const std::set<SharedPtrDynamicData*>& GetData() const { return m_data; }
+        SR_NODISCARD const std::unordered_set<SharedPtrDynamicData*>& GetData() const { return m_data; }
 
     private:
         uint64_t m_count = 0;
-        std::set<SharedPtrDynamicData*> m_data;
+        std::unordered_set<SharedPtrDynamicData*> m_data;
 
     };
 
@@ -115,7 +115,7 @@ namespace SR_HTYPES_NS {
             : m_data(SR_UTILS_NS::Exchange(ptr.m_data, nullptr))
             , m_ptr(SR_UTILS_NS::Exchange(ptr.m_ptr, nullptr))
         { }
-        ~SharedPtr(); /// не должен быть виртуальным
+        virtual ~SharedPtr();
 
     public:
         template<typename U = T, typename R = U, typename... Args> SR_NODISCARD static SharedPtr<R> MakeShared(Args&&... args) {
@@ -153,6 +153,15 @@ namespace SR_HTYPES_NS {
         }
         SR_INLINE bool operator!=(const SharedPtr<T>& right) const {
             return m_ptr != right.m_ptr;
+        }
+
+        template<typename U> SharedPtr<U> PolymorphicCast() const {
+        #ifdef SR_DEBUG
+            if (!DynamicCast<U>()) {
+                SR_SAFE_PTR_ASSERT(false, "Invalid cast!");
+            }
+        #endif
+            return StaticCast<U>();
         }
 
         template<typename U> SharedPtr<U> DynamicCast() const {
@@ -345,13 +354,14 @@ namespace SR_HTYPES_NS {
             const auto pPtr = m_ptr;
             SharedPtrDynamicData* pData = m_data;
 
-            pData->valid = false;
-
             if (valid) {
                 pData->deallocated = true;
                 freeFun(pPtr);
+                pData->valid = false;
                 return true;
             }
+
+            pData->valid = false;
 
             return false;
         }
@@ -385,7 +395,7 @@ namespace SR_HTYPES_NS {
 
         if (strongCount == 1) {
             if (pData->policy == SR_UTILS_NS::SharedPtrPolicy::Manually) {
-                SR_SAFE_PTR_ASSERT(!pData->valid, "Ptr was not freed!");
+                SR_SAFE_PTR_ASSERT(pData->deallocated, "Ptr was not freed!");
             }
             else if (pData->policy == SR_UTILS_NS::SharedPtrPolicy::Automatic && pData->valid) {
                 pData->valid = false;

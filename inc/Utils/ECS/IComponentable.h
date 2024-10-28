@@ -2,32 +2,31 @@
 // Created by Monika on 12.12.2022.
 //
 
-#ifndef SR_ENGINE_ICOMPONENTABLE_H
-#define SR_ENGINE_ICOMPONENTABLE_H
+#ifndef SR_ENGINE_I_COMPONENTABLE_H
+#define SR_ENGINE_I_COMPONENTABLE_H
 
 #include <Utils/Types/Marshal.h>
-#include <Utils/ECS/ISavable.h>
+#include <Utils/Types/Vector.h>
+#include <Utils/ECS/Entity.h>
+#include <Utils/ECS/Component.h>
 
 namespace SR_WORLD_NS {
     class Scene;
 }
 
 namespace SR_UTILS_NS {
-    class Component;
-
-    class IComponentable {
+    class IComponentable : public Entity {
+        SR_CLASS()
     public:
-        using Components = std::vector<Component*>;
-        using ComponentList = std::list<Component*>;
         using ScenePtr = SR_WORLD_NS::Scene*;
+        using OriginType = IComponentable;
 
     protected:
         IComponentable() = default;
-        virtual ~IComponentable();
+        ~IComponentable() override;
 
     public:
-        SR_NODISCARD SR_INLINE const Components& GetComponents() const noexcept { return m_components; }
-        SR_NODISCARD SR_INLINE const std::list<Component*>& GetLoadedComponents() const noexcept { return m_loadedComponents; }
+        SR_NODISCARD SR_FORCE_INLINE const std::vector<Component::Ptr>& GetComponents() const noexcept { return m_components; }
         SR_NODISCARD bool IsDirty() const noexcept;
 
     public:
@@ -44,29 +43,25 @@ namespace SR_UTILS_NS {
         SR_NODISCARD virtual bool IsActive() const noexcept { return true; }
         SR_NODISCARD virtual bool IsDestroyed() const noexcept { return false; }
 
-        virtual bool SetDirty(bool dirty) {
-            if (!m_loadedComponents.empty()) {
-                m_dirty = true;
-                return true;
-            }
-            return (m_dirty = dirty);
-        };
+        virtual bool SetDirty(bool dirty);
 
-        virtual Component* GetOrCreateComponent(const std::string& name);
-        virtual Component* GetOrCreateComponent(StringAtom name);
-        virtual Component* GetComponent(const std::string& name);
-        virtual Component* GetComponent(StringAtom name);
+        virtual Component::Ptr GetOrCreateComponent(const std::string& name);
+        virtual Component::Ptr GetOrCreateComponent(StringAtom name);
+        virtual Component::Ptr GetComponent(const std::string& name);
+        virtual Component::Ptr GetComponent(StringAtom name);
 
-        virtual bool AddComponent(Component* component);
+        virtual bool AddComponent(const Component::Ptr& pComponent);
 
-        virtual bool RemoveComponent(Component* component);
+        virtual bool RemoveComponent(const Component::Ptr& pComponent);
         virtual bool ContainsComponent(const std::string& name);
-        virtual void ForEachComponent(const std::function<bool(Component*)>& fun);
+
+        virtual void ForEachComponent(const std::function<bool(const Component::Ptr&)>& fun) const;
+        virtual void ForEachComponent(const std::function<bool(Component::Ptr&)>& fun);
 
         virtual void DestroyComponents();
 
-        template<typename T> T* GetComponent() {
-            return dynamic_cast<T*>(GetComponent(T::COMPONENT_NAME));
+        template<typename T> SR_HTYPES_NS::SharedPtr<T> GetComponent() {
+            return GetComponent(T::COMPONENT_NAME).template DynamicCast<T>();
         }
 
         virtual void OnPriorityChanged();
@@ -75,16 +70,17 @@ namespace SR_UTILS_NS {
         SR_NODISCARD virtual ScenePtr GetScene() const;
 
     protected:
-        void DestroyComponent(Component* pComponent);
+        void DestroyComponent(const Component::Ptr& pComponent);
 
     protected:
-        Components m_components = { };
-        ComponentList m_loadedComponents = { };
+        /// @property
+        std::vector<Component::Ptr> m_components;
 
     private:
+        bool m_hasNotAttachedComponents = false;
         bool m_dirty = true;
 
     };
 }
 
-#endif //SR_ENGINE_ICOMPONENTABLE_H
+#endif //SR_ENGINE_I_COMPONENTABLE_H

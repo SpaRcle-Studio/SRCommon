@@ -63,7 +63,7 @@
 #define SR_DOUBLE_MAX std::numeric_limits<double_t>::max()
 #define SR_FLOAT_MAX std::numeric_limits<float_t>::max()
 
-#define SR_GRAV_CONST (9.81) // Gravitational Conctant (m/s^2)
+#define SR_EARTH_GRAVITY_CONST (9.81) // Gravitational Constant (m/s^2)
 
 #define SR_SQUARE(value) (value * value)
 #define SR_POW(x, n) std::pow(x, n)
@@ -73,7 +73,7 @@
 #define SR_ARC_SIN(x) std::asin(x)
 #define SR_ARC_COS(x) std::acos(x)
 
-#define SR_ABS(x) (std::abs(x))
+#define SR_ABS(x) (SR_MATH_NS::Abs(x))
 #define SR_MAX(a, b) (a > b ? a : b)
 #define SR_MIN(a, b) (a < b ? a : b)
 #define SR_CLAMP(x, lower, upper) (SR_MIN(upper, SR_MAX(x, lower)))
@@ -87,38 +87,45 @@
 #include <glm/gtc/quaternion.hpp>
 
 namespace SR_MATH_NS {
-    static SR_FORCE_INLINE bool IsNumber(const std::string& str) {
+    static SR_FORCE_INLINE bool IsNumber(std::string_view str) {
         bool hasDot = false;
+        bool hasNumber = false;
 
-        for (auto&& c : str) {
-            switch (c) {
-                case '0':
-                case '1':
-                case '2':
-                case '3':
-                case '4':
-                case '5':
-                case '6':
-                case '7':
-                case '8':
-                case '9':
-                    break;
-
-                case '.':
-                case ',': {
-                    if (hasDot) {
-                        return false;
-                    }
-                    hasDot = true;
-                    break;
-                }
-
-                default:
-                    return false;
+        for (const char* c = str.data(); *c; c++) {
+            if (*c == '-' && c == str.data()) {
+                continue;
             }
+
+            if (*c == '.' || *c == ',') {
+                if (hasDot) {
+                    return false;
+                }
+                hasDot = true;
+                continue;
+            }
+
+            if (*c < '0' || *c > '9') {
+                return false;
+            }
+            hasNumber = true;
         }
 
-        return true;
+        return hasNumber;
+    }
+
+    static SR_FORCE_INLINE bool IsIntegerNumber(std::string_view str) {
+        bool hasNumber = false;
+        for (const char* c = str.data(); *c; c++) {
+            if (*c == '-' && c == str.data()) {
+                continue;
+            }
+            if (*c < '0' || *c > '9') {
+                return false;
+            }
+            hasNumber = true;
+        }
+
+        return hasNumber;
     }
 
     typedef float Unit; //! can broke render
@@ -128,6 +135,15 @@ namespace SR_MATH_NS {
     constexpr int32_t  Int32MAX  = std::numeric_limits<int32_t>::max();
 
     constexpr Unit UnitMAX = FloatMAX;
+
+    template<typename T> SR_NODISCARD SR_FORCE_INLINE static constexpr T Abs(T value) {
+        if constexpr (std::is_same_v<T, bool>) {
+            return value;
+        }
+        else {
+            return value >= static_cast<T>(0) ? value : -value;
+        }
+    }
 
     static SR_FORCE_INLINE Unit Sign(Unit value) {
         return value >= static_cast<Unit>(0) ? static_cast<Unit>(1) : static_cast<Unit>(-1);
@@ -155,25 +171,36 @@ namespace SR_MATH_NS {
         return std::sqrt(value);
     }
 
-    static SR_FORCE_INLINE bool is_equal_approx(const Unit a, const Unit b) noexcept {
+    template<typename T, typename Y> static SR_FORCE_INLINE bool IsEquals(const T& a, const Y& b) noexcept {
         // Check for exact equality first, required to handle "infinity" values.
-        if (a == b) {
-            return true;
+
+        constexpr bool isNeedTolerance = std::is_floating_point_v<T> || std::is_floating_point_v<Y>;
+
+        if constexpr (!isNeedTolerance) {
+            return a == b;
         }
-        // Then check for approximate equality.
-        double tolerance = CMP_EPSILON * abs(a);
-        if (tolerance < CMP_EPSILON) {
-            tolerance = CMP_EPSILON;
+        else {
+            if (a == b) {
+                return true;
+            }
+            // Then check for approximate equality.
+            double tolerance = CMP_EPSILON * Abs(a);
+            if (tolerance < CMP_EPSILON) {
+                tolerance = CMP_EPSILON;
+            }
+            return Abs(a - b) < tolerance;
         }
-        return abs(a - b) < tolerance;
     }
-    static SR_FORCE_INLINE bool is_equal_approx(const Unit a, const Unit b, const Unit tolerance) {
+
+    template<typename T, typename Y, typename Z> static SR_FORCE_INLINE bool IsEquals(const T& a, const Y& b, const Z& tolerance) noexcept {
         // Check for exact equality first, required to handle "infinity" values.
         if (a == b) {
             return true;
         }
-        // Then check for approximate equality.
-        return abs(a - b) < tolerance;
+        else {
+            // Then check for approximate equality.
+            return Abs(a - b) < tolerance;
+        }
     }
 
     template<typename T> constexpr bool IsFloat() {
@@ -223,8 +250,8 @@ namespace SR_MATH_NS {
     }
 }
 
-#define SR_EQUALS(a, b) (SR_MATH_NS::is_equal_approx(a, b))
-#define SR_EQUALS_T(a, b, tolerance) (SR_MATH_NS::is_equal_approx(a, b, tolerance))
+#define SR_EQUALS(a, b) (SR_MATH_NS::IsEquals(a, b))
+#define SR_EQUALS_T(a, b, tolerance) (SR_MATH_NS::IsEquals(a, b, tolerance))
 #define Deg180InRad ((SR_MATH_NS::Unit)M_PI)
 #define Deg90InRad  ((SR_MATH_NS::Unit)RAD(90.0))
 

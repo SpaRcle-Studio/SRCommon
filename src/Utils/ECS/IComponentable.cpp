@@ -8,10 +8,11 @@
 #include <Utils/World/Scene.h>
 #include <Utils/World/SceneUpdater.h>
 
+#include <Codegen/IComponentable.generated.hpp>
+
 namespace SR_UTILS_NS {
     IComponentable::~IComponentable() {
         SRAssert(m_components.empty());
-        SRAssert(m_loadedComponents.empty());
     }
 
     bool IComponentable::IsDirty() const noexcept {
@@ -24,18 +25,12 @@ namespace SR_UTILS_NS {
         }
 
         std::vector<SR_HTYPES_NS::Marshal::Ptr> components;
-        components.reserve(m_components.size() + m_loadedComponents.size());
+        components.reserve(m_components.size());
 
         const auto componentSaveData = SR_UTILS_NS::SavableContext(nullptr, data.flags);
 
         for (auto&& pComponent : m_components) {
-            if (auto&& pMarshalComponent = pComponent->Save(componentSaveData)) {
-                components.emplace_back(pMarshalComponent);
-            }
-        }
-
-        for (auto&& pComponent : m_loadedComponents) {
-            if (auto&& pMarshalComponent = pComponent->Save(componentSaveData)) {
+            if (auto&& pMarshalComponent = pComponent->SaveLegacy(componentSaveData)) {
                 components.emplace_back(pMarshalComponent);
             }
         }
@@ -50,7 +45,7 @@ namespace SR_UTILS_NS {
         return data.pMarshal;
     }
 
-    Component* IComponentable::GetOrCreateComponent(StringAtom name) {
+    Component::Ptr IComponentable::GetOrCreateComponent(StringAtom name) {
         if (auto&& pComponent = GetComponent(name)) {
             return pComponent;
         }
@@ -59,15 +54,13 @@ namespace SR_UTILS_NS {
             if (AddComponent(pComponent)) {
                 return pComponent;
             }
-            else {
-                SRHalt("IComponentable::GetOrCreateComponent() : failed to add component!");
-            }
+            SRHalt("IComponentable::GetOrCreateComponent() : failed to add component!");
         }
 
         return nullptr;
     }
 
-    Component* IComponentable::GetComponent(const std::string& name) {
+    Component::Ptr IComponentable::GetComponent(const std::string& name) {
         return GetComponent(StringAtom(name));
     }
 
@@ -75,19 +68,19 @@ namespace SR_UTILS_NS {
         return GetComponent(name);
     }
 
-    Component* IComponentable::GetOrCreateComponent(const std::string& name) {
+    bool IComponentable::SetDirty(bool dirty) {
+        if (m_hasNotAttachedComponents) {
+            m_dirty = true;
+            return true;
+        }
+        return (m_dirty = dirty);
+    }
+
+    Component::Ptr IComponentable::GetOrCreateComponent(const std::string& name) {
         return GetOrCreateComponent(StringAtom(name));
     }
 
-    Component* IComponentable::GetComponent(StringAtom name) {
-        for (auto&& pComponent : m_loadedComponents) {
-            if (pComponent->GetComponentName() != name) {
-                continue;
-            }
-
-            return pComponent;
-        }
-
+    Component::Ptr IComponentable::GetComponent(StringAtom name) {
         for (auto&& pComponent : m_components) {
             if (pComponent->GetComponentName() != name) {
                 continue;
@@ -99,28 +92,33 @@ namespace SR_UTILS_NS {
         return nullptr;
     }
 
-    void IComponentable::ForEachComponent(const std::function<bool(Component *)> &fun) {
+    void IComponentable::ForEachComponent(const std::function<bool(const Component::Ptr&)> &fun) const {
         for (uint32_t i = 0; i < m_components.size(); ++i) {
             auto&& pComponent = m_components[i];
             if (!fun(pComponent)) {
                 break;
             }
         }
+    }
 
-        for (auto pIt = m_loadedComponents.begin(); pIt != m_loadedComponents.end(); ++pIt) {
-            if (!fun(*pIt)) {
+    void IComponentable::ForEachComponent(const std::function<bool(Component::Ptr&)> &fun) {
+        for (uint32_t i = 0; i < m_components.size(); ++i) {
+            auto&& pComponent = m_components[i];
+            if (!fun(pComponent)) {
                 break;
             }
         }
     }
 
-    bool IComponentable::AddComponent(Component* pComponent) {
+    bool IComponentable::AddComponent(const Component::Ptr& pComponent) {
         if (!pComponent) {
             SRHalt("pComponent is nullptr!");
             return false;
         }
 
-        m_loadedComponents.emplace_back(pComponent);
+        m_components.emplace_back(pComponent);
+
+        m_hasNotAttachedComponents = true;
 
         /// Definitely should be here. In other cases Parent is nullptr.
         /// Scene may not exist.
@@ -136,25 +134,14 @@ namespace SR_UTILS_NS {
         return true;
     }
 
-    bool IComponentable::RemoveComponent(Component* pComponent) {
+    bool IComponentable::RemoveComponent(const Component::Ptr& pComponent) {
         auto&& pIt = std::find(m_components.begin(), m_components.end(), pComponent);
 
         if (pIt == m_components.end()) {
-            auto&& pLoadedIt = std::find_if(m_loadedComponents.begin(), m_loadedComponents.end(), [&](auto&& pElement) {
-                return pComponent == pElement;
-            });
-
-            if (pLoadedIt == m_loadedComponents.end()) {
-                SR_ERROR("IComponentable::RemoveComponent() : component \"" + pComponent->GetComponentName().ToStringRef() + "\" not found!");
-                return false;
-            }
-            else {
-                m_loadedComponents.erase(pLoadedIt);
-            }
+            SR_ERROR("IComponentable::RemoveComponent() : component \"" + pComponent->GetComponentName().ToStringRef() + "\" not found!");
+            return false;
         }
-        else {
-            m_components.erase(pIt);
-        }
+        m_components.erase(pIt);
 
         SRAssert2(!pComponent->GetParent() || pComponent->GetParent() == this, "The component does not belong to the game object!");
 
@@ -168,23 +155,23 @@ namespace SR_UTILS_NS {
             return false;
         }
 
-        if (!m_loadedComponents.empty()) {
+        if (!m_components.empty()) {
             SRAssert2(GetScene(), "Missing scene!");
 
-            m_components.reserve(m_loadedComponents.size());
-
-            while (!m_loadedComponents.empty()) {
-                auto&& pLoadedCmp = m_loadedComponents.front();
-                m_components.emplace_back(pLoadedCmp);
+            for (uint32_t i = 0; i < m_components.size(); ++i) {
+                auto&& pComponent = m_components[i];
+                if (pComponent->IsAttached()) {
+                    continue;
+                }
 
                 /// Scene should already exist.
-                pLoadedCmp->SetParent(this);
+                pComponent->SetParent(this);
 
-                pLoadedCmp->OnAttached();
-                pLoadedCmp->OnMatrixDirty();
-
-                m_loadedComponents.pop_front();
+                pComponent->OnAttached();
+                pComponent->OnMatrixDirty();
             }
+
+            m_hasNotAttachedComponents = false;
         }
 
         return true;
@@ -197,6 +184,11 @@ namespace SR_UTILS_NS {
 
         for (uint32_t i = 0; i < m_components.size(); ++i) {
             auto&& pComponent = m_components[i];
+
+            if (!pComponent->IsAttached()) {
+                continue;
+            }
+
             if (!pComponent->IsEnabled()) {
                 continue;
             }
@@ -226,6 +218,11 @@ namespace SR_UTILS_NS {
 
         for (uint32_t i = 0; i < m_components.size(); ++i) { /// NOLINT
             auto&& pComponent = m_components[i];
+
+            if (!pComponent->IsAttached()) {
+                continue;
+            }
+
             if (!pComponent->IsEnabled()) {
                 continue;
             }
@@ -249,6 +246,11 @@ namespace SR_UTILS_NS {
 
         for (uint32_t i = 0; i < m_components.size(); ++i) { /// NOLINT
             auto&& pComponent = m_components[i];
+
+            if (!pComponent->IsAttached()) {
+                continue;
+            }
+
             if (!pComponent->IsAwake()) {
                 continue;
             }
@@ -266,15 +268,10 @@ namespace SR_UTILS_NS {
             DestroyComponent(pComponent);
         }
 
-        for (auto&& pComponent : m_loadedComponents) {
-            DestroyComponent(pComponent);
-        }
-
-        m_loadedComponents.clear();
         m_components.clear();
     }
 
-    void IComponentable::DestroyComponent(Component* pComponent) {
+    void IComponentable::DestroyComponent(const Component::Ptr& pComponent) {
         if (pComponent->IsAttached()) {
             pComponent->OnDetached();
         }
@@ -300,6 +297,11 @@ namespace SR_UTILS_NS {
 
         for (uint32_t i = 0; i < m_components.size(); ++i) {
             auto&& pComponent = m_components[i];
+
+            if (!pComponent->IsAttached()) {
+                continue;
+            }
+
             pComponent->OnPriorityChanged();
         }
     }
@@ -312,6 +314,11 @@ namespace SR_UTILS_NS {
         const auto size = static_cast<uint32_t>(m_components.size());
         for (uint32_t i = 0; i < size; ++i) {
             auto&& pComponent = m_components[i];
+
+            if (!pComponent->IsAttached()) {
+                continue;
+            }
+
             pComponent->OnMatrixDirty();
         }
     }

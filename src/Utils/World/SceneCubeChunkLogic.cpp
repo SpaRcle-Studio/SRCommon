@@ -8,9 +8,9 @@
 #include <Utils/DebugDraw.h>
 
 namespace SR_WORLD_NS {
-    SceneCubeChunkLogic::SceneCubeChunkLogic(const ScenePtr& scene)
-        : Super(scene)
-        , m_observer(new Observer(scene))
+    SceneCubeChunkLogic::SceneCubeChunkLogic(const ScenePtr& pScene)
+        : Super(pScene)
+        , m_observer(new Observer(pScene))
     {
         ReloadConfig();
     }
@@ -72,12 +72,12 @@ namespace SR_WORLD_NS {
         return true;
     }
 
-    const Scene::GameObjects& SceneCubeChunkLogic::GetGameObjectsAtChunk(const SR_MATH_NS::IVector3 &region, const SR_MATH_NS::IVector3 &chunk) const {
+    const Scene::SceneObjects& SceneCubeChunkLogic::GetGameObjectsAtChunk(const SR_MATH_NS::IVector3& region, const SR_MATH_NS::IVector3& chunk) const {
         SR_TRACY_ZONE;
 
         const auto key = TensorKey(region, chunk);
         if (m_tensor.count(key) == 0) {
-            static GameObjects _default = GameObjects();
+            static SceneObjects _default = SceneObjects();
             return _default;
         }
 
@@ -156,7 +156,7 @@ namespace SR_WORLD_NS {
         return false;
     }
 
-    void SceneCubeChunkLogic::SetObserver(const GameObject::Ptr& target) {
+    void SceneCubeChunkLogic::SetObserver(const SceneObject::Ptr& target) {
         SR_LOCK_GUARD;
 
         if (target != m_observer->m_target) {
@@ -193,9 +193,13 @@ namespace SR_WORLD_NS {
         const auto fOffset = ((deltaOffset.m_region * m_regionWidth + deltaOffset.m_chunk)
                               * Math::IVector3(m_chunkSize.x, m_chunkSize.y, m_chunkSize.x)).Cast<Math::Unit>();
 
-        auto&& root = m_scene->GetRootGameObjects();
-        for (const GameObject::Ptr& gameObject : root) {
-            gameObject->GetTransform()->GlobalTranslate(fOffset);
+        auto&& root = m_scene->GetRootSceneObjects();
+        for (const SceneObject::Ptr& oObject : root) {
+            GameObject::Ptr pGameObject = oObject.DynamicCast<GameObject>();
+            if (!pGameObject) {
+                continue;
+            }
+            pGameObject->GetTransform()->GlobalTranslate(fOffset);
         }
 
         for (const auto& pRegion : m_regions) {
@@ -264,10 +268,15 @@ namespace SR_WORLD_NS {
         m_tensor.clear();
         m_tensor.reserve(reserved);
 
-        auto&& root = m_scene->GetRootGameObjects();
+        auto&& root = m_scene->GetRootSceneObjects();
 
-        for (GameObject::Ptr gameObject : root) {
-            const SR_MATH_NS::FVector3 gmPosition = gameObject->GetTransform()->GetTranslation();
+        for (SceneObject::Ptr pObject : root) {
+            GameObject::Ptr pGameObject = pObject.DynamicCast<GameObject>();
+            if (!pGameObject) {
+                continue;
+            }
+
+            const SR_MATH_NS::FVector3 gmPosition = pGameObject->GetTransform()->GetTranslation();
 
             if (!gmPosition.IsFinite() || gmPosition.ContainsNaN()) {
                 continue;
@@ -279,10 +288,10 @@ namespace SR_WORLD_NS {
             const TensorKey key = TensorKey(region, MakeChunk(chunk, m_regionWidth));
 
             if (auto&& pIt = m_tensor.find(key); pIt != m_tensor.end()) {
-                pIt->second.emplace_back(std::move(gameObject));
+                pIt->second.emplace_back(std::move(pObject));
             }
             else {
-                m_tensor[key].emplace_back(std::move(gameObject));
+                m_tensor[key].emplace_back(std::move(pObject));
 
                 if (GetOrLoadRegion(key.region)->GetChunk(key.chunk)) {
                     /// подгружаем чанк, чтобы объект не остался висеть в пустоте
@@ -427,8 +436,11 @@ namespace SR_WORLD_NS {
         const World::Offset& offset = m_observer->m_offset;
 
         if (m_observer->m_target) {
-            auto&& pTransform = m_observer->m_target->GetRoot()->GetTransform();
-            m_observer->m_targetPosition = pTransform->GetTranslation().Singular(chunkSize.Cast<Math::Unit>());
+            GameObject::Ptr pGameObject = m_observer->m_target->GetRoot().DynamicCast<GameObject>();
+            if (pGameObject) {
+                auto&& pTransform = pGameObject->GetTransform();
+                m_observer->m_targetPosition = pTransform->GetTranslation().Singular(chunkSize.Cast<Math::Unit>());
+            }
         }
 
         auto&& lastChunk = m_observer->m_lastChunk;

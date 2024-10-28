@@ -27,12 +27,12 @@ namespace SR_WORLD_NS {
         bool Load(const Path& path) override;
 
         void SetWorldOffset(const SR_WORLD_NS::Offset& offset);
-        void SetObserver(const GameObjectPtr& target);
+        void SetObserver(const SceneObjectPtr& target);
 
         bool ReloadChunks();
         void UpdateDebug();
 
-        SR_NODISCARD const GameObjects& GetGameObjectsAtChunk(const SR_MATH_NS::IVector3& region, const SR_MATH_NS::IVector3& chunk) const;
+        SR_NODISCARD const SceneObjects& GetGameObjectsAtChunk(const SR_MATH_NS::IVector3& region, const SR_MATH_NS::IVector3& chunk) const;
         SR_NODISCARD Chunk* GetCurrentChunk() const;
         SR_NODISCARD Observer* GetObserver() const { return m_observer; }
         SR_NODISCARD SR_MATH_NS::FVector3 GetWorldPosition(const SR_MATH_NS::IVector3& region, const SR_MATH_NS::IVector3& chunk) const;

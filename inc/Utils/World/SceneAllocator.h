@@ -2,30 +2,25 @@
 // Created by Monika on 23.08.2022.
 //
 
-#ifndef SR_ENGINE_SCENEALLOCATOR_H
-#define SR_ENGINE_SCENEALLOCATOR_H
+#ifndef SR_ENGINE_SCENE_ALLOCATOR_H
+#define SR_ENGINE_SCENE_ALLOCATOR_H
 
 #include <Utils/Types/SharedPtr.h>
-#include <Utils/Types/SafePointer.h>
-
-namespace SR_UTILS_NS {
-    class GameObject;
-}
 
 namespace SR_WORLD_NS {
     class Scene;
 
     class SR_DLL_EXPORT SceneAllocator : public SR_UTILS_NS::Singleton<SceneAllocator> {
         SR_REGISTER_SINGLETON(SceneAllocator)
-        typedef std::function<Scene*(void)> Allocator;
-        using ScenePtr = Types::SafePtr<Scene>;
-        using GameObjectPtr = SR_HTYPES_NS::SharedPtr<GameObject>;
+        using ScenePtr = SR_HTYPES_NS::SharedPtr<Scene>;
+        typedef std::function<ScenePtr(void)> Allocator;
+
     protected:
         ~SceneAllocator() override = default;
 
     public:
         bool Init(const Allocator& allocator);
-        ScenePtr Allocate();
+        SR_NODISCARD ScenePtr Allocate() const;
 
     private:
         Allocator m_allocator;
@@ -33,4 +28,4 @@ namespace SR_WORLD_NS {
     };
 }
 
-#endif //SR_ENGINE_SCENEALLOCATOR_H
+#endif //SR_ENGINE_SCENE_ALLOCATOR_H

@@ -9,6 +9,7 @@
 #include <Utils/Web/CSS/CSSColor.h>
 #include <Utils/Web/CSS/CSSEnums.h>
 #include <Utils/Types/SharedPtr.h>
+#include <Utils/Profile/TracyContext.h>
 #include <Utils/Debug.h>
 
 namespace SR_UTILS_NS::Web {
@@ -18,6 +19,8 @@ namespace SR_UTILS_NS::Web {
         void ParseProperty(std::string_view name, std::string_view data);
 
         SR_NODISCARD std::string ToString(uint16_t depth = 0) const;
+
+        static CSSStyle Merge(const CSSStyle& main, const CSSStyle& other);
 
         CSSOptionalSizeValue /// content size
             width, // = CSSSizeValue(0.f, CSSSizeValue::Unit::Percent),
@@ -46,18 +49,14 @@ namespace SR_UTILS_NS::Web {
         CSSOptionalSizeValue opacity;
         CSSOptionalSizeValue zIndex;
 
-        CSSDisplay display = DEFAULT_CSS_DISPLAY;
+        CSSOptionalEnum<CSSDisplay> display = CSSOptionalEnum<CSSDisplay>::CreateDefault(DEFAULT_CSS_DISPLAY);
+
+        CSSPosition position = CSSPosition::Static;
 
         CSSColor color = DEFAULT_CSS_COLOR;
         CSSColor backgroundColor = DEFAULT_CSS_COLOR;
-    };
 
-    enum class CSSPosition : uint8_t {
-        Absolute,
-        Relative,
-        Fixed,
-        Static,
-        Sticky,
+        CSSBoxSizing boxSizing = CSSBoxSizing::ContentBox;
     };
 
     class CSS : public SR_HTYPES_NS::SharedPtr<CSS> {
@@ -71,17 +70,47 @@ namespace SR_UTILS_NS::Web {
     public:
         SR_NODISCARD std::string ToString(uint16_t depth = 0) const;
 
-        SR_NODISCARD const CSSStyle* GetStyle(const std::string& token) const {
-            const auto it = m_tokens.find(token);
-            return it != m_tokens.end() ? &it->second : nullptr;
+        SR_NODISCARD const CSSStyle* GetClassStyle(const std::string& token) const {
+            SR_TRACY_ZONE;
+            const auto it = m_styles.find(std::make_pair(token, true));
+            return it != m_styles.end() ? &it->second : nullptr;
         }
 
-        void AddStyle(std::string&& token, const CSSStyle& style) {
-            m_tokens.emplace(std::move(token), style);
+        SR_NODISCARD const CSSStyle* GetTagStyle(const std::string& token) const {
+            SR_TRACY_ZONE;
+            const auto it = m_styles.find(std::make_pair(token, false));
+            return it != m_styles.end() ? &it->second : nullptr;
+        }
+
+        void AddClassStyle(std::string&& token, const CSSStyle& style) {
+            SRAssert2(!token.empty(), "Token is empty!");
+            m_styles.emplace(std::make_pair(std::move(token), true), style);
+        }
+
+        void AddTagStyle(std::string&& token, const CSSStyle& style) {
+            SRAssert2(!token.empty(), "Token is empty!");
+            m_styles.emplace(std::make_pair(std::move(token), false), style);
+        }
+
+        SR_NODISCARD const CSSStyle* GetGlobalStyle() const {
+            return &m_globalStyle;
+        }
+
+        SR_NODISCARD CSSStyle* GetOrCreateStyle(std::string_view token, bool isClass) {
+            SRAssert2(!token.empty(), "Token is empty!");
+            if (token == "*") { return &m_globalStyle; }
+            const auto pIt = std::ranges::find_if(m_styles, [token, isClass](const auto& pair) {
+                return pair.first.first == token && pair.first.second == isClass;
+            });
+            if (pIt != m_styles.end()) {
+                return &pIt->second;
+            }
+            return &m_styles.emplace(std::make_pair(token, isClass), m_globalStyle).first->second;
         }
 
     private:
-        std::map<std::string, CSSStyle> m_tokens;
+        CSSStyle m_globalStyle;
+        std::map<std::pair<std::string, bool /** is class */>, CSSStyle> m_styles;
 
     };
 }

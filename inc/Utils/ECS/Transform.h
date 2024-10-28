@@ -5,7 +5,7 @@
 #ifndef SR_ENGINE_TRANSFORM_H
 #define SR_ENGINE_TRANSFORM_H
 
-#include <Utils/ECS/ISavable.h>
+#include <Utils/Serialization/Serializable.h>
 #include <Utils/Common/Measurement.h>
 
 #include <Utils/Math/Mathematics.h>
@@ -31,18 +31,23 @@ namespace SR_UTILS_NS {
         InvAxisZ
     );
 
-    class SR_DLL_EXPORT Transform : public ISavable {
+    class SR_DLL_EXPORT Transform : public Serializable, public SR_HTYPES_NS::SharedPtr<Transform> {
+        SR_CLASS();
         friend class GameObject;
         SR_INLINE static const uint16_t VERSION = 1001;
+        using Super = Serializable;
     public:
-        Transform() = default;
+        using Ptr = SR_HTYPES_NS::SharedPtr<Transform>;
+
+    public:
+        Transform();
         ~Transform() override;
 
     public:
         static Transform* Load(SR_HTYPES_NS::Marshal& marshal);
 
     public:
-        SR_NODISCARD SR_HTYPES_NS::Marshal::Ptr Save(SavableContext data) const override;
+        SR_NODISCARD SR_HTYPES_NS::Marshal::Ptr SaveLegacy(SavableContext data) const override;
 
         void SetGameObject(GameObject *gameObject);
 
@@ -106,7 +111,7 @@ namespace SR_UTILS_NS {
         SR_NODISCARD virtual SR_MATH_NS::FVector2 GetTranslation2D() const;
         SR_NODISCARD virtual SR_MATH_NS::FVector2 GetScale2D() const;
 
-        SR_NODISCARD virtual Transform* Copy() const;
+        SR_NODISCARD virtual Transform::Ptr Copy() const;
         SR_NODISCARD Transform* GetParentTransform() const;
         SR_NODISCARD SR_HTYPES_NS::SharedPtr<GameObject> GetGameObject() const;
 

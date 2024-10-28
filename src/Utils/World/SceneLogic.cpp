@@ -8,9 +8,11 @@
 #include <Utils/World/SceneCubeChunkLogic.h>
 #include <Utils/World/ScenePrefabLogic.h>
 
+#include <Codegen/SceneLogic.generated.hpp>
+
 namespace SR_WORLD_NS {
     SceneLogic::SceneLogic(const SceneLogic::ScenePtr& pScene)
-        : SR_HTYPES_NS::SafePtr<SceneLogic>(this)
+        : Super(this, SR_UTILS_NS::SharedPtrPolicy::Manually)
         , m_scene(pScene)
     { }
 

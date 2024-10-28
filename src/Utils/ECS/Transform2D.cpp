@@ -160,7 +160,7 @@ namespace SR_UTILS_NS {
         UpdateTree();
     }
 
-    Transform *Transform2D::Copy() const {
+    Transform::Ptr Transform2D::Copy() const {
         auto&& pTransform = new Transform2D();
 
         pTransform->m_anchor = m_anchor;
@@ -379,9 +379,11 @@ namespace SR_UTILS_NS {
 
         m_gameObject->OnPriorityChanged();
 
-        for (auto&& child : m_gameObject->GetChildrenRef()) {
-            if (auto&& pTransform2D = dynamic_cast<Transform2D*>(child->GetTransform())) {
-                pTransform2D->UpdatePriorityTree();
+        for (auto&& pChild : m_gameObject->GetChildrenRef()) {
+            if (auto&& pGameObject = pChild.DynamicCast<GameObject>()) {
+                if (auto&& pTransform2D = dynamic_cast<Transform2D*>(pGameObject->GetTransform())) {
+                    pTransform2D->UpdatePriorityTree();
+                }
             }
         }
     }

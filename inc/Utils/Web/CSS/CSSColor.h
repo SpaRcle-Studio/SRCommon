@@ -39,6 +39,10 @@ namespace SR_UTILS_NS::Web {
 
         SR_NODISCARD static CSSRGBAColor Parse(std::string_view data);
 
+        SR_NODISCARD SR_MATH_NS::FColor ToFColor() const {
+            return SR_MATH_NS::FColor(r / 255.f, g / 255.f, b / 255.f, a / 255.f);
+        }
+
         SR_NODISCARD std::string ToString() const {
             return SR_FORMAT("RGBA({}, {}, {}, {})", r, g, b, a);
         }

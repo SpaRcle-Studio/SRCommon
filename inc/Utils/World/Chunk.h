@@ -26,7 +26,7 @@ namespace SR_WORLD_NS {
     #define SRChunkAllocVArgs observer, region, position, size
 
     class SR_DLL_EXPORT Chunk : public NonCopyable {
-        using ScenePtr = SR_HTYPES_NS::SafePtr<Scene>;
+        using ScenePtr = SR_HTYPES_NS::SharedPtr<Scene>;
     protected:
         Chunk(SRChunkAllocArgs);
 

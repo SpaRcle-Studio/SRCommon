@@ -26,7 +26,7 @@ namespace SR_WORLD_NS {
     typedef std::unordered_map<Math::IVector3, SR_HTYPES_NS::Marshal::Ptr> CachedChunks;
 
     class SR_DLL_EXPORT Region : public NonCopyable {
-        using ScenePtr = SR_HTYPES_NS::SafePtr<Scene>;
+        using ScenePtr = SR_HTYPES_NS::SharedPtr<Scene>;
     protected:
         explicit Region(SRRegionAllocArgs)
             : m_observer(observer)

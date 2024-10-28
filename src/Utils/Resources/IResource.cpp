@@ -66,6 +66,7 @@ namespace SR_UTILS_NS {
     }
 
     void IResource::DeleteResource() {
+        Unload();
         StopWatch();
         m_deleteVerifyFlag = true;
         delete this;

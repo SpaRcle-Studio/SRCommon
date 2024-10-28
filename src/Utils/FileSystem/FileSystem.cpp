@@ -82,7 +82,7 @@ namespace SR_UTILS_NS {
         return result;
     }
 
-    std::vector<char> FileSystem::ReadBinary(const std::string &path) {
+    std::vector<char> FileSystem::ReadBinary(const std::string_view path) {
         /*std::ifstream ifd(path,  std::ios::binary |  std::ios::ate);
         int size = ifd.tellg();
         ifd.seekg(0,  std::ios::beg);
@@ -93,10 +93,10 @@ namespace SR_UTILS_NS {
         //std::ifstream input(path, std::ios::binary);
         //std::vector<uint32_t> buffer(std::istreambuf_iterator<char>(input), {});
 
-        std::ifstream file(path, std::ios::ate | std::ios::binary);
+        std::ifstream file(path.data(), std::ios::ate | std::ios::binary);
 
         if (!file.is_open()) {
-            SR_ERROR("FileSystem::ReadBinary() : failed to open \""+path+"\"file!");
+            SR_ERROR("FileSystem::ReadBinary() : failed to open \"{}\"file!", path);
             return std::vector<char>();
         }
 

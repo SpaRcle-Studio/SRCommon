@@ -10,6 +10,8 @@
 #include <Utils/Common/StringUtils.h>
 #include <Utils/Common/CollisionData.h>
 #include <Utils/Common/CollisionData.h>
+#include <Utils/Common/CollisionData.h>
+
 #include <Utils/ECS/EntityManager.h>
 
 #include <Utils/Math/Vector3.h>
@@ -20,6 +22,7 @@
 #include <Utils/Types/SharedPtr.h>
 #include <Utils/Types/Marshal.h>
 #include <Utils/Types/SafeVariable.h>
+#include <Utils/Types/SharedPtr.h>
 #include <Utils/Types/SharedPtr.h>
 
 #include <Utils/TypeTraits/Properties.h>

@@ -43,8 +43,14 @@
 #endif
 
 #define CRT_SECURE_NO_WARNINGS
-#define _SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING
-#define _HAS_AUTO_PTR_ETC 1
+
+#ifndef _SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING
+    #define _SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING
+#endif
+
+#ifndef _HAS_AUTO_PTR_ETC
+    #define _HAS_AUTO_PTR_ETC 1
+#endif
 
 #define TRUE 1
 #define FALSE 0
@@ -206,7 +212,6 @@
     #define SR_WIN32_BOOL false
 #endif
 
-
 #ifdef WIN32
     #define SR_SIMD_SUPPORT 1
 #else
@@ -247,14 +252,31 @@
 #define SR_AUDIO_NS SpaRcle::Audio
 #define SR_UTILS_GUI_NS SR_UTILS_NS::GUI
 
+#define SR_COUNT_ARGS_IMPL2(                                                                                            \
+    _1, _2, _3, _4, _5, _6, _7, _8, _9, _10,                                                                            \
+    _11, _12, _13, _14, _15, _16, _17, _18, _19, _20,                                                                   \
+    _21, _22, _23, _24, _25, _26, _27, _28, _29, _30,                                                                   \
+    _31, _32, _33, _34, _35, _36, _37, _38, _39, _40,                                                                   \
+    _41, _42, _43, _44, _45, _46, _47, _48, _49, _50,                                                                   \
+    _51, _52, _53, _54, _55, _56, _57, _58, _59, _60,                                                                   \
+    _61, _62, _63, _64, N, ...) N
+
+#define SR_COUNT_ARGS_IMPL(...) SR_COUNT_ARGS_IMPL2(__VA_ARGS__)
+#define SR_COUNT_ARGS(...) SR_COUNT_ARGS_IMPL(__VA_ARGS__,                                                              \
+    64, 63, 62, 61, 60, 59, 58, 57, 56, 55, 54, 53, 52, 51,                                                             \
+    50, 49, 48, 47, 46, 45, 44, 43, 42, 41, 40, 39, 38, 37,                                                             \
+    36, 35, 34, 33, 32, 31, 30, 29, 28, 27, 26, 25, 24, 23,                                                             \
+    22, 21, 20, 19, 18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 8,                                                           \
+    7, 6, 5, 4, 3, 2, 1, 0)
+
 #define SR_GLOBAL_LOCK static std::mutex codegenGlobalMutex##__LINE__; std::lock_guard<std::mutex> codegenLock##__LINE__(codegenGlobalMutex##__LINE__);
 
 #define SR_STATIC_ASSERT2(expr, msg) static_assert(expr, msg)
 
 #if defined(SR_MINGW) || (SR_MSC_VERSION > 1929) || defined(SR_ANDROID) || defined(SR_LINUX)
-    #define SR_STATIC_ASSERT(msg) static_assert(msg);
+    #define SR_STATIC_ASSERT(msg) static_assert(msg)
 #else
-    #define SR_STATIC_ASSERT(msg) static_assert(false, msg);
+    #define SR_STATIC_ASSERT(msg) static_assert(false, msg)
 #endif
 
 #ifdef SR_LINUX

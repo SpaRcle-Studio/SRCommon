@@ -27,6 +27,7 @@
 #include "../src/Utils/Math/Matrix4x4.cpp"
 #include "../src/Utils/Math/Quaternion.cpp"
 #include "../src/Utils/Math/Vector3.cpp"
+#include "../src/Utils/Math/Vector4.cpp"
 #include "../src/Utils/Math/Vector6.cpp"
 #include "../src/Utils/Math/Noise.cpp"
 #include "../src/Utils/Math/Rect.cpp"
@@ -53,11 +54,14 @@
 #include "../src/Utils/CommandManager/CmdManager.cpp"
 #include "../src/Utils/CommandManager/ReversibleCommand.cpp"
 
+#include "../src/Utils/TypeTraits/SRProperty.cpp"
 #include "../src/Utils/TypeTraits/PropertyManager.cpp"
 #include "../src/Utils/TypeTraits/Property.cpp"
 #include "../src/Utils/TypeTraits/Properties.cpp"
 #include "../src/Utils/TypeTraits/StandardProperty.cpp"
 #include "../src/Utils/TypeTraits/SRClass.cpp"
+#include "../src/Utils/TypeTraits/ClassDB.cpp"
+#include "../src/Utils/TypeTraits/SRClassMeta.cpp"
 
 #include "../src/Utils/Game/LookAtComponent.cpp"
 #include "../src/Utils/Game/DebugLogComponent.cpp"

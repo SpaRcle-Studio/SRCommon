@@ -19,8 +19,8 @@ namespace SR_UTILS_NS {
         static bool WriteToFile(const std::string& path, const std::string& text);
         static std::string NormalizePath(const std::string& path);
 
-        static std::vector<std::string> ReadAllLines(const std::string& path) {
-            std::ifstream file(path);
+        static std::vector<std::string> ReadAllLines(const SR_UTILS_NS::Path& path) {
+            std::ifstream file(path.c_str());
             std::vector<std::string> lines = { };
             while (file.good()) {
                 std::string line;
@@ -34,7 +34,7 @@ namespace SR_UTILS_NS {
         static bool WriteHashToFile(const SR_UTILS_NS::Path& path, uint64_t hash);
 
         static std::string ReadBinaryAsString(const Path& path, bool checkError = true);
-        static std::vector<char> ReadBinary(const std::string& path);
+        static std::vector<char> ReadBinary(std::string_view path);
         static std::vector<uint8_t> ReadFileAsVector(const std::string& path);
         static std::shared_ptr<std::vector<uint8_t>> ReadFileAsBlob(const std::string& path);
 

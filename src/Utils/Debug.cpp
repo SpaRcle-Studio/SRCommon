@@ -20,7 +20,7 @@ namespace SR_UTILS_NS {
 
         if (!m_isInit) {
             SR_PLATFORM_NS::WriteConsoleError("Debug::Print() : debugger isn't initialized!\n\tMessage: " + msg + "\n" + SR_UTILS_NS::GetStacktrace());
-            SR_PLATFORM_NS::Terminate();
+            return;
         }
 
         if (type == DebugLogType::Assert) {

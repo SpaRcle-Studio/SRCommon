@@ -84,7 +84,7 @@ namespace SR_MATH_NS {
             return Quaternion(glm::inverse(self));
         }
 
-        SR_FORCE_INLINE SR_NODISCARD bool SR_FASTCALL IsEquals(const Quaternion& q, Unit tolerance) const noexcept {
+        SR_NODISCARD SR_FORCE_INLINE bool SR_FASTCALL IsEquals(const Quaternion& q, Unit tolerance) const noexcept {
         #if SR_SIMD_SUPPORT
             // Загружаем компоненты текущего кватерниона и значения в SIMD регистры
             __m128 this_vec = _mm_set_ps(w, z, y, x);

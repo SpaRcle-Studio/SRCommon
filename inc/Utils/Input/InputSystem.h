@@ -8,9 +8,10 @@
 #include <Utils/Math/Vector2.h>
 #include <Utils/Input/KeyCodes.h>
 #include <Utils/Common/Singleton.h>
+#include <Utils/Common/SubscriptionHolder.h>
 
 namespace SR_UTILS_NS {
-    class SR_DLL_EXPORT Input : public Singleton<Input> {
+    class SR_DLL_EXPORT Input : public Singleton<Input>, public SubscriptionHolder {
         SR_REGISTER_SINGLETON(Input)
 
         enum class State {
@@ -53,6 +54,7 @@ namespace SR_UTILS_NS {
 
     private:
         void Reset();
+        void SetState(uint16_t keyIndex, State state);
 
     private:
         uint32_t m_counterLock = 0;

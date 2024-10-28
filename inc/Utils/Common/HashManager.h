@@ -70,6 +70,7 @@ namespace SR_UTILS_NS {
         mutable std::array<ConstexprStringHashEntry, ConstexprStringsMaxEntries> entries;
         mutable uint64_t count;
 
+
         constexpr uint64_t Register(std::string_view str, uint64_t hash) const {
             if (count < ConstexprStringsMaxEntries) {
                 for (uint64_t i = 0; i < count; ++i) {

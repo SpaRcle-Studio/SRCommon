@@ -7,7 +7,13 @@
 #include <Utils/ECS/TransformZero.h>
 #include <Utils/Profile/TracyContext.h>
 
+#include <Codegen/Transform.generated.hpp>
+
 namespace SR_UTILS_NS {
+    Transform::Transform()
+        : Ptr(this, SR_UTILS_NS::SharedPtrPolicy::Manually)
+    { }
+
     Transform::~Transform() {
         m_gameObject = nullptr;
     }
@@ -24,7 +30,9 @@ namespace SR_UTILS_NS {
         }
 
         if (auto&& pParent = m_gameObject->GetParent()) {
-            return pParent->GetTransform();
+            if (auto&& pGameObject = pParent.DynamicCast<GameObject>()) {
+                return pGameObject->GetTransform();
+            }
         }
 
         return nullptr;
@@ -82,8 +90,8 @@ namespace SR_UTILS_NS {
         Scale(Math::FVector3(x, y, z));
     }
 
-    SR_HTYPES_NS::Marshal::Ptr Transform::Save(SavableContext data) const {
-        auto&& pMarshal = ISavable::Save(data);
+    SR_HTYPES_NS::Marshal::Ptr Transform::SaveLegacy(SavableContext data) const {
+        auto&& pMarshal = Super::SaveLegacy(data);
         pMarshal->Write<uint16_t>(VERSION);
         pMarshal->Write(static_cast<uint8_t>(GetMeasurement()));
 
@@ -225,8 +233,10 @@ namespace SR_UTILS_NS {
 
         m_gameObject->OnMatrixDirty();
 
-        for (auto&& child : m_gameObject->GetChildrenRef()) {
-            child->GetTransform()->UpdateTree();
+        for (auto&& pChild : m_gameObject->GetChildrenRef()) {
+            if (auto&& pGameObject = pChild.DynamicCast<GameObject>()) {
+                pGameObject->GetTransform()->UpdateTree();
+            }
         }
     }
 
@@ -234,7 +244,7 @@ namespace SR_UTILS_NS {
         return m_dirtyMatrix;
     }
 
-    Transform *Transform::Copy() const {
+    Transform::Ptr Transform::Copy() const {
         SRHalt("Not implemented!");
         return nullptr;
     }

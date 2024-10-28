@@ -8,7 +8,6 @@
 #include <Utils/Math/Vector2.h>
 #include <Utils/Math/Vector3.h>
 #include <Utils/Types/Marshal.h>
-#include <Utils/ECS/ISavable.h>
 
 namespace SR_WORLD_NS {
     class SR_DLL_EXPORT CameraData : public NonCopyable {

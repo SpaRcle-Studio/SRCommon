@@ -36,6 +36,7 @@
 #include <string>
 #include <cassert>
 #include <cmath>
+#include <ranges>
 #include <atomic>
 #include <utility>
 #include <array>
@@ -60,6 +61,7 @@
 #include <concepts>
 #include <condition_variable>
 #include <numeric>
+#include <numbers>
 
 #ifdef SR_SUPPORT_PARALLEL
     #include <omp.h>
@@ -91,7 +93,58 @@
 /// C++11 - 201103L
 /// C++98 - 199711L
 
+inline std::string_view SRGetClassName(std::string_view func_signature) {
+    // Для GCC/Clang
+#ifdef __GNUC__
+    auto start = func_signature.find("] ") + 2;
+    auto end = func_signature.find_last_of(";");
+#else  // Для MSVC
+    auto start = func_signature.find("SRGetClassName<") + 15;
+    auto end = func_signature.find_last_of('>');
+#endif
+    return func_signature.substr(start, end - start);
+}
+
+#ifdef _MSC_VER
+    #define SR_GET_CLASS_NAME() SRGetClassName(__FUNCSIG__)
+#else
+    #define SR_GET_CLASS_NAME() SRGetClassName(__PRETTY_FUNCTION__)
+#endif
+
+#define SR_GET_COMPILE_TIME_CLASS_NAME(T) SR_UTILS_NS::GetCompileTimeTypeName<T>()
+
+#define SR_IGNORE_UNUSED(...) SR_UTILS_NS::IgnoreUnused(__VA_ARGS__)
+
 namespace SR_UTILS_NS {
+    using namespace std::literals::string_literals;
+    using namespace std::literals::string_view_literals;
+
+    template<size_t N1, size_t N2> constexpr auto CompileTimeConcatStrings(const char(&s1)[N1], const char(&s2)[N2]) {
+        char result[N1 + N2 - 1] = {};
+        for (size_t i = 0; i < N1 - 1; ++i) {
+            result[i] = s1[i];
+        }
+        for (size_t i = 0; i < N2; ++i) {
+            result[N1 - 1 + i] = s2[i];
+        }
+        return result;
+    }
+
+    template<typename T> constexpr const char* GetCompileTimeTypeName() {
+    #ifdef _MSC_VER
+        return __FUNCSIG__;
+    #else
+        return __PRETTY_FUNCTION__;
+    #endif
+    }
+
+    template <typename... T> SR_CONSTEXPR void IgnoreUnused(const T&...) { }
+
+    template <class Alloc, class ValueType>
+    using RebindAllocT = typename std::allocator_traits<Alloc>::template rebind_alloc<ValueType>;
+
+    using SRHashType = uint64_t;
+
     #ifdef SR_LINUX
         using TimePointType = std::chrono::time_point<std::chrono::system_clock>;
     #else

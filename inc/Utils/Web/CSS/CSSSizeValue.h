@@ -20,6 +20,8 @@ namespace SR_UTILS_NS::Web {
             Deg,
         } unit = Unit::Px;
 
+        bool autoValue = false;
+
         CSSSizeValue() = default;
 
         CSSSizeValue(const int32_t px) : px(static_cast<int16_t>(px)) { } /** NOLINT(google-explicit-constructor) */
@@ -47,8 +49,13 @@ namespace SR_UTILS_NS::Web {
                 result.SetDpi(SR_UTILS_NS::LexicalCast<uint16_t>(value.substr(0, value.size() - 3)));
             } else if (value.ends_with("deg")) {
                 result.SetDeg(SR_UTILS_NS::LexicalCast<float_t>(value.substr(0, value.size() - 1)));
-            } else {
-                SRHalt("Unknown CSS size value: %s", value.data());
+            } else if (value == "0") {
+                result.SetPx(0);
+            } else if (value == "auto") {
+                result.autoValue = true;
+            }
+            else {
+                SR_ERROR("Unknown CSS size value: {}", value.data());
                 return {};
             }
             return result;
