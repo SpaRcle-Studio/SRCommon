@@ -5,17 +5,23 @@
 #ifndef SR_ENGINE_UTILS_COMPONENT_H
 #define SR_ENGINE_UTILS_COMPONENT_H
 
-#include <Utils/ECS/EntityManager.h>
-#include <Utils/Math/Vector3.h>
-#include <Utils/Types/SafePointer.h>
-#include <Utils/Types/SharedPtr.h>
 #include <Utils/Common/Singleton.h>
 #include <Utils/Common/Hashes.h>
 #include <Utils/Common/StringUtils.h>
+#include <Utils/Common/CollisionData.h>
+#include <Utils/Common/CollisionData.h>
+#include <Utils/ECS/EntityManager.h>
+
+#include <Utils/Math/Vector3.h>
+
+#include <Utils/World/Scene.h>
+
+#include <Utils/Types/SafePointer.h>
+#include <Utils/Types/SharedPtr.h>
 #include <Utils/Types/Marshal.h>
 #include <Utils/Types/SafeVariable.h>
-#include <Utils/World/Scene.h>
-#include <Utils/Common/CollisionData.h>
+#include <Utils/Types/SharedPtr.h>
+
 #include <Utils/TypeTraits/Properties.h>
 
 /**
@@ -42,13 +48,16 @@ namespace SR_UTILS_NS {
     class GameObject;
 
     class SR_DLL_EXPORT Component : public Entity {
+        SR_CLASS()
         friend class GameObject;
         friend class IComponentable;
         friend class ComponentManager;
     public:
         using Ptr = SR_HTYPES_NS::SharedPtr<Component>;
+        using OriginType = Component;
         using ScenePtr = SR_WORLD_NS::Scene*;
         using GameObjectPtr = SR_HTYPES_NS::SharedPtr<GameObject>;
+        using SceneObjectPtr = SR_HTYPES_NS::SharedPtr<SceneObject>;
     public:
         ~Component() override;
 
@@ -124,9 +133,10 @@ namespace SR_UTILS_NS {
         SR_NODISCARD ScenePtr GetScene() const;
         SR_NODISCARD bool HasScene() const { return TryGetScene(); }
         SR_NODISCARD GameObjectPtr GetGameObject() const;
+        SR_NODISCARD SceneObjectPtr GetSceneObject() const;
         SR_NODISCARD bool HasParent() const { return m_parent; }
         SR_NODISCARD ScenePtr TryGetScene() const;
-        SR_NODISCARD GameObjectPtr GetRoot() const;
+        SR_NODISCARD SceneObjectPtr GetRoot() const;
         SR_NODISCARD Transform* GetTransform() const noexcept;
         SR_NODISCARD SR_UTILS_NS::PropertyContainer& GetComponentProperties() noexcept { return m_properties; }
         SR_NODISCARD const SR_UTILS_NS::PropertyContainer& GetComponentProperties() const noexcept { return m_properties; }
@@ -135,21 +145,23 @@ namespace SR_UTILS_NS {
         SR_NODISCARD std::string GetEntityInfo() const override;
 
     protected:
-        SR_NODISCARD SR_HTYPES_NS::Marshal::Ptr Save(SavableContext data) const override;
+        SR_NODISCARD SR_HTYPES_NS::Marshal::Ptr SaveLegacy(SavableContext data) const override;
 
         void SetParent(IComponentable* pParent);
 
     protected:
         bool m_isComponentLoaded = false;
         bool m_isAttached = false;
-        bool m_isEnabled = true;
         bool m_isActive = false;
         bool m_isAwake = false;
         bool m_isStarted = false;
 
+        /// @property
+        bool m_isEnabled = true;
+
         int32_t m_indexInSceneUpdater = SR_ID_INVALID;
 
-        GameObjectPtr m_gameObject;
+        SceneObjectPtr m_sceneObject = nullptr;
         IComponentable* m_parent = nullptr;
         SR_WORLD_NS::Scene* m_scene = nullptr;
 

@@ -277,8 +277,10 @@
 
 #if defined(SR_MSVC)
     #define SR_STRCMPI _strcmpi
+    #define SR_STRNCPY strncpy_s
 #else
     #define SR_STRCMPI strcasecmp
+    #define SR_STRNCPY strncpy
 #endif
 
 #ifdef SR_MSVC

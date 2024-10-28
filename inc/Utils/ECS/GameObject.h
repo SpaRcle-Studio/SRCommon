@@ -9,6 +9,7 @@
 #include <Utils/ECS/IComponentable.h>
 #include <Utils/ECS/TagManager.h>
 #include <Utils/ECS/Prefab.h>
+#include <Utils/ECS/Transform.h>
 
 #include <Utils/Math/Vector3.h>
 #include <Utils/Types/SafePointer.h>

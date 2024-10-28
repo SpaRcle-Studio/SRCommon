@@ -12,6 +12,7 @@
 namespace SR_UTILS_NS {
     struct StringHashInfo {
         std::string data;
+        std::string_view view;
         uint64_t hash = SR_ID_INVALID;
         uint64_t size = 0; /// TODO: remove
     };
@@ -27,7 +28,7 @@ namespace SR_UTILS_NS {
         SR_MAYBE_UNUSED static HashManager& Instance();
 
     public:
-        SR_NODISCARD const std::string& HashToString(Hash hash) const;
+        SR_NODISCARD const std::string_view& HashToString(Hash hash) const;
         SR_NODISCARD StringAtom HashToStringAtom(Hash hash) const;
         SR_NODISCARD bool Exists(Hash hash) const;
 
@@ -47,8 +48,58 @@ namespace SR_UTILS_NS {
         mutable std::recursive_mutex m_mutex;
 
     };
+
+    struct ConstexprStringHashEntry {
+        constexpr ConstexprStringHashEntry() = default;
+        constexpr ConstexprStringHashEntry(std::string_view str, uint64_t hash)
+            : str(str)
+            , hash(hash)
+        { }
+        std::string_view str;
+        uint64_t hash;
+    };
+
+    constexpr uint64_t ConstexprStringsMaxEntries = 512;
+
+    struct GlobalStringRegistry {
+        constexpr GlobalStringRegistry()
+            : entries{}
+            , count(0)
+        { }
+
+        mutable std::array<ConstexprStringHashEntry, ConstexprStringsMaxEntries> entries;
+        mutable uint64_t count;
+
+        constexpr uint64_t Register(std::string_view str, uint64_t hash) const {
+            if (count < ConstexprStringsMaxEntries) {
+                for (uint64_t i = 0; i < count; ++i) {
+                    if (entries[i].hash == hash) {
+                        return hash;
+                    }
+                }
+                entries[++count] = ConstexprStringHashEntry(str, hash);
+            }
+            else {
+                throw std::runtime_error("GlobalStringRegistry() : max entries reached!");
+            }
+            return hash;
+        }
+
+        SR_NODISCARD constexpr std::optional<std::string_view> FindConstexprStringByHash(uint64_t hash) const {
+            for (uint64_t i = 0; i < count; ++i) {
+                if (entries[i].hash == hash) {
+                    return entries[i].str;
+                }
+            }
+            return std::nullopt;
+        }
+    };
+
+    /// TODO: может быть баг при использовании dll
+    //inline constexpr GlobalStringRegistry g_StringRegistry = GlobalStringRegistry();
 }
 
+#define SR_HASH_CONSTEXPR_STR_VIEW_REGISTER(x) (SR_UTILS_NS::g_StringRegistry.Register(x, SR_HASH_STR_VIEW(x)))
 #define SR_HASH_STR_REGISTER(x) (SR_UTILS_NS::HashManager::Instance().AddHash(x))
 #define SR_HASH_TYPE_NAME_STR_REGISTER(x) (SR_UTILS_NS::HashManager::Instance().AddHash(SR_GET_TYPE_NAME(x)))
 #define SR_HASH_TO_STR(x) SR_UTILS_NS::HashManager::Instance().HashToString(x)

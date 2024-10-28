@@ -36,13 +36,97 @@ namespace SR_UTILS_NS::Web {
     void CSSStyle::ParseProperty(std::string_view name, std::string_view data) {
         const SRHashType nameHash = SR_HASH_STR_VIEW(name);
 
-        if (nameHash == "display"_atom_hash) {
+        if (nameHash == "position"_atom_hash_cexpr) {
+            position = StringToCSSPosition(data);
+        }
+        else if (nameHash == "box-sizing"_atom_hash_cexpr) {
+            boxSizing = StringToCSSBoxSizing(data);
+        }
+        else if (nameHash == "margin"_atom_hash_cexpr) {
+            const auto& values = SR_UTILS_NS::StringUtils::SplitView(data, " ");
+            if (values.size() == 1) {
+                const auto result = CSSSizeValue::Parse(values[0]);
+                if (result) {
+                    marginTop = marginRight = marginBottom = marginLeft = result.value();
+                }
+            }
+            else if (values.size() == 2) {
+                const auto result1 = CSSSizeValue::Parse(values[0]);
+                const auto result2 = CSSSizeValue::Parse(values[1]);
+                if (result1 && result2) {
+                    marginTop = marginBottom = result1.value();
+                    marginRight = marginLeft = result2.value();
+                }
+            }
+            else if (values.size() == 3) {
+                const auto result1 = CSSSizeValue::Parse(values[0]);
+                const auto result2 = CSSSizeValue::Parse(values[1]);
+                const auto result3 = CSSSizeValue::Parse(values[2]);
+                if (result1 && result2 && result3) {
+                    marginTop = result1.value();
+                    marginRight = marginLeft = result2.value();
+                    marginBottom = result3.value();
+                }
+            }
+            else if (values.size() == 4) {
+                const auto result1 = CSSSizeValue::Parse(values[0]);
+                const auto result2 = CSSSizeValue::Parse(values[1]);
+                const auto result3 = CSSSizeValue::Parse(values[2]);
+                const auto result4 = CSSSizeValue::Parse(values[3]);
+                if (result1 && result2 && result3 && result4) {
+                    marginTop = result1.value();
+                    marginRight = result2.value();
+                    marginBottom = result3.value();
+                    marginLeft = result4.value();
+                }
+            }
+        }
+        else if (nameHash == "padding"_atom_hash_cexpr) {
+            const auto& values = SR_UTILS_NS::StringUtils::SplitView(data, " ");
+            if (values.size() == 1) {
+                const auto result = CSSSizeValue::Parse(values[0]);
+                if (result) {
+                    paddingTop = paddingRight = paddingBottom = paddingLeft = result.value();
+                }
+            }
+            else if (values.size() == 2) {
+                const auto result1 = CSSSizeValue::Parse(values[0]);
+                const auto result2 = CSSSizeValue::Parse(values[1]);
+                if (result1 && result2) {
+                    paddingTop = paddingBottom = result1.value();
+                    paddingRight = paddingLeft = result2.value();
+                }
+            }
+            else if (values.size() == 3) {
+                const auto result1 = CSSSizeValue::Parse(values[0]);
+                const auto result2 = CSSSizeValue::Parse(values[1]);
+                const auto result3 = CSSSizeValue::Parse(values[2]);
+                if (result1 && result2 && result3) {
+                    paddingTop = result1.value();
+                    paddingRight = paddingLeft = result2.value();
+                    paddingBottom = result3.value();
+                }
+            }
+            else if (values.size() == 4) {
+                const auto result1 = CSSSizeValue::Parse(values[0]);
+                const auto result2 = CSSSizeValue::Parse(values[1]);
+                const auto result3 = CSSSizeValue::Parse(values[2]);
+                const auto result4 = CSSSizeValue::Parse(values[3]);
+                if (result1 && result2 && result3 && result4) {
+                    paddingTop = result1.value();
+                    paddingRight = result2.value();
+                    paddingBottom = result3.value();
+                    paddingLeft = result4.value();
+                }
+            }
+        }
+        else if (nameHash == "display"_atom_hash_cexpr) {
             display = StringToCSSDisplay(data);
         }
-        else if (nameHash == "color"_atom_hash) {
+        else if (nameHash == "color"_atom_hash_cexpr) {
             color = CSSColor::Parse(data);
         }
-        else if (nameHash == "background-color"_atom_hash || nameHash == "background"_atom_hash) {
+        else if (nameHash == "background-color"_atom_hash_cexpr || nameHash == "background"_atom_hash_cexpr) {
             backgroundColor = CSSColor::Parse(data);
         }
         else if (const auto& it = CSS_CLASS_SIZE_PROPERTIES.find(nameHash); it != CSS_CLASS_SIZE_PROPERTIES.end()) {
@@ -66,11 +150,17 @@ namespace SR_UTILS_NS::Web {
             if (depth > 0) {
                 result += std::string(depth, '\t');
             }
-            result += SR_FORMAT("{}: {};\n", SR_HASH_TO_STR(hash).c_str(), value.ToString());
+            result += SR_FORMAT("{}: {};\n", SR_HASH_TO_STR(hash), value.ToString());
         }
 
         if (depth > 0) { result += std::string(depth, '\t'); }
-        result += SR_FORMAT("display: {};\n", SR_HASH_TO_STR(CSSDisplayToString(display)).c_str());
+        result += SR_FORMAT("display: {};\n", SR_HASH_TO_STR(CSSDisplayToString(display)));
+
+        if (depth > 0) { result += std::string(depth, '\t'); }
+        result += SR_FORMAT("box-sizing: {};\n", SR_HASH_TO_STR(CSSBoxSizingToString(boxSizing)));
+
+        if (depth > 0) { result += std::string(depth, '\t'); }
+        result += SR_FORMAT("position: {};\n", SR_HASH_TO_STR(CSSPositionToString(position)));
 
         if (const auto str = color.ToString(); !str.empty()) {
             if (depth > 0) { result += std::string(depth, '\t'); }
@@ -81,6 +171,69 @@ namespace SR_UTILS_NS::Web {
             if (depth > 0) { result += std::string(depth, '\t'); }
             result += SR_FORMAT("background-color: {};\n", str);
         }
+
+        return result;
+    }
+
+    CSSStyle CSSStyle::Merge(const CSSStyle& main, const CSSStyle& other) {
+        CSSStyle result = main;
+        if (!other.width.IsDefault()) {
+            result.width = other.width;
+        }
+        if (!other.height.IsDefault()) {
+            result.height = other.height;
+        }
+        if (!other.marginTop.IsDefault()) {
+            result.marginTop = other.marginTop;
+        }
+        if (!other.marginRight.IsDefault()) {
+            result.marginRight = other.marginRight;
+        }
+        if (!other.marginBottom.IsDefault()) {
+            result.marginBottom = other.marginBottom;
+        }
+        if (!other.marginLeft.IsDefault()) {
+            result.marginLeft = other.marginLeft;
+        }
+        if (!other.paddingTop.IsDefault()) {
+            result.paddingTop = other.paddingTop;
+        }
+        if (!other.paddingRight.IsDefault()) {
+            result.paddingRight = other.paddingRight;
+        }
+        if (!other.paddingBottom.IsDefault()) {
+            result.paddingBottom = other.paddingBottom;
+        }
+        if (!other.paddingLeft.IsDefault()) {
+            result.paddingLeft = other.paddingLeft;
+        }
+        if (!other.borderTop.IsDefault()) {
+            result.borderTop = other.borderTop;
+        }
+        if (other.borderRight.IsDefault()) {
+            result.borderRight = other.borderRight;
+        }
+        if (!other.borderBottom.IsDefault()) {
+            result.borderBottom = other.borderBottom;
+        }
+        if (!other.borderLeft.IsDefault()) {
+            result.borderLeft = other.borderLeft;
+        }
+        if (!other.opacity.IsDefault()) {
+            result.opacity = other.opacity;
+        }
+        if (!other.zIndex.IsDefault()) {
+            result.zIndex = other.zIndex;
+        }
+        if (other.display.IsDefault()) {
+            result.display = other.display;
+        }
+
+        /// TODO: need merge instead of replace
+        result.color = other.color;
+        result.backgroundColor = other.backgroundColor;
+        result.boxSizing = other.boxSizing;
+        result.position = other.position;
 
         return result;
     }
@@ -96,9 +249,17 @@ namespace SR_UTILS_NS::Web {
         if (depth > 0) {
             result += std::string(depth, '\t');
         }
-        for (const auto& [token, style] : m_tokens) {
+
+        result = "* {\n" + m_globalStyle.ToString(depth + 1) + "}\n";
+
+        for (const auto& [token, style] : m_styles) {
             std::string body = "{\n" + style.ToString(depth + 1) + "}";
-            result += SR_FORMAT("{} {}\n", token.c_str(), body);
+            if (token.second) {
+                result += SR_FORMAT(".{} {}\n", token.first.c_str(), body);
+            }
+            else {
+                result += SR_FORMAT("{} {}\n", token.first.c_str(), body);
+            }
         }
         return result;
     }

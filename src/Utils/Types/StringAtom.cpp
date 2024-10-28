@@ -8,23 +8,23 @@
 namespace SR_UTILS_NS {
     StringHashInfo* StringAtom::DEFAULT_STRING_INFO = SR_UTILS_NS::HashManager::Instance().GetOrAddInfo("");
 
-    StringAtom::StringAtom() {
+    constexpr StringAtom::StringAtom() {
          m_info = DEFAULT_STRING_INFO;
     }
 
-    StringAtom::StringAtom(const char* str)
+    constexpr StringAtom::StringAtom(const char* str)
         : StringAtom(SR_UTILS_NS::HashManager::Instance().GetOrAddInfo(str))
     { }
 
-    StringAtom::StringAtom(const std::string& str)
+    constexpr StringAtom::StringAtom(const std::string& str)
         : StringAtom(SR_UTILS_NS::HashManager::Instance().GetOrAddInfo(str))
     { }
 
-    StringAtom::StringAtom(const std::string_view& str)
+    StringAtom::StringAtom(std::string_view str)
         : StringAtom(SR_UTILS_NS::HashManager::Instance().GetOrAddInfo(str))
     { }
 
-    StringAtom::StringAtom(StringHashInfo* pInfo)
+    constexpr StringAtom::StringAtom(StringHashInfo* pInfo)
         : m_info(pInfo)
     {
         SRAssert(m_info);
@@ -38,7 +38,7 @@ namespace SR_UTILS_NS {
         m_info = DEFAULT_STRING_INFO;
     }
 
-    StringAtom::operator std::string() const noexcept { /// NOLINT
+    StringAtom::operator const std::string&() const noexcept { /// NOLINT
         return m_info ? m_info->data : DEFAULT;
     }
 

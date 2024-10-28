@@ -10,6 +10,7 @@ option(SR_COMMON_SDL "" OFF)
 option(SR_COMMON_CURL "" OFF)
 option(SR_COMMON_JSON "" OFF)
 option(SR_COMMON_MYHTML "" ON)
+option(SR_COMMON_LITEHTML "" OFF)
 
 option(SR_COMMON_DLL_EXPORTS "" ON)
 option(SR_COMMON_GIT_METADATA "" ON)
@@ -19,6 +20,10 @@ option(SR_COMMON_CI_BUILD "" OFF)
 
 if (SR_COMMON_SDL)
     add_compile_definitions(SR_COMMON_SDL)
+endif()
+
+if (SR_COMMON_LITEHTML)
+    add_compile_definitions(SR_COMMON_LITEHTML)
 endif()
 
 if (SR_COMMON_EMBED_RESOURCES)
@@ -215,6 +220,7 @@ SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_SOURCE_DIR}/libs/cppcoro/inc
 SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_SOURCE_DIR}/libs/cpptrace/include)
 SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_SOURCE_DIR}/libs/rapidyaml/src)
 SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_SOURCE_DIR}/libs/cssparser/cssparser)
+SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${SR_CMAKE_ROOT_BUILD_DIRECTORY}/Codegen)
 
 SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_BINARY_DIR}/include/Utils/EmbedResources)
 
@@ -264,6 +270,12 @@ if (SR_COMMON_MYHTML)
     add_subdirectory(libs/myhtml)
     SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_SOURCE_DIR}/libs/myhtml/include)
     target_link_libraries(Utils myhtml_static)
+endif()
+
+if (SR_COMMON_LITEHTML)
+    add_subdirectory(libs/litehtml)
+    SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_SOURCE_DIR}/libs/litehtml/include)
+    target_link_libraries(Utils litehtml)
 endif()
 
 if (SR_COMMON_SDL)

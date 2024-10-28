@@ -92,65 +92,101 @@ namespace SR_UTILS_NS {
             std::constructible_from<T, std::string> &&
             requires(T type) { type.to_string(); } ||
             requires(T type) { type.ToString(); };
+
+        static constexpr SRHashType InitialHash() noexcept { return 0xcbf29ce484222325; }
+        static constexpr SRHashType MagicPrime() noexcept { return 0x100000001b3; }
+
+        template<size_t S, size_t N> struct Encoder {
+            static constexpr SRHashType EncodeChar(SRHashType hash, const char (&text)[S]) noexcept {
+                hash = (hash ^ static_cast<SRHashType>(static_cast<uint8_t>(text[S - N - 1]))) * MagicPrime();
+                return Encoder<S, N - 1>::EncodeChar(hash, text);
+            }
+        };
+
+        template<size_t S> struct Encoder<S, 0> {
+            static constexpr SRHashType EncodeChar(SRHashType hash, const char (&)[S]) noexcept {
+                return hash;
+            }
+        };
     }
 
-    SR_INLINE_STATIC constexpr size_t SR_FNV_OFFSET_BASIS = 14695981039346656037ULL;
-    SR_INLINE_STATIC constexpr size_t SR_FNV_PRIME = 1099511628211ULL;
+    template<size_t S> SR_NODISCARD static constexpr uint64_t ComputeHashConstexpr(const char (&text)[S]) noexcept {
+        return static_cast<uint64_t>(Hash::Detail::Encoder<S, S - 1>::EncodeChar(Hash::Detail::InitialHash(), text));
+    }
 
-    SR_NODISCARD SR_INLINE_STATIC size_t FNV1AAppendBytes(size_t value, const unsigned char* const first, const size_t count) noexcept {
-        for (size_t i = 0; i < count; ++i) {
-            value ^= static_cast<size_t>(first[i]);
+    SR_NODISCARD static constexpr uint64_t ComputeHash(const char* text) noexcept {
+        uint64_t hash = Hash::Detail::InitialHash();
+        for (size_t i = 0; text[i] != '\0'; ++i) {
+            hash = (hash ^ static_cast<uint64_t>(static_cast<uint8_t>(text[i]))) * Hash::Detail::MagicPrime();
+        }
+        return hash;
+    }
+
+    SR_NODISCARD static constexpr uint64_t ComputeHash(const std::string_view text) noexcept {
+        uint64_t hash = Hash::Detail::InitialHash();
+        for (const char i : text) {
+            hash = (hash ^ static_cast<uint64_t>(static_cast<uint8_t>(i))) * Hash::Detail::MagicPrime();
+        }
+        return hash;
+    }
+
+    SR_INLINE_STATIC constexpr uint64_t SR_FNV_OFFSET_BASIS = 14695981039346656037ULL;
+    SR_INLINE_STATIC constexpr uint64_t SR_FNV_PRIME = 1099511628211ULL;
+
+    SR_NODISCARD constexpr SR_INLINE_STATIC uint64_t FNV1AAppendBytes(uint64_t value, const unsigned char* const first, const uint64_t count) noexcept {
+        for (uint64_t i = 0; i < count; ++i) {
+            value ^= static_cast<uint64_t>(first[i]);
             value *= SR_FNV_PRIME;
         }
 
         return value;
     }
 
-    template<class T> SR_NODISCARD SR_INLINE_STATIC size_t FNV1AAppendValue(const size_t value, const T& keyValue) noexcept {
+    template<class T> SR_NODISCARD SR_INLINE_STATIC constexpr uint64_t FNV1AAppendValue(const uint64_t value, const T& keyValue) noexcept {
         return FNV1AAppendBytes(value, &reinterpret_cast<const unsigned char&>(keyValue), sizeof(T));
     }
 
-    template<class T> SR_NODISCARD size_t HashArrayRepresentation(const T* const first, const size_t count) noexcept {
+    template<class T> SR_NODISCARD constexpr uint64_t HashArrayRepresentation(const T* const first, const size_t count) noexcept {
         return FNV1AAppendBytes(SR_FNV_OFFSET_BASIS, reinterpret_cast<const unsigned char*>(first), count * sizeof(T));
     }
 
-    template<class T> SR_NODISCARD size_t HashRepresentation(const T& keyVal) noexcept {
+    template<class T> SR_NODISCARD constexpr uint64_t HashRepresentation(const T& keyVal) noexcept {
         return FNV1AAppendValue(SR_FNV_OFFSET_BASIS, keyVal);
     }
 
-    template <class T> class SRHash;
+    template <class T> struct SRHash;
 
     template <class T, bool Enabled> struct SRConditionallyEnabledHash {
-        SR_NODISCARD size_t operator()(const T& keyVal) const
+        SR_NODISCARD constexpr  size_t operator()(const T& keyVal) const
         noexcept(noexcept(SR_UTILS_NS::SRHash<T>::DoHash(keyVal))) {
             return SR_UTILS_NS::SRHash<T>::DoHash(keyVal);
         }
     };
 
     template <class T> struct SRConditionallyEnabledHash<T, false> {
-        SRConditionallyEnabledHash() = delete;
-        SRConditionallyEnabledHash(const SRConditionallyEnabledHash&) = delete;
-        SRConditionallyEnabledHash(SRConditionallyEnabledHash&&) = delete;
-        SRConditionallyEnabledHash& operator=(const SRConditionallyEnabledHash&) = delete;
-        SRConditionallyEnabledHash& operator=(SRConditionallyEnabledHash&&) = delete;
+        constexpr SRConditionallyEnabledHash() = delete;
+        constexpr SRConditionallyEnabledHash(const SRConditionallyEnabledHash&) = delete;
+        constexpr SRConditionallyEnabledHash(SRConditionallyEnabledHash&&) = delete;
+        constexpr SRConditionallyEnabledHash& operator=(const SRConditionallyEnabledHash&) = delete;
+        constexpr SRConditionallyEnabledHash& operator=(SRConditionallyEnabledHash&&) = delete;
     };
 
     template<class T> struct SRHash : SRConditionallyEnabledHash<T, !std::is_const_v<T> && !std::is_volatile_v<T> && (std::is_enum_v<T> || std::is_integral_v<T> || std::is_pointer_v<T>)> {
-        static size_t DoHash(const T& value) noexcept {
+        constexpr static uint64_t DoHash(const T& value) noexcept {
             return FNV1AAppendValue(SR_FNV_OFFSET_BASIS, value);
         }
     };
 
-    template<typename T> uint64_t CalculateHash(const T& value) {
-        static SRHash<T> h;
+    template<typename T> constexpr uint64_t CalculateHash(const T& value) {
+        constexpr SRHash<T> h;
         return h(value);
     }
 
-    template<typename T> uint64_t HashCombine(const T& value, uint64_t hash = 0) {
+    template<typename T> constexpr uint64_t HashCombine(const T& value, uint64_t hash = 0) {
         return hash ^ CalculateHash<T>(value) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
     }
 
-    SR_MAYBE_UNUSED static uint64_t CombineTwoHashes(uint64_t hash1, uint64_t hash2) {
+    SR_MAYBE_UNUSED constexpr static uint64_t CombineTwoHashes(uint64_t hash1, uint64_t hash2) {
         return hash2 ^ hash1 + 0x9e3779b9 + (hash2 << 6) + (hash2 >> 2);
     }
 
@@ -178,42 +214,40 @@ namespace SR_UTILS_NS {
     T sha256(const std::string& msg) {
         return sha256<T>(msg.data(), msg.size());
     }
-
-    using SRHashType = uint64_t;
 }
 
 template <class Elem, class Alloc> struct SR_UTILS_NS::SRHash<std::basic_string<Elem, std::char_traits<Elem>, Alloc>> : SR_UTILS_NS::SRConditionallyEnabledHash<std::basic_string<Elem, std::char_traits<Elem>, Alloc>, IsECharT<Elem>> {
-    SR_NODISCARD static size_t DoHash(const std::basic_string<Elem, std::char_traits<Elem>, Alloc>& keyVal) noexcept {
+    SR_NODISCARD constexpr static size_t DoHash(const std::basic_string<Elem, std::char_traits<Elem>, Alloc>& keyVal) noexcept {
         return HashArrayRepresentation(keyVal.c_str(), keyVal.size());
     }
 };
 
 template <class Elem> struct SR_UTILS_NS::SRHash<std::basic_string_view<Elem>> : SR_UTILS_NS::SRConditionallyEnabledHash<std::basic_string_view<Elem>, IsECharT<Elem>> {
-    SR_NODISCARD static size_t DoHash(const std::basic_string_view<Elem> keyVal) noexcept {
+    SR_NODISCARD constexpr static size_t DoHash(const std::basic_string_view<Elem> keyVal) noexcept {
         return HashArrayRepresentation(keyVal.data(), keyVal.size());
     }
 };
 
 template<> struct SR_UTILS_NS::SRHash<float> {
-    SR_NODISCARD size_t operator()(const float keyVal) const noexcept {
+    SR_NODISCARD constexpr size_t operator()(const float keyVal) const noexcept {
         return HashRepresentation(keyVal == 0.0F ? 0.0F : keyVal);
     }
 };
 
 template<> struct SR_UTILS_NS::SRHash<double> {
-    SR_NODISCARD size_t operator()(const double keyVal) const noexcept {
+    SR_NODISCARD constexpr size_t operator()(const double keyVal) const noexcept {
         return HashRepresentation(keyVal == 0.0 ? 0.0 : keyVal);
     }
 };
 
 template<> struct SR_UTILS_NS::SRHash<long double> {
-    SR_NODISCARD size_t operator()(const long double keyVal) const noexcept {
+    SR_NODISCARD constexpr size_t operator()(const long double keyVal) const noexcept {
         return HashRepresentation(keyVal == 0.0L ? 0.0L : keyVal);
     }
 };
 
 template<> struct SR_UTILS_NS::SRHash<nullptr_t> {
-    SR_NODISCARD size_t operator()(nullptr_t) const noexcept {
+    SR_NODISCARD constexpr size_t operator()(nullptr_t) const noexcept {
         void* null = nullptr;
         return HashRepresentation(null);
     }
