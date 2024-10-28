@@ -20,7 +20,7 @@ namespace SR_UTILS_NS {
         : StringAtom(SR_UTILS_NS::HashManager::Instance().GetOrAddInfo(str))
     { }
 
-    constexpr StringAtom::StringAtom(const std::string_view& str)
+    StringAtom::StringAtom(std::string_view str)
         : StringAtom(SR_UTILS_NS::HashManager::Instance().GetOrAddInfo(str))
     { }
 

@@ -39,9 +39,9 @@ namespace SR_UTILS_NS {
             return pIt->second->view;
         }
 
-        if (const auto str = g_StringRegistry.FindConstexprStringByHash(hash)) {
+        /*if (const auto str = g_StringRegistry.FindConstexprStringByHash(hash)) {
             return str.value();
-        }
+        }*/
 
         return gDefault;
     }

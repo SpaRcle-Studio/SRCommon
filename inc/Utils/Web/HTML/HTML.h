@@ -11,11 +11,14 @@
 #include <Utils/Types/SharedPtr.h>
 #include <Utils/Common/PassKey.h>
 
-#include <litehtml.h>
+#ifdef SR_COMMON_LITEHTML
+	#include <litehtml.h>
+#endif
 
 namespace SR_UTILS_NS::Web {
 	class HTMLPage;
 
+#ifdef SR_COMMON_LITEHTML
     class HTMLContainerInterface : public SR_HTYPES_NS::SharedPtr<HTMLContainerInterface>, public litehtml::document_container {
     	using Super = SR_HTYPES_NS::SharedPtr<HTMLContainerInterface>;
     public:
@@ -76,6 +79,11 @@ namespace SR_UTILS_NS::Web {
     	std::vector<SR_UTILS_NS::Path> m_paths;
 
     };
+#else
+	class HTMLContainerInterface : public SR_HTYPES_NS::SharedPtr<HTMLContainerInterface> {
+
+	};
+#endif
 
     class HTMLPage final : public SR_HTYPES_NS::SharedPtr<HTMLPage> {
         using Super = SR_HTYPES_NS::SharedPtr<HTMLPage>;
@@ -92,13 +100,21 @@ namespace SR_UTILS_NS::Web {
 
         SR_NODISCARD const std::vector<SR_UTILS_NS::Path>& GetPaths() const;
 		SR_NODISCARD HTMLContainerInterface::Ptr GetContainer() const { return m_container; }
+	#ifdef SR_COMMON_LITEHTML
     	SR_NODISCARD litehtml::document::ptr GetDocument() const { return m_document; }
+    #else
+    	SR_NODISCARD void* GetDocument() const { return nullptr; }
+    #endif
 
     protected:
 
     private:
     	HTMLContainerInterface::Ptr m_container;
+    #ifdef SR_COMMON_LITEHTML
     	litehtml::document::ptr m_document;
+    #else
+    	void* m_document;
+    #endif
 
     };
 }

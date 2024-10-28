@@ -10,6 +10,7 @@
 #include <Utils/Common/TypeInfo.h>
 #include <Utils/Debug.h>
 #include <Utils/Platform/Platform.h>
+#include <Utils/TypeTraits/TypeTraits.h>
 
 namespace SR_UTILS_NS {
     enum class SharedPtrPolicy : uint8_t {
@@ -231,7 +232,10 @@ namespace SR_HTYPES_NS {
             return;
         }
 
-        if constexpr (SR_UTILS_NS::IsDerivedFrom<SharedPtr, T>::value) {
+        if constexpr (!SR_UTILS_NS::IsCompleteTypeV<T>) {
+            SR_SAFE_PTR_ASSERT(ptr == nullptr, "Ptr is not nullptr!");
+        }
+        else if constexpr (SR_UTILS_NS::IsDerivedFrom<SharedPtr, T>::value) {
             if ((m_data = ptr->GetPtrData())) {
                 m_data->IncrementStrong();
                 m_ptr = ptr;

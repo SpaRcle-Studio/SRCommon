@@ -22,7 +22,7 @@ namespace SR_UTILS_NS {
         constexpr StringAtom(StringHashInfo* pInfo); /// NOLINT
         constexpr StringAtom(const char* str); /// NOLINT
         constexpr StringAtom(const std::string& str); /// NOLINT
-        constexpr StringAtom(const std::string_view& str); /// NOLINT
+        StringAtom(std::string_view str); /// NOLINT
 
     public:
         operator const std::string&() const noexcept; /// NOLINT

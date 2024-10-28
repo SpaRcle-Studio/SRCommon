@@ -1,5 +1,6 @@
 from Common import *
 
+print("ResourceEmbedder.py: running...")
 def needs_update(path, export_path):
     if not os.path.exists(path):
         print(f"Path does not exist: {path}")

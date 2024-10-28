@@ -62,8 +62,13 @@ namespace SR_UTILS_NS {
     constexpr uint64_t ConstexprStringsMaxEntries = 512;
 
     struct GlobalStringRegistry {
-        mutable std::array<ConstexprStringHashEntry, ConstexprStringsMaxEntries> entries = {};
-        mutable uint64_t count = 0;
+        constexpr GlobalStringRegistry()
+            : entries{}
+            , count(0)
+        { }
+
+        mutable std::array<ConstexprStringHashEntry, ConstexprStringsMaxEntries> entries;
+        mutable uint64_t count;
 
         constexpr uint64_t Register(std::string_view str, uint64_t hash) const {
             if (count < ConstexprStringsMaxEntries) {
@@ -91,7 +96,7 @@ namespace SR_UTILS_NS {
     };
 
     /// TODO: может быть баг при использовании dll
-    inline constexpr GlobalStringRegistry g_StringRegistry = {};
+    //inline constexpr GlobalStringRegistry g_StringRegistry = GlobalStringRegistry();
 }
 
 #define SR_HASH_CONSTEXPR_STR_VIEW_REGISTER(x) (SR_UTILS_NS::g_StringRegistry.Register(x, SR_HASH_STR_VIEW(x)))
