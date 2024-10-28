@@ -20,7 +20,7 @@ SR_INLINE uint64_t operator"" _atom_hash(const char* str, size_t) {
 ///     return SR_UTILS_NS::StringAtom(str);
 /// }
 
-/*constexpr uint64_t operator"" _atom_hash_cexpr(const char* str, size_t size) {
+/*constexpr uint64_t operator"" _atom_hash(const char* str, size_t size) {
     const auto strView = std::string_view(str, size);
     return SR_HASH_CONSTEXPR_STR_VIEW_REGISTER(strView);
 }*/

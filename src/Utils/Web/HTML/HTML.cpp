@@ -6,6 +6,7 @@
 #include <Utils/Web/HTML/HTML.h>
 
 namespace SR_UTILS_NS::Web {
+#ifdef SR_COMMON_LITEHTML
     int HTMLContainerInterface::pt_to_px(int pt) const {
         const double_t dpi = SR_PLATFORM_NS::GetScreenDPI();
         return static_cast<int>(static_cast<double>(pt) * dpi / 72.0);
@@ -97,4 +98,5 @@ namespace SR_UTILS_NS::Web {
         static std::vector<SpaRcle::Utils::Path> empty;
         return m_container ? m_container->GetPaths() : empty;
     }
+#endif //SR_COMMON_LITEHTML
 }

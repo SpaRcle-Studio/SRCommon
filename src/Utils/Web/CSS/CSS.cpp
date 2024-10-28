@@ -36,13 +36,13 @@ namespace SR_UTILS_NS::Web {
     void CSSStyle::ParseProperty(std::string_view name, std::string_view data) {
         const SRHashType nameHash = SR_HASH_STR_VIEW(name);
 
-        if (nameHash == "position"_atom_hash_cexpr) {
+        if (nameHash == "position"_atom_hash) {
             position = StringToCSSPosition(data);
         }
-        else if (nameHash == "box-sizing"_atom_hash_cexpr) {
+        else if (nameHash == "box-sizing"_atom_hash) {
             boxSizing = StringToCSSBoxSizing(data);
         }
-        else if (nameHash == "margin"_atom_hash_cexpr) {
+        else if (nameHash == "margin"_atom_hash) {
             const auto& values = SR_UTILS_NS::StringUtils::SplitView(data, " ");
             if (values.size() == 1) {
                 const auto result = CSSSizeValue::Parse(values[0]);
@@ -81,7 +81,7 @@ namespace SR_UTILS_NS::Web {
                 }
             }
         }
-        else if (nameHash == "padding"_atom_hash_cexpr) {
+        else if (nameHash == "padding"_atom_hash) {
             const auto& values = SR_UTILS_NS::StringUtils::SplitView(data, " ");
             if (values.size() == 1) {
                 const auto result = CSSSizeValue::Parse(values[0]);
@@ -120,13 +120,13 @@ namespace SR_UTILS_NS::Web {
                 }
             }
         }
-        else if (nameHash == "display"_atom_hash_cexpr) {
+        else if (nameHash == "display"_atom_hash) {
             display = StringToCSSDisplay(data);
         }
-        else if (nameHash == "color"_atom_hash_cexpr) {
+        else if (nameHash == "color"_atom_hash) {
             color = CSSColor::Parse(data);
         }
-        else if (nameHash == "background-color"_atom_hash_cexpr || nameHash == "background"_atom_hash_cexpr) {
+        else if (nameHash == "background-color"_atom_hash || nameHash == "background"_atom_hash) {
             backgroundColor = CSSColor::Parse(data);
         }
         else if (const auto& it = CSS_CLASS_SIZE_PROPERTIES.find(nameHash); it != CSS_CLASS_SIZE_PROPERTIES.end()) {
