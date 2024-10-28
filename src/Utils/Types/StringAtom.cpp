@@ -8,15 +8,15 @@
 namespace SR_UTILS_NS {
     StringHashInfo* StringAtom::DEFAULT_STRING_INFO = SR_UTILS_NS::HashManager::Instance().GetOrAddInfo("");
 
-    constexpr StringAtom::StringAtom() {
+    StringAtom::StringAtom() {
          m_info = DEFAULT_STRING_INFO;
     }
 
-    constexpr StringAtom::StringAtom(const char* str)
+    StringAtom::StringAtom(const char* str)
         : StringAtom(SR_UTILS_NS::HashManager::Instance().GetOrAddInfo(str))
     { }
 
-    constexpr StringAtom::StringAtom(const std::string& str)
+    StringAtom::StringAtom(const std::string& str)
         : StringAtom(SR_UTILS_NS::HashManager::Instance().GetOrAddInfo(str))
     { }
 
@@ -24,7 +24,7 @@ namespace SR_UTILS_NS {
         : StringAtom(SR_UTILS_NS::HashManager::Instance().GetOrAddInfo(str))
     { }
 
-    constexpr StringAtom::StringAtom(StringHashInfo* pInfo)
+    StringAtom::StringAtom(StringHashInfo* pInfo)
         : m_info(pInfo)
     {
         SRAssert(m_info);
