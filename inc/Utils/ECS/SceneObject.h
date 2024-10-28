@@ -31,6 +31,7 @@ namespace SR_UTILS_NS {
         using OriginType = SceneObject;
 
     public:
+        SceneObject();
         explicit SceneObject(ObjectNameT name);
         ~SceneObject() override;
 

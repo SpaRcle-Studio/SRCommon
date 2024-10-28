@@ -13,17 +13,6 @@
 namespace SR_UTILS_NS {
 	class Serializable;
 
-	template<class, class = std::void_t<>>
-	struct HasOriginType : std::false_type
-	{};
-
-	template<class T>
-	struct HasOriginType<T, std::void_t<typename T::OriginType>> : std::true_type
-	{};
-
-	template<class T>
-	constexpr bool HasOriginTypeV = HasOriginType<T>::value;
-
 	template<class T>
 	using HasMethodEmptyT = decltype(std::declval<const T&>().empty());
 
@@ -32,7 +21,6 @@ namespace SR_UTILS_NS {
 	{
 		static constexpr bool HasEmpty = IsDetectedV<HasMethodEmptyT, T>;
 		static constexpr bool IsSerializable = std::is_base_of_v<SR_UTILS_NS::Serializable, T>;
-		static constexpr bool HasOriginType = SR_UTILS_NS::HasOriginTypeV<T>;
 	};
 
 	template<typename T, typename Enable = void> struct DefaultChecker {

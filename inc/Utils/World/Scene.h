@@ -44,7 +44,7 @@ namespace SR_WORLD_NS {
 
         ~Scene() override;
 
-    protected:
+    public:
         Scene();
 
     public:

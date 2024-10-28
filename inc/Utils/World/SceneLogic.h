@@ -26,6 +26,7 @@ namespace SR_WORLD_NS {
         using OriginType = SceneLogic;
 
     public:
+        SceneLogic();
         explicit SceneLogic(const ScenePtr& scene);
         ~SceneLogic() override = default;
 

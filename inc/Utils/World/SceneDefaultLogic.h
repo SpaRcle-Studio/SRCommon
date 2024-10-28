@@ -12,6 +12,7 @@ namespace SR_WORLD_NS {
         SR_CLASS()
         using Super = SceneLogic;
     public:
+        SceneDefaultLogic() = default;
         explicit SceneDefaultLogic(const ScenePtr& scene);
         ~SceneDefaultLogic() override = default;
 

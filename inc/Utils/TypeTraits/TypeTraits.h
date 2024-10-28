@@ -273,6 +273,20 @@ namespace SR_UTILS_NS {
 
 	template<template<class...> class Op, class X, class Y>
 	constexpr bool CheckOperatorUsableV = CheckOperatorUsable<Op, X, Y>::value;
+
+	/**
+	Example for checking if type has a member type:
+
+	template<class, class = std::void_t<>>
+	struct HasSomeType : std::false_type { };
+
+	template<class T>
+	struct HasSomeType<T, std::void_t<typename T::SomeType>> : std::true_type { };
+
+	template<class T>
+	constexpr bool HasSomeTypeV = HasSomeType<T>::value;
+
+	static constexpr bool HasSomeType = SR_UTILS_NS::HasSomeTypeV<T>;*/
 }
 
 #endif //SR_COMMON_TYPE_TRAITS_H

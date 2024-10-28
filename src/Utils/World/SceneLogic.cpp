@@ -11,6 +11,10 @@
 #include <Codegen/SceneLogic.generated.hpp>
 
 namespace SR_WORLD_NS {
+    SceneLogic::SceneLogic()
+        : Super(this, SR_UTILS_NS::SharedPtrPolicy::Manually)
+    { }
+
     SceneLogic::SceneLogic(const SceneLogic::ScenePtr& pScene)
         : Super(this, SR_UTILS_NS::SharedPtrPolicy::Manually)
         , m_scene(pScene)

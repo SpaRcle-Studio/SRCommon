@@ -28,6 +28,7 @@ namespace SR_UTILS_NS {
         using Ptr = SR_HTYPES_NS::SharedPtr<GameObject>;
 
     public:
+        GameObject() = default;
         explicit GameObject(ObjectNameT name, SR_HTYPES_NS::SharedPtr<Transform> pTransform = nullptr);
         ~GameObject() override;
 

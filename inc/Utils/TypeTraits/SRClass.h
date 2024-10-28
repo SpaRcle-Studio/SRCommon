@@ -31,6 +31,8 @@ namespace SR_UTILS_NS {
             return {};
         }
 
+        virtual void InitializeClass() noexcept { }
+
         static SR_UTILS_NS::StringAtom GetClassStaticName() noexcept;
         static const SR_UTILS_NS::SRClassMeta* GetMetaStatic() noexcept;
         static bool RegisterPropertiesCodegen();

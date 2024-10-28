@@ -16,32 +16,44 @@ namespace SR_UTILS_NS {
     public:
         virtual ~BaseFactory() = default;
 
-        SR_NODISCARD virtual SRClassMeta* GetType(std::string_view name) const = 0;
+        SR_NODISCARD virtual const SRClassMeta* GetType(std::string_view name) const = 0;
 
         SR_NODISCARD bool IsRegistered(const SRClassMeta* pMeta) const {
             return pMeta && GetType(pMeta->GetFactoryName()) == pMeta;
         }
     };
 
-    template<typename T> class Factory : public SR_UTILS_NS::Singleton<Factory<T>>, public BaseFactory {
-        SR_REGISTER_TEMPLATE_SINGLETON(Factory, T);
-        using ClassPtrT = SR_HTYPES_NS::SharedPtr<T>;
+    class Factory : public BaseFactory {
+        using ClassPtrT = SR_HTYPES_NS::SharedPtr<SRClass>;
         using AllocatorT = std::function<ClassPtrT()>;
-        using MetaGetterT = SRClassMeta*(*)();
+        using MetaGetterT = const SRClassMeta*(*)();
         struct TypeInfo {
             AllocatorT allocator;
-            MetaGetterT metaGetter;
+            MetaGetterT metaGetter = nullptr;
         };
     public:
+        SR_NODISCARD static Factory& Instance() noexcept;
+
         SR_NODISCARD std::string_view GetName(const SRClassMeta* pMeta, bool isMustExists = true) const;
 
-        bool Register(std::string_view name, AllocatorT allocator, MetaGetterT metaGetter) {
-            auto&& pIt = m_types.find(name);
-            if (pIt != m_types.end()) {
+        template<class T> bool Register() {
+            if constexpr (std::is_abstract_v<T>) {
                 return false;
             }
-            m_types[name] = {allocator, metaGetter};
-            return true;
+            else if constexpr (std::is_same_v<T, void>) {
+                static_assert(AlwaysFalseV<T>, "Type must be specified!");
+            }
+            else if constexpr (!std::is_default_constructible_v<T>) {
+                static_assert(AlwaysFalseV<T>, "Type must be default constructible!");
+            }
+            else if (auto&& pMeta = T::GetMetaStatic()) {
+                auto&& name = pMeta->GetFactoryName();
+                TypeInfo& info = m_types[name];
+                info.allocator = []() { return SRNew<T>(); };
+                info.metaGetter = T::GetMetaStatic;
+                return true;
+            }
+            return false;
         }
 
         template<class Y> SR_NODISCARD std::string_view GetName(Y* pObject, const bool isMustExists = true) const {
@@ -55,7 +67,15 @@ namespace SR_UTILS_NS {
             return GetName(Y::GetMetaStatic(), true);
         }
 
-        SR_NODISCARD ClassPtrT Create(std::string_view name) const noexcept {
+        template<typename T = SRClass> SR_NODISCARD SR_HTYPES_NS::SharedPtr<T> Create(std::string_view name) const noexcept {
+            auto&& pClass = CreateBase(name);
+            if constexpr (std::is_same_v<T, SRClass>) {
+                return pClass;
+            }
+            return pClass.DynamicCast<T>();
+        }
+
+        SR_NODISCARD ClassPtrT CreateBase(std::string_view name) const noexcept {
             auto&& pIt = m_types.find(name);
             if (pIt != m_types.end()) {
                 return pIt->second.allocator();
@@ -63,7 +83,7 @@ namespace SR_UTILS_NS {
             return nullptr;
         }
 
-        SR_NODISCARD SRClassMeta* GetType(std::string_view name) const noexcept override {
+        SR_NODISCARD const SRClassMeta* GetType(std::string_view name) const noexcept override {
             auto&& pIt = m_types.find(name);
             if (pIt != m_types.end()) {
                 return pIt->second.metaGetter();
@@ -72,27 +92,9 @@ namespace SR_UTILS_NS {
         }
 
     private:
-        ska::flat_hash_map<std::string_view, TypeInfo> m_types;
+        std::unordered_map<std::string_view, TypeInfo> m_types;
 
     };
-
-    /// Implementation
-
-    template<typename T> std::string_view Factory<T>::GetName(const SRClassMeta* pMeta, const bool isMustExists) const {
-        if (IsRegistered(pMeta)) {
-			return pMeta->GetFactoryName(); /// NOLINT
-		}
-
-		if (isMustExists) {
-			if (!pMeta) {
-				SRHalt("Factory::GetName() : meta is nullptr!");
-			}
-			else {
-				SRHalt("Factory::GetName() : meta is not registered!");
-			}
-		}
-		return {};
-    }
 }
 
 #endif //SR_COMMON_TYPE_TRAITS_FACTORY_H

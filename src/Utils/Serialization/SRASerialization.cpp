@@ -7,22 +7,22 @@
 #include <Utils/Serialization/SRASerialization.h>
 
 namespace SR_UTILS_NS {
-    SRANode& SRAISerialization::GetCurrentNode() noexcept {
-        if (m_stack.empty()) {
+    SRANode& SRAISerialization::GetNode(const std::vector<uint64_t>& stack) noexcept {
+        if (stack.empty()) {
             return m_root;
         }
         std::vector<SRANode>* current = &m_root.children;
-        for (uint64_t i = 0; i < m_stack.size(); ++i) {
-            if (current->size() <= m_stack[i]) {
-                SR_ERROR("SRAISerialization::GetCurrentNode() : invalid stack!");
+        for (uint64_t i = 0; i < stack.size(); ++i) {
+            if (current->size() <= stack[i]) {
+                SR_ERROR("SRAISerialization::GetNode() : invalid stack!");
                 return m_root;
             }
-            if (i == m_stack.size() - 1) {
-                return (*current)[m_stack[i]];
+            if (i == stack.size() - 1) {
+                return (*current)[stack[i]];
             }
-            current = &current->at(m_stack[i]).children;
+            current = &current->at(stack[i]).children;
         }
-        SR_ERROR("SRAISerialization::GetCurrentNode() : invalid stack!");
+        SR_ERROR("SRAISerialization::GetNode() : invalid stack!");
         return m_root;
     }
 
@@ -306,6 +306,85 @@ namespace SR_UTILS_NS {
         SRAssert2(m_root.type == SRASerializationDataType::Root, "SRADeserializer::LoadFromFile() : invalid root type!");
 
         return true;
+    }
+
+    bool SRADeserializer::NextItem(const SerializationId& id) noexcept {
+        if (m_walker.empty() || m_arrayStack.empty()) {
+            SRHalt("SRADeserializer::NextItem() : invalid walker or array stack!");
+            return false;
+        }
+
+        ArrayInfo& info = m_arrayStack.back();
+
+        if (info.state == ArrayInfo::State::End) {
+            return false;
+        }
+
+        if (info.state == ArrayInfo::State::None) {
+            for (uint64_t i = 0; i < info.pNode->children.size(); ++i) {
+                if (info.pNode->children[i].id.GetHash() == id.GetHash()) {
+                    m_walker.emplace_back(i);
+                    info.state = ArrayInfo::State::Reading;
+                    return true;
+                }
+            }
+            info.state = ArrayInfo::State::End;
+            return false;
+        }
+
+        if (info.state == ArrayInfo::State::Reading) {
+            for (uint64_t i = m_walker.back() + 1; i < info.pNode->children.size(); ++i) {
+                if (info.pNode->children[i].id.GetHash() == id.GetHash()) {
+                    m_walker.back() = i;
+                    return true;
+                }
+            }
+            info.state = ArrayInfo::State::End;
+            return false;
+        }
+
+        SRHalt("SRADeserializer::NextItem() : invalid state!");
+        return false;
+    }
+
+    bool SRADeserializer::BeginObject(const SerializationId& id) {
+        auto& node = GetWalkNode();
+
+        if (node.type == SRASerializationDataType::Object && node.id.GetHash() == id.GetHash()) {
+            return true;
+        }
+
+        //for (uint64_t i = 0; i < node.children.size(); ++i) {
+        //    if (node.children[i].id.GetHash() == id.GetHash()) {
+        //        m_walker.emplace_back(i);
+        //        return true;
+        //    }
+        //}
+        return false;
+    }
+
+    void SRADeserializer::EndObject() {
+        //m_walker.pop_back();
+    }
+
+    uint64_t SRADeserializer::BeginArray(const SerializationId& id) {
+        auto& node = GetWalkNode();
+        for (uint64_t i = 0; i < node.children.size(); ++i) {
+            if (node.children[i].id.GetHash() == id.GetHash()) {
+                ArrayInfo& info = m_arrayStack.emplace_back();
+                info.pNode = &node.children[i];
+
+                m_walker.emplace_back(i);
+
+                return node.children[i].children.size();
+            }
+        }
+        return 0;
+    }
+
+    void SRADeserializer::EndArray() {
+        m_walker.pop_back();
+        m_arrayStack.pop_back();
     }
 
     void SRADeserializer::UpdateDepth(int32_t depth, int32_t line) {

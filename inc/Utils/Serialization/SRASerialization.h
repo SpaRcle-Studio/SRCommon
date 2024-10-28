@@ -50,10 +50,13 @@ namespace SR_UTILS_NS {
 
     protected:
         SR_NODISCARD bool SaveToFileImpl(const SR_UTILS_NS::Path& path) const;
-        SR_NODISCARD SRANode& GetCurrentNode() noexcept;
+        SR_NODISCARD SRANode& GetCurrentNode() noexcept { return GetNode(m_stack); }
+        SR_NODISCARD SRANode& GetWalkNode() noexcept { return GetNode(m_walker); }
+        SR_NODISCARD SRANode& GetNode(const std::vector<uint64_t>& stack) noexcept;
 
     protected:
         std::vector<uint64_t> m_stack;
+        std::vector<uint64_t> m_walker;
         SRANode m_root;
         bool m_isNeedUseTabs = false;
 
@@ -93,23 +96,35 @@ namespace SR_UTILS_NS {
         SR_NODISCARD bool LoadFromFile(const SR_UTILS_NS::Path& path) override;
 
         SR_NODISCARD bool IsDefault(const SerializationId& name) const noexcept override { return false; }
-        SR_NODISCARD bool ShouldSetDefaults(const SerializationId& name) const noexcept override { return false; }
-        SR_NODISCARD bool ShouldSetDefaults() const noexcept override { return false; }
+        SR_NODISCARD bool ShouldSetDefaults(const SerializationId& name) const noexcept override { return true; }
+        SR_NODISCARD bool ShouldSetDefaults() const noexcept override { return true; }
         SR_NODISCARD bool AllowNewMapKeys() const noexcept override { return false; }
         SR_NODISCARD bool IsPreserveMode() const noexcept override { return false; }
         SR_NODISCARD bool AllowReAllocPointer(ReAllocPointerReason reason) const noexcept override { return false; }
 
-        bool NextItem(const SerializationId& name) noexcept override { return false; }
+        bool NextItem(const SerializationId& id) noexcept override;
 
-        void BeginObject(const SerializationId& name) override { }
-        void EndObject() override { }
+        bool BeginObject(const SerializationId& id) override;
+        void EndObject() override;
 
-        uint64_t BeginArray(const SerializationId& name) override { return 0; }
-        void EndArray() override { }
+        uint64_t BeginArray(const SerializationId& id) override;
+        void EndArray() override;
 
         void ReadString(std::string& value, const SerializationId& name) override { return ReadStringImpl(value, name); }
         void ReadString(SR_UTILS_NS::StringAtom& value, const SerializationId& name) override { return ReadStringImpl(value, name); }
-        void ReadBool(bool& value, const SerializationId& name) override { return ReadIntegerImpl(value, name); }
+
+        void ReadBool(bool& value, const SerializationId& name) override {
+            auto&& node = GetWalkNode();
+            for (auto&& child : node.children) {
+                if (child.id.GetHash() == name.GetHash()) {
+                    if (child.type == SRASerializationDataType::Boolean) {
+                        value = child.data.boolean;
+                    }
+                    break;
+                }
+            }
+        }
+
         void ReadInt(int8_t& value, const SerializationId& name) override { return ReadIntegerImpl(value, name); }
         void ReadInt(int16_t& value, const SerializationId& name) override { return ReadIntegerImpl(value, name); }
         void ReadInt(int32_t& value, const SerializationId& name) override { return ReadIntegerImpl(value, name); }
@@ -118,6 +133,7 @@ namespace SR_UTILS_NS {
         void ReadUInt(uint16_t& value, const SerializationId& name) override { return ReadIntegerImpl(value, name); }
         void ReadUInt(uint32_t& value, const SerializationId& name) override { return ReadIntegerImpl(value, name); }
         void ReadUInt(uint64_t& value, const SerializationId& name) override { return ReadIntegerImpl(value, name); }
+
         void ReadFloat(float_t& value, const SerializationId& name) override { return ReadFloatingImpl(value, name); }
         void ReadDouble(double_t& value, const SerializationId& name) override { return ReadFloatingImpl(value, name); }
 
@@ -127,13 +143,51 @@ namespace SR_UTILS_NS {
         void UpdateDepth(int32_t depth, int32_t line);
 
         template<typename T> void ReadIntegerImpl(T& value, const SerializationId& name) {
+            auto&& node = GetWalkNode();
+            for (auto&& child : node.children) {
+                if (child.id.GetHash() == name.GetHash()) {
+                    if (child.type == SRASerializationDataType::Integer) {
+                        value = static_cast<T>(child.data.integer);
+                    }
+                    break;
+                }
+            }
         }
 
         template<typename T> void ReadFloatingImpl(T& value, const SerializationId& name) {
+            auto&& node = GetWalkNode();
+            for (auto&& child : node.children) {
+                if (child.id.GetHash() == name.GetHash()) {
+                    if (child.type == SRASerializationDataType::Floating) {
+                        value = static_cast<T>(child.data.floating);
+                    }
+                    break;
+                }
+            }
         }
 
         template<typename T> void ReadStringImpl(T& value, const SerializationId& name) {
+            auto&& node = GetWalkNode();
+            for (auto&& child : node.children) {
+                if (child.id.GetHash() == name.GetHash()) {
+                    if (child.type == SRASerializationDataType::String) {
+                        value = child.string;
+                    }
+                    break;
+                }
+            }
         }
+
+    private:
+        struct ArrayInfo {
+            SRANode* pNode = nullptr;
+            enum class State : uint8_t {
+                None,
+                Reading,
+                End
+            } state = State::None;
+        };
+        std::vector<ArrayInfo> m_arrayStack;
 
     };
 }

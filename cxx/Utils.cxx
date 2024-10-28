@@ -62,6 +62,7 @@
 #include "../src/Utils/TypeTraits/SRClass.cpp"
 #include "../src/Utils/TypeTraits/ClassDB.cpp"
 #include "../src/Utils/TypeTraits/SRClassMeta.cpp"
+#include "../src/Utils/TypeTraits/Factory.cpp"
 
 #include "../src/Utils/Game/LookAtComponent.cpp"
 #include "../src/Utils/Game/DebugLogComponent.cpp"

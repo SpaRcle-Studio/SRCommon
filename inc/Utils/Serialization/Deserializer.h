@@ -32,7 +32,7 @@ namespace SR_UTILS_NS {
 
         virtual bool NextItem(const SerializationId& name) noexcept = 0;
 
-        virtual void BeginObject(const SerializationId& name) = 0;
+        virtual bool BeginObject(const SerializationId& name) = 0;
         virtual void EndObject() = 0;
 
         virtual uint64_t BeginArray(const SerializationId& name) = 0;

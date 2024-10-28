@@ -12,6 +12,10 @@
 #include <Codegen/SceneObject.generated.hpp>
 
 namespace SR_UTILS_NS {
+    SceneObject::SceneObject() {
+        UpdateEntityPath();
+    }
+
     SceneObject::SceneObject(ObjectNameT name) {
         SetName(name);
         UpdateEntityPath();

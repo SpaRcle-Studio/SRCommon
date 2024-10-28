@@ -150,6 +150,9 @@ public:
 
 	static void Load(IDeserializer& deserializer, T& value, const SerializationId& id) {
 		const uint64_t size = deserializer.BeginArray(id);
+		if (size == 0) {
+			return;
+		}
 
 		if (!deserializer.IsPreserveMode()) {
 			value.clear();
@@ -173,14 +176,16 @@ public:
 		}
 		uint64_t index = 0;
 
-		while (deserializer.NextItem(id)) {
+		SR_CONSTEXPR SerializationId itemId = SerializationId::Create("item");
+
+		while (deserializer.NextItem(itemId)) {
 			/// Try to load exists item in PreserveMode
 			if (deserializer.IsPreserveMode() && index < value.size()) {
-				LoadItem(deserializer, value[index], id);
+				LoadItem(deserializer, value[index], itemId);
 			}
 			else {
 				auto&& item = value.emplace_back();
-				LoadItem(deserializer, item, id);
+				LoadItem(deserializer, item, itemId);
 				if (!SR_UTILS_NS::Serialization::IsValidValue(item)) {
 					value.pop_back();
 				}
@@ -555,16 +560,16 @@ struct ObjectDataAccessor<T, typename std::enable_if<SerializationTraits<T>::IsS
 	}
 
 	static void Load(IDeserializer& deserializer, T& value, const SerializationId& id) {
-		deserializer.BeginObject(id);
+		if (!deserializer.BeginObject(id)) {
+            return;
+        }
 		static_cast<Serializable&>(value).Load(deserializer);
 		deserializer.EndObject();
 	}
 };
 
 template<typename T>
-struct ObjectDataAccessor<SR_HTYPES_NS::SharedPtr<T>, std::enable_if_t<SerializationTraits<T>::HasOriginType>> {
-	using ObjectFactoryType = SR_UTILS_NS::Factory<typename T::OriginType>;
-
+struct ObjectDataAccessor<SR_HTYPES_NS::SharedPtr<T>, std::enable_if_t<SerializationTraits<T>::IsSerializable>> {
 	static void Save(ISerializer& serializer, const SR_HTYPES_NS::SharedPtr<T>& value, const SerializationId& id) {
 		if (!value) {
 			return;
@@ -585,9 +590,11 @@ struct ObjectDataAccessor<SR_HTYPES_NS::SharedPtr<T>, std::enable_if_t<Serializa
 		serializer.EndObject();
 	}
 
-	static void Load(IDeserializer& deserializer, SR_HTYPES_NS::SharedPtr<T>& value, const SerializationId& id)
-	{
-		deserializer.BeginObject(id);
+	static void Load(IDeserializer& deserializer, SR_HTYPES_NS::SharedPtr<T>& value, const SerializationId& id) {
+		if (!deserializer.BeginObject(id)) {
+			return;
+		}
+
 		std::string type;
 		deserializer.ReadString(type, SerializationId::Create("type"));
 
@@ -595,25 +602,16 @@ struct ObjectDataAccessor<SR_HTYPES_NS::SharedPtr<T>, std::enable_if_t<Serializa
 			deserializer.EndObject();
 			return;
 		}
+
 		if (!type.empty()) {
 			if (!deserializer.IsPreserveMode()) {
-				if constexpr (std::is_same_v<T, typename T::OriginType>) {
-					value = ObjectFactoryType::Instance().Create(type);
-				}
-				else {
-					value = ObjectFactoryType::Instance().Create(type).template DynamicCast<T>();
-				}
+				value = SR_UTILS_NS::Factory::Instance().Create<T>(type);
 				SRAssert2(value, "Unknown object's type: " + type);
 			}
 			else {
-				const bool isNeedReAlloc = !value || type != ObjectFactoryType::Instance().GetName(value.Get());
+				const bool isNeedReAlloc = !value || type != SR_UTILS_NS::Factory::Instance().GetName(value.Get());
 				if (isNeedReAlloc && deserializer.AllowReAllocPointer(value ? IDeserializer::ReAllocPointerReason::HasDifferentType : IDeserializer::ReAllocPointerReason::IsNull)) {
-					if constexpr (std::is_same_v<T, typename T::OriginType>) {
-						value = ObjectFactoryType::Instance().Create(type);
-					}
-					else {
-						value = ObjectFactoryType::Instance().Create(type).template DynamicCast<T>();
-					}
+					value = SR_UTILS_NS::Factory::Instance().Create<T>(type);
 					SRAssert2(value, "Unknown object's type: " + type);
 				}
 			}
