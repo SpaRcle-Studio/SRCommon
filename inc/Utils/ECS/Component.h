@@ -5,17 +5,26 @@
 #ifndef SR_ENGINE_UTILS_COMPONENT_H
 #define SR_ENGINE_UTILS_COMPONENT_H
 
-#include <Utils/ECS/EntityManager.h>
-#include <Utils/Math/Vector3.h>
-#include <Utils/Types/SafePointer.h>
-#include <Utils/Types/SharedPtr.h>
 #include <Utils/Common/Singleton.h>
 #include <Utils/Common/Hashes.h>
 #include <Utils/Common/StringUtils.h>
+#include <Utils/Common/CollisionData.h>
+#include <Utils/Common/CollisionData.h>
+#include <Utils/Common/CollisionData.h>
+
+#include <Utils/ECS/EntityManager.h>
+
+#include <Utils/Math/Vector3.h>
+
+#include <Utils/World/Scene.h>
+
+#include <Utils/Types/SafePointer.h>
+#include <Utils/Types/SharedPtr.h>
 #include <Utils/Types/Marshal.h>
 #include <Utils/Types/SafeVariable.h>
-#include <Utils/Common/CollisionData.h>
 #include <Utils/Types/SharedPtr.h>
+#include <Utils/Types/SharedPtr.h>
+
 #include <Utils/TypeTraits/Properties.h>
 
 /**

@@ -178,7 +178,7 @@ namespace SR_UTILS_NS {
     };
 
     template<typename T> constexpr uint64_t CalculateHash(const T& value) {
-        static SRHash<T> h;
+        constexpr SRHash<T> h;
         return h(value);
     }
 

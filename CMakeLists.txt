@@ -10,7 +10,7 @@ option(SR_COMMON_SDL "" OFF)
 option(SR_COMMON_CURL "" OFF)
 option(SR_COMMON_JSON "" OFF)
 option(SR_COMMON_MYHTML "" ON)
-option(SR_COMMON_LITEHTML "" ON)
+option(SR_COMMON_LITEHTML "" OFF)
 
 option(SR_COMMON_DLL_EXPORTS "" ON)
 option(SR_COMMON_GIT_METADATA "" ON)
@@ -20,6 +20,10 @@ option(SR_COMMON_CI_BUILD "" OFF)
 
 if (SR_COMMON_SDL)
     add_compile_definitions(SR_COMMON_SDL)
+endif()
+
+if (SR_COMMON_LITEHTML)
+    add_compile_definitions(SR_COMMON_LITEHTML)
 endif()
 
 if (SR_COMMON_EMBED_RESOURCES)

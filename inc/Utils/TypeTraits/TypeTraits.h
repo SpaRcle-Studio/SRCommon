@@ -25,7 +25,7 @@ namespace SR_UTILS_NS {
 
 		static SerializationId CreateFromCStr(const char* text) noexcept {
 			SerializationId id;
-			strncpy_s(id.name, text, MaxNameLength - 1);
+			SR_STRNCPY(id.name, text, MaxNameLength - 1);
 			id.name[MaxNameLength - 1] = '\0';
 			id.hash = ComputeHash(text);
 			return id;
@@ -33,7 +33,7 @@ namespace SR_UTILS_NS {
 
 		static SerializationId CreateFromString(const std::string_view text) noexcept {
 			SerializationId id;
-			strncpy_s(id.name, text.data(), std::min(text.size(), MaxNameLength - 1));
+			SR_STRNCPY(id.name, text.data(), std::min(text.size(), MaxNameLength - 1));
 			id.name[MaxNameLength - 1] = '\0';
 			id.hash = ComputeHash(text);
 			return id;
@@ -47,6 +47,15 @@ namespace SR_UTILS_NS {
 		uint64_t hash = 0;
 		char name[MaxNameLength]{};
 	};
+
+	template <typename T, typename = void>
+	struct IsCompleteType : std::false_type {};
+
+	template <typename T>
+	struct IsCompleteType<T, std::void_t<decltype(sizeof(T))>> : std::true_type {};
+
+	template <typename T>
+	constexpr bool IsCompleteTypeV = IsCompleteType<T>::value;
 
 	template<template<typename, size_t> typename Tmpl1>
 	struct IsStdArrayTemplate : std::false_type
