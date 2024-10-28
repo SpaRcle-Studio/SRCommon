@@ -8,6 +8,7 @@
 #include <Utils/macros.h>
 
 #include <cfloat>
+#include <span>
 #include <limits>
 #include <type_traits>
 #include <cstdio>
