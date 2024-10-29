@@ -30,12 +30,13 @@ namespace SR_UTILS_NS {
         SR_NODISCARD virtual bool IsPreserveMode() const noexcept = 0;
         SR_NODISCARD virtual bool AllowReAllocPointer(ReAllocPointerReason reason) const noexcept = 0;
 
-        virtual bool NextItem(const SerializationId& name) noexcept = 0;
+        virtual bool BeginItem(const SerializationId& id, uint32_t index) = 0;
+        virtual void EndItem() = 0;
 
-        virtual bool BeginObject(const SerializationId& name) = 0;
+        virtual bool BeginObject(const SerializationId& id) = 0;
         virtual void EndObject() = 0;
 
-        virtual uint64_t BeginArray(const SerializationId& name) = 0;
+        virtual uint64_t BeginArray(const SerializationId& id) = 0;
         virtual void EndArray() = 0;
 
         virtual void ReadString(std::string& value, const SerializationId& name) = 0;
@@ -52,7 +53,7 @@ namespace SR_UTILS_NS {
         virtual void ReadFloat(float_t& value, const SerializationId& name) = 0;
         virtual void ReadDouble(double_t& value, const SerializationId& name) = 0;
 
-        virtual void ReportError(const SerializationId& name, const std::string& message) = 0;
+        virtual void ReportError(const std::string& message) = 0;
 
     };
 }

@@ -325,7 +325,6 @@ namespace SR_UTILS_NS {
         }
     }
 
-
     void SceneObject::Destroy() {
         SR_TRACY_ZONE;
 
@@ -343,8 +342,7 @@ namespace SR_UTILS_NS {
         }
 
         if (auto&& pParent = GetParent()) {
-            auto&& pThisPtr = GetThis().DynamicCast<SceneObject>();
-            pParent->RemoveChild(pThisPtr);
+            pParent->RemoveChild(this);
         }
 
         if (m_scene) {
@@ -374,6 +372,14 @@ namespace SR_UTILS_NS {
         /// это должно быть единственное место,
         /// где мы уничтожаем объект
         AutoFree();
+    }
+
+    void SceneObject::OnPostLoaded() {
+        SR_TRACY_ZONE;
+        for (auto&& pChild : m_children) {
+            pChild->SetParent(this);
+        }
+        Super::OnPostLoaded();
     }
 
     void SceneObject::UpdateRoot() {
@@ -505,6 +511,7 @@ namespace SR_UTILS_NS {
 
     void SceneObject::RemoveChild(const SceneObject::Ptr& pChild) {
         SR_TRACY_ZONE;
+
         pChild->SetParent(SceneObject::Ptr());
 
         for (uint16_t i = 0; i < m_children.size(); ++i) {
@@ -522,6 +529,18 @@ namespace SR_UTILS_NS {
             pChild->SetParent(SceneObject::Ptr());
         }
         m_children.clear();
+    }
+
+    void SceneObject::VerifyAfterLoad(SerializableVerifyContext& context) const noexcept {
+        /*for (auto&& pChild : m_children) {
+            if (!pChild) {
+                context.AddError(SR_FORMAT("Child is nullptr on \"{}\"", GetName().ToStringView()));
+            }
+            else {
+                pChild->VerifyAfterLoad(context);
+            }
+        }*/
+        return Super::VerifyAfterLoad(context);
     }
 
     void SceneObject::ForEachChild(const std::function<void(SceneObject::Ptr&)>& fn) {

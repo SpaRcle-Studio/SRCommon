@@ -25,6 +25,7 @@ namespace SR_UTILS_NS {
         Integer,
         Floating,
         Object,
+        Item,
         Array
     };
 
@@ -49,6 +50,7 @@ namespace SR_UTILS_NS {
         SR_NODISCARD std::string ToString() const;
 
     protected:
+        SR_NODISCARD virtual bool IsAllowEmptyElementsInArrayImpl() const noexcept { return true; }
         SR_NODISCARD bool SaveToFileImpl(const SR_UTILS_NS::Path& path) const;
         SR_NODISCARD SRANode& GetCurrentNode() noexcept { return GetNode(m_stack); }
         SR_NODISCARD SRANode& GetWalkNode() noexcept { return GetNode(m_walker); }
@@ -82,11 +84,17 @@ namespace SR_UTILS_NS {
         void WriteFloat(float_t value, const SerializationId& name) override { WriteDouble(static_cast<double_t>(value), name); }
         void WriteDouble(double_t value, const SerializationId& name) override;
 
-        void BeginObject(const SerializationId& name) override;
+        void BeginItem(const SerializationId& id) override;
+        void EndItem() override;
+
+        void BeginObject(const SerializationId& id) override;
         void EndObject() override;
 
-        void BeginArray(uint64_t size, const SerializationId& name) override;
+        void BeginArray(uint64_t size, const SerializationId& id) override;
         void EndArray() override;
+
+    private:
+        bool IsAllowEmptyElementsInArrayImpl() const noexcept override { return IsAllowEmptyElementsInArray(); }
 
     };
 
@@ -102,7 +110,8 @@ namespace SR_UTILS_NS {
         SR_NODISCARD bool IsPreserveMode() const noexcept override { return false; }
         SR_NODISCARD bool AllowReAllocPointer(ReAllocPointerReason reason) const noexcept override { return false; }
 
-        bool NextItem(const SerializationId& id) noexcept override;
+        bool BeginItem(const SerializationId& id, uint32_t index) override;
+        void EndItem() override;
 
         bool BeginObject(const SerializationId& id) override;
         void EndObject() override;
@@ -137,7 +146,7 @@ namespace SR_UTILS_NS {
         void ReadFloat(float_t& value, const SerializationId& name) override { return ReadFloatingImpl(value, name); }
         void ReadDouble(double_t& value, const SerializationId& name) override { return ReadFloatingImpl(value, name); }
 
-        void ReportError(const SerializationId& name, const std::string& message) override { }
+        void ReportError(const std::string& message) override;
 
     private:
         void UpdateDepth(int32_t depth, int32_t line);

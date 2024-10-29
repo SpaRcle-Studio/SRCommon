@@ -42,6 +42,8 @@ namespace SR_UTILS_NS {
     }
 
     std::string SRAISerialization::ToString() const {
+        SR_TRACY_ZONE;
+
         std::string result;
 
         result += "sra format\n";
@@ -62,6 +64,15 @@ namespace SR_UTILS_NS {
                     break;
                 case SRASerializationDataType::Array:
                     result += SR_UTILS_NS::ToString(depth) + "-a:"s + node.id.GetName() + "\n";
+                    break;
+                case SRASerializationDataType::Item:
+                    if (node.children.empty() && !IsAllowEmptyElementsInArrayImpl()) {
+                        return;
+                    }
+                    result += SR_UTILS_NS::ToString(depth) + "-k:"s + node.id.GetName() + "\n";
+                    if (node.children.empty()) {
+                        return;
+                    }
                     break;
                 case SRASerializationDataType::Unknown:
                     SRHalt("SRAISerialization::ToString() : unknown type!");
@@ -114,6 +125,9 @@ namespace SR_UTILS_NS {
                         serializeNode(child, depth + 1);
                     }
                     break;
+                case SRASerializationDataType::Item:
+                    serializeNode(node.children[0], depth + 1);
+                    break;
                 case SRASerializationDataType::Array:
                     for (auto&& child : node.children) {
                         serializeNode(child, depth + 1);
@@ -158,6 +172,22 @@ namespace SR_UTILS_NS {
         SRANode node(name, SRASerializationDataType::Floating);
         node.data.floating = value;
         GetCurrentNode().children.emplace_back(node);
+    }
+
+    void SRASerializer::BeginItem(const SerializationId& id) {
+        auto&& currentNode = GetCurrentNode();
+        if (currentNode.type != SRASerializationDataType::Array) {
+            SRHalt("SRASerializer::BeginItem() : invalid node type!");
+        }
+
+        SRANode node(id, SRASerializationDataType::Item);
+        currentNode.children.emplace_back(node);
+        m_stack.emplace_back(GetCurrentNode().children.size() - 1);
+    }
+
+    void SRASerializer::EndItem() {
+        SRAssert2(GetCurrentNode().type == SRASerializationDataType::Item, "SRASerializer::EndItem() : invalid node type!");
+        m_stack.pop_back();
     }
 
     void SRASerializer::BeginObject(const SerializationId& name) {
@@ -209,11 +239,8 @@ namespace SR_UTILS_NS {
             std::string_view line = lines[i];
 
             if (!line.empty() && line[0] == '\t') {
-                for (size_t j = 0; j < line.size(); ++j) {
-                    if (line[j] != '\t') {
-                        line = line.substr(j);
-                        break;
-                    }
+                if (const size_t pos = line.find_first_not_of('\t'); pos != std::string::npos) {
+                    line = line.substr(pos);
                 }
             }
 
@@ -225,15 +252,19 @@ namespace SR_UTILS_NS {
             const int32_t depth = LexicalCast<int32_t>(depthStr);
             if (depth == 0) {
                 if (!m_stack.empty()) {
-                    ReportError(SerializationId::Create("Root"), "Double root on line: "s + std::to_string(i + 1));
+                    ReportError("Double root on line: "s + std::to_string(i + 1));
                     continue;
                 }
             }
 
             const std::string_view& type = line.substr(line.find_first_of('-') + 1, 1);
             if (type.size() != 1) {
-                ReportError(SerializationId::Create("Root"), "Type not found on line: "s + std::to_string(i + 1));
+                ReportError("Type not found on line: "s + std::to_string(i + 1));
                 continue;
+            }
+
+            while (m_stack.size() + 1 > static_cast<size_t>(depth) && !m_stack.empty()) {
+                m_stack.pop_back();
             }
 
             switch (type[0]) {
@@ -244,7 +275,7 @@ namespace SR_UTILS_NS {
                     continue;
                 }
                 case 'v': {
-                    UpdateDepth(depth, i + 1);
+                    //UpdateDepth(depth, i + 1);
                     auto& node = GetCurrentNode();
                     auto&& newNode = node.children.emplace_back();
                     newNode.id = SerializationId::CreateFromString(line.substr(line.find_first_of(':') + 1));
@@ -252,7 +283,7 @@ namespace SR_UTILS_NS {
                     continue;
                 }
                 case 'o': {
-                    UpdateDepth(depth, i + 1);
+                    //UpdateDepth(depth, i + 1);
                     auto& node = GetCurrentNode();
                     auto&& newNode = node.children.emplace_back();
                     newNode.id = SerializationId::CreateFromString(line.substr(line.find_first_of(':') + 1));
@@ -261,11 +292,20 @@ namespace SR_UTILS_NS {
                     break;
                 }
                 case 'a': {
-                    UpdateDepth(depth, i + 1);
+                    //UpdateDepth(depth, i + 1);
                     auto& node = GetCurrentNode();
                     auto&& newNode = node.children.emplace_back();
                     newNode.id = SerializationId::CreateFromString(line.substr(line.find_first_of(':') + 1));
                     newNode.type = SRASerializationDataType::Array;
+                    m_stack.emplace_back(node.children.size() - 1);
+                    break;
+                }
+                case 'k': {
+                    //UpdateDepth(depth, i + 1);
+                    auto& node = GetCurrentNode();
+                    auto&& newNode = node.children.emplace_back();
+                    newNode.id = SerializationId::CreateFromString(line.substr(line.find_first_of(':') + 1));
+                    newNode.type = SRASerializationDataType::Item;
                     m_stack.emplace_back(node.children.size() - 1);
                     break;
                 }
@@ -298,7 +338,7 @@ namespace SR_UTILS_NS {
                     continue;
                 }
                 default:
-                    ReportError(SerializationId::Create("Root"), "Invalid type: "s + type.data());
+                    ReportError("Invalid type: "s + type.data());
                     break;
             }
         }
@@ -308,7 +348,7 @@ namespace SR_UTILS_NS {
         return true;
     }
 
-    bool SRADeserializer::NextItem(const SerializationId& id) noexcept {
+    /*bool SRADeserializer::NextItem(const SerializationId& id) noexcept {
         if (m_walker.empty() || m_arrayStack.empty()) {
             SRHalt("SRADeserializer::NextItem() : invalid walker or array stack!");
             return false;
@@ -345,37 +385,65 @@ namespace SR_UTILS_NS {
 
         SRHalt("SRADeserializer::NextItem() : invalid state!");
         return false;
+    }*/
+
+    bool SRADeserializer::BeginItem(const SerializationId& id, uint32_t index) {
+        auto&& node = GetWalkNode();
+        if (node.children.size() <= index) {
+            return false;
+        }
+        if (node.children[index].id.GetHash() != id.GetHash()) {
+            return false;
+        }
+        m_walker.emplace_back(index);
+        return true;
+    }
+
+    void SRADeserializer::EndItem() {
+        if (m_walker.empty()) {
+            SRHalt("SRADeserializer::EndItem() : invalid walker!");
+            return;
+        }
+        if (GetWalkNode().type != SRASerializationDataType::Item) {
+            SRHalt("SRADeserializer::EndItem() : node type is not Item!");
+            return;
+        }
+        m_walker.pop_back();
+        if (GetWalkNode().type != SRASerializationDataType::Array) {
+            SRHalt("SRADeserializer::EndItem() : node type is not Array!");
+        }
     }
 
     bool SRADeserializer::BeginObject(const SerializationId& id) {
         auto& node = GetWalkNode();
 
-        if (node.type == SRASerializationDataType::Object && node.id.GetHash() == id.GetHash()) {
-            return true;
+        for (uint64_t i = 0; i < node.children.size(); ++i) {
+            if (node.children[i].id.GetHash() == id.GetHash()) {
+                m_walker.emplace_back(i);
+                return true;
+            }
         }
 
-        //for (uint64_t i = 0; i < node.children.size(); ++i) {
-        //    if (node.children[i].id.GetHash() == id.GetHash()) {
-        //        m_walker.emplace_back(i);
-        //        return true;
-        //    }
-        //}
         return false;
     }
 
     void SRADeserializer::EndObject() {
-        //m_walker.pop_back();
+        if (m_walker.empty()) {
+            ReportError("SRADeserializer::EndObject() : invalid walker!");
+            return;
+        }
+        if (GetWalkNode().type != SRASerializationDataType::Object) {
+            ReportError("SRADeserializer::EndObject() : invalid node type!");
+            return;
+        }
+        m_walker.pop_back();
     }
 
     uint64_t SRADeserializer::BeginArray(const SerializationId& id) {
         auto& node = GetWalkNode();
         for (uint64_t i = 0; i < node.children.size(); ++i) {
             if (node.children[i].id.GetHash() == id.GetHash()) {
-                ArrayInfo& info = m_arrayStack.emplace_back();
-                info.pNode = &node.children[i];
-
                 m_walker.emplace_back(i);
-
                 return node.children[i].children.size();
             }
         }
@@ -383,8 +451,18 @@ namespace SR_UTILS_NS {
     }
 
     void SRADeserializer::EndArray() {
+        if (m_walker.empty()) {
+            ReportError("SRADeserializer::EndArray() : invalid walker!");
+            return;
+        }
+        if (GetWalkNode().type != SRASerializationDataType::Array) {
+            ReportError("SRADeserializer::EndArray() : invalid node type!");
+        }
         m_walker.pop_back();
-        m_arrayStack.pop_back();
+    }
+
+    void SRADeserializer::ReportError(const std::string& message) {
+        SRHalt("SRADeserializer::ReportError() : {}!", message);
     }
 
     void SRADeserializer::UpdateDepth(int32_t depth, int32_t line) {
@@ -392,7 +470,7 @@ namespace SR_UTILS_NS {
             const int32_t delta = depth - static_cast<int32_t>(m_stack.size());
 
             if (delta < 0 && m_stack.size() < SR_ABS(delta)) {
-                SRHalt("SRADeserializer::UpdateDepth() : invalid stack size on line: {}!", line);
+                ReportError(SR_FORMAT("SRADeserializer::UpdateDepth() : invalid stack size on line: {}!", line));
                 return;
             }
 

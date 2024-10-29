@@ -23,6 +23,7 @@ namespace SR_UTILS_NS {
 
     class SceneObject : public IComponentable {
         SR_CLASS()
+        using Super = IComponentable;
     public:
         using Ptr = SR_HTYPES_NS::SharedPtr<SceneObject>;
         using ScenePtr = SR_WORLD_NS::Scene*;
@@ -90,6 +91,8 @@ namespace SR_UTILS_NS {
         void UnlinkPrefab();
         void RemoveAllChildren();
 
+        void VerifyAfterLoad(SerializableVerifyContext& context) const noexcept override;
+
         /// Вызывает OnAttached у компонентов загруженных через LoadComponent
         bool PostLoad(bool force) override;
         void Awake(bool force, bool isPaused) noexcept override;
@@ -102,6 +105,8 @@ namespace SR_UTILS_NS {
 
         /// Освобождает память объекта
         void DestroyImpl();
+
+        void OnPostLoaded() override;
 
     protected:
         virtual void OnHierarchyChanged() { }

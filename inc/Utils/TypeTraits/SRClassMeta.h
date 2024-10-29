@@ -19,6 +19,7 @@ namespace SR_UTILS_NS {
         virtual void Save(SR_UTILS_NS::ISerializer& serializer, const SR_UTILS_NS::Serializable& obj) const;
         virtual void Load(SR_UTILS_NS::IDeserializer& deserializer, SR_UTILS_NS::Serializable& obj) const;
 
+        SR_NODISCARD virtual bool IsAbstract() const noexcept { return false; }
         SR_NODISCARD virtual bool IsEditorOnly() const noexcept { return false; }
         SR_NODISCARD virtual std::span<const SRClassMeta*> GetBaseMetas() const noexcept { return {}; }
         SR_NODISCARD virtual std::string_view GetFactoryName() const noexcept { return {}; }

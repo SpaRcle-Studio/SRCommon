@@ -54,6 +54,10 @@ namespace SR_UTILS_NS {
         void Save(ISerializer& serializer) const;
         void Load(IDeserializer& deserializer);
 
+        virtual void VerifyAfterLoad(SerializableVerifyContext& context) const noexcept { }
+
+        virtual void OnPostLoaded() { }
+
         void AddSerializationFlags(SerializationFlagsFlag flags) noexcept { m_flags |= flags; }
         void RemoveSerializationFlags(SerializationFlagsFlag flags) noexcept { m_flags &= ~flags; }
 

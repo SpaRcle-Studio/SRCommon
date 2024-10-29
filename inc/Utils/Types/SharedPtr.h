@@ -106,6 +106,7 @@ namespace SR_HTYPES_NS {
     template<class T> class SR_DLL_EXPORT SharedPtr {
     public:
         using Ptr = SharedPtr<T>;
+        using SharedPointerType = T;
 
         SharedPtr() = default;
         SharedPtr(const T* constPtr); /** NOLINT(google-explicit-constructor) */

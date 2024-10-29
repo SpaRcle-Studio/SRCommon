@@ -274,6 +274,17 @@ namespace SR_UTILS_NS {
 	template<template<class...> class Op, class X, class Y>
 	constexpr bool CheckOperatorUsableV = CheckOperatorUsable<Op, X, Y>::value;
 
+	namespace SharedPointerTraits {
+		template<class, class = std::void_t<>>
+		struct IsSharedPointer : std::false_type { };
+
+		template<class T>
+		struct IsSharedPointer<T, std::void_t<typename T::SharedPointerType>> : std::true_type { };
+	}
+
+	template<class T>
+	constexpr bool IsSharedPointerV = SharedPointerTraits::IsSharedPointer<T>::value;
+
 	/**
 	Example for checking if type has a member type:
 

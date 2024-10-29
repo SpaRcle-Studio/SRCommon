@@ -13,6 +13,19 @@
 namespace SR_UTILS_NS {
     class SRClassMeta;
 
+    struct SerializableVerifyContext {
+    public:
+        void AddError(const std::string& error) noexcept { errors.insert(error); }
+        void AddWarning(const std::string& warning) noexcept { warnings.insert(warning); }
+
+        SR_NODISCARD const std::set<std::string>& GetErrors() const noexcept { return errors; }
+        SR_NODISCARD const std::set<std::string>& GetWarnings() const noexcept { return warnings; }
+
+    private:
+        std::set<std::string> errors;
+        std::set<std::string> warnings;
+    };
+
     struct PropertyInfo {
         StringAtom name;
         StringAtom className;
@@ -50,7 +63,7 @@ namespace SR_UTILS_NS {
 }
 
 template<class T, typename ...Args> static T* SRNew(Args&& ...args) {
-    return PostAllocationInitialize(new T(std::forward<Args>(args)...));
+     return PostAllocationInitialize(new T(std::forward<Args>(args)...));
 }
 
 #endif //SR_ENGINE_UTILS_TYPE_TRAITS_SR_CLASS_H

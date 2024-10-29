@@ -24,12 +24,13 @@ namespace SR_UTILS_NS {
     };
 
     class Factory : public BaseFactory {
-        using ClassPtrT = SR_HTYPES_NS::SharedPtr<SRClass>;
+        using ClassPtrT = SRClass*;
         using AllocatorT = std::function<ClassPtrT()>;
         using MetaGetterT = const SRClassMeta*(*)();
         struct TypeInfo {
             AllocatorT allocator;
             MetaGetterT metaGetter = nullptr;
+            bool isAbstract = false;
         };
     public:
         SR_NODISCARD static Factory& Instance() noexcept;
@@ -38,6 +39,14 @@ namespace SR_UTILS_NS {
 
         template<class T> bool Register() {
             if constexpr (std::is_abstract_v<T>) {
+                if (auto&& pMeta = T::GetMetaStatic()) {
+                    auto&& name = pMeta->GetFactoryName();
+                    TypeInfo& info = m_types[name];
+                    info.isAbstract = true;
+                }
+                else {
+                    SR_PLATFORM_NS::WriteConsoleError("Failed to get meta for abstract class!");
+                }
                 return false;
             }
             else if constexpr (std::is_same_v<T, void>) {
@@ -49,7 +58,9 @@ namespace SR_UTILS_NS {
             else if (auto&& pMeta = T::GetMetaStatic()) {
                 auto&& name = pMeta->GetFactoryName();
                 TypeInfo& info = m_types[name];
-                info.allocator = []() { return SRNew<T>(); };
+                info.allocator = []() {
+                    return SRNew<T>();
+                };
                 info.metaGetter = T::GetMetaStatic;
                 return true;
             }
@@ -67,19 +78,40 @@ namespace SR_UTILS_NS {
             return GetName(Y::GetMetaStatic(), true);
         }
 
-        template<typename T = SRClass> SR_NODISCARD SR_HTYPES_NS::SharedPtr<T> Create(std::string_view name) const noexcept {
-            auto&& pClass = CreateBase(name);
-            if constexpr (std::is_same_v<T, SRClass>) {
-                return pClass;
+        template<typename T> SR_NODISCARD SR_HTYPES_NS::SharedPtr<T> Create(std::string_view name) const noexcept {
+            if constexpr (SR_UTILS_NS::IsSharedPointerV<T>) {
+                if (auto&& pClass = CreateBase(name)) {
+                    if (auto&& pCasted = dynamic_cast<T*>(pClass)) {
+                        return SR_HTYPES_NS::SharedPtr<T>(pCasted);
+                    }
+                    SRHalt("Failed to cast object \"{}\" to type \"{}\"!", name, typeid(T).name());
+                    return nullptr;
+                }
+                return nullptr;
             }
-            return pClass.DynamicCast<T>();
+            SRHalt("Type \"{}\" is not a shared pointer!", typeid(T).name());
+            return nullptr;
         }
 
         SR_NODISCARD ClassPtrT CreateBase(std::string_view name) const noexcept {
             auto&& pIt = m_types.find(name);
+
             if (pIt != m_types.end()) {
-                return pIt->second.allocator();
+                if (pIt->second.isAbstract) {
+                    SR_ERROR("Factory::CreateBase() : type \"{}\" is abstract!", name);
+                    return nullptr;
+                }
+
+                auto&& pClass = pIt->second.allocator();
+                if (pClass) {
+                    return pClass;
+                }
+
+                SRHalt("Failed to create object \"{}\"!", name);
+                return nullptr;
             }
+
+            SRHalt("Type \"{}\" is not registered!", name);
             return nullptr;
         }
 
