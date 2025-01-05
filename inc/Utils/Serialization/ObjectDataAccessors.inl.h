@@ -134,7 +134,6 @@ template<> struct ObjectDataAccessor<std::uint64_t> {
 
 template<class T> struct ObjectDataAccessorVector {
 private:
-	//using ConstRef = std::conditional_t<std::is_same_v<typename T::value_type, bool>, bool, typename T::const_reference>;
 	SR_CONSTEXPR static SerializationId itemId = SerializationId::Create("i");
 	SR_CONSTEXPR static SerializationId dataId = SerializationId::Create("d");
 
@@ -181,7 +180,6 @@ public:
 		uint64_t index = 0;
 
 		while (deserializer.BeginItem(itemId, index)) {
-			/// Try to load exists item in PreserveMode
 			if (deserializer.IsPreserveMode() && index < value.size()) {
 				Serialization::Load(deserializer, value[index], dataId);
 			}
@@ -198,18 +196,6 @@ public:
 		}
 
 		deserializer.EndArray();
-	}
-
-private:
-	static void LoadItem(IDeserializer& deserializer, typename T::reference item, const SerializationId& id) {
-		//if constexpr (!std::is_same_v<typename T::value_type, bool>) {
-		//	Serialization::Load(deserializer, item, id);
-		//}
-		//else {
-		//	bool itemToLoad = item;
-		//	Serialization::Load(deserializer, itemToLoad, id);
-		//	item = itemToLoad;
-		//}
 	}
 };
 

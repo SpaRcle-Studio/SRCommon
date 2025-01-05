@@ -29,6 +29,18 @@ namespace SR_HTYPES_NS {
             return m_objects.size() - m_freeIndices.Size();
         }
 
+        SR_NODISCARD uint32_t GetFreeCount() const {
+            return m_freeIndices.Size();
+        }
+
+        SR_NODISCARD uint32_t GetCapacity() const {
+            return m_objects.size();
+        }
+
+        SR_NODISCARD const std::vector<std::pair<bool, T>>& GetObjects() const {
+            return m_objects;
+        }
+
         Index Add(T&& object) {
             Index index;
             if (m_freeIndices.IsEmpty()) SR_UNLIKELY_ATTRIBUTE {
@@ -75,11 +87,11 @@ namespace SR_HTYPES_NS {
             return object.second;
         }
 
-        T& AtUnchecked(Index index) {
+        T& SR_FASTCALL AtUnchecked(Index index) {
             return m_objects[index].second;
         }
 
-        const T& AtUnchecked(Index index) const {
+        const T& SR_FASTCALL AtUnchecked(Index index) const {
             return m_objects[index].second;
         }
 
@@ -123,7 +135,7 @@ namespace SR_HTYPES_NS {
             return m_objects.size() == m_freeIndices.Size();
         }
 
-        SR_NODISCARD bool IsAlive(Index index) const {
+        SR_NODISCARD bool SR_FASTCALL IsAlive(Index index) const {
             if (index >= m_objects.size()) SR_UNLIKELY_ATTRIBUTE {
                 return false;
             }

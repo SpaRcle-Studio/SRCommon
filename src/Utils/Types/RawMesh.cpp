@@ -335,7 +335,7 @@ namespace SR_HTYPES_NS {
     #ifdef SR_UTILS_ASSIMP
         if (!m_scene || id >= m_scene->mNumMeshes) {
             SRHalt("Out of range or invalid scene!");
-            static std::vector<uint32_t> empty;
+            return empty;
         }
 
         auto&& mesh = m_scene->mMeshes[id];

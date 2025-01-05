@@ -8,6 +8,8 @@
 #include <Utils/stdInclude.h>
 #include <Utils/Common/Hashes.h>
 
+#include <fmt/format.h>
+
 namespace SR_UTILS_NS {
     class StringHashInfo;
 
@@ -90,5 +92,16 @@ namespace std {
         }
     };
 }
+
+template<> struct fmt::formatter<SR_UTILS_NS::StringAtom>
+{
+    template<typename ParseContext>
+    constexpr auto parse(ParseContext& ctx) { return ctx.begin(); }
+
+    template<typename FormatContext>
+    auto format(SR_UTILS_NS::StringAtom const& str, FormatContext& ctx) {
+        return fmt::format_to(ctx.out(), "{}", str.ToStringView());
+    }
+};
 
 #endif //SR_ENGINE_STRING_ATOM_H

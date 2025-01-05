@@ -6,6 +6,7 @@
 #define SR_COMMON_TYPE_TRAITS_H
 
 #include <Utils/Common/Hashes.h>
+#include <Utils/Common/EnumReflector.h>
 
 namespace SR_UTILS_NS {
 	struct SerializationId {
@@ -182,7 +183,7 @@ namespace SR_UTILS_NS {
 	inline constexpr bool IsTypeFromClassTemplateV = IsTypeFromClassTemplate<T, Tmpl>::value;
 
 	template<class T> struct IsSREnum {
-		static constexpr bool IsEnum() {
+		static constexpr bool IsEnumType() {
 			if constexpr (std::is_enum<T>::value) {
 				return SR_UTILS_NS::EnumTraits<T>::IsEnum;
 			}
@@ -191,11 +192,27 @@ namespace SR_UTILS_NS {
 			}
 		}
 
-		static constexpr bool value = IsSREnum::IsEnum();
+		static constexpr bool value = IsSREnum::IsEnumType();
 	};
 
 	template<class T>
 	inline constexpr bool IsSREnumV = IsSREnum<T>::value;
+
+	template<class T> struct IsEnum {
+		static constexpr bool IsEnumType() {
+			if constexpr (std::is_enum<T>::value) {
+				return true;
+			}
+			else {
+				return false;
+			}
+		}
+
+		static constexpr bool value = IsEnum::IsEnumType();
+	};
+
+	template<class T>
+	inline constexpr bool IsEnumV = IsEnum<T>::value;
 
 	template<size_t Index, class... Types>
 	using GetPromPackT = typename decltype(Details::GetFromPackResolver<Index, Types...>())::type;
@@ -299,5 +316,23 @@ namespace SR_UTILS_NS {
 
 	static constexpr bool HasSomeType = SR_UTILS_NS::HasSomeTypeV<T>;*/
 }
+
+template<typename T> struct SREnumFmt {
+	explicit SREnumFmt(T _value) : value(_value) { }
+	T value;
+
+	static_assert(SR_UTILS_NS::IsEnumV<T>, "Type must be an enum!");
+};
+
+template <typename T>
+struct fmt::formatter<SREnumFmt<T>> {
+	constexpr auto parse(format_parse_context& ctx) {
+		return ctx.begin();
+	}
+
+	auto format(const SREnumFmt<T>& val, format_context& ctx) const {
+		return fmt::format_to(ctx.out(), "{}", SR_UTILS_NS::EnumReflector::ToStringAtom(val.value).ToStringView());
+	}
+};
 
 #endif //SR_COMMON_TYPE_TRAITS_H

@@ -15,6 +15,42 @@ SR_INLINE uint64_t operator"" _atom_hash(const char* str, size_t) {
     return SR_HASH_STR_REGISTER(str);
 }
 
+namespace SR_UTILS_NS::Details {
+    class Formatter {
+    public:
+        explicit Formatter(const char* format) noexcept
+            : m_format(format)
+        { }
+
+        template <class... Args> SR_NODISCARD std::string operator()(Args... args) const noexcept {
+            return SR_FORMAT(m_format, args...);
+        }
+    private:
+        const char* m_format = nullptr;
+    };
+
+    class AtomFormatter {
+    public:
+        explicit AtomFormatter(const char* format) noexcept
+            : m_format(format)
+        { }
+
+        template <class... Args> SR_NODISCARD SR_UTILS_NS::StringAtom operator()(Args... args) const noexcept {
+            return SR_UTILS_NS::StringAtom(SR_FORMAT(m_format, args...));
+        }
+    private:
+        const char* m_format = nullptr;
+    };
+}
+
+SR_INLINE SR_UTILS_NS::Details::Formatter operator"" _format(const char* str, size_t) {
+    return SR_UTILS_NS::Details::Formatter(str);
+}
+
+SR_INLINE SR_UTILS_NS::Details::AtomFormatter operator"" _format_atom(const char* str, size_t) {
+    return SR_UTILS_NS::Details::AtomFormatter(str);
+}
+
 /// TODO: constexpr StringAtom support
 /// SR_INLINE constexpr SR_UTILS_NS::StringAtom operator"" _atom_cexpr(const char* str, size_t) {
 ///     return SR_UTILS_NS::StringAtom(str);

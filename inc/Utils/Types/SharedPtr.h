@@ -193,8 +193,14 @@ namespace SR_HTYPES_NS {
             return reinterpret_cast<U>(m_ptr);
         }
 
-        const T* Get() const { return m_ptr; }
-        T* Get() { return m_ptr; }
+        SR_NODISCARD const void* GetVoid() const { return reinterpret_cast<const void*>(m_ptr); } /// NOLINT(modernize-use-nodiscard)
+        SR_NODISCARD void* GetVoid() { return reinterpret_cast<void*>(m_ptr); } /// NOLINT(modernize-use-nodiscard)
+
+        SR_NODISCARD const T* Get() const { return m_ptr; }
+        SR_NODISCARD T* Get() { return m_ptr; }
+
+        SR_NODISCARD SR_FORCE_INLINE const T& SR_FASTCALL GetUncheckedRef() const { return *m_ptr; }
+        SR_NODISCARD SR_FORCE_INLINE T& SR_FASTCALL GetUncheckedRef() { return *m_ptr; }
 
         const SharedPtrDynamicData* GetPtrData() const { return m_data; } /// NOLINT(modernize-use-nodiscard)
         SharedPtrDynamicData* GetPtrData() { return m_data; }

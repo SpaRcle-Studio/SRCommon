@@ -16,7 +16,7 @@ namespace SR_HTYPES_NS {
 }
 
 namespace SR_GTYPES_NS {
-    class ITextComponent;
+    //class ITextComponent;
 }
 
 namespace SR_UTILS_NS::Localization {

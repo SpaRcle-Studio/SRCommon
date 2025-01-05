@@ -24,8 +24,7 @@ namespace SR_UTILS_NS {
     };
 
     class Factory : public BaseFactory {
-        using ClassPtrT = SRClass*;
-        using AllocatorT = std::function<ClassPtrT()>;
+        using AllocatorT = std::function<SRClass*()>;
         using MetaGetterT = const SRClassMeta*(*)();
         struct TypeInfo {
             AllocatorT allocator;
@@ -58,8 +57,8 @@ namespace SR_UTILS_NS {
             else if (auto&& pMeta = T::GetMetaStatic()) {
                 auto&& name = pMeta->GetFactoryName();
                 TypeInfo& info = m_types[name];
-                info.allocator = []() {
-                    return SRNew<T>();
+                info.allocator = []() -> SRClass* {
+                    return static_cast<SRClass*>(SRNew<T>());
                 };
                 info.metaGetter = T::GetMetaStatic;
                 return true;
@@ -93,7 +92,7 @@ namespace SR_UTILS_NS {
             return nullptr;
         }
 
-        SR_NODISCARD ClassPtrT CreateBase(std::string_view name) const noexcept {
+        SR_NODISCARD SRClass* CreateBase(std::string_view name) const noexcept {
             auto&& pIt = m_types.find(name);
 
             if (pIt != m_types.end()) {

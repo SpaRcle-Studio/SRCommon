@@ -48,6 +48,7 @@ namespace SR_UTILS_NS {
 
         static SR_UTILS_NS::StringAtom GetClassStaticName() noexcept;
         static const SR_UTILS_NS::SRClassMeta* GetMetaStatic() noexcept;
+        static SR_UTILS_NS::SRClass* AllocateStatic() noexcept;
         static bool RegisterPropertiesCodegen();
 
     private:

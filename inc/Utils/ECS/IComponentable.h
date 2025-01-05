@@ -52,6 +52,19 @@ namespace SR_UTILS_NS {
 
         virtual bool AddComponent(const Component::Ptr& pComponent);
 
+        template<typename T> SR_HTYPES_NS::SharedPtr<T> AddComponent() {
+            Component* pComponent = ComponentManager::Instance().CreateComponentOfName(T::COMPONENT_NAME);
+            if (!pComponent) {
+                SR_ERROR("IComponentable::AddComponent() : failed to create component of type: {}", T::COMPONENT_NAME);
+                return nullptr;
+            }
+            if (!AddComponent(pComponent)) {
+                SR_ERROR("IComponentable::AddComponent() : failed to add component of type: {}", T::COMPONENT_NAME);
+                return nullptr;
+            }
+            return pComponent->template DynamicCast<T>();
+        }
+
         virtual bool RemoveComponent(const Component::Ptr& pComponent);
         virtual bool ContainsComponent(const std::string& name);
 

@@ -17,7 +17,7 @@ def needs_update(path, export_path):
     header_name = f"{filename}{file_extension}"
     header_path = f"{export_path}/EmbedResources/{header_name}.h"
     if not os.path.exists(header_path):
-        print("ResourceEmbedder.py : header does not exist, creating a new one.")
+        print("ResourceEmbedder.py: header does not exist, creating a new one.")
         return True
 
     hash_path = f"{export_path}/EmbedResources/Hashes/{header_name}.hash"
@@ -25,13 +25,13 @@ def needs_update(path, export_path):
         current_hash = hashlib.md5(open(path, "rb").read()).hexdigest()
         previous_hash = open(hash_path, "r").read()
         if current_hash != previous_hash:
-            print(f"ResourceEmbedder.py : hashes are not equal, creating new header: '{current_hash}' != '{previous_hash}'.")
+            print(f"ResourceEmbedder.py: hashes are not equal, creating new header: '{current_hash}' != '{previous_hash}'.")
             return True
 
     return False
 
 def create_cxx(path):
-    print(f"ResourceEmbedder.py : creating cxx at '{path}'.")
+    print(f"ResourceEmbedder.py: creating cxx at '{path}'.")
     files = [f for f in os.listdir(path) if os.path.isfile(os.path.join(path, f))]
 
     if os.path.isfile(os.path.join(path, "EmbedResources.cxx")):
@@ -146,22 +146,37 @@ args = parser.parse_args()
 working_directory = args.working_directory
 
 if working_directory == "" and args.export_directory == "":
+    print("ResourceEmbedder.py: working directory and export directory are not set.")
     exit(0)
 
 resources = filter(None, args.resources.split('|'))
 cxx_needs_update = False
-for resource_path in resources:
-    resource_path = resource_path.replace("\\", "/")
-    if os.path.isdir(resource_path):
-        for filename in os.listdir(resource_path):
-            file_path = os.path.join(resource_path, filename)
-            if os.path.isfile(file_path) and needs_update(file_path, args.export_directory):
-                create_header(file_path, args.export_directory)
-                cxx_needs_update = True
-    elif needs_update(resource_path, args.export_directory):
-        create_header(resource_path, args.export_directory)
-        cxx_needs_update = True
+
+embed_resources_path = f'{args.export_directory}/EmbedResources/EmbedResources.cxx'
+if not os.path.isfile(embed_resources_path):
+    cxx_needs_update = True
+    print(f"ResourceEmbedder.py: cxx does not exist by path '{embed_resources_path}'. creating a new one.")
+
+if not cxx_needs_update:
+    for resource_path in resources:
+        resource_path = resource_path.replace("\\", "/")
+        if os.path.isdir(resource_path):
+            for filename in os.listdir(resource_path):
+                file_path = os.path.join(resource_path, filename)
+                if os.path.isfile(file_path) and needs_update(file_path, args.export_directory):
+                    create_header(file_path, args.export_directory)
+                    cxx_needs_update = True
+                    print(f"ResourceEmbedder.py: {file_path} needs update.")
+        elif needs_update(resource_path, args.export_directory):
+            create_header(resource_path, args.export_directory)
+            cxx_needs_update = True
+            print(f"ResourceEmbedder.py: {resource_path} needs update.")
 
 if cxx_needs_update:
     create_cxx(f"{args.export_directory}/EmbedResources")
+else:
+    print("ResourceEmbedder.py: no updates needed.")
+
+print("ResourceEmbedder.py: finished.")
+
 exit(0)

@@ -36,7 +36,7 @@ namespace SR_HTYPES_NS {
     };
 
     class SR_DLL_EXPORT RawMesh : public IResource {
-        using ScenePtr = SR_HTYPES_NS::SafePtr<SR_WORLD_NS::Scene>;
+        using ScenePtr = SR_HTYPES_NS::SharedPtr<SR_WORLD_NS::Scene>;
         using Ptr = RawMesh*;
         using Hash = uint64_t;
     private:
