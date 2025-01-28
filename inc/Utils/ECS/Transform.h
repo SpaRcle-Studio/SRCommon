@@ -34,7 +34,7 @@ namespace SR_UTILS_NS {
     class SR_DLL_EXPORT Transform : public Serializable, public SR_HTYPES_NS::SharedPtr<Transform> {
         SR_CLASS();
         friend class GameObject;
-        SR_INLINE static const uint16_t VERSION = 1001;
+        SR_INLINE static const uint16_t VERSION = 1002;
         using Super = Serializable;
     public:
         using Ptr = SR_HTYPES_NS::SharedPtr<Transform>;

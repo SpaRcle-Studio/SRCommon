@@ -28,11 +28,19 @@ namespace SR_MATH_NS {
             y = 0;
             z = 0;
         }
+
         template<typename U> constexpr SR_FORCE_INLINE explicit Vector3(const Vector3<U>& vec) {
             x = static_cast<T>(vec.x);
             y = static_cast<T>(vec.y);
             z = static_cast<T>(vec.z);
         }
+
+        template<typename U> constexpr SR_FORCE_INLINE explicit Vector3(const Vector2<U>& vec, U value) {
+            x = static_cast<T>(vec.x);
+            y = static_cast<T>(vec.y);
+            z = static_cast<T>(value);
+        }
+
         SR_FORCE_INLINE constexpr explicit Vector3(const float* vec) {
             x = (Unit)vec[0];
             y = (Unit)vec[1];
@@ -359,7 +367,7 @@ namespace SR_MATH_NS {
             return Vector3(-x, -y, -z);
         }
 
-        SR_NODISCARD Vector3 SR_FASTCALL InverseAxis(AxisFlag axis) const {
+        SR_NODISCARD Vector3 SR_FASTCALL InverseAxis(Axis axis) const {
             Vector3 v = *this;
 
             switch (axis) {
@@ -408,7 +416,7 @@ namespace SR_MATH_NS {
             return v;
         }
 
-        SR_NODISCARD Vector3 ZeroAxis(AxisFlag axis) const {
+        SR_NODISCARD Vector3 ZeroAxis(Axis axis) const {
             Vector3 v = *this;
 
             switch (axis) {

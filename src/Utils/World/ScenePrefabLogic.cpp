@@ -40,7 +40,7 @@ namespace SR_WORLD_NS {
 
         uint16_t childrenNum = 0;
         for (auto&& pObject : root) {
-            if (pObject->HasSerializationFlags(ObjectSerializationFlags::DontSave)) {
+            if (pObject->HasSerializationFlags(SerializationFlags::DontSave)) {
                 continue;
             }
             ++childrenNum;
@@ -49,7 +49,7 @@ namespace SR_WORLD_NS {
         pMarshal->Write(static_cast<uint16_t>(childrenNum));
 
         for (auto&& pObject : root) {
-            if (pObject->HasSerializationFlags(ObjectSerializationFlags::DontSave)) {
+            if (pObject->HasSerializationFlags(SerializationFlags::DontSave)) {
                 continue;
             }
 

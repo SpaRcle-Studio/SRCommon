@@ -29,8 +29,8 @@ namespace SR_UTILS_NS {
         using IdentifierPtr = void*;
         using ContextMap = std::map<IdentifierPtr, TracyContextPtr>;
     public:
-        TracyContextPtr& GetContext(TracyTypeFlag type, IdentifierPtr pIdentifier) {
-            if (type >= TracyType::TracyTypeTMAX - 1) {
+        TracyContextPtr& GetContext(TracyType type, IdentifierPtr pIdentifier) {
+            if (type >= TracyType::TracyTypeMAX - 1) {
                 SRHalt0();
                 static TracyContextPtr pNull = nullptr;
                 return pNull;
@@ -39,17 +39,17 @@ namespace SR_UTILS_NS {
             return m_contexts[type][pIdentifier];
         }
 
-        void Destroy(TracyTypeFlag type);
+        void Destroy(TracyType type);
 
     #ifdef SR_USE_VULKAN
         std::function<void(void*)> VulkanDestroy;
     #endif
 
     private:
-        void Destroy(TracyContextPtr pContext, TracyTypeFlag type);
+        void Destroy(TracyContextPtr pContext, TracyType type);
 
     private:
-        std::array<ContextMap, TracyType::TracyTypeTMAX - 1> m_contexts;
+        std::array<ContextMap, TracyType::TracyTypeMAX - 1> m_contexts;
 
     };
 }

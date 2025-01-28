@@ -21,10 +21,6 @@
     SR_NODISCARD uint16_t GetPropertyVersion() const noexcept override { return VESION; }                               \
 
 namespace SR_UTILS_NS {
-    SR_ENUM_NS_CLASS_T(PropertyPublicity, uint8_t,
-        ReadOnly, Private, Public
-    );
-
     class Property : public SR_UTILS_NS::NonCopyable {
     public:
         using Base = Property;

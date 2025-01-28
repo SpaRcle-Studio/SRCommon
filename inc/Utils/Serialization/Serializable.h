@@ -35,14 +35,8 @@ namespace SR_UTILS_NS {
         None = 1 << 0,
         Compress = 1 << 1,
         Editor = 1 << 2,
-        NoUID = 1 << 3
-    )
-
-    /// Флаги самого сериализируемого объекта
-    SR_ENUM_NS_STRUCT_T(ObjectSerializationFlags, uint64_t,
-        None = 1 << 0,
-        DontSave = 1 << 1,
-        DontSaveRecursive = 1 << 2
+        NoUID = 1 << 3,
+        DontSave = 1 << 4
     )
 
     class Serializable : public SRClass {
@@ -58,15 +52,15 @@ namespace SR_UTILS_NS {
 
         virtual void OnPostLoaded() { }
 
-        void AddSerializationFlags(SerializationFlagsFlag flags) noexcept { m_flags |= flags; }
-        void RemoveSerializationFlags(SerializationFlagsFlag flags) noexcept { m_flags &= ~flags; }
+        void AddSerializationFlags(SerializationFlags flags) noexcept { m_flags |= flags; }
+        void RemoveSerializationFlags(SerializationFlags flags) noexcept { m_flags &= ~flags; }
 
-        SR_NODISCARD bool HasSerializationFlags(SerializationFlagsFlag flags) const noexcept;
+        SR_NODISCARD bool HasSerializationFlags(SerializationFlags flags) const noexcept;
 
         SR_DEPRECATED SR_NODISCARD virtual SR_HTYPES_NS::Marshal::Ptr SaveLegacy(SavableContext data) const;
 
     private:
-        SerializationFlagsFlag m_flags = SerializationFlags::None;
+        SerializationFlags m_flags = SerializationFlags::None;
 
     };
 }

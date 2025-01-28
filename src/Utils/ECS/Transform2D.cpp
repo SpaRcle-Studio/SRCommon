@@ -7,7 +7,9 @@
 namespace SR_UTILS_NS {
     Transform2D::Transform2D()
         : Transform()
-    { }
+    {
+        m_modifiers.reserve(8);
+    }
 
     void Transform2D::SetTranslation(const SR_MATH_NS::FVector3& translation) {
         if (translation == m_translation) {
@@ -90,17 +92,74 @@ namespace SR_UTILS_NS {
     }
 
     void Transform2D::UpdateMatrix() const {
-        auto&& scale = CalculateStretch();
-        auto&& translation = CalculateAnchor(m_translation, scale);
+        const SR_MATH_NS::FVector2 size = GetSize();
 
         m_localMatrix = SR_MATH_NS::Matrix4x4(
-            translation,
+            m_translation,
             SR_MATH_NS::Quaternion::Identity(),
-            m_scale * scale,
+            SR_MATH_NS::FVector3(size, 1.f),
             m_skew
         ) * SR_MATH_NS::Matrix4x4::FromQuaternion(m_quaternion);
 
         Transform::UpdateMatrix();
+    }
+
+    void Transform2D::BuildUITree() {
+        SR_TRACY_ZONE;
+
+        UI::UIModifierContext context;
+
+        for (const UI::UIModifierComponent* pModifier : m_modifiers) {
+            pModifier->Prepare(context);
+        }
+
+        if (m_gameObject) {
+            for (auto&& pChild : m_gameObject->GetChildrenRef()) {
+                if (pChild->GetSceneObjectType() != SceneObjectType::GameObject) {
+                    continue;
+                }
+
+                auto&& pGameObject = pChild.StaticCast<GameObject>();
+                if (pGameObject->GetTransform()->GetMeasurement() != Measurement::Space2D) {
+                    continue;
+                }
+
+                auto&& pTransform2D = static_cast<Transform2D*>(pGameObject->GetTransform());
+
+                pTransform2D->BuildUITree();
+
+                context.childTranslation = pTransform2D->GetTranslation();
+                context.childSize = pTransform2D->GetSize();
+
+                for (const UI::UIModifierComponent* pModifier : m_modifiers) {
+                    pModifier->ApplyChild(context);
+                }
+            }
+        }
+
+        for (const UI::UIModifierComponent* pModifier : m_modifiers) {
+            pModifier->PostProcess(context);
+        }
+
+        m_translation = SR_MATH_NS::FVector3(context.position, context.zOrder);
+        m_contentSize = context.contentSize;
+
+        UpdateTree();
+    }
+
+    SR_MATH_NS::FVector2 Transform2D::GetSize() const {
+        SR_TRACY_ZONE;
+
+        if (m_contentSize.HasPercent()) {
+            if (auto&& pParent = GetParentTransform()) {
+                 if (pParent->GetMeasurement() == Measurement::Space2D) {
+                     const Transform2D* pParentTransform = static_cast<Transform2D*>(pParent);
+                     return m_contentSize.ToPixels(pParentTransform->GetSize());
+                 }
+            }
+        }
+
+        return m_contentSize.ToPixels();
     }
 
     void Transform2D::SetGlobalTranslation(const SR_MATH_NS::FVector3& translation) {
@@ -140,33 +199,10 @@ namespace SR_UTILS_NS {
         }
     }
 
-    void Transform2D::SetAnchor(Anchor anchorType) {
-        m_anchor = anchorType;
-        UpdateTree();
-    }
-
-    void Transform2D::SetStretch(Stretch stretch) {
-        m_stretch = stretch;
-        UpdateTree();
-    }
-
-    void Transform2D::SetPositionMode(PositionMode positionMode) {
-        m_positionMode = positionMode;
-        UpdateTree();
-    }
-
-    void Transform2D::SetFixedSize(FixedSize fixedSize) {
-        m_fixedSize = fixedSize;
-        UpdateTree();
-    }
-
     Transform::Ptr Transform2D::Copy() const {
         auto&& pTransform = new Transform2D();
 
-        pTransform->m_anchor = m_anchor;
         pTransform->m_priority = m_priority;
-        pTransform->m_stretch = m_stretch;
-        pTransform->m_positionMode = m_positionMode;
         pTransform->m_localPriority = m_localPriority;
         pTransform->m_relativePriority = m_relativePriority;
 
@@ -177,159 +213,6 @@ namespace SR_UTILS_NS {
         pTransform->m_skew = m_skew;
 
         return pTransform;
-    }
-
-    SR_MATH_NS::FVector3 Transform2D::CalculateStretch() const {
-        auto&& pParent = dynamic_cast<Transform2D*>(GetParentTransform());
-        if (!pParent) {
-            return SR_MATH_NS::FVector3::One();
-        }
-
-        auto&& aspect = pParent->GetScale().XY().Aspect();
-        if (SR_EQUALS(aspect, 0.f)) {
-            return SR_MATH_NS::FVector3::One();
-        }
-
-        auto scale = SR_MATH_NS::FVector3::One();
-
-        auto&& fitWidth = [&]() {
-            scale.x *= 1.f / aspect;
-        };
-
-        auto&& fitHeight = [&]() {
-            scale.y *= aspect;
-        };
-
-        //if (GetGameObject()->GetName() == "Top") {
-        ////if (m_fixedSize != FixedSize::None) {
-        //    auto&& matrix = pParent->GetMatrix();
-        //    auto&& parentScale = matrix.GetScale();
-        //    scale /= parentScale;
-        //}
-
-        /// Компенсация растяжения родительской ноды
-        switch (m_stretch) {
-            case Stretch::SavePosition:
-                break;
-            case Stretch::ChangeAspect:
-                break;
-            case Stretch::WidthControlsHeight:
-                fitWidth();
-                break;
-            case Stretch::HeightControlsWidth:
-                fitHeight();
-                break;
-            case Stretch::ShowAll: {
-                if (aspect > 1.f) {
-                    fitWidth();
-                }
-                else {
-                    fitHeight();
-                }
-                break;
-            }
-            case Stretch::NoBorder: {
-                if (aspect > 1.f) {
-                    fitHeight();
-                }
-                else {
-                    fitWidth();
-                }
-                break;
-            }
-            default:
-                break;
-        }
-
-        return scale;
-    }
-
-    SR_MATH_NS::FVector3 Transform2D::CalculateAnchor(const SR_MATH_NS::FVector3& position, const SR_MATH_NS::FVector3& scale) const {
-        auto&& pParent = dynamic_cast<Transform2D*>(GetParentTransform());
-        if (!pParent) {
-            return SR_MATH_NS::FVector3();
-        }
-
-        const auto parentScale = pParent->GetScale();
-
-        SR_MATH_NS::FVector3 stretchHorizontal;
-        SR_MATH_NS::FVector3 stretchVertical;
-
-        if (m_stretch == Stretch::ShowAll) {
-            if (scale.XY().Aspect() > 1.f) {
-                stretchHorizontal = SR_MATH_NS::FVector3(1.f, 1.f, 1.f);
-                stretchVertical = SR_MATH_NS::FVector3(scale.y, scale.x, 1.f);
-            }
-            else {
-                stretchHorizontal = SR_MATH_NS::FVector3(scale.y, scale.x, 1.f);
-                stretchVertical = SR_MATH_NS::FVector3(1.f, 1.f, 1.f);
-            }
-        }
-        else if (m_stretch == Stretch::WidthControlsHeight) {
-            stretchHorizontal = parentScale;
-            stretchVertical = SR_MATH_NS::FVector3(1.f);
-        }
-        else if (m_stretch == Stretch::ChangeAspect || m_stretch == Stretch::SavePosition) {
-            stretchVertical = stretchHorizontal = SR_MATH_NS::FVector3(1.f);
-        }
-        else if (m_stretch == Stretch::HeightControlsWidth) {
-            stretchHorizontal = SR_MATH_NS::FVector3(1.f);
-            stretchVertical = SR_MATH_NS::FVector3(scale.y, scale.x, 1.f);
-        }
-        else if (m_stretch == Stretch::NoBorder) {
-            if (scale.XY().Aspect() > 1.f) {
-                stretchHorizontal = parentScale;
-                stretchVertical = SR_MATH_NS::FVector3(1.f);
-            }
-            else {
-                stretchHorizontal = SR_MATH_NS::FVector3(1.f);
-                stretchVertical = parentScale;
-            }
-        }
-
-        const auto horizontalAspect = SR_MATH_NS::FVector2(stretchHorizontal.XY()).Aspect();
-        auto horizontalAnchor = (horizontalAspect - 1.f) * (1.f / horizontalAspect);
-        horizontalAnchor += (1.f - m_scale.x) * (1.f / horizontalAspect);
-
-        const auto verticalAspect = SR_MATH_NS::FVector2(stretchVertical.XY()).AspectInv();
-        auto verticalAnchor = (verticalAspect - 1.f) * (1.f / verticalAspect);
-        verticalAnchor += (1.f - m_scale.y) * (1.f / verticalAspect);
-
-        auto&& positionMode = CalculatePositionMode();
-        const SR_MATH_NS::FVector3 translation = SR_MATH_NS::FVector3(
-            position.x * (positionMode.x ? m_scale.x : 1.f) * (1.f / horizontalAspect),
-            position.y * (positionMode.y ? m_scale.y : 1.f) * (1.f / verticalAspect),
-            0.f
-        );
-
-        switch (m_anchor) {
-            case Anchor::None:
-            case Anchor::MiddleCenter:
-                return translation;
-
-            case Anchor::MiddleLeft:
-                return translation + SR_MATH_NS::FVector3(-horizontalAnchor, 0.f, 0.f);
-            case Anchor::MiddleRight:
-                return translation + SR_MATH_NS::FVector3(horizontalAnchor, 0.f, 0.f);
-
-            case Anchor::TopCenter:
-                return translation + SR_MATH_NS::FVector3(0.f, verticalAnchor, 0.f);
-            case Anchor::BottomCenter:
-                return translation + SR_MATH_NS::FVector3(0.f, -verticalAnchor, 0.f);
-
-            case Anchor::TopLeft:
-                return translation + SR_MATH_NS::FVector3(-horizontalAnchor, verticalAnchor, 0.f);
-            case Anchor::TopRight:
-                return translation + SR_MATH_NS::FVector3(horizontalAnchor, verticalAnchor, 0.f);
-
-            case Anchor::BottomLeft:
-                return translation + SR_MATH_NS::FVector3(-horizontalAnchor, -verticalAnchor, 0.f);
-            case Anchor::BottomRight:
-                return translation + SR_MATH_NS::FVector3(horizontalAnchor, -verticalAnchor, 0.f);
-
-            default:
-                return SR_MATH_NS::FVector3();
-        }
     }
 
     int32_t Transform2D::GetPriority() { /// NOLINT
@@ -393,10 +276,21 @@ namespace SR_UTILS_NS {
         Transform::OnHierarchyChanged();
     }
 
-    SR_MATH_NS::BVector2 Transform2D::CalculatePositionMode() const noexcept {
-        return SR_MATH_NS::BVector2(
-            m_positionMode == PositionMode::ProportionalXY || m_positionMode == PositionMode::ProportionalX,
-            m_positionMode == PositionMode::ProportionalXY || m_positionMode == PositionMode::ProportionalY
-        );
+    void Transform2D::RemoveModifier(UI::UIModifierComponent* pModifier) {
+        /// erase element witout memory reallocation
+        std::erase(m_modifiers, pModifier);
+    }
+
+    void Transform2D::OnUITreeChanged() {
+        SR_TRACY_ZONE;
+
+        if (auto&& pParent = GetParentTransform()) SR_LIKELY_ATTRIBUTE {
+            if (pParent->GetMeasurement() == Measurement::Space2D) SR_LIKELY_ATTRIBUTE {
+                static_cast<Transform2D*>(pParent)->OnUITreeChanged();
+                return;
+            }
+        }
+
+        BuildUITree();
     }
 }

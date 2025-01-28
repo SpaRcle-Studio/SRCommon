@@ -193,9 +193,6 @@ namespace SR_HTYPES_NS {
             return reinterpret_cast<U>(m_ptr);
         }
 
-        SR_NODISCARD const void* GetVoid() const { return reinterpret_cast<const void*>(m_ptr); } /// NOLINT(modernize-use-nodiscard)
-        SR_NODISCARD void* GetVoid() { return reinterpret_cast<void*>(m_ptr); } /// NOLINT(modernize-use-nodiscard)
-
         SR_NODISCARD const T* Get() const { return m_ptr; }
         SR_NODISCARD T* Get() { return m_ptr; }
 
@@ -205,8 +202,8 @@ namespace SR_HTYPES_NS {
         const SharedPtrDynamicData* GetPtrData() const { return m_data; } /// NOLINT(modernize-use-nodiscard)
         SharedPtrDynamicData* GetPtrData() { return m_data; }
 
-        const void* GetRawPtr() const { return reinterpret_cast<const void*>(m_ptr); } /// NOLINT(modernize-use-nodiscard)
-        void* GetRawPtr() { return reinterpret_cast<void*>(m_ptr); }
+        SR_NODISCARD const void* GetRawPtr() const { return reinterpret_cast<const void*>(m_ptr); } /// NOLINT(modernize-use-nodiscard)
+        SR_NODISCARD void* GetRawPtr() { return reinterpret_cast<void*>(m_ptr); }
 
         SR_NODISCARD SharedPtr<T> GetThis() const {
             return *this;
@@ -248,7 +245,7 @@ namespace SR_HTYPES_NS {
                 m_ptr = ptr;
             }
             else {
-                SR_SAFE_PTR_ASSERT(false, "Class was inherit, but not initialized!");
+                SR_SAFE_PTR_ASSERT(false, "Class was inherit, but not initialized! Or called wrong constructor with policy!");
             }
         }
         else {

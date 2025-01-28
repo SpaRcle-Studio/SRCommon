@@ -9,6 +9,8 @@
 #include <Utils/Serialization/Serializer.h>
 #include <Utils/Serialization/Deserializer.h>
 
+#include <Utils/Reflection/Property.h>
+
 namespace SR_UTILS_NS {
     class Serializable;
 
@@ -22,6 +24,7 @@ namespace SR_UTILS_NS {
         SR_NODISCARD virtual bool IsAbstract() const noexcept { return false; }
         SR_NODISCARD virtual bool IsEditorOnly() const noexcept { return false; }
         SR_NODISCARD virtual std::span<const SRClassMeta*> GetBaseMetas() const noexcept { return {}; }
+        SR_NODISCARD virtual std::span<const SR_UTILS_NS::Reflection::Property> GetProperties() const noexcept { return {}; }
         SR_NODISCARD virtual std::string_view GetFactoryName() const noexcept { return {}; }
         SR_NODISCARD virtual SRClass* Allocate() const noexcept { return nullptr; }
     };

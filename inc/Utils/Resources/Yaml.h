@@ -5,47 +5,53 @@
 #ifndef SR_COMMON_YAML_H
 #define SR_COMMON_YAML_H
 
-#include <rapidyaml/src/ryml.hpp>
+#include <Utils/Common/NonCopyable.h>
 
 namespace SR_UTILS_NS::Yaml {
     class SR_DLL_EXPORT Node {
         friend class Document;
 
     public:
-        Node();
-        explicit Node(ryml::ConstNodeRef node);
+        Node() = default;
+
+        explicit Node(void const* pTreeImpl, const size_t id)
+            : m_treeImpl(pTreeImpl)
+            , m_id(id)
+        { }
 
     public:
-        static Node Empty() { return { }; }
+        static Node Empty() { return Node(); }
 
         explicit operator bool() const { return IsValid(); }
-        SR_NODISCARD bool IsValid() const { return m_isValid; }
+        SR_NODISCARD bool IsValid() const { return m_treeImpl && m_id != -1; }
 
         SR_NODISCARD std::string Name() const;
         SR_NODISCARD std::string_view NameView() const;
 
         SR_NODISCARD std::string GetValue() const;
+        SR_NODISCARD std::string_view GetValueView() const;
         SR_NODISCARD std::string GetKey() const;
+        SR_NODISCARD std::string_view GetKeyView() const;
         SR_NODISCARD std::vector<Node> GetChildren() const;
-        SR_NODISCARD uint16_t GetId() const { return m_node.m_id; }
+        SR_NODISCARD uint16_t GetId() const;
         SR_NODISCARD Node GetChild(const std::string& name) const;
 
     private:
-        ryml::ConstNodeRef m_node;
-        bool m_isValid = false;
+        void const* m_treeImpl = nullptr;
+        size_t m_id = -1;
     };
 
     class SR_DLL_EXPORT Document final : public NonCopyable {
     public:
-        Document();
+        Document() = default;
+        ~Document() override;
 
         Document(Document&& document) noexcept;
         Document& operator=(Document&& document) noexcept;
         explicit operator bool() const { return IsValid(); }
 
     public:
-        static Document Empty() { return { }; }
-
+        static Document Empty();
         static Document New();
         static Document Load(const SR_UTILS_NS::Path &path);
 
@@ -56,13 +62,11 @@ namespace SR_UTILS_NS::Yaml {
         SR_NODISCARD std::string Dump() const;
 
         SR_NODISCARD Node GetRoot() const;
-        SR_NODISCARD bool IsValid() const { return m_isValid; }
+        SR_NODISCARD bool IsValid() const { return m_pImpl; }
 
     private:
-        ryml::Tree m_tree;
+        void* m_pImpl = nullptr;
         SR_UTILS_NS::Path m_path;
-
-        bool m_isValid;
     };
 }
 

@@ -244,7 +244,7 @@ namespace SR_WORLD_NS {
         return pMarshal;
     }
 
-    SR_MATH_NS::FVector3 Chunk::GetWorldPosition(SR_MATH_NS::AxisFlag center) const {
+    SR_MATH_NS::FVector3 Chunk::GetWorldPosition(SR_MATH_NS::Axis center) const {
         auto fPos = SR_UTILS_NS::World::AddOffset(
                 ((m_region->GetWorldPosition()) + (m_position - SR_MATH_NS::FVector3(1, 1, 1))).Cast<SR_MATH_NS::Unit>(),
                 m_observer->m_offset.m_chunk.Cast<SR_MATH_NS::Unit>()

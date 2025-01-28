@@ -7,7 +7,7 @@
 #ifdef SR_TRACY_ENABLE
 
 namespace SR_UTILS_NS {
-    void TracyContextManager::Destroy(TracyTypeFlag type) {
+    void TracyContextManager::Destroy(TracyType type) {
         if (type == TracyType::All) {
             for (auto&& contextMap : m_contexts) {
                 for (auto&& [pIdentifier, pContext] : contextMap) {
@@ -24,7 +24,7 @@ namespace SR_UTILS_NS {
         m_contexts[type].clear();
     }
 
-    void TracyContextManager::Destroy(TracyContextPtr pContext, TracyTypeFlag type) {
+    void TracyContextManager::Destroy(TracyContextPtr pContext, TracyType type) {
         if (!pContext) {
             return;
         }

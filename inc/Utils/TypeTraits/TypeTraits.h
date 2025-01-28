@@ -317,22 +317,4 @@ namespace SR_UTILS_NS {
 	static constexpr bool HasSomeType = SR_UTILS_NS::HasSomeTypeV<T>;*/
 }
 
-template<typename T> struct SREnumFmt {
-	explicit SREnumFmt(T _value) : value(_value) { }
-	T value;
-
-	static_assert(SR_UTILS_NS::IsEnumV<T>, "Type must be an enum!");
-};
-
-template <typename T>
-struct fmt::formatter<SREnumFmt<T>> {
-	constexpr auto parse(format_parse_context& ctx) {
-		return ctx.begin();
-	}
-
-	auto format(const SREnumFmt<T>& val, format_context& ctx) const {
-		return fmt::format_to(ctx.out(), "{}", SR_UTILS_NS::EnumReflector::ToStringAtom(val.value).ToStringView());
-	}
-};
-
 #endif //SR_COMMON_TYPE_TRAITS_H

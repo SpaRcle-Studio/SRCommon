@@ -9,6 +9,10 @@
 #include <Utils/Serialization/Deserializer.h>
 #include <Utils/TypeTraits/Factory.h>
 #include <Utils/Types/SharedPtr.h>
+#include <Utils/Math/Size.h>
+#include <Utils/Common/StringAtomLiterals.h>
+
+#include <Codegen/Enums.generated.hpp>
 
 namespace SR_UTILS_NS {
 	class Serializable;

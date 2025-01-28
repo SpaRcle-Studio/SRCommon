@@ -7,6 +7,7 @@
 
 #include <Utils/Common/Enumerations.h>
 #include <Utils/Common/AnyVisitor.h>
+#include <Utils/Math/Size.h>
 #include <Utils/Math/Vector2.h>
 #include <Utils/Math/Vector3.h>
 #include <Utils/Math/Vector4.h>
@@ -32,10 +33,16 @@ namespace SR_UTILS_NS {
         StringAtom,
         UnicodeString,
 
+        Array, Map, Set,
+
         Enum,
         Class,
 
         Path,
+
+        FSize, FSize2,
+        ISize, ISize2,
+        USize, USize2,
 
         FVector2, FVector3, FVector4, FVector5, FVector6,
         IVector2, IVector3, IVector4, IVector5, IVector6,
@@ -82,83 +89,112 @@ namespace SR_UTILS_NS {
     }
 
     template<typename T> constexpr StandardType GetStandardType() {
-        if constexpr (std::is_same<T, bool>()) {
+        using Type = SR_UTILS_NS::RemoveQualifiersT<T>;
+
+        if constexpr (std::is_same<Type, bool>()) {
             return StandardType::Bool;
         }
-        else if constexpr (std::is_same<T, int8_t>() || std::is_same<T, char>()) {
+        else if constexpr (std::is_same<Type, int8_t>() || std::is_same<Type, char>()) {
             return StandardType::Int8;
         }
-        else if constexpr (std::is_same<T, uint8_t>() || std::is_same<T, unsigned char>()) {
+        else if constexpr (std::is_same<Type, uint8_t>() || std::is_same<Type, unsigned char>()) {
             return StandardType::UInt8;
         }
-        else if constexpr (std::is_same<T, int16_t>() || std::is_same<T, short>()) {
+        else if constexpr (std::is_same<Type, int16_t>() || std::is_same<Type, short>()) {
             return StandardType::Int16;
         }
-        else if constexpr (std::is_same<T, uint16_t>() || std::is_same<T, unsigned short>()) {
+        else if constexpr (std::is_same<Type, uint16_t>() || std::is_same<Type, unsigned short>()) {
             return StandardType::UInt16;
         }
-        else if constexpr (std::is_same<T, int32_t>() || std::is_same<T, int>()) {
+        else if constexpr (std::is_same<Type, int32_t>() || std::is_same<Type, int>()) {
             return StandardType::Int32;
         }
-        else if constexpr (std::is_same<T, uint32_t>() || std::is_same<T, unsigned int>()) {
+        else if constexpr (std::is_same<Type, uint32_t>() || std::is_same<Type, unsigned int>()) {
             return StandardType::UInt32;
         }
-        else if constexpr (std::is_same<T, int64_t>() || std::is_same<T, long long>()) {
+        else if constexpr (std::is_same<Type, int64_t>() || std::is_same<Type, long long>()) {
             return StandardType::Int64;
         }
-        else if constexpr (std::is_same<T, uint64_t>() || std::is_same<T, unsigned long long>()) {
+        else if constexpr (std::is_same<Type, uint64_t>() || std::is_same<Type, unsigned long long>()) {
             return StandardType::UInt64;
         }
-        else if constexpr (std::is_same<T, float_t>() || std::is_same<T, float>()) {
+        else if constexpr (std::is_same<Type, float_t>() || std::is_same<Type, float>()) {
             return StandardType::Float;
         }
-        else if constexpr (std::is_same<T, double_t>() || std::is_same<T, double>()) {
+        else if constexpr (std::is_same<Type, double_t>() || std::is_same<Type, double>()) {
             return StandardType::Double;
         }
-        else if constexpr (std::is_same<T, std::string>() || std::is_same<T, const char*>()) {
+        else if constexpr (std::is_same<Type, std::string>() || std::is_same<Type, const char*>()) {
             return StandardType::String;
         }
-        else if constexpr (std::is_same<T, SR_HTYPES_NS::UnicodeString>()) {
+        else if constexpr (std::is_same<Type, SR_UTILS_NS::StringAtom>()) {
+            return StandardType::StringAtom;
+        }
+        else if constexpr (std::is_same<Type, SR_HTYPES_NS::UnicodeString>()) {
             return StandardType::UnicodeString;
         }
-        else if constexpr (std::is_same<T, SR_MATH_NS::FVector2>() || std::is_same<T, SR_MATH_NS::Vector2<float>>() || std::is_same<T, SR_MATH_NS::Vector2<float_t>>()) {
+        else if constexpr (std::is_same<Type, SR_MATH_NS::FVector2>() || std::is_same<Type, SR_MATH_NS::Vector2<float>>() || std::is_same<Type, SR_MATH_NS::Vector2<float_t>>()) {
             return StandardType::FVector2;
         }
-        else if constexpr (std::is_same<T, SR_MATH_NS::UVector2>() || std::is_same<T, SR_MATH_NS::Vector2<uint32_t>>() || std::is_same<T, SR_MATH_NS::Vector2<unsigned int>>()) {
+        else if constexpr (std::is_same<Type, SR_MATH_NS::UVector2>() || std::is_same<Type, SR_MATH_NS::Vector2<uint32_t>>() || std::is_same<Type, SR_MATH_NS::Vector2<unsigned int>>()) {
             return StandardType::UVector2;
         }
-        else if constexpr (std::is_same<T, SR_MATH_NS::FVector3>() || std::is_same<T, SR_MATH_NS::Vector3<float>>() || std::is_same<T, SR_MATH_NS::Vector3<float_t>>()) {
+        else if constexpr (std::is_same<Type, SR_MATH_NS::FVector3>() || std::is_same<Type, SR_MATH_NS::Vector3<float>>() || std::is_same<Type, SR_MATH_NS::Vector3<float_t>>()) {
             return StandardType::FVector3;
         }
-        else if constexpr (std::is_same<T, SR_MATH_NS::FVector4>() || std::is_same<T, SR_MATH_NS::Vector4<float>>() || std::is_same<T, SR_MATH_NS::Vector4<float_t>>()) {
+        else if constexpr (std::is_same<Type, SR_MATH_NS::FVector4>() || std::is_same<Type, SR_MATH_NS::Vector4<float>>() || std::is_same<Type, SR_MATH_NS::Vector4<float_t>>()) {
             return StandardType::FVector4;
         }
-        else if constexpr (std::is_same<T, SR_MATH_NS::FVector6>() || std::is_same<T, SR_MATH_NS::Vector6<float>>() || std::is_same<T, SR_MATH_NS::Vector6<float_t>>()) {
+        else if constexpr (std::is_same<Type, SR_MATH_NS::FVector6>() || std::is_same<Type, SR_MATH_NS::Vector6<float>>() || std::is_same<Type, SR_MATH_NS::Vector6<float_t>>()) {
             return StandardType::FVector6;
         }
-        else if constexpr (std::is_same<T, SR_MATH_NS::BVector3>() || std::is_same<T, SR_MATH_NS::Vector3<bool>>()) {
+        else if constexpr (std::is_same<Type, SR_MATH_NS::BVector3>() || std::is_same<Type, SR_MATH_NS::Vector3<bool>>()) {
             return StandardType::BVector3;
         }
-        else if constexpr (std::is_same<T, SR_MATH_NS::IVector2>() || std::is_same<T, SR_MATH_NS::Vector2<int>>()|| std::is_same<T, SR_MATH_NS::Vector2<int32_t>>()) {
+        else if constexpr (std::is_same<Type, SR_MATH_NS::BVector4>() || std::is_same<Type, SR_MATH_NS::Vector4<bool>>()) {
+            return StandardType::BVector4;
+        }
+        else if constexpr (std::is_same<Type, SR_MATH_NS::IVector2>() || std::is_same<Type, SR_MATH_NS::Vector2<int>>()|| std::is_same<Type, SR_MATH_NS::Vector2<int32_t>>()) {
             return StandardType::IVector2;
         }
-        else if constexpr (std::is_same<T, SR_MATH_NS::IVector3>() || std::is_same<T, SR_MATH_NS::Vector3<int>>()|| std::is_same<T, SR_MATH_NS::Vector3<int32_t>>()) {
+        else if constexpr (std::is_same<Type, SR_MATH_NS::IVector3>() || std::is_same<Type, SR_MATH_NS::Vector3<int>>()|| std::is_same<Type, SR_MATH_NS::Vector3<int32_t>>()) {
             return StandardType::IVector3;
         }
-        else if constexpr (std::is_same<T, SR_MATH_NS::IVector4>() || std::is_same<T, SR_MATH_NS::Vector4<int>>()|| std::is_same<T, SR_MATH_NS::Vector4<int32_t>>()) {
+        else if constexpr (std::is_same<Type, SR_MATH_NS::IVector4>() || std::is_same<Type, SR_MATH_NS::Vector4<int>>()|| std::is_same<Type, SR_MATH_NS::Vector4<int32_t>>()) {
             return StandardType::IVector4;
         }
-        else if constexpr (std::is_same<T, SR_MATH_NS::IVector6>() || std::is_same<T, SR_MATH_NS::Vector6<int>>()|| std::is_same<T, SR_MATH_NS::Vector6<int32_t>>()) {
+        else if constexpr (std::is_same<Type, SR_MATH_NS::IVector6>() || std::is_same<Type, SR_MATH_NS::Vector6<int>>()|| std::is_same<Type, SR_MATH_NS::Vector6<int32_t>>()) {
             return StandardType::IVector6;
         }
-        else if constexpr (std::is_class_v<T>) {
+        /// Size types
+        else if constexpr (std::is_same<Type, SR_MATH_NS::ISize>() || std::is_same<Type, SR_MATH_NS::Size<int>>() || std::is_same<Type, SR_MATH_NS::Size<int32_t>>()) {
+            return StandardType::ISize;
+        }
+        else if constexpr (std::is_same<Type, SR_MATH_NS::ISize2>() || std::is_same<Type, SR_MATH_NS::Size2<int>>() || std::is_same<Type, SR_MATH_NS::Size2<int32_t>>()) {
+            return StandardType::ISize2;
+        }
+        else if constexpr (std::is_same<Type, SR_MATH_NS::USize>() || std::is_same<Type, SR_MATH_NS::Size<uint32_t>>() || std::is_same<Type, SR_MATH_NS::Size<unsigned int>>()) {
+            return StandardType::USize;
+        }
+        else if constexpr (std::is_same<Type, SR_MATH_NS::USize2>() || std::is_same<Type, SR_MATH_NS::Size2<uint32_t>>() || std::is_same<Type, SR_MATH_NS::Size2<unsigned int>>()) {
+            return StandardType::USize2;
+        }
+        else if constexpr (std::is_same<Type, SR_MATH_NS::FSize>() || std::is_same<Type, SR_MATH_NS::Size<float_t>>() || std::is_same<Type, SR_MATH_NS::Size<float>>()) {
+            return StandardType::FSize;
+        }
+        else if constexpr (std::is_same<Type, SR_MATH_NS::FSize2>() || std::is_same<Type, SR_MATH_NS::Size2<float_t>>() || std::is_same<Type, SR_MATH_NS::Size2<float>>()) {
+            return StandardType::FSize2;
+        }
+        /// Other types
+        else if constexpr (std::is_class_v<Type>) {
             return StandardType::Class;
         }
-        else if constexpr (std::is_enum_v<T>) {
+        else if constexpr (std::is_enum_v<Type>) {
             return StandardType::Enum;
         }
-        else
+        else {
             return StandardType::Unknown;
+        }
     }
 
     SR_MAYBE_UNUSED static uint64_t GetTypeSize(const StandardType& type) {
@@ -228,8 +264,64 @@ namespace SR_UTILS_NS {
         static constexpr bool const value = is_stl_container_impl::is_stl_container<std::decay_t<T>>::value;
     };
 
-    template <typename T> constexpr bool IsSTLVector() {
+    template<typename T> constexpr bool IsSTLVector() {
         return is_stl_container_impl::is_stl_vector<std::decay_t<T>>::value;
+    }
+
+    template<typename T> constexpr bool IsMathSize() {
+        constexpr StandardType type = GetStandardType<T>();
+        return false;
+    }
+
+    template<typename T> constexpr bool IsMathVector() {
+        constexpr StandardType type = GetStandardType<T>();
+        return type == StandardType::FVector2 || type == StandardType::FVector3 || type == StandardType::FVector4 || type == StandardType::FVector5 || type == StandardType::FVector6 ||
+               type == StandardType::IVector2 || type == StandardType::IVector3 || type == StandardType::IVector4 || type == StandardType::IVector5 || type == StandardType::IVector6 ||
+               type == StandardType::UVector2 || type == StandardType::UVector3 || type == StandardType::UVector4 || type == StandardType::UVector5 || type == StandardType::UVector6 ||
+               type == StandardType::BVector2 || type == StandardType::BVector3 || type == StandardType::BVector4 || type == StandardType::BVector5 || type == StandardType::BVector6;
+    }
+
+    constexpr uint8_t GetMathVectorSize(StandardType type) {
+        if (type == StandardType::FVector2 || type == StandardType::IVector2 || type == StandardType::UVector2 || type == StandardType::BVector2) {
+            return 2;
+        }
+        if (type == StandardType::FVector3 || type == StandardType::IVector3 || type == StandardType::UVector3 || type == StandardType::BVector3) {
+            return 3;
+        }
+        if (type == StandardType::FVector4 || type == StandardType::IVector4 || type == StandardType::UVector4 || type == StandardType::BVector4) {
+            return 4;
+        }
+        if (type == StandardType::FVector5 || type == StandardType::IVector5 || type == StandardType::UVector5 || type == StandardType::BVector5) {
+            return 5;
+        }
+        if (type == StandardType::FVector6 || type == StandardType::IVector6 || type == StandardType::UVector6 || type == StandardType::BVector6) {
+            return 6;
+        }
+        return 0;
+    }
+
+    template<typename T> constexpr uint8_t GetMathVectorSize() {
+        return GetMathVectorSize(GetStandardType<T>());
+    }
+
+    constexpr StandardType GetMathVectorType(StandardType type) {
+        if (type == StandardType::FVector2 || type == StandardType::FVector3 || type == StandardType::FVector4 || type == StandardType::FVector5 || type == StandardType::FVector6) {
+            return StandardType::Float;
+        }
+        if (type == StandardType::IVector2 || type == StandardType::IVector3 || type == StandardType::IVector4 || type == StandardType::IVector5 || type == StandardType::IVector6) {
+            return StandardType::Int32;
+        }
+        if (type == StandardType::UVector2 || type == StandardType::UVector3 || type == StandardType::UVector4 || type == StandardType::UVector5 || type == StandardType::UVector6) {
+            return StandardType::UInt32;
+        }
+        if (type == StandardType::BVector2 || type == StandardType::BVector3 || type == StandardType::BVector4 || type == StandardType::BVector5 || type == StandardType::BVector6) {
+            return StandardType::Bool;
+        }
+        return StandardType::Unknown;
+    }
+
+    template<typename T> constexpr StandardType GetMathVectorType() {
+        return GetMathVectorType(GetStandardType<T>());
     }
 }
 

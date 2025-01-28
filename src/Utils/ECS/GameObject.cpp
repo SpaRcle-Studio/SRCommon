@@ -93,7 +93,7 @@ namespace SR_UTILS_NS {
 
         uint16_t childrenNum = 0;
         for (auto&& pChild : GetChildrenRef()) {
-            if (pChild->HasSerializationFlags(ObjectSerializationFlags::DontSave)) {
+            if (pChild->HasSerializationFlags(SerializationFlags::DontSave)) {
                 continue;
             }
             ++childrenNum;
@@ -101,7 +101,7 @@ namespace SR_UTILS_NS {
 
         data.pMarshal->Write(static_cast<uint16_t>(childrenNum));
         for (auto&& pChild : GetChildrenRef()) {
-            if (pChild->HasSerializationFlags(ObjectSerializationFlags::DontSave)) {
+            if (pChild->HasSerializationFlags(SerializationFlags::DontSave)) {
                 continue;
             }
 

@@ -100,9 +100,6 @@ namespace SR_UTILS_NS {
                 break;
             case Measurement::Space2D: {
                 auto&& pTransform2D = dynamic_cast<const SR_UTILS_NS::Transform2D*>(this);
-                pMarshal->Write<uint8_t>(static_cast<uint8_t>(pTransform2D->GetStretch()));
-                pMarshal->Write<uint8_t>(static_cast<uint8_t>(pTransform2D->GetAnchor()));
-                pMarshal->Write<uint8_t>(static_cast<uint8_t>(pTransform2D->GetPositionMode()));
                 pMarshal->Write<bool>(static_cast<bool>(pTransform2D->IsRelativePriority()));
                 pMarshal->Write<int32_t>(static_cast<int32_t>(pTransform2D->GetLocalPriority()));
                 pMarshal->Write(GetTranslation(), SR_MATH_NS::FVector3(0.f));
@@ -186,9 +183,6 @@ namespace SR_UTILS_NS {
                 break;
             case Measurement::Space2D: {
                 auto&& pTransform2D = dynamic_cast<Transform2D*>(pTransform);
-                pTransform2D->SetStretch(static_cast<Stretch>(marshal.Read<uint8_t>()));
-                pTransform2D->SetAnchor(static_cast<Anchor>(marshal.Read<uint8_t>()));
-                pTransform2D->SetPositionMode(static_cast<PositionMode>(marshal.Read<uint8_t>()));
                 pTransform2D->SetRelativePriority(marshal.Read<bool>());
                 pTransform2D->SetLocalPriority(marshal.Read<int32_t>());
                 SR_FALLTHROUGH;

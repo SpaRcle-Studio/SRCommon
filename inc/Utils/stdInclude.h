@@ -141,6 +141,8 @@ namespace SR_UTILS_NS {
 
     template <typename... T> SR_CONSTEXPR void IgnoreUnused(const T&...) { }
 
+    template <class T> using RemoveQualifiersT = std::remove_reference_t<std::remove_const_t<std::remove_volatile_t<T>>>;
+
     template <class Alloc, class ValueType>
     using RebindAllocT = typename std::allocator_traits<Alloc>::template rebind_alloc<ValueType>;
 

@@ -240,7 +240,7 @@ namespace SR_UTILS_NS {
                 continue;
             }
 
-           auto&& threadNameStr = threadName.GetValue();
+            auto&& threadNameStr = threadName.GetValue();
             ThreadWorker::Ptr pThreadWorker = new ThreadWorker(threadNameStr);
 
             static auto processCondition = [](int type, SR_YAML_NS::Node conditionNode, const ThreadWorkerStateBase::Ptr& pState) {

@@ -15,12 +15,12 @@ namespace SR_UTILS_NS {
         GetMeta()->Load(deserializer, *this);
     }
 
-    bool Serializable::HasSerializationFlags(const ObjectSerializationFlagsFlag flags) const noexcept {
+    bool Serializable::HasSerializationFlags(const SerializationFlags flags) const noexcept {
         return SR_MATH_NS::IsMaskIncludedSubMask(m_flags, flags);
     }
 
     SR_HTYPES_NS::Marshal::Ptr Serializable::SaveLegacy(SavableContext data) const  {
-        if (HasSerializationFlags(ObjectSerializationFlags::DontSave)) {
+        if (HasSerializationFlags(SerializationFlags::DontSave)) {
             return nullptr;
         }
 
