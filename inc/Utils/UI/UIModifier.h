@@ -68,6 +68,8 @@ namespace SR_UTILS_NS::UI {
 
         void OnTransformSet() override;
 
+        SR_NODISCARD bool UseNewSerialization() const noexcept override { return true; }
+
         virtual void Prepare(UIModifierContext& context) const { }
         virtual void PostProcess(UIModifierContext& context) const { }
         virtual void ApplyChild(UIModifierContext& context) const { }

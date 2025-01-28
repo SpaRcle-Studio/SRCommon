@@ -104,8 +104,10 @@ template<> struct ObjectDataAccessor<SR_MATH_NS::FSize> {
 		if (!deserializer.BeginObject(id)) {
 			return;
 		}
+
 		Serialization::Load(deserializer, value.v, SerializationId::Create("v"));
-		Serialization::Load(deserializer, value.metric, SerializationId::Create("metric"));
+        Serialization::Load(deserializer, value.metric, SerializationId::Create("metric"));
+
 		deserializer.EndObject();
 	}
 };
@@ -582,6 +584,9 @@ struct ObjectDataAccessor<T, typename std::enable_if<IsSREnumV<T>>::type> {
 	static void Load(IDeserializer& deserializer, T& value, const SerializationId& id) {
 		std::string enumName;
 		deserializer.ReadString(enumName, id);
+		if (enumName.empty()) {
+            return; // Default value
+        }
 		if (!SR_UTILS_NS::EnumReflector::FromString<T>(enumName.c_str(), value)) {
 			deserializer.ReportError("Invalid enum value \"" + enumName + " for type: {}, id: {}"_format(typeid(T).name(), id.GetName()));
 		}

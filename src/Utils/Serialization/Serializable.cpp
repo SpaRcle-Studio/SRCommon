@@ -8,10 +8,12 @@
 
 namespace SR_UTILS_NS {
     void Serializable::Save(ISerializer& serializer) const {
+        SR_TRACY_ZONE;
         GetMeta()->Save(serializer, *this);
     }
 
     void Serializable::Load(IDeserializer& deserializer) {
+        SR_TRACY_ZONE;
         GetMeta()->Load(deserializer, *this);
     }
 
@@ -20,6 +22,8 @@ namespace SR_UTILS_NS {
     }
 
     SR_HTYPES_NS::Marshal::Ptr Serializable::SaveLegacy(SavableContext data) const  {
+        SR_TRACY_ZONE;
+
         if (HasSerializationFlags(SerializationFlags::DontSave)) {
             return nullptr;
         }

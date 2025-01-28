@@ -52,6 +52,8 @@ namespace SR_UTILS_NS {
 
         virtual void OnPostLoaded() { }
 
+        SR_NODISCARD virtual bool UseNewSerialization() const noexcept { return false; }
+
         void AddSerializationFlags(SerializationFlags flags) noexcept { m_flags |= flags; }
         void RemoveSerializationFlags(SerializationFlags flags) noexcept { m_flags &= ~flags; }
 

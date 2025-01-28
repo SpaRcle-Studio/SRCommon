@@ -102,6 +102,7 @@ namespace SR_UTILS_NS {
     public:
         SR_NODISCARD bool SaveToFile(const SR_UTILS_NS::Path& path) const override { return SaveToFileImpl(path); }
         SR_NODISCARD bool LoadFromFile(const SR_UTILS_NS::Path& path) override;
+        SR_NODISCARD bool LoadFromString(const std::string& str) override;
 
         SR_NODISCARD bool IsDefault(const SerializationId& name) const noexcept override { return false; }
         SR_NODISCARD bool ShouldSetDefaults(const SerializationId& name) const noexcept override { return true; }

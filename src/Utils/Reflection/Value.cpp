@@ -13,7 +13,7 @@ namespace SR_UTILS_NS::Reflection {
         : m_deleter(other.m_deleter)
         , m_copier(other.m_copier)
         , m_type(other.m_type)
-        , m_isReference(other.m_isReference)
+        , m_isReference(false)
         , m_isConst(other.m_isConst)
     {
         if (other.m_data && m_copier) {
@@ -30,10 +30,10 @@ namespace SR_UTILS_NS::Reflection {
         m_data = SR_EXCHANGE(other.m_data, {});
     }
 
-    Value& Value::operator=(const Value &other) {
+    Value& Value::operator=(const Value& other) {
         if (this != &other) {
             m_type = other.m_type;
-            m_isReference = other.m_isReference;
+            m_isReference = false;
             m_isConst = other.m_isConst;
             m_deleter = other.m_deleter;
             m_copier = other.m_copier;

@@ -211,6 +211,8 @@ namespace SR_UTILS_NS {
             case StandardType::Float: return sizeof(float_t);
             case StandardType::Double: return sizeof(double_t);
             default:
+                SR_PLATFORM_NS::WriteConsoleError("Unknown type size!");
+                SR_UTILS_NS::Breakpoint();
                 return 0;
         }
     }
@@ -268,9 +270,14 @@ namespace SR_UTILS_NS {
         return is_stl_container_impl::is_stl_vector<std::decay_t<T>>::value;
     }
 
+    constexpr bool IsMathSize(const StandardType type) {
+        return type == StandardType::FSize || type == StandardType::FSize2 ||
+               type == StandardType::ISize || type == StandardType::ISize2 ||
+               type == StandardType::USize || type == StandardType::USize2;
+    }
+
     template<typename T> constexpr bool IsMathSize() {
-        constexpr StandardType type = GetStandardType<T>();
-        return false;
+        return IsMathSize(GetStandardType<T>());
     }
 
     template<typename T> constexpr bool IsMathVector() {
@@ -281,7 +288,7 @@ namespace SR_UTILS_NS {
                type == StandardType::BVector2 || type == StandardType::BVector3 || type == StandardType::BVector4 || type == StandardType::BVector5 || type == StandardType::BVector6;
     }
 
-    constexpr uint8_t GetMathVectorSize(StandardType type) {
+    constexpr uint8_t GetMathVectorDim(const StandardType type) {
         if (type == StandardType::FVector2 || type == StandardType::IVector2 || type == StandardType::UVector2 || type == StandardType::BVector2) {
             return 2;
         }
@@ -300,11 +307,25 @@ namespace SR_UTILS_NS {
         return 0;
     }
 
-    template<typename T> constexpr uint8_t GetMathVectorSize() {
-        return GetMathVectorSize(GetStandardType<T>());
+    constexpr uint8_t GetMathSizeDim(const StandardType type) {
+        if (type == StandardType::FSize || type == StandardType::ISize || type == StandardType::USize) {
+            return 1;
+        }
+        if (type == StandardType::FSize2 || type == StandardType::ISize2 || type == StandardType::USize2) {
+            return 2;
+        }
+        return 0;
     }
 
-    constexpr StandardType GetMathVectorType(StandardType type) {
+    template<typename T> constexpr uint8_t GetMathSizeDim() {
+        return GetMathSizeDim(GetStandardType<T>());
+    }
+
+    template<typename T> constexpr uint8_t GetMathVectorDim() {
+        return GetMathVectorDim(GetStandardType<T>());
+    }
+
+    constexpr StandardType GetMathVectorType(const StandardType type) {
         if (type == StandardType::FVector2 || type == StandardType::FVector3 || type == StandardType::FVector4 || type == StandardType::FVector5 || type == StandardType::FVector6) {
             return StandardType::Float;
         }
@@ -322,6 +343,23 @@ namespace SR_UTILS_NS {
 
     template<typename T> constexpr StandardType GetMathVectorType() {
         return GetMathVectorType(GetStandardType<T>());
+    }
+
+    constexpr StandardType GetMathSizeType(const StandardType type) {
+        if (type == StandardType::FSize || type == StandardType::FSize2) {
+            return StandardType::Float;
+        }
+        if (type == StandardType::ISize || type == StandardType::ISize2) {
+            return StandardType::Int32;
+        }
+        if (type == StandardType::USize || type == StandardType::USize2) {
+            return StandardType::UInt32;
+        }
+        return StandardType::Unknown;
+    }
+
+    template<typename T> constexpr StandardType GetMathSizeType() {
+        return GetMathSizeType(GetStandardType<T>());
     }
 }
 

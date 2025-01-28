@@ -9,6 +9,7 @@
 #include <Utils/Types/Thread.h>
 #include <Utils/World/Scene.h>
 #include <Utils/World/SceneUpdater.h>
+#include <Utils/Serialization/SRASerialization.h>
 
 #include <Codegen/Component.generated.hpp>
 
@@ -29,7 +30,14 @@ namespace SR_UTILS_NS {
         data.pMarshal->Write(IsEnabled());
         data.pMarshal->Write<uint16_t>(GetEntityVersion());
 
-        if (!SR_UTILS_NS::ComponentManager::Instance().HasLoader(GetComponentName())) {
+        /// New serialization system based on codegen
+        if (UseNewSerialization()) {
+            SR_UTILS_NS::SRASerializer serializer;
+            serializer.SetUseTabs(true);
+            Save(serializer);
+            data.pMarshal->Write(serializer.ToString());
+        }
+        else if (!SR_UTILS_NS::ComponentManager::Instance().HasLoader(GetComponentName())) {
             GetComponentProperties().SaveProperty(*data.pMarshal);
         }
 

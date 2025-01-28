@@ -13,6 +13,7 @@
 #include <Utils/Types/SafePointer.h>
 #include <Utils/Math/Vector3.h>
 #include <Utils/Common/StringUtils.h>
+#include <Utils/Serialization/SRASerialization.h>
 
 namespace SR_UTILS_NS {
     class Component;
@@ -70,7 +71,17 @@ namespace SR_UTILS_NS {
             SR_TRACY_ZONE;
 
             if (auto&& pComponent = CreateComponentOfName(name)) {
-                pComponent->GetComponentProperties().LoadProperty(marshal);
+                if (pComponent->UseNewSerialization()) {
+                    SR_UTILS_NS::SRADeserializer deserializer;
+                    if (!deserializer.LoadFromString(marshal.Read<std::string>())) {
+                        SRHalt("ComponentManager::LoadComponent() : failed to load component!");
+                        return pComponent;
+                    }
+                    pComponent->Load(deserializer);
+                }
+                else {
+                    pComponent->GetComponentProperties().LoadProperty(marshal);
+                }
                 return pComponent;
             }
 

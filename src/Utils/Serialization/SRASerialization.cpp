@@ -226,7 +226,16 @@ namespace SR_UTILS_NS {
             return false;
         }
 
-        const std::vector<std::string> lines = FileSystem::ReadAllLines(path);
+        const std::string data = FileSystem::ReadAllText(path.ToStringRef());
+        if (data.empty()) {
+            return false;
+        }
+
+        return LoadFromString(data);
+    }
+
+    bool SRADeserializer::LoadFromString(const std::string& str) {
+        const std::vector<std::string_view> lines = SR_UTILS_NS::StringUtils::SplitView(str, "\n");
         if (lines.empty()) {
             return false;
         }

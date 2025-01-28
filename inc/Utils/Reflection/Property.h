@@ -27,6 +27,9 @@ namespace SR_UTILS_NS::Reflection {
             , m_setCallback(other.m_setCallback)
             , m_getCallback(other.m_getCallback)
             , m_onChangeCallback(other.m_onChangeCallback)
+            , m_editorWidth(other.m_editorWidth)
+            , m_dragValue(other.m_dragValue.Clone())
+            , m_resetValue(other.m_resetValue.Clone())
         { }
 
         Property(Property&& other) noexcept
@@ -40,6 +43,9 @@ namespace SR_UTILS_NS::Reflection {
             , m_setCallback(other.m_setCallback)
             , m_getCallback(other.m_getCallback)
             , m_onChangeCallback(other.m_onChangeCallback)
+            , m_editorWidth(other.m_editorWidth)
+            , m_dragValue(std::move(other.m_dragValue))
+            , m_resetValue(std::move(other.m_resetValue))
         { }
 
         Property& operator=(const Property& other) {
@@ -54,6 +60,9 @@ namespace SR_UTILS_NS::Reflection {
                 m_setCallback = other.m_setCallback;
                 m_getCallback = other.m_getCallback;
                 m_onChangeCallback = other.m_onChangeCallback;
+                m_editorWidth = other.m_editorWidth;
+                m_dragValue = other.m_dragValue.Clone();
+                m_resetValue = other.m_resetValue.Clone();
             }
             return *this;
         }
@@ -70,6 +79,9 @@ namespace SR_UTILS_NS::Reflection {
                 m_setCallback = other.m_setCallback;
                 m_getCallback = other.m_getCallback;
                 m_onChangeCallback = other.m_onChangeCallback;
+                m_editorWidth = other.m_editorWidth;
+                m_dragValue = std::move(other.m_dragValue);
+                m_resetValue = std::move(other.m_resetValue);
             }
             return *this;
         }
@@ -89,6 +101,9 @@ namespace SR_UTILS_NS::Reflection {
         SR_NODISCARD StringAtom GetInspector() const noexcept { return m_inspector; }
         SR_NODISCARD PropertyPublicity GetPublicity() const noexcept { return m_publicity; }
         SR_NODISCARD const Value& GetDefaultValue() const noexcept { return m_defaultValue; }
+        SR_NODISCARD const Value& GetDragValue() const noexcept { return m_dragValue; }
+        SR_NODISCARD const Value& GetResetValue() const noexcept { return m_resetValue; }
+        SR_NODISCARD float_t GetEditorWidth() const noexcept { return m_editorWidth; }
         SR_NODISCARD bool IsHidden() const noexcept {
             return m_publicity == PropertyPublicity::Hidden || m_publicity == PropertyPublicity::HiddenReadOnly;
         }
@@ -106,9 +121,14 @@ namespace SR_UTILS_NS::Reflection {
         Property& SetDefaultValue(Value&& value) noexcept { m_defaultValue = std::move(value); return *this; }
         Property& SetChangeCallback(ChangeCallbackFn callback) noexcept { m_onChangeCallback = callback; return *this; }
         Property& SetInspector(const StringAtom& inspector) noexcept { m_inspector = inspector; return *this; }
+        Property& SetDragValue(Value&& value) noexcept { m_dragValue = std::move(value); return *this; }
+        Property& SetResetValue(Value&& value) noexcept { m_resetValue = std::move(value); return *this; }
 
     private:
+        float_t m_editorWidth = 0.f;
         Reflection::Value m_defaultValue;
+        Reflection::Value m_dragValue;
+        Reflection::Value m_resetValue;
         SR_UTILS_NS::StringAtom m_name;
         SR_UTILS_NS::StringAtom m_serializeName;
         SR_UTILS_NS::StringAtom m_displayName;
