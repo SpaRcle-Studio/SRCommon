@@ -27,8 +27,16 @@ namespace SR_UTILS_NS::Platform {
         pAndroidInstance = reinterpret_cast<android_app*>(pInstance);
     }
 
+    void Unzip(const SR_UTILS_NS::Path& source, const SR_UTILS_NS::Path& destination) {
+        SRHaltOnce("Not yet implemented!");
+    }
+
     void SetMousePos(const SR_MATH_NS::IVector2& pos) {
 
+    }
+
+    void OpenFile(const SR_UTILS_NS::Path& path, const std::string& args) {
+        SRHaltOnce("Not implemented!");
     }
 
     bool IsRunningUnderDebugger() {
@@ -77,6 +85,10 @@ namespace SR_UTILS_NS::Platform {
         SRHaltOnce("Not implemented!");
     }
 
+    void SetCurrentProcessDirectory(const SR_UTILS_NS::Path& directory) {
+        SRHaltOnce("Not implemented!");
+    }
+
     void PasteFilesFromClipboard(const SR_UTILS_NS::Path &topath) {
         SRHaltOnce("Not implemented!");
     }
@@ -84,6 +96,10 @@ namespace SR_UTILS_NS::Platform {
     std::string GetClipboardText() {
         SRHaltOnce("Not implemented!");
         return std::string();
+    }
+
+    void InitializePlatform() {
+        SRHaltOnce("Not implemented!");
     }
 
     void ClearClipboard() {
@@ -160,6 +176,16 @@ namespace SR_UTILS_NS::Platform {
 
     void OpenInNativeFileExplorer(const Path &path){
         SRHaltOnce("Not implemented!");
+    }
+
+    SR_MATH_NS::UVector2 GetScreenResolution() {
+        SRHaltOnce("Not implemented!");
+        return SR_MATH_NS::UVector2();
+    }
+
+    double_t GetScreenDPI() {
+        SRHaltOnce("Not implemented!");
+        return 0.0;
     }
 
     bool IsExists(const Path &path) {

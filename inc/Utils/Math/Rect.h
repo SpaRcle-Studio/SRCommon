@@ -7,6 +7,7 @@
 
 #include <Utils/Math/Mathematics.h>
 #include <Utils/Math/Vector2.h>
+#include <Utils/Math/Vector3.h>
 
 namespace SR_MATH_NS {
     template<typename T> struct SR_DLL_EXPORT Rect {
@@ -17,6 +18,10 @@ namespace SR_MATH_NS {
                 T y;
                 T w;
                 T h;
+            };
+            struct {
+                SR_MATH_NS::Vector2<T> xy;
+                SR_MATH_NS::Vector2<T> wh;
             };
         };
 
@@ -31,6 +36,20 @@ namespace SR_MATH_NS {
         constexpr Rect(const Vector2<T>& position, const Vector2<T>& size)
             : x(position.x)
             , y(position.y)
+            , w(size.x)
+            , h(size.y)
+        { }
+
+        constexpr Rect(const Vector2<T>& position, T width, T height)
+            : x(position.x)
+            , y(position.y)
+            , w(width)
+            , h(height)
+        { }
+
+        constexpr Rect(T x, T y, const Vector2<T>& size)
+            : x(x)
+            , y(y)
             , w(size.x)
             , h(size.y)
         { }
@@ -55,13 +74,75 @@ namespace SR_MATH_NS {
         SR_NODISCARD constexpr SR_MATH_NS::Vector2<T> XY() const noexcept { return SR_MATH_NS::Vector2<T>(x, y); }
         SR_NODISCARD constexpr SR_MATH_NS::Vector2<T> WH() const noexcept { return SR_MATH_NS::Vector2<T>(w, h); }
 
+        SR_NODISCARD constexpr SR_MATH_NS::Vector3<T> XY0() const noexcept { return SR_MATH_NS::Vector3<T>(x, y, 0); }
+        SR_NODISCARD constexpr SR_MATH_NS::Vector3<T> WH0() const noexcept { return SR_MATH_NS::Vector3<T>(w, h, 0); }
+        SR_NODISCARD constexpr SR_MATH_NS::Vector3<T> WH1() const noexcept { return SR_MATH_NS::Vector3<T>(w, h, 1); }
+
         template<typename U> SR_NODISCARD constexpr bool IsInside(const SR_MATH_NS::Vector2<U>& point) const noexcept {
             return point.x >= static_cast<U>(x) && point.x <= static_cast<U>(x + w) &&
                    point.y >= static_cast<U>(y) && point.y <= static_cast<U>(y + h);
         }
 
+        SR_NODISCARD bool operator==(const Rect& other) const noexcept {
+            return SR_MATH_NS::IsEquals(x, other.x) && SR_MATH_NS::IsEquals(y, other.y) &&
+                   SR_MATH_NS::IsEquals(w, other.w) && SR_MATH_NS::IsEquals(h, other.h);
+        }
+
+        SR_NODISCARD bool operator!=(const Rect& other) const noexcept {
+            return !(*this == other);
+        }
+
+        SR_NODISCARD Rect operator+(const SR_MATH_NS::Rect<T>& other) const noexcept {
+            return Rect(x + other.x, y + other.y, w + other.w, h + other.h);
+        }
+
+        SR_NODISCARD Rect operator-(const SR_MATH_NS::Rect<T>& other) const noexcept {
+            return Rect(x - other.x, y - other.y, w - other.w, h - other.h);
+        }
+
+        SR_NODISCARD Rect operator*(const SR_MATH_NS::Rect<T>& other) const noexcept {
+            return Rect(x * other.x, y * other.y, w * other.w, h * other.h);
+        }
+
+        SR_NODISCARD Rect operator/(const SR_MATH_NS::Rect<T>& other) const noexcept {
+            return Rect(x / other.x, y / other.y, w / other.w, h / other.h);
+        }
+
+        void operator+=(const SR_MATH_NS::Rect<T>& other) noexcept {
+            x += other.x;
+            y += other.y;
+            w += other.w;
+            h += other.h;
+        }
+
+        void operator-=(const SR_MATH_NS::Rect<T>& other) noexcept {
+            x -= other.x;
+            y -= other.y;
+            w -= other.w;
+            h -= other.h;
+        }
+
+        void operator*=(const SR_MATH_NS::Rect<T>& other) noexcept {
+            x *= other.x;
+            y *= other.y;
+            w *= other.w;
+            h *= other.h;
+        }
+
+        void operator/=(const SR_MATH_NS::Rect<T>& other) noexcept {
+            x /= other.x;
+            y /= other.y;
+            w /= other.w;
+            h /= other.h;
+        }
+
     public:
         SR_NODISCARD static Rect<Unit> FromTranslationAndScale(const SR_MATH_NS::FVector2& translation, const SR_MATH_NS::FVector2& scale);
+
+        SR_NODISCARD bool Contains(const SR_MATH_NS::Vector2<T>& point) const noexcept {
+            return point.x >= Left() && point.x <= Right() && point.y <= Top() && point.y >= Bottom();
+        }
+
 
     public:
         constexpr void SetLeft(const T& value) {

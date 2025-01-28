@@ -2,20 +2,22 @@
 // Created by Nikita on 30.12.2020.
 //
 
-#ifndef GAMEENGINE_INPUTSYSTEM_H
-#define GAMEENGINE_INPUTSYSTEM_H
+#ifndef SR_ENGINE_INPUTSYSTEM_H
+#define SR_ENGINE_INPUTSYSTEM_H
 
 #include <Utils/Math/Vector2.h>
 #include <Utils/Input/KeyCodes.h>
 #include <Utils/Common/Singleton.h>
+#include <Utils/Common/SubscriptionHolder.h>
 
 namespace SR_UTILS_NS {
-    class SR_DLL_EXPORT Input : public Singleton<Input> {
+    class SR_DLL_EXPORT Input : public Singleton<Input>, public SubscriptionHolder {
         SR_REGISTER_SINGLETON(Input)
 
         enum class State {
             UnPressed, Down, Pressed, Up
         };
+        using CursorLockCallback = SR_HTYPES_NS::Function<void()>;
 
     protected:
         ~Input() override = default;
@@ -32,11 +34,9 @@ namespace SR_UTILS_NS {
         SR_NODISCARD SR_MATH_NS::FVector2 GetMouseDrag();
         SR_NODISCARD SR_MATH_NS::FVector2 GetMousePos() const { return m_mouse; }
         SR_NODISCARD SR_MATH_NS::FVector2 GetPrevMousePos() const { return m_mousePrev; }
-        SR_NODISCARD bool IsCursorLocked() const { return m_isLocked; }
         SR_NODISCARD bool IsMouseMoved() const;
 
         int32_t GetMouseWheel();
-        int32_t DebugKey();
 
         bool GetMouseDown(MouseCode code) { return GetKeyDown(static_cast<KeyCode>(code)); }
         bool GetMouseUp(MouseCode code) { return GetKeyUp(static_cast<KeyCode>(code)); }
@@ -46,13 +46,20 @@ namespace SR_UTILS_NS {
         bool GetKeyUp(KeyCode key);
         bool GetKey(KeyCode key);
 
-        void LockCursor(bool isLock);
         void SetCursorVisible(bool isVisible);
+        void SetCursorLockCallback(CursorLockCallback&& callback);
+
+        void LockCursor();
+        void UnlockCursor();
 
     private:
         void Reset();
+        void SetState(uint16_t keyIndex, State state);
 
     private:
+        uint32_t m_counterLock = 0;
+        CursorLockCallback m_lockCursorCallback;
+
         SR_MATH_NS::FVector2 m_mouseDrag;
         SR_MATH_NS::FVector2 m_mousePrev;
         SR_MATH_NS::FVector2 m_mouse;
@@ -60,13 +67,40 @@ namespace SR_UTILS_NS {
         SR_MATH_NS::FVector2 m_mouseScrollCurrent;
 
         std::atomic<bool> m_init = false;
-        std::atomic<bool> m_isLocked = false;
         std::atomic<bool> m_isVisible = true;
 
         State m_keys[256] = { };
         uint8_t* m_arr = nullptr;
-
     };
+
+    class CursorLock : public NonCopyable {
+    public:
+        CursorLock() {
+            m_isLock  = true;
+            Input::Instance().LockCursor();
+        };
+
+        ~CursorLock() {
+            if (m_isLock) {
+                m_isLock = false;
+                Input::Instance().UnlockCursor();
+            } };
+
+        CursorLock(CursorLock&& ref) noexcept {
+            m_isLock = SR_UTILS_NS::Exchange(ref.m_isLock, {});
+        }
+
+        CursorLock& operator=(CursorLock&& other) noexcept {
+            if (this != &other){
+                m_isLock = SR_UTILS_NS::Exchange(other.m_isLock, { });
+            }
+            return *this;
+        }
+
+    private:
+        bool m_isLock = false;
+    };
+
 }
 
-#endif //GAMEENGINE_INPUTSYSTEM_H
+#endif //SR_ENGINE_INPUTSYSTEM_H

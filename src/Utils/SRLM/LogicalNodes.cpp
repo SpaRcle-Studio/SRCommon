@@ -97,7 +97,7 @@ namespace SR_SRLM_NS {
     }
 
     std::string ConstructorNode::GetNodeName() const noexcept {
-        return SR_HASH_TO_STR(GetNodeHashName());
+        return std::string(SR_HASH_TO_STR(GetNodeHashName()));
     }
 
     /// ----------------------------------------------------------------------------------------------------------------
@@ -160,12 +160,12 @@ namespace SR_SRLM_NS {
             for (auto&& output : GetOutputs()) {
                 auto&& pIt = variables.find(output.hashName);
                 if (pIt == variables.end()) {
-                    SRHalt("Output not found! Name: " + SR_HASH_TO_STR(output.hashName));
+                    SRHalt("Output not found! Name: {}", SR_HASH_TO_STR(output.hashName));
                     continue;
                 }
 
                 if (pIt->second->GetClass() != output.pData->GetClass()) {
-                    SRHalt("Output have incompatible class! Name: " + SR_HASH_TO_STR(output.hashName));
+                    SRHalt("Output have incompatible class! Name: {}", SR_HASH_TO_STR(output.hashName));
                     continue;
                 }
 

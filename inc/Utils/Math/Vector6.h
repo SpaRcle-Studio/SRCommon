@@ -6,6 +6,7 @@
 #define SR_ENGINE_VECTOR6_H
 
 #include <Utils/Math/Mathematics.h>
+#include <Utils/Math/Vector3.h>
 
 namespace SR_MATH_NS {
     template<typename T> struct SR_DLL_EXPORT Vector6 {
@@ -21,11 +22,27 @@ namespace SR_MATH_NS {
             };
 
             T coord[6] = { 0 };
+
+            struct {
+                SR_MATH_NS::Vector3<T> vec3d1;
+                SR_MATH_NS::Vector3<T> vec3d2;
+            };
+
+            struct {
+                SR_MATH_NS::Vector2<T> vec2d1;
+                SR_MATH_NS::Vector2<T> vec2d2;
+                SR_MATH_NS::Vector2<T> vec2d3;
+            };
         };
     public:
         SR_FAST_CONSTRUCTOR Vector6() {
             x = y = z = w = v = t = 0;
         }
+
+        SR_FAST_CONSTRUCTOR Vector6(SR_MATH_NS::Vector3<T> vec3d1, SR_MATH_NS::Vector3<T> vec3d2)
+            : vec3d1(vec3d1)
+            , vec3d2(vec3d2)
+        { }
 
         SR_FAST_CONSTRUCTOR Vector6(T scalar) {
             x = y = z = w = v = t = scalar;

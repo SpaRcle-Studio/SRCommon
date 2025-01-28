@@ -62,12 +62,21 @@ namespace SR_WORLD_NS {
         /*TODO: это потенциальное место для дедлоков, так как при уничтожении компоненты
          * блокируют другие потоки. Придумать как исправить */
 
-        auto&& pLogic = m_observer->m_scene->GetLogicBase().DynamicCast<SceneCubeChunkLogic>();
-        auto&& gameObjects = pLogic->GetGameObjectsAtChunk(m_regionPosition, m_position);
+        auto&& pLogicBase = m_observer->m_scene->GetLogicBase();
+        auto&& pLogic = pLogicBase.DynamicCast<SceneCubeChunkLogic>();
+        if (!pLogic) {
+            if (!pLogicBase) {
+                SRHalt("Chunk::Unload() : logic is nullptr!");
+                return false;
+            }
+            SRHalt("Chunk::Unload() : logic is not SceneCubeChunkLogic!");
+            return false;
+        }
+        auto&& sceneObjects = pLogic->GetGameObjectsAtChunk(m_regionPosition, m_position);
 
-        for (auto&& gameObject : gameObjects) {
-            if (gameObject) {
-                gameObject->Destroy();
+        for (auto&& pObject : sceneObjects) {
+            if (pObject) {
+                pObject->Destroy();
             }
         }
 
@@ -118,6 +127,8 @@ namespace SR_WORLD_NS {
     }
 
     bool Chunk::PreLoad(SR_HTYPES_NS::Marshal* pMarshal) {
+        SR_TRACY_ZONE;
+
         /// TODO: add version and migration
 
         if (pMarshal && pMarshal->Valid()) {
@@ -153,7 +164,7 @@ namespace SR_WORLD_NS {
         SRAssert(m_loadState == LoadState::PreLoaded);
 
         for (auto&& gameObject : m_preloaded) {
-            m_observer->m_scene->RegisterGameObject(gameObject);
+            m_observer->m_scene->RegisterSceneObject(gameObject.StaticCast<SceneObject>());
         }
 
         m_preloaded.clear();
@@ -188,7 +199,7 @@ namespace SR_WORLD_NS {
 
         for (auto&& gameObject : gameObjects) {
             if (gameObject.RecursiveLockIfValid()) {
-                if (auto&& gameObjectMarshal = gameObject->Save(gameObjectSaveData); gameObjectMarshal) {
+                if (auto&& gameObjectMarshal = gameObject->SaveLegacy(gameObjectSaveData); gameObjectMarshal) {
                     if (gameObjectMarshal->Valid()) {
                         marshaled.emplace_back(gameObjectMarshal);
                     }
@@ -203,7 +214,7 @@ namespace SR_WORLD_NS {
 
         for (auto&& gameObject : m_preloaded) {
             if (gameObject.RecursiveLockIfValid()) {
-                if (auto &&gameObjectMarshal = gameObject->Save(gameObjectSaveData); gameObjectMarshal) {
+                if (auto &&gameObjectMarshal = gameObject->SaveLegacy(gameObjectSaveData); gameObjectMarshal) {
                     if (gameObjectMarshal->Valid()) {
                         marshaled.emplace_back(gameObjectMarshal);
                     }
@@ -233,7 +244,7 @@ namespace SR_WORLD_NS {
         return pMarshal;
     }
 
-    SR_MATH_NS::FVector3 Chunk::GetWorldPosition(SR_MATH_NS::AxisFlag center) const {
+    SR_MATH_NS::FVector3 Chunk::GetWorldPosition(SR_MATH_NS::Axis center) const {
         auto fPos = SR_UTILS_NS::World::AddOffset(
                 ((m_region->GetWorldPosition()) + (m_position - SR_MATH_NS::FVector3(1, 1, 1))).Cast<SR_MATH_NS::Unit>(),
                 m_observer->m_offset.m_chunk.Cast<SR_MATH_NS::Unit>()

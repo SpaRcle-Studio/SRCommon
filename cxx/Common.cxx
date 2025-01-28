@@ -14,7 +14,15 @@
 #include "../src/Utils/Common/Vertices.cpp"
 #include "../src/Utils/Common/CmdOptions.cpp"
 #include "../src/Utils/Common/Coroutine.cpp"
+#include "../src/Utils/Common/SubscriptionHolder.cpp"
 
-#ifndef SR_UTILS_CI_BUILD
+#include "../src/Utils/Serialization/Serializable.cpp"
+#include "../src/Utils/Serialization/Serializer.cpp"
+#include "../src/Utils/Serialization/Deserializer.cpp"
+#include "../src/Utils/Serialization/SRASerialization.cpp"
+
+#include "../src/Utils/UI/UIModifier.cpp"
+
+#ifdef SR_COMMON_EMBED_RESOURCES
     #include <EmbedResources.cxx>
 #endif

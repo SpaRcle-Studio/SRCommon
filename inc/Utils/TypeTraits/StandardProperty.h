@@ -30,6 +30,9 @@ namespace SR_UTILS_NS {
         SR_NODISCARD float_t GetResetValue() const noexcept { return m_resetValue; }
         StandardProperty& SetResetValue(float_t value) { m_resetValue = value; return *this; }
 
+        SR_NODISCARD bool IsMultiline() const noexcept { return m_multiline; }
+        void SetMultiline() noexcept { m_multiline = true; }
+
         SR_NODISCARD bool GetBool() const noexcept { return GetValue<bool, StandardType::Bool>(); }
         void SetBool(bool value) noexcept { SetValue<bool, StandardType::Bool>(value); }
 
@@ -51,11 +54,17 @@ namespace SR_UTILS_NS {
         SR_NODISCARD std::string GetString() const noexcept { return GetValue<std::string, StandardType::String>(); }
         void SetString(const std::string& value) noexcept { SetValue<std::string, StandardType::String>(value); }
 
+        SR_NODISCARD SR_HTYPES_NS::UnicodeString GetUnicodeString() const noexcept { return GetValue<SR_HTYPES_NS::UnicodeString, StandardType::UnicodeString>(); }
+        void SetUnicodeString(const SR_HTYPES_NS::UnicodeString& value) noexcept { SetValue<SR_HTYPES_NS::UnicodeString, StandardType::UnicodeString>(value); }
+
         SR_NODISCARD SR_UTILS_NS::StringAtom GetStringAtom() const noexcept { return GetValue<SR_UTILS_NS::StringAtom, StandardType::StringAtom>(); }
         void SetStringAtom(const SR_UTILS_NS::StringAtom& value) noexcept { SetValue<SR_UTILS_NS::StringAtom, StandardType::StringAtom>(value); }
 
         SR_NODISCARD SR_MATH_NS::FVector2 GetFVector2() const noexcept { return GetValue<SR_MATH_NS::FVector2, StandardType::FVector2>(); }
         void SetFVector2(const SR_MATH_NS::FVector2& value) noexcept { SetValue<SR_MATH_NS::FVector2, StandardType::FVector2>(value); }
+
+        SR_NODISCARD SR_MATH_NS::UVector2 GetUVector2() const noexcept { return GetValue<SR_MATH_NS::UVector2, StandardType::UVector2>(); }
+        void SetUVector2(const SR_MATH_NS::UVector2& value) noexcept { SetValue<SR_MATH_NS::UVector2, StandardType::UVector2>(value); }
 
         SR_NODISCARD SR_MATH_NS::FVector3 GetFVector3() const noexcept { return GetValue<SR_MATH_NS::FVector3, StandardType::FVector3>(); }
         void SetFVector3(const SR_MATH_NS::FVector3& value) noexcept { SetValue<SR_MATH_NS::FVector3, StandardType::FVector3>(value); }
@@ -85,6 +94,7 @@ namespace SR_UTILS_NS {
         }
 
     private:
+        bool m_multiline = false;
         StandardType m_type = StandardType::Unknown;
         SetterFn m_setter;
         GetterFn m_getter;

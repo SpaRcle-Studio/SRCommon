@@ -6,7 +6,7 @@
 
 namespace SR_UTILS_NS {
     PropertyContainer::PropertyContainer() {
-        m_properties.reserve(8);
+        m_properties.reserve(16);
     }
 
     PropertyContainer::~PropertyContainer() {
@@ -23,7 +23,10 @@ namespace SR_UTILS_NS {
 
         pProperty->SetName(name);
 
-        m_properties.emplace_back(pProperty);
+        PropertyInfo propertyInfo;
+        propertyInfo.pProperty = pProperty;
+
+        m_properties.emplace_back(propertyInfo);
         OnPropertyAdded(pProperty);
 
         return *pProperty;
@@ -32,11 +35,15 @@ namespace SR_UTILS_NS {
     void PropertyContainer::ClearContainer() { /// NOLINT
         SR_TRACY_ZONE;
 
-        for (auto&& pProperty : m_properties) {
-            if (auto&& pContainer = dynamic_cast<PropertyContainer*>(pProperty)) {
+        for (auto&& propertyInfo : m_properties) {
+            if (propertyInfo.isExternal) {
+                continue; /// внешние свойства не удаляем
+            }
+
+            if (auto&& pContainer = dynamic_cast<PropertyContainer*>(propertyInfo.pProperty)) {
                 pContainer->ClearContainer();
             }
-            delete pProperty;
+            delete propertyInfo.pProperty;
         }
 
         m_properties.clear();
@@ -49,21 +56,21 @@ namespace SR_UTILS_NS {
             SR_HTYPES_NS::Marshal propertiesMarshal;
             uint16_t count = 0;
 
-            for (auto&& pProperty : GetProperties()) {
-                if (pProperty->IsDontSave()) {
+            for (auto&& propertyInfo : GetProperties()) {
+                if (propertyInfo.pProperty->IsDontSave()) {
                     continue;
                 }
 
-                if (!pProperty->IsActive()) {
+                if (!propertyInfo.pProperty->IsActive()) {
                     continue;
                 }
 
                 ++count;
 
                 SR_HTYPES_NS::Marshal propertyMarshal;
-                pProperty->SaveProperty(propertyMarshal);
+                propertyInfo.pProperty->SaveProperty(propertyMarshal);
 
-                propertiesMarshal.Write<StringAtom>(pProperty->GetName());
+                propertiesMarshal.Write<StringAtom>(propertyInfo.pProperty->GetName());
                 propertiesMarshal.Write<uint32_t>(propertyMarshal.Size());
                 propertiesMarshal.Append(std::move(propertyMarshal));
             }
@@ -75,7 +82,7 @@ namespace SR_UTILS_NS {
         }
     }
 
-    EntityRefProperty& PropertyContainer::AddEntityRefProperty(SpaRcle::Utils::StringAtom name, const EntityRefUtils::OwnerRef& owner) {
+    EntityRefProperty& PropertyContainer::AddEntityRefProperty(SR_UTILS_NS::StringAtom name, const EntityRefUtils::OwnerRef& owner) {
         if (auto&& pProperty = Find(name)) {
             SRHalt("Properties::AddEntityRefProperty() : property \"" + name.ToStringRef() + "\" already exists!");
             return *dynamic_cast<EntityRefProperty*>(pProperty);
@@ -86,36 +93,37 @@ namespace SR_UTILS_NS {
         pProperty->SetName(name);
         pProperty->GetEntityRef().SetOwner(owner);
 
-        m_properties.emplace_back(pProperty);
+        PropertyInfo propertyInfo;
+        propertyInfo.pProperty = pProperty;
+        m_properties.emplace_back(propertyInfo);
+
         OnPropertyAdded(pProperty);
 
         return *pProperty;
     }
 
     void PropertyContainer::LoadProperty(MarshalRef marshal) noexcept {
-        SR_TRACY_ZONE;
-
         if (auto&& pBlock = LoadPropertyBase(marshal)) {
             auto&& count = pBlock->Read<uint16_t>();
 
             for (uint16_t i = 0; i < count; ++i) {
                 auto&& name = pBlock->Read<StringAtom>();
                 auto&& size = pBlock->Read<uint32_t>();
+
+                SR_TRACY_ZONE;
+                SR_TRACY_ZONE_TEXT(name.ToStringRef());
+
                 auto&& propertyMarshal = pBlock->ReadBytes(size);
 
                 if (auto&& pProperty = Find(name)) {
                     pProperty->LoadProperty(propertyMarshal);
                 }
-                else {
+                else if (m_showErrors) {
                     SR_WARN("PropertyContainer::LoadProperty() : property not found!\n\tContainer: {}\n\tProperty name: {}",
                         GetName().ToCStr(), name.ToCStr()
                     );
                 }
             }
         }
-    }
-
-    ArrayReferenceProperty& PropertyContainer::AddArrayReferenceProperty(const char* name) {
-        return AddCustomProperty<ArrayReferenceProperty>(name);
     }
 }

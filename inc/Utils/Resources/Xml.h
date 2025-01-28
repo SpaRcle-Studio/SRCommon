@@ -2,8 +2,8 @@
 // Created by Monika on 03.09.2021.
 //
 
-#ifndef GAMEENGINE_XML_H
-#define GAMEENGINE_XML_H
+#ifndef SR_COMMON_XML_H
+#define SR_COMMON_XML_H
 
 #include <Utils/Debug.h>
 
@@ -420,6 +420,9 @@ namespace SR_UTILS_NS::Xml {
             else if constexpr (std::is_same<T, SR_UTILS_NS::Path>()) {
                 attrib.set_value(value.CStr());
             }
+            else if constexpr (std::is_same<T, std::string_view>()) {
+                attrib.set_value(value.data());
+            }
             else {
                 attrib.set_value(value);
             }
@@ -541,7 +544,13 @@ namespace SR_UTILS_NS::Xml {
             if (!path.Exists()) {
                 path.Create();
             }
-            return m_document->save_file(path.CStr());
+
+            if (!m_document->save_file(path.CStr())) {
+                SR_ERROR("Document::Save() : failed save to file!\n\tPath: " + path.ToString());
+                return false;
+            }
+
+            return true;
         }
 
         SR_NODISCARD std::string Dump() const;
@@ -596,4 +605,4 @@ namespace SR_UTILS_NS::Xml {
     }
 }
 
-#endif //GAMEENGINE_XML_H
+#endif //SR_COMMON_XML_H

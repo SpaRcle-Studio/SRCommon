@@ -2,8 +2,8 @@
 // Created by Monika on 15.08.2021.
 //
 
-#ifndef GAMEENGINE_GRAPHUTILS_H
-#define GAMEENGINE_GRAPHUTILS_H
+#ifndef SR_ENGINE_GRAPHUTILS_H
+#define SR_ENGINE_GRAPHUTILS_H
 
 namespace SR_UTILS_NS::Graph {
     enum class PipeLine {
@@ -11,4 +11,4 @@ namespace SR_UTILS_NS::Graph {
     };
 }
 
-#endif //GAMEENGINE_GRAPHUTILS_H
+#endif //SR_ENGINE_GRAPHUTILS_H

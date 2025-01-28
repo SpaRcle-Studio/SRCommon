@@ -2,8 +2,8 @@
 // Created by Monika on 17.11.2021.
 //
 
-#ifndef GAMEENGINE_WORLDGEN_H
-#define GAMEENGINE_WORLDGEN_H
+#ifndef SR_ENGINE_WORLDGEN_H
+#define SR_ENGINE_WORLDGEN_H
 
 namespace SR_WORLD_NS {
     class Region;
@@ -14,4 +14,4 @@ namespace SR_WORLD_NS {
     };
 }
 
-#endif //GAMEENGINE_WORLDGEN_H
+#endif //SR_ENGINE_WORLDGEN_H

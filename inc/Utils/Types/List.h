@@ -2,8 +2,8 @@
 // Created by Nikita on 04.03.2021.
 //
 
-#ifndef GAMEENGINE_LIST_H
-#define GAMEENGINE_LIST_H
+#ifndef SR_ENGINE_LIST_H
+#define SR_ENGINE_LIST_H
 
 #include <Utils/Debug.h>
 
@@ -70,4 +70,4 @@ namespace SR_HTYPES_NS {
     };
 }
 
-#endif //GAMEENGINE_LIST_H
+#endif //SR_ENGINE_LIST_H

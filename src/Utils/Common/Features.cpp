@@ -3,7 +3,7 @@
 //
 
 #include <Utils/Common/Features.h>
-#include <Utils/Xml.h>
+#include <Utils/Resources/Xml.h>
 #include <Utils/Types/Thread.h>
 #include <Utils/Profile/TracyContext.h>
 
@@ -72,7 +72,7 @@ namespace SR_UTILS_NS {
             return false;
         }
 
-        SR_LOG("Features::Reload() : features successfully reloaded!");
+        SR_LOG("Features::Reload() : features are successfully reloaded!");
 
         m_isInitialized = true;
 
@@ -80,10 +80,12 @@ namespace SR_UTILS_NS {
     }
 
     bool Features::Enabled(const std::string &name) const {
+        SR_TRACY_ZONE;
         return GetGroup("Common").Enabled(name);
     }
 
     bool Features::Enabled(const std::string &name, bool def) const {
+        SR_TRACY_ZONE;
         return GetGroup("Common").Enabled(name, def);
     }
 

@@ -3,6 +3,8 @@
 //
 
 #include <Utils/Common/StringUtils.h>
+#include <Utils/Profile/TracyContext.h>
+#include <Utils/Debug.h>
 
 namespace SR_UTILS_NS {
     std::string StringUtils::GetExtensionFromFilePath(std::string path) {
@@ -179,6 +181,21 @@ namespace SR_UTILS_NS {
         return tokens;
     }
 
+    std::vector<std::string_view> StringUtils::SplitView(std::string_view source, std::string_view delimiter) {
+        size_t pos = 0;
+        std::vector<std::string_view> tokens = {};
+        while ((pos = source.find(delimiter)) != std::string::npos) {
+            if (auto&& token = source.substr(0, pos); !token.empty())
+                tokens.emplace_back(token);
+            source.remove_prefix(pos + delimiter.length());
+        }
+
+        if (!source.empty())
+            tokens.emplace_back(source);
+
+        return tokens;
+    }
+
     std::string StringUtils::Tab(std::string code, uint32_t count) {
         if (!code.empty()) {
             code = std::string(count, '\t') + code;
@@ -247,6 +264,8 @@ namespace SR_UTILS_NS {
     }
 
     std::string StringUtils::Base64Decode(const std::string & base64) {
+        SR_TRACY_ZONE;
+
         int in_len = base64.size();
         int i = 0;
         int j = 0;

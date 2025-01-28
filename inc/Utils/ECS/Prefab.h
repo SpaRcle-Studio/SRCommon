@@ -17,11 +17,11 @@ namespace SR_WORLD_NS {
 }
 
 namespace SR_UTILS_NS {
-    class GameObject;
+    class SceneObject;
 
     class SR_DLL_EXPORT Prefab : public IResource {
     public:
-        using GameObjectPtr = SR_HTYPES_NS::SharedPtr<GameObject>;
+        using SceneObjectPtr = SR_HTYPES_NS::SharedPtr<SceneObject>;
         using ScenePtr = SR_WORLD_NS::Scene*;
 
         static constexpr const char* EXTENSION = "prefab";
@@ -31,17 +31,17 @@ namespace SR_UTILS_NS {
         ~Prefab() override;
 
     public:
-        static Prefab *Load(const SR_UTILS_NS::Path& rawPath);
+        static Prefab* Load(const SR_UTILS_NS::Path& rawPath);
 
-        SR_NODISCARD GameObjectPtr Instance(const ScenePtr& scene) const;
-        SR_NODISCARD const GameObjectPtr& GetData() const noexcept { return m_data; }
+        SR_NODISCARD SceneObjectPtr Instance(const ScenePtr& scene) const;
+        SR_NODISCARD const SceneObjectPtr& GetData() const noexcept { return m_data; }
 
     protected:
         bool Unload() override;
         bool Load() override;
 
     private:
-        GameObjectPtr m_data;
+        SceneObjectPtr m_data;
 
     };
 }

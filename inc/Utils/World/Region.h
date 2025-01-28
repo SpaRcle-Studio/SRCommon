@@ -2,12 +2,12 @@
 // Created by Monika on 30.09.2021.
 //
 
-#ifndef GAMEENGINE_REGION_H
-#define GAMEENGINE_REGION_H
+#ifndef SR_ENGINE_REGION_H
+#define SR_ENGINE_REGION_H
 
 #include <Utils/Math/Vector3.h>
 #include <Utils/World/Observer.h>
-#include <Utils/Xml.h>
+#include <Utils/Resources/Xml.h>
 
 #define SRRegionAllocArgs SR_WORLD_NS::Observer* observer, uint32_t width, const SR_MATH_NS::IVector2& chunkSize, const SR_MATH_NS::IVector3& position
 #define SRRegionAllocVArgs observer, width, chunkSize, position
@@ -26,7 +26,7 @@ namespace SR_WORLD_NS {
     typedef std::unordered_map<Math::IVector3, SR_HTYPES_NS::Marshal::Ptr> CachedChunks;
 
     class SR_DLL_EXPORT Region : public NonCopyable {
-        using ScenePtr = SR_HTYPES_NS::SafePtr<Scene>;
+        using ScenePtr = SR_HTYPES_NS::SharedPtr<Scene>;
     protected:
         explicit Region(SRRegionAllocArgs)
             : m_observer(observer)
@@ -34,7 +34,10 @@ namespace SR_WORLD_NS {
             , m_chunkSize(chunkSize)
             , m_position(position)
             , m_containsObserver(false)
-        { }
+        {
+            //m_cached.resize(width * width * width);
+            //m_loadedChunks.resize(width * width * width);
+        }
 
     public:
         ~Region() override;
@@ -90,4 +93,4 @@ namespace SR_WORLD_NS {
     };
 }
 
-#endif //GAMEENGINE_REGION_H
+#endif //SR_ENGINE_REGION_H

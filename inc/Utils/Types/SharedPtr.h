@@ -10,6 +10,7 @@
 #include <Utils/Common/TypeInfo.h>
 #include <Utils/Debug.h>
 #include <Utils/Platform/Platform.h>
+#include <Utils/TypeTraits/TypeTraits.h>
 
 namespace SR_UTILS_NS {
     enum class SharedPtrPolicy : uint8_t {
@@ -45,16 +46,16 @@ namespace SR_HTYPES_NS {
 
     public:
         SR_NODISCARD bool IsSingletonCanBeDestroyed() const override { return false; }
-        SR_NODISCARD const std::set<SharedPtrDynamicData*>& GetData() const { return m_data; }
+        SR_NODISCARD const std::unordered_set<SharedPtrDynamicData*>& GetData() const { return m_data; }
 
     private:
         uint64_t m_count = 0;
-        std::set<SharedPtrDynamicData*> m_data;
+        std::unordered_set<SharedPtrDynamicData*> m_data;
 
     };
 
     struct SharedPtrDynamicData {
-        SharedPtrDynamicData(uint16_t strongCount, uint16_t weakCount, bool valid, SharedPtrPolicy policy)
+        SharedPtrDynamicData(uint16_t strongCount, uint16_t weakCount, bool valid, SR_UTILS_NS::SharedPtrPolicy policy)
             : strongCount(strongCount)
             , weakCount(weakCount)
             , valid(valid)
@@ -94,7 +95,7 @@ namespace SR_HTYPES_NS {
         uint16_t weakCount = 0;
         bool valid = false;
         bool deallocated = false;
-        SharedPtrPolicy policy = SharedPtrPolicy::Automatic;
+        SR_UTILS_NS::SharedPtrPolicy policy = SR_UTILS_NS::SharedPtrPolicy::Automatic;
 
     #ifdef SR_SHARED_PTR_TRACE
         SR_UTILS_NS::StringAtom debugTrace;
@@ -105,16 +106,17 @@ namespace SR_HTYPES_NS {
     template<class T> class SR_DLL_EXPORT SharedPtr {
     public:
         using Ptr = SharedPtr<T>;
+        using SharedPointerType = T;
 
         SharedPtr() = default;
-        SharedPtr(const T* constPtr); /** NOLINT */
-        SharedPtr(const T* constPtr, SharedPtrPolicy policy); /** NOLINT */
-        SharedPtr(SharedPtr const &ptr);
+        SharedPtr(const T* constPtr); /** NOLINT(google-explicit-constructor) */
+        SharedPtr(const T* constPtr, SR_UTILS_NS::SharedPtrPolicy policy);
+        SharedPtr(SharedPtr const& ptr);
         SharedPtr(SharedPtr&& ptr) noexcept
             : m_data(SR_UTILS_NS::Exchange(ptr.m_data, nullptr))
             , m_ptr(SR_UTILS_NS::Exchange(ptr.m_ptr, nullptr))
         { }
-        ~SharedPtr(); /// не должен быть виртуальным
+        virtual ~SharedPtr();
 
     public:
         template<typename U = T, typename R = U, typename... Args> SR_NODISCARD static SharedPtr<R> MakeShared(Args&&... args) {
@@ -123,13 +125,14 @@ namespace SR_HTYPES_NS {
                 return pData->GetThis();
             }
             else {
-                return pData->GetThis().template DynamicCast<R>();
+                SR_STATIC_ASSERT2((std::is_base_of_v<T, R> || std::is_base_of_v<R, T>), "Invalid type!");
+                return pData->GetThis().template StaticCast<R>();
             }
         }
 
         SR_NODISCARD SR_FORCE_INLINE operator bool() const noexcept { return m_data && m_data->valid; } /** NOLINT */
-        SharedPtr<T>& operator=(const SharedPtr<T> &ptr);
-        SharedPtr<T>& operator=(T *ptr);
+        SharedPtr<T>& operator=(const SharedPtr<T>& ptr);
+        SharedPtr<T>& operator=(T* ptr);
         SharedPtr<T>& operator=(SharedPtr<T>&& ptr) noexcept {
             Reset();
 
@@ -144,14 +147,24 @@ namespace SR_HTYPES_NS {
 
             return *this;
         }
-        SR_NODISCARD SR_FORCE_INLINE T& operator*() const noexcept { return *m_ptr; }
-        SR_NODISCARD SR_FORCE_INLINE T* operator->() const noexcept { return m_ptr; }
-        SR_NODISCARD SR_INLINE bool operator==(const SharedPtr<T>& right) const noexcept {
+        SR_FORCE_INLINE T& operator*() const { return *m_ptr; }
+        SR_FORCE_INLINE T* operator->() const { return m_ptr; }
+        SR_INLINE bool operator==(const SharedPtr<T>& right) const {
             return m_ptr == right.m_ptr;
         }
-        SR_NODISCARD SR_INLINE bool operator!=(const SharedPtr<T>& right) const noexcept {
+        SR_INLINE bool operator!=(const SharedPtr<T>& right) const {
             return m_ptr != right.m_ptr;
         }
+
+        template<typename U> SharedPtr<U> PolymorphicCast() const {
+        #ifdef SR_DEBUG
+            if (!DynamicCast<U>()) {
+                SR_SAFE_PTR_ASSERT(false, "Invalid cast!");
+            }
+        #endif
+            return StaticCast<U>();
+        }
+
         template<typename U> SharedPtr<U> DynamicCast() const {
             if constexpr (std::is_same_v<T, void>) {
                 return SharedPtr<U>();
@@ -164,28 +177,51 @@ namespace SR_HTYPES_NS {
             return SharedPtr<U>();
         }
 
+        template<typename U> SharedPtr<U> StaticCast() const {
+            if constexpr (std::is_same_v<T, void>) {
+                return SharedPtr<U>();
+            }
+
+            if (m_data && m_data->valid) {
+                return SharedPtr<U>(static_cast<U*>(m_ptr));
+            }
+
+            return SharedPtr<U>();
+        }
+
         template<typename U> U ReinterpretCast() {
             return reinterpret_cast<U>(m_ptr);
         }
 
-        SR_NODISCARD SR_FORCE_INLINE T* Get() const noexcept { return m_ptr; }
-        SR_NODISCARD SR_FORCE_INLINE SharedPtrDynamicData* GetPtrData() const noexcept { return m_data; }
-        SR_NODISCARD SR_FORCE_INLINE void* GetRawPtr() const noexcept { return (void*)m_ptr; }
+        SR_NODISCARD const T* Get() const { return m_ptr; }
+        SR_NODISCARD T* Get() { return m_ptr; }
+
+        SR_NODISCARD SR_FORCE_INLINE const T& SR_FASTCALL GetUncheckedRef() const { return *m_ptr; }
+        SR_NODISCARD SR_FORCE_INLINE T& SR_FASTCALL GetUncheckedRef() { return *m_ptr; }
+
+        const SharedPtrDynamicData* GetPtrData() const { return m_data; } /// NOLINT(modernize-use-nodiscard)
+        SharedPtrDynamicData* GetPtrData() { return m_data; }
+
+        SR_NODISCARD const void* GetRawPtr() const { return reinterpret_cast<const void*>(m_ptr); } /// NOLINT(modernize-use-nodiscard)
+        SR_NODISCARD void* GetRawPtr() { return reinterpret_cast<void*>(m_ptr); }
+
         SR_NODISCARD SharedPtr<T> GetThis() const {
             return *this;
         }
-        SR_NODISCARD SR_FORCE_INLINE bool Valid() const noexcept { return m_data && m_data->valid; }
+
+        bool Valid() const { return m_data && m_data->valid; } /// NOLINT(modernize-use-nodiscard)
 
         bool AutoFree(const SR_HTYPES_NS::Function<void(T *ptr)>& freeFun);
         bool AutoFree();
 
         void Reset();
-        SR_NODISCARD SR_FORCE_INLINE bool RecursiveLockIfValid() const noexcept;
-        SR_NODISCARD SR_FORCE_INLINE bool TryRecursiveLockIfValid() const noexcept;
-        SR_FORCE_INLINE void Unlock() const noexcept { /** nothing */  }
+
+        SR_NODISCARD bool RecursiveLockIfValid() const noexcept;
+        SR_NODISCARD bool TryRecursiveLockIfValid() const noexcept;
+        void Unlock() const noexcept { /** nothing */  }
 
     private:
-        bool FreeImpl(const SR_HTYPES_NS::Function<void(T *ptr)> &freeFun);
+        bool FreeImpl(const SR_HTYPES_NS::Function<void(T *ptr)>& freeFun);
 
     private:
         SharedPtrDynamicData* m_data = nullptr;
@@ -200,41 +236,44 @@ namespace SR_HTYPES_NS {
             return;
         }
 
-        if constexpr (IsDerivedFrom<SharedPtr, T>::value) {
+        if constexpr (!SR_UTILS_NS::IsCompleteTypeV<T>) {
+            SR_SAFE_PTR_ASSERT(ptr == nullptr, "Ptr is not nullptr!");
+        }
+        else if constexpr (SR_UTILS_NS::IsDerivedFrom<SharedPtr, T>::value) {
             if ((m_data = ptr->GetPtrData())) {
                 m_data->IncrementStrong();
                 m_ptr = ptr;
             }
             else {
-                SRHalt("Class was inherit, but not initialized!");
+                SR_SAFE_PTR_ASSERT(false, "Class was inherit, but not initialized! Or called wrong constructor with policy!");
             }
         }
         else {
             m_ptr = ptr;
             m_data = new SharedPtrDynamicData(
-                    1, /// strong
-                    0,  /// weak
-                    true,    /// valid
-                    SharedPtrPolicy::Automatic /// policy
+                1, /// strong
+                0, /// weak
+                true, /// valid
+                SR_UTILS_NS::SharedPtrPolicy::Automatic /// policy
             );
         }
     }
 
-    template<class T> SharedPtr<T>::SharedPtr(const T* constPtr, SharedPtrPolicy policy) {
+    template<class T> SharedPtr<T>::SharedPtr(const T* constPtr, SR_UTILS_NS::SharedPtrPolicy policy) {
         T* ptr = const_cast<T*>(constPtr);
-        SRAssert(ptr);
+        SR_SAFE_PTR_ASSERT(ptr, "Ptr is nullptr!");
 
-        if constexpr (IsDerivedFrom<SharedPtr, T>::value) {
-            SRAssert2(!ptr->GetPtrData(), "Class was inherit, but already initialized!");
+        if constexpr (SR_UTILS_NS::IsDerivedFrom<SharedPtr, T>::value) {
+            SR_SAFE_PTR_ASSERT(!ptr->GetPtrData(), "Class was inherit, but already initialized!");
         }
 
         m_basicManually = true;
         m_ptr = ptr;
         m_data = new SharedPtrDynamicData(
             0, /// strong
-            0,  /// weak
-            true,    /// valid
-            policy        /// policy
+            0, /// weak
+            true, /// valid
+            policy /// policy
         );
     }
 
@@ -282,7 +321,7 @@ namespace SR_HTYPES_NS {
 
         Reset();
 
-        if constexpr (IsDerivedFrom<SharedPtr, T>::value) {
+        if constexpr (SR_UTILS_NS::IsDerivedFrom<SharedPtr, T>::value) {
             if ((m_data = ptr->GetPtrData())) {
                 m_data->IncrementStrong();
                 m_ptr = ptr;
@@ -295,10 +334,10 @@ namespace SR_HTYPES_NS {
             m_ptr = ptr;
 
             m_data = new SharedPtrDynamicData(
-                    1,    /// strong
-                    0,    /// weak
-                    true, /// valid
-                    SharedPtrPolicy::Automatic /// policy
+                1, /// strong
+                0, /// weak
+                true, /// valid
+                SR_UTILS_NS::SharedPtrPolicy::Automatic /// policy
             );
         }
 
@@ -319,13 +358,14 @@ namespace SR_HTYPES_NS {
             const auto pPtr = m_ptr;
             SharedPtrDynamicData* pData = m_data;
 
-            pData->valid = false;
-
             if (valid) {
                 pData->deallocated = true;
                 freeFun(pPtr);
+                pData->valid = false;
                 return true;
             }
+
+            pData->valid = false;
 
             return false;
         }
@@ -358,10 +398,10 @@ namespace SR_HTYPES_NS {
         SR_SAFE_PTR_ASSERT(strongCount != 0, "SharedPtr is corrupted!");
 
         if (strongCount == 1) {
-            if (pData->policy == SharedPtrPolicy::Manually) {
-                SR_SAFE_PTR_ASSERT(!pData->valid, "Ptr was not freed!");
+            if (pData->policy == SR_UTILS_NS::SharedPtrPolicy::Manually) {
+                SR_SAFE_PTR_ASSERT(pData->deallocated, "Ptr was not freed!");
             }
-            else if (pData->policy == SharedPtrPolicy::Automatic && pData->valid) {
+            else if (pData->policy == SR_UTILS_NS::SharedPtrPolicy::Automatic && pData->valid) {
                 pData->valid = false;
                 delete pPtr;
             }
@@ -385,11 +425,11 @@ namespace std {
 
     template <typename T> struct less<SR_HTYPES_NS::SharedPtr<T>> {
         bool operator()(const SR_HTYPES_NS::SharedPtr<T> &lhs, const SR_HTYPES_NS::SharedPtr<T> &rhs) const {
-            void* a = lhs.GetRawPtr();
-            void* b = rhs.GetRawPtr();
+            const void* a = lhs.GetRawPtr();
+            const void* b = rhs.GetRawPtr();
             return a < b;
         }
     };
 }
 
-#endif //SR_ENGINE_SHAREDPTR_H
+#endif //SR_ENGINE_SHARED_PTR_H

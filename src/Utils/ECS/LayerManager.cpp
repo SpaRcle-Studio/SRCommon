@@ -37,6 +37,12 @@ namespace SR_UTILS_NS {
             }
         }
 
+        m_hashState = m_defaultLayer.load().GetHash();
+
+        for (auto&& layer : m_layers) {
+            m_hashState = SR_COMBINE_HASHES(m_hashState, layer.GetHash());
+        }
+
         return Super::LoadSettings(node);
     }
 

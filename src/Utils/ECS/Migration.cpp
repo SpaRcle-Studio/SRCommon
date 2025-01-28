@@ -6,6 +6,8 @@
 
 namespace SR_UTILS_NS {
     bool Migration::Migrate(uint64_t hashName, SR_HTYPES_NS::Marshal& marshal, Version from, Version to) const {
+        SR_TRACY_ZONE;
+
         if (from == to) {
             SRHalt("Migration from and to versions are the same!");
             return false;

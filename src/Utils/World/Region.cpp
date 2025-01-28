@@ -49,6 +49,8 @@ namespace SR_WORLD_NS {
     }
 
     Chunk* Region::GetChunk(const SR_MATH_NS::IVector3 &position) {
+        SR_TRACY_ZONE;
+
         if (position < 0 || position > static_cast<int32_t>(m_width)) {
             SR_ERROR("Region::GetChunk() : incorrect position! "
                    "\n\tWidth: {}\n\tRegion position: {}, {}, {}\n\tChunk position: {}, {}, {}",

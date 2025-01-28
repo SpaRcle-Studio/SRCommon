@@ -23,33 +23,6 @@ namespace SR_UTILS_NS {
         }
 
         return std::nullopt;
-
-        /*auto&& resourcesPath = appFolder.Concat("Resources");
-        if (resourcesPath.Exists(SR_UTILS_NS::Path::Type::Folder)) {
-            return resourcesPath;
-        }
-
-        resourcesPath = appFolder.Concat("../Resources");
-        if (resourcesPath.Exists(SR_UTILS_NS::Path::Type::Folder)) {
-            return resourcesPath;
-        }
-
-        resourcesPath = appFolder.Concat("../../Resources");
-        if (resourcesPath.Exists(SR_UTILS_NS::Path::Type::Folder)) {
-            return resourcesPath;
-        }
-
-        resourcesPath = appFolder.Concat("../../../Resources");
-        if (resourcesPath.Exists(SR_UTILS_NS::Path::Type::Folder)) {
-            return resourcesPath;
-        }
-
-        resourcesPath = appFolder.Concat("../../../../Resources");
-        if (resourcesPath.Exists(SR_UTILS_NS::Path::Type::Folder)) {
-            return resourcesPath;
-        }
-
-        return std::nullopt;*/
     }
 
 
@@ -78,8 +51,13 @@ namespace SR_UTILS_NS {
         SR_SCOPED_LOCK;
         SRAssert(m_isRun);
 
-        if (!path.Exists()) {
+        if (!path.IsFile()) {
             SRHalt("ResourceManager::StartWatch() : watching a non-existent file! '{}'", path.ToStringRef());
+            return nullptr;
+        }
+
+        if (path == GetResPath()) {
+            SRHalt("ResourceManager::StartWatch() : watching the resource folder is prohibited!");
             return nullptr;
         }
 
@@ -184,10 +162,10 @@ namespace SR_UTILS_NS {
     }
 
     bool ResourceManager::RegisterType(const std::string& name, uint64_t hashTypeName) {
-        SR_INFO("ResourceManager::RegisterType() : register new \"" + name + "\" type...");
+        SR_INFO("ResourceManager::RegisterType() : registering new \"" + name + "\" type...");
 
         if (m_resources.count(hashTypeName) == 1) {
-            SRHalt("ResourceManager::RegisterType() : type already registered!");
+            SRHalt("ResourceManager::RegisterType() : type is already registered!");
             return false;
         }
 
@@ -344,6 +322,8 @@ namespace SR_UTILS_NS {
         }
     #endif
 
+        pResource->StartWatch();
+
         auto&& pGroupIt = m_resources.find(pResource->GetResourceHashName());
         auto&& [name, resourcesGroup] = *pGroupIt;
 
@@ -443,6 +423,7 @@ namespace SR_UTILS_NS {
     }
 
     void ResourceManager::Execute(const SR_HTYPES_NS::Function<void()>& fun) {
+        SR_TRACY_ZONE;
         SR_LOCK_GUARD;
 
         fun();
@@ -464,64 +445,6 @@ namespace SR_UTILS_NS {
         SRHalt("ResourceManager::GetTypeName() : unknown hash name!");
 
         return "Unknown";
-    }
-
-    const std::string& ResourceManager::GetResourceId(ResourceManager::Hash hashId) const {
-        SR_LOCK_GUARD;
-
-        static std::string defaultId;
-
-        /// пустая строка
-        if (hashId == 0) {
-            return defaultId;
-        }
-
-        if (auto&& id = SR_UTILS_NS::HashManager::Instance().HashToString(hashId); !id.empty()) {
-            return id;
-        }
-
-        SRHalt("ResourceManager::GetResourceId() : id is not registered!");
-
-        return defaultId;
-    }
-
-    const Path& ResourceManager::GetResourcePath(ResourceManager::Hash hashPath) const {
-        SR_TRACY_ZONE;
-        SR_LOCK_GUARD;
-
-        /// пустая строка
-        if (hashPath == 0) {
-            static SR_UTILS_NS::Path emptyPath;
-            return emptyPath;
-        }
-
-        auto&& pIt = m_hashPaths.find(hashPath);
-
-        if (pIt == m_hashPaths.end()) {
-            SRHalt("ResourceManager::GetResourcePath() : path is not registered!");
-            static Path defaultPath;
-            return defaultPath;
-        }
-
-        return pIt->second;
-    }
-
-    ResourceManager::Hash ResourceManager::RegisterResourcePath(const Path &path) {
-        SR_LOCK_GUARD;
-
-        if (path.IsEmpty()) {
-            SRHalt("ResourceManager::RegisterResourcePath() : empty path!");
-        }
-
-        const ResourceManager::Hash hash = path.GetHash();
-
-        auto&& pIt = m_hashPaths.find(hash);
-
-        if (pIt == m_hashPaths.end()) {
-            m_hashPaths.insert(std::make_pair(hash, path));
-        }
-
-        return hash;
     }
 
     bool ResourceManager::Run() {
@@ -582,18 +505,15 @@ namespace SR_UTILS_NS {
                 pResourceReloader = m_defaultReloader;
             }
 
-            auto&& path = GetResourcePath(pHardPtr->m_pathHash);
-
-            if (path.IsEmpty()) {
+            if (pHardPtr->m_path.empty()) {
                 SR_ERROR("ResourceManager::ReloadResources() : resource have empty path!\n\tResource name: " +
-                    pHardPtr->m_resourceType->GetName() + "\n\tHash name: " + std::to_string(pHardPtr->m_resourceHash) +
-                    "\n\tPath hash: " + std::to_string(pHardPtr->m_pathHash)
+                    pHardPtr->m_resourceType->GetName() + "\n\tHash state: " + std::to_string(pHardPtr->m_resourceHash)
                 );
                 continue;
             }
 
-            if (pResourceReloader && !pResourceReloader->Reload(path, pHardPtr.get())) {
-                SR_ERROR("ResourceManager::ReloadResources() : failed to reload resource!\n\tPath: " + path.ToStringRef());
+            if (pResourceReloader && !pResourceReloader->Reload(pHardPtr->m_path, pHardPtr.get())) {
+                SR_ERROR("ResourceManager::ReloadResources() : failed to reload resource!\n\tPath: " + pHardPtr->m_path.ToStringRef());
             }
         }
     }
@@ -610,9 +530,7 @@ namespace SR_UTILS_NS {
         SR_LOCK_GUARD;
 
         while (!m_dirtyWatchers.empty()) {
-            FileWatcher::Ptr pWatcher = m_dirtyWatchers.front();
-
-            if (pWatcher) {
+            if (const FileWatcher::Ptr pWatcher = m_dirtyWatchers.front()) {
                 std::lock_guard lockWatcher(pWatcher->GetMutex());
 
                 if (!pWatcher->IsActive()) {

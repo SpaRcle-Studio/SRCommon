@@ -14,11 +14,7 @@ namespace SR_HTYPES_NS {
     class Function <ReturnType (ArgumentTypes...)>
     {
         class function_holder_base;
-    #if defined(SR_ANDROID) || defined(SR_LINUX)
         using invoker_t = std::unique_ptr<function_holder_base>;
-    #else
-        using invoker_t = std::auto_ptr<function_holder_base>;
-    #endif
     public:
         typedef ReturnType signature_type(ArgumentTypes...);
 

@@ -31,6 +31,7 @@ namespace SR_HTYPES_NS {
         mutable std::atomic<std::thread::id> m_owner;
     };
 
+    // SR_DEPRECATED_EX("Use SharedPtr instead of this")
     template<class T> class SR_DLL_EXPORT SafePtr {
     public:
         explicit SafePtr(const T *ptr);

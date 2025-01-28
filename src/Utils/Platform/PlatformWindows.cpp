@@ -15,21 +15,50 @@
 #include <shlobj.h>
 #include <ImageHlp.h>
 #include <csignal>
+#include <sddl.h>
+
+#include <filesystem>
 
 #ifdef SR_MINGW
     #include <ShObjIdl.h>
 #endif
 
 namespace SR_UTILS_NS::Platform {
+    std::wstring ConvertToUnicode(const std::string& str) {
+        UINT codePage = CP_ACP;
+        DWORD flags = 0;
+        int resultSize = MultiByteToWideChar
+                (codePage     // CodePage
+                        , flags        // dwFlags
+                        , str.c_str()  // lpMultiByteStr
+                        , str.length() // cbMultiByte
+                        , NULL         // lpWideCharStr
+                        , 0            // cchWideChar
+                );
+        std::vector<wchar_t> result(resultSize + 1);
+        MultiByteToWideChar
+                (codePage     // CodePage
+                        , flags        // dwFlags
+                        , str.c_str()  // lpMultiByteStr
+                        , str.length() // cbMultiByte
+                        , &result[0]   // lpWideCharStr
+                        , resultSize   // cchWideChar
+                );
+        return &result[0];
+    }
+
     void WriteConsoleLog(const std::string& msg) {
+        std::lock_guard lock(g_platformLogMutex);
         std::cout << msg << std::flush;
     }
 
     void WriteConsoleError(const std::string& msg) {
+        std::lock_guard lock(g_platformLogMutex);
         std::cerr << msg << std::flush;
     }
 
     void WriteConsoleWarn(const std::string& msg) {
+        std::lock_guard lock(g_platformLogMutex);
         std::cout << msg << std::flush;
     }
 
@@ -101,6 +130,68 @@ namespace SR_UTILS_NS::Platform {
         std::set_terminate(StdHandler);
     }
 
+    void InitializePlatform() {
+        SR_PLATFORM_NS::WriteConsoleLog("Platform::InitializePlatform() : initializing Windows platform...\n");
+        HKEY hKey;
+        LPCTSTR lpSubKey = TEXT("Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\ComDlg32\\LastVisitedPidlMRU");
+        const LONG lResult = RegOpenKeyEx(HKEY_CURRENT_USER, lpSubKey, 0, KEY_READ, &hKey);
+
+        if (lResult != ERROR_SUCCESS) {
+            SR_PLATFORM_NS::WriteConsoleError("InitializePlatform() : failed to open registry key!");
+            return;
+        }
+
+        DWORD dwIndex = 0;
+
+        TCHAR szValueName[2048];
+        DWORD dwValueNameSize = 2048;
+
+        BYTE lpData[2048];
+        DWORD dwDataSize = 2048;
+
+        DWORD dwType;
+
+        std::vector<std::pair<std::string, std::wstring>> values;
+
+        while (true) {
+            const LSTATUS code = RegEnumValue(hKey, dwIndex, szValueName, &dwValueNameSize, NULL, &dwType, lpData, &dwDataSize);
+            if (code == ERROR_NO_MORE_ITEMS) {
+                break;
+            }
+
+            if (dwType == REG_BINARY) {
+                std::wstring strData;
+                for (DWORD i = 0; i < dwDataSize; i += 2) {
+                    const auto ch = static_cast<wchar_t>(lpData[i]);
+                    strData.push_back(ch);
+                }
+
+                values.emplace_back(std::string(szValueName, szValueName + dwValueNameSize), strData);
+            }
+
+            dwValueNameSize = 2048;
+            dwDataSize = 2048;
+            ++dwIndex;
+        }
+
+        auto&& appName = SR_PLATFORM_NS::GetApplicationName();
+        auto&& appNameW = ConvertToUnicode(appName);
+
+        for (const auto& [name, data] : values) {
+            if (data.find(appNameW) == 0) {
+                LONG lResult = RegSetKeyValue(HKEY_CURRENT_USER, lpSubKey,  const_cast<char*>(name.c_str()), REG_BINARY, NULL, 0);
+
+                if (lResult != ERROR_SUCCESS) {
+                    SR_PLATFORM_NS::WriteConsoleError("InitializePlatform() : failed to delete register value!");
+                }
+
+                break;
+            }
+        }
+
+        RegCloseKey(hKey);
+    }
+
     void SetInstance(void*) {
 
     }
@@ -145,6 +236,10 @@ namespace SR_UTILS_NS::Platform {
         operator HRESULT() const { return m_hr; }
         HRESULT m_hr;
     };
+
+    void SetCurrentProcessDirectory(const SR_UTILS_NS::Path& directory) {
+        SetCurrentDirectory(directory.CStr());
+    }
 
     ///функция для копирования файла/файлов в буфер обмена
     void CopyFilesToClipboard(std::list<SR_UTILS_NS::Path> paths) {
@@ -210,6 +305,11 @@ namespace SR_UTILS_NS::Platform {
         }
     }
 
+    bool GetSystemKeyboardState(uint8_t* pKeyCodes) {
+        GetKeyState(0);
+        return ::GetKeyboardState(pKeyCodes);
+    }
+
     std::string GetClipboardText() {
         std::string text{};
 
@@ -248,10 +348,21 @@ namespace SR_UTILS_NS::Platform {
             SR_ERROR("Platform::ClearClipboard() : failed to open clipboard!");
     }
 
-    Math::FVector2 GetMousePos() {
+    SR_MATH_NS::FVector2 GetMousePos() {
         POINT p;
         GetCursorPos(&p);
         return Math::FVector2(p.x, p.y);
+    }
+
+    MouseState GetMouseState() {
+        MouseState state;
+        state.position = GetMousePos();
+        state.buttonStates[0] = GetKeyState(VK_LBUTTON) & 0x8000;
+        state.buttonStates[1] = GetKeyState(VK_RBUTTON) & 0x8000;
+        state.buttonStates[2] = GetKeyState(VK_MBUTTON) & 0x8000;
+        state.buttonStates[3] = GetKeyState(VK_XBUTTON1) & 0x8000;
+        state.buttonStates[4] = GetKeyState(VK_XBUTTON2) & 0x8000;
+        return state;
     }
 
     void Sleep(uint64_t milliseconds) {
@@ -272,17 +383,21 @@ namespace SR_UTILS_NS::Platform {
     }
 
     bool IsFileDeletable(const SR_UTILS_NS::Path& path) {
-        if (!path.IsFile()) {
-            SR_WARN("Platform::CanBeDeleted() : path is no a file.");
+        if (!path.Exists() || !path.IsFile()) {
+            SR_WARN("Platform::CanBeDeleted() : path does not exist or is not a file.");
             return false;
         }
 
-        if (auto&& file = std::ofstream((path.c_str()))) {
+        if (auto&& file = std::ofstream(path.c_str())) {
             file.close();
             return true;
         }
 
         return false;
+    }
+
+    void SetSamePermissions(const SR_UTILS_NS::Path& path) {
+        SRHaltOnce("Platform::SetSamePermissions() : is not implemented!");
     }
 
     void SetThreadPriority(void *nativeHandle, ThreadPriority priority) {
@@ -345,7 +460,8 @@ namespace SR_UTILS_NS::Platform {
             );
 
             if (!result) {
-                SR_WARN("Platform::Copy() : {}\n\tFrom: {}\n\tTo: {}", GetLastErrorAsString().c_str(), from.CStr(), to.CStr());
+                auto&& message = GetLastErrorAsString();
+                SR_WARN("Platform::Copy() : {}\n\tFrom: {}\n\tTo: {}", message.c_str(), from.CStr(), to.CStr());
             }
 
             return result;
@@ -356,7 +472,7 @@ namespace SR_UTILS_NS::Platform {
             return false;
         }
 
-        CreateFolder(to.ToStringRef());
+        to.Create();
 
         for (auto&& item : GetInDirectory(from, Path::Type::Undefined)) {
             if (Copy(item, to.Concat(item.GetBaseNameAndExt()))) {
@@ -464,6 +580,22 @@ namespace SR_UTILS_NS::Platform {
         return GetApplicationPath().GetFolder();
     }
 
+    std::list<Path> GetAllInDirectory(const Path& dir) {
+        std::list<Path> result;
+
+        if (!IsExists(dir)) {
+            return result;
+        }
+
+        for (const auto& entry : std::filesystem::directory_iterator(dir.ToStringRef())) {
+            if (entry.is_directory() || entry.is_regular_file()) {
+                result.emplace_back(entry.path());
+            }
+        }
+
+        return result;
+    }
+
     Path GetApplicationName() {
         const std::size_t buf_len = 260;
         auto s = new TCHAR[buf_len];
@@ -479,7 +611,7 @@ namespace SR_UTILS_NS::Platform {
         return false;
     }
 
-    void OpenFile(const SR_UTILS_NS::Path& path) {
+    void OpenFile(const SR_UTILS_NS::Path& path, const std::string& args) {
         STARTUPINFO si;
         PROCESS_INFORMATION pi;
 
@@ -489,15 +621,15 @@ namespace SR_UTILS_NS::Platform {
 
         /// start the program up
         CreateProcess(path.c_str(), /// the path
-    NULL,
-    NULL, /// Process handle not inheritable
-    NULL, /// Thread handle not inheritable
-    FALSE, /// Set handle inheritance to FALSE
-    0, /// No creation flags
-    NULL, /// Use parent's environment block
-    NULL, /// Use parent's starting directory
-    &si, /// Pointer to STARTUPINFO structure
-    &pi  /// Pointer to PROCESS_INFORMATION structure (removed extra parentheses)
+            const_cast<char*>(args.c_str()),
+            NULL, /// Process handle not inheritable
+            NULL, /// Thread handle not inheritable
+            FALSE, /// Set handle inheritance to FALSE
+            0, /// No creation flags
+            NULL, /// Use parent's environment block
+            NULL, /// Use parent's starting directory
+            &si, /// Pointer to STARTUPINFO structure
+            &pi  /// Pointer to PROCESS_INFORMATION structure (removed extra parentheses)
         );
 
         // Close process and thread handles.
@@ -507,7 +639,14 @@ namespace SR_UTILS_NS::Platform {
 
     void SelfOpen() {
         auto&& exe = SR_PLATFORM_NS::GetApplicationPath();
-        OpenFile(exe);
+        OpenFile(exe, "");
+    }
+
+    void Unzip(const SR_UTILS_NS::Path& source, const SR_UTILS_NS::Path& destination, bool replace) {
+		//TODO: Add support for the 'replace' argument.
+        destination.CreateIfNotExists();
+        std::string command = "tar -xf "+ source.ToString() + " -C " + destination.ToString();
+        system(command.c_str());
     }
 
     FileMetadata GetFileMetadata(const Path& file) {
@@ -523,6 +662,21 @@ namespace SR_UTILS_NS::Platform {
             fileMetadata.lastWriteTime = SR_UINT64_MAX; ///TODO: какое значение стоит назначить в случае, если не был получен handle файла?
         }
         return fileMetadata; ///TODO: std::move в будущем, когда FileMetadata станет больше?
+    }
+
+    SR_MATH_NS::UVector2 GetScreenResolution() {
+        const HDC hdc = GetDC(NULL);
+        const int32_t w = GetDeviceCaps(hdc, HORZRES);
+        const int32_t h = GetDeviceCaps(hdc, VERTRES);
+        ReleaseDC(NULL, hdc);
+        return SR_MATH_NS::UVector2(w, h);
+    }
+
+    double_t GetScreenDPI() {
+        const HDC hdc = GetDC(NULL);
+        const int32_t ret = GetDeviceCaps(hdc, LOGPIXELSX);
+        ReleaseDC(NULL, hdc);
+        return ret;
     }
 
     bool IsAbsolutePath(const Path &path) {
@@ -572,20 +726,20 @@ namespace SR_UTILS_NS::Platform {
     }
 
     void SetMousePos(const SR_MATH_NS::IVector2& pos) {
-        ::SetCursorPos(static_cast<int32_t>(pos.x), static_cast<int32_t>(pos.y));
+        ::SetCursorPos(pos.x, pos.y);
     }
 
     void SetCursorVisible(bool isVisible) {
-        //::ShowCursor(isVisible);
+        ::ShowCursor(isVisible);
 
-        if (!isVisible) {
-            ::SetCursor(nullptr);
-            return;
-        }
-
-        HINSTANCE hInstance = ::GetModuleHandle(NULL);  // get a handle to the app's instance
-        HCURSOR hCursor = ::LoadCursor(hInstance, MAKEINTRESOURCE(IDC_ARROW));  // load a cursor
-        ::SetCursor(hCursor);
+        // if (!isVisible) {
+        //     ::SetCursor(nullptr);
+        //     return;
+        // }
+        //
+        // HINSTANCE hInstance = ::GetModuleHandle(NULL);  // get a handle to the app's instance
+        // HCURSOR hCursor = ::LoadCursor(hInstance, MAKEINTRESOURCE(IDC_ARROW));  // load a cursor
+        // ::SetCursor(hCursor);
     }
 
     PlatformType GetType() {

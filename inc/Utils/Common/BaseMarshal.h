@@ -22,6 +22,12 @@ namespace SR_UTILS_NS {
                 stream.write((const char *) &value.b, sizeof(SR_MATH_NS::Unit));
                 stream.write((const char *) &value.a, sizeof(SR_MATH_NS::Unit));
             }
+            else if constexpr (std::is_same<T, SR_MATH_NS::FVector4>()) {
+                stream.write((const char *) &value.x, sizeof(SR_MATH_NS::Unit));
+                stream.write((const char *) &value.y, sizeof(SR_MATH_NS::Unit));
+                stream.write((const char *) &value.z, sizeof(SR_MATH_NS::Unit));
+                stream.write((const char *) &value.w, sizeof(SR_MATH_NS::Unit));
+            }
             else if constexpr (std::is_same<T, SR_MATH_NS::FVector3>()) {
                 stream.write((const char *) &value.x, sizeof(SR_MATH_NS::Unit));
                 stream.write((const char *) &value.y, sizeof(SR_MATH_NS::Unit));
@@ -80,6 +86,12 @@ namespace SR_UTILS_NS {
                 stream.read((char*)&value.g, sizeof(SR_MATH_NS::Unit));
                 stream.read((char*)&value.b, sizeof(SR_MATH_NS::Unit));
                 stream.read((char*)&value.a, sizeof(SR_MATH_NS::Unit));
+            }
+            else if constexpr (std::is_same<T, SR_MATH_NS::FVector4>()) {
+                stream.read((char*)&value.x, sizeof(SR_MATH_NS::Unit));
+                stream.read((char*)&value.y, sizeof(SR_MATH_NS::Unit));
+                stream.read((char*)&value.z, sizeof(SR_MATH_NS::Unit));
+                stream.read((char*)&value.w, sizeof(SR_MATH_NS::Unit));
             }
             else if constexpr (std::is_same<T, SR_MATH_NS::FVector3>()) {
                 stream.read((char*)&value.x, sizeof(SR_MATH_NS::Unit));

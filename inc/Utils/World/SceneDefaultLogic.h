@@ -9,8 +9,10 @@
 
 namespace SR_WORLD_NS {
     class SceneDefaultLogic : public SceneLogic {
+        SR_CLASS()
         using Super = SceneLogic;
     public:
+        SceneDefaultLogic() = default;
         explicit SceneDefaultLogic(const ScenePtr& scene);
         ~SceneDefaultLogic() override = default;
 
@@ -21,6 +23,7 @@ namespace SR_WORLD_NS {
         void Destroy() override;
         void Update(float_t dt) override;
 
+        bool Load(const Path& path) override;
         bool Save(const Path& path) override;
 
     };

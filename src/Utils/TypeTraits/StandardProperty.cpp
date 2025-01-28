@@ -19,10 +19,13 @@ namespace SR_UTILS_NS {
                 case StandardType::Int32: pBlock->Write<int32_t>(GetInt32()); break;
                 case StandardType::UInt32: pBlock->Write<uint32_t>(GetUInt32()); break;
                 case StandardType::String: pBlock->Write<std::string>(GetString()); break;
+                case StandardType::UnicodeString: pBlock->Write<SR_HTYPES_NS::UnicodeString>(GetUnicodeString()); break;
                 case StandardType::StringAtom: pBlock->Write<StringAtom>(GetStringAtom()); break;
                 case StandardType::FVector2: pBlock->Write<SR_MATH_NS::FVector2>(GetFVector2()); break;
+                case StandardType::UVector2: pBlock->Write<SR_MATH_NS::UVector2>(GetUVector2()); break;
                 case StandardType::FVector3: pBlock->Write<SR_MATH_NS::FVector3>(GetFVector3()); break;
                 case StandardType::FVector4: pBlock->Write<SR_MATH_NS::FVector4>(GetFVector4()); break;
+                case StandardType::BVector3: pBlock->Write<SR_MATH_NS::BVector3>(GetBVector3()); break;
                 default:
                     SRHalt("Unsupported type! Type: \"" + SR_UTILS_NS::EnumReflector::ToStringAtom(GetStandardType()).ToStringRef() + "\"");
                     return;
@@ -52,10 +55,13 @@ namespace SR_UTILS_NS {
                 case StandardType::Int32: SetInt32(pBlock->Read<int32_t>()); break;
                 case StandardType::UInt32: SetUInt32(pBlock->Read<uint32_t>()); break;
                 case StandardType::String: SetString(pBlock->Read<std::string>()); break;
+                case StandardType::UnicodeString: SetUnicodeString(pBlock->Read<SR_HTYPES_NS::UnicodeString>()); break;
                 case StandardType::StringAtom: SetStringAtom(pBlock->Read<StringAtom>()); break;
+                case StandardType::UVector2: SetUVector2(pBlock->Read<SR_MATH_NS::UVector2>()); break;
                 case StandardType::FVector2: SetFVector2(pBlock->Read<SR_MATH_NS::FVector2>()); break;
                 case StandardType::FVector3: SetFVector3(pBlock->Read<SR_MATH_NS::FVector3>()); break;
                 case StandardType::FVector4: SetFVector4(pBlock->Read<SR_MATH_NS::FVector4>()); break;
+                case StandardType::BVector3: SetBVector3(pBlock->Read<SR_MATH_NS::BVector3>()); break;
                 default:
                     SRHalt("Unsupported type! Type: \"" + SR_UTILS_NS::EnumReflector::ToStringAtom(GetStandardType()).ToStringRef() + "\"");
                     return;
@@ -131,5 +137,16 @@ namespace SR_UTILS_NS {
                 m_loadArray(*pBlock);
             }
         }
+    }
+
+    ArrayReferenceProperty& PropertyContainer::AddArrayReferenceProperty(const char* name) {
+        return AddCustomProperty<ArrayReferenceProperty>(name);
+    }
+
+    void PropertyContainer::AddExternalProperty(Property* pProperty) {
+        PropertyInfo propertyInfo;
+        propertyInfo.pProperty = pProperty;
+        propertyInfo.isExternal = true;
+        m_properties.emplace_back(propertyInfo);
     }
 }

@@ -6,6 +6,9 @@
 #define SR_ENGINE_STRING_ATOM_H
 
 #include <Utils/stdInclude.h>
+#include <Utils/Common/Hashes.h>
+
+#include <fmt/format.h>
 
 namespace SR_UTILS_NS {
     class StringHashInfo;
@@ -14,19 +17,17 @@ namespace SR_UTILS_NS {
         SR_INLINE_STATIC std::string DEFAULT = std::string();
         static StringHashInfo* DEFAULT_STRING_INFO;
     public:
-        StringAtom() {
-            m_info = DEFAULT_STRING_INFO;
-        }
+        StringAtom();
 
         StringAtom(const StringAtom& str) = default;
 
         StringAtom(StringHashInfo* pInfo); /// NOLINT
         StringAtom(const char* str); /// NOLINT
         StringAtom(const std::string& str); /// NOLINT
-        StringAtom(const std::string_view& str); /// NOLINT
+        StringAtom(std::string_view str); /// NOLINT
 
     public:
-        operator std::string() const noexcept; /// NOLINT
+        operator const std::string&() const noexcept; /// NOLINT
         operator std::string_view() const noexcept; /// NOLINT
         bool operator==(const StringAtom& rhs) const noexcept;
         bool operator==(const std::string& rhs) const noexcept;
@@ -59,13 +60,7 @@ namespace SR_UTILS_NS {
             Clear();
         }
 
-        void Clear() {
-            if (!m_info) {
-                return;
-            }
-
-            m_info = DEFAULT_STRING_INFO;
-        }
+        void Clear();
 
     private:
         StringHashInfo* m_info = nullptr;
@@ -86,16 +81,27 @@ namespace SR_UTILS_NS {
 
 namespace std {
     template<> struct hash<SR_UTILS_NS::StringAtom> {
-        size_t operator()(SR_UTILS_NS::StringAtom const& object) const {
+        size_t operator()(SR_UTILS_NS::StringAtom const& object) const noexcept {
             return object.GetHash();
         }
     };
 
     template<> struct less<SR_UTILS_NS::StringAtom> {
-        bool operator()(const SR_UTILS_NS::StringAtom& lhs, const SR_UTILS_NS::StringAtom& rhs) const {
+        bool operator()(const SR_UTILS_NS::StringAtom& lhs, const SR_UTILS_NS::StringAtom& rhs) const noexcept {
             return lhs.GetHash() < rhs.GetHash();
         }
     };
 }
+
+template<> struct fmt::formatter<SR_UTILS_NS::StringAtom>
+{
+    template<typename ParseContext>
+    constexpr auto parse(ParseContext& ctx) { return ctx.begin(); }
+
+    template<typename FormatContext>
+    auto format(SR_UTILS_NS::StringAtom const& str, FormatContext& ctx) {
+        return fmt::format_to(ctx.out(), "{}", str.ToStringView());
+    }
+};
 
 #endif //SR_ENGINE_STRING_ATOM_H

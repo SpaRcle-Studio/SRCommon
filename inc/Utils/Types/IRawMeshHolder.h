@@ -21,7 +21,7 @@ namespace SR_HTYPES_NS {
     public:
         SR_NODISCARD MeshIndex GetMeshId() const noexcept { return m_meshId; }
         SR_NODISCARD RawMeshPtr GetRawMesh() const noexcept { return m_rawMesh; }
-        SR_NODISCARD const SR_UTILS_NS::Path& GetMeshPath() const noexcept;
+        SR_NODISCARD SR_UTILS_NS::Path GetMeshPath() const noexcept;
         SR_NODISCARD std::string GetMeshStringPath() const noexcept;
         SR_NODISCARD bool IsValidMeshId() const noexcept;
         SR_NODISCARD std::vector<SR_UTILS_NS::Vertex> GetVertices() const noexcept;

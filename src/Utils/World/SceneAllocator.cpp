@@ -5,7 +5,7 @@
 #include <Utils/World/SceneAllocator.h>
 
 namespace SR_WORLD_NS {
-    bool SceneAllocator::Init(const SceneAllocator::Allocator &allocator) {
+    bool SceneAllocator::Init(const SceneAllocator::Allocator& allocator) {
         if (m_allocator) {
             SR_WARN("SceneAllocator::Init() : allocator already initialized!");
             return false;
@@ -16,12 +16,12 @@ namespace SR_WORLD_NS {
         return true;
     }
 
-    SceneAllocator::ScenePtr SceneAllocator::Allocate() {
+    SceneAllocator::ScenePtr SceneAllocator::Allocate() const {
         if (!m_allocator) {
             SRHalt("SceneAllocator::Allocate() : allocator isn't initialized!");
             Platform::Terminate();
         }
 
-        return *m_allocator();
+        return m_allocator();
     }
 }

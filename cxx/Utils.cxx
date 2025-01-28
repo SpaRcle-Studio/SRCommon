@@ -27,16 +27,17 @@
 #include "../src/Utils/Math/Matrix4x4.cpp"
 #include "../src/Utils/Math/Quaternion.cpp"
 #include "../src/Utils/Math/Vector3.cpp"
+#include "../src/Utils/Math/Vector4.cpp"
 #include "../src/Utils/Math/Vector6.cpp"
 #include "../src/Utils/Math/Noise.cpp"
 #include "../src/Utils/Math/Rect.cpp"
 
 #include "../src/Utils/TaskManager/TaskManager.cpp"
+#include "../src/Utils/TaskManager/ThreadWorker.cpp"
 
 #include "../src/Utils/Settings.cpp"
 #include "../src/Utils/DebugDraw.cpp"
 #include "../src/Utils/Debug.cpp"
-#include "../src/Utils/Xml.cpp"
 
 #include "../src/Utils/Resources/FileWatcher.cpp"
 #include "../src/Utils/Resources/IResource.cpp"
@@ -45,16 +46,26 @@
 #include "../src/Utils/Resources/ResourceManager.cpp"
 #include "../src/Utils/Resources/ResourceContainer.cpp"
 #include "../src/Utils/Resources/IResourceReloader.cpp"
+#include "../src/Utils/Resources/ResourceEmbedder.cpp"
+#include "../src/Utils/Resources/Xml.cpp"
+#include "../src/Utils/Resources/Yaml.cpp"
 
 #include "../src/Utils/CommandManager/ICommand.cpp"
 #include "../src/Utils/CommandManager/CmdManager.cpp"
 #include "../src/Utils/CommandManager/ReversibleCommand.cpp"
 
+#include "../src/Utils/TypeTraits/SRProperty.cpp"
 #include "../src/Utils/TypeTraits/PropertyManager.cpp"
 #include "../src/Utils/TypeTraits/Property.cpp"
 #include "../src/Utils/TypeTraits/Properties.cpp"
 #include "../src/Utils/TypeTraits/StandardProperty.cpp"
 #include "../src/Utils/TypeTraits/SRClass.cpp"
+#include "../src/Utils/TypeTraits/ClassDB.cpp"
+#include "../src/Utils/TypeTraits/SRClassMeta.cpp"
+#include "../src/Utils/TypeTraits/Factory.cpp"
+
+#include "../src/Utils/Reflection/Property.cpp"
+#include "../src/Utils/Reflection/Value.cpp"
 
 #include "../src/Utils/Game/LookAtComponent.cpp"
 #include "../src/Utils/Game/DebugLogComponent.cpp"
@@ -66,5 +77,3 @@
 #endif
 
 #include "../libs/xxHash/xxhash.c"
-#include "../libs/openssl/crypto/sha/sha256.c"
-#include "../libs/openssl/crypto/mem_clr.c"

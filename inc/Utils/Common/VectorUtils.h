@@ -2,8 +2,8 @@
 // Created by Monika on 01.09.2021.
 //
 
-#ifndef GAMEENGINE_VECTORUTILS_H
-#define GAMEENGINE_VECTORUTILS_H
+#ifndef SR_ENGINE_VECTORUTILS_H
+#define SR_ENGINE_VECTORUTILS_H
 
 #include <Utils/Common/StringFormat.h>
 
@@ -85,4 +85,4 @@ namespace SR_UTILS_NS {
     }
 }
 
-#endif //GAMEENGINE_VECTORUTILS_H
+#endif //SR_ENGINE_VECTORUTILS_H

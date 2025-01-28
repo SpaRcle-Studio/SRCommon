@@ -2,8 +2,8 @@
 // Created by Nikita on 21.03.2021.
 //
 
-#ifndef GAMEENGINE_MACROS_H
-#define GAMEENGINE_MACROS_H
+#ifndef SR_COMMON_MACROS_H
+#define SR_COMMON_MACROS_H
 
 #ifdef _WINDOWS_
     #error "Windows.h was included before macros.h"
@@ -43,8 +43,14 @@
 #endif
 
 #define CRT_SECURE_NO_WARNINGS
-#define _SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING
-#define _HAS_AUTO_PTR_ETC 1
+
+#ifndef _SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING
+    #define _SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING
+#endif
+
+#ifndef _HAS_AUTO_PTR_ETC
+    #define _HAS_AUTO_PTR_ETC 1
+#endif
 
 #define TRUE 1
 #define FALSE 0
@@ -64,6 +70,20 @@
 
 #if defined(__MINGW64__) || defined(__MINGW32__)
     #define SR_MINGW
+#endif
+
+#ifdef __has_cpp_attribute
+    #define SR_HAS_ATTRIBUTE __has_cpp_attribute
+#else
+    #define SR_HAS_ATTRIBUTE(x) (0)
+#endif
+
+#if SR_HAS_ATTRIBUTE(likely) || defined(SR_MSVC)
+    #define SR_LIKELY_ATTRIBUTE [[likely]]
+    #define SR_UNLIKELY_ATTRIBUTE [[unlikely]]
+#else
+    #define SR_LIKELY_ATTRIBUTE
+    #define SR_UNLIKELY_ATTRIBUTE
 #endif
 
 #ifdef __GNUC__
@@ -102,7 +122,7 @@
     #endif
 #else
     #ifdef SR_ANDROID
-        #define SR_RELEASE
+        #define SR_RELEASE /// TODO: wtf
     #endif
 #endif
 
@@ -135,8 +155,14 @@
     #define SR_FORCE_INLINE __forceinline
 #endif
 
-#define SR_CLOCKS_PER_SEC CLOCKS_PER_SEC
-#define SR_NODISCARD [[nodiscard]]
+#define SR_CLOCKS_PER_SEC 1000
+
+#ifdef SR_GCC
+    #define SR_NODISCARD __attribute__ ((__warn_unused_result__))
+#else
+    #define SR_NODISCARD [[nodiscard]]
+#endif
+
 #define SR_FALLTHROUGH [[fallthrough]]
 #define SR_MAYBE_UNUSED [[maybe_unused]]
 #define SR_DEPRECATED_EX(text) [[deprecated(text)]]
@@ -146,16 +172,17 @@
 #define SR_NULL 0
 #define SR_MARSHAL_USE_LIST 1
 #define SR_MARSHAL_ENCODE_AND_DECODE 0
-#define SR_INVALID_STR_POS -1
-#define SR_ID_INVALID -1
+#define SR_INVALID_STR_POS (-1)
+#define SR_ID_INVALID (-1)
 #define SR_SHADER_PROGRAM int32_t
-#define SR_NULL_SHADER -1
+#define SR_NULL_SHADER (-1)
 #define SR_VERTEX_DESCRIPTION size_t
 #define GLM_ENABLE_EXPERIMENTAL
 #define SR_NOOP (void)0
 #define SR_FLT_EPSILON FLT_EPSILON
+#define SR_NORETURN [[noreturn]]
 
-#define SR_MAX_BONES_ON_VERTEX 8
+#define SR_MAX_BONES_ON_VERTEX 16
 #define SR_HUMANOID_MAX_BONES 128
 
 #define SR_FAST_CONSTRUCTOR SR_FORCE_INLINE SR_CONSTEXPR
@@ -185,8 +212,18 @@
     #define SR_WIN32_BOOL false
 #endif
 
+#ifdef WIN32
+    #define SR_SIMD_SUPPORT 1
+#else
+    #define SR_SIMD_SUPPORT 0
+#endif
+
 #define SR_MACRO_CONCAT_UTIL(a, b) a ## b
 #define SR_MACRO_CONCAT(a, b) SR_MACRO_CONCAT_UTIL(a, b)
+#define SR_STRINGIFY(x) #x
+#define SR_EXPAND_AND_STRINGIFY(x) SR_STRINGIFY(x)
+#define SR_PROTECT(...) __VA_ARGS__
+#define SR_EXPAND(x) x
 
 #define SR_LINE __LINE__
 
@@ -195,6 +232,7 @@
 #define SR_INADDR_ANY (ULONG)0x00000000
 
 #define SR_XML_NS SpaRcle::Utils::Xml
+#define SR_YAML_NS SpaRcle::Utils::Yaml
 #define SR_PHYSICS_NS SpaRcle::Physics
 #define SR_PTYPES_NS SR_PHYSICS_NS::Types
 #define SR_PHYSICS_UTILS_NS SR_PHYSICS_NS::Utils
@@ -218,14 +256,43 @@
 #define SR_AUDIO_NS SpaRcle::Audio
 #define SR_UTILS_GUI_NS SR_UTILS_NS::GUI
 
+#define SR_COUNT_ARGS_IMPL2(                                                                                            \
+    _1, _2, _3, _4, _5, _6, _7, _8, _9, _10,                                                                            \
+    _11, _12, _13, _14, _15, _16, _17, _18, _19, _20,                                                                   \
+    _21, _22, _23, _24, _25, _26, _27, _28, _29, _30,                                                                   \
+    _31, _32, _33, _34, _35, _36, _37, _38, _39, _40,                                                                   \
+    _41, _42, _43, _44, _45, _46, _47, _48, _49, _50,                                                                   \
+    _51, _52, _53, _54, _55, _56, _57, _58, _59, _60,                                                                   \
+    _61, _62, _63, _64, _65, _66, _67, _68, _69, _70,                                                                   \
+    _71, _72, _73, _74, _75, _76, _77, _78, _79, _80,                                                                   \
+    _81, _82, _83, _84, _85, _86, _87, _88, _89, _90,                                                                   \
+    _91, _92, _93, _94, _95, _96, _97, _98, _99, _100,                                                                  \
+    _101, _102, _103, _104, _105, _106, _107, _108, _109, _110,                                                         \
+    _111, _112, _113, _114, _115, _116, _117, _118, _119, _120,                                                         \
+    _121, _122, _123, _124, _125, N, ...) N
+
+#define SR_COUNT_ARGS_IMPL(...) SR_EXPAND(SR_COUNT_ARGS_IMPL2(__VA_ARGS__))
+
+#define SR_COUNT_ARGS(...) SR_COUNT_ARGS_IMPL(SR_PROTECT(__VA_ARGS__),                                                  \
+    125, 124, 123, 122, 121, 120, 119, 118, 117,                                                                        \
+    116, 115, 114, 113, 112, 111, 110, 109, 108, 107, 106, 105, 104, 103,                                               \
+    102, 101, 100, 99, 98, 97, 96, 95, 94, 93, 92, 91, 90, 89,                                                          \
+    88, 87, 86, 85, 84, 83, 82, 81, 80, 79, 78, 77, 76, 75,                                                             \
+    74, 73, 72, 71, 70, 69, 68, 67, 66, 65, 64, 63, 62, 61,                                                             \
+    60, 59, 58, 57, 56, 55, 54, 53, 52, 51, 50, 49, 48, 47,                                                             \
+    46, 45, 44, 43, 42, 41, 40, 39, 38, 37, 36, 35, 34, 33,                                                             \
+    32, 31, 30, 29, 28, 27, 26, 25, 24, 23, 22, 21, 20, 19,                                                             \
+    18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5,                                                                  \
+    4, 3, 2, 1, 0)
+
 #define SR_GLOBAL_LOCK static std::mutex codegenGlobalMutex##__LINE__; std::lock_guard<std::mutex> codegenLock##__LINE__(codegenGlobalMutex##__LINE__);
 
-#define SR_STATIC_ASSERT2(expr, msg) static_assert(expr, msg);
+#define SR_STATIC_ASSERT2(expr, msg) static_assert(expr, msg)
 
 #if defined(SR_MINGW) || (SR_MSC_VERSION > 1929) || defined(SR_ANDROID) || defined(SR_LINUX)
-    #define SR_STATIC_ASSERT(msg) static_assert(msg);
+    #define SR_STATIC_ASSERT(msg) static_assert(msg)
 #else
-    #define SR_STATIC_ASSERT(msg) static_assert(false, msg);
+    #define SR_STATIC_ASSERT(msg) static_assert(false, msg)
 #endif
 
 #ifdef SR_LINUX
@@ -248,8 +315,10 @@
 
 #if defined(SR_MSVC)
     #define SR_STRCMPI _strcmpi
+    #define SR_STRNCPY strncpy_s
 #else
     #define SR_STRCMPI strcasecmp
+    #define SR_STRNCPY strncpy
 #endif
 
 #ifdef SR_MSVC
@@ -260,4 +329,4 @@
 
 #define SR_OFFSETOF(s,m) ((::size_t)&reinterpret_cast<char const volatile&>((((s*)0)->m)))
 
-#endif //GAMEENGINE_MACROS_H
+#endif //SR_COMMON_MACROS_H

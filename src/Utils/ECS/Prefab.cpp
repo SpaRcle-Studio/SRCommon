@@ -62,11 +62,12 @@ namespace SR_UTILS_NS {
 
         auto&& marshal = SR_HTYPES_NS::Marshal::Load(path);
         if (!marshal.Valid()) {
-            SR_ERROR("Prefab::Load() : failed to load marshal data!");
+            SR_ERROR("Prefab::Load() : failed to load marshal data!\n\tPath: " + path.ToString());
             return false;
         }
 
-        m_data = SR_UTILS_NS::GameObject::Load(marshal, nullptr);
+        /// TODO: implement load other types of data
+        m_data = SR_UTILS_NS::GameObject::Load(marshal, nullptr).StaticCast<SceneObject>();
 
         if (!m_data.Valid()) {
             m_loadState = LoadState::Error;
@@ -77,13 +78,13 @@ namespace SR_UTILS_NS {
         return IResource::Load();
     }
 
-    Prefab::GameObjectPtr Prefab::Instance(const Prefab::ScenePtr& scene) const {
+    Prefab::SceneObjectPtr Prefab::Instance(const Prefab::ScenePtr& scene) const {
         if (m_data) {
-            auto&& instanced = m_data->Copy(scene);
-            instanced->SetPrefab(const_cast<Prefab*>(this), true);
-            return instanced;
+            auto&& pInstanced = m_data->Copy(scene, nullptr);
+            pInstanced->SetPrefab(const_cast<Prefab*>(this), true);
+            return pInstanced;
         }
 
-        return Prefab::GameObjectPtr();
+        return Prefab::SceneObjectPtr();
     }
 }

@@ -2,8 +2,8 @@
 // Created by mantsurov-n on 03.12.2021.
 //
 
-#ifndef GAMEENGINE_OBSERVER_H
-#define GAMEENGINE_OBSERVER_H
+#ifndef SR_ENGINE_OBSERVER_H
+#define SR_ENGINE_OBSERVER_H
 
 #include <Utils/Types/SafePointer.h>
 #include <Utils/Types/SharedPtr.h>
@@ -13,6 +13,7 @@
 
 namespace SR_UTILS_NS {
     class GameObject;
+    class SceneObject;
 }
 
 namespace SR_WORLD_NS {
@@ -54,8 +55,8 @@ namespace SR_WORLD_NS {
     };
 
     class SR_DLL_EXPORT Observer : public NonCopyable {
-        using GameObjectPtr = SR_HTYPES_NS::SharedPtr<SR_UTILS_NS::GameObject>;
-        using ScenePtr = SR_HTYPES_NS::SafePtr<Scene>;
+        using GameObjectPtr = SR_HTYPES_NS::SharedPtr<SR_UTILS_NS::SceneObject>;
+        using ScenePtr = SR_HTYPES_NS::SharedPtr<Scene>;
     public:
         explicit Observer(const ScenePtr& scene);
         ~Observer() override = default;
@@ -67,7 +68,7 @@ namespace SR_WORLD_NS {
         void SetWorldMetrics(const Math::IVector2& chunkSize, int32_t regionWidth);
         void SetScope(int32_t value) { m_scope = value; }
         void SetShiftDist(int32_t value) { m_shiftDistance = value; }
-        Offset MathNeighbour(const Math::IVector3& offset);
+        Offset MathNeighbour(const Math::IVector3& offset) const;
         Math::IVector3 WorldPosToChunkPos(const Math::FVector3& position);
 
         SR_NODISCARD int32_t GetScope() const noexcept { return m_scope; }
@@ -106,4 +107,4 @@ namespace SR_WORLD_NS {
     SR_DLL_EXPORT Math::FVector3 AddOffset(const Math::FVector3& region, const Math::IVector3& offset);
 }
 
-#endif //GAMEENGINE_OBSERVER_H
+#endif //SR_ENGINE_OBSERVER_H

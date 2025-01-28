@@ -8,6 +8,10 @@
 #include <Utils/Platform/Stacktrace.h>
 #include <Utils/Platform/Platform.h>
 
+#ifdef SR_COMMON_GIT_METADATA
+    #include <git.h>
+#endif
+
 namespace SR_UTILS_NS {
     void Debug::Print(std::string msg, DebugLogType type) {
         SR_LOCK_GUARD;
@@ -16,7 +20,8 @@ namespace SR_UTILS_NS {
 
         if (!m_isInit) {
             SR_PLATFORM_NS::WriteConsoleError("Debug::Print() : debugger isn't initialized!\n\tMessage: " + msg + "\n" + SR_UTILS_NS::GetStacktrace());
-            SR_PLATFORM_NS::Terminate();
+            Breakpoint();
+            return;
         }
 
         if (type == DebugLogType::Assert) {
@@ -29,14 +34,23 @@ namespace SR_UTILS_NS {
         auto&& prefix = SR_FORMAT("[{}] [{}]", SR_UTILS_NS::EnumReflector::ToStringAtom(type).ToCStr(), threadName);
         auto&& memoryUsage = m_showUseMemory ? SR_FORMAT("<{} KB> ", static_cast<uint32_t>(SR_PLATFORM_NS::GetProcessUsedMemory() / 1024)) : std::string();
 
-        fmt::print(fmt::fg(fmt::color::dark_gray) | fmt::emphasis::faint, memoryUsage);
-        fmt::print(GetTextStyleColorByLogType(type),prefix);
-        fmt::print(fmt::emphasis::bold, " " + msg);
+        {
+            fmt::print(fmt::fg(fmt::color::dark_gray) | fmt::emphasis::faint, memoryUsage);
+            fmt::print(GetTextStyleColorByLogType(type), prefix);
 
-        std::cout << std::flush;
+            std::lock_guard lock(SR_PLATFORM_NS::g_platformLogMutex);
+            try {
+                fmt::print(fmt::emphasis::bold, " " + msg);
+            }
+            catch (const std::exception& ex) {
+                std::cout << " Error while printing message: " << ex.what() << "\nMessage: " << msg << std::endl;
+            }
 
-        if (m_file.is_open()) {
-            m_file << (memoryUsage + prefix + " " + msg) << std::flush;
+            std::cout << std::flush;
+
+            if (m_file.is_open()) {
+                m_file << (memoryUsage + prefix + " " + msg) << std::flush;
+            }
         }
 
         volatile static bool enableBreakPoints = true;
@@ -56,7 +70,7 @@ namespace SR_UTILS_NS {
             Platform::Delete(successfulPath);
     #endif
 
-        m_logPath = Path(log_path + "/srengine-log.txt");
+        m_logPath = Path(log_path);
         if (m_logPath.Exists(Path::Type::File))
             Platform::Delete(m_logPath);
 
@@ -69,6 +83,20 @@ namespace SR_UTILS_NS {
         m_showUseMemory = ShowUsedMemory;
 
         Print("Debugger has been initialized. \n\tLog path: " + m_logPath.ToString(), DebugLogType::Debug);
+
+    #ifdef SR_COMMON_GIT_METADATA
+        std::string gitMetadata;
+        std::string dirty = git_AnyUncommittedChanges() ? "true" : "false";
+
+        std::time_t timestamp = std::stoll(git_CommitDate());
+        std::tm* timeUTC = std::gmtime(&timestamp);
+
+        gitMetadata += "Build Info: '" + std::string(git_CommitSHA1()).substr(0, 7) + "' in '" + git_Branch() + "' (dirty: " + dirty + ") "
+            "by '" +
+            + git_AuthorName() + "' on\n\t" + std::asctime(timeUTC);
+
+        Print(gitMetadata, DebugLogType::Info);
+    #endif
     }
 
     void Debug::OnSingletonDestroy() {
@@ -151,6 +179,7 @@ namespace SR_UTILS_NS {
             case DebugLogType::VulkanLog: return fmt::fg(fmt::color::deep_sky_blue);
             case DebugLogType::VulkanError: return fmt::fg(fmt::color::red) | errorWarnStyle;
             case DebugLogType::Assert: return fmt::fg(fmt::color::orange_red) | errorWarnStyle;
+            case DebugLogType::Success: return fmt::fg(fmt::color::lime_green);
             default:
                 return fmt::text_style(); /// NOLINT
         }

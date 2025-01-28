@@ -15,16 +15,20 @@ namespace SR_UTILS_NS {
 namespace SR_WORLD_NS {
     class Scene;
 
-    class SceneLogic : public SR_HTYPES_NS::SafePtr<SceneLogic> {
+    class SceneLogic : public SR_UTILS_NS::Serializable, public SR_HTYPES_NS::SharedPtr<SceneLogic> {
+        SR_CLASS()
+        using Super = SR_HTYPES_NS::SharedPtr<SceneLogic>;
     public:
-        using Ptr = SR_HTYPES_NS::SafePtr<SceneLogic>;
-        using ScenePtr = SR_HTYPES_NS::SafePtr<Scene>;
-        using GameObjectPtr = SR_HTYPES_NS::SharedPtr<GameObject>;
-        using GameObjects = std::vector<GameObjectPtr>;
+        using Ptr = SR_HTYPES_NS::SharedPtr<SceneLogic>;
+        using ScenePtr = SR_HTYPES_NS::SharedPtr<Scene>;
+        using SceneObjectPtr = SR_HTYPES_NS::SharedPtr<SceneObject>;
+        using SceneObjects = std::vector<SceneObjectPtr>;
+        using OriginType = SceneLogic;
 
     public:
+        SceneLogic();
         explicit SceneLogic(const ScenePtr& scene);
-        virtual ~SceneLogic() = default;
+        ~SceneLogic() override = default;
 
     public:
         /// Метод всегда вернет валидную логику сцены
@@ -33,6 +37,7 @@ namespace SR_WORLD_NS {
     public:
         SR_NODISCARD virtual bool IsDefault() const noexcept { return false; }
 
+        virtual void Init() { }
         virtual void Update(float_t dt) { }
         virtual void Destroy() { }
         virtual void PostLoad() { }

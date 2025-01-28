@@ -44,10 +44,7 @@ namespace SR_HTYPES_NS {
 
     SR_UTILS_NS::Path RawMesh::InitializeResourcePath() const {
         auto&& resourceId = GetResourceId();
-        return SR_UTILS_NS::Path(
-                SR_UTILS_NS::StringUtils::SubstringView(resourceId, '|', 1),
-                true /** fast */
-        );
+        return SR_UTILS_NS::Path(SR_UTILS_NS::StringUtils::SubstringView(resourceId, '|', 1));
     }
 
     RawMesh::Ptr RawMesh::Load(const SR_UTILS_NS::Path &rawPath) {
@@ -105,11 +102,15 @@ namespace SR_HTYPES_NS {
 
         m_fromCache = false;
 
+        m_indices.clear();
         m_bones.clear();
         m_optimizedBones.clear();
 
         m_boneOffsetsMap.clear();
+        m_boneTransformsMap.clear();
+
         m_boneOffsets.clear();
+        m_boneTransforms.clear();
 
         return !hasErrors;
     }
@@ -182,6 +183,7 @@ namespace SR_HTYPES_NS {
             CalculateBones();
             OptimizeSkeleton();
             CalculateOffsets();
+            CalculateTransforms();
             CalculateAnimations();
         }
         else {
@@ -280,7 +282,7 @@ namespace SR_HTYPES_NS {
                         continue;
                     }
 
-                    auto&& boneIndex = bones.at(SR_HASH_STR(mesh->mBones[i]->mName.C_Str()));
+                    auto&& boneIndex = bones.at(SR_UTILS_NS::StringAtom(mesh->mBones[i]->mName.C_Str()));
 
                     vertex.weights[vertex.weightsNum - 1].boneId = boneIndex;
                     vertex.weights[vertex.weightsNum - 1].weight = mesh->mBones[i]->mWeights[j].mWeight;
@@ -314,41 +316,52 @@ namespace SR_HTYPES_NS {
         return vertices;
     }
 
-    std::vector<uint32_t> RawMesh::GetIndices(uint32_t id) const {
+    const std::vector<uint32_t>& RawMesh::GetIndices(uint32_t id) const {
+        SR_TRACY_ZONE;
+
+        static std::vector<uint32_t> empty;
+
+        if (id >= m_indices.size()) {
+            SRHalt("Out of range!");
+            return empty;
+        }
+
+        if (!m_indices[id].empty()) {
+            return m_indices[id];
+        }
+
         std::vector<uint32_t> indices;
 
     #ifdef SR_UTILS_ASSIMP
         if (!m_scene || id >= m_scene->mNumMeshes) {
-            SRAssert2(false, "Out of range or invalid scene!");
-            return {};
+            SRHalt("Out of range or invalid scene!");
+            return empty;
         }
 
         auto&& mesh = m_scene->mMeshes[id];
 
-
-        indices.reserve(mesh->mNumFaces * 3);
+        indices.resize(mesh->mNumFaces * 3);
+        uint32_t count = 0;
 
         for (uint32_t i = 0; i < mesh->mNumFaces; ++i) {
-            aiFace face = mesh->mFaces[i];
+            const aiFace& face = mesh->mFaces[i];
 
-            SRAssert2(face.mNumIndices <= 3, "Mesh isn't triangulated!");
+            if (face.mNumIndices > 3) {
+                SRHalt("Mesh isn't triangulated!");
+                return empty;
+            }
 
-            if (face.mNumIndices == 1) {
-                indices.emplace_back(face.mIndices[0]);
-            }
-            else if (face.mNumIndices == 2) {
-                indices.emplace_back(face.mIndices[0]);
-                indices.emplace_back(face.mIndices[1]);
-            }
-            else {
-                indices.emplace_back(face.mIndices[0]);
-                indices.emplace_back(face.mIndices[1]);
-                indices.emplace_back(face.mIndices[2]);
-            }
+            memcpy(&indices[count], face.mIndices, sizeof(uint32_t) * face.mNumIndices);
+
+            count += face.mNumIndices;
         }
+
+        indices.resize(count);
     #endif
 
-        return indices;
+        m_indices[id] = std::move(indices);
+
+        return m_indices[id];
     }
 
     uint32_t RawMesh::GetVerticesCount(uint32_t id) const {
@@ -414,8 +427,27 @@ namespace SR_HTYPES_NS {
         return 0;
     }
 
-    const ska::flat_hash_map<uint64_t, uint32_t>& RawMesh::GetBones(uint32_t id) const {
-        static const auto&& def = ska::flat_hash_map<uint64_t, uint32_t>();
+    std::vector<SR_UTILS_NS::StringAtom> RawMesh::GetAnimationNames() const {
+    #ifdef SR_UTILS_ASSIMP
+        if (!m_scene) {
+            SRHalt("Invalid scene!");
+            return {};
+        }
+
+        std::vector<SR_UTILS_NS::StringAtom> names;
+        names.reserve(m_scene->mNumAnimations);
+
+        for (uint32_t i = 0; i < m_scene->mNumAnimations; ++i) {
+            names.emplace_back(m_scene->mAnimations[i]->mName.C_Str());
+        }
+
+        return names;
+    #endif
+        return {};
+    }
+
+    const ska::flat_hash_map<SR_UTILS_NS::StringAtom, uint32_t>& RawMesh::GetBones(uint32_t id) const {
+        static const auto&& def = ska::flat_hash_map<SR_UTILS_NS::StringAtom, uint32_t>();
 
         if (id >= m_bones.size()) {
             return def;
@@ -424,11 +456,31 @@ namespace SR_HTYPES_NS {
         return m_bones.at(id);
     }
 
-    const SR_MATH_NS::Matrix4x4& RawMesh::GetBoneOffset(uint64_t hashName) const {
+    const SR_MATH_NS::Matrix4x4& RawMesh::GetBoneOffset(SR_UTILS_NS::StringAtom name) const {
         static const auto&& def = SR_MATH_NS::Matrix4x4::Identity();
 
-        auto&& pIt = m_boneOffsetsMap.find(hashName);
+        auto&& pIt = m_boneOffsetsMap.find(name);
         if (pIt == m_boneOffsetsMap.end()) {
+            return def;
+        }
+
+        return pIt->second;
+    }
+
+    const SR_MATH_NS::Matrix4x4& RawMesh::GetBoneTransform(uint32_t index) const {
+        static const auto&& def = SR_MATH_NS::Matrix4x4::Identity();
+        if (index >= m_boneTransforms.size()) SR_UNLIKELY_ATTRIBUTE {
+            SRHalt("Out of range!");
+            return def;
+        }
+        return m_boneTransforms[index];
+    }
+
+    const SR_MATH_NS::Matrix4x4& RawMesh::GetBoneTransform(SR_UTILS_NS::StringAtom name) const {
+        static const auto&& def = SR_MATH_NS::Matrix4x4::Identity();
+
+        auto&& pIt = m_boneTransformsMap.find(name);
+        if (pIt == m_boneTransformsMap.end()) {
             return def;
         }
 
@@ -438,14 +490,19 @@ namespace SR_HTYPES_NS {
     void RawMesh::CalculateBones() {
     #ifdef SR_UTILS_ASSIMP
         m_bones.resize(m_scene->mNumMeshes);
+        m_indices.resize(m_scene->mNumMeshes);
 
         for (uint32_t meshId = 0; meshId < m_scene->mNumMeshes; ++meshId) {
             auto&& pMesh = m_scene->mMeshes[meshId];
 
             for (uint32_t boneId = 0; boneId < pMesh->mNumBones; ++boneId) {
-                auto&& hashName = SR_HASH_STR(pMesh->mBones[boneId]->mName.data);
+                auto&& name = SR_UTILS_NS::StringAtom(pMesh->mBones[boneId]->mName.data);
 
-                m_bones[meshId].insert(std::make_pair(hashName, static_cast<uint32_t>(m_bones[meshId].size())));
+                if (m_bones[meshId].count(name) == 1) {
+                    SR_WARN("RawMesh::CalculateBones() : bone already exists! \n\tName: " + name.ToString());
+                    continue;
+                }
+                m_bones[meshId].insert(std::make_pair(name, static_cast<uint32_t>(m_bones[meshId].size())));
             }
         }
     #endif
@@ -469,6 +526,10 @@ namespace SR_HTYPES_NS {
 
         for (auto&& mesh : m_bones) {
             for (auto&& [hashName, index] : mesh) {
+                if (m_optimizedBones.count(hashName) == 1) {
+                    index = m_optimizedBones[hashName];
+                    continue;
+                }
                 m_optimizedBones[hashName] = index;
             }
         }
@@ -480,17 +541,17 @@ namespace SR_HTYPES_NS {
             auto&& pMesh = m_scene->mMeshes[meshId];
 
             for (uint32_t boneId = 0; boneId < pMesh->mNumBones; ++boneId) {
-                auto&& hashName = SR_HASH_STR(pMesh->mBones[boneId]->mName.data);
+                auto&& name = SR_UTILS_NS::StringAtom(pMesh->mBones[boneId]->mName.data);
 
-                if (m_boneOffsetsMap.count(hashName) == 1) {
+                if (m_boneOffsetsMap.count(name) == 1) {
                     continue;
                 }
 
-                auto&& offsetMatrix = pMesh->mBones[boneId]->mOffsetMatrix;
+                auto&& matrix = pMesh->mBones[boneId]->mOffsetMatrix;
 
                 aiQuaternion rotation;
                 aiVector3D scaling, translation;
-                offsetMatrix.Decompose(scaling, rotation, translation);
+                matrix.Decompose(scaling, rotation, translation);
 
                 SR_MATH_NS::Matrix4x4 matrix4X4(
                         SR_MATH_NS::FVector3(translation.x, translation.y, translation.z),
@@ -498,7 +559,7 @@ namespace SR_HTYPES_NS {
                         SR_MATH_NS::FVector3(scaling.x, scaling.y, scaling.z)
                 );
 
-                m_boneOffsetsMap.insert(std::make_pair(hashName, std::move(matrix4X4)));
+                m_boneOffsetsMap.insert(std::make_pair(name, matrix4X4));
             }
         }
     #endif
@@ -513,10 +574,59 @@ namespace SR_HTYPES_NS {
         }
     }
 
-    uint16_t RawMesh::GetBoneIndex(uint64_t hashName) const {
-        auto&& pIt = m_optimizedBones.find(hashName);
+    void RawMesh::CalculateTransforms() {
+#ifdef SR_UTILS_ASSIMP
+        std::map<SR_UTILS_NS::StringAtom, SR_MATH_NS::Matrix4x4> matrices;
+
+        std::function<void(aiNode*, SR_MATH_NS::Matrix4x4)> processNode;
+
+        processNode = [&matrices, &processNode](aiNode* pNode, SR_MATH_NS::Matrix4x4 matrix) {
+            aiQuaternion rotation;
+            aiVector3D scaling, translation;
+            pNode->mTransformation.Decompose(scaling, rotation, translation);
+
+            SR_MATH_NS::Matrix4x4 local(
+                    SR_MATH_NS::FVector3(translation.x, translation.y, translation.z),
+                    SR_MATH_NS::Quaternion(rotation.x, rotation.y, rotation.z, rotation.w),
+                    SR_MATH_NS::FVector3(scaling.x, scaling.y, scaling.z));
+
+            matrices.insert(std::make_pair(SR_UTILS_NS::StringAtom(pNode->mName.C_Str()), local));
+
+            for (uint32_t i = 0; i < pNode->mNumChildren; ++i) {
+                processNode(pNode->mChildren[i], local);
+            }
+        };
+        processNode(m_scene->mRootNode, SR_MATH_NS::Matrix4x4::Identity());
+
+        for (uint32_t meshId = 0; meshId < m_scene->mNumMeshes; ++meshId) {
+            auto&& pMesh = m_scene->mMeshes[meshId];
+
+            for (uint32_t boneId = 0; boneId < pMesh->mNumBones; ++boneId) {
+                auto&& name = SR_UTILS_NS::StringAtom(pMesh->mBones[boneId]->mName.data);
+
+                if (m_boneTransformsMap.count(name) == 1 || matrices.count(name) == 0) {
+                    continue;
+                }
+
+                m_boneTransformsMap.insert(std::make_pair(name, matrices.at(name)));
+            }
+        }
+#endif
+
+        m_boneTransforms.resize(m_boneTransformsMap.size());
+
+        for (auto&& [hashName, boneId] : m_optimizedBones) {
+            if (boneId >= m_boneTransforms.size()) {
+                m_boneTransforms.resize(boneId + 1);
+            }
+            m_boneTransforms[boneId] = GetBoneTransform(hashName);
+        }
+    }
+
+    uint32_t RawMesh::GetBoneIndex(SR_UTILS_NS::StringAtom name) const {
+        auto&& pIt = m_optimizedBones.find(name);
         if (pIt == m_optimizedBones.end()) {
-            return SR_UINT16_MAX;
+            return SR_ID_INVALID;
         }
 
         return pIt->second;

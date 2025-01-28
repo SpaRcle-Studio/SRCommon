@@ -8,9 +8,15 @@
 #include <Utils/World/SceneCubeChunkLogic.h>
 #include <Utils/World/ScenePrefabLogic.h>
 
+#include <Codegen/SceneLogic.generated.hpp>
+
 namespace SR_WORLD_NS {
+    SceneLogic::SceneLogic()
+        : Super(this, SR_UTILS_NS::SharedPtrPolicy::Manually)
+    { }
+
     SceneLogic::SceneLogic(const SceneLogic::ScenePtr& pScene)
-        : SR_HTYPES_NS::SafePtr<SceneLogic>(this)
+        : Super(this, SR_UTILS_NS::SharedPtrPolicy::Manually)
         , m_scene(pScene)
     { }
 
@@ -43,9 +49,9 @@ namespace SR_WORLD_NS {
                 pathsXml.AppendNode(name).AppendAttribute(value);
             }
 
-            auto&& seetingsPath = path.Concat("data/settings.xml");
-            if (!documentXml.Save(seetingsPath)) {
-                SR_ERROR("SceneLogic::Save() : failed save settings!\n\tPath: " + seetingsPath.ToStringRef());
+            auto&& settingsPath = path.Concat("data/settings.xml");
+            if (!documentXml.Save(settingsPath)) {
+                SR_ERROR("SceneLogic::Save() : failed save to settings!\n\tPath: " + settingsPath.ToStringRef());
                 return false;
             }
         }

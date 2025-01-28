@@ -2,8 +2,8 @@
 // Created by Nikita on 01.03.2021.
 //
 
-#ifndef GAMEENGINE_VECTOR3_H
-#define GAMEENGINE_VECTOR3_H
+#ifndef SR_ENGINE_VECTOR3_H
+#define SR_ENGINE_VECTOR3_H
 
 #include <Utils/Math/Vector2.h>
 #include <Utils/Math/Quaternion.h>
@@ -11,6 +11,8 @@
 namespace SR_MATH_NS {
     template<typename T> struct SR_DLL_EXPORT Vector3 {
     public:
+        using ValueType = T;
+
         union {
             struct {
                 T x;
@@ -26,11 +28,19 @@ namespace SR_MATH_NS {
             y = 0;
             z = 0;
         }
+
         template<typename U> constexpr SR_FORCE_INLINE explicit Vector3(const Vector3<U>& vec) {
             x = static_cast<T>(vec.x);
             y = static_cast<T>(vec.y);
             z = static_cast<T>(vec.z);
         }
+
+        template<typename U> constexpr SR_FORCE_INLINE explicit Vector3(const Vector2<U>& vec, U value) {
+            x = static_cast<T>(vec.x);
+            y = static_cast<T>(vec.y);
+            z = static_cast<T>(value);
+        }
+
         SR_FORCE_INLINE constexpr explicit Vector3(const float* vec) {
             x = (Unit)vec[0];
             y = (Unit)vec[1];
@@ -277,6 +287,25 @@ namespace SR_MATH_NS {
         }
 
         SR_NODISCARD bool IsEquals(const Vector3& value, Unit tolerance) const noexcept {
+        #if SR_SIMD_SUPPORT
+            // Загружаем компоненты текущего вектора и значения в SIMD регистры
+            __m128 this_vec = _mm_set_ps(0.0f, z, y, x); // загружаем в обратном порядке для корректного выравнивания
+            __m128 value_vec = _mm_set_ps(0.0f, value.z, value.y, value.x); // загружаем в обратном порядке для корректного выравнивания
+
+            // Вычисляем разницу между компонентами
+            __m128 diff_vec = _mm_sub_ps(this_vec, value_vec);
+
+            // Загружаем допуск в SIMD регистр
+            __m128 tolerance_vec = _mm_set1_ps(tolerance);
+
+            // Вычисляем абсолютное значение разницы
+            __m128 abs_diff_vec = _mm_andnot_ps(_mm_set1_ps(-0.0f), diff_vec); // получаем abs
+            abs_diff_vec = _mm_cmpge_ps(abs_diff_vec, tolerance_vec); // сравниваем на больше или равно по модулю
+
+            // Проверяем, все ли компоненты проходят проверку на равенство
+            const int mask = _mm_movemask_ps(abs_diff_vec); // применяем маску
+            return mask == 0; // если все 0, то результаты совпадают
+        #else
             if (!SR_EQUALS_T(x, value.x, tolerance)) {
                 return false;
             }
@@ -286,6 +315,25 @@ namespace SR_MATH_NS {
             }
 
             if (!SR_EQUALS_T(z, value.z, tolerance)) {
+                return false;
+            }
+
+            SR_NOOP;
+
+            return true;
+        #endif
+        }
+
+        SR_NODISCARD bool IsEqualsLikely(const Vector3& value, Unit tolerance) const noexcept {
+            if (!SR_EQUALS_T(x, value.x, tolerance)) SR_UNLIKELY_ATTRIBUTE {
+                return false;
+            }
+
+            if (!SR_EQUALS_T(y, value.y, tolerance)) SR_UNLIKELY_ATTRIBUTE {
+                return false;
+            }
+
+            if (!SR_EQUALS_T(z, value.z, tolerance)) SR_UNLIKELY_ATTRIBUTE {
                 return false;
             }
 
@@ -319,7 +367,7 @@ namespace SR_MATH_NS {
             return Vector3(-x, -y, -z);
         }
 
-        SR_NODISCARD Vector3 SR_FASTCALL InverseAxis(AxisFlag axis) const {
+        SR_NODISCARD Vector3 SR_FASTCALL InverseAxis(Axis axis) const {
             Vector3 v = *this;
 
             switch (axis) {
@@ -368,7 +416,7 @@ namespace SR_MATH_NS {
             return v;
         }
 
-        SR_NODISCARD Vector3 ZeroAxis(AxisFlag axis) const {
+        SR_NODISCARD Vector3 ZeroAxis(Axis axis) const {
             Vector3 v = *this;
 
             switch (axis) {
@@ -387,7 +435,22 @@ namespace SR_MATH_NS {
         }
 
         SR_NODISCARD SR_FORCE_INLINE Vector3 SR_FASTCALL Lerp(const Vector3& vector3, Unit t) const noexcept {
-            return (Vector3)(*this + (vector3 - *this) * t);
+        #if SR_SIMD_SUPPORT
+            const __m128 t_vec = _mm_set1_ps(t);
+            const __m128 this_vec = _mm_set_ps(0.0f, z, y, x); // Вектор this, добавляем 0.0f для выравнивания
+            const __m128 other_vec = _mm_set_ps(0.0f, vector3.z, vector3.y, vector3.x); // Вектор vector3, добавляем 0.0f для выравнивания
+
+            const __m128 diff_vec = _mm_sub_ps(other_vec, this_vec); // vector3 - *this
+            const __m128 mul_vec = _mm_mul_ps(diff_vec, t_vec); // (vector3 - *this) * t
+            const __m128 result_vec = _mm_add_ps(this_vec, mul_vec); // *this + ((vector3 - *this) * t)
+
+            alignas(16) float result_array[4];
+            _mm_store_ps(result_array, result_vec); // Сохраняем результат в массив
+
+            return { result_array[0], result_array[1], result_array[2] }; // Извлекаем значения из массива
+        #else
+            return static_cast<Vector3>(*this + (vector3 - *this) * t);
+        #endif
         }
 
         SR_NODISCARD Vector3 Normalized() const {
@@ -658,4 +721,4 @@ namespace std {
     };
 }
 
-#endif //GAMEENGINE_VECTOR3_H
+#endif //SR_ENGINE_VECTOR3_H

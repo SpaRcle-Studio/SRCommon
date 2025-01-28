@@ -18,7 +18,7 @@ namespace SR_UTILS_NS {
     public:
         SR_NODISCARD Measurement GetMeasurement() const override { return Measurement::SpaceZero; }
 
-        SR_NODISCARD Transform* Copy() const override;
+        SR_NODISCARD Transform::Ptr Copy() const override;
 
     };
 
@@ -30,7 +30,7 @@ namespace SR_UTILS_NS {
     public:
         SR_NODISCARD Measurement GetMeasurement() const override { return Measurement::SpaceZero; }
 
-        SR_NODISCARD Transform* Copy() const override;
+        SR_NODISCARD Transform::Ptr Copy() const override;
 
     };
 }

@@ -3,3 +3,9 @@
 //
 
 #include <Utils/TypeTraits/SRClass.h>
+
+#include <Codegen/SRClass.generated.hpp>
+
+namespace SR_UTILS_NS {
+
+}

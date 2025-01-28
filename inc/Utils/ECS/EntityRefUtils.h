@@ -21,7 +21,7 @@ namespace SR_UTILS_NS::EntityRefUtils {
     struct OwnerRef {
         OwnerRef() = default;
         SR_MAYBE_UNUSED OwnerRef(const SR_HTYPES_NS::SharedPtr<Entity>& ptr); /// NOLINT
-        SR_MAYBE_UNUSED OwnerRef(const SR_HTYPES_NS::SafePtr<SR_WORLD_NS::Scene>& ptr); /// NOLINT
+        SR_MAYBE_UNUSED OwnerRef(const SR_HTYPES_NS::SharedPtr<SR_WORLD_NS::Scene>& ptr); /// NOLINT
 
         OwnerRef(OwnerRef&& other) noexcept
             : pEntity(SR_UTILS_NS::Exchange(other.pEntity, { }))
@@ -46,7 +46,7 @@ namespace SR_UTILS_NS::EntityRefUtils {
         }
 
         SR_HTYPES_NS::SharedPtr<Entity> pEntity;
-        SR_HTYPES_NS::SafePtr<SR_WORLD_NS::Scene> pScene;
+        SR_HTYPES_NS::SharedPtr<SR_WORLD_NS::Scene> pScene;
 
     };
 
@@ -69,7 +69,7 @@ namespace SR_UTILS_NS::EntityRefUtils {
 
     typedef std::vector<PathItem> RefPath;
 
-    SR_MAYBE_UNUSED SR_HTYPES_NS::SafePtr<SR_WORLD_NS::Scene> GetSceneFromOwner(const OwnerRef& owner);
+    SR_MAYBE_UNUSED SR_HTYPES_NS::SharedPtr<SR_WORLD_NS::Scene> GetSceneFromOwner(const OwnerRef& owner);
 
     SR_MAYBE_UNUSED SR_HTYPES_NS::SharedPtr<Entity> GetEntity(const OwnerRef& owner, const RefPath& path);
 

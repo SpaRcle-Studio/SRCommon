@@ -9,6 +9,9 @@
 #include <Utils/Types/Thread.h>
 #include <Utils/World/Scene.h>
 #include <Utils/World/SceneUpdater.h>
+#include <Utils/Serialization/SRASerialization.h>
+
+#include <Codegen/Component.generated.hpp>
 
 namespace SR_UTILS_NS {
     Component::~Component() {
@@ -18,8 +21,8 @@ namespace SR_UTILS_NS {
         m_properties.ClearContainer();
     }
 
-    SR_HTYPES_NS::Marshal::Ptr Component::Save(SavableContext data) const {
-        if (!(data.pMarshal = Entity::Save(data))) {
+    SR_HTYPES_NS::Marshal::Ptr Component::SaveLegacy(SavableContext data) const {
+        if (!(data.pMarshal = Entity::SaveLegacy(data))) {
             return data.pMarshal;
         }
 
@@ -27,7 +30,14 @@ namespace SR_UTILS_NS {
         data.pMarshal->Write(IsEnabled());
         data.pMarshal->Write<uint16_t>(GetEntityVersion());
 
-        if (!SR_UTILS_NS::ComponentManager::Instance().HasLoader(GetComponentName())) {
+        /// New serialization system based on codegen
+        if (UseNewSerialization()) {
+            SR_UTILS_NS::SRASerializer serializer;
+            serializer.SetUseTabs(true);
+            Save(serializer);
+            data.pMarshal->Write(serializer.ToString());
+        }
+        else if (!SR_UTILS_NS::ComponentManager::Instance().HasLoader(GetComponentName())) {
             GetComponentProperties().SaveProperty(*data.pMarshal);
         }
 
@@ -36,12 +46,12 @@ namespace SR_UTILS_NS {
 
     void Component::SetParent(IComponentable* pParent) {
         if ((m_parent = pParent)) {
-            if (auto&& pGameObject = dynamic_cast<SR_UTILS_NS::GameObject*>(m_parent)) {
-                m_gameObject = pGameObject->GetThis().DynamicCast<GameObject>();
-                m_scene = m_gameObject->GetScene();
+            if (auto&& pSceneObject = dynamic_cast<SR_UTILS_NS::SceneObject*>(m_parent)) {
+                m_sceneObject = pSceneObject;
+                m_scene = m_sceneObject->GetScene();
             }
             else {
-                m_gameObject.Reset();
+                m_sceneObject.Reset();
                 m_scene = dynamic_cast<SR_WORLD_NS::Scene*>(m_parent);
             }
 
@@ -50,7 +60,7 @@ namespace SR_UTILS_NS {
             }
         }
         else {
-            m_gameObject.Reset();
+            m_sceneObject.Reset();
             m_scene = nullptr;
         }
     }
@@ -70,7 +80,7 @@ namespace SR_UTILS_NS {
     void Component::CheckActivity() {
         /// если родителя нет, или он отличается от ожидаемого, то будем считать, что родитель активен.
         /// сцена выключенной (в понимании игровых объектов) быть не может.
-        const bool isActive = m_isEnabled && (!m_gameObject || m_gameObject->IsActive());
+        const bool isActive = m_isEnabled && (!m_sceneObject || m_sceneObject->IsActive());
         if (isActive == m_isActive) {
             return;
         }
@@ -103,7 +113,12 @@ namespace SR_UTILS_NS {
 
     Component::GameObjectPtr Component::GetGameObject() const {
         SRAssert(m_parent);
-        return m_gameObject;
+        return m_sceneObject.DynamicCast<GameObject>();
+    }
+
+    Component::SceneObjectPtr Component::GetSceneObject() const {
+        SRAssert(m_parent);
+        return m_sceneObject;
     }
 
     IComponentable* Component::GetParent() const {
@@ -111,32 +126,32 @@ namespace SR_UTILS_NS {
         return m_parent;
     }
 
-    GameObject::Ptr Component::GetRoot() const {
+    SceneObject::Ptr Component::GetRoot() const {
         SRAssert(m_parent);
 
-        if (!m_gameObject) {
-            return GameObjectPtr();
+        if (!m_sceneObject) {
+            return SceneObject::Ptr();
         }
 
-        GameObjectPtr root = m_gameObject;
+        SceneObject::Ptr pRoot = m_sceneObject;
 
-        while (root.Valid()) {
-            if (auto&& parent = root->GetParent()) {
-                root = parent;
+        while (pRoot) {
+            if (auto&& parent = pRoot->GetParent()) {
+                pRoot = parent;
             }
             else {
                 break;
             }
         }
 
-        return root;
+        return pRoot;
     }
 
     Transform* Component::GetTransform() const noexcept {
         SRAssert(m_parent);
 
-        if (m_gameObject) {
-            return m_gameObject->GetTransform();
+        if (m_sceneObject && m_sceneObject->GetSceneObjectType() == SceneObjectType::GameObject) {
+            return m_sceneObject.StaticCast<GameObject>()->GetTransform();
         }
 
         return nullptr;

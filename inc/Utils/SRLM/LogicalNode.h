@@ -9,7 +9,9 @@
 #include <Utils/Common/Hashes.h>
 #include <Utils/Common/Enumerations.h>
 #include <Utils/Common/ToString.h>
-#include <Utils/Xml.h>
+#include <Utils/Resources/Xml.h>
+
+#include <Codegen/Enums.generated.hpp>
 
 namespace SR_SRLM_NS {
     class DataType;
@@ -96,7 +98,7 @@ namespace SR_SRLM_NS {
         SR_NODISCARD bool HasErrors() const { return m_status & LogicalNodeStatus::ErrorStatus; }
         SR_NODISCARD bool IsSuccessfullyCompleted() const noexcept;
         SR_NODISCARD uint32_t GetNodeIndex() const noexcept { return m_nodeIndex; }
-        SR_NODISCARD LogicalNodeStatusFlag GetStatus() const noexcept { return m_status; }
+        SR_NODISCARD LogicalNodeStatus GetStatus() const noexcept { return m_status; }
 
     public:
         void RemoveInput(uint32_t index);
@@ -115,7 +117,7 @@ namespace SR_SRLM_NS {
         template<typename T> NodePin& AddOutputData(uint64_t hashName = SR_UINT64_MAX) { return AddOutputData(new T(), hashName); }
 
     protected:
-        mutable LogicalNodeStatusFlag m_status = LogicalNodeStatus::None;
+        mutable LogicalNodeStatus m_status = LogicalNodeStatus::None;
 
         uint32_t m_nodeIndex = SR_UINT32_MAX;
 

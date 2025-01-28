@@ -5,11 +5,11 @@
 #include <Utils/ECS/TransformZero.h>
 
 namespace SR_UTILS_NS {
-    Transform* TransformZero::Copy() const {
+    Transform::Ptr TransformZero::Copy() const {
         return new TransformZero();
     }
 
-    Transform* TransformHolder::Copy() const {
+    Transform::Ptr TransformHolder::Copy() const {
         return new TransformHolder();
     }
 }

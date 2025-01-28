@@ -7,7 +7,13 @@
 #include <Utils/ECS/TransformZero.h>
 #include <Utils/Profile/TracyContext.h>
 
+#include <Codegen/Transform.generated.hpp>
+
 namespace SR_UTILS_NS {
+    Transform::Transform()
+        : Ptr(this, SR_UTILS_NS::SharedPtrPolicy::Manually)
+    { }
+
     Transform::~Transform() {
         m_gameObject = nullptr;
     }
@@ -24,7 +30,9 @@ namespace SR_UTILS_NS {
         }
 
         if (auto&& pParent = m_gameObject->GetParent()) {
-            return pParent->GetTransform();
+            if (auto&& pGameObject = pParent.DynamicCast<GameObject>()) {
+                return pGameObject->GetTransform();
+            }
         }
 
         return nullptr;
@@ -82,8 +90,8 @@ namespace SR_UTILS_NS {
         Scale(Math::FVector3(x, y, z));
     }
 
-    SR_HTYPES_NS::Marshal::Ptr Transform::Save(SavableContext data) const {
-        auto&& pMarshal = ISavable::Save(data);
+    SR_HTYPES_NS::Marshal::Ptr Transform::SaveLegacy(SavableContext data) const {
+        auto&& pMarshal = Super::SaveLegacy(data);
         pMarshal->Write<uint16_t>(VERSION);
         pMarshal->Write(static_cast<uint8_t>(GetMeasurement()));
 
@@ -92,9 +100,6 @@ namespace SR_UTILS_NS {
                 break;
             case Measurement::Space2D: {
                 auto&& pTransform2D = dynamic_cast<const SR_UTILS_NS::Transform2D*>(this);
-                pMarshal->Write<uint8_t>(static_cast<uint8_t>(pTransform2D->GetStretch()));
-                pMarshal->Write<uint8_t>(static_cast<uint8_t>(pTransform2D->GetAnchor()));
-                pMarshal->Write<uint8_t>(static_cast<uint8_t>(pTransform2D->GetPositionMode()));
                 pMarshal->Write<bool>(static_cast<bool>(pTransform2D->IsRelativePriority()));
                 pMarshal->Write<int32_t>(static_cast<int32_t>(pTransform2D->GetLocalPriority()));
                 pMarshal->Write(GetTranslation(), SR_MATH_NS::FVector3(0.f));
@@ -134,6 +139,8 @@ namespace SR_UTILS_NS {
     }
 
     Transform* Transform::Load(SR_HTYPES_NS::Marshal& marshal) {
+        SR_TRACY_ZONE;
+
         Transform* pTransform = nullptr;
 
         SR_MAYBE_UNUSED auto&& version = marshal.Read<uint16_t>();
@@ -176,9 +183,6 @@ namespace SR_UTILS_NS {
                 break;
             case Measurement::Space2D: {
                 auto&& pTransform2D = dynamic_cast<Transform2D*>(pTransform);
-                pTransform2D->SetStretch(static_cast<Stretch>(marshal.Read<uint8_t>()));
-                pTransform2D->SetAnchor(static_cast<Anchor>(marshal.Read<uint8_t>()));
-                pTransform2D->SetPositionMode(static_cast<PositionMode>(marshal.Read<uint8_t>()));
                 pTransform2D->SetRelativePriority(marshal.Read<bool>());
                 pTransform2D->SetLocalPriority(marshal.Read<int32_t>());
                 SR_FALLTHROUGH;
@@ -212,16 +216,21 @@ namespace SR_UTILS_NS {
     }
 
     void Transform::UpdateTree() {
-        m_dirtyMatrix = true;
-
-        if (!m_gameObject) {
+        if (!m_gameObject) SR_UNLIKELY_ATTRIBUTE {
             return;
         }
 
+        if (m_dirtyMatrix) {
+            return;
+        }
+        m_dirtyMatrix = true;
+
         m_gameObject->OnMatrixDirty();
 
-        for (auto&& child : m_gameObject->GetChildrenRef()) {
-            child->GetTransform()->UpdateTree();
+        for (auto&& pChild : m_gameObject->GetChildrenRef()) {
+            if (auto&& pGameObject = pChild.DynamicCast<GameObject>()) {
+                pGameObject->GetTransform()->UpdateTree();
+            }
         }
     }
 
@@ -229,7 +238,7 @@ namespace SR_UTILS_NS {
         return m_dirtyMatrix;
     }
 
-    Transform *Transform::Copy() const {
+    Transform::Ptr Transform::Copy() const {
         SRHalt("Not implemented!");
         return nullptr;
     }

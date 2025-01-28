@@ -2,10 +2,10 @@
 // Created by Nikita on 27.11.2020.
 //
 
-#ifndef GAMEENGINE_TRANSFORM_H
-#define GAMEENGINE_TRANSFORM_H
+#ifndef SR_ENGINE_TRANSFORM_H
+#define SR_ENGINE_TRANSFORM_H
 
-#include <Utils/ECS/ISavable.h>
+#include <Utils/Serialization/Serializable.h>
 #include <Utils/Common/Measurement.h>
 
 #include <Utils/Math/Mathematics.h>
@@ -31,18 +31,23 @@ namespace SR_UTILS_NS {
         InvAxisZ
     );
 
-    class SR_DLL_EXPORT Transform : public ISavable {
+    class SR_DLL_EXPORT Transform : public Serializable, public SR_HTYPES_NS::SharedPtr<Transform> {
+        SR_CLASS();
         friend class GameObject;
-        SR_INLINE static const uint16_t VERSION = 1001;
+        SR_INLINE static const uint16_t VERSION = 1002;
+        using Super = Serializable;
     public:
-        Transform() = default;
+        using Ptr = SR_HTYPES_NS::SharedPtr<Transform>;
+
+    public:
+        Transform();
         ~Transform() override;
 
     public:
         static Transform* Load(SR_HTYPES_NS::Marshal& marshal);
 
     public:
-        SR_NODISCARD SR_HTYPES_NS::Marshal::Ptr Save(SavableContext data) const override;
+        SR_NODISCARD SR_HTYPES_NS::Marshal::Ptr SaveLegacy(SavableContext data) const override;
 
         void SetGameObject(GameObject *gameObject);
 
@@ -64,7 +69,9 @@ namespace SR_UTILS_NS {
         virtual void RotateAround(const Math::FVector3& point, const Math::FVector3& eulers) { }
         virtual void RotateAroundParent(const Math::FVector3& eulers) { }
 
-        virtual void SetMatrix(const SR_MATH_NS::Matrix4x4& matrix) { }
+        virtual void SetMatrix(const std::optional<SR_MATH_NS::FVector3>& translation,
+                               const std::optional<SR_MATH_NS::Quaternion>& rotation,
+                               const std::optional<SR_MATH_NS::FVector3>& scale) { }
 
         virtual void SetGlobalTranslation(const SR_MATH_NS::FVector3& translation) { }
 
@@ -104,7 +111,7 @@ namespace SR_UTILS_NS {
         SR_NODISCARD virtual SR_MATH_NS::FVector2 GetTranslation2D() const;
         SR_NODISCARD virtual SR_MATH_NS::FVector2 GetScale2D() const;
 
-        SR_NODISCARD virtual Transform* Copy() const;
+        SR_NODISCARD virtual Transform::Ptr Copy() const;
         SR_NODISCARD Transform* GetParentTransform() const;
         SR_NODISCARD SR_HTYPES_NS::SharedPtr<GameObject> GetGameObject() const;
 
@@ -121,9 +128,9 @@ namespace SR_UTILS_NS {
         GameObject* m_gameObject = nullptr;
 
     private:
-        mutable bool m_dirtyMatrix = true;
+        mutable bool m_dirtyMatrix = false;
 
     };
 }
 
-#endif //GAMEENGINE_TRANSFORM_H
+#endif //SR_ENGINE_TRANSFORM_H

@@ -36,6 +36,18 @@ namespace SR_UTILS_NS {
         return m_target.DynamicCast<GameObject>();
     }
 
+    SR_HTYPES_NS::SharedPtr<SceneObject> EntityRef::GetSceneObject() const {
+        if (m_path.empty() && m_target) {
+            UpdatePath();
+        }
+
+        if (!m_target) {
+            UpdateTarget();
+        }
+
+        return m_target.DynamicCast<SceneObject>();
+    }
+
     Component::Ptr EntityRef::GetComponent() const {
         if (m_path.empty() && m_target) {
             UpdatePath();

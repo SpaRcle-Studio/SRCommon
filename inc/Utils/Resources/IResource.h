@@ -2,13 +2,14 @@
 // Created by Nikita on 16.11.2020.
 //
 
-#ifndef GAMEENGINE_IRESOURCE_H
-#define GAMEENGINE_IRESOURCE_H
+#ifndef SR_ENGINE_IRESOURCE_H
+#define SR_ENGINE_IRESOURCE_H
 
 #include <Utils/Debug.h>
 #include <Utils/FileSystem/Path.h>
 #include <Utils/Common/NonCopyable.h>
 #include <Utils/Common/Hashes.h>
+#include <Utils/Common/SubscriptionHolder.h>
 #include <Utils/Types/Function.h>
 #include <Utils/Types/SharedPtr.h>
 #include <Utils/Resources/ResourceContainer.h>
@@ -21,11 +22,13 @@ namespace SR_UTILS_NS {
 
     struct ResourceInfo;
 
-    class SR_DLL_EXPORT IResource : public ResourceContainer {
+    class SR_DLL_EXPORT IResource : public ResourceContainer, public SubscriptionHolder {
         friend class ResourceType;
         using Super = ResourceContainer;
         using ResourceInfoWeakPtr = std::weak_ptr<ResourceInfo>;
     public:
+        SR_INLINE_STATIC const StringAtom RELOAD_DONE_EVENT = "ReloadDone";
+
         using Ptr = IResource*;
 
         enum class LoadState : uint8_t {
@@ -63,13 +66,12 @@ namespace SR_UTILS_NS {
         SR_NODISCARD uint64_t GetResourceHashName() const noexcept { return m_resourceHashName; }
         SR_NODISCARD SR_UTILS_NS::StringAtom GetResourceId() const noexcept { return m_resourceId; }
         SR_NODISCARD LoadState GetResourceLoadState() const { return m_loadState; }
-        SR_NODISCARD uint64_t GetResourceHashPath() const noexcept { return m_resourceHashPath; }
         SR_NODISCARD uint64_t GetResourceHash() const noexcept { return m_resourceHash; }
         SR_NODISCARD ResourceInfoWeakPtr GetResourceInfo() const noexcept { return m_resourceInfo; }
         SR_NODISCARD bool IsResourceFromMemory() const noexcept { return m_isFromMemory; }
 
         SR_NODISCARD std::string_view GetResourceName() const;
-        SR_NODISCARD const Path& GetResourcePath() const;
+        SR_NODISCARD StringAtom GetResourcePath() const;
         SR_NODISCARD uint16_t GetCountUses() const noexcept;
 
         SR_NODISCARD virtual IResource* CopyResource(IResource* destination) const;
@@ -87,7 +89,7 @@ namespace SR_UTILS_NS {
             m_isRegistered = true;
         }
 
-        virtual void OnReloadDone() { }
+        virtual void OnReloadDone();
 
         /** Вызывается только из ResourceManager и IResource, удаляет экземпляр класса,
          * или не удаляет, но это уже не его проблема, а того, как он переопределен.
@@ -137,9 +139,11 @@ namespace SR_UTILS_NS {
     private:
         ResourceInfoWeakPtr m_resourceInfo;
 
-        SR_UTILS_NS::StringAtom m_resourceId;
+        /// хещ-состояние ресурса
         uint64_t m_resourceHash = 0;
-        uint64_t m_resourceHashPath = 0;
+
+        SR_UTILS_NS::StringAtom m_resourceId;
+        SR_UTILS_NS::StringAtom m_resourcePath;
 
         uint16_t m_reloadCount = 0;
 
@@ -155,4 +159,4 @@ namespace SR_UTILS_NS {
     };
 }
 
-#endif //GAMEENGINE_IRESOURCE_H
+#endif //SR_ENGINE_IRESOURCE_H

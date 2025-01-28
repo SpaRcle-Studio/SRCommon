@@ -45,7 +45,7 @@ namespace SR_UTILS_NS {
     std::optional<SR_UTILS_NS::StringAtom> EnumReflector::ToStringInternal(int64_t value) const {
         if (!m_data) {
             std::cerr << "EnumReflector::ToStringInternal() : reflector is empty!\n";
-            return std::optional<SR_UTILS_NS::StringAtom>();
+            return std::nullopt;
         }
 
         for (auto&& enumerator : m_data->values) {
@@ -54,13 +54,13 @@ namespace SR_UTILS_NS {
             }
         }
 
-        return std::optional<std::string>();
+        return std::nullopt;
     }
 
     std::optional<int64_t> EnumReflector::FromStringInternal(const SR_UTILS_NS::StringAtom& name) const {
         if (!m_data) {
             std::cerr << "EnumReflector::ToStringInternal() : reflector is empty!\n";
-            return std::optional<int64_t>();
+            return std::nullopt;
         }
 
         for (auto&& enumerator : m_data->values) {
@@ -69,7 +69,7 @@ namespace SR_UTILS_NS {
             }
         }
 
-        return std::optional<int64_t>();
+        return std::nullopt;
     }
 
     std::optional<int64_t> EnumReflector::GetIndexInternal(int64_t value) const {
@@ -82,7 +82,7 @@ namespace SR_UTILS_NS {
             ++index;
         }
 
-        return std::optional<int64_t>();
+        return std::nullopt;
     }
 
     std::optional<int64_t> EnumReflector::AtInternal(int64_t index) const {
@@ -90,7 +90,24 @@ namespace SR_UTILS_NS {
             return m_data->values[index].value;
         }
 
-        return std::optional<int64_t>();
+        return std::nullopt;
+    }
+
+    std::optional<int64_t> EnumReflector::FromStringLowerCaseInternal(const std::string& value) const {
+        if (!m_data) {
+            std::cerr << "EnumReflector::FromStringLowerCaseInternal() : reflector is empty!\n";
+            return std::nullopt;
+        }
+
+        const std::string lower = SR_UTILS_NS::StringUtils::ToLower(value);
+
+        for (auto&& enumerator : m_data->values) {
+            if (SR_UTILS_NS::StringUtils::ToLower(enumerator.name) == lower) {
+                return enumerator.value;
+            }
+        }
+
+        return std::nullopt;
     }
 }
 

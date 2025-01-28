@@ -2,12 +2,10 @@
 // Created by Nikita on 17.11.2020.
 //
 
-#ifndef GAMEENGINE_STRINGUTILS_H
-#define GAMEENGINE_STRINGUTILS_H
+#ifndef SR_ENGINE_STRINGUTILS_H
+#define SR_ENGINE_STRINGUTILS_H
 
-#include <Utils/Debug.h>
 #include <Utils/Math/Mathematics.h>
-#include <codecvt>
 
 namespace SR_UTILS_NS {
     SR_MAYBE_UNUSED static std::wstring s2ws(const std::string& str)
@@ -154,6 +152,14 @@ namespace SR_UTILS_NS {
                 return source.substr(pos + offset, source.size() - 1);
         }
 
+        static std::string Substring(const std::string& source, const char* subStr) {
+            if (auto&& pos = source.find(subStr); pos == std::string::npos)
+                return source;
+            else {
+                return source.substr(pos, source.size() - 1);
+            }
+        }
+
         static std::string Substring(const std::string_view& source, char symbol, uint32_t offset = 0) {
             if (auto&& pos = source.find(symbol); pos == std::string::npos)
                 return std::string(source);
@@ -164,6 +170,15 @@ namespace SR_UTILS_NS {
 
         static std::string_view SubstringView(const std::string_view& source, char symbol, uint32_t offset = 0) {
             if (auto&& pos = source.find(symbol); pos == std::string::npos) {
+                return source;
+            }
+            else {
+                return source.substr(pos + offset, source.size() - 1);
+            }
+        }
+
+        static std::string_view SubstringView(const std::string_view& source, StringAtom substr, uint32_t offset = 0) {
+            if (auto&& pos = source.find(substr.ToStringView()); pos == std::string::npos) {
                 return source;
             }
             else {
@@ -247,7 +262,7 @@ namespace SR_UTILS_NS {
             return len;
         }
 
-        inline static std::pair<std::string, std::string> SplitTwo(std::string source, const std::string& delimiter) {
+        SR_NODISCARD inline static std::pair<std::string, std::string> SplitTwo(std::string source, const std::string& delimiter) {
             std::pair<std::string, std::string> result = {};
             auto pos = source.find(delimiter);
 
@@ -258,9 +273,10 @@ namespace SR_UTILS_NS {
             return result;
         }
 
-        static std::vector<std::string> Split(std::string source, const std::string& delimiter);
+        SR_NODISCARD static std::vector<std::string_view> SplitView(std::string_view source, std::string_view delimiter);
+        SR_NODISCARD static std::vector<std::string> Split(std::string source, const std::string& delimiter);
 
-        inline static char** Split(const char* source, char chr, unsigned short start, unsigned short count_strs) {
+        SR_NODISCARD inline static char** Split(const char* source, char chr, unsigned short start, unsigned short count_strs) {
             char** strs = new char*[count_strs];
             unsigned char   found_floats = 0;
 
@@ -305,11 +321,11 @@ namespace SR_UTILS_NS {
             return nullptr;
         }
 
-        inline static bool Contains(const std::string& str, const std::string& word) noexcept {
+        SR_NODISCARD inline static bool Contains(const std::string& str, const std::string& word) noexcept {
             return str.find(word) != std::string::npos;
         }
 
-        inline static float* SplitFloats(const char* source, char chr, unsigned short start, unsigned short count_floats) {
+        SR_NODISCARD inline static float* SplitFloats(const char* source, char chr, unsigned short start, unsigned short count_floats) {
             auto*			floats			= new float[count_floats];
             unsigned char   found_floats	= 0;
 
@@ -358,7 +374,7 @@ namespace SR_UTILS_NS {
             return nullptr;
         }
 
-        inline static unsigned char MathCount(const char* str, char symb) noexcept {
+        SR_NODISCARD inline static unsigned char MathCount(const char* str, char symb) noexcept {
             unsigned char count = 0;
             while (*str != '\0') {
                 if (*str == symb)
@@ -368,7 +384,7 @@ namespace SR_UTILS_NS {
             return count;
         }
 
-        inline static std::string ReplaceAllRecursive(const std::string& original, const std::vector<std::string>& fromList, const std::string& to) noexcept {
+        SR_NODISCARD inline static std::string ReplaceAllRecursive(const std::string& original, const std::vector<std::string>& fromList, const std::string& to) noexcept {
             std::string result = original;
 
         repeat:
@@ -384,8 +400,9 @@ namespace SR_UTILS_NS {
             return result;
         }
 
-        template<typename stringType> static stringType ReplaceAll(stringType const& original, stringType const& from, stringType const& to) noexcept {
+        template<typename stringType> SR_NODISCARD static stringType ReplaceAll(stringType const& original, stringType const& from, stringType const& to) noexcept {
             stringType results;
+            results.reserve(original.size());
             typename stringType::const_iterator end = original.end();
             typename stringType::const_iterator current = original.begin();
             typename stringType::const_iterator next = std::search(current, end, from.begin(), from.end());
@@ -399,38 +416,51 @@ namespace SR_UTILS_NS {
             return results;
         }
 
-        inline static std::string ToLower(std::string str) noexcept {
-            for (char & t : str)
-                t = tolower(t);
+        SR_NODISCARD SR_INLINE_STATIC std::string ToLower(std::string str) noexcept {
+            for (char& t : str) {
+                t = static_cast<char>(tolower(static_cast<char>(t)));
+            }
             return str;
         }
-        inline static std::string MakePath(std::string str, bool toLower = false) noexcept {
-            str = ReplaceAll<std::string>(str, "\\\\", "/");
-            str = ReplaceAll<std::string>(str, "\\", "/");
-            if (toLower) str = ToLower(str);
-            return str;
+
+        SR_INLINE_STATIC void ToLowerRef(std::string_view str) noexcept {
+            for (auto t = const_cast<char*>(str.data()); *t != '\0'; t++) {
+                *t = static_cast<char>(tolower(static_cast<char>(*t)));
+            }
         }
-        inline static std::string FromCharVector(const std::vector<char>& vs) noexcept {
+
+        SR_INLINE_STATIC void ToUpperRef(std::string_view str) noexcept {
+            for (auto t = const_cast<char*>(str.data()); *t != '\0'; t++) {
+                *t = static_cast<char>(toupper(static_cast<char>(*t)));
+            }
+        }
+
+        SR_NODISCARD inline static std::string MakePath(const std::string& str, bool toLower = false) noexcept {
+            auto&& replaced = ReplaceAll<std::string>(str, "\\", "/");
+            if (toLower) replaced = ToLower(replaced);
+            return replaced;
+        }
+        SR_NODISCARD inline static std::string FromCharVector(const std::vector<char>& vs) noexcept {
             std::string result(begin(vs), end(vs));
             return result;
         }
 
         // convert UTF-8 string to wstring
-        static std::wstring utf8_to_wstring (const std::string& str)
+        SR_NODISCARD static std::wstring utf8_to_wstring (const std::string& str)
         {
             std::wstring_convert<std::codecvt_utf8<wchar_t>> myconv;
             return myconv.from_bytes(str);
         }
 
         // convert wstring to UTF-8 string
-        static std::string wstring_to_utf8 (const std::wstring& str)
+        SR_NODISCARD static std::string wstring_to_utf8 (const std::wstring& str)
         {
             std::wstring_convert<std::codecvt_utf8<wchar_t>> myconv;
             return myconv.to_bytes(str);
         }
 
         // Cut string (file name) to output it
-        static std::string CutName(std::string str, unsigned int frompos){
+        SR_NODISCARD static std::string CutName(std::string str, unsigned int frompos){
             if (str.size() > frompos){
                 str = str.substr(0,frompos);
                 str.append("..."); //должно быть "…", но utf-16 символы не поддерживаются в ImGui, вероятно можно выбрать набор с нужными глифами
@@ -449,4 +479,4 @@ namespace SR_UTILS_NS {
     };
 }
 
-#endif //GAMEENGINE_STRINGUTILS_H
+#endif //SR_ENGINE_STRINGUTILS_H

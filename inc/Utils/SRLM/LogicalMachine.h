@@ -12,7 +12,7 @@
 #include <Utils/Resources/FileWatcher.h>
 #include <Utils/Resources/ResourceManager.h>
 #include <Utils/SRLM/LogicalNode.h>
-#include <Utils/Xml.h>
+#include <Utils/Resources/Xml.h>
 
 namespace SR_SRLM_NS {
     class DataType;

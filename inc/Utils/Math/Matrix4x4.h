@@ -61,7 +61,9 @@ namespace SR_MATH_NS {
         { }
 
         Matrix4x4(const FVector3& translate, const Quaternion& rotation) noexcept;
+        Matrix4x4(const FVector3& translate, const FVector3& scale) noexcept;
         Matrix4x4(const FVector3& translate, const Quaternion& rotation, const FVector3& scale) noexcept;
+        Matrix4x4(const Quaternion& rotation, const FVector3& scale) noexcept;
         Matrix4x4(const FVector3& translate, const Quaternion& rotation, const FVector3& scale, const FVector3& skew) noexcept;
 
         static constexpr Matrix4x4 Identity() {
@@ -96,6 +98,10 @@ namespace SR_MATH_NS {
         #endif
 
             return Result;
+        }
+
+        static Matrix4x4 CreateTRS(const SR_MATH_NS::FVector3& translation, const SR_MATH_NS::Quaternion& rotation, const SR_MATH_NS::FVector3& scale) {
+            return Matrix4x4(translation, rotation, scale);
         }
 
         static Matrix4x4 LookAt(const SR_MATH_NS::FVector3& eye, const SR_MATH_NS::FVector3& center, const SR_MATH_NS::FVector3& up) {
@@ -236,7 +242,7 @@ namespace SR_MATH_NS {
             return Matrix4x4(glm::translate(self, vec3.ToGLM()));
         }
 
-        SR_NODISCARD FVector4 GetAxis(AxisFlag axis) const {
+        SR_NODISCARD FVector4 GetAxis(Axis axis) const {
             switch (axis) {
                 case Axis::X: return value[0];
                 case Axis::Y: return value[1];
@@ -494,7 +500,7 @@ namespace SR_MATH_NS {
         }
     };
 
-    static FVector4 CalcTranslationPlanNormal(const Matrix4x4& model, const SR_MATH_NS::FVector3& cameraEye, const SR_MATH_NS::FVector3& cameraDir, AxisFlag axis) {
+    static FVector4 CalcTranslationPlanNormal(const Matrix4x4& model, const SR_MATH_NS::FVector3& cameraEye, const SR_MATH_NS::FVector3& cameraDir, Axis axis) {
         SR_MATH_NS::FVector4 movePlanNormal[] = {
             model.v.right, /// x
             model.v.up,    /// y
@@ -529,7 +535,7 @@ namespace SR_MATH_NS {
         return SR_MATH_NS::FVector4();
     }
 
-    static FVector4 CalcRotationPlanNormal(const Matrix4x4& model, const SR_MATH_NS::FVector3& cameraDir, AxisFlag axis) {
+    static FVector4 CalcRotationPlanNormal(const Matrix4x4& model, const SR_MATH_NS::FVector3& cameraDir, Axis axis) {
         SR_MATH_NS::FVector4 rotatePlanNormal[] = {
             model.v.right, /// x
             model.v.up,    /// y
@@ -551,7 +557,7 @@ namespace SR_MATH_NS {
         return SR_MATH_NS::FVector4();
     }
 
-    static FVector4 CalcRotationPlanNormal(const SR_MATH_NS::FVector3& cameraDir, AxisFlag axis) {
+    static FVector4 CalcRotationPlanNormal(const SR_MATH_NS::FVector3& cameraDir, Axis axis) {
         SR_MATH_NS::FVector4 rotatePlanNormal[] = {
             SR_MATH_NS::FVector4(SR_MATH_NS::FVector3::Right(), 0.f), /// x
             SR_MATH_NS::FVector4(SR_MATH_NS::FVector3::Up(), 0.f), /// y

@@ -61,7 +61,12 @@ namespace SR_UTILS_NS {
         return ResourceManager::Instance().GetTypeName(m_resourceHashName);
     }
 
+    void IResource::OnReloadDone() {
+        Broadcast(RELOAD_DONE_EVENT);
+    }
+
     void IResource::DeleteResource() {
+        Unload();
         StopWatch();
         m_deleteVerifyFlag = true;
         delete this;
@@ -71,20 +76,13 @@ namespace SR_UTILS_NS {
         SRAssert2(!id.empty(), "Invalid id!");
 
         if (m_resourceId.empty()) {
-            auto&& resourcesManager = ResourceManager::Instance();
+            SRAssert2(m_resourcePath.Empty(), "Resource path already set!");
 
             m_resourceId = id;
-
-            SRAssert(m_resourceHashPath == 0);
-
-            auto&& path = InitializeResourcePath();
-
-            m_resourceHashPath = resourcesManager.RegisterResourcePath(path);
-
-            StartWatch();
+            m_resourcePath = InitializeResourcePath();
 
             if (autoRegister) {
-                resourcesManager.RegisterResource(this);
+                ResourceManager::Instance().RegisterResource(this);
             }
         }
         else {
@@ -109,10 +107,13 @@ namespace SR_UTILS_NS {
     }
 
     IResource::RemoveUPResult IResource::RemoveUsePoint() {
+        SR_TRACY_ZONE;
+
         RemoveUPResult result;
 
         /// тут нужно делать синхронно, иначе может произойти deadlock
         /// TODO: а вообще опасное место, нужно переделать
+        /// TODO 2: здесь какой-то пиздец. нужно оптимизировать.
         ResourceManager::Instance().Execute([this, &result]() {
             if (m_countUses == 0) {
                 SRHalt("Count use points is zero!");
@@ -138,6 +139,7 @@ namespace SR_UTILS_NS {
 
             result = RemoveUPResult::Success;
 
+            /// TODO: получение синглтона дорогая операция, нужно оптимизировать
             if (SR_UTILS_NS::ResourceManager::Instance().IsUsePointStackTraceProfilingEnabled()) {
                 m_debugUnUseStackTraces.emplace_back(SR_UTILS_NS::GetStacktrace());
             }
@@ -147,6 +149,8 @@ namespace SR_UTILS_NS {
     }
 
     void IResource::AddUsePoint() {
+        SR_TRACY_ZONE;
+
         SRAssert(m_countUses != SR_UINT16_MAX);
 
         if (m_isRegistered && m_countUses == 0 && m_isDestroyed) {
@@ -155,6 +159,7 @@ namespace SR_UTILS_NS {
 
         ++m_countUses;
 
+        /// TODO: получение синглтона дорогая операция, нужно оптимизировать
         if (SR_UTILS_NS::ResourceManager::Instance().IsUsePointStackTraceProfilingEnabled()) {
             m_debugUseStackTraces.emplace_back(SR_UTILS_NS::GetStacktrace());
         }
@@ -164,14 +169,13 @@ namespace SR_UTILS_NS {
         return m_countUses;
     }
 
-    IResource* IResource::CopyResource(IResource *destination) const {
-        /// destination->m_lifetime = m_lifetime;
-        destination->m_resourceHashPath = m_resourceHashPath;
-        destination->m_loadState.store(m_loadState);
+    IResource* IResource::CopyResource(IResource* pDestination) const {
+        pDestination->m_resourcePath = m_resourcePath;
+        pDestination->m_loadState.store(m_loadState);
 
-        destination->SetId(m_resourceId, true /** auto register */);
+        pDestination->SetId(m_resourceId, true /** auto register */);
 
-        return destination;
+        return pDestination;
     }
 
     bool IResource::Destroy() {
@@ -228,12 +232,12 @@ namespace SR_UTILS_NS {
         m_resourceHash = hash;
     }
 
-    const Path& IResource::GetResourcePath() const {
-        return SR_UTILS_NS::ResourceManager::Instance().GetResourcePath(m_resourceHashPath);
+    StringAtom IResource::GetResourcePath() const {
+        return m_resourcePath;
     }
 
     Path IResource::InitializeResourcePath() const {
-        return SR_UTILS_NS::Path(GetResourceId(), false /** fast */);
+        return SR_UTILS_NS::Path(GetResourceId());
     }
 
     Path IResource::GetAssociatedPath() const {
@@ -303,7 +307,7 @@ namespace SR_UTILS_NS {
     }
 
     void IResource::StartWatch() {
-        if (IsResourceFromMemory()) {
+        if (IsResourceFromMemory() || !IsFileResource()) {
             return;
         }
 

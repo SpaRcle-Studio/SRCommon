@@ -9,7 +9,9 @@
 
 namespace SR_UTILS_NS {
     class SR_DLL_EXPORT Transform3D : public Transform {
+        SR_CLASS()
         friend class GameObject;
+        using Super = Transform;
     public:
         Transform3D() = default;
 
@@ -24,6 +26,10 @@ namespace SR_UTILS_NS {
 
         /// Transforms direction from local space to world space
         SR_NODISCARD SR_MATH_NS::FVector3 TransformDirection(const SR_MATH_NS::FVector3& direction) const;
+
+        void SetMatrix(const std::optional<SR_MATH_NS::FVector3>& translation,
+                       const std::optional<SR_MATH_NS::Quaternion>& rotation,
+                       const std::optional<SR_MATH_NS::FVector3>& scale) override;
 
         void SetGlobalTranslation(const SR_MATH_NS::FVector3& translation) override;
         void SetGlobalRotation(const SR_MATH_NS::Quaternion& quaternion) override;
@@ -40,14 +46,20 @@ namespace SR_UTILS_NS {
         SR_NODISCARD SR_MATH_NS::Quaternion GetQuaternion() const override { return m_quaternion; }
 
         SR_NODISCARD SR_MATH_NS::FVector3 GetTranslation() const override { return m_translation; }
-        SR_NODISCARD SR_MATH_NS::FVector3 GetRotation() const override { return m_rotation; }
+        SR_NODISCARD SR_MATH_NS::FVector3 GetRotation() const override {
+            if (m_eulersDirty) {
+                m_rotation = m_quaternion.EulerAngle();
+                m_eulersDirty = false;
+            }
+            return m_rotation;
+        }
         SR_NODISCARD SR_MATH_NS::FVector3 GetScale() const override { return m_scale; }
         SR_NODISCARD SR_MATH_NS::FVector3 GetSkew() const override { return m_skew; }
 
         void LookAt(const SR_MATH_NS::FVector3& position) override;
         void LookAt(const SR_MATH_NS::FVector3& position, LookAtAxis axis) override;
 
-        SR_NODISCARD Transform* Copy() const override;
+        SR_NODISCARD Transform::Ptr Copy() const override;
 
         SR_NODISCARD Measurement GetMeasurement() const override { return Measurement::Space3D; }
 
@@ -63,11 +75,16 @@ namespace SR_UTILS_NS {
         mutable SR_MATH_NS::Matrix4x4 m_localMatrix = SR_MATH_NS::Matrix4x4::Identity();
         mutable SR_MATH_NS::Matrix4x4 m_matrix = SR_MATH_NS::Matrix4x4::Identity();
 
-        SR_MATH_NS::Quaternion m_quaternion = SR_MATH_NS::Quaternion::Identity();
+        mutable bool m_eulersDirty = true;
+        mutable SR_MATH_NS::FVector3 m_rotation = SR_MATH_NS::FVector3::Zero();
 
+        /// @property
         SR_MATH_NS::FVector3 m_translation = SR_MATH_NS::FVector3::Zero();
-        SR_MATH_NS::FVector3 m_rotation = SR_MATH_NS::FVector3::Zero();
+        /// @property
+        SR_MATH_NS::Quaternion m_quaternion = SR_MATH_NS::Quaternion::Identity();
+        /// @property
         SR_MATH_NS::FVector3 m_scale = SR_MATH_NS::FVector3::One();
+        /// @property
         SR_MATH_NS::FVector3 m_skew = SR_MATH_NS::FVector3::One();
 
     };

@@ -22,10 +22,10 @@ namespace SR_UTILS_NS {
         using HardPtr = std::shared_ptr<ResourceInfo>;
         using WeakPtr = std::weak_ptr<ResourceInfo>;
 
-        ResourceInfo(uint64_t resourceHash, uint64_t pathHash, ResourceType* pResourceType)
+        ResourceInfo(uint64_t resourceHash, SR_UTILS_NS::StringAtom path, ResourceType* pResourceType)
             : m_resourceType(pResourceType)
             , m_resourceHash(resourceHash)
-            , m_pathHash(pathHash)
+            , m_path(path)
         { }
 
         SR_NODISCARD IResource* GetResource() const;
@@ -34,10 +34,10 @@ namespace SR_UTILS_NS {
 
         ResourceType* m_resourceType = nullptr;
 
-        /// текущий хэш самого ресурса (параметры и тд, не файл!)
+        /// текущий хеш самого ресурса (параметры и тд, не файл!)
         uint64_t m_resourceHash = 0;
-        /// хеш пути ресурса
-        uint64_t m_pathHash = 0;
+        /// путь ресурса
+        SR_UTILS_NS::StringAtom m_path;
 
         ResourcesSet m_loaded;
     };
@@ -45,7 +45,7 @@ namespace SR_UTILS_NS {
     class SR_DLL_EXPORT ResourceType : public NonCopyable {
         friend class ResourceManager;
         using ResourceId = SR_UTILS_NS::StringAtom;
-        using ResourcePath = uint64_t;
+        using ResourcePath = SR_UTILS_NS::StringAtom;
         using CopiesMap = std::unordered_map<ResourceId, std::unordered_set<IResource*>>;
         using Info = std::unordered_map<ResourcePath, ResourceInfo::HardPtr>;
     public:

@@ -8,6 +8,7 @@
 namespace SR_UTILS_NS {
     class SR_DLL_EXPORT FileDialog : public Singleton<FileDialog> {
         SR_REGISTER_SINGLETON(FileDialog)
+        /// Name, Extension
         using Filter = std::vector<std::pair<StringAtom, StringAtom>>;
     protected:
         ~FileDialog() override = default;

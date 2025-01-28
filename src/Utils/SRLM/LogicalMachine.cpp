@@ -6,7 +6,7 @@
 #include <Utils/SRLM/DataType.h>
 #include <Utils/SRLM/LogicalNode.h>
 #include <Utils/SRLM/LogicalNodeManager.h>
-#include <Utils/Xml.h>
+#include <Utils/Resources/Xml.h>
 
 namespace SR_SRLM_NS {
     LogicalMachine::LogicalMachine()

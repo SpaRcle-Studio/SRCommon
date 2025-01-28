@@ -10,6 +10,7 @@
 
 namespace SR_UTILS_NS {
     class GameObject;
+    class SceneObject;
     class Component;
 
     class EntityRef final : public SR_UTILS_NS::NonCopyable {
@@ -37,6 +38,7 @@ namespace SR_UTILS_NS {
         }
 
         SR_NODISCARD SR_HTYPES_NS::SharedPtr<GameObject> GetGameObject() const;
+        SR_NODISCARD SR_HTYPES_NS::SharedPtr<SceneObject> GetSceneObject() const;
         SR_NODISCARD SR_HTYPES_NS::SharedPtr<Component> GetComponent() const;
         SR_NODISCARD bool IsValid() const;
         SR_NODISCARD bool IsRelative() const { return m_relative; }

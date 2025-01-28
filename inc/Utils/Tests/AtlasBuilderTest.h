@@ -1,5 +1,5 @@
-#ifndef SRENGINE_ATLASBUILDERTEST_H
-#define SRENGINE_ATLASBUILDERTEST_H
+#ifndef SR_ENGINE_ATLASBUILDERTEST_H
+#define SR_ENGINE_ATLASBUILDERTEST_H
 
 #include <Graphics/Utils/AtlasBuilder.h>
 #include <Utils/Resources/ResourceManager.h>
@@ -24,4 +24,4 @@ namespace SR_UTILS_NS {
 
 
 
-#endif //SRENGINE_ATLASBUILDERTEST_H
+#endif //SR_ENGINE_ATLASBUILDERTEST_H

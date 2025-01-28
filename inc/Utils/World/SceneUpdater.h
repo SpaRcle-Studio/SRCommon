@@ -22,8 +22,9 @@ namespace SR_WORLD_NS {
 
     public:
         void Build(bool isPaused);
-        void Update(float_t dt);
-        void FixedUpdate();
+        void Update(float_t dt, bool isPaused);
+        void FixedUpdate(bool isPaused);
+        void LateUpdate(bool isPaused);
 
         void SetDirty();
 

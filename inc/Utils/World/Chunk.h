@@ -2,8 +2,8 @@
 // Created by Monika on 30.09.2021.
 //
 
-#ifndef GAMEENGINE_CHUNK_H
-#define GAMEENGINE_CHUNK_H
+#ifndef SR_ENGINE_CHUNK_H
+#define SR_ENGINE_CHUNK_H
 
 #include <Utils/Math/Vector2.h>
 #include <Utils/Types/SharedPtr.h>
@@ -26,7 +26,7 @@ namespace SR_WORLD_NS {
     #define SRChunkAllocVArgs observer, region, position, size
 
     class SR_DLL_EXPORT Chunk : public NonCopyable {
-        using ScenePtr = SR_HTYPES_NS::SafePtr<Scene>;
+        using ScenePtr = SR_HTYPES_NS::SharedPtr<Scene>;
     protected:
         Chunk(SRChunkAllocArgs);
 
@@ -50,7 +50,7 @@ namespace SR_WORLD_NS {
         SR_NODISCARD bool IsAlive() const { return m_lifetime > 0; }
         SR_NODISCARD bool IsPreLoaded() const { return m_loadState == LoadState::PreLoaded; }
         SR_NODISCARD SR_MATH_NS::IVector3 GetPosition() const { return m_position; }
-        SR_NODISCARD SR_MATH_NS::FVector3 GetWorldPosition(SR_MATH_NS::AxisFlag center = SR_MATH_NS::Axis::None) const;
+        SR_NODISCARD SR_MATH_NS::FVector3 GetWorldPosition(SR_MATH_NS::Axis center = SR_MATH_NS::Axis::None) const;
         SR_NODISCARD ScenePtr GetScene() const;
 
         SR_NODISCARD SR_HTYPES_NS::Marshal::Ptr Save(SR_HTYPES_NS::DataStorage* pContext) const;
@@ -88,4 +88,4 @@ namespace SR_WORLD_NS {
     };
 }
 
-#endif //GAMEENGINE_CHUNK_H
+#endif //SR_ENGINE_CHUNK_H

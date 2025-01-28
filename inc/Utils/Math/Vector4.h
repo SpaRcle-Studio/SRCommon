@@ -13,6 +13,8 @@ namespace SR_MATH_NS {
 
     template<typename T> struct SR_DLL_EXPORT Vector4 {
     public:
+        using ValueType = T;
+
         union {
             struct {
                 T x;
@@ -72,6 +74,14 @@ namespace SR_MATH_NS {
 
         SR_FORCE_INLINE T& operator[](int32_t axis) {
             return coord[axis];
+        }
+
+        SR_FORCE_INLINE bool operator==(const Vector4& v) const {
+            return SR_EQUALS(x, v.x) && SR_EQUALS(y, v.y) && SR_EQUALS(z, v.z) && SR_EQUALS(w, v.w);
+        }
+
+        SR_FORCE_INLINE bool operator!=(const Vector4& v) const {
+            return !(*this == v);
         }
 
         template<typename U> SR_FORCE_INLINE Vector4 &operator*=(U p_scalar) {
@@ -198,9 +208,27 @@ namespace SR_MATH_NS {
         SR_FAST_CONSTRUCTOR FColor (Unit scalar) : Vector4<Unit>(scalar) { }
         SR_FAST_CONSTRUCTOR FColor(const glm::vec4& vec4) : Vector4<Unit>(vec4) { }
         SR_FAST_CONSTRUCTOR FColor(const Vector4<Unit>& v) : Vector4<Unit>(v) { }
+        SR_FAST_CONSTRUCTOR FColor(const FColor& color) : Vector4<Unit>(color.r, color.g, color.b, color.a) { }
+        SR_FAST_CONSTRUCTOR FColor(FColor&& color) : Vector4<Unit>(color.r, color.g, color.b, color.a) { }
         SR_FAST_CONSTRUCTOR FColor(double_t _x, double_t _y, double_t _z, double_t _w) : Vector4<Unit>(_x, _y, _z, _w) { }
         SR_FAST_CONSTRUCTOR FColor(float_t _x, float_t _y, float_t _z, float_t _w) : Vector4<Unit>(_x, _y, _z, _w) { }
         SR_FAST_CONSTRUCTOR FColor(int32_t _x, int32_t _y, int32_t _z, int32_t _w) : Vector4<Unit>(_x, _y, _z, _w) { }
+
+        FColor& operator=(const FColor& color) {
+            r = color.r;
+            g = color.g;
+            b = color.b;
+            a = color.a;
+            return *this;
+        }
+
+        FColor& operator=(FColor&& color) {
+            r = color.r;
+            g = color.g;
+            b = color.b;
+            a = color.a;
+            return *this;
+        }
 
         static constexpr FColor Red() { return FColor(255.f, 0.f, 0.f, 255.f); }
         static constexpr FColor Green() { return FColor(0.f, 255.f, 0.f, 255.f); }
@@ -210,12 +238,16 @@ namespace SR_MATH_NS {
         static constexpr FColor Yellow() { return FColor(255.f, 255.f, 0.f, 255.f); }
         static constexpr FColor Cyan() { return FColor(0.f, 255.f, 255.f, 255.f); }
         static constexpr FColor Magenta() { return FColor(255.f, 0.f, 255.f, 255.f); }
+        static constexpr FColor Alpha() { return FColor(0.f, 0.f, 0.f, 0.f); }
 
     };
+
+    extern std::unordered_map<SRHashType, FColor> SR_COLOR_PALETTE;
 
     typedef Vector4<Unit>     FVector4;
     typedef Vector4<int32_t>  IVector4;
     typedef Vector4<uint32_t> UVector4;
+    typedef Vector4<bool>     BVector4;
 
     SR_INLINE static const FVector4 InfinityFV4 = FVector4 { UnitMAX, UnitMAX, UnitMAX, UnitMAX };
 

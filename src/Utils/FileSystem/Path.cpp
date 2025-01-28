@@ -5,6 +5,7 @@
 #include <Utils/FileSystem/Path.h>
 #include <Utils/FileSystem/FileSystem.h>
 #include <Utils/Platform/Platform.h>
+#include <Utils/Profile/TracyContext.h>
 
 namespace SR_UTILS_NS {
     Path::Path()
@@ -15,59 +16,51 @@ namespace SR_UTILS_NS {
         , m_type(Type::Undefined)
     { }
 
-    Path::Path(std::string_view path, bool fast)
-        : Path(path.data(), fast)
+    Path::Path(std::string_view path)
+        : Path(std::string(path))
     { }
 
-    Path::Path(std::wstring path, bool fast)
+    Path::Path(std::wstring path)
         : m_path(SR_WS2S(path))
         , m_name()
         , m_ext()
         , m_hash(SR_UINT64_MAX)
         , m_type(Type::Undefined)
     {
-        if (!fast) {
-            Update();
-        }
+        Update();
         m_hash = SR_HASH_STR(m_path);
     }
 
-    Path::Path(SR_UTILS_NS::StringAtom stringAtom, bool fast)
+    Path::Path(SR_UTILS_NS::StringAtom stringAtom)
         : m_path(stringAtom)
         , m_name()
         , m_ext()
         , m_hash(SR_UINT64_MAX)
         , m_type(Type::Undefined)
     {
-        if (!fast) {
-            Update();
-        }
+        Update();
         m_hash = SR_HASH_STR(m_path);
     }
 
-    Path::Path(std::string path, bool fast)
+    Path::Path(std::string path)
         : m_path(std::move(path))
         , m_name()
         , m_ext()
         , m_hash(SR_UINT64_MAX)
         , m_type(Type::Undefined)
     {
-        if (!fast) {
-            Update();
-        }
+        Update();
         m_hash = SR_HASH_STR(m_path);
     }
 
-    Path::Path(const char *path, bool fast)
+    Path::Path(const char* path)
         : m_path(path)
-        , m_name("")
-        , m_ext("")
+        , m_name()
+        , m_ext()
         , m_hash(SR_UINT64_MAX)
         , m_type(Type::Undefined)
     {
-        if (!fast) {
-            Update();
-        }
+        Update();
         m_hash = SR_HASH_STR(m_path);
     }
 
@@ -89,11 +82,11 @@ namespace SR_UTILS_NS {
     }
 
     bool Path::IsDir() const {
-        return m_type == Type::Folder;
+        return GetType() == Type::Folder;
     }
 
     bool Path::IsFile() const {
-        return m_type == Type::File;
+        return GetType() == Type::File;
     }
 
     std::list<Path> Path::GetFiles() const {
@@ -101,7 +94,7 @@ namespace SR_UTILS_NS {
     }
 
     std::list<Path> Path::GetAll() const {
-        return SR_PLATFORM_NS::GetInDirectory(*this, Path::Type::Undefined);
+        return SR_PLATFORM_NS::GetAllInDirectory(*this);
     }
 
     std::list<Path> Path::GetFolders() const {
@@ -117,46 +110,25 @@ namespace SR_UTILS_NS {
     }
 
     void Path::Update() {
+        SR_TRACY_ZONE;
+
         NormalizeSelf();
-
-        m_type = GetType();
-
-        if (auto&& index = m_path.find_last_of("/\\"); index == std::string::npos) {
-            if (index = m_path.find_last_of("."); index != std::string::npos) {
-                m_name = m_path.substr(0, (m_path.size() - index) - 1);
-                m_ext  = m_path.substr(index + 1, m_path.size() - index);
-            }
-            else {
-                m_name = m_path;
-                m_ext = std::string();
-            }
-        }
-        else {
-            ++index;
-
-            if (auto dot = m_path.find_last_of('.'); dot != std::string::npos && dot > index) {
-                m_name = m_path.substr(index, dot - index);
-                m_ext  = m_path.substr(dot + 1, m_path.size() - dot);
-            }
-            else {
-                m_name = m_path.substr(index);
-                m_ext  = std::string();
-            }
-        }
+        ExtractNameAndExt();
     }
 
     std::string Path::GetExtension() const {
-        return m_ext;
+        return std::string(m_ext);
     }
 
     std::string Path::GetBaseName() const {
-        return m_name;
+        return std::string(m_name);
     }
 
     Path::Path(const Path& path) {
         m_path = path.m_path;
-        m_name = path.m_name;
-        m_ext  = path.m_ext;
+
+        ExtractNameAndExt();
+
         m_hash = path.m_hash;
         m_type = path.m_type;
     }
@@ -166,6 +138,17 @@ namespace SR_UTILS_NS {
     }
 
     Path::Type Path::GetType() const {
+#ifdef SR_WIN32
+    if (m_path.size() < 2 || m_path[1] != ':') {
+        return Type::Undefined;
+    }
+#elif defined(SR_LINUX)
+    if (m_path.empty() || m_path[0] != '/') {
+        return Type::Undefined;
+    }
+#endif
+
+        SR_TRACY_ZONE;
 #if defined(SR_MSVC) || defined (SR_LINUX)
         struct stat s{};
         if(stat(m_path.c_str(), &s) == 0) {
@@ -201,14 +184,18 @@ namespace SR_UTILS_NS {
     }
 
     bool Path::Exists() const {
-        return Exists(m_type);
+        return GetType() != Type::Undefined;
     }
 
     bool Path::Exists(Type type) const {
-        return SR_PLATFORM_NS::IsExists(m_path);
+        if (type == Type::Undefined) {
+            return false;
+        }
+        return GetType() == type;
     }
 
     void Path::NormalizeSelf() {
+        SR_TRACY_ZONE;
         m_path = FileSystem::NormalizePath(m_path);
         m_type = GetType();
     }
@@ -363,7 +350,10 @@ namespace SR_UTILS_NS {
     }
 
     std::string Path::GetBaseNameAndExt() const {
-        return m_name + "." + m_ext;
+        if (m_ext.empty()) {
+            return std::string(m_name);
+        }
+        return std::string(m_name) + "." + std::string(m_ext);
     }
 
     std::string_view Path::View() const {
@@ -386,5 +376,46 @@ namespace SR_UTILS_NS {
 
     Path Path::EmplaceFront(const std::string &str) const {
         return str + m_path;
+    }
+
+    std::string Path::ConvertToFileName() const {
+        std::string str = ToString();
+
+        if (str.size() >= 2 && str[1] == ':') {
+            str[2] = '-';
+        }
+
+        for (auto&& c : str) {
+            if (c == '/' || c == '\\') {
+                c = '-';
+            }
+        }
+
+        return str;
+    }
+
+    void Path::ExtractNameAndExt() {
+        if (auto&& index = m_path.find_last_of("/\\"); index == std::string::npos) {
+            if (index = m_path.find_last_of('.'); index != std::string::npos) {
+                m_name = std::string_view { m_path.data(), index };
+                m_ext = std::string_view { m_path.data() + index + 1, m_path.size() - index - 1 };
+            }
+            else {
+                m_name = m_path;
+                m_ext = std::string_view();
+            }
+        }
+        else {
+            ++index;
+
+            if (auto dot = m_path.find_last_of('.'); dot != std::string::npos && dot > index) {
+                m_name = std::string_view { m_path.data() + index, dot - index };
+                m_ext = std::string_view { m_path.data() + dot + 1, m_path.size() - dot - 1 };
+            }
+            else {
+                m_name = std::string_view { m_path.data() + index, m_path.size() - index };
+                m_ext = std::string_view();
+            }
+        }
     }
 }

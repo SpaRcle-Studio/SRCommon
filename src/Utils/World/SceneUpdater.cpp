@@ -29,31 +29,31 @@ namespace SR_WORLD_NS {
 
         m_lastBuildTimePoint = SR_HTYPES_NS::Time::Instance().Now();
 
-        auto&& root = m_scene->GetRootGameObjects();
+        auto&& root = m_scene->GetRootSceneObjects();
 
         m_scene->PostLoad(false);
         m_scene->Awake(false, isPaused);
         m_scene->CheckActivity(false);
         m_scene->Start(false);
 
-        for (auto&& gameObject : root) {
-            gameObject->PostLoad(false);
+        for (auto&& pObject : root) {
+            pObject->PostLoad(false);
         }
 
-        for (auto&& gameObject : root) {
-            gameObject->Awake(false, isPaused);
+        for (auto&& pObject : root) {
+            pObject->Awake(false, isPaused);
         }
 
-        for (auto&& gameObject : root) {
-            gameObject->CheckActivity(false);
+        for (auto&& pObject : root) {
+            pObject->CheckActivity(false);
         }
 
-        for (auto&& gameObject : root) {
-            gameObject->Start(false);
+        for (auto&& pObject : root) {
+            pObject->Start(false);
         }
     }
 
-    void SceneUpdater::Update(float_t dt) {
+    void SceneUpdater::Update(float_t dt, bool isPaused) {
         SR_TRACY_ZONE;
         SR_LOCK_GUARD;
 
@@ -62,11 +62,16 @@ namespace SR_WORLD_NS {
             if (!pComponent) {
                 continue;
             }
+
+            if (isPaused && !pComponent->ExecuteInEditMode()) {
+                continue;
+            }
+
             pComponent->Update(dt);
         }
     }
 
-    void SceneUpdater::FixedUpdate() {
+    void SceneUpdater::FixedUpdate(bool isPaused) {
         SR_TRACY_ZONE;
         SR_LOCK_GUARD;
 
@@ -75,7 +80,30 @@ namespace SR_WORLD_NS {
             if (!pComponent) {
                 continue;
             }
+
+            if (isPaused && !pComponent->ExecuteInEditMode()) {
+                continue;
+            }
+
             pComponent->FixedUpdate();
+        }
+    }
+
+    void SceneUpdater::LateUpdate(bool isPaused) {
+        SR_TRACY_ZONE;
+        SR_LOCK_GUARD;
+
+        for (uint32_t i = 0; i < m_componentsPoolSize; ++i) {
+            auto&& pComponent = m_updatableComponents[i];
+            if (!pComponent) {
+                continue;
+            }
+
+            if (isPaused && !pComponent->ExecuteInEditMode()) {
+                continue;
+            }
+
+            pComponent->LateUpdate();
         }
     }
 

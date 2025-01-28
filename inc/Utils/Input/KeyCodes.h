@@ -17,23 +17,28 @@ namespace SR_UTILS_NS {
     };
 
     enum class MouseCode : uint8_t {
-        None = 0,
-        MouseLeft = 1,
-        MouseRight = 2,
-        MouseMiddle = 4,
+        MouseLeft = 0,
+        MouseRight = 1,
+        MouseMiddle = 2,
+        MouseButton4 = 3,
+        MouseButton5 = 4,
+        None = std::numeric_limits<uint8_t>::max() - 1
     };
 
     const MouseCode MouseCodes[] = {
         MouseCode::MouseLeft,
         MouseCode::MouseRight,
         MouseCode::MouseMiddle,
+        MouseCode::MouseButton4,
+        MouseCode::MouseButton5,
     };
 
-    enum class KeyCode : uint8_t {
-        None = 0,
-        MouseLeft = 1,
-        MouseRight = 2,
-        MouseMiddle = 4,
+    SR_ENUM_NS_CLASS_T(KeyCode, uint8_t,
+        MouseLeft = 0,
+        MouseRight = 1,
+        MouseMiddle = 2,
+        MouseButton4 = 3,
+        MouseButton5 = 4,
         BackSpace = 8,
         Tab = 9,
         Enter = 13,
@@ -98,10 +103,12 @@ namespace SR_UTILS_NS {
         F10 = 121,
         F11 = 122,
         F12 = 123,
-        Plus = 187, Minus = 189,
+        Plus = 187,
+        Minus = 189,
         Dot = 190,
         Tilde = 192,
-    };
+        None = std::numeric_limits<uint8_t>::max() - 1
+    );
 
     const KeyCode KeyCodes[] = {
             KeyCode::BackSpace,
@@ -167,7 +174,8 @@ namespace SR_UTILS_NS {
             KeyCode::F10,
             KeyCode::F11,
             KeyCode::F12,
-            KeyCode::Plus, KeyCode::Minus,
+            KeyCode::Plus,
+            KeyCode::Minus,
             KeyCode::Dot,
             KeyCode::Tilde,
     };

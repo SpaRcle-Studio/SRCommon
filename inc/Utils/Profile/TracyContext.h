@@ -29,8 +29,8 @@ namespace SR_UTILS_NS {
         using IdentifierPtr = void*;
         using ContextMap = std::map<IdentifierPtr, TracyContextPtr>;
     public:
-        TracyContextPtr& GetContext(TracyTypeFlag type, IdentifierPtr pIdentifier) {
-            if (type >= TracyType::TracyTypeTMAX - 1) {
+        TracyContextPtr& GetContext(TracyType type, IdentifierPtr pIdentifier) {
+            if (type >= TracyType::TracyTypeMAX - 1) {
                 SRHalt0();
                 static TracyContextPtr pNull = nullptr;
                 return pNull;
@@ -39,29 +39,32 @@ namespace SR_UTILS_NS {
             return m_contexts[type][pIdentifier];
         }
 
-        void Destroy(TracyTypeFlag type);
+        void Destroy(TracyType type);
 
     #ifdef SR_USE_VULKAN
         std::function<void(void*)> VulkanDestroy;
     #endif
 
     private:
-        void Destroy(TracyContextPtr pContext, TracyTypeFlag type);
+        void Destroy(TracyContextPtr pContext, TracyType type);
 
     private:
-        std::array<ContextMap, TracyType::TracyTypeTMAX - 1> m_contexts;
+        std::array<ContextMap, TracyType::TracyTypeMAX - 1> m_contexts;
 
     };
 }
 #endif
 
 #ifdef SR_TRACY_ENABLE
+    #define SR_TRACY_IS_PROFILER_CONNECTED (tracy::GetProfiler().IsConnected())
     #define SR_TRACY_TEXT_N(name, text) ZoneText(text.c_str(), text.size())
-    #define SR_TRACY_ZONE ZoneScoped
+    #define SR_TRACY_ZONE ZoneScoped /** NOLINT */
     #define SR_TRACY_ZONE_VALUE(value) ZoneValue(value)
     #define SR_TRACY_ZONE_TEXT(value) ZoneText(value.c_str(), value.size())
+    #define SR_TRACY_ZONE_TEXT_C(value) ZoneText(value, strlen(value))
     #define SR_TRACY_ZONE_N(name) ZoneScopedN(name)
     #define SR_TRACY_ZONE_S(name) ZoneTransientN(TracyConcat(__tracy_source_location, TracyLine), name, true)
+    #define SR_TRACY_PLOT(name, val) TracyPlot(name, val)
 
     #define SR_TRACY_GET_CONTEXT(tracyType, pIdentifier) \
         SR_UTILS_NS::TracyContextManager::Instance().GetContext(tracyType, pIdentifier)
@@ -69,12 +72,15 @@ namespace SR_UTILS_NS {
     #define SR_TRACY_DESTROY(tracyType) SR_UTILS_NS::TracyContextManager::Instance().Destroy(tracyType);
 
 #else
+    #define SR_TRACY_IS_PROFILER_CONNECTED (false)
     #define SR_TRACY_TEXT_N(name, text)
     #define SR_TRACY_ZONE SR_NOOP
     #define SR_TRACY_ZONE_VALUE(value) SR_NOOP
     #define SR_TRACY_ZONE_TEXT(value) SR_NOOP
+    #define SR_TRACY_ZONE_TEXT_C(value) SR_NOOP
     #define SR_TRACY_ZONE_N(name) SR_NOOP
     #define SR_TRACY_ZONE_S(name) SR_NOOP
+    #define SR_TRACY_PLOT(name, val) SR_NOOP
 
     #define SR_TRACY_GET_CONTEXT(tracyType, pIdentifier)
     #define SR_TRACY_DESTROY(tracyType)

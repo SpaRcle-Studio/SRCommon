@@ -41,7 +41,7 @@ namespace SR_UTILS_NS {
 
     void ResourceType::Remove(IResource *pResource) {
         const auto id = pResource->GetResourceId();
-        auto&& hashPath = pResource->GetResourceHashPath();
+        auto&& path = pResource->GetResourcePath();
 
         /// -------------------------------------------------------------
 
@@ -59,12 +59,12 @@ namespace SR_UTILS_NS {
 
         /// -------------------------------------------------------------
 
-        auto&& pInfo = m_info.at(hashPath);
+        auto&& pInfo = m_info.at(path);
 
         pInfo->m_loaded.erase(pResource);
 
         if (pInfo->m_loaded.empty()) {
-            m_info.erase(hashPath);
+            m_info.erase(path);
         }
 
         /// -------------------------------------------------------------
@@ -73,8 +73,8 @@ namespace SR_UTILS_NS {
     }
 
     void ResourceType::Add(IResource* pResource) {
-        if (pResource->GetResourceHashPath() == 0 && pResource->IsFileResource()) {
-            SRHalt("ResourceType::Add() : resource path have a zero hash!");
+        if (pResource->GetResourcePath().empty() && pResource->IsFileResource()) {
+            SRHalt("ResourceType::Add() : resource empty path!");
             return;
         }
 
@@ -83,7 +83,7 @@ namespace SR_UTILS_NS {
 
         pResource->OnResourceRegistered();
 
-        auto&& path = pResource->GetResourceHashPath();
+        auto&& path = pResource->GetResourcePath();
         auto&& pIt = m_info.find(path);
 
     retry:
@@ -127,7 +127,7 @@ namespace SR_UTILS_NS {
 
     std::pair<ResourceType::ResourcePath, ResourceInfo::HardPtr> ResourceType::GetInfoByIndex(uint64_t index) {
         if (index >= m_info.size()) {
-            return std::make_pair(0, nullptr);
+            return std::make_pair(ResourcePath(), nullptr);
         }
 
         auto&& [hash, info] = *std::next(m_info.begin(), index);

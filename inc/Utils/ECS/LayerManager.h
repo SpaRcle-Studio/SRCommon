@@ -20,6 +20,8 @@ namespace SR_UTILS_NS {
 
         SR_NODISCARD static StringAtom GetDefaultLayer();
 
+        SR_NODISCARD uint64_t GetHashState() const { return m_hashState; }
+
     protected:
         SR_NODISCARD SR_UTILS_NS::Path InitializeResourcePath() const override;
 
@@ -29,6 +31,7 @@ namespace SR_UTILS_NS {
     private:
         std::vector<StringAtom> m_layers;
         std::atomic<StringAtom> m_defaultLayer;
+        uint64_t m_hashState = 0;
 
     };
 }

@@ -43,7 +43,7 @@ namespace SR_UTILS_NS {
         return buffer;
     }
 
-    std::string FileSystem::ReadAllText(const std::string &path) {
+    std::string FileSystem::ReadAllText(const std::string& path) {
         std::string data = std::string();
         std::ifstream stream(path, std::ios::in);
         if (stream.is_open()) {
@@ -82,7 +82,7 @@ namespace SR_UTILS_NS {
         return result;
     }
 
-    std::vector<char> FileSystem::ReadBinary(const std::string &path) {
+    std::vector<char> FileSystem::ReadBinary(const std::string_view path) {
         /*std::ifstream ifd(path,  std::ios::binary |  std::ios::ate);
         int size = ifd.tellg();
         ifd.seekg(0,  std::ios::beg);
@@ -93,10 +93,10 @@ namespace SR_UTILS_NS {
         //std::ifstream input(path, std::ios::binary);
         //std::vector<uint32_t> buffer(std::istreambuf_iterator<char>(input), {});
 
-        std::ifstream file(path, std::ios::ate | std::ios::binary);
+        std::ifstream file(path.data(), std::ios::ate | std::ios::binary);
 
         if (!file.is_open()) {
-            SR_ERROR("FileSystem::ReadBinary() : failed to open \""+path+"\"file!");
+            SR_ERROR("FileSystem::ReadBinary() : failed to open \"{}\"file!", path);
             return std::vector<char>();
         }
 
@@ -119,14 +119,23 @@ namespace SR_UTILS_NS {
         if (path.back() != '/')
             path.append("/");
 
+    #ifdef SR_LINUX
+        return SR_PLATFORM_NS::CreateFolder(path);
+    #else
         auto pos = path.find('/', offset);
         if (pos != std::string::npos) {
-            auto dir = path.substr(0, pos);
+            auto&& dir = path.substr(0, pos);
+            if (dir.back() != '/') {
+                dir.append("/");
+
+            }
+
             SR_PLATFORM_NS::CreateFolder(dir);
             return CreatePath(std::move(path), pos + 1);
         }
 
         return true;
+    #endif
     }
 
     //std::string FileSystem::GetFullPath(const std::string& path) {
@@ -140,6 +149,8 @@ namespace SR_UTILS_NS {
     //}
 
     std::string FileSystem::NormalizePath(const std::string &path) {
+        SR_TRACY_ZONE;
+
         auto newPath = StringUtils::MakePath(path);
 
         do {
@@ -168,12 +179,12 @@ namespace SR_UTILS_NS {
         return true;
     }
 
-    std::string FileSystem::ReadBinaryAsString(const std::string& path, bool checkError) {
-        std::ifstream file(path, std::ios::ate | std::ios::binary);
+    std::string FileSystem::ReadBinaryAsString(const Path& path, bool checkError) {
+        std::ifstream file(path.ToStringRef(), std::ios::ate | std::ios::binary);
 
         if (!file.is_open()) {
             SR_UNUSED_VARIABLE(checkError);
-            SRAssert2(!checkError, "FileSystem::ReadBinaryAsString() : failed to open \"" + path + "\" file!");
+            SRAssert2(!checkError, "FileSystem::ReadBinaryAsString() : failed to open \"" + path.ToStringRef() + "\" file!");
             return std::string();
         }
 
@@ -251,16 +262,22 @@ namespace SR_UTILS_NS {
         return hash;
     }
 
-    void FileSystem::WriteHashToFile(const Path& path, uint64_t hash) {
-        path.Make(Path::Type::File);
+    bool FileSystem::WriteHashToFile(const Path& path, uint64_t hash) {
+        if (!path.Create()) {
+            SR_ERROR("FileSystem::WriteHashToFile() : failed to create file!\n\tPath: " + path.ToString());
+            return false;
+        }
 
         std::ofstream file(path.ToString(), std::ios::binary);
 
         if (!file.is_open()) {
-            return;
+            SR_ERROR("FileSystem::WriteHashToFile() : failed to open file!\n\tPath: " + path.ToString());
+            return false;
         }
 
         file.write((char*)&hash, sizeof(uint64_t));
         file.close();
+
+        return true;
     }
 }

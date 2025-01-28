@@ -2,8 +2,8 @@
 // Created by Nikita on 11.07.2021.
 //
 
-#ifndef GAMEENGINE_VECTOR2_H
-#define GAMEENGINE_VECTOR2_H
+#ifndef SR_ENGINE_VECTOR2_H
+#define SR_ENGINE_VECTOR2_H
 
 #include <Utils/Math/Mathematics.h>
 #include <Utils/Math/Axis.h>
@@ -11,6 +11,8 @@
 namespace SR_MATH_NS {
     template<typename T> struct SR_DLL_EXPORT Vector2 {
     public:
+        using ValueType = T;
+
         union {
             struct {
                 T x;
@@ -139,6 +141,12 @@ namespace SR_MATH_NS {
             return *this;
         }
 
+        template<typename U> SR_FORCE_INLINE Vector2 operator*=(const Vector2<U>& value) {
+            this->x *= value.x;
+            this->y *= value.y;
+            return *this;
+        }
+
         template<typename U> SR_FORCE_INLINE bool operator==(const Vector2<U> &p_v) const {
             return SR_EQUALS(x, p_v.x) && SR_EQUALS(y, p_v.y);
         }
@@ -162,6 +170,12 @@ namespace SR_MATH_NS {
         template<typename U> SR_FORCE_INLINE Vector2 &operator/=(U p_scalar) {
             x /= p_scalar;
             y /= p_scalar;
+            return *this;
+        }
+
+        template<typename U> SR_FORCE_INLINE Vector2 &operator/=(const Vector2<U> &p_v) {
+            x /= p_v.x;
+            y /= p_v.y;
             return *this;
         }
 
@@ -248,4 +262,4 @@ namespace std {
     };
 }
 
-#endif //GAMEENGINE_VECTOR2_H
+#endif //SR_ENGINE_VECTOR2_H
