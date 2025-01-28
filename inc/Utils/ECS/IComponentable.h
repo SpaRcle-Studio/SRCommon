@@ -9,6 +9,7 @@
 #include <Utils/Types/Vector.h>
 #include <Utils/ECS/Entity.h>
 #include <Utils/ECS/Component.h>
+#include <Utils/ECS/ComponentManager.h>
 
 namespace SR_WORLD_NS {
     class Scene;
