@@ -31,6 +31,9 @@ def needs_update(path, export_path):
     return False
 
 def create_cxx(path):
+    if not os.path.exists(path):
+        raise FileNotFoundError(f"ResourceEmbedder.py: path does not exist: {path}")
+
     print(f"ResourceEmbedder.py: creating cxx at '{path}'.")
     files = [f for f in os.listdir(path) if os.path.isfile(os.path.join(path, f))]
 
@@ -149,28 +152,31 @@ if working_directory == "" and args.export_directory == "":
     print("ResourceEmbedder.py: working directory and export directory are not set.")
     exit(0)
 
+print(f"ResourceEmbedder.py: counting resources: {len(args.resources.split('|'))}")
+
 resources = filter(None, args.resources.split('|'))
+
 cxx_needs_update = False
 
 embed_resources_path = f'{args.export_directory}/EmbedResources/EmbedResources.cxx'
+
 if not os.path.isfile(embed_resources_path):
     cxx_needs_update = True
     print(f"ResourceEmbedder.py: cxx does not exist by path '{embed_resources_path}'. creating a new one.")
 
-if not cxx_needs_update:
-    for resource_path in resources:
-        resource_path = resource_path.replace("\\", "/")
-        if os.path.isdir(resource_path):
-            for filename in os.listdir(resource_path):
-                file_path = os.path.join(resource_path, filename)
-                if os.path.isfile(file_path) and needs_update(file_path, args.export_directory):
-                    create_header(file_path, args.export_directory)
-                    cxx_needs_update = True
-                    print(f"ResourceEmbedder.py: {file_path} needs update.")
-        elif needs_update(resource_path, args.export_directory):
-            create_header(resource_path, args.export_directory)
-            cxx_needs_update = True
-            print(f"ResourceEmbedder.py: {resource_path} needs update.")
+for resource_path in resources:
+    resource_path = resource_path.replace("\\", "/")
+    if os.path.isdir(resource_path):
+        for filename in os.listdir(resource_path):
+            file_path = os.path.join(resource_path, filename)
+            if os.path.isfile(file_path) and needs_update(file_path, args.export_directory):
+                create_header(file_path, args.export_directory)
+                cxx_needs_update = True
+                print(f"ResourceEmbedder.py: {file_path} needs update.")
+    elif needs_update(resource_path, args.export_directory):
+        create_header(resource_path, args.export_directory)
+        cxx_needs_update = True
+        print(f"ResourceEmbedder.py: {resource_path} needs update.")
 
 if cxx_needs_update:
     create_cxx(f"{args.export_directory}/EmbedResources")
