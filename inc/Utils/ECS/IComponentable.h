@@ -50,6 +50,11 @@ namespace SR_UTILS_NS {
         virtual Component::Ptr GetOrCreateComponent(StringAtom name);
         virtual Component::Ptr GetComponent(const std::string& name);
         virtual Component::Ptr GetComponent(StringAtom name);
+        virtual bool MoveComponent(const Component::Ptr& pComponent, int32_t offset);
+
+        SR_NODISCARD bool HasComponent(const Component::Ptr& pComponent) const;
+        SR_NODISCARD int32_t GetComponentIndex(const Component::Ptr& pComponent) const;
+        SR_NODISCARD uint32_t GetComponentsCount() const noexcept { return static_cast<uint32_t>(m_components.size()); }
 
         virtual bool AddComponent(const Component::Ptr& pComponent);
 

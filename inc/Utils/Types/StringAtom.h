@@ -42,6 +42,8 @@ namespace SR_UTILS_NS {
 
         SR_NODISCARD SR_FORCE_INLINE operator uint64_t() const noexcept { return GetHash(); }
 
+        SR_NODISCARD char operator[](size_t index) const noexcept;
+
     public:
         SR_NODISCARD uint64_t Size() const;
         SR_NODISCARD uint64_t size() const;

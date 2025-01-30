@@ -72,7 +72,7 @@ namespace SR_UTILS_NS {
         };
 
     public:
-        template<typename Integral> EnumReflector(const Integral* values, size_t count, const char* name, const char* body);
+        template<typename Integral> EnumReflector(EnumVariant enumVariant, const Integral* values, size_t count, const char* name, const char* body);
         ~EnumReflector() override;
 
     public:
@@ -83,6 +83,7 @@ namespace SR_UTILS_NS {
         template<typename EnumType> SR_NODISCARD static EnumType FromString(const SR_UTILS_NS::StringAtom& value);
         template<typename EnumType> SR_NODISCARD static bool FromString(const SR_UTILS_NS::StringAtom& value, EnumType& result);
         template<typename EnumType> SR_NODISCARD static EnumType FromStringLowerCase(const std::string& value);
+        template<typename EnumType> SR_NODISCARD static uint64_t GetIntegralTypeSize();
 
         template<typename EnumType> SR_NODISCARD static const std::vector<SR_UTILS_NS::StringAtom>& GetNames();
         template<typename EnumType> SR_NODISCARD static const std::vector<Enumerator>& GetValues();
@@ -90,17 +91,23 @@ namespace SR_UTILS_NS {
 
         template<typename EnumType> SR_NODISCARD static int64_t GetIndex(EnumType value);
         template<typename EnumType> SR_NODISCARD static int64_t GetIndex(int64_t value);
-        template<typename EnumType> SR_NODISCARD static EnumType At(int64_t index);
-        template<typename EnumType> SR_NODISCARD static int64_t AtAsInt(int64_t index);
+        template<typename EnumType> SR_NODISCARD static EnumType At(uint64_t index);
+        template<typename EnumType> SR_NODISCARD static int64_t AtAsInt(uint64_t index);
+        template<typename EnumType> SR_NODISCARD static SR_UTILS_NS::StringAtom GetName();
+        template<typename EnumType> SR_NODISCARD static EnumVariant GetEnumVariant();
 
         SR_NODISCARD SR_MAYBE_UNUSED std::optional<SR_UTILS_NS::StringAtom> ToStringInternal(int64_t value) const;
         SR_NODISCARD SR_MAYBE_UNUSED std::optional<int64_t> FromStringInternal(const SR_UTILS_NS::StringAtom& name) const;
         SR_NODISCARD SR_MAYBE_UNUSED std::optional<int64_t> FromStringLowerCaseInternal(const std::string& value) const;
         SR_NODISCARD SR_MAYBE_UNUSED std::optional<int64_t> GetIndexInternal(int64_t value) const;
-        SR_NODISCARD SR_MAYBE_UNUSED std::optional<int64_t> AtInternal(int64_t index) const;
+        SR_NODISCARD SR_MAYBE_UNUSED std::optional<int64_t> AtInternal(uint64_t index) const;
         SR_NODISCARD SR_MAYBE_UNUSED const std::vector<SR_UTILS_NS::StringAtom>& GetNamesInternal() const { return m_data->names; }
         SR_NODISCARD SR_MAYBE_UNUSED const SR_UTILS_NS::StringAtom& GetNameInternal() const { return m_data->enumName; }
+        SR_NODISCARD SR_MAYBE_UNUSED uint64_t GetIntegralTypeSizeInternal() const { return m_integralTypeSize; }
         SR_NODISCARD SR_MAYBE_UNUSED uint64_t GetHashNameInternal() const { return m_data->hashName; }
+        SR_NODISCARD SR_MAYBE_UNUSED int64_t ReadEnumValueFromPointerInternal(const void* pEnum) const;
+        SR_NODISCARD SR_MAYBE_UNUSED void WriteEnumValueToPointerInternal(void* pEnum, int64_t value) const;
+        SR_NODISCARD SR_MAYBE_UNUSED EnumVariant GetEnumVariantInternal() const { return m_enumVariant; }
 
     private:
         static bool IsIdentChar(char c);
@@ -114,13 +121,19 @@ namespace SR_UTILS_NS {
             SR_UTILS_NS::StringAtom enumName;
             uint64_t hashName;
         }* m_data;
+
+        uint64_t m_integralTypeSize = 0;
+        EnumVariant m_enumVariant = EnumVariant::Undefined;
     };
 }
 
 namespace SR_UTILS_NS {
-    template<typename Integral> EnumReflector::EnumReflector(const Integral *values, size_t count, const char *name, const char *body)
+    template<typename Integral> EnumReflector::EnumReflector(EnumVariant enumVariant, const Integral *values, size_t count, const char *name, const char *body)
         : m_data(new Data())
     {
+        m_enumVariant = enumVariant;
+        m_integralTypeSize = sizeof(Integral);
+
         m_data->enumName = name;
         m_data->hashName = SR_HASH_STR_REGISTER(name);
         m_data->values.resize(count);
@@ -267,6 +280,10 @@ namespace SR_UTILS_NS {
         return static_cast<EnumType>(0);
     }
 
+    template<typename EnumType> uint64_t EnumReflector::GetIntegralTypeSize() {
+        return GetReflector<EnumType>()->GetIntegralTypeSizeInternal();
+    }
+
     template<typename EnumType> int64_t EnumReflector::GetIndex(int64_t value) {
         if (auto&& result = GetReflector<EnumType>()->GetIndexInternal(value); result.has_value()) {
             return result.value();
@@ -277,11 +294,11 @@ namespace SR_UTILS_NS {
         return SR_ID_INVALID;
     }
 
-    template<typename EnumType> EnumType EnumReflector::At(int64_t index) {
+    template<typename EnumType> EnumType EnumReflector::At(uint64_t index) {
         return static_cast<EnumType>(AtAsInt<EnumType>(index));
     }
 
-    template<typename EnumType> int64_t EnumReflector::AtAsInt(int64_t index) {
+    template<typename EnumType> int64_t EnumReflector::AtAsInt(uint64_t index) {
         if (auto&& result = GetReflector<EnumType>()->AtInternal(index); result.has_value()) {
             return result.value();
         }
@@ -293,6 +310,14 @@ namespace SR_UTILS_NS {
 
     template<typename EnumType> uint64_t EnumReflector::Count() {
         return GetReflector<EnumType>()->m_data->values.size();
+    }
+
+    template<typename EnumType> SR_UTILS_NS::StringAtom EnumReflector::GetName() {
+        return GetReflector<EnumType>()->GetNameInternal();
+    }
+
+    template<typename EnumType> EnumVariant EnumReflector::GetEnumVariant() {
+        return GetReflector<EnumType>()->GetEnumVariantInternal();
     }
 
     template<typename EnumType> EnumReflector* EnumReflector::GetReflector() {
@@ -350,7 +375,7 @@ namespace SR_UTILS_NS {
                 integral _val;                                                                                          \
             } __VA_ARGS__;                                                                                              \
             const integral _detail_vals[] = { __VA_ARGS__ };                                                            \
-            return SR_UTILS_NS::EnumReflector( _detail_vals, sizeof(_detail_vals) / sizeof(integral),                   \
+            return SR_UTILS_NS::EnumReflector(enumVariant, _detail_vals, sizeof(_detail_vals) / sizeof(integral),       \
                     enumNameStr, SR_ENUM_DETAIL_STR((__VA_ARGS__)));                                                    \
         }());                                                                                                           \
         return _reflector;                                                                                              \

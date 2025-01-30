@@ -459,85 +459,49 @@ template<typename T, typename U> struct ObjectDataAccessor<std::pair<T, U>> {
 	}
 };
 
-#define SR_DATA_ACCESSOR_VECTOR2(Type)																					\
-template<> struct ObjectDataAccessor<Type> {																			\
-	static void Save(ISerializer& serializer, const Type& value, const SerializationId& id) {							\
-		serializer.BeginObject(id);																						\
-		Serialization::SaveCheckDefault(serializer, value.x, SerializationId::Create("x"));								\
-		Serialization::SaveCheckDefault(serializer, value.y, SerializationId::Create("y"));								\
-		serializer.EndObject();																							\
-	}																													\
-																														\
-	static void Load(IDeserializer& deserializer, Type& value, const SerializationId& id) {								\
-		if (!deserializer.BeginObject(id)) {																			\
-			return;																										\
-		}																												\
-		Serialization::Load(deserializer, value.x, SerializationId::Create("x"));										\
-		Serialization::Load(deserializer, value.y, SerializationId::Create("y"));										\
-		deserializer.EndObject();																						\
-	}							 																						\
-};								 																						\
+template<typename Type, uint64_t dim> struct ObjectDataAccessorMathVector {
+	static void Save(ISerializer& serializer, const Type& value, const SerializationId& id) {
+		serializer.BeginObject(id);
+		if constexpr (dim >= 1) { Serialization::SaveCheckDefault(serializer, value.x, SerializationId::Create("x")); }
+		if constexpr (dim >= 2) { Serialization::SaveCheckDefault(serializer, value.y, SerializationId::Create("y")); }
+		if constexpr (dim >= 3) { Serialization::SaveCheckDefault(serializer, value.z, SerializationId::Create("z")); }
+		if constexpr (dim >= 4) { Serialization::SaveCheckDefault(serializer, value.w, SerializationId::Create("w")); }
+		if constexpr (dim >= 5) { Serialization::SaveCheckDefault(serializer, value.v, SerializationId::Create("v")); }
+		if constexpr (dim >= 6) { Serialization::SaveCheckDefault(serializer, value.u, SerializationId::Create("u")); }
+		serializer.EndObject();
+	}
 
+	static void Load(IDeserializer& deserializer, Type& value, const SerializationId& id) {
+		if (!deserializer.BeginObject(id)) {
+			return;
+		}
+		if constexpr (dim >= 1) { Serialization::Load(deserializer, value.x, SerializationId::Create("x")); }
+		if constexpr (dim >= 2) { Serialization::Load(deserializer, value.y, SerializationId::Create("y")); }
+		if constexpr (dim >= 3) { Serialization::Load(deserializer, value.z, SerializationId::Create("z")); }
+		if constexpr (dim >= 4) { Serialization::Load(deserializer, value.w, SerializationId::Create("w")); }
+		if constexpr (dim >= 5) { Serialization::Load(deserializer, value.v, SerializationId::Create("v")); }
+		if constexpr (dim >= 6) { Serialization::Load(deserializer, value.u, SerializationId::Create("u")); }
+		deserializer.EndObject();
+	}
+};
 
-#define SR_DATA_ACCESSOR_VECTOR3(Type)																					\
-template<> struct ObjectDataAccessor<Type> {																			\
-	static void Save(ISerializer& serializer, const Type& value, const SerializationId& id) {							\
-		serializer.BeginObject(id);																						\
-		Serialization::SaveCheckDefault(serializer, value.x, SerializationId::Create("x"));								\
-		Serialization::SaveCheckDefault(serializer, value.y, SerializationId::Create("y"));								\
-		Serialization::SaveCheckDefault(serializer, value.z, SerializationId::Create("z"));								\
-		serializer.EndObject();																							\
-	}																													\
-																														\
-	static void Load(IDeserializer& deserializer, Type& value, const SerializationId& id) {								\
-		if (!deserializer.BeginObject(id)) {																			\
-			return;																										\
-		}																												\
-		Serialization::Load(deserializer, value.x, SerializationId::Create("x"));										\
-		Serialization::Load(deserializer, value.y, SerializationId::Create("y"));										\
-		Serialization::Load(deserializer, value.z, SerializationId::Create("z"));										\
-		deserializer.EndObject();																						\
-	}							 																						\
-};								 																						\
+template<> struct ObjectDataAccessor<SR_MATH_NS::FVector2> : ObjectDataAccessorMathVector<SR_MATH_NS::FVector2, 2> {};
+template<> struct ObjectDataAccessor<SR_MATH_NS::IVector2> : ObjectDataAccessorMathVector<SR_MATH_NS::IVector2, 2> {};
+template<> struct ObjectDataAccessor<SR_MATH_NS::UVector2> : ObjectDataAccessorMathVector<SR_MATH_NS::UVector2, 2> {};
 
+template<> struct ObjectDataAccessor<SR_MATH_NS::FVector3> : ObjectDataAccessorMathVector<SR_MATH_NS::FVector3, 3> {};
+template<> struct ObjectDataAccessor<SR_MATH_NS::BVector3> : ObjectDataAccessorMathVector<SR_MATH_NS::BVector3, 3> {};
+template<> struct ObjectDataAccessor<SR_MATH_NS::IVector3> : ObjectDataAccessorMathVector<SR_MATH_NS::IVector3, 3> {};
+template<> struct ObjectDataAccessor<SR_MATH_NS::UVector3> : ObjectDataAccessorMathVector<SR_MATH_NS::UVector3, 3> {};
 
-#define SR_DATA_ACCESSOR_VECTOR4(Type)																					\
-template<> struct ObjectDataAccessor<Type> {																			\
-	static void Save(ISerializer& serializer, const Type& value, const SerializationId& id) {							\
-		serializer.BeginObject(id);																						\
-		Serialization::SaveCheckDefault(serializer, value.x, SerializationId::Create("x"));								\
-		Serialization::SaveCheckDefault(serializer, value.y, SerializationId::Create("y"));								\
-		Serialization::SaveCheckDefault(serializer, value.z, SerializationId::Create("z"));								\
-		Serialization::SaveCheckDefault(serializer, value.w, SerializationId::Create("w"));								\
-		serializer.EndObject();																							\
-	}																													\
-																														\
-	static void Load(IDeserializer& deserializer, Type& value, const SerializationId& id) {								\
-		if (!deserializer.BeginObject(id)) {																			\
-			return;																										\
-		}																												\
-		Serialization::Load(deserializer, value.x, SerializationId::Create("x"));										\
-		Serialization::Load(deserializer, value.y, SerializationId::Create("y"));										\
-		Serialization::Load(deserializer, value.z, SerializationId::Create("z"));										\
-		Serialization::Load(deserializer, value.w, SerializationId::Create("w"));										\
-		deserializer.EndObject();																						\
-	}							 																						\
-};								 																						\
+template<> struct ObjectDataAccessor<SR_MATH_NS::FVector4> : ObjectDataAccessorMathVector<SR_MATH_NS::FVector4, 4> {};
+template<> struct ObjectDataAccessor<SR_MATH_NS::BVector4> : ObjectDataAccessorMathVector<SR_MATH_NS::BVector4, 4> {};
+template<> struct ObjectDataAccessor<SR_MATH_NS::IVector4> : ObjectDataAccessorMathVector<SR_MATH_NS::IVector4, 4> {};
+template<> struct ObjectDataAccessor<SR_MATH_NS::UVector4> : ObjectDataAccessorMathVector<SR_MATH_NS::UVector4, 4> {};
 
-SR_DATA_ACCESSOR_VECTOR2(SR_MATH_NS::FVector2)
-SR_DATA_ACCESSOR_VECTOR2(SR_MATH_NS::BVector2)
-SR_DATA_ACCESSOR_VECTOR2(SR_MATH_NS::IVector2)
-SR_DATA_ACCESSOR_VECTOR2(SR_MATH_NS::UVector2)
-
-SR_DATA_ACCESSOR_VECTOR3(SR_MATH_NS::FVector3)
-SR_DATA_ACCESSOR_VECTOR3(SR_MATH_NS::BVector3)
-SR_DATA_ACCESSOR_VECTOR3(SR_MATH_NS::IVector3)
-SR_DATA_ACCESSOR_VECTOR3(SR_MATH_NS::UVector3)
-
-SR_DATA_ACCESSOR_VECTOR4(SR_MATH_NS::FVector4)
-SR_DATA_ACCESSOR_VECTOR4(SR_MATH_NS::BVector4)
-SR_DATA_ACCESSOR_VECTOR4(SR_MATH_NS::IVector4)
-SR_DATA_ACCESSOR_VECTOR4(SR_MATH_NS::UVector4)
+template<> struct ObjectDataAccessor<SR_MATH_NS::FVector6> : ObjectDataAccessorMathVector<SR_MATH_NS::FVector6, 6> {};
+template<> struct ObjectDataAccessor<SR_MATH_NS::IVector6> : ObjectDataAccessorMathVector<SR_MATH_NS::IVector6, 6> {};
+template<> struct ObjectDataAccessor<SR_MATH_NS::UVector6> : ObjectDataAccessorMathVector<SR_MATH_NS::UVector6, 6> {};
 
 template<> struct ObjectDataAccessor<SR_MATH_NS::Quaternion> {
 	static void Save(ISerializer& serializer, const SR_MATH_NS::Quaternion& value, const SerializationId& id) {

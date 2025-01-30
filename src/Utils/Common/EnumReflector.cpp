@@ -31,6 +31,30 @@ namespace SR_UTILS_NS {
         SR_SAFE_DELETE_PTR(m_data)
     }
 
+    int64_t EnumReflector::ReadEnumValueFromPointerInternal(const void *pEnum) const {
+        switch (GetIntegralTypeSizeInternal()) {
+            case 1: return *static_cast<const int8_t*>(pEnum);
+            case 2: return *static_cast<const int16_t*>(pEnum);
+            case 4: return *static_cast<const int32_t*>(pEnum);
+            case 8: return *static_cast<const int64_t*>(pEnum);
+            default:
+                SRHalt("EnumReflector::ReadEnumValueFromPointerInternal() : unsupported enum size!");
+                return 0;
+        }
+    }
+
+    void EnumReflector::WriteEnumValueToPointerInternal(void* pEnum, int64_t value) const {
+        switch (GetIntegralTypeSizeInternal()) {
+            case 1: *static_cast<int8_t*>(pEnum) = static_cast<int8_t>(value); break;
+            case 2: *static_cast<int16_t*>(pEnum) = static_cast<int16_t>(value); break;
+            case 4: *static_cast<int32_t*>(pEnum) = static_cast<int32_t>(value); break;
+            case 8: *static_cast<int64_t*>(pEnum) = value; break;
+            default:
+                SRHalt("EnumReflector::WriteEnumValueToPointerInternal() : unsupported enum size!");
+                break;
+        }
+    }
+
     bool EnumReflector::IsIdentChar(char c) {
         return (c >= 'A' && c <= 'Z') ||
                (c >= 'a' && c <= 'z') ||
@@ -85,7 +109,7 @@ namespace SR_UTILS_NS {
         return std::nullopt;
     }
 
-    std::optional<int64_t> EnumReflector::AtInternal(int64_t index) const {
+    std::optional<int64_t> EnumReflector::AtInternal(uint64_t index) const {
         if (static_cast<uint64_t>(index) < m_data->values.size()) {
             return m_data->values[index].value;
         }

@@ -18,7 +18,7 @@ namespace SR_MATH_NS {
                 T z;
                 T w;
                 T v;
-                T t;
+                T u;
             };
 
             T coord[6] = { 0 };
@@ -36,7 +36,7 @@ namespace SR_MATH_NS {
         };
     public:
         SR_FAST_CONSTRUCTOR Vector6() {
-            x = y = z = w = v = t = 0;
+            x = y = z = w = v = u = 0;
         }
 
         SR_FAST_CONSTRUCTOR Vector6(SR_MATH_NS::Vector3<T> vec3d1, SR_MATH_NS::Vector3<T> vec3d2)
@@ -45,7 +45,7 @@ namespace SR_MATH_NS {
         { }
 
         SR_FAST_CONSTRUCTOR Vector6(T scalar) {
-            x = y = z = w = v = t = scalar;
+            x = y = z = w = v = u = scalar;
         }
 
         SR_FORCE_INLINE bool operator==(const Vector6 &p_v) const {
@@ -54,7 +54,7 @@ namespace SR_MATH_NS {
                 && SR_EQUALS(z, p_v.z)
                 && SR_EQUALS(w, p_v.w)
                 && SR_EQUALS(v, p_v.v)
-                && SR_EQUALS(t, p_v.t);
+                && SR_EQUALS(u, p_v.u);
         }
 
         SR_FORCE_INLINE bool operator!=(const Vector6 &p_v) const {
@@ -67,7 +67,7 @@ namespace SR_MATH_NS {
             z = static_cast<T>(vec.z);
             w = static_cast<T>(vec.w);
             v = static_cast<T>(vec.v);
-            t = static_cast<T>(vec.t);
+            u = static_cast<T>(vec.u);
         }
 
         template<typename U> SR_FAST_CONSTRUCTOR explicit Vector6(const Vector3<U>& vec1, const Vector3<U>& vec2) {
@@ -76,16 +76,16 @@ namespace SR_MATH_NS {
             z = static_cast<T>(vec1.z);
             w = static_cast<T>(vec2.x);
             v = static_cast<T>(vec2.y);
-            t = static_cast<T>(vec2.z);
+            u = static_cast<T>(vec2.z);
         }
 
-        SR_FAST_CONSTRUCTOR Vector6(T _x, T _y, T _z, T _w, T _v, T _t) {
+        SR_FAST_CONSTRUCTOR Vector6(T _x, T _y, T _z, T _w, T _v, T _u) {
             x = _x;
             y = _y;
             z = _z;
             w = _w;
             v = _v;
-            t = _t;
+            u = _u;
         }
     };
 

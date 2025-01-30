@@ -92,6 +92,52 @@ namespace SR_UTILS_NS {
         return nullptr;
     }
 
+    bool IComponentable::HasComponent(const Component::Ptr& pComponent) const {
+        for (auto&& pComponentInList : m_components) {
+            if (pComponentInList == pComponent) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    int32_t IComponentable::GetComponentIndex(const Component::Ptr& pComponent) const {
+        auto&& pIt = std::find(m_components.begin(), m_components.end(), pComponent);
+        if (pIt == m_components.end()) {
+            return -1;
+        }
+        return static_cast<int32_t>(std::distance(m_components.begin(), pIt));
+    }
+
+    bool IComponentable::MoveComponent(const Component::Ptr& pComponent, const int32_t offset) {
+        auto&& pIt = std::ranges::find(m_components, pComponent);
+        if (pIt == m_components.end()) {
+            return false;
+        }
+
+        const int64_t currentIndex = std::distance(m_components.begin(), pIt);
+        const int64_t newIndex = currentIndex + offset;
+
+        if (newIndex < 0 || newIndex >= m_components.size()) {
+            return false;
+        }
+
+        if (currentIndex == newIndex) {
+            return true;
+        }
+
+        if (currentIndex < newIndex) {
+            std::rotate(m_components.begin() + currentIndex, m_components.begin() + currentIndex + 1, m_components.begin() + newIndex + 1);
+        }
+        else {
+            std::rotate(m_components.begin() + newIndex, m_components.begin() + currentIndex, m_components.begin() + currentIndex + 1);
+        }
+
+        SetDirty(true);
+
+        return true;
+    }
+
     void IComponentable::ForEachComponent(const std::function<bool(const Component::Ptr&)> &fun) const {
         for (uint32_t i = 0; i < m_components.size(); ++i) {
             auto&& pComponent = m_components[i];

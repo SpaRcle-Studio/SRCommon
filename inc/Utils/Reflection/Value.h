@@ -47,18 +47,20 @@ namespace SR_UTILS_NS::Reflection {
 
         template<class T> bool Map(T*& pValue) const;
         template<class T> T* Map() const;
-        const char* MapString() const { return static_cast<const char*>(m_data); }
-        char* MapString(){ return static_cast<char*>(m_data); }
+        SR_NODISCARD const char* MapString() const { return static_cast<const char*>(m_data); }
+        SR_NODISCARD char* MapString(){ return static_cast<char*>(m_data); }
 
         SR_NODISCARD StandardType GetType() const { return m_type; }
+        SR_NODISCARD uint64_t GetSize() const;
         SR_NODISCARD Value Clone() const;
 
-        SR_NODISCARD operator bool() const { return m_data != nullptr; }
+        SR_NODISCARD operator bool() const noexcept { return m_data != nullptr; } /** NOLINT */
 
     private:
         void Destroy();
 
     private:
+        uint64_t m_size = 0;
         void* m_data = nullptr;
         DeleterFn m_deleter = nullptr;
         CopyFn m_copier = nullptr;
@@ -83,6 +85,7 @@ namespace SR_UTILS_NS::Reflection {
 
         using CopiedType = SR_UTILS_NS::RemoveQualifiersT<T>;
 
+        result.m_size = sizeof(CopiedType);
         result.m_data = const_cast<void*>(static_cast<const void*>(new CopiedType(std::forward<T>(value))));
         result.m_deleter = GetDeleter<T>();
 
@@ -106,10 +109,12 @@ namespace SR_UTILS_NS::Reflection {
         result.m_isReference = true;
         result.m_isConst = isConst;
 
+        using CopiedType = SR_UTILS_NS::RemoveQualifiersT<T>;
+
+        result.m_size = sizeof(CopiedType);
         result.m_data = const_cast<void*>(static_cast<const void*>(&value));
         result.m_deleter = GetDeleter<T>();
 
-        using CopiedType = SR_UTILS_NS::RemoveQualifiersT<T>;
         result.m_copier = [](void*& pDstRef, const void* pSource) {
             pDstRef = new CopiedType(*static_cast<const CopiedType*>(pSource));
         };

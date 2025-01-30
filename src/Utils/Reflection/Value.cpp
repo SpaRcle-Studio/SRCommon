@@ -15,6 +15,7 @@ namespace SR_UTILS_NS::Reflection {
         , m_type(other.m_type)
         , m_isReference(false)
         , m_isConst(other.m_isConst)
+        , m_size(other.m_size)
     {
         if (other.m_data && m_copier) {
             m_copier(m_data, other.m_data);
@@ -28,6 +29,7 @@ namespace SR_UTILS_NS::Reflection {
         m_deleter = SR_EXCHANGE(other.m_deleter, {});
         m_copier = SR_EXCHANGE(other.m_copier, {});
         m_data = SR_EXCHANGE(other.m_data, {});
+        m_size = SR_EXCHANGE(other.m_size, {});
     }
 
     Value& Value::operator=(const Value& other) {
@@ -37,6 +39,7 @@ namespace SR_UTILS_NS::Reflection {
             m_isConst = other.m_isConst;
             m_deleter = other.m_deleter;
             m_copier = other.m_copier;
+            m_size = other.m_size;
 
             if (other.m_data && m_copier) {
                 m_copier(m_data, other.m_data);
@@ -53,8 +56,16 @@ namespace SR_UTILS_NS::Reflection {
             m_deleter = SR_EXCHANGE(other.m_deleter, {});
             m_copier = SR_EXCHANGE(other.m_copier, {});
             m_data = SR_EXCHANGE(other.m_data, {});
+            m_size = SR_EXCHANGE(other.m_size, {});
         }
         return *this;
+    }
+
+    uint64_t Value::GetSize() const {
+        if (m_isReference) {
+            return sizeof(void*);
+        }
+        return m_size;
     }
 
     Value Value::Clone() const {
@@ -64,6 +75,7 @@ namespace SR_UTILS_NS::Reflection {
         result.m_isConst = false;
         result.m_deleter = m_deleter;
         result.m_copier = m_copier;
+        result.m_size = m_size;
 
         if (m_data && m_copier) {
             m_copier(result.m_data, m_data);
@@ -79,5 +91,6 @@ namespace SR_UTILS_NS::Reflection {
 
         m_deleter(m_data);
         m_data = nullptr;
+        m_size = 0;
     }
 }

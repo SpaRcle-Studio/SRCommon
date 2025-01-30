@@ -179,6 +179,14 @@ namespace SR_UTILS_NS {
         marshal.SetPosition(0);
         pComponent->GetComponentProperties().LoadProperty(marshal);
 
+        SR_UTILS_NS::SRASerializer serializer;
+        Save(serializer);
+
+        SR_UTILS_NS::SRADeserializer deserializer;
+        if (deserializer.LoadFromString(serializer.ToString())) {
+            pComponent->Load(deserializer);
+        }
+
         return pComponent;
     }
 

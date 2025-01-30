@@ -182,25 +182,11 @@ namespace SR_UTILS_NS {
 	template<typename T, template<typename...> typename Tmpl>
 	inline constexpr bool IsTypeFromClassTemplateV = IsTypeFromClassTemplate<T, Tmpl>::value;
 
-	template<class T> struct IsSREnum {
-		static constexpr bool IsEnumType() {
-			if constexpr (std::is_enum<T>::value) {
-				return SR_UTILS_NS::EnumTraits<T>::IsEnum;
-			}
-			else {
-				return false;
-			}
-		}
-
-		static constexpr bool value = IsSREnum::IsEnumType();
-	};
-
-	template<class T>
-	inline constexpr bool IsSREnumV = IsSREnum<T>::value;
-
 	template<class T> struct IsEnum {
+		using Type = SR_UTILS_NS::RemoveQualifiersT<T>;
+
 		static constexpr bool IsEnumType() {
-			if constexpr (std::is_enum<T>::value) {
+			if constexpr (std::is_enum_v<Type>) {
 				return true;
 			}
 			else {
@@ -213,6 +199,24 @@ namespace SR_UTILS_NS {
 
 	template<class T>
 	inline constexpr bool IsEnumV = IsEnum<T>::value;
+
+	template<class T> struct IsSREnum {
+		using Type = SR_UTILS_NS::RemoveQualifiersT<T>;
+
+		static constexpr bool IsEnumType() {
+			if constexpr (IsEnumV<Type>) {
+				return SR_UTILS_NS::EnumTraits<Type>::IsEnum;
+			}
+			else {
+				return false;
+			}
+		}
+
+		static constexpr bool value = IsSREnum::IsEnumType();
+	};
+
+	template<class T>
+	inline constexpr bool IsSREnumV = IsSREnum<T>::value;
 
 	template<size_t Index, class... Types>
 	using GetPromPackT = typename decltype(Details::GetFromPackResolver<Index, Types...>())::type;
@@ -301,6 +305,14 @@ namespace SR_UTILS_NS {
 
 	template<class T>
 	constexpr bool IsSharedPointerV = SharedPointerTraits::IsSharedPointer<T>::value;
+
+	template<typename T> SR_UTILS_NS::StringAtom GetEnumReflectorName() {
+		using Type = SR_UTILS_NS::RemoveQualifiersT<T>;
+		if constexpr (SR_UTILS_NS::IsSREnumV<Type>) {
+			return SR_UTILS_NS::EnumReflector::GetName<Type>();
+		}
+		return SR_UTILS_NS::StringAtom();
+	}
 
 	/**
 	Example for checking if type has a member type:
