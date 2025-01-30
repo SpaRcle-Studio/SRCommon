@@ -53,6 +53,8 @@ namespace SR_UTILS_NS::Reflection {
         SR_NODISCARD StandardType GetType() const { return m_type; }
         SR_NODISCARD Value Clone() const;
 
+        SR_NODISCARD operator bool() const { return m_data != nullptr; }
+
     private:
         void Destroy();
 
