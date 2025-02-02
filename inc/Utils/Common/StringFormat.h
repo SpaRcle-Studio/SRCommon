@@ -18,11 +18,16 @@
 
 namespace SR_UTILS_NS {
     /// Функция для преобразования hex символа в целое число
+
     SR_NODISCARD SR_INLINE_STATIC uint8_t HexCharToUInt8(const char c) {
         if (c >= '0' && c <= '9') return c - '0';
         if (c >= 'A' && c <= 'F') return c - 'A' + 10;
         if (c >= 'a' && c <= 'f') return c - 'a' + 10;
-        return 0;
+        throw std::runtime_error("Invalid hex character!");
+    }
+
+    SR_NODISCARD SR_INLINE_STATIC uint8_t HexCharToUInt8(const char high, const char low) {
+        return (HexCharToUInt8(high) << 4) | HexCharToUInt8(low);
     }
 
     SR_NODISCARD SR_INLINE_STATIC bool IsHexString(const std::string_view str) {
@@ -41,6 +46,19 @@ namespace SR_UTILS_NS {
 
     SR_NODISCARD SR_INLINE_STATIC uint8_t HexToByte(const std::string_view str) {
         return HexToByte(str.data());
+    }
+
+    SR_NODISCARD SR_INLINE_STATIC uint8_t CharToInt(const char c) {
+        if (c >= '0' && c <= '9') {
+            return c - '0';
+        }
+        if (c >= 'A' && c <= 'F') {
+            return c - 'A' + 10;
+        }
+        if (c >= 'a' && c <= 'f') {
+            return c - 'a' + 10;
+        }
+        return 0;
     }
 
     template<typename T> SR_NODISCARD T LexicalCast(std::string_view str) {

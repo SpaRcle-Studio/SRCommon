@@ -29,6 +29,17 @@ namespace SR_UTILS_NS {
         virtual NonMovable& operator=(NonMovable&&) = delete;
 
     };
+
+    class SR_DLL_EXPORT Cloneable {
+    protected:
+        constexpr Cloneable() = default;
+        virtual void OnCloned() { }
+
+    public:
+        virtual ~Cloneable() = default;
+        SR_NODISCARD virtual Cloneable* Clone() const = 0;
+
+    };
 }
 
 #endif //SR_ENGINE_NONCOPYABLE_H

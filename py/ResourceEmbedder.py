@@ -1,4 +1,5 @@
 from Common import *
+import base64, zlib
 
 print("ResourceEmbedder.py: running...")
 def needs_update(path, export_path):
@@ -30,6 +31,7 @@ def needs_update(path, export_path):
 
     return False
 
+
 def create_cxx(path):
     if not os.path.exists(path):
         raise FileNotFoundError(f"ResourceEmbedder.py: path does not exist: {path}")
@@ -57,30 +59,43 @@ def read_file(file_name):
     data = bytearray(data)
     return data
 
+def compress_byte_data_and_convert(byte_data) -> str:
+    compressed_data = zlib.compress(byte_data)  # Сжимаем данные с помощью zlib
+    hex_string = compressed_data.hex()  # Преобразуем сжатые данные в строку hex
+    return hex_string
 
 def create_array(name, data, path):
-    size = str(len(data))
     print(f'Working directory: {working_directory}, Path: {path}')
     path = path.split(working_directory + '/')
     print(f'Path: {path}')
     path = path[1]
-    static_content = (f"\t\tconstexpr static const uint64_t size = {size};"
-                      f"\n\t\tconstexpr static const char path[] = \"{path}\";"
-                      f"\n\t\tconstexpr static const unsigned char data[") + size + "] = "
-    array_content = "{\n\t\t\t"
-    byte_array = bytes_to_c_arr(data)
-    for i in range(0, len(byte_array)):
-        if i == len(byte_array) - 1:
-            array_content += f"{byte_array[i]}" + '\n\t\t};\n'
+
+    encoded = compress_byte_data_and_convert(data)
+    if len(encoded) == 0:
+        raise ValueError("ResourceEmbedder.py: encoded data is empty")
+
+    content = (
+        f"\t\t/// Encoded as zlib + hex\n\n"
+        f"\t\tconstexpr static const std::string_view path = \"{path}\";\n"
+        f"\t\tconstexpr static const uint64_t size = {len(data)};\n"
+        f"\t\tconstexpr static const std::string_view data = \n"
+    )
+
+    max_line_length = 512
+    # write all data as string, max max_line_length symbols per line
+    for i in range(0, len(encoded)):
+        if i % max_line_length == 0:
+            content += "\t\t\t\""
+        content += encoded[i]
+        if i % max_line_length == (max_line_length - 1) or i == len(encoded) - 1:
+            if i == len(encoded) - 1:
+                content += "\";\n"
+            else:
+                content += "\"\n"
         else:
-            array_content += f"{byte_array[i]}, "
-        if (i + 1) % 18 == 0:
-            array_content += "\n\t\t\t"
+            content += ""
 
-
-    #array_content = '\n' + array_content
-    final_content = static_content + array_content
-    return final_content
+    return content
 
 
 def create_header(path, export_path):
@@ -107,17 +122,18 @@ def create_header(path, export_path):
     if not os.path.exists(f"{export_path}/EmbedResources"):
         os.mkdir(f"{export_path}/EmbedResources")
 
-    headerfile = open(f"{export_path}/EmbedResources/{header_name}.h", "w")
+    headerfile = open(f"{export_path}/EmbedResources/{header_name}.h", "w", encoding="utf-8")
 
     header_contents = ""
     header_contents += "/// This file is created by ResourceEmbedder.py\n\n"
     header_contents += f"#ifndef {header_include_guard}\n"
     header_contents += f"#define {header_include_guard}\n\n"
     header_contents += "#include <Utils/Resources/ResourceEmbedder.h>\n\n"
+    header_contents += "#include <Utils/Common/Base64.h>\n\n"
     header_contents += "namespace ResourceEmbedder::Resources {\n"
     header_contents += f"\tclass {class_name} " + " {\n"
     header_contents += "\tpublic:\n"
-    header_contents += f"\t\t{class_name}() = delete;\n"
+    header_contents += f"\t\t{class_name}() = delete;\n\n"
 
     header_contents += create_array(header_name, read_file(path), path)
 

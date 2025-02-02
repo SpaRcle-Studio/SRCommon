@@ -15,6 +15,7 @@
 #include "../src/Utils/Common/CmdOptions.cpp"
 #include "../src/Utils/Common/Coroutine.cpp"
 #include "../src/Utils/Common/SubscriptionHolder.cpp"
+#include "../src/Utils/Common/StoreUtils.cpp"
 
 #include "../src/Utils/Serialization/Serializable.cpp"
 #include "../src/Utils/Serialization/Serializer.cpp"

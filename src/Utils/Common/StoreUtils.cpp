@@ -1,0 +1,118 @@
+//
+// Created by Monika on 02.02.2025.
+//
+
+#include <Utils/Common/StoreUtils.h>
+#include <Utils/Common/ToString.h>
+#include <Utils/Resources/ResourceManager.h>
+#include <Utils/Resources/Xml.h>
+
+namespace SR_UTILS_NS::StoreUtils {
+    void Storage::Save()
+    {
+        SR_UTILS_NS::Path path = SR_UTILS_NS::ResourceManager::Instance().GetCachePath().Concat("UserData.xml");
+
+        if (!path.CreateIfNotExists()) {
+            SRHalt("Storage::Save() : failed to create file \"{}\"!", path);
+        }
+
+        auto&& document = SR_XML_NS::Document::New();
+        auto&& root = document.Root().AppendChild("UserData");
+        auto&& pUserDataIt = m_storage.find(StorageType::User);
+        if (pUserDataIt != m_storage.end()) {
+            for (auto&& [key, value] : pUserDataIt->second) {
+                auto&& node = root.AppendChild(key.ToString());
+                switch (value.type) {
+                case ValueType::Float:
+                    node.AppendAttribute("Type", "Float");
+                    node.AppendAttribute("Value", value.value.f);
+                    break;
+                default:
+                    SRHalt("Storage::Save() : unsupported value type!");
+                    break;
+                }
+            }
+        }
+
+        if (!document.Save(path)) {
+            SRHalt("Storage::Save() : failed to save YAML document to file \"{}\"!", path);
+        }
+    }
+
+    void Storage::Load() {
+        SR_UTILS_NS::Path path = SR_UTILS_NS::ResourceManager::Instance().GetCachePath().Concat("UserData.xml");
+
+        if (!path.Exists(SR_UTILS_NS::Path::Type::File)) {
+            return;
+        }
+
+        auto&& document = SR_XML_NS::Document::Load(path);
+        auto&& root = document.Root().GetNode("UserData");
+        if (!root) {
+            return;
+        }
+
+        for (auto&& node : root.GetNodes()) {
+            auto&& type = node.GetAttribute("Type").ToString();
+
+            if (type == "Float") {
+                Set(StorageType::User, ValueType::Float, node.Name(), node.GetAttribute("Value").ToFloat());
+            }
+            else {
+                SRHalt("Storage::Load() : unsupported value type!");
+            }
+        }
+    }
+
+    bool Storage::Has(const StorageType storageTepe, ValueType valueType, const StringAtom key)
+    {
+        if (auto&& pStorageIt = m_storage.find(storageTepe); pStorageIt != m_storage.end()) {
+            if (auto&& pValueIt = pStorageIt->second.find(key); pValueIt != pStorageIt->second.end()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    bool Storage::Drop(const StorageType storageTepe, const StringAtom key)
+    {
+        if (auto&& pStorageIt = m_storage.find(storageTepe); pStorageIt != m_storage.end()) {
+            if (auto&& pValueIt = pStorageIt->second.find(key); pValueIt != pStorageIt->second.end()) {
+                pStorageIt->second.erase(pValueIt);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    Storage::Value Storage::GetImpl(StorageType storageTepe, ValueType valueType, StringAtom key, const std::optional<Value>& def)
+    {
+        if (auto&& pStorageIt = m_storage.find(storageTepe); pStorageIt != m_storage.end()) {
+            if (auto&& pValueIt = pStorageIt->second.find(key); pValueIt != pStorageIt->second.end()) {
+                if (pValueIt->second.type != valueType) {
+                    SRHalt("Storage::GetImpl() : value type mismatch for key \"{}\"!", key);
+                }
+                else {
+                    return pValueIt->second.value;
+                }
+            }
+        }
+
+        if (def) {
+            return def.value();
+        }
+
+        SRHalt("Storage::GetImpl() : key \"{}\" not found in storage!", key);
+        return {};
+    }
+
+    void Storage::SetImpl(StorageType storageTepe, ValueType valueType, StringAtom key, Value value)
+    {
+        if (auto&& pIt = m_storage.find(storageTepe); pIt != m_storage.end()) {
+            pIt->second[key] = { value, valueType };
+        }
+        else {
+            m_storage[storageTepe] = { { key, { value, valueType } } };
+        }
+    }
+}

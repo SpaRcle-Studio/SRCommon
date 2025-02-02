@@ -10,13 +10,11 @@
 #include <Utils/Types/Map.h>
 
 namespace SR_UTILS_NS {
-    struct EmbedResourceStructure {
-        const char* path;
-        const char* data;
-        uint64_t size;
-    };
-
     class ResourceEmbedder {
+        struct Resource {
+            std::string_view compressedHex;
+            uint64_t decompressedSize = 0;
+        };
     public:
         static ResourceEmbedder& Instance() {
             static ResourceEmbedder instance;
@@ -25,24 +23,27 @@ namespace SR_UTILS_NS {
 
     public:
         template<class T> bool RegisterResource() {
-            const char* pData = reinterpret_cast<const char*>(&T::data[0]);
-            uint64_t dataSize = T::size;
-
-            m_resources[T::path] = std::make_pair(dataSize, pData);
-
+            Resource resource;
+            resource.compressedHex = T::data;
+            resource.decompressedSize = T::size;
+            m_resources[T::path] = resource;
             return true;
         }
 
         bool ExportAllResources();
-        bool ExportAllResources(SR_UTILS_NS::Path newDirectory);
+        bool ExportAllResources(const SR_UTILS_NS::Path& newDirectory);
 
-        static bool ExportToFile(const EmbedResourceStructure& resource, const SR_UTILS_NS::Path& newDirectory);
+        static bool ExportToFile(std::string_view path, const Resource& resource, const SR_UTILS_NS::Path& newDirectory);
         bool ExportToFile(const SR_UTILS_NS::Path& path);
 
-        static bool ExportToMemory(const EmbedResourceStructure& resource);
+        static bool ExportToMemory(std::string_view data);
 
     private:
-        ska::flat_hash_map<std::string, std::pair<uint64_t, const char*>> m_resources;
+        SR_NODISCARD static std::string HexToBytes(const std::string_view& hex);
+        SR_NODISCARD static std::string Decompress(const Resource& resource);
+
+    private:
+        ska::flat_hash_map<std::string_view, Resource> m_resources;
     };
 }
 

@@ -151,4 +151,15 @@ namespace SR_UTILS_NS {
     };
 }
 
+template<> struct fmt::formatter<SR_UTILS_NS::Path>
+{
+    template<typename ParseContext>
+    constexpr auto parse(ParseContext& ctx) { return ctx.begin(); }
+
+    template<typename FormatContext>
+    auto format(SR_UTILS_NS::Path const& str, FormatContext& ctx) {
+        return fmt::format_to(ctx.out(), "{}", str.ToStringView());
+    }
+};
+
 #endif //SR_ENGINE_PATH_H

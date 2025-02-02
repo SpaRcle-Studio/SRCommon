@@ -131,6 +131,30 @@ namespace SR_UTILS_NS {
             return source.substr(begin + 1, (end - begin) - 1);
         }
 
+        static std::string_view GetBetween(std::string_view source, char begin, char end, int8_t* pResult = nullptr) {
+            if (pResult) {
+                *pResult = 0;
+            }
+
+            auto first = source.find(begin);
+            if (first == std::string::npos) {
+                first = 0;
+                if (pResult) {
+                    *pResult -= 1;
+                }
+            }
+
+            auto last = source.find(end);
+            if (last == std::string::npos) {
+                last = source.size() - 1;
+                if (pResult) {
+                    *pResult -= 1;
+                }
+            }
+
+            return source.substr(first + 1, (last - first) - 1);
+        }
+
         static std::string Tab(std::string code, uint32_t count = 1);
 
         static std::string GetBetween(const std::string& source, const std::string& begin, const std::string& end) {

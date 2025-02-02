@@ -5,92 +5,166 @@
 #include <Utils/Reflection/Value.h>
 
 namespace SR_UTILS_NS::Reflection {
-    Value::~Value() {
-        Destroy();
+    Value ValueSequenceContainerIterator::operator*() const {
+        return Value(m_iterator->as_ref());
     }
 
-    Value::Value(const Value& other)
-        : m_deleter(other.m_deleter)
-        , m_copier(other.m_copier)
-        , m_type(other.m_type)
-        , m_isReference(false)
-        , m_isConst(other.m_isConst)
-        , m_size(other.m_size)
-    {
-        if (other.m_data && m_copier) {
-            m_copier(m_data, other.m_data);
+    InputIteratorPointer<Value> ValueSequenceContainerIterator::operator->() const {
+        return operator*();
+    }
+
+    void ValueSequenceContainer::Clear() {
+        m_storage.clear();
+    }
+
+    void ValueSequenceContainer::Resize(uint64_t size) {
+        if (static_cast<int64_t>(size) < 0) {
+            SR_ERROR("ValueSequenceContainer::Resize() : size is negative!");
+            return;
         }
+        m_storage.resize(size);
     }
 
-    Value::Value(Value&& other) noexcept {
-        m_type = SR_EXCHANGE(other.m_type, {});
-        m_isReference = SR_EXCHANGE(other.m_isReference, {});
-        m_isConst = SR_EXCHANGE(other.m_isConst, {});
-        m_deleter = SR_EXCHANGE(other.m_deleter, {});
-        m_copier = SR_EXCHANGE(other.m_copier, {});
-        m_data = SR_EXCHANGE(other.m_data, {});
-        m_size = SR_EXCHANGE(other.m_size, {});
-    }
-
-    Value& Value::operator=(const Value& other) {
-        if (this != &other) {
-            m_type = other.m_type;
-            m_isReference = false;
-            m_isConst = other.m_isConst;
-            m_deleter = other.m_deleter;
-            m_copier = other.m_copier;
-            m_size = other.m_size;
-
-            if (other.m_data && m_copier) {
-                m_copier(m_data, other.m_data);
-            }
+    void ValueSequenceContainer::Reserve(uint64_t size) {
+        if (static_cast<int64_t>(size) < 0) {
+            SR_ERROR("ValueSequenceContainer::Reserve() : size is negative!");
+            return;
         }
-        return *this;
+        m_storage.reserve(size);
     }
 
-    Value& Value::operator=(Value&& other) noexcept {
-        if (this != &other) {
-            m_type = SR_EXCHANGE(other.m_type, {});
-            m_isReference = SR_EXCHANGE(other.m_isReference, {});
-            m_isConst = SR_EXCHANGE(other.m_isConst, {});
-            m_deleter = SR_EXCHANGE(other.m_deleter, {});
-            m_copier = SR_EXCHANGE(other.m_copier, {});
-            m_data = SR_EXCHANGE(other.m_data, {});
-            m_size = SR_EXCHANGE(other.m_size, {});
-        }
-        return *this;
+    /// ----------------------------------------------------------------------------------------------------------------
+
+    Value Value::Ref() {
+        return Value(m_storage.as_ref());
     }
 
-    uint64_t Value::GetSize() const {
-        if (m_isReference) {
-            return sizeof(void*);
-        }
-        return m_size;
-    }
-
-    Value Value::Clone() const {
+    Value Value::Copy() const {
         Value result;
-        result.m_type = m_type;
-        result.m_isReference = false;
-        result.m_isConst = false;
-        result.m_deleter = m_deleter;
-        result.m_copier = m_copier;
-        result.m_size = m_size;
-
-        if (m_data && m_copier) {
-            m_copier(result.m_data, m_data);
-        }
-
+        result.m_storage = m_storage;
         return result;
     }
 
-    void Value::Destroy() {
-        if (!m_data || m_isReference || !m_deleter) {
-            return;
+    Value& Value::Detach() {
+        if (IsRef()) {
+            m_storage = entt::meta_any(m_storage);
+        }
+        return *this;
+    }
+
+    Value& Value::DetachIfConst() {
+        if (IsConst()) {
+            return Detach();
+        }
+        return *this;
+    }
+
+    bool Value::IsRef() const {
+        return m_storage.base().policy() == entt::any_policy::cref || m_storage.base().policy() == entt::any_policy::ref;
+    }
+
+    bool Value::IsSequenceContainer() const {
+        return m_storage.type().is_sequence_container();
+    }
+
+    bool Value::IsAssociativeContainer() const {
+        return m_storage.type().is_associative_container();
+    }
+
+    bool Value::IsMathVector() const {
+        if (!IsClass() || !IsTemplate()) {
+            return false;
         }
 
-        m_deleter(m_data);
-        m_data = nullptr;
-        m_size = 0;
+        static const auto meta = entt::meta_any(SR_MATH_NS::FVector3());
+        static const std::string_view compare = meta.base().type().name().substr(0, meta.base().type().name().find('<') - 1);
+
+        return GetTypeName().starts_with(compare);
+    }
+
+    bool Value::IsMathSize() const {
+        if (!IsClass() || !IsTemplate()) {
+            return false;
+        }
+
+        static const auto meta = entt::meta_any(SR_MATH_NS::FSize2());
+        static const std::string_view compare = meta.base().type().name().substr(0, meta.base().type().name().find('<') - 1);
+
+        return GetTypeName().starts_with(compare);
+    }
+
+    bool Value::IsBool() const {
+        return m_storage.type().is_arithmetic() && GetTypeName() == "bool";
+    }
+
+    bool Value::IsArithmetic() const {
+        return m_storage.type().is_arithmetic();
+    }
+
+    bool Value::IsClass() const {
+        return m_storage.type().is_class();
+    }
+
+    bool Value::IsTemplate() const {
+        return m_storage.type().is_template_specialization();
+    }
+
+    bool Value::IsConst() const {
+        return m_storage.base().policy() == entt::any_policy::cref;
+    }
+
+    std::string_view Value::GetTypeName() const {
+        return m_storage.base().type().name();
+    }
+
+    Value::operator bool() const noexcept {
+        return static_cast<bool>(m_storage);
+    }
+
+    uint64_t Value::SizeOf() const {
+        return m_storage.type().size_of();
+    }
+
+    const void* Value::Data() const {
+        return m_storage.base().data();
+    }
+
+    void* Value::Data() {
+        return m_storage.base().data();
+    }
+
+    bool Value::IsSigned() const {
+        return m_storage.type().is_signed();
+    }
+
+    bool Value::IsEnum() const {
+        return m_storage.type().is_enum();
+    }
+
+    bool Value::IsIntegral() const {
+        return m_storage.type().is_integral();
+    }
+
+    std::string_view Value::GetEnumType() const {
+        std::string_view type = GetTypeName();
+
+        /// format is: enum Namespace::second_namespace::EnumName or enum EnumName
+
+        auto pos = type.rfind(':');
+        if (pos == std::string_view::npos) {
+            pos = type.find(' ');
+        }
+        if (pos == std::string_view::npos) {
+            return {};
+        }
+        return type.substr(pos + 1, type.size() - pos - 1);
+    }
+
+    ValueSequenceContainer Value::AsSequenceContainer() {
+        return ValueSequenceContainer(m_storage.as_sequence_container());
+    }
+
+    ValueSequenceContainer Value::AsSequenceContainer() const {
+        return ValueSequenceContainer(m_storage.as_sequence_container());
     }
 }

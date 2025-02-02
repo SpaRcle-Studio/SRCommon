@@ -8,6 +8,11 @@
 #include <Utils/Common/Hashes.h>
 #include <Utils/Common/EnumReflector.h>
 
+#include <Utils/Math/Vector2.h>
+#include <Utils/Math/Vector3.h>
+#include <Utils/Math/Vector4.h>
+#include <Utils/Math/Vector6.h>
+
 namespace SR_UTILS_NS {
 	struct SerializationId {
 		SR_CONSTEXPR SerializationId() noexcept = default;
@@ -127,6 +132,20 @@ namespace SR_UTILS_NS {
 
 	template<template<class...> class Op, class... Args>
 	using DetectedT = typename Details::Detector<Details::Empty, void, Op, Args...>::type;
+
+	template <typename T>
+	using HasNullptrComparison = decltype(std::declval<const T>() == nullptr);
+
+	template <typename T>
+	struct SupportsNullptrComparison : std::bool_constant<IsDetectedV<HasNullptrComparison, T>> {};
+
+	template <typename T> struct SupportsNullptrComparison<SR_MATH_NS::Vector2<T>> : std::false_type {};
+	template <typename T> struct SupportsNullptrComparison<SR_MATH_NS::Vector3<T>> : std::false_type {};
+	template <typename T> struct SupportsNullptrComparison<SR_MATH_NS::Vector4<T>> : std::false_type {};
+	template <typename T> struct SupportsNullptrComparison<SR_MATH_NS::Vector6<T>> : std::false_type {};
+
+	template<class T>
+	inline constexpr bool SupportsNullptrComparisonV = SupportsNullptrComparison<T>::value;
 
 	template<class Default, template<class...> class Op, class... Args>
 	struct DetectedOr : Details::Detector<Default, void, Op, Args...>
@@ -284,15 +303,24 @@ namespace SR_UTILS_NS {
 	template<class X, class Y>
 	using CheckerOperatorMinus = decltype(std::declval<const X>() - std::declval<const Y>());
 
-	template<template<class...> class Op, class X, class Y>
+	/*template<template<class...> class Op, class X, class Y>
 	struct CheckOperatorUsable : IsDetected<Op, X, Y>
 	{};
 
 	template<typename T>
 	struct CheckOperatorUsable<CheckerEqualityComparable, std::optional<T>, std::optional<T>> : std::false_type
-	{};
+	{};*/
 
-	template<template<class...> class Op, class X, class Y>
+	template <template<class...> class Op, class X, class Y, typename = void>
+	struct CheckOperatorUsable : IsDetected<Op, X, Y> {};
+
+	template <template<class...> class Op, class X, class Y>
+	struct CheckOperatorUsable<Op, X, Y, std::enable_if_t<std::is_same_v<Y, std::nullptr_t> && !SupportsNullptrComparisonV<X>>> : std::false_type {};
+
+	template <typename T>
+	struct CheckOperatorUsable<CheckerEqualityComparable, std::optional<T>, std::optional<T>> : std::false_type {};
+
+	template <template<class...> class Op, class X, class Y>
 	constexpr bool CheckOperatorUsableV = CheckOperatorUsable<Op, X, Y>::value;
 
 	namespace SharedPointerTraits {

@@ -9,19 +9,17 @@ namespace SR_UTILS_NS {
         return ExportAllResources(SR_UTILS_NS::Path());
     }
 
-    bool ResourceEmbedder::ExportAllResources(SR_UTILS_NS::Path newDirectory) {
+    bool ResourceEmbedder::ExportAllResources(const SR_UTILS_NS::Path& newDirectory) {
         bool result = true;
         if (!newDirectory.IsEmpty() && !newDirectory.Exists()) {
             if (!newDirectory.Create()) {
-                SR_ERROR("ResourceEmbedder::ExportAllResources() : failed to create new directory.");
+                SR_ERROR("ResourceEmbedder::ExportAllResources() : failed to create new directory!");
                 result = false;
             }
         }
 
-        for (auto&& it : m_resources) {
-            EmbedResourceStructure resource = {it.first.c_str(), it.second.second, it.second.first};
-
-            if (!ExportToFile(resource, newDirectory)) {
+        for (auto&& [path, data] : m_resources) {
+            if (!ExportToFile(path, data, newDirectory)) {
                 result = false;
             }
         }
@@ -29,45 +27,36 @@ namespace SR_UTILS_NS {
         return result;
     }
 
-    bool ResourceEmbedder::ExportToFile(
-        const SR_UTILS_NS::EmbedResourceStructure &resource,
-        const SR_UTILS_NS::Path &newDirectory
-    ) {
-        SR_UTILS_NS::Path path = newDirectory.Concat(resource.path);
+    bool ResourceEmbedder::ExportToFile(std::string_view path, const Resource& resource, const SR_UTILS_NS::Path& newDirectory) {
+        SR_UTILS_NS::Path resourcePath = newDirectory.Concat(path);
         if (newDirectory.IsEmpty()) {
-            path = SR_UTILS_NS::Path(resource.path);
+            resourcePath = SR_UTILS_NS::Path(path);
         }
 
-        auto&& dataSize = resource.size;
-        auto&& pData = resource.data;
-
-        std::string buffer;
-        buffer.resize(dataSize);
-        memcpy(buffer.data(), pData, dataSize);
-
-        if (!path.Exists()) {
+        if (!resourcePath.Exists()) {
         #ifdef SR_LINUX
             /// It is needed because on Linux there are files without extensions.
-            if (!SR_PLATFORM_NS::CreateFolder(path.GetPrevious().GetFolder())) {
-                SR_ERROR("ResourceEmbedder::ExportToFile() : failed to create path.");
+            if (!SR_PLATFORM_NS::CreateFolder(resourcePath.GetPrevious().GetFolder())) {
+                SR_ERROR("ResourceEmbedder::ExportToFile() : failed to create path!");
                 return false;
             }
 
         #else
-            if (!path.Create()) {
-                SR_ERROR("ResourceEmbedder::ExportToFile() : failed to create path.");
+            if (!resourcePath.Create()) {
+                SR_ERROR("ResourceEmbedder::ExportToFile() : failed to create path!");
                 return false;
             }
         #endif
         }
 
-        std::ofstream file(path.c_str(), std::ios::out | std::ios::binary);
+        std::ofstream file(resourcePath.c_str(), std::ios::out | std::ios::binary);
         if (!file.is_open()) {
-            SR_ERROR("ResourceEmbedder::ExportToFile() : failed to open file '{}'.", resource.path);
+            SR_ERROR("ResourceEmbedder::ExportToFile() : failed to open file '{}'!", path);
             return false;
         }
 
-        file.write(buffer.data(), buffer.size());
+        std::string decompressedData = Decompress(resource);
+        file.write(decompressedData.data(), static_cast<int64_t>(decompressedData.size()));
         file.close();
 
     #ifdef SR_LINUX
@@ -78,13 +67,67 @@ namespace SR_UTILS_NS {
         return true;
     }
 
-    bool ResourceEmbedder::ExportToFile(const SR_UTILS_NS::Path &path) {
-        auto&& it = m_resources.find(path.ToStringRef());
-        return ExportToFile({path.CStr(), it->second.second, it->second.first}, SR_UTILS_NS::Path());
+    bool ResourceEmbedder::ExportToFile(const SR_UTILS_NS::Path& path) {
+        auto&& pIt = m_resources.find(path.ToStringRef());
+        if (pIt == m_resources.end()) {
+            SR_ERROR("ResourceEmbedder::ExportToFile() : resource '{}' not found!", path.ToStringRef());
+            return false;
+        }
+        return ExportToFile(pIt->first, pIt->second, SR_UTILS_NS::Path());
     }
 
-    bool ResourceEmbedder::ExportToMemory(const EmbedResourceStructure &resource) {
+    bool ResourceEmbedder::ExportToMemory(std::string_view data) {
 		SRHalt("Not yet implemented!");
         return false;
+    }
+
+    std::string ResourceEmbedder::HexToBytes(const std::string_view& hex) {
+        if (hex.length() % 2 != 0) {
+            throw std::runtime_error("Hex string length must be even!");
+        }
+
+        std::string result;
+        result.reserve(hex.length() / 2);
+
+        for (size_t i = 0; i < hex.length(); i += 2) {
+            char byte = SR_UTILS_NS::HexCharToUInt8(hex[i], hex[i + 1]);
+            result.push_back(byte);
+        }
+
+        return result;
+    }
+
+    std::string ResourceEmbedder::Decompress(const Resource& resource) {
+        std::string compressedData = HexToBytes(resource.compressedHex);
+
+        uLongf decompressedSize = resource.decompressedSize;
+        std::vector<char> decompressedData(decompressedSize);
+
+        z_stream strm;
+        strm.zalloc = Z_NULL;
+        strm.zfree = Z_NULL;
+        strm.opaque = Z_NULL;
+        int ret = inflateInit(&strm);
+        if (ret != Z_OK) {
+            SR_PLATFORM_NS::WriteConsoleError("InflateInit failed, error code: {}\n"_format(ret));
+            SR_PLATFORM_NS::Terminate();
+        }
+
+        strm.avail_in = compressedData.size();
+        strm.next_in = reinterpret_cast<Bytef*>(const_cast<char*>(compressedData.data()));
+        strm.avail_out = decompressedSize;
+        strm.next_out = reinterpret_cast<Bytef*>(decompressedData.data());
+
+        ret = inflate(&strm, Z_FINISH);
+        if (ret != Z_STREAM_END) {
+            inflateEnd(&strm);
+            SR_PLATFORM_NS::WriteConsoleError("Failed to decompress data, error code: {}\n"_format(ret));
+            SR_PLATFORM_NS::Terminate();
+        }
+
+        decompressedSize = strm.total_out;
+        inflateEnd(&strm);
+
+        return {decompressedData.begin(), decompressedData.begin() + decompressedSize };
     }
 }

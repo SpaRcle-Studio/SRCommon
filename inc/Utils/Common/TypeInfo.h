@@ -17,7 +17,9 @@
 namespace SR_UTILS_NS {
     SR_ENUM_NS_CLASS_T(StandardType, uint16_t,
         Unknown,
+        /// Boolean
         Bool,
+        /// Numeric
         Int8,
         UInt8,
         Int16,
@@ -28,26 +30,28 @@ namespace SR_UTILS_NS {
         UInt64,
         Float,
         Double,
-
+        /// Strings
         String,
         StringAtom,
         UnicodeString,
-
-        Array, Map, Set,
-
-        Enum,
-        Class,
-
         Path,
-
+        /// Containers
+        Array, Map, Set,
+        /// Reflected enums
+        Enum,
+        /// Mathematical size
         FSize, FSize2,
         ISize, ISize2,
         USize, USize2,
-
+        /// Mathematical vectors
         FVector2, FVector3, FVector4, FVector5, FVector6,
         IVector2, IVector3, IVector4, IVector5, IVector6,
         UVector2, UVector3, UVector4, UVector5, UVector6,
-        BVector2, BVector3, BVector4, BVector5, BVector6
+        BVector2, BVector3, BVector4, BVector5, BVector6,
+        /// Reflected objects
+        Object, Class,
+        /// Pointer to reflected object
+        Ptr
     );
 
     union StandardData {
@@ -269,6 +273,9 @@ namespace SR_UTILS_NS {
     template<typename T> constexpr bool IsSTLVector() {
         return is_stl_container_impl::is_stl_vector<std::decay_t<T>>::value;
     }
+
+    template<class T>
+    inline constexpr bool IsSTLVectorV = IsSTLVector<T>();
 
     constexpr bool IsMathSize(const StandardType type) {
         return type == StandardType::FSize || type == StandardType::FSize2 ||

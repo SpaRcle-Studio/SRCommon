@@ -161,6 +161,7 @@ endif()
 add_subdirectory(libs/rapidyaml)
 add_subdirectory(libs/cppcoro)
 add_subdirectory(libs/cpptrace)
+add_subdirectory(libs/entt)
 
 list(APPEND SR_UTILS_LINK_LIBRARIES cxx/ICU.cxx)
 list(APPEND SR_UTILS_LINK_LIBRARIES cxx/Utils.cxx)
@@ -220,9 +221,11 @@ SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_SOURCE_DIR}/libs/cppcoro/inc
 SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_SOURCE_DIR}/libs/cpptrace/include)
 SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_SOURCE_DIR}/libs/rapidyaml/src)
 SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_SOURCE_DIR}/libs/cssparser/cssparser)
+SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_SOURCE_DIR}/libs/entt/src)
 SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${SR_CMAKE_ROOT_BUILD_DIRECTORY}/Codegen)
 
 SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_BINARY_DIR}/include/Utils/EmbedResources)
+SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_BINARY_DIR}/libs/zlib)
 
 add_library(asio INTERFACE)
 
@@ -321,7 +324,7 @@ else()
 endif()
 
 target_link_libraries(Utils asio)
-target_link_libraries(Utils ryml::ryml cppcoro cpptrace::cpptrace)
+target_link_libraries(Utils ryml::ryml cppcoro cpptrace::cpptrace EnTT)
 
 get_property(SR_UTILS_INCLUDE_DIRECTORIES_CONTENT GLOBAL PROPERTY SR_UTILS_INCLUDE_DIRECTORIES)
 message("SRCommon include directories: ${SR_UTILS_INCLUDE_DIRECTORIES_CONTENT}")

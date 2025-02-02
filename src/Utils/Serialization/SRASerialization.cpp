@@ -452,6 +452,9 @@ namespace SR_UTILS_NS {
         auto& node = GetWalkNode();
         for (uint64_t i = 0; i < node.children.size(); ++i) {
             if (node.children[i].id.GetHash() == id.GetHash()) {
+                if (node.children[i].children.empty()) {
+                    return 0;
+                }
                 m_walker.emplace_back(i);
                 return node.children[i].children.size();
             }

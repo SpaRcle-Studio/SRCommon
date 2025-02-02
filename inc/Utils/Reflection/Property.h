@@ -17,20 +17,17 @@ namespace SR_UTILS_NS::Reflection {
         EditorPropertyParams& SetTooltip(const StringAtom& tooltip) noexcept { m_tooltip = tooltip; return *this; }
         EditorPropertyParams& SetInspector(const StringAtom& inspector) noexcept { m_inspector = inspector; return *this; }
         EditorPropertyParams& SetDragSpeed(float_t speed) noexcept { m_dragSpeed = speed; return *this; }
-        EditorPropertyParams& SetEnumReflector(const StringAtom& reflector) noexcept { m_enumReflector = reflector; return *this; }
 
         SR_NODISCARD StringAtom GetDisplayName() const noexcept { return m_displayName; }
         SR_NODISCARD StringAtom GetTooltip() const noexcept { return m_tooltip; }
         SR_NODISCARD float_t GetDragSpeed() const noexcept { return m_dragSpeed; }
         SR_NODISCARD float_t GetEditorWidth() const noexcept { return m_editorWidth; }
         SR_NODISCARD StringAtom GetInspector() const noexcept { return m_inspector; }
-        SR_NODISCARD StringAtom GetEnumReflector() const noexcept { return m_enumReflector; }
 
     private:
         SR_UTILS_NS::StringAtom m_displayName;
         SR_UTILS_NS::StringAtom m_tooltip;
         SR_UTILS_NS::StringAtom m_inspector;
-        SR_UTILS_NS::StringAtom m_enumReflector;
         float_t m_editorWidth = 0.f;
         float_t m_dragSpeed = 1.f;
 
@@ -43,64 +40,64 @@ namespace SR_UTILS_NS::Reflection {
     public:
         Property() = default;
 
-        Property(const Property& other)
-            : m_defaultValue(other.m_defaultValue.Clone())
-            , m_name(other.m_name)
-            , m_serializeName(other.m_serializeName)
-            , m_editorParams(other.m_editorParams)
-            , m_publicity(other.m_publicity)
-            , m_setCallback(other.m_setCallback)
-            , m_getCallback(other.m_getCallback)
-            , m_onChangeCallback(other.m_onChangeCallback)
-            , m_resetValue(other.m_resetValue.Clone())
-        { }
+        //Property(const Property& other)
+        //    : m_defaultValue(other.m_defaultValue.Clone())
+        //    , m_name(other.m_name)
+        //    , m_serializeName(other.m_serializeName)
+        //    , m_editorParams(other.m_editorParams)
+        //    , m_publicity(other.m_publicity)
+        //    , m_setCallback(other.m_setCallback)
+        //    , m_getCallback(other.m_getCallback)
+        //    , m_onChangeCallback(other.m_onChangeCallback)
+        //    , m_resetValue(other.m_resetValue.Clone())
+        //{ }
 
-        Property(Property&& other) noexcept
-            : m_defaultValue(std::move(other.m_defaultValue))
-            , m_name(std::move(other.m_name))
-            , m_serializeName(std::move(other.m_serializeName))
-            , m_editorParams(std::move(other.m_editorParams))
-            , m_publicity(other.m_publicity)
-            , m_setCallback(other.m_setCallback)
-            , m_getCallback(other.m_getCallback)
-            , m_onChangeCallback(other.m_onChangeCallback)
-            , m_resetValue(std::move(other.m_resetValue))
-        { }
+        //Property(Property&& other) noexcept
+        //    : m_defaultValue(std::move(other.m_defaultValue))
+        //    , m_name(std::move(other.m_name))
+        //    , m_serializeName(std::move(other.m_serializeName))
+        //    , m_editorParams(std::move(other.m_editorParams))
+        //    , m_publicity(other.m_publicity)
+        //    , m_setCallback(other.m_setCallback)
+        //    , m_getCallback(other.m_getCallback)
+        //    , m_onChangeCallback(other.m_onChangeCallback)
+        //    , m_resetValue(std::move(other.m_resetValue))
+        //{ }
 
-        Property& operator=(const Property& other) {
-            if (this != &other) {
-                m_defaultValue = other.m_defaultValue.Clone();
-                m_name = other.m_name;
-                m_serializeName = other.m_serializeName;
-                m_editorParams = other.m_editorParams;
-                m_publicity = other.m_publicity;
-                m_setCallback = other.m_setCallback;
-                m_getCallback = other.m_getCallback;
-                m_onChangeCallback = other.m_onChangeCallback;
-                m_resetValue = other.m_resetValue.Clone();
-            }
-            return *this;
-        }
+        //Property& operator=(const Property& other) {
+        //    if (this != &other) {
+        //        m_defaultValue = other.m_defaultValue.Clone();
+        //        m_name = other.m_name;
+        //        m_serializeName = other.m_serializeName;
+        //        m_editorParams = other.m_editorParams;
+        //        m_publicity = other.m_publicity;
+        //        m_setCallback = other.m_setCallback;
+        //        m_getCallback = other.m_getCallback;
+        //        m_onChangeCallback = other.m_onChangeCallback;
+        //        m_resetValue = other.m_resetValue.Clone();
+        //    }
+        //    return *this;
+        //}
 
-        Property& operator=(Property&& other) noexcept {
-            if (this != &other) {
-                m_defaultValue = std::move(other.m_defaultValue);
-                m_name = std::move(other.m_name);
-                m_serializeName = std::move(other.m_serializeName);
-                m_editorParams = std::move(other.m_editorParams);
-                m_publicity = other.m_publicity;
-                m_setCallback = other.m_setCallback;
-                m_getCallback = other.m_getCallback;
-                m_onChangeCallback = other.m_onChangeCallback;
-                m_resetValue = std::move(other.m_resetValue);
-            }
-            return *this;
-        }
+        //Property& operator=(Property&& other) noexcept {
+        //    if (this != &other) {
+        //        m_defaultValue = std::move(other.m_defaultValue);
+        //        m_name = std::move(other.m_name);
+        //        m_serializeName = std::move(other.m_serializeName);
+        //        m_editorParams = std::move(other.m_editorParams);
+        //        m_publicity = other.m_publicity;
+        //        m_setCallback = other.m_setCallback;
+        //        m_getCallback = other.m_getCallback;
+        //        m_onChangeCallback = other.m_onChangeCallback;
+        //        m_resetValue = std::move(other.m_resetValue);
+        //    }
+        //    return *this;
+        //}
 
         SR_NODISCARD Value Get(void* pOwner) const noexcept { return m_getCallback(pOwner); }
         void Set(void* pOwner, const Value& value) const noexcept { m_setCallback(pOwner, value); }
 
-        SR_NODISCARD void OnChanged(void* pOwner) const noexcept {
+        void OnChanged(void* pOwner) const noexcept {
             if (m_onChangeCallback) {
                 m_onChangeCallback(pOwner);
             }
@@ -147,17 +144,20 @@ namespace SR_UTILS_NS::Reflection {
         if constexpr (SR_MATH_NS::IsBool<Type>()) {
             return "Bool"_atom;
         }
-        if constexpr(SR_MATH_NS::IsNumber<Type>()) {
+        if constexpr (SR_MATH_NS::IsNumber<Type>()) {
             return "Numeric"_atom;
         }
-        if constexpr(SR_UTILS_NS::IsMathVector<Type>()) {
-            return "Vector"_atom;
+        if constexpr (SR_UTILS_NS::IsMathVector<Type>()) {
+            return "MathVector"_atom;
         }
-        if constexpr(SR_UTILS_NS::IsMathSize<Type>()) {
+        if constexpr (SR_UTILS_NS::IsMathSize<Type>()) {
             return "Size"_atom;
         }
-        if constexpr(SR_UTILS_NS::IsSREnumV<Type>) {
+        if constexpr (SR_UTILS_NS::IsSREnumV<Type>) {
             return "Enum"_atom;
+        }
+        if constexpr (SR_UTILS_NS::IsSTLVectorV<Type>) {
+            return "Vector"_atom;
         }
 
         return SR_UTILS_NS::StringAtom();

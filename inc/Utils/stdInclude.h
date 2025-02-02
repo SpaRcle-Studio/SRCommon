@@ -64,6 +64,8 @@
 #include <numeric>
 #include <numbers>
 
+#include <zlib.h>
+
 #ifdef SR_SUPPORT_PARALLEL
     #include <omp.h>
 #endif
@@ -117,6 +119,22 @@ inline std::string_view SRGetClassName(std::string_view func_signature) {
 #define SR_IGNORE_UNUSED(...) SR_UTILS_NS::IgnoreUnused(__VA_ARGS__)
 
 namespace SR_UTILS_NS {
+    template<typename T> struct InputIteratorPointer final {
+        using ValueType = T;
+        using Pointer = T*;
+        using Reference = T&;
+
+        constexpr InputIteratorPointer(ValueType&& value) noexcept(std::is_nothrow_move_constructible_v<ValueType>) /// NOLINT(google-explicit-constructor)
+            : m_value { std::move(value) }
+        { }
+
+        SR_NODISCARD constexpr Pointer operator->() noexcept { return std::addressof(m_value); }
+        SR_NODISCARD constexpr Reference operator*() noexcept { return m_value; }
+
+    private:
+        T m_value;
+    };
+
     using namespace std::literals::string_literals;
     using namespace std::literals::string_view_literals;
 

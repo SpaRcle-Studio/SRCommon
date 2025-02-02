@@ -5,145 +5,166 @@
 #ifndef SR_UTILS_TYPE_TRAITS_VALUE_H
 #define SR_UTILS_TYPE_TRAITS_VALUE_H
 
-#include <Utils/Common/Enumerations.h>
-#include <Utils/Common/TypeInfo.h>
-#include <Utils/Types/StringAtom.h>
+#include <Utils/Reflection/ValueImpl.h>
+
+#include <entt/entt.hpp>
 
 namespace SR_UTILS_NS::Reflection {
-    /*SR_ENUM_NS_CLASS_T(ValueTypeKind, uint8_t,
-        None,
-        /// trivial types
-        Bool,
-        Int8, Int16, Int32, Int64,
-        UInt8, UInt16, UInt32, UInt64,
-        Float, Double,
-        /// strings
-        String, StringAtom,
-        /// containers
-        Vector, Map, Set,
-        /// reflected enums
-        Enum,
+    class Value;
+    class ValueSequenceContainer;
 
-        WeakPtr, StrongPtr,
-        Object
-    );*/
+    class ValueSequenceContainerIterator {
+        friend ValueSequenceContainer;
+    private:
+        explicit ValueSequenceContainerIterator(entt::meta_sequence_container::iterator&& iterator)
+            : m_iterator(std::move(iterator))
+        { }
 
-    class Value {
-        using DeleterFn = void(*)(void*);
-        using CopyFn = void(*)(void*& pDstRef, const void* pSource);
+    public:
+        ValueSequenceContainerIterator& operator++() noexcept { ++m_iterator; return *this; }
+        ValueSequenceContainerIterator& operator--() noexcept { --m_iterator; return *this; }
+
+        ValueSequenceContainerIterator operator++(int32_t value) noexcept {
+            ValueSequenceContainerIterator orig = *this;
+            ++m_iterator;
+            return orig;
+        }
+
+        ValueSequenceContainerIterator operator--(int32_t value) noexcept {
+            ValueSequenceContainerIterator orig = *this;
+            --m_iterator;
+            return orig;
+        }
+
+        SR_NODISCARD Value operator*() const;
+        SR_NODISCARD InputIteratorPointer<Value> operator->() const;
+
+        SR_NODISCARD operator bool() const noexcept { return static_cast<bool>(m_iterator); } /// NOLINT
+
+        SR_NODISCARD bool operator==(const ValueSequenceContainerIterator& other) const noexcept {
+            return m_iterator == other.m_iterator;
+        }
+
+        SR_NODISCARD bool operator!=(const ValueSequenceContainerIterator& other) const noexcept {
+            return !(*this == other);
+        }
+
+    private:
+        entt::meta_sequence_container::iterator m_iterator;
+
+    };
+
+    class SR_DLL_EXPORT SR_NODISCARD ValueSequenceContainer {
+        friend Value;
+    private:
+        explicit ValueSequenceContainer(entt::meta_sequence_container&& storage)
+            : m_storage(storage)
+        { }
+
+    public:
+        SR_NODISCARD ValueSequenceContainerIterator begin() { return ValueSequenceContainerIterator(m_storage.begin()); }
+        SR_NODISCARD ValueSequenceContainerIterator end() { return ValueSequenceContainerIterator(m_storage.end()); }
+
+        void Clear();
+        void Resize(uint64_t size);
+        void Reserve(uint64_t size);
+
+        SR_NODISCARD uint64_t Size() const { return m_storage.size(); }
+        SR_NODISCARD bool Empty() const { return Size() == 0; }
+
+    private:
+        entt::meta_sequence_container m_storage;
+    };
+
+    /// ----------------------------------------------------------------------------------------------------------------
+
+    class SR_DLL_EXPORT SR_NODISCARD Value {
+        friend ValueSequenceContainerIterator;
+    private:
+        explicit Value(entt::meta_any&& storage)
+            : m_storage(std::move(storage))
+        { }
+
     public:
         Value() = default;
-        ~Value();
 
-        Value(const Value& other);
-        Value(Value&& other) noexcept;
-        Value& operator=(const Value& other);
-        Value& operator=(Value&& other) noexcept;
+        Value(const Value& other)
+            : m_storage(other.IsRef() ? other.m_storage.as_ref() : other.m_storage)
+        { }
 
-        template<class T> static Value Create(T&& value, bool isConst = false);
-        template<class T> static Value CreateReference(T& value, bool isConst = false);
+        Value(Value& other)
+            : m_storage(other.IsRef() ? other.m_storage.as_ref() : other.m_storage)
+        { }
 
-        template<class T> static DeleterFn GetDeleter();
+        Value& operator=(const Value& other) {
+            if (this != &other) {
+                m_storage = other.IsRef() ? other.m_storage.as_ref() : other.m_storage;
+            }
+            return *this;
+        }
 
-        template<class T> bool Map(T*& pValue) const;
-        template<class T> T* Map() const;
-        SR_NODISCARD const char* MapString() const { return static_cast<const char*>(m_data); }
-        SR_NODISCARD char* MapString(){ return static_cast<char*>(m_data); }
+        Value& operator=(Value& other) {
+            if (this != &other) {
+                m_storage = other.IsRef() ? other.m_storage.as_ref() : other.m_storage;
+            }
+            return *this;
+        }
 
-        SR_NODISCARD StandardType GetType() const { return m_type; }
-        SR_NODISCARD uint64_t GetSize() const;
-        SR_NODISCARD Value Clone() const;
+        template<typename T> static Value Create(T&& value);
+        template<typename T> static Value CreateRef(T& value);
+        template<typename T> static Value CreateCRef(const T& value);
 
-        SR_NODISCARD operator bool() const noexcept { return m_data != nullptr; } /** NOLINT */
+        template<typename T> const T* TryCast() const { return m_storage.try_cast<T>(); }
+        template<typename T> T* TryCast() { return m_storage.try_cast<T>(); }
+
+        Value& Detach();
+        Value& DetachIfConst();
+
+        SR_NODISCARD ValueSequenceContainer AsSequenceContainer();
+        SR_NODISCARD ValueSequenceContainer AsSequenceContainer() const;
+
+        SR_NODISCARD Value Ref();
+        SR_NODISCARD Value Copy() const;
+
+        SR_NODISCARD bool IsRef() const;
+        SR_NODISCARD bool IsConst() const;
+
+        SR_NODISCARD bool IsSequenceContainer() const;
+        SR_NODISCARD bool IsAssociativeContainer() const;
+
+        SR_NODISCARD bool IsMathVector() const;
+        SR_NODISCARD bool IsMathSize() const;
+        SR_NODISCARD bool IsBool() const;
+        SR_NODISCARD bool IsArithmetic() const;
+        SR_NODISCARD bool IsClass() const;
+        SR_NODISCARD bool IsTemplate() const;
+        SR_NODISCARD bool IsIntegral() const;
+        SR_NODISCARD bool IsSigned() const;
+        SR_NODISCARD bool IsEnum() const;
+        SR_NODISCARD std::string_view GetTypeName() const;
+        SR_NODISCARD uint64_t SizeOf() const;
+        SR_NODISCARD void* Data();
+        SR_NODISCARD const void* Data() const;
+        SR_NODISCARD std::string_view GetEnumType() const;
+
+        SR_NODISCARD operator bool() const noexcept; /// NOLINT
 
     private:
-        void Destroy();
-
-    private:
-        uint64_t m_size = 0;
-        void* m_data = nullptr;
-        DeleterFn m_deleter = nullptr;
-        CopyFn m_copier = nullptr;
-        StandardType m_type = StandardType::Unknown;
-        bool m_isReference = false;
-        bool m_isConst = false;
+        entt::meta_any m_storage;
     };
 
     /// Implementation
 
-    template<class T> Value Value::Create(T&& value, bool isConst)  {
-        Value result;
-
-        constexpr StandardType type = GetStandardType<T>();
-        if constexpr (static_cast<uint16_t>(type) == static_cast<uint16_t>(StandardType::Unknown)) {
-            static_assert(AlwaysFalseV<T>, "Unknown type!");
-        }
-
-        result.m_type = type;
-        result.m_isReference = false;
-        result.m_isConst = isConst;
-
-        using CopiedType = SR_UTILS_NS::RemoveQualifiersT<T>;
-
-        result.m_size = sizeof(CopiedType);
-        result.m_data = const_cast<void*>(static_cast<const void*>(new CopiedType(std::forward<T>(value))));
-        result.m_deleter = GetDeleter<T>();
-
-        result.m_copier = [](void*& pDstRef, const void* pSource) {
-            pDstRef = new CopiedType(*static_cast<const CopiedType*>(pSource));
-        };
-
-        return result;
+    template<typename T> Value Value::Create(T&& value) {
+        return Value(entt::meta_any(std::forward<T>(value)));
     }
 
-    template<class T> Value Value::CreateReference(T& value, bool isConst) {
-        Value result;
-
-        constexpr StandardType type = GetStandardType<T>();
-        if constexpr (static_cast<uint16_t>(type) == static_cast<uint16_t>(StandardType::Unknown)) {
-            static_assert(AlwaysFalseV<T>, "Unknown type!");
-        }
-
-        result.m_type = type;
-
-        result.m_isReference = true;
-        result.m_isConst = isConst;
-
-        using CopiedType = SR_UTILS_NS::RemoveQualifiersT<T>;
-
-        result.m_size = sizeof(CopiedType);
-        result.m_data = const_cast<void*>(static_cast<const void*>(&value));
-        result.m_deleter = GetDeleter<T>();
-
-        result.m_copier = [](void*& pDstRef, const void* pSource) {
-            pDstRef = new CopiedType(*static_cast<const CopiedType*>(pSource));
-        };
-
-        return result;
+    template<typename T> Value Value::CreateRef(T& value) {
+        return Value(entt::meta_any::create_ref(value));
     }
 
-    template<typename T> Value::DeleterFn Value::GetDeleter() {
-        using CopiedType = SR_UTILS_NS::RemoveQualifiersT<T>;
-        return [](void* pData) {
-            delete static_cast<CopiedType*>(pData);
-        };
-    }
-
-    template<class T> bool Value::Map(T*& pValue) const {
-        if (m_type != GetStandardType<T>()) {
-            return false;
-        }
-
-        pValue = static_cast<T*>(m_data);
-        return true;
-    }
-
-    template<class T> T* Value::Map() const {
-        T* pValue = nullptr;
-        if (!Map(pValue)) {
-            return nullptr;
-        }
-        return pValue;
+    template<typename T> Value Value::CreateCRef(const T& value) {
+        return Value(entt::meta_any::create_cref(value));
     }
 }
 
