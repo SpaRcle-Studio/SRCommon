@@ -71,6 +71,11 @@ namespace SR_UTILS_NS::Reflection {
         return m_storage.type().is_associative_container();
     }
 
+    bool Value::IsBitMap() const {
+        static auto meta = entt::meta_any(std::vector<bool>());
+        return GetTypeName() == meta.base().type().name();
+    }
+
     bool Value::IsMathVector() const {
         if (!IsClass() || !IsTemplate()) {
             return false;

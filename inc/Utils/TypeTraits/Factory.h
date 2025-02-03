@@ -42,6 +42,7 @@ namespace SR_UTILS_NS {
                     auto&& name = pMeta->GetFactoryName();
                     TypeInfo& info = m_types[name];
                     info.isAbstract = true;
+                    info.metaGetter = T::GetMetaStatic;
                 }
                 else {
                     SR_PLATFORM_NS::WriteConsoleError("Failed to get meta for abstract class!");

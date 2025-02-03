@@ -131,6 +131,7 @@ namespace SR_UTILS_NS::Reflection {
 
         SR_NODISCARD bool IsSequenceContainer() const;
         SR_NODISCARD bool IsAssociativeContainer() const;
+        SR_NODISCARD bool IsBitMap() const;
 
         SR_NODISCARD bool IsMathVector() const;
         SR_NODISCARD bool IsMathSize() const;

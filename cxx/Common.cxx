@@ -22,6 +22,8 @@
 #include "../src/Utils/Serialization/Deserializer.cpp"
 #include "../src/Utils/Serialization/SRASerialization.cpp"
 
+#include "../src/Utils/Tests/ReflectionTestComonent.cpp"
+
 #include "../src/Utils/UI/UIModifier.cpp"
 
 #ifdef SR_COMMON_EMBED_RESOURCES

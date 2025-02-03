@@ -218,13 +218,28 @@ public:
 
 		while (deserializer.BeginItem(itemId, index)) {
 			if (deserializer.IsPreserveMode() && index < value.size()) {
-				Serialization::Load(deserializer, value[index], dataId);
+				if constexpr (std::is_same_v<T::value_type, bool>) {
+					bool item = false;
+					Serialization::Load(deserializer, item, dataId);
+					value[index] = item;
+				}
+				else {
+					Serialization::Load(deserializer, value[index], dataId);
+				}
 			}
 			else {
-				auto&& item = value.emplace_back();
-				Serialization::Load(deserializer, item, dataId);
-				if (!SR_UTILS_NS::Serialization::IsValidValue(item)) {
-					value.pop_back();
+				if constexpr (std::is_same_v<T::value_type, bool>) {
+					value.emplace_back();
+					bool item = false;
+					Serialization::Load(deserializer, item, dataId);
+					value[index] = item;
+				}
+				else {
+					auto&& item = value.emplace_back();
+					Serialization::Load(deserializer, item, dataId);
+					if (!SR_UTILS_NS::Serialization::IsValidValue(item)) {
+						value.pop_back();
+					}
 				}
 			}
 

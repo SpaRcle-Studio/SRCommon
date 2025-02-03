@@ -35,7 +35,7 @@ namespace Codegen {
 }
 
 
-#define SR_CLASS()                                                                                                      \
+#define SR_CLASS_BASE()                                                                                                 \
     public:                                                                                                             \
         static bool RegisterPropertiesCodegen();                                                                        \
     private:                                                                                                            \
@@ -52,7 +52,16 @@ namespace Codegen {
                                                                                                                         \
         static SR_UTILS_NS::StringAtom GetClassStaticName() noexcept;                                                   \
         static SRClass* AllocateStatic() noexcept;                                                                      \
-    private:
+
+
+#define SR_CLASS()                                                                                                      \
+        SR_CLASS_BASE()                                                                                                 \
+    private:                                                                                                            \
+
+
+#define SR_STRUCT()                                                                                                     \
+        SR_CLASS_BASE()                                                                                                 \
+    public:                                                                                                             \
 
 
 #define SR_CLASS_REGISTER_PROPERTY_BASE(className, propertyName, propertyType)                                          \
