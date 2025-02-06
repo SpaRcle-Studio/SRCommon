@@ -16,5 +16,23 @@ namespace SR_UTILS_NS {
     		pMeta->Load(deserializer, obj);
     	}
     }
+
+    bool SRClassMeta::IsInherited(std::string_view baseClass) const noexcept {
+		if (GetFactoryName() == baseClass) {
+			return false;
+		}
+
+    	for (auto&& pMeta : GetBaseMetas()) {
+			if (pMeta->GetFactoryName() == baseClass) {
+				return true;
+			}
+
+			if (pMeta->IsInherited(baseClass)) {
+				return true;
+			}
+		}
+
+    	return false;
+    }
 }
 

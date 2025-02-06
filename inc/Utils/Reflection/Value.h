@@ -133,6 +133,7 @@ namespace SR_UTILS_NS::Reflection {
         SR_NODISCARD bool IsAssociativeContainer() const;
         SR_NODISCARD bool IsBitMap() const;
 
+        SR_NODISCARD bool IsSmartPtr() const;
         SR_NODISCARD bool IsMathVector() const;
         SR_NODISCARD bool IsMathSize() const;
         SR_NODISCARD bool IsBool() const;
@@ -143,6 +144,7 @@ namespace SR_UTILS_NS::Reflection {
         SR_NODISCARD bool IsSigned() const;
         SR_NODISCARD bool IsEnum() const;
         SR_NODISCARD std::string_view GetTypeName() const;
+        SR_NODISCARD std::string_view GetSharedPtrType() const;
         SR_NODISCARD uint64_t SizeOf() const;
         SR_NODISCARD void* Data();
         SR_NODISCARD const void* Data() const;

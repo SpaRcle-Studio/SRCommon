@@ -76,6 +76,17 @@ namespace SR_UTILS_NS::Reflection {
         return GetTypeName() == meta.base().type().name();
     }
 
+    bool Value::IsSmartPtr() const {
+        if (!IsClass() || !IsTemplate()) {
+            return false;
+        }
+
+        static auto meta = entt::meta_any(SR_HTYPES_NS::SharedPtr<uint64_t>());
+        static const std::string_view compare = meta.base().type().name().substr(0, meta.base().type().name().find('<'));
+
+        return GetTypeName().starts_with(compare);
+    }
+
     bool Value::IsMathVector() const {
         if (!IsClass() || !IsTemplate()) {
             return false;
@@ -120,6 +131,22 @@ namespace SR_UTILS_NS::Reflection {
 
     std::string_view Value::GetTypeName() const {
         return m_storage.base().type().name();
+    }
+
+    std::string_view Value::GetSharedPtrType() const {
+        SRAssert2(IsSmartPtr(), "Value::GetSharedPtrType() : value is not a smart pointer!");
+
+        std::string_view type = GetTypeName();
+
+        const uint64_t start = type.find('<');
+        const uint64_t end = type.rfind('>');
+
+        if (start == std::string_view::npos || end == std::string_view::npos) {
+            SRHalt("Value::GetSharedPtrType() : failed to find type!");
+            return {};
+        }
+
+        return type.substr(start + 1, end - start - 1);
     }
 
     Value::operator bool() const noexcept {

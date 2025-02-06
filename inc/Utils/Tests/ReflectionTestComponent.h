@@ -9,7 +9,15 @@
 #include <Utils/ECS/ComponentManager.h>
 
 namespace SR_UTILS_NS::Tests {
-    struct ReflectionTestComponentData : public SR_UTILS_NS::Serializable {
+    struct ReflectionTestComponentDataBase : public SR_UTILS_NS::Serializable {
+        SR_STRUCT()
+
+        /// @property
+        bool baseField = false;
+
+    };
+
+    struct ReflectionTestComponentData : public ReflectionTestComponentDataBase {
         SR_STRUCT()
 
         /// @property
@@ -20,6 +28,44 @@ namespace SR_UTILS_NS::Tests {
         int32_t m_width = 100;
         /// @property
         std::vector<float> m_test;
+    };
+
+    class ReflectionTestComponentLogicBase : public SR_UTILS_NS::Serializable, public SR_HTYPES_NS::SharedPtr<ReflectionTestComponentLogicBase> {
+        SR_CLASS()
+    public:
+        using Ptr = SR_HTYPES_NS::SharedPtr<ReflectionTestComponentLogicBase>;
+
+        ReflectionTestComponentLogicBase()
+            : SR_HTYPES_NS::SharedPtr<ReflectionTestComponentLogicBase>(this, SR_UTILS_NS::SharedPtrPolicy::Automatic)
+        { }
+
+    private:
+        /// @property
+        bool m_baseBoolValue = false;
+
+    };
+
+    class ReflectionTestComponentLogicSimple : public ReflectionTestComponentLogicBase {
+        SR_CLASS()
+    private:
+        /// @property
+        float_t m_simpleFloat = 0.0f;
+        /// @property
+        int32_t m_simpleInt = 0;
+    };
+
+    class ReflectionTestComponentLogicComplex : public ReflectionTestComponentLogicBase {
+        SR_CLASS()
+    private:
+        /// @property
+        std::vector<int> m_complexInts;
+        /// @property
+        SR_MATH_NS::FVector3 m_complexVector;
+        /// @property
+        ReflectionTestComponentLogicBase::Ptr m_other;
+        /// @property
+        std::vector<ReflectionTestComponentLogicBase::Ptr> m_others;
+
     };
 
     class ReflectionTestComponent : public SR_UTILS_NS::Component {
@@ -48,6 +94,8 @@ namespace SR_UTILS_NS::Tests {
         SR_UTILS_NS::PlatformType m_platformType = SR_UTILS_NS::PlatformType::Windows;
         /// @property
         ReflectionTestComponentData m_data;
+        /// @property
+        ReflectionTestComponentLogicBase::Ptr m_logic;
         /// @property
         std::vector<ReflectionTestComponentData> m_datas;
         /// @property @changeCallback(OnChanged) @getter(IsWidthChangeable)

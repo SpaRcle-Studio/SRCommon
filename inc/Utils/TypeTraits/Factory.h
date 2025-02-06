@@ -89,8 +89,10 @@ namespace SR_UTILS_NS {
                 }
                 return nullptr;
             }
-            SRHalt("Type \"{}\" is not a shared pointer!", typeid(T).name());
-            return nullptr;
+            else {
+                static_assert(AlwaysFalseV<T>, "Type must be shared pointer! Or your class has private inheritance from SharedPtr!");
+                return nullptr;
+            }
         }
 
         SR_NODISCARD SRClass* CreateBase(std::string_view name) const noexcept {
@@ -114,6 +116,8 @@ namespace SR_UTILS_NS {
             SRHalt("Type \"{}\" is not registered!", name);
             return nullptr;
         }
+
+        SR_NODISCARD std::vector<std::string_view> GetInheritances(std::string_view baseClass) const noexcept;
 
         SR_NODISCARD const SRClassMeta* GetType(std::string_view name) const noexcept override {
             auto&& pIt = m_types.find(name);

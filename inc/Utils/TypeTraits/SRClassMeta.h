@@ -21,6 +21,24 @@ namespace SR_UTILS_NS {
         virtual void Save(SR_UTILS_NS::ISerializer& serializer, const SR_UTILS_NS::Serializable& obj) const;
         virtual void Load(SR_UTILS_NS::IDeserializer& deserializer, SR_UTILS_NS::Serializable& obj) const;
 
+        SR_NODISCARD bool IsInherited(std::string_view baseClass) const noexcept;
+
+        void ForEachProperty(const std::function<void(const SR_UTILS_NS::Reflection::Property& property, uint64_t index)>& func, uint64_t* pIndex = nullptr) const {
+            uint64_t index = 0;
+            if (!pIndex) {
+                pIndex = &index;
+            }
+
+            for (auto&& pBase : GetBaseMetas()) {
+                pBase->ForEachProperty(func, pIndex);
+            }
+
+            for (auto&& property : GetProperties()) {
+                func(property, *pIndex);
+                ++(*pIndex);
+            }
+        }
+
         SR_NODISCARD virtual bool IsAbstract() const noexcept { return false; }
         SR_NODISCARD virtual bool IsEditorOnly() const noexcept { return false; }
         SR_NODISCARD virtual std::span<const SRClassMeta*> GetBaseMetas() const noexcept { return {}; }
@@ -44,7 +62,7 @@ namespace Codegen {
                                                                                                                         \
     public:                                                                                                             \
         static const SR_UTILS_NS::SRClassMeta* GetMetaStatic() noexcept;                                                \
-        virtual const SR_UTILS_NS::SRClassMeta* GetMeta() const noexcept {                                              \
+        const SR_UTILS_NS::SRClassMeta* GetMeta() const noexcept override {                                             \
             auto&& pStaticMetaFromClass = GetMetaStatic();                                                              \
             SRAssert2(pStaticMetaFromClass, std::string("No static meta for: ") + typeid(*this).name());                \
             return pStaticMetaFromClass;                                                                                \

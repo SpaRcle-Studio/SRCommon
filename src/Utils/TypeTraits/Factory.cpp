@@ -34,4 +34,16 @@ namespace SR_UTILS_NS {
         }
         return {};
     }
+
+    std::vector<std::string_view> Factory::GetInheritances(std::string_view baseClass) const noexcept {
+        std::vector<std::string_view> result;
+        for (auto&& [name, info] : m_types) {
+            if (auto&& pMeta = info.metaGetter()) {
+                if (pMeta->IsInherited(baseClass)) {
+                    result.push_back(name);
+                }
+            }
+        }
+        return result;
+    }
 }
