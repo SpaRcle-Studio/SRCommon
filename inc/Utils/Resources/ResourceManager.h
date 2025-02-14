@@ -59,10 +59,16 @@ namespace SR_UTILS_NS {
         }
 
         template<typename T> bool RegisterType() {
+            if constexpr (!std::is_base_of_v<IResource, T>) {
+                static_assert(std::is_base_of_v<IResource, T>, "Resource must be derived from IResource");
+            }
             return RegisterType(typeid(T).name(), SR_COMPILE_TIME_CRC32_TYPE_NAME(T));
         }
 
         template<typename ResourceT, typename ReloaderT, typename ...Args> bool RegisterReloader(Args&&... args) {
+            if constexpr (!std::is_base_of_v<IResource, ResourceT>) {
+                static_assert(std::is_base_of_v<IResource, ResourceT>, "Resource must be derived from IResource");
+            }
             return RegisterReloader(new ReloaderT(std::forward<Args>(args)...), SR_COMPILE_TIME_CRC32_TYPE_NAME(ResourceT));
         }
 

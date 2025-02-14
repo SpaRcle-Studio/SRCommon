@@ -5,7 +5,7 @@
 #ifndef SR_ENGINE_UTILS_IRAWMESHHOLDER_H
 #define SR_ENGINE_UTILS_IRAWMESHHOLDER_H
 
-#include <Utils/stdInclude.h>
+#include <Utils/TypeTraits/SRClass.h>
 
 namespace SR_HTYPES_NS {
     class RawMesh;
@@ -30,9 +30,10 @@ namespace SR_HTYPES_NS {
 
         void SetRawMesh(const SR_UTILS_NS::Path& path);
         void SetRawMesh(RawMeshPtr pRawMesh);
-        void SetMeshId(MeshIndex meshIndex);
+        void SetMeshId(MeshIndex meshIndex, bool forceReload = false);
 
     private:
+        SR_UTILS_NS::Subscription m_reloadSubscription;
         RawMeshPtr m_rawMesh = nullptr;
         /// определяет порядок меша в файле, если их там несколько
         /// TODO: переделать в int16_t, но нужно написать миграторы.

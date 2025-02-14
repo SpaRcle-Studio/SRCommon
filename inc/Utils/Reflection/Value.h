@@ -134,6 +134,8 @@ namespace SR_UTILS_NS::Reflection {
         SR_NODISCARD bool IsBitMap() const;
 
         SR_NODISCARD bool IsSmartPtr() const;
+        SR_NODISCARD bool IsString() const;
+        SR_NODISCARD bool IsPath() const;
         SR_NODISCARD bool IsMathVector() const;
         SR_NODISCARD bool IsMathSize() const;
         SR_NODISCARD bool IsBool() const;

@@ -40,12 +40,18 @@ namespace SR_UTILS_NS {
         virtual ~SRClass() = default;
 
     public:
-        static std::span<const SRClassMeta*> GetBaseMetas() noexcept {
+        SR_NODISCARD static std::span<const SRClassMeta*> GetBaseMetas() noexcept {
             return {};
         }
 
+        SR_NODISCARD virtual const SR_UTILS_NS::SRClassMeta* GetMeta() const noexcept = 0;
+
+        SR_NODISCARD virtual const std::vector<Reflection::Property>& GetCustomProperties() const noexcept {
+            static std::vector<Reflection::Property> properties;
+            return properties;
+        }
+
         virtual void InitializeClass() noexcept { }
-        virtual const SR_UTILS_NS::SRClassMeta* GetMeta() const noexcept = 0;
 
         static SR_UTILS_NS::StringAtom GetClassStaticName() noexcept;
         static const SR_UTILS_NS::SRClassMeta* GetMetaStatic() noexcept;

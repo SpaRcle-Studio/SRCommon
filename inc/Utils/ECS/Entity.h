@@ -137,7 +137,7 @@ namespace SR_UTILS_NS {
         SR_UTILS_NS::PropertyContainer m_entityMessages;
 
     private:
-        /// @property @dontLoad
+        /// @property @dontLoad @hidden
         EntityId m_entityId;
 
         EntityPath m_entityPath;

@@ -265,6 +265,10 @@ namespace SR_MATH_NS {
             return scale;
         }
 
+        SR_NODISCARD bool IsFinite() const {
+            return value[0].IsFinite() && value[1].IsFinite() && value[2].IsFinite() && value[3].IsFinite();
+        }
+
         bool Decompose(FVector3& translation, Quaternion& quaternion, FVector3& scale) const {
             translation = glm::vec3(self[3]);
 

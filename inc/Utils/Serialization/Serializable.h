@@ -45,8 +45,8 @@ namespace SR_UTILS_NS {
         using OriginType = Serializable;
 
     public:
-        void Save(ISerializer& serializer) const;
-        void Load(IDeserializer& deserializer);
+        virtual void Save(ISerializer& serializer) const;
+        virtual void Load(IDeserializer& deserializer);
 
         virtual void VerifyAfterLoad(SerializableVerifyContext& context) const noexcept { }
 

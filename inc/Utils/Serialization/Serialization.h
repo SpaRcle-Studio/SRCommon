@@ -7,6 +7,7 @@
 
 #include <Utils/Serialization/Serializer.h>
 #include <Utils/Serialization/Deserializer.h>
+#include <Utils/Serialization/ObjectDataAccessor.h>
 #include <Utils/TypeTraits/Factory.h>
 #include <Utils/Types/SharedPtr.h>
 #include <Utils/Math/Size.h>
@@ -51,18 +52,6 @@ namespace SR_UTILS_NS {
 	/// Default object makers for serialization
 
 	#include <Utils/Serialization/DefaultObjectMakers.inl.h>
-
-	/// Specialization for serializable types
-
-	template<typename T, typename Enable = void> struct ObjectDataAccessor {
-		static void Save(ISerializer&, const T&, const SerializationId&) {
-			static_assert(AlwaysFalseV<T>, "Unable to save! Need to inherit from Serializable!");
-		}
-
-		static void Load(IDeserializer&, T&, const SerializationId&) {
-			static_assert(AlwaysFalseV<T>, "Unable to load! Need to inherit from Serializable!");
-		}
-	};
 
 	namespace Serialization {
 		template<typename T> bool IsValidValue(const T& value) {

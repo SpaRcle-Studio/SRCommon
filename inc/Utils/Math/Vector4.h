@@ -183,6 +183,11 @@ namespace SR_MATH_NS {
             return Dot3(point) + w;
         }
 
+        SR_NODISCARD bool IsFinite() const noexcept {
+            /// если будет inf или nan, то вернет false
+            return std::isfinite(x) && std::isfinite(y) && std::isfinite(z);
+        }
+
         SR_NODISCARD T Dot(const Vector4<T>& v) const
         {
             return (x * v.x) + (y * v.y) + (z * v.z) + (w * v.w);

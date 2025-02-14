@@ -13,6 +13,7 @@ namespace SR_UTILS_NS::Reflection {
     public:
         EditorPropertyParams() = default;
 
+        EditorPropertyParams& SetNoHeader() noexcept { m_noHeader = true; return *this; }
         EditorPropertyParams& SetDisplayName(const StringAtom& displayName) noexcept { m_displayName = displayName; return *this; }
         EditorPropertyParams& SetTooltip(const StringAtom& tooltip) noexcept { m_tooltip = tooltip; return *this; }
         EditorPropertyParams& SetInspector(const StringAtom& inspector) noexcept { m_inspector = inspector; return *this; }
@@ -23,6 +24,7 @@ namespace SR_UTILS_NS::Reflection {
         SR_NODISCARD float_t GetDragSpeed() const noexcept { return m_dragSpeed; }
         SR_NODISCARD float_t GetEditorWidth() const noexcept { return m_editorWidth; }
         SR_NODISCARD StringAtom GetInspector() const noexcept { return m_inspector; }
+        SR_NODISCARD bool IsNoHeader() const noexcept { return m_noHeader; }
 
     private:
         SR_UTILS_NS::StringAtom m_displayName;
@@ -30,6 +32,7 @@ namespace SR_UTILS_NS::Reflection {
         SR_UTILS_NS::StringAtom m_inspector;
         float_t m_editorWidth = 0.f;
         float_t m_dragSpeed = 1.f;
+        bool m_noHeader = false;
 
     };
 
@@ -39,60 +42,6 @@ namespace SR_UTILS_NS::Reflection {
         using ChangeCallbackFn = void(*)(void* pOwner);
     public:
         Property() = default;
-
-        //Property(const Property& other)
-        //    : m_defaultValue(other.m_defaultValue.Clone())
-        //    , m_name(other.m_name)
-        //    , m_serializeName(other.m_serializeName)
-        //    , m_editorParams(other.m_editorParams)
-        //    , m_publicity(other.m_publicity)
-        //    , m_setCallback(other.m_setCallback)
-        //    , m_getCallback(other.m_getCallback)
-        //    , m_onChangeCallback(other.m_onChangeCallback)
-        //    , m_resetValue(other.m_resetValue.Clone())
-        //{ }
-
-        //Property(Property&& other) noexcept
-        //    : m_defaultValue(std::move(other.m_defaultValue))
-        //    , m_name(std::move(other.m_name))
-        //    , m_serializeName(std::move(other.m_serializeName))
-        //    , m_editorParams(std::move(other.m_editorParams))
-        //    , m_publicity(other.m_publicity)
-        //    , m_setCallback(other.m_setCallback)
-        //    , m_getCallback(other.m_getCallback)
-        //    , m_onChangeCallback(other.m_onChangeCallback)
-        //    , m_resetValue(std::move(other.m_resetValue))
-        //{ }
-
-        //Property& operator=(const Property& other) {
-        //    if (this != &other) {
-        //        m_defaultValue = other.m_defaultValue.Clone();
-        //        m_name = other.m_name;
-        //        m_serializeName = other.m_serializeName;
-        //        m_editorParams = other.m_editorParams;
-        //        m_publicity = other.m_publicity;
-        //        m_setCallback = other.m_setCallback;
-        //        m_getCallback = other.m_getCallback;
-        //        m_onChangeCallback = other.m_onChangeCallback;
-        //        m_resetValue = other.m_resetValue.Clone();
-        //    }
-        //    return *this;
-        //}
-
-        //Property& operator=(Property&& other) noexcept {
-        //    if (this != &other) {
-        //        m_defaultValue = std::move(other.m_defaultValue);
-        //        m_name = std::move(other.m_name);
-        //        m_serializeName = std::move(other.m_serializeName);
-        //        m_editorParams = std::move(other.m_editorParams);
-        //        m_publicity = other.m_publicity;
-        //        m_setCallback = other.m_setCallback;
-        //        m_getCallback = other.m_getCallback;
-        //        m_onChangeCallback = other.m_onChangeCallback;
-        //        m_resetValue = std::move(other.m_resetValue);
-        //    }
-        //    return *this;
-        //}
 
         SR_NODISCARD Value Get(void* pOwner) const noexcept { return m_getCallback(pOwner); }
         void Set(void* pOwner, const Value& value) const noexcept { m_setCallback(pOwner, value); }
@@ -162,6 +111,9 @@ namespace SR_UTILS_NS::Reflection {
 
         return SR_UTILS_NS::StringAtom();
     }
+
+    SR_UTILS_NS::StringAtom MakeSerializePropertyName(std::string_view name);
+    SR_UTILS_NS::StringAtom MakeDisplayName(std::string_view name);
 }
 
 #endif //SR_ENGINE_UTILS_REFLECTION_PROPERTY_H

@@ -20,6 +20,7 @@ namespace SR_UTILS_NS {
     /// Не можем наследоваться от Singleton
     class HashManager : SR_UTILS_NS::NonCopyable {
         using Hash = uint64_t;
+        using Storage = ska::flat_hash_map<Hash, StringHashInfo*>;
     private:
         HashManager() = default;
         ~HashManager() override = default;
@@ -28,9 +29,14 @@ namespace SR_UTILS_NS {
         SR_MAYBE_UNUSED static HashManager& Instance();
 
     public:
+        void Lock() const { m_mutex.lock(); }
+        void Unlock() const { m_mutex.unlock(); }
+
         SR_NODISCARD const std::string_view& HashToString(Hash hash) const;
         SR_NODISCARD StringAtom HashToStringAtom(Hash hash) const;
         SR_NODISCARD bool Exists(Hash hash) const;
+
+        SR_NODISCARD const Storage& GetStorage() const { return m_strings; }
 
         SR_NODISCARD StringHashInfo* GetOrAddInfo(const std::string& str);
         SR_NODISCARD StringHashInfo* GetOrAddInfo(const std::string_view& str);
@@ -44,7 +50,7 @@ namespace SR_UTILS_NS {
         SR_NODISCARD StringHashInfo* Register(std::string str, Hash hash);
 
     private:
-        ska::flat_hash_map<Hash, StringHashInfo*> m_strings; /// NOLINT
+        Storage m_strings; /// NOLINT
         mutable std::recursive_mutex m_mutex;
 
     };

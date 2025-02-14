@@ -6,6 +6,8 @@
 #include <Utils/FileSystem/FileSystem.h>
 #include <Utils/Platform/Platform.h>
 #include <Utils/Profile/TracyContext.h>
+#include <Utils/Serialization/Serializer.h>
+#include <Utils/Serialization/Deserializer.h>
 
 namespace SR_UTILS_NS {
     Path::Path()
@@ -227,6 +229,16 @@ namespace SR_UTILS_NS {
         }
 
         return true;
+    }
+
+    void Path::Save(ISerializer& serializer, const SerializationId& id) const {
+        serializer.WriteString(m_path, id);
+    }
+
+    void Path::Load(IDeserializer& deserializer, const SerializationId& id) {
+        deserializer.ReadString(m_path, id);
+        Update();
+        m_hash = SR_HASH_STR(m_path);
     }
 
     bool Path::Make(Type type) const {

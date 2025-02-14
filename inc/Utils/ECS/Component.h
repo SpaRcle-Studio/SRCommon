@@ -150,7 +150,7 @@ namespace SR_UTILS_NS {
         bool m_isAwake = false;
         bool m_isStarted = false;
 
-        /// @property
+        /// @property @hidden
         bool m_isEnabled = true;
 
         int32_t m_indexInSceneUpdater = SR_ID_INVALID;

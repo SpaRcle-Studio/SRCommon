@@ -39,6 +39,11 @@ namespace SR_UTILS_NS {
             }
         }
 
+        SR_NODISCARD virtual SR_UTILS_NS::StringAtom GetInspectorName() const noexcept {
+            static const SR_UTILS_NS::StringAtom def = "ObjectPropertyDrawer";
+            return def;
+        }
+
         SR_NODISCARD virtual bool IsAbstract() const noexcept { return false; }
         SR_NODISCARD virtual bool IsEditorOnly() const noexcept { return false; }
         SR_NODISCARD virtual std::span<const SRClassMeta*> GetBaseMetas() const noexcept { return {}; }
@@ -83,5 +88,8 @@ namespace Codegen {
 
 
 #define SR_CLASS_REGISTER_PROPERTY_BASE(className, propertyName, propertyType)                                          \
+
+#define SR_VIRTUAL_PROPERTY typedef bool SR_COMBINE(SR_CODEGEN_VIRTUAL_PROP_LINE_, __LINE__);
+//#define SR_VIRTUAL_PROPERTY void SR_COMBINE(SR_CODEGEN_VIRTUAL_PROP_ANCHOR_LINE_, __LINE__)() {}
 
 #endif //SR_COMMON_TYPE_TRAITS_SR_CLASS_META_H

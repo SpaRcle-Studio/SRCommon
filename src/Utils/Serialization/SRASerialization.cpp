@@ -126,7 +126,9 @@ namespace SR_UTILS_NS {
                     }
                     break;
                 case SRASerializationDataType::Item:
-                    serializeNode(node.children[0], depth + 1);
+                    for (auto&& child : node.children) {
+                        serializeNode(child, depth + 1);
+                    }
                     break;
                 case SRASerializationDataType::Array:
                     for (auto&& child : node.children) {

@@ -87,6 +87,26 @@ namespace SR_UTILS_NS::Reflection {
         return GetTypeName().starts_with(compare);
     }
 
+    bool Value::IsString() const {
+        if (!IsClass()) {
+            return false;
+        }
+
+        static const auto meta = entt::meta_any(std::string());
+        static const std::string_view compare = meta.base().type().name();
+        return GetTypeName() == compare;
+    }
+
+    bool Value::IsPath() const {
+        if (!IsClass()) {
+            return false;
+        }
+
+        static const auto meta = entt::meta_any(SR_UTILS_NS::Path());
+        static const std::string_view compare = meta.base().type().name();
+        return GetTypeName() == compare;
+    }
+
     bool Value::IsMathVector() const {
         if (!IsClass() || !IsTemplate()) {
             return false;
