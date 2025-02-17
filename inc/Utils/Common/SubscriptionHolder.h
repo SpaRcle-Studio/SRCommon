@@ -79,6 +79,7 @@ namespace SR_UTILS_NS {
         { }
 
         Subscription& operator=(Subscription&& other) noexcept {
+            Reset();
             m_internalInfo = SR_EXCHANGE(other.m_internalInfo, nullptr);
             return *this;
         }

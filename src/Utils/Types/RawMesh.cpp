@@ -208,7 +208,7 @@ namespace SR_HTYPES_NS {
     #endif
     }
 
-    std::string RawMesh::GetGeometryName(uint32_t id) const {
+    std::string_view RawMesh::GetGeometryName(uint32_t id) const {
     #ifdef SR_UTILS_ASSIMP
         if (!m_scene || id >= m_scene->mNumMeshes) {
             SRAssert2(false, "Out of range or invalid scene!");
@@ -217,7 +217,7 @@ namespace SR_HTYPES_NS {
 
         return m_scene->mMeshes[id]->mName.C_Str();
     #else
-        return std::string();
+        return std::string_view();
     #endif
     }
 

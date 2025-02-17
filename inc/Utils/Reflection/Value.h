@@ -96,14 +96,14 @@ namespace SR_UTILS_NS::Reflection {
             : m_storage(other.IsRef() ? other.m_storage.as_ref() : other.m_storage)
         { }
 
-        Value& operator=(const Value& other) {
+        Value& operator=(const Value& other) noexcept {
             if (this != &other) {
-                m_storage = other.IsRef() ? other.m_storage.as_ref() : other.m_storage;
+                m_storage = other.IsRef() ? const_cast<entt::meta_any*>(&other.m_storage)->as_ref() : other.m_storage;
             }
             return *this;
         }
 
-        Value& operator=(Value& other) {
+        Value& operator=(Value&& other) noexcept {
             if (this != &other) {
                 m_storage = other.IsRef() ? other.m_storage.as_ref() : other.m_storage;
             }
@@ -135,6 +135,7 @@ namespace SR_UTILS_NS::Reflection {
 
         SR_NODISCARD bool IsSmartPtr() const;
         SR_NODISCARD bool IsString() const;
+        SR_NODISCARD bool IsStringView() const;
         SR_NODISCARD bool IsPath() const;
         SR_NODISCARD bool IsMathVector() const;
         SR_NODISCARD bool IsMathSize() const;
