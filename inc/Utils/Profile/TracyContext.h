@@ -70,7 +70,7 @@ namespace SR_UTILS_NS {
         SR_UTILS_NS::TracyContextManager::Instance().GetContext(tracyType, pIdentifier)
 
     #define SR_TRACY_DESTROY(tracyType) SR_UTILS_NS::TracyContextManager::Instance().Destroy(tracyType);
-
+    #define SR_TRACY_THREAD_NAME(name) tracy::SetThreadName(name)
 #else
     #define SR_TRACY_IS_PROFILER_CONNECTED (false)
     #define SR_TRACY_TEXT_N(name, text)
@@ -84,6 +84,7 @@ namespace SR_UTILS_NS {
 
     #define SR_TRACY_GET_CONTEXT(tracyType, pIdentifier)
     #define SR_TRACY_DESTROY(tracyType)
+    #define SR_TRACY_THREAD_NAME(name)
 #endif
 
 

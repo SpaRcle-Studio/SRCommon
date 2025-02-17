@@ -53,8 +53,11 @@ namespace SR_UTILS_NS {
         SR_NODISCARD virtual bool IsAllowEmptyElementsInArrayImpl() const noexcept { return true; }
         SR_NODISCARD bool SaveToFileImpl(const SR_UTILS_NS::Path& path) const;
         SR_NODISCARD SRANode& GetCurrentNode() noexcept { return GetNode(m_stack); }
+        SR_NODISCARD const SRANode& GetCurrentNode() const noexcept { return GetNode(m_stack); }
         SR_NODISCARD SRANode& GetWalkNode() noexcept { return GetNode(m_walker); }
+        SR_NODISCARD const SRANode& GetWalkNode() const noexcept { return GetNode(m_walker); }
         SR_NODISCARD SRANode& GetNode(const std::vector<uint64_t>& stack) noexcept;
+        SR_NODISCARD const SRANode& GetNode(const std::vector<uint64_t>& stack) const noexcept;
 
     protected:
         std::vector<uint64_t> m_stack;
@@ -104,7 +107,7 @@ namespace SR_UTILS_NS {
         SR_NODISCARD bool LoadFromFile(const SR_UTILS_NS::Path& path) override;
         SR_NODISCARD bool LoadFromString(const std::string& str) override;
 
-        SR_NODISCARD bool IsDefault(const SerializationId& name) const noexcept override { return false; }
+        SR_NODISCARD bool IsDefault(const SerializationId& name) const noexcept override;
         SR_NODISCARD bool ShouldSetDefaults(const SerializationId& name) const noexcept override { return true; }
         SR_NODISCARD bool ShouldSetDefaults() const noexcept override { return true; }
         SR_NODISCARD bool AllowNewMapKeys() const noexcept override { return false; }

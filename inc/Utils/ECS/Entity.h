@@ -95,8 +95,8 @@ namespace SR_UTILS_NS {
         using OriginType = Entity;
 
     public:
-        ~Entity() override;
         Entity();
+        ~Entity() override;
 
     public:
         SR_NODISCARD const SR_UTILS_NS::PropertyContainer& GetEntityMessages() const { return m_entityMessages; }

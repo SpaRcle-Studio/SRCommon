@@ -184,6 +184,7 @@ namespace SR_HTYPES_NS {
         std::string m_name;
         DataStorage* m_context = nullptr;
 
+        std::atomic<bool> m_nameChanged = false;
         std::atomic<bool> m_isCreated = false;
         std::atomic<bool> m_isRan = false;
 

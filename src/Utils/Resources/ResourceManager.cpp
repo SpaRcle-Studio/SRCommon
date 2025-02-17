@@ -205,9 +205,11 @@ namespace SR_UTILS_NS {
 
     void ResourceManager::Thread() {
         do {
-            SR_PLATFORM_NS::Sleep(5);
-
             SR_TRACY_ZONE;
+
+            m_thread->Synchronize();
+
+            SR_PLATFORM_NS::Sleep(5);
 
             auto time = clock();
             m_deltaTime = static_cast<uint64_t>(time - m_lastTime); /// miliseconds
@@ -455,7 +457,11 @@ namespace SR_UTILS_NS {
 
         m_isRun = true;
 
-        m_thread = SR_HTYPES_NS::Thread::Factory::Instance().Create(std::thread(&ResourceManager::Thread, this));
+        if (!SR_HTYPES_NS::Thread::Factory::Instance().Create(m_thread, &ResourceManager::Thread, this)) {
+            SRHalt("ResourceManager::Run() : failed to create thread!");
+            return false;
+        }
+
         m_thread->SetName("Resources manager");
 
         return true;

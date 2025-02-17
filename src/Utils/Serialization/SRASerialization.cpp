@@ -8,10 +8,14 @@
 
 namespace SR_UTILS_NS {
     SRANode& SRAISerialization::GetNode(const std::vector<uint64_t>& stack) noexcept {
+        return const_cast<SRANode&>(static_cast<const SRAISerialization*>(this)->GetNode(stack));
+    }
+
+    const SRANode& SRAISerialization::GetNode(const std::vector<uint64_t>& stack) const noexcept {
         if (stack.empty()) {
             return m_root;
         }
-        std::vector<SRANode>* current = &m_root.children;
+        const std::vector<SRANode>* current = &m_root.children;
         for (uint64_t i = 0; i < stack.size(); ++i) {
             if (current->size() <= stack[i]) {
                 SR_ERROR("SRAISerialization::GetNode() : invalid stack!");
@@ -356,6 +360,15 @@ namespace SR_UTILS_NS {
 
         SRAssert2(m_root.type == SRASerializationDataType::Root, "SRADeserializer::LoadFromFile() : invalid root type!");
 
+        return true;
+    }
+
+    bool SRADeserializer::IsDefault(const SerializationId& name) const noexcept {
+        for (auto&& child : GetWalkNode().children) {
+            if (child.id.GetHash() == name.GetHash()) {
+                return false;
+            }
+        }
         return true;
     }
 

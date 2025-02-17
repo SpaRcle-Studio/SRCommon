@@ -110,7 +110,11 @@ namespace SR_UTILS_NS {
         SRAssert(!m_isActive);
         m_isActive = true;
 
-        SR_HTYPES_NS::Thread::Factory::Instance().Create(m_thread, &ThreadWorker::Work, this);
+        if (!SR_HTYPES_NS::Thread::Factory::Instance().Create(m_thread, &ThreadWorker::Work, this)) {
+            SRHalt("ThreadWorker::Start() : failed to create thread!");
+            return;
+        }
+
         m_thread->SetName(m_name);
     }
 
@@ -130,6 +134,8 @@ namespace SR_UTILS_NS {
     void ThreadWorker::Work() {
         while (true) {
             SR_TRACY_ZONE_S(m_name.c_str());
+
+            m_thread->Synchronize();
 
             if (!m_isActive) {
                 break;
