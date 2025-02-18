@@ -20,6 +20,8 @@ namespace SR_UTILS_NS {
         void SetEditorAllowed(const bool value) noexcept { m_isEditorAllowed = value; }
         void SetAllowEmptyElementsInArray(const bool value) noexcept { m_isAllowEmptyElementsInArray = value; }
 
+        void WriteAny(const std::any& value, const SerializationId& name);
+
         virtual void WriteString(std::string_view value, const SerializationId& name) = 0;
         virtual void WriteBool(bool value, const SerializationId& name) = 0;
         virtual void WriteInt(int8_t value, const SerializationId& name) = 0;
