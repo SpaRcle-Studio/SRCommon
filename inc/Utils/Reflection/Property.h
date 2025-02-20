@@ -14,6 +14,7 @@ namespace SR_UTILS_NS::Reflection {
         EditorPropertyParams() = default;
 
         EditorPropertyParams& SetNoHeader() noexcept { m_noHeader = true; return *this; }
+        EditorPropertyParams& SetNotNull() noexcept { m_notNull = true; return *this; }
         EditorPropertyParams& SetDisplayName(const StringAtom& displayName) noexcept { m_displayName = displayName; return *this; }
         EditorPropertyParams& SetTooltip(const StringAtom& tooltip) noexcept { m_tooltip = tooltip; return *this; }
         EditorPropertyParams& SetInspector(const StringAtom& inspector) noexcept { m_inspector = inspector; return *this; }
@@ -25,6 +26,7 @@ namespace SR_UTILS_NS::Reflection {
         SR_NODISCARD float_t GetEditorWidth() const noexcept { return m_editorWidth; }
         SR_NODISCARD StringAtom GetInspector() const noexcept { return m_inspector; }
         SR_NODISCARD bool IsNoHeader() const noexcept { return m_noHeader; }
+        SR_NODISCARD bool IsNotNull() const noexcept { return m_notNull; }
 
     private:
         SR_UTILS_NS::StringAtom m_displayName;
@@ -33,20 +35,22 @@ namespace SR_UTILS_NS::Reflection {
         float_t m_editorWidth = 0.f;
         float_t m_dragSpeed = 1.f;
         bool m_noHeader = false;
+        bool m_notNull = false;
 
     };
 
     class Property {
-        using SetCallbackFn = void(*)(void* pOwner, const Value& value);
-        using GetCallbackFn = Value(*)(void* pOwner);
-        using ChangeCallbackFn = void(*)(void* pOwner);
+        using SetCallbackFn = void(*)(SRClass* pOwner, const Value& value);
+        using GetCallbackFn = Value(*)(SRClass* pOwner);
+        using ChangeCallbackFn = void(*)(SRClass* pOwner);
+        using PropertyActiveCallbackFn = bool(*)(SRClass* pOwner);
     public:
         Property() = default;
 
-        SR_NODISCARD Value Get(void* pOwner) const noexcept { return m_getCallback(pOwner); }
-        void Set(void* pOwner, const Value& value) const noexcept { m_setCallback(pOwner, value); }
+        SR_NODISCARD Value Get(SRClass* pOwner) const noexcept { return m_getCallback(pOwner); }
+        void Set(SRClass* pOwner, const Value& value) const noexcept { m_setCallback(pOwner, value); }
 
-        void OnChanged(void* pOwner) const noexcept {
+        void OnChanged(SRClass* pOwner) const noexcept {
             if (m_onChangeCallback) {
                 m_onChangeCallback(pOwner);
             }
@@ -58,9 +62,20 @@ namespace SR_UTILS_NS::Reflection {
         SR_NODISCARD const Value& GetResetValue() const noexcept { return m_resetValue; }
         SR_NODISCARD const EditorPropertyParams& GetEditorParams() const noexcept { return m_editorParams; }
 
-        SR_NODISCARD bool IsHidden() const noexcept {
+        SR_NODISCARD bool IsActive(SRClass* pOwner) const noexcept {
+            if (pOwner && m_propertyActiveCallback) {
+                return m_propertyActiveCallback(pOwner);
+            }
+            return true;
+        }
+
+        SR_NODISCARD bool IsHidden(SRClass* pOwner) const noexcept {
+            if (!IsActive(pOwner)) {
+                return true;
+            }
             return m_publicity == PropertyPublicity::Hidden || m_publicity == PropertyPublicity::HiddenReadOnly;
         }
+
         SR_NODISCARD bool IsReadOnly() const noexcept {
             return m_publicity == PropertyPublicity::ReadOnly || m_publicity == PropertyPublicity::HiddenReadOnly;
         }
@@ -74,6 +89,7 @@ namespace SR_UTILS_NS::Reflection {
         Property& SetChangeCallback(ChangeCallbackFn callback) noexcept { m_onChangeCallback = callback; return *this; }
         Property& SetResetValue(Value&& value) noexcept { m_resetValue = std::move(value); return *this; }
         Property& SetEditorParams(const EditorPropertyParams& params) noexcept { m_editorParams = params; return *this; }
+        Property& SetPropertyCondition(PropertyActiveCallbackFn callback) noexcept { m_propertyActiveCallback = callback; return *this; }
 
     private:
         EditorPropertyParams m_editorParams;
@@ -85,6 +101,7 @@ namespace SR_UTILS_NS::Reflection {
         SetCallbackFn m_setCallback = nullptr;
         GetCallbackFn m_getCallback = nullptr;
         ChangeCallbackFn m_onChangeCallback = nullptr;
+        PropertyActiveCallbackFn m_propertyActiveCallback = nullptr;
     };
 
     template<typename T> SR_UTILS_NS::StringAtom GetPropertyInspector() {

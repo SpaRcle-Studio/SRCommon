@@ -193,6 +193,9 @@ namespace SR_UTILS_NS {
 
     };
 
+    template <class BaseT, class DerivedT>
+    constexpr bool IsBaseOfV = std::is_base_of_v<BaseT, DerivedT>;
+
     template<typename T> constexpr bool IsVolatile() {
         return std::is_volatile<T>::value;
     }

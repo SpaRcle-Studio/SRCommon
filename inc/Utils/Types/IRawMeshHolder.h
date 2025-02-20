@@ -2,10 +2,12 @@
 // Created by Monika on 20.03.2023.
 //
 
-#ifndef SR_ENGINE_UTILS_IRAWMESHHOLDER_H
-#define SR_ENGINE_UTILS_IRAWMESHHOLDER_H
+#ifndef SR_ENGINE_UTILS_I_RAW_MESH_HOLDER_H
+#define SR_ENGINE_UTILS_I_RAW_MESH_HOLDER_H
 
 #include <Utils/TypeTraits/SRClass.h>
+#include <Utils/Common/Vertices.h>
+#include <Utils/Common/SubscriptionHolder.h>
 
 namespace SR_HTYPES_NS {
     class RawMesh;
@@ -43,4 +45,4 @@ namespace SR_HTYPES_NS {
     };
 }
 
-#endif //SR_ENGINE_UTILS_IRAWMESHHOLDER_H
+#endif //SR_ENGINE_UTILS_I_RAW_MESH_HOLDER_H

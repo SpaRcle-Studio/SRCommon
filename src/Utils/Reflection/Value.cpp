@@ -222,6 +222,10 @@ namespace SR_UTILS_NS::Reflection {
         return type.substr(pos + 1, type.size() - pos - 1);
     }
 
+    SRClass* Value::GetSRClass() const {
+        return m_SRClassGetter ? m_SRClassGetter(*this) : nullptr;
+    }
+
     ValueSequenceContainer Value::AsSequenceContainer() {
         return ValueSequenceContainer(m_storage.as_sequence_container());
     }
