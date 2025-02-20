@@ -10,6 +10,7 @@
 #include <Utils/Common/TypeInfo.h>
 #include <Utils/Debug.h>
 #include <Utils/Platform/Platform.h>
+#include <Utils/TypeTraits/SRClass.h>
 #include <Utils/TypeTraits/TypeTraits.h>
 
 namespace SR_UTILS_NS {
@@ -112,6 +113,9 @@ namespace SR_HTYPES_NS {
     public:
         const SharedPtrDynamicData* GetPtrData() const { return m_data; } /// NOLINT(modernize-use-nodiscard)
         SharedPtrDynamicData* GetPtrData() { return m_data; }
+        virtual SR_NODISCARD SRClass* GetSRClass() const = 0;
+        virtual void Reset() = 0;
+        virtual void SetPointerFromBase(SharedPtrBase* pBase) = 0;
 
     protected:
         SharedPtrDynamicData* m_data = nullptr;
@@ -210,6 +214,22 @@ namespace SR_HTYPES_NS {
             return reinterpret_cast<U>(m_ptr);
         }
 
+        void SetPointerFromBase(SharedPtrBase* pBase) override {
+            if constexpr (SR_UTILS_NS::IsCompleteTypeV<T>) {
+                if constexpr (std::is_base_of_v<SRClass, T>) {
+                    Reset();
+                    if (pBase) {
+                        m_data = pBase->GetPtrData();
+                        m_data->IncrementStrong();
+                        m_ptr = dynamic_cast<T*>(pBase);
+                        SR_SAFE_PTR_ASSERT(m_ptr, "Invalid cast!");
+                    }
+                    return;
+                }
+            }
+            SR_SAFE_PTR_ASSERT(false, "Incomplete or invalid type!");
+        }
+
         SR_NODISCARD const T* Get() const { return m_ptr; }
         SR_NODISCARD T* Get() { return m_ptr; }
 
@@ -225,10 +245,20 @@ namespace SR_HTYPES_NS {
 
         bool Valid() const { return m_data && m_data->valid; } /// NOLINT(modernize-use-nodiscard)
 
+        SR_NODISCARD SRClass* GetSRClass() const override {
+            if constexpr (SR_UTILS_NS::IsCompleteTypeV<T>) {
+                if constexpr (std::is_base_of_v<SRClass, T>) {
+                    return dynamic_cast<SRClass*>(m_ptr);
+                }
+            }
+            SR_SAFE_PTR_ASSERT(false, "Incomplete or invalid type!");
+            return nullptr;
+        }
+
         bool AutoFree(const SR_HTYPES_NS::Function<void(T *ptr)>& freeFun);
         bool AutoFree();
 
-        void Reset();
+        void Reset() override;
 
         SR_NODISCARD bool RecursiveLockIfValid() const noexcept;
         SR_NODISCARD bool TryRecursiveLockIfValid() const noexcept;

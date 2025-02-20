@@ -374,12 +374,12 @@ namespace SR_UTILS_NS {
         AutoFree();
     }
 
-    void SceneObject::OnPostLoaded() {
+    void SceneObject::OnPostLoad() {
         SR_TRACY_ZONE;
         for (auto&& pChild : m_children) {
             pChild->SetParent(this);
         }
-        Super::OnPostLoaded();
+        Super::OnPostLoad();
     }
 
     void SceneObject::UpdateRoot() {

@@ -50,7 +50,11 @@ namespace SR_UTILS_NS {
 
         virtual void VerifyAfterLoad(SerializableVerifyContext& context) const noexcept { }
 
-        virtual void OnPostLoaded() { }
+        virtual void OnPreSave() { }
+        virtual void OnPostSave() { }
+
+        virtual void OnPreLoad() { }
+        virtual void OnPostLoad() { }
 
         SR_NODISCARD virtual bool UseNewSerialization() const noexcept { return false; }
 

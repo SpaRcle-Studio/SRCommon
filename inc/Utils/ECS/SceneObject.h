@@ -106,7 +106,7 @@ namespace SR_UTILS_NS {
         /// Освобождает память объекта
         void DestroyImpl();
 
-        void OnPostLoaded() override;
+        void OnPostLoad() override;
 
     protected:
         virtual void OnHierarchyChanged() { }

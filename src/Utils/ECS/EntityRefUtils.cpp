@@ -8,6 +8,8 @@
 #include <Utils/ECS/Component.h>
 #include <Utils/ECS/GameObject.h>
 
+#include <Codegen/EntityRefUtils.generated.hpp>
+
 namespace SR_UTILS_NS::EntityRefUtils {
     EntityRefUtils::OwnerRef::OwnerRef(const SR_HTYPES_NS::SharedPtr<Entity>& ptr)
         : pEntity(ptr)
@@ -150,11 +152,7 @@ namespace SR_UTILS_NS::EntityRefUtils {
                         }
                     }
 
-                    PathItem item = {
-                        .name = pComponent->GetComponentName(),
-                        .index = componentIndex,
-                        .action = Action::Action_Component
-                    };
+                    PathItem item(pComponent->GetComponentName(), componentIndex, Action::Action_Component);
 
                     refPath.emplace_back(item);
 
@@ -186,11 +184,7 @@ namespace SR_UTILS_NS::EntityRefUtils {
                     }
                 }
 
-                PathItem item = {
-                    .name = pObject->GetName(),
-                    .index = objectIndex,
-                    .action = Action::Action_Child
-                };
+                PathItem item(pObject->GetName(), objectIndex, Action::Action_Child);
 
                 refPath.emplace_back(item);
                 pFromEntity = pParent.DynamicCast<Entity>();

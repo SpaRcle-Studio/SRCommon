@@ -97,8 +97,6 @@ namespace SR_UTILS_NS::Reflection {
             } else {
                 m_storage = other.m_storage;
             }
-            m_SRClassGetter = other.m_SRClassGetter;
-            m_SRClassSetter = other.m_SRClassSetter;
         }
 
         Value& operator=(const Value& other) noexcept {
@@ -108,8 +106,6 @@ namespace SR_UTILS_NS::Reflection {
                 } else {
                     m_storage = other.m_storage;
                 }
-                m_SRClassGetter = other.m_SRClassGetter;
-                m_SRClassSetter = other.m_SRClassSetter;
             }
             return *this;
         }
@@ -117,8 +113,6 @@ namespace SR_UTILS_NS::Reflection {
         Value& operator=(Value&& other) noexcept {
             if (this != &other) {
                 m_storage = other.IsRef() ? other.m_storage.as_ref() : other.m_storage;
-                m_SRClassGetter = other.m_SRClassGetter;
-                m_SRClassSetter = other.m_SRClassSetter;
             }
             return *this;
         }
@@ -129,12 +123,6 @@ namespace SR_UTILS_NS::Reflection {
 
         template<typename T> const T* TryCast() const { return m_storage.try_cast<T>(); }
         template<typename T> T* TryCast() { return m_storage.try_cast<T>(); }
-
-        void SetSRClass(SRClass* pSRClass) {
-            if (SRVerify(m_SRClassSetter)) {
-                m_SRClassSetter(*this, pSRClass);
-            }
-        }
 
         Value& Detach();
         Value& DetachIfConst();
@@ -153,8 +141,10 @@ namespace SR_UTILS_NS::Reflection {
         SR_NODISCARD bool IsBitMap() const;
 
         SR_NODISCARD bool IsSmartPtr() const;
+        SR_NODISCARD bool IsPointer() const;
         SR_NODISCARD bool IsString() const;
         SR_NODISCARD bool IsStringView() const;
+        SR_NODISCARD bool IsStringAtom() const;
         SR_NODISCARD bool IsPath() const;
         SR_NODISCARD bool IsMathVector() const;
         SR_NODISCARD bool IsMathSize() const;
@@ -172,6 +162,7 @@ namespace SR_UTILS_NS::Reflection {
         SR_NODISCARD const void* Data() const;
         SR_NODISCARD std::string_view GetEnumType() const;
         SR_NODISCARD SRClass* GetSRClass() const;
+        SR_NODISCARD SR_HTYPES_NS::SharedPtrBase* GetSharedPtrBase() const;
 
         SR_NODISCARD operator bool() const noexcept; /// NOLINT
 
@@ -180,15 +171,13 @@ namespace SR_UTILS_NS::Reflection {
 
     private:
         entt::meta_any m_storage;
-        SRClassGetterFn m_SRClassGetter = nullptr;
-        SRClassSetterFn m_SRClassSetter = nullptr;
 
     };
 
     /// Implementation
 
     template<typename T> void Value::InitBase(Value& value) {
-        if constexpr (IsSharedPointerV<T>) {
+        /*if constexpr (IsSharedPointerV<T>) {
             value.m_SRClassGetter = [](const Value& value) -> SRClass* {
                 if (auto&& pData = value.TryCast<T>()) {
                     return const_cast<SRClass*>(dynamic_cast<const SRClass*>((*pData).Get()));
@@ -209,7 +198,7 @@ namespace SR_UTILS_NS::Reflection {
                 }
                 return nullptr;
             };
-        }
+        }*/
     }
 
     template<typename T> Value Value::Create(T&& value) {

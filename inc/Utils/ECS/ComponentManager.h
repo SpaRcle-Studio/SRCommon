@@ -73,7 +73,7 @@ namespace SR_UTILS_NS {
             if (auto&& pComponent = CreateComponentOfName(name)) {
                 if (pComponent->UseNewSerialization()) {
                     SR_UTILS_NS::SRADeserializer deserializer;
-                    if (!deserializer.LoadFromString(marshal.Read<std::string>())) {
+                    if (!deserializer.LoadFromString(MarshalUtils::LoadStr(marshal))) {
                         SRHalt("ComponentManager::LoadComponent() : failed to load component!");
                         return pComponent;
                     }

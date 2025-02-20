@@ -46,11 +46,6 @@ namespace SR_UTILS_NS {
 
         SR_NODISCARD virtual const SR_UTILS_NS::SRClassMeta* GetMeta() const noexcept = 0;
 
-        SR_NODISCARD virtual const std::vector<Reflection::Property>& GetCustomProperties() const noexcept {
-            static std::vector<Reflection::Property> properties;
-            return properties;
-        }
-
         virtual void InitializeClass() noexcept { }
 
         static SR_UTILS_NS::StringAtom GetClassStaticName() noexcept;

@@ -34,5 +34,21 @@ namespace SR_UTILS_NS {
 
     	return false;
     }
+
+    void SRClassMeta::ForEachProperty(const std::function<void(const SR_UTILS_NS::Reflection::Property& property, uint64_t index)>& func, uint64_t* pIndex) const  {
+    	uint64_t index = 0;
+    	if (!pIndex) {
+    		pIndex = &index;
+    	}
+
+    	for (auto&& pBase : GetBaseMetas()) {
+    		pBase->ForEachProperty(func, pIndex);
+    	}
+
+    	for (auto&& property : GetProperties()) {
+    		func(property, *pIndex);
+    		++(*pIndex);
+    	}
+    }
 }
 

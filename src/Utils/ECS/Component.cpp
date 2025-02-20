@@ -35,7 +35,8 @@ namespace SR_UTILS_NS {
             SR_UTILS_NS::SRASerializer serializer;
             serializer.SetUseTabs(true);
             Save(serializer);
-            data.pMarshal->Write(serializer.ToString());
+            //data.pMarshal->Write(serializer.ToString());
+            MarshalUtils::SaveString(*data.pMarshal, serializer.ToString());
         }
         else if (!SR_UTILS_NS::ComponentManager::Instance().HasLoader(GetComponentName())) {
             GetComponentProperties().SaveProperty(*data.pMarshal);

@@ -9,9 +9,11 @@
 #include <Utils/Serialization/Serializer.h>
 #include <Utils/Serialization/Deserializer.h>
 
-#include <Utils/Reflection/Property.h>
-
 namespace SR_UTILS_NS {
+    namespace Reflection {
+        class Property;
+    }
+
     class Serializable;
 
     class SRClassMeta {
@@ -23,21 +25,7 @@ namespace SR_UTILS_NS {
 
         SR_NODISCARD bool IsInherited(std::string_view baseClass) const noexcept;
 
-        void ForEachProperty(const std::function<void(const SR_UTILS_NS::Reflection::Property& property, uint64_t index)>& func, uint64_t* pIndex = nullptr) const {
-            uint64_t index = 0;
-            if (!pIndex) {
-                pIndex = &index;
-            }
-
-            for (auto&& pBase : GetBaseMetas()) {
-                pBase->ForEachProperty(func, pIndex);
-            }
-
-            for (auto&& property : GetProperties()) {
-                func(property, *pIndex);
-                ++(*pIndex);
-            }
-        }
+        void ForEachProperty(const std::function<void(const SR_UTILS_NS::Reflection::Property& property, uint64_t index)>& func, uint64_t* pIndex = nullptr) const;
 
         SR_NODISCARD virtual SR_UTILS_NS::StringAtom GetInspectorName() const noexcept {
             static const SR_UTILS_NS::StringAtom def = "ObjectPropertyDrawer";

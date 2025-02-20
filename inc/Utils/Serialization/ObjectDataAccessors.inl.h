@@ -576,7 +576,9 @@ template<typename T>
 struct ObjectDataAccessor<T, typename std::enable_if<SerializationTraits<T>::IsSerializable>::type> {
 	static void Save(ISerializer& serializer, const T& value, const SerializationId& id) {
 		serializer.BeginObject(id);
+		const_cast<Serializable&>(static_cast<const Serializable&>(value)).OnPreSave();
 		static_cast<const Serializable&>(value).Save(serializer);
+		const_cast<Serializable&>(static_cast<const Serializable&>(value)).OnPostSave();
 		serializer.EndObject();
 	}
 
@@ -584,7 +586,9 @@ struct ObjectDataAccessor<T, typename std::enable_if<SerializationTraits<T>::IsS
 		if (!deserializer.BeginObject(id)) {
             return;
         }
+		static_cast<Serializable&>(value).OnPreLoad();
 		static_cast<Serializable&>(value).Load(deserializer);
+		static_cast<Serializable&>(value).OnPostLoad();
 		deserializer.EndObject();
 	}
 };
@@ -613,7 +617,10 @@ struct ObjectDataAccessor<SR_HTYPES_NS::SharedPtr<T>, std::enable_if_t<Serializa
 		serializer.BeginObject(id);
 
 		serializer.WriteString(typeName, SerializationId::Create("type"));
+
+		const_cast<Serializable&>(static_cast<const Serializable&>(*value)).OnPreSave();
 		Serialization::Save(serializer, *value, SerializationId::Create("ptr"));
+		const_cast<Serializable&>(static_cast<const Serializable&>(*value)).OnPostSave();
 
 		serializer.EndObject();
 	}
@@ -650,9 +657,9 @@ struct ObjectDataAccessor<SR_HTYPES_NS::SharedPtr<T>, std::enable_if_t<Serializa
 		}
 
 		if (value) {
+			value->OnPreLoad();
 			Serialization::Load(deserializer, *value, SerializationId::Create("ptr"));
-
-			value->OnPostLoaded();
+			value->OnPostLoad();
 
 			SR_UTILS_NS::SerializableVerifyContext context;
 			value->VerifyAfterLoad(context);

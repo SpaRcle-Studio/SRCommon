@@ -94,7 +94,7 @@ namespace SR_UTILS_NS {
 
     StringHashInfo* HashManager::GetOrAddInfo(const char* str) {
         SR_LOCK_GUARD;
-        auto&& hash = SR_HASH_STR(str);
+        auto&& hash = SR_HASH_STR(str ? str : "");
         if (auto&& pIt = m_strings.find(hash); pIt != m_strings.end()) {
             return pIt->second;
         }

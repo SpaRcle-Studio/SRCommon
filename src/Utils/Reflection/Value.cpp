@@ -87,6 +87,10 @@ namespace SR_UTILS_NS::Reflection {
         return GetTypeName().starts_with(compare);
     }
 
+    bool Value::IsPointer() const {
+        return m_storage.type().is_pointer();
+    }
+
     bool Value::IsString() const {
         if (!IsClass()) {
             return false;
@@ -103,6 +107,16 @@ namespace SR_UTILS_NS::Reflection {
         }
 
         static const auto meta = entt::meta_any(std::string_view());
+        static const std::string_view compare = meta.base().type().name();
+        return GetTypeName() == compare;
+    }
+
+    bool Value::IsStringAtom() const {
+        if (!IsClass()) {
+            return false;
+        }
+
+        static const auto meta = entt::meta_any(SR_UTILS_NS::StringAtom());
         static const std::string_view compare = meta.base().type().name();
         return GetTypeName() == compare;
     }
@@ -223,7 +237,17 @@ namespace SR_UTILS_NS::Reflection {
     }
 
     SRClass* Value::GetSRClass() const {
-        return m_SRClassGetter ? m_SRClassGetter(*this) : nullptr;
+        if (SR_HTYPES_NS::SharedPtrBase* pShared = GetSharedPtrBase()) {
+            return pShared->GetSRClass();
+        }
+        return const_cast<SRClass*>(static_cast<const SRClass*>(Data()));
+    }
+
+    SR_HTYPES_NS::SharedPtrBase* Value::GetSharedPtrBase() const {
+        if (IsSmartPtr()) {
+            return const_cast<SR_HTYPES_NS::SharedPtrBase*>(static_cast<const SR_HTYPES_NS::SharedPtrBase*>(Data()));
+        }
+        return nullptr;
     }
 
     ValueSequenceContainer Value::AsSequenceContainer() {
