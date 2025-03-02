@@ -8,16 +8,15 @@
 #include <Utils/DebugDraw.h>
 
 namespace SR_WORLD_NS {
-    SceneCubeChunkLogic::SceneCubeChunkLogic(const ScenePtr& pScene)
-        : Super(pScene)
-        , m_observer(new Observer(pScene))
-    {
-        ReloadConfig();
-    }
-
     SceneCubeChunkLogic::~SceneCubeChunkLogic() {
         SR_SAFE_DELETE_PTR(m_observer);
         SRAssert(!m_isAlive);
+    }
+
+    void SceneCubeChunkLogic::SetScene(const ScenePtr& pScene) {
+        Super::SetScene(pScene);
+        m_observer = new Observer(pScene);
+        ReloadConfig();
     }
 
     bool SceneCubeChunkLogic::ReloadConfig() {
@@ -72,7 +71,7 @@ namespace SR_WORLD_NS {
         return true;
     }
 
-    const Scene::SceneObjects& SceneCubeChunkLogic::GetGameObjectsAtChunk(const SR_MATH_NS::IVector3& region, const SR_MATH_NS::IVector3& chunk) const {
+    const std::vector<SceneObject::Ptr>& SceneCubeChunkLogic::GetGameObjectsAtChunk(const SR_MATH_NS::IVector3& region, const SR_MATH_NS::IVector3& chunk) const {
         SR_TRACY_ZONE;
 
         const auto key = TensorKey(region, chunk);
@@ -347,13 +346,33 @@ namespace SR_WORLD_NS {
         return std::make_pair(currentRegion, currentChunk);
     }
 
-    bool SceneCubeChunkLogic::Save(const Path& path) {
+    SR_UTILS_NS::Path SceneCubeChunkLogic::GetSceneDataPath(const SR_UTILS_NS::Path& path) const {
+        return path.Concat("scene.data");
+    }
+
+    bool SceneCubeChunkLogic::SaveLogic(const Path& path) {
         SR_TRACY_ZONE;
         SR_LOCK_GUARD;
 
-        if (!Super::Save(path)) {
-            SR_ERROR("ScenePrefabLogic::Save() : failed to save base logic!");
-            return false;
+        {
+            auto&& documentXml = SR_XML_NS::Document::New();
+            auto&& settingsXml = documentXml.Root().AppendNode("Settings");
+
+            auto&& stringsXml = settingsXml.AppendNode("Strings");
+            for (auto&& [name, value] : m_scene->GetDataStorage().GetValues<std::string>()) {
+                stringsXml.AppendNode(name).AppendAttribute(value);
+            }
+
+            auto&& pathsXml = settingsXml.AppendNode("Paths");
+            for (auto&& [name, value] : m_scene->GetDataStorage().GetValues<SR_UTILS_NS::Path>()) {
+                pathsXml.AppendNode(name).AppendAttribute(value);
+            }
+
+            auto&& settingsPath = path.Concat("data/settings.xml");
+            if (!documentXml.Save(settingsPath)) {
+                SR_ERROR("SceneLogic::Save() : failed save to settings!\n\tPath: " + settingsPath.ToStringRef());
+                return false;
+            }
         }
 
         auto&& currentChunk = CalculateCurrentChunk();
@@ -370,11 +389,11 @@ namespace SR_WORLD_NS {
             SaveRegion(path.Concat("regions"), pRegion, pContext);
         }
 
-        auto&& pSceneRootMarshal = m_scene->SaveComponents(SR_UTILS_NS::SavableContext(nullptr, SAVABLE_FLAG_NONE));
-        if (!pSceneRootMarshal->Save(path.Concat("data/components.bin"))) {
-            SR_ERROR("SceneCubeChunkLogic::Save() : failed to save scene components!");
-        }
-        SR_SAFE_DELETE_PTR(pSceneRootMarshal);
+        //auto&& pSceneRootMarshal = m_scene->SaveComponents(SR_UTILS_NS::SavableContext(nullptr, SAVABLE_FLAG_NONE));
+        //if (!pSceneRootMarshal->Save(path.Concat("data/components.bin"))) {
+        //    SR_ERROR("SceneCubeChunkLogic::Save() : failed to save scene components!");
+        //}
+        //SR_SAFE_DELETE_PTR(pSceneRootMarshal);
 
         auto&& sceneMainXmlPath = path.Concat("main.scene");
         if (!SR_XML_NS::Document::New().Save(sceneMainXmlPath)) {
@@ -385,9 +404,11 @@ namespace SR_WORLD_NS {
         return true;
     }
 
-    bool SceneCubeChunkLogic::Load(const Path &path) {
+    bool SceneCubeChunkLogic::LoadLogic(const Path& path) {
         SR_TRACY_ZONE;
         SR_LOCK_GUARD;
+
+        m_scene->SetPath(path.GetFolder());
 
         auto&& componentsPath = m_scene->GetAbsPath().Concat("data/components.bin");
 
@@ -586,14 +607,14 @@ namespace SR_WORLD_NS {
         m_debugDirty = false;
     }
 
-    void SceneCubeChunkLogic::PostLoad() {
+    void SceneCubeChunkLogic::Prepare() {
         SR_TRACY_ZONE;
 
         for (auto&& pRegion : m_regions) {
             pRegion->PostLoad();
         }
 
-        Super::PostLoad();
+        Super::Prepare();
     }
 
     void SceneCubeChunkLogic::Init() {

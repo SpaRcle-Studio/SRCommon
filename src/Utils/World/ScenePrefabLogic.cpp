@@ -7,61 +7,31 @@
 #include <Utils/ECS/LayerManager.h>
 
 namespace SR_WORLD_NS {
-    ScenePrefabLogic::ScenePrefabLogic(const SceneLogic::ScenePtr& scene)
-        : Super(scene)
-    {
-        m_tag = SR_UTILS_NS::TagManager::Instance().GetDefaultTag();
-        m_layer = SR_UTILS_NS::LayerManager::Instance().GetDefaultLayer();
-    }
-
-    bool ScenePrefabLogic::Save(const Path& path) {
-        if (!Super::Save(path)) {
-            SR_ERROR("ScenePrefabLogic::Save() : failed to save base logic!");
+    /*bool ScenePrefabLogic::Save(const Path& path) {
+        auto&& rootObjects = m_scene->GetRootSceneObjects();
+        if (rootObjects.size() != 1) {
+            SRHalt("ScenePrefabLogic::Save() : invalid root objects count!");
             return false;
         }
 
-        auto&& pMarshal = new SR_HTYPES_NS::Marshal();
-
-        pMarshal->Write(static_cast<uint64_t>(ENTITY_ID_MAX));
-        pMarshal->Write(GameObject::VERSION);
-        pMarshal->Write<bool>(false /** is prefab */);
-        pMarshal->Write<bool>(true /** is enabled */);
-        pMarshal->Write(m_scene->GetName());
-        pMarshal->Write<uint64_t>(m_tag.GetHash());
-        pMarshal->Write<uint64_t>(m_layer.GetHash());
-
-        auto&& pTransformMarshal = Transform3D().SaveLegacy(SR_UTILS_NS::SavableContext(nullptr, SAVABLE_FLAG_ECS_NO_ID));
-        pMarshal->Write<uint64_t>(pTransformMarshal->Size());
-        pMarshal->Append(pTransformMarshal);
-
-        pMarshal = m_scene->SaveComponents(SR_UTILS_NS::SavableContext(pMarshal, SAVABLE_FLAG_ECS_NO_ID));
-
-        auto&& root = m_scene->GetRootSceneObjects();
-
-        uint16_t childrenNum = 0;
-        for (auto&& pObject : root) {
-            if (pObject->HasSerializationFlags(SerializationFlags::DontSave)) {
-                continue;
-            }
-            ++childrenNum;
+        auto&& pRootSO = rootObjects.front();
+        if (!pRootSO) {
+            SRHalt("ScenePrefabLogic::Save() : invalid root object!");
+            return false;
         }
 
-        pMarshal->Write(static_cast<uint16_t>(childrenNum));
+        SR_UTILS_NS::SRASerializer serializer;
+        pRootSO->Save(serializer);
 
-        for (auto&& pObject : root) {
-            if (pObject->HasSerializationFlags(SerializationFlags::DontSave)) {
-                continue;
-            }
-
-            pMarshal = pObject->SaveLegacy(SR_UTILS_NS::SavableContext(pMarshal, SAVABLE_FLAG_ECS_NO_ID));
+        if (!serializer.SaveToFile(path)) {
+            SR_ERROR("ScenePrefabLogic::Save() : failed to save prefab!\n\tPath: " + path.ToString());
+            return true;
         }
 
-        const bool result = pMarshal->Save(path);
-        SR_SAFE_DELETE_PTR(pMarshal);
-        return result;
+        return false;
     }
 
-    bool ScenePrefabLogic::Load(const Path &path) {
+    bool ScenePrefabLogic::Load(const Path& path) {
         auto&& pPrefab = Prefab::Load(path);
         if (!pPrefab) {
             SR_ERROR("ScenePrefabLogic::Load() : failed to load prefab!\n\tPath: " + path.ToString());
@@ -70,34 +40,22 @@ namespace SR_WORLD_NS {
 
         pPrefab->AddUsePoint();
 
-        m_tag = pPrefab->GetData()->GetTag();
-        m_layer = pPrefab->GetData()->GetLayer();
-
-        for (auto&& pComponent : pPrefab->GetData()->GetComponents()) {
-            if (auto&& pCopy = pComponent->CopyComponent()) {
-                m_scene->AddComponent(pCopy);
-            }
-        }
-
-        for (auto&& gameObject : pPrefab->GetData()->GetChildrenRef()) {
-            /// при копировании объекта на сцену, он автоматически инстанциируется на ней
-            SR_MAYBE_UNUSED auto&& pUnusedCopy = gameObject->Copy(m_scene.Get(), nullptr);
+        if (const SR_UTILS_NS::SceneObject::Ptr& pSO = pPrefab->GetData()) {
+            m_scene->RegisterSceneObject(pSO);
         }
 
         pPrefab->RemoveUsePoint();
 
         return true;
-    }
+    }*/
 
-    bool ScenePrefabLogic::Reload() {
-        return SceneLogic::Reload();
-    }
+    void ScenePrefabLogic::OnPreSave() {
+        if (auto&& pScene = GetScene(); SRVerify2(pScene, "Scene is nullptr!")) {
+            if (pScene->GetRootSceneObjects().size() != 1) {
+                SRHalt("ScenePrefabLogic::OnPreSave() : invalid root objects count!");
+            }
+        }
 
-    void ScenePrefabLogic::Destroy() {
-        SceneLogic::Destroy();
-    }
-
-    void ScenePrefabLogic::Update(float_t dt) {
-        SceneLogic::Update(dt);
+        Super::OnPreSave();
     }
 }

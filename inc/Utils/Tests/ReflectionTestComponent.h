@@ -80,8 +80,6 @@ namespace SR_UTILS_NS::Tests {
             m_hasChanged = true;
         }
 
-        SR_NODISCARD bool UseNewSerialization() const noexcept override { return true; }
-
         void OnDestroy() override {
             Super::OnDestroy();
             GetThis().AutoFree([](auto&& pData) {

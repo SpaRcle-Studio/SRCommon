@@ -19,32 +19,6 @@ namespace SR_UTILS_NS {
         return m_dirty;
     }
 
-    SR_HTYPES_NS::Marshal::Ptr IComponentable::SaveComponents(SavableContext data) const {
-        if (!data.pMarshal) {
-            data.pMarshal = new SR_HTYPES_NS::Marshal();
-        }
-
-        std::vector<SR_HTYPES_NS::Marshal::Ptr> components;
-        components.reserve(m_components.size());
-
-        const auto componentSaveData = SR_UTILS_NS::SavableContext(nullptr, data.flags);
-
-        for (auto&& pComponent : m_components) {
-            if (auto&& pMarshalComponent = pComponent->SaveLegacy(componentSaveData)) {
-                components.emplace_back(pMarshalComponent);
-            }
-        }
-
-        data.pMarshal->Write(static_cast<uint16_t>(components.size()));
-
-        for (auto&& pMarshalComponent : components) {
-            data.pMarshal->Write<uint32_t>(pMarshalComponent->Size());
-            data.pMarshal->Append(pMarshalComponent);
-        }
-
-        return data.pMarshal;
-    }
-
     Component::Ptr IComponentable::GetOrCreateComponent(StringAtom name) {
         if (auto&& pComponent = GetComponent(name)) {
             return pComponent;
@@ -334,6 +308,17 @@ namespace SR_UTILS_NS {
     IComponentable::ScenePtr IComponentable::GetScene() const {
         SRHalt("Not implemented!");
         return nullptr;
+    }
+
+    void IComponentable::OnPostLoad() {
+        Super::OnPostLoad();
+
+        m_hasNotAttachedComponents = !m_components.empty();
+
+        for (uint32_t i = 0; i < m_components.size(); ++i) {
+            m_components[i]->SetParent(this);
+            m_components[i]->OnLoaded();
+        }
     }
 
     void IComponentable::OnPriorityChanged() {

@@ -21,30 +21,6 @@ namespace SR_UTILS_NS {
         m_properties.ClearContainer();
     }
 
-    SR_HTYPES_NS::Marshal::Ptr Component::SaveLegacy(SavableContext data) const {
-        if (!(data.pMarshal = Entity::SaveLegacy(data))) {
-            return data.pMarshal;
-        }
-
-        data.pMarshal->Write<uint64_t>(GetComponentName().GetHash());
-        data.pMarshal->Write(IsEnabled());
-        data.pMarshal->Write<uint16_t>(GetEntityVersion());
-
-        /// New serialization system based on codegen
-        if (UseNewSerialization()) {
-            SR_UTILS_NS::SRASerializer serializer;
-            serializer.SetUseTabs(true);
-            Save(serializer);
-            //data.pMarshal->Write(serializer.ToString());
-            MarshalUtils::SaveString(*data.pMarshal, serializer.ToString());
-        }
-        else if (!SR_UTILS_NS::ComponentManager::Instance().HasLoader(GetComponentName())) {
-            GetComponentProperties().SaveProperty(*data.pMarshal);
-        }
-
-        return data.pMarshal;
-    }
-
     void Component::SetParent(IComponentable* pParent) {
         if ((m_parent = pParent)) {
             if (auto&& pSceneObject = dynamic_cast<SR_UTILS_NS::SceneObject*>(m_parent)) {
@@ -152,7 +128,7 @@ namespace SR_UTILS_NS {
         SRAssert(m_parent);
 
         if (m_sceneObject && m_sceneObject->GetSceneObjectType() == SceneObjectType::GameObject) {
-            return m_sceneObject.StaticCast<GameObject>()->GetTransform();
+            return m_sceneObject.StaticCast<GameObject>()->GetTransform().Get();
         }
 
         return nullptr;
@@ -162,33 +138,26 @@ namespace SR_UTILS_NS {
         return "Component: " + GetComponentName().ToStringRef();
     }
 
-    bool Component::IsUpdatable() const noexcept {
-        return m_isStarted && m_isActive;
-    }
-
-    Component* Component::CopyComponent() const {
-        auto&& pComponent = SR_UTILS_NS::ComponentManager::Instance().CreateComponentOfName(GetComponentName());
-        if (!pComponent) {
-            return nullptr;
-        }
-
-        pComponent->SetEnabled(IsEnabled());
-
-        /// TODO: non-optimized way
-        SR_HTYPES_NS::Marshal marshal;
-        GetComponentProperties().SaveProperty(marshal);
-        marshal.SetPosition(0);
-        pComponent->GetComponentProperties().LoadProperty(marshal);
+    Component::Ptr Component::CloneComponent() const {
+        SR_TRACY_ZONE;
 
         SR_UTILS_NS::SRASerializer serializer;
         Save(serializer);
 
-        SR_UTILS_NS::SRADeserializer deserializer;
-        if (deserializer.LoadFromString(serializer.ToString())) {
-            pComponent->Load(deserializer);
+        SR_UTILS_NS::SRADeserializer deserializer = serializer.CreateDeserializer();
+
+        Component::Ptr pComponent = ComponentManager::Instance().CreateComponentOfName(GetComponentName());
+        if (!pComponent) {
+            SR_ERROR("Component::CloneComponent() : failed to create component of type: {}", GetComponentName());
+            return nullptr;
         }
 
+        pComponent->Load(deserializer);
         return pComponent;
+    }
+
+    bool Component::IsUpdatable() const noexcept {
+        return m_isStarted && m_isActive;
     }
 
     bool Component::IsPlayingMode() const {

@@ -4,6 +4,8 @@
 
 #include <Utils/ECS/Transform2D.h>
 
+#include <Codegen/Transform2D.generated.hpp>
+
 namespace SR_UTILS_NS {
     Transform2D::Transform2D()
         : Transform()
@@ -31,6 +33,12 @@ namespace SR_UTILS_NS {
 
     void Transform2D::SetRotation(const SR_MATH_NS::FVector3& euler) {
         m_quaternion = euler.Radians().ToQuat();
+        m_rotation = m_quaternion.EulerAngle();
+        UpdateTree();
+    }
+
+    void Transform2D::SetRotation(const SR_MATH_NS::Quaternion& quaternion) {
+        m_quaternion = quaternion;
         m_rotation = m_quaternion.EulerAngle();
         UpdateTree();
     }
@@ -124,7 +132,7 @@ namespace SR_UTILS_NS {
                     continue;
                 }
 
-                auto&& pTransform2D = static_cast<Transform2D*>(pGameObject->GetTransform());
+                auto&& pTransform2D = static_cast<Transform2D*>(pGameObject->GetTransform().Get());
 
                 pTransform2D->BuildUITree();
 
@@ -199,22 +207,6 @@ namespace SR_UTILS_NS {
         }
     }
 
-    Transform::Ptr Transform2D::Copy() const {
-        auto&& pTransform = new Transform2D();
-
-        pTransform->m_priority = m_priority;
-        pTransform->m_localPriority = m_localPriority;
-        pTransform->m_relativePriority = m_relativePriority;
-
-        pTransform->m_translation = m_translation;
-        pTransform->m_rotation = m_rotation;
-        pTransform->m_quaternion = m_quaternion;
-        pTransform->m_scale = m_scale;
-        pTransform->m_skew = m_skew;
-
-        return pTransform;
-    }
-
     int32_t Transform2D::GetPriority() { /// NOLINT
         if (!m_isDirtyPriority) {
             return m_priority;
@@ -264,7 +256,7 @@ namespace SR_UTILS_NS {
 
         for (auto&& pChild : m_gameObject->GetChildrenRef()) {
             if (auto&& pGameObject = pChild.DynamicCast<GameObject>()) {
-                if (auto&& pTransform2D = dynamic_cast<Transform2D*>(pGameObject->GetTransform())) {
+                if (auto&& pTransform2D = dynamic_cast<Transform2D*>(pGameObject->GetTransform().Get())) {
                     pTransform2D->UpdatePriorityTree();
                 }
             }

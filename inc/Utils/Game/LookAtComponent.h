@@ -12,17 +12,11 @@
 
 namespace SR_UTILS_NS {
     class SR_DLL_EXPORT LookAtComponent final : public Component {
-        SR_ENTITY_SET_VERSION(1003);
-        SR_INITIALIZE_COMPONENT(LookAtComponent);
+        SR_CLASS()
+        SR_REGISTER_NEW_COMPONENT(LookAtComponent, 1000);
         using Super = Component;
     public:
         LookAtComponent();
-
-    private:
-        ~LookAtComponent() override = default;
-
-    public:
-        static Component* LoadComponent(SR_HTYPES_NS::Marshal& marshal, const SR_HTYPES_NS::DataStorage* dataStorage);
 
     public:
         void Update(float_t dt) override;
@@ -46,20 +40,21 @@ namespace SR_UTILS_NS {
         SR_NODISCARD float_t GetDelay() const noexcept { return m_delay; }
         SR_NODISCARD LookAtAxis GetAxis() const noexcept { return m_axis; }
 
-        SR_NODISCARD Component* CopyComponent() const override;
-
-        SR_NODISCARD SR_HTYPES_NS::Marshal::Ptr SaveLegacy(SavableContext data) const override;
-
     private:
         SR_MATH_NS::FVector3 m_direction;
-
         bool m_reached = false;
 
+        /// @property
         SR_UTILS_NS::EntityRef m_target;
+        /// @property @getter(GetAxis) @setter(SetAxis)
         LookAtAxis m_axis = LookAtAxis::AxisY;
+        /// @property @getter(GetOffset) @setter(SetOffset)
         SR_MATH_NS::FVector3 m_offset;
+        /// @property @getter(GetMirror) @setter(SetMirror)
         bool m_mirror = false;
+        /// @property @getter(ExecuteInEditMode) @setter(SetExecuteInEditMode)
         bool m_editMode = false;
+        /// @property @getter(GetDelay) @setter(SetDelay)
         float_t m_delay = 0.f;
 
     };

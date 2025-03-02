@@ -60,31 +60,62 @@ namespace SR_UTILS_NS {
             path = ResourceManager::Instance().GetResPath().Concat(path);
         }
 
-        auto&& marshal = SR_HTYPES_NS::Marshal::Load(path);
-        if (!marshal.Valid()) {
-            SR_ERROR("Prefab::Load() : failed to load marshal data!\n\tPath: " + path.ToString());
+        SRADeserializer deserializer;
+        if (!deserializer.LoadFromFile(path)) {
+            m_loadState = LoadState::Error;
+            SR_ERROR("Prefab::Load() : failed to load prefab!\n\tPath: " + path.ToString());
             return false;
         }
 
-        /// TODO: implement load other types of data
-        m_data = SR_UTILS_NS::GameObject::Load(marshal, nullptr).StaticCast<SceneObject>();
-
-        if (!m_data.Valid()) {
+        if (!deserializer.BeginObject(SerializationId::Create("info"))) {
             m_loadState = LoadState::Error;
-            SR_ERROR("Prefab::Load() : failed to load game object from marshal data!");
+            SR_ERROR("Prefab::Load() : failed to load prefab info!\n\tPath: " + path.ToString());
+            return false;
+        }
+
+        SR_UTILS_NS::StringAtom type;
+        deserializer.ReadString(type, SerializationId::Create("type"));
+
+        deserializer.EndObject();
+
+        if (!type.Empty()) {
+            m_loadState = LoadState::Error;
+            SR_ERROR("Prefab::Load() : prefab type is empty!\n\tPath: " + path.ToString());
+            return false;
+        }
+
+        m_data = SR_UTILS_NS::Factory::Instance().Create<SceneObject>(type);
+        if (!m_data) {
+            m_loadState = LoadState::Error;
+            SR_ERROR("Prefab::Load() : failed to create scene object from type: " + type.ToString());
+            return false;
+        }
+
+        if (deserializer.BeginObject(SerializationId::Create("data"))) {
+            m_data->Load(deserializer);
+            deserializer.EndObject();
+        }
+        else {
+            m_loadState = LoadState::Error;
+            SR_ERROR("Prefab::Load() : failed to load prefab data!\n\tPath: " + path.ToString());
             return false;
         }
 
         return IResource::Load();
     }
 
-    Prefab::SceneObjectPtr Prefab::Instance(const Prefab::ScenePtr& scene) const {
+    Prefab::SceneObjectPtr Prefab::Instance(const Prefab::ScenePtr& pScene) const {
+        SR_TRACY_ZONE;
+
         if (m_data) {
-            auto&& pInstanced = m_data->Copy(scene, nullptr);
-            pInstanced->SetPrefab(const_cast<Prefab*>(this), true);
-            return pInstanced;
+            auto&& pClone = m_data->CloneSceneObject();
+            pClone->SetPrefab(const_cast<Prefab*>(this), true);
+            pScene->RegisterSceneObject(pClone);
+            return pClone;
         }
 
-        return Prefab::SceneObjectPtr();
+        SRHalt("Prefab::Instance() : prefab data is nullptr!");
+
+        return nullptr;
     }
 }

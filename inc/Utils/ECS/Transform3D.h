@@ -13,9 +13,6 @@ namespace SR_UTILS_NS {
         friend class GameObject;
         using Super = Transform;
     public:
-        Transform3D() = default;
-
-    public:
         void Translate(const SR_MATH_NS::FVector3& translation) override;
         void Rotate(const SR_MATH_NS::FVector3& eulers) override;
         void Scale(const SR_MATH_NS::FVector3& scale) override;
@@ -59,8 +56,6 @@ namespace SR_UTILS_NS {
         void LookAt(const SR_MATH_NS::FVector3& position) override;
         void LookAt(const SR_MATH_NS::FVector3& position, LookAtAxis axis) override;
 
-        SR_NODISCARD Transform::Ptr Copy() const override;
-
         SR_NODISCARD Measurement GetMeasurement() const override { return Measurement::Space3D; }
 
     private:
@@ -76,15 +71,16 @@ namespace SR_UTILS_NS {
         mutable SR_MATH_NS::Matrix4x4 m_matrix = SR_MATH_NS::Matrix4x4::Identity();
 
         mutable bool m_eulersDirty = true;
-        mutable SR_MATH_NS::FVector3 m_rotation = SR_MATH_NS::FVector3::Zero();
 
-        /// @property
+        /// @property @setter(SetTranslation) @defaultValue(SR_MATH_NS::FVector3::Zero())
         SR_MATH_NS::FVector3 m_translation = SR_MATH_NS::FVector3::Zero();
-        /// @property
+        /// @property @dontSave @setter(SetRotation)
+        mutable SR_MATH_NS::FVector3 m_rotation = SR_MATH_NS::FVector3::Zero();
+        /// @property @setter(SetRotation) @hidden
         SR_MATH_NS::Quaternion m_quaternion = SR_MATH_NS::Quaternion::Identity();
-        /// @property
+        /// @property @setter(SetScale) @defaultValue(SR_MATH_NS::FVector3::One())
         SR_MATH_NS::FVector3 m_scale = SR_MATH_NS::FVector3::One();
-        /// @property
+        /// @property @setter(SetSkew) @defaultValue(SR_MATH_NS::FVector3::One())
         SR_MATH_NS::FVector3 m_skew = SR_MATH_NS::FVector3::One();
 
     };

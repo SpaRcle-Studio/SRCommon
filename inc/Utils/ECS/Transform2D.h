@@ -6,22 +6,23 @@
 #define SR_ENGINE_TRANSFORM2D_H
 
 #include <Utils/ECS/Transform.h>
-#include <Utils/Math/Rect.h>
 #include <Utils/UI/UIModifier.h>
+#include <Utils/Math/Rect.h>
 
 namespace SR_UTILS_NS {
     class GameObject;
 
     class SR_DLL_EXPORT Transform2D : public Transform {
+        SR_CLASS()
         friend class GameObject;
     public:
         Transform2D();
-        ~Transform2D() override = default;
 
     public:
         void SetTranslation(const SR_MATH_NS::FVector3& translation) override;
         void SetTranslationAndRotation(const SR_MATH_NS::FVector3& translation, const SR_MATH_NS::FVector3& euler) override;
         void SetRotation(const SR_MATH_NS::FVector3& euler) override;
+        void SetRotation(const SR_MATH_NS::Quaternion& quaternion) override;
         void SetScale(const SR_MATH_NS::FVector3& scale) override;
         void SetSkew(const SR_MATH_NS::FVector3& skew) override;
 
@@ -41,8 +42,6 @@ namespace SR_UTILS_NS {
         SR_NODISCARD SR_MATH_NS::FVector3 GetSkew() const override { return m_skew; }
 
         SR_NODISCARD Measurement GetMeasurement() const override { return Measurement::Space2D; }
-
-        SR_NODISCARD Transform::Ptr Copy() const override;
 
         SR_NODISCARD const SR_MATH_NS::Matrix4x4& GetMatrix() const override;
 
@@ -72,23 +71,30 @@ namespace SR_UTILS_NS {
         void UpdatePriorityTree();
 
     protected:
-        std::vector<UI::UIModifierComponent*> m_modifiers;
-
-        int32_t m_priority = 0;
-        int32_t m_localPriority = 0;
-        bool m_relativePriority = true;
-        bool m_isDirtyPriority = true;
-
         mutable SR_MATH_NS::FSize2 m_contentSize;
         mutable SR_MATH_NS::Matrix4x4 m_localMatrix = SR_MATH_NS::Matrix4x4::Identity();
         mutable SR_MATH_NS::Matrix4x4 m_matrix = SR_MATH_NS::Matrix4x4::Identity();
 
-        SR_MATH_NS::Quaternion m_quaternion = SR_MATH_NS::Quaternion::Identity();
+        std::vector<UI::UIModifierComponent*> m_modifiers;
 
+        bool m_isDirtyPriority = true;
+        int32_t m_priority = 0;
+
+        /// @property @setter(SetTranslation)
         SR_MATH_NS::FVector3 m_translation = SR_MATH_NS::FVector3::Zero();
+        /// @property @setter(SetRotation) @dontSave
         SR_MATH_NS::FVector3 m_rotation = SR_MATH_NS::FVector3::Zero();
+        /// @property @setter(SetRotation) @hidden
+        SR_MATH_NS::Quaternion m_quaternion = SR_MATH_NS::Quaternion::Identity();
+        /// @property @setter(SetScale)
         SR_MATH_NS::FVector3 m_scale = SR_MATH_NS::FVector3::One();
+        /// @property @setter(SetSkew)
         SR_MATH_NS::FVector3 m_skew = SR_MATH_NS::FVector3::One();
+
+        /// @property @setter(SetLocalPriority)
+        int32_t m_localPriority = 0;
+        /// @property @setter(SetRelativePriority)
+        bool m_relativePriority = true;
 
     };
 }

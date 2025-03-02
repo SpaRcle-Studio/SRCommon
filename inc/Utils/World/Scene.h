@@ -6,14 +6,17 @@
 #define SR_ENGINE_SCENE_H
 
 #include <Utils/ECS/IComponentable.h>
+
 #include <Utils/Types/SafePointer.h>
 #include <Utils/Types/SharedPtr.h>
-#include <Utils/World/Observer.h>
 #include <Utils/Types/StringAtom.h>
 #include <Utils/Types/Marshal.h>
-#include <Utils/World/CameraData.h>
 #include <Utils/Types/DataStorage.h>
+
 #include <Utils/World/TensorKey.h>
+#include <Utils/World/Observer.h>
+#include <Utils/World/SceneLogicType.h>
+#include <Utils/World/CameraData.h>
 
 namespace SR_UTILS_NS {
     class SceneObject;
@@ -42,25 +45,26 @@ namespace SR_WORLD_NS {
         SR_MAYBE_UNUSED SR_INLINE_STATIC const Path NewScenePath = "Scenes/New-cache-scene"; /// NOLINT
         SR_MAYBE_UNUSED SR_INLINE_STATIC const Path NewPrefabPath = "Scenes/New-cache-prefab"; /// NOLINT
 
+    public:
+        Scene();
         ~Scene() override;
 
     public:
-        Scene();
-
-    public:
-        static Scene::Ptr Empty();
-        static Scene::Ptr New(const Path& path);
-        static Scene::Ptr Load(const Path& path);
+        static Scene::Ptr CreateEmptyScene();
+        static Scene::Ptr NewScene(const Path& path, SceneLogicType type);
+        static Scene::Ptr LoadScene(const Path& path);
         static bool IsExists(const Path& path);
         static Path GetAbsPath(const Path& path);
 
         void Init();
         void Prepare();
 
-        bool Save();
-        bool SaveAt(const Path& path);
+        bool SaveScene();
+        bool SaveSceneAt(const Path& path);
         bool Destroy();
         bool SetDirty(bool dirty) override;
+
+        void SetPath(const Path& path);
 
     public:
         SR_NODISCARD std::string GetName() const;
@@ -87,9 +91,8 @@ namespace SR_WORLD_NS {
 
         void RegisterSceneObject(const SceneObjectPtr& ptr);
 
-        virtual SceneObjectPtr InstanceFromFile(const std::string& path);
+        virtual SceneObjectPtr InstanceFromFile(const SR_UTILS_NS::Path& path);
         virtual SceneObjectPtr Instance(const Types::RawMesh* rawMesh);
-        virtual SceneObjectPtr Instance(SR_HTYPES_NS::Marshal& marshal);
 
         virtual GameObjectPtr FindOrInstanceGameObject(SR_UTILS_NS::StringAtom name);
         virtual GameObjectPtr InstanceGameObject(SR_UTILS_NS::StringAtom name);
@@ -103,6 +106,8 @@ namespace SR_WORLD_NS {
         void OnChanged();
 
         bool Reload();
+
+        void OnPostLoad() override;
 
     private:
         SceneUpdater* m_sceneUpdater = nullptr;
@@ -120,15 +125,17 @@ namespace SR_WORLD_NS {
 
         std::list<Component::Ptr> m_destroyedComponents;
 
-        SceneObjects m_sceneObjects;
-        SceneObjects m_root;
-
         Path m_path;
         Path m_absPath;
+
+        SceneObjects m_sceneObjects;
 
     private:
         /// @property
         SR_HTYPES_NS::SharedPtr<SceneLogic> m_logic;
+        /// @property @getter(GetRootSceneObjects)
+        /// @propertyCondition(This.m_logic && This.m_logic->IsAllowedRootSave())
+        SceneObjects m_root;
 
     };
 }

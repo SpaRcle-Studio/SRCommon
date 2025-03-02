@@ -53,6 +53,8 @@ namespace SR_UTILS_NS {
 
 	#include <Utils/Serialization/DefaultObjectMakers.inl.h>
 
+	#include <Utils/Serialization/SaveCheckers.inl.h>
+
 	namespace Serialization {
 		template<typename T> bool IsValidValue(const T& value) {
 			if constexpr (CheckOperatorUsableV<CheckerEqualityComparable, T, std::nullptr_t>) {
@@ -64,7 +66,14 @@ namespace SR_UTILS_NS {
 			}
 		}
 
+		template<typename T> bool CanBeSaved(const T& value) {
+			return SR_UTILS_NS::SaveChecker<T>::CanBeSaved(value);
+		}
+
 		template<typename T> void Save(ISerializer& serializer, const T& value, const SerializationId& key) {
+			if (!CanBeSaved(value)) {
+				return;
+			}
 			SR_UTILS_NS::ObjectDataAccessor<T>::Save(serializer, value, key);
 		}
 
@@ -72,7 +81,7 @@ namespace SR_UTILS_NS {
 			if (!serializer.IsWriteDefaults() && IsDefault(value)) {
 				return;
 			}
-			SR_UTILS_NS::ObjectDataAccessor<T>::Save(serializer, value, key);
+			Save(serializer, value, key);
 		}
 
 		template<typename T> bool Load(IDeserializer& deserializer, T& value, const SerializationId& key) {

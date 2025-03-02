@@ -67,11 +67,15 @@ namespace SR_UTILS_NS {
 
     };
 
+    class SRADeserializer;
+
     class SRASerializer : public ISerializer, public SRAISerialization {
     public:
         SRASerializer();
 
     public:
+        SR_NODISCARD SRADeserializer CreateDeserializer() const;
+
         SR_NODISCARD bool SaveToFile(const SR_UTILS_NS::Path& path) const override { return SaveToFileImpl(path); }
 
         void WriteString(std::string_view value, const SerializationId& name) override;
@@ -102,6 +106,7 @@ namespace SR_UTILS_NS {
     };
 
     class SRADeserializer : public IDeserializer, public SRAISerialization {
+        friend SRASerializer;
     public:
         SR_NODISCARD bool SaveToFile(const SR_UTILS_NS::Path& path) const override { return SaveToFileImpl(path); }
         SR_NODISCARD bool LoadFromFile(const SR_UTILS_NS::Path& path) override;

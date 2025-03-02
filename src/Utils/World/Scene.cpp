@@ -20,6 +20,8 @@
 
 #include <Utils/Platform/Platform.h>
 
+#include <Enum/SceneLogicType.hpp>
+
 #include <Codegen/Scene.generated.hpp>
 
 namespace SR_WORLD_NS {
@@ -43,15 +45,31 @@ namespace SR_WORLD_NS {
         SR_SAFE_DELETE_PTR(m_sceneUpdater);
     }
 
-    GameObject::Ptr Scene::InstanceGameObject(SR_UTILS_NS::StringAtom name) {
+    Scene::Ptr Scene::CreateEmptyScene() {
         if (Debug::Instance().GetLevel() >= Debug::Level::High) {
-            SR_LOG("Scene::Instance() : instance \"" + name.ToStringRef() + "\" game object at \"" + GetName() + "\" scene.");
+            SR_LOG("Scene::CreateEmptyScene() : creating empty scene...");
         }
 
-        const GameObject::Ptr pGameObject = new GameObject(name);
-        const SceneObject::Ptr pSceneObject = pGameObject.StaticCast<SceneObject>();
+        auto&& pScene = SceneAllocator::Instance().Allocate();
 
-        RegisterSceneObject(pSceneObject);
+        if (!pScene) {
+            SR_ERROR("Scene::CreateEmptyScene() : failed to allocate scene!");
+            return Scene::Ptr();
+        }
+
+        return pScene;
+    }
+
+    GameObject::Ptr Scene::InstanceGameObject(SR_UTILS_NS::StringAtom name) {
+        if (Debug::Instance().GetLevel() >= Debug::Level::High) {
+            SR_LOG("Scene::InstanceGameObject() : instance \"" + name.ToStringRef() + "\" game object at \"" + GetName() + "\" scene.");
+        }
+
+        const GameObject::Ptr pGameObject = SRNew<GameObject>();
+        pGameObject->SetName(name);
+
+        RegisterSceneObject(pGameObject.StaticCast<SceneObject>());
+
         return pGameObject;
     }
 
@@ -63,29 +81,12 @@ namespace SR_WORLD_NS {
         return InstanceGameObject(name);
     }
 
-    Scene::SceneObjectPtr Scene::Instance(SR_HTYPES_NS::Marshal& marshal) {
-        /// TODO: Implement laod other types of objects
-        return GameObject::Load(marshal, this).StaticCast<SceneObject>();
+    void Scene::SetPath(const Path& path) {
+        m_path = path;
+        m_absPath = GetAbsPath(path);
     }
 
-    Scene::Ptr Scene::Empty() {
-        if (Debug::Instance().GetLevel() > Debug::Level::None) {
-            SR_LOG("Scene::Empty() : creating new empty scene...");
-        }
-
-        auto&& pScene = SceneAllocator::Instance().Allocate();
-
-        if (!pScene) {
-            SR_ERROR("Scene::New() : failed to allocate scene!");
-            return Scene::Ptr();
-        }
-
-        pScene->m_logic = new SceneDefaultLogic(pScene);
-
-        return pScene;
-    }
-
-    Scene::Ptr Scene::New(const Path& path) {
+    Scene::Ptr Scene::NewScene(const Path& path, SceneLogicType type) {
         if (Debug::Instance().GetLevel() > Debug::Level::None) {
             SR_LOG("Scene::New() : creating new scene...");
         }
@@ -95,52 +96,66 @@ namespace SR_WORLD_NS {
             return Scene::Ptr();
         }
 
-        auto&& scene = SceneAllocator::Instance().Allocate();
+        auto&& pLogic = SR_UTILS_NS::Factory::Instance().Create<SceneLogic>("Scene{}Logic"_format(type));
+        if (!pLogic) {
+            SR_ERROR("Scene::New() : failed to create scene logic! Type: {}", type);
+            return Scene::Ptr();
+        }
 
-        if (!scene) {
+        auto&& pScene = SceneAllocator::Instance().Allocate();
+
+        if (!pScene) {
             SR_ERROR("Scene::New() : failed to allocate scene!");
             return Scene::Ptr();
         }
 
         SRAssert(!path.IsAbs());
 
-        scene->m_absPath = GetAbsPath(path);
-        scene->m_path = path;
-        scene->m_logic = SceneLogic::CreateByExt(scene, path.GetExtension());
+        pScene->SetPath(path);
+        pScene->m_logic = pLogic;
 
-        return scene;
+        return pScene;
     }
 
-    Scene::Ptr World::Scene::Load(const Path& path) {
+    Scene::Ptr Scene::LoadScene(const Path& path) {
         if (Debug::Instance().GetLevel() > Debug::Level::None) {
             SR_LOG("Scene::Load() : loading scene...\n\tPath: " + path.ToString());
         }
 
-        auto&& scene = SceneAllocator::Instance().Allocate();
+        static auto&& destroySceneFn = [](Scene::Ptr& pScene) {
+            pScene.AutoFree([](SR_WORLD_NS::Scene* pScene) {
+                pScene->Destroy();
+                delete pScene;
+            });
+        };
 
-        if (!scene) {
+        auto&& pScene = SceneAllocator::Instance().Allocate();
+
+        if (!pScene) {
             SR_ERROR("Scene::Load() : failed to allocate scene!");
             return Scene::Ptr();
         }
 
         SRAssert(!path.IsAbs());
 
-        scene->m_absPath = GetAbsPath(path);
-        scene->m_path = path;
-        scene->m_logic = SceneLogic::CreateByExt(scene, path.GetExtension());
+        pScene->SetPath(path);
 
-        if (!scene->m_logic->Load(scene->m_absPath)) {
-            SR_ERROR("Scene::Load() : failed to load scene logic!");
-
-            scene.AutoFree([](SR_WORLD_NS::Scene* pScene) {
-                pScene->Destroy();
-                delete pScene;
-            });
-
+        SRADeserializer deserializer;
+        if (!deserializer.LoadFromFile(pScene->m_absPath)) {
+            SR_ERROR("Scene::Load() : failed to load scene!\n\tPath: " + pScene->m_absPath.ToString());
+            destroySceneFn(pScene);
             return Scene::Ptr();
         }
 
-        return scene;
+        pScene->Load(deserializer);
+
+        if (!pScene->m_logic || !pScene->m_logic->LoadLogic(pScene->m_absPath)) {
+            SR_ERROR("Scene::Load() : failed to load scene logic!");
+            destroySceneFn(pScene);
+            return Scene::Ptr();
+        }
+
+        return pScene;
     }
 
     bool Scene::Destroy() {
@@ -151,7 +166,7 @@ namespace SR_WORLD_NS {
 
         m_isPreDestroyed = true;
 
-        IComponentable::DestroyComponents();
+        DestroyComponents();
 
         m_logic.AutoFree([](auto&& pLogic) {
             pLogic->Destroy();
@@ -222,11 +237,11 @@ namespace SR_WORLD_NS {
         m_isHierarchyChanged = true;
     }
 
-    bool Scene::Save() {
-        return SaveAt(m_path);
+    bool Scene::SaveScene() {
+        return SaveSceneAt(m_path);
     }
 
-    bool Scene::SaveAt(const Path& path) {
+    bool Scene::SaveSceneAt(const Path& path) {
         SR_INFO(SR_FORMAT("Scene::SaveAt() : saving scene...\n\tPath: {}", path.CStr()));
 
         SRAssert(!path.IsAbs());
@@ -236,7 +251,16 @@ namespace SR_WORLD_NS {
             return false;
         }
 
-        if (!m_logic->Save(GetAbsPath(path))) {
+        SRASerializer serializer;
+        serializer.SetUseTabs(true);
+        Save(serializer);
+
+        if (!serializer.SaveToFile(m_logic->GetSceneDataPath(GetAbsPath(path)))) {
+            SR_ERROR("Scene::SaveAt() : failed to save scene!");
+            return false;
+        }
+
+        if (!m_logic->SaveLogic(GetAbsPath(path))) {
             SR_ERROR("Scene::SaveAt() : failed to save scene logic!");
             return false;
         }
@@ -286,16 +310,12 @@ namespace SR_WORLD_NS {
         return SceneObject::Ptr();
     }
 
-    SceneObject::Ptr Scene::InstanceFromFile(const std::string& path) {
-        auto&& extension = SR_UTILS_NS::StringUtils::GetExtensionFromFilePath(path);
-
-        if (extension == Prefab::EXTENSION) {
-            auto&& pPrefab = Prefab::Load(path);
-
-            if (pPrefab) {
-                auto&& instanced = pPrefab->Instance(this);
+    SceneObject::Ptr Scene::InstanceFromFile(const SR_UTILS_NS::Path& path) {
+        if (path.GetExtensionView() == Prefab::EXTENSION) {
+            if (auto&& pPrefab = Prefab::Load(path)) {
+                auto&& pInstanced = pPrefab->Instance(this);
                 pPrefab->CheckResourceUsage();
-                return instanced;
+                return pInstanced;
             }
 
             return SceneObject::Ptr();
@@ -317,6 +337,20 @@ namespace SR_WORLD_NS {
     bool Scene::Reload() {
         SR_INFO("Scene::Reload() : reload scene...");
         return m_logic->Reload();
+    }
+
+    void Scene::OnPostLoad() {
+        if (m_logic) {
+            m_logic->SetScene(this);
+        }
+
+        for (auto&& pObject : m_root) {
+            if (SRVerify2(pObject, "Scene::OnPostLoad() : invalid root object!")) {
+                RegisterSceneObject(pObject);
+            }
+        }
+
+        Super::OnPostLoad();
     }
 
     SceneObject::Ptr Scene::Find(uint64_t hashName) {
@@ -371,7 +405,7 @@ namespace SR_WORLD_NS {
         SR_TRACY_ZONE;
 
         if (auto&& pLogic = GetLogicBase()) {
-            pLogic->PostLoad();
+            pLogic->Prepare();
         }
 
         if (!m_deleteQueue.empty() || !m_newQueue.empty() || !m_destroyedComponents.empty()) {

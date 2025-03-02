@@ -176,9 +176,20 @@ private:
 
 public:
 	static void Save(ISerializer& serializer, const T& value, const SerializationId& id) {
-		serializer.BeginArray(value.size(), id);
+		uint64_t count = 0;
 
 		for (auto&& item : value) {
+			if (SR_UTILS_NS::Serialization::CanBeSaved(item)) {
+				++count;
+			}
+		}
+
+		serializer.BeginArray(count, id);
+
+		for (auto&& item : value) {
+			if (!SR_UTILS_NS::Serialization::CanBeSaved(item)) {
+				continue;
+			}
 			serializer.BeginItem(itemId);
 			Serialization::Save(serializer, item, dataId);
 			serializer.EndItem();
@@ -218,7 +229,7 @@ public:
 
 		while (deserializer.BeginItem(itemId, index)) {
 			if (deserializer.IsPreserveMode() && index < value.size()) {
-				if constexpr (std::is_same_v<T::value_type, bool>) {
+				if constexpr (std::is_same_v<T, std::vector<bool>>) {
 					bool item = false;
 					Serialization::Load(deserializer, item, dataId);
 					value[index] = item;
@@ -228,7 +239,7 @@ public:
 				}
 			}
 			else {
-				if constexpr (std::is_same_v<T::value_type, bool>) {
+				if constexpr (std::is_same_v<T, std::vector<bool>>) {
 					value.emplace_back();
 					bool item = false;
 					Serialization::Load(deserializer, item, dataId);
@@ -258,10 +269,23 @@ struct ObjectDataAccessor<std::vector<T, TOther...>> : ObjectDataAccessorVector<
 
 template<typename T, size_t N> struct ObjectDataAccessor<std::array<T, N>> {
 	static void Save(ISerializer& serializer, const std::array<T, N>& value, const SerializationId& id) {
-		serializer.BeginArray(value.size(), id);
+		uint64_t count = 0;
+
+		for (auto&& item : value) {
+			if (SR_UTILS_NS::Serialization::CanBeSaved(item)) {
+				++count;
+			}
+		}
+
+		serializer.BeginArray(count, id);
 
 		for (uint64_t i = 0; i < value.size(); ++i) {
 			const auto& item = value[i];
+
+			if (!SR_UTILS_NS::Serialization::CanBeSaved(item)) {
+				continue;
+			}
+
 			if (IsValidValue(item) && (serializer.IsWriteDefaults() || !IsDefault(item))) {
 				constexpr auto itemId = SerializationId::Create("item");
 				constexpr auto dataId = SerializationId::Create("data");
@@ -576,9 +600,7 @@ template<typename T>
 struct ObjectDataAccessor<T, typename std::enable_if<SerializationTraits<T>::IsSerializable>::type> {
 	static void Save(ISerializer& serializer, const T& value, const SerializationId& id) {
 		serializer.BeginObject(id);
-		const_cast<Serializable&>(static_cast<const Serializable&>(value)).OnPreSave();
 		static_cast<const Serializable&>(value).Save(serializer);
-		const_cast<Serializable&>(static_cast<const Serializable&>(value)).OnPostSave();
 		serializer.EndObject();
 	}
 
@@ -586,9 +608,7 @@ struct ObjectDataAccessor<T, typename std::enable_if<SerializationTraits<T>::IsS
 		if (!deserializer.BeginObject(id)) {
             return;
         }
-		static_cast<Serializable&>(value).OnPreLoad();
 		static_cast<Serializable&>(value).Load(deserializer);
-		static_cast<Serializable&>(value).OnPostLoad();
 		deserializer.EndObject();
 	}
 };
@@ -618,9 +638,7 @@ struct ObjectDataAccessor<SR_HTYPES_NS::SharedPtr<T>, std::enable_if_t<Serializa
 
 		serializer.WriteString(typeName, SerializationId::Create("type"));
 
-		const_cast<Serializable&>(static_cast<const Serializable&>(*value)).OnPreSave();
 		Serialization::Save(serializer, *value, SerializationId::Create("ptr"));
-		const_cast<Serializable&>(static_cast<const Serializable&>(*value)).OnPostSave();
 
 		serializer.EndObject();
 	}
@@ -657,9 +675,7 @@ struct ObjectDataAccessor<SR_HTYPES_NS::SharedPtr<T>, std::enable_if_t<Serializa
 		}
 
 		if (value) {
-			value->OnPreLoad();
 			Serialization::Load(deserializer, *value, SerializationId::Create("ptr"));
-			value->OnPostLoad();
 
 			SR_UTILS_NS::SerializableVerifyContext context;
 			value->VerifyAfterLoad(context);

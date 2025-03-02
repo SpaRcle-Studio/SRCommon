@@ -33,13 +33,9 @@ namespace SR_UTILS_NS {
 
     public:
         SceneObject();
-        explicit SceneObject(ObjectNameT name);
         ~SceneObject() override;
 
     public:
-        SR_NODISCARD SR_HTYPES_NS::Marshal::Ptr SaveLegacy(SavableContext data) const override;
-        SR_NODISCARD virtual SceneObject::Ptr Copy(const ScenePtr& pScene, const SceneObject::Ptr& pObject) const;
-
         SR_NODISCARD SR_FORCE_INLINE const ObjectNameT& GetName() const { return m_name; }
         SR_NODISCARD SR_FORCE_INLINE bool IsEnabled() const noexcept { return m_isEnabled; }
         SR_NODISCARD SR_FORCE_INLINE uint64_t GetIdInScene() const noexcept { return m_idInScene; }
@@ -70,6 +66,8 @@ namespace SR_UTILS_NS {
         SR_NODISCARD std::string GetEntityInfo() const override;
         SR_NODISCARD StringAtom GetTag() const;
         SR_NODISCARD std::list<EntityBranch> GetEntityBranches() const override;
+
+        SR_NODISCARD SceneObject::Ptr CloneSceneObject() const;
 
         SR_NODISCARD virtual SceneObjectType GetSceneObjectType() const noexcept = 0;
 
@@ -136,15 +134,15 @@ namespace SR_UTILS_NS {
         SRHashType m_idInScene = SR_ID_INVALID;
 
     private:
-        /// @property
+        /// @property @setter(SetTag)
         SR_UTILS_NS::StringAtom m_tag;
-        /// @property
+        /// @property @setter(SetName)
         SR_UTILS_NS::StringAtom m_name;
         /// @property
         std::vector<SceneObject::Ptr> m_children;
-        /// @property
+        /// @property @setter(SetEnabled)
         bool m_isEnabled = true;
-        /// @property
+        /// @property @setter(SetLayer)
         StringAtom m_layer = LayerManager::GetDefaultLayer();
 
     };

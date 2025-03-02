@@ -10,14 +10,11 @@
 #include <Utils/World/Scene.h>
 
 #include <Codegen/SceneObject.generated.hpp>
+#include <Utils/ECS/GameObject.h>
 
 namespace SR_UTILS_NS {
     SceneObject::SceneObject() {
-        UpdateEntityPath();
-    }
-
-    SceneObject::SceneObject(ObjectNameT name) {
-        SetName(name);
+        SetLayer(SR_UTILS_NS::LayerManager::GetDefaultLayer());
         UpdateEntityPath();
     }
 
@@ -27,39 +24,6 @@ namespace SR_UTILS_NS {
             UnlinkPrefab();
         }
         SRAssert(!GetPrefab());
-    }
-
-    SR_HTYPES_NS::Marshal::Ptr SceneObject::SaveLegacy(SavableContext data) const {
-        if (!(data.pMarshal = Entity::SaveLegacy(data))) {
-            return data.pMarshal;
-        }
-
-        return Entity::SaveLegacy(data);
-    }
-
-    SceneObject::Ptr SceneObject::Copy(const ScenePtr& pScene, const SceneObject::Ptr& pObject) const {
-        pObject->SetEnabled(IsEnabled());
-
-        pObject->SetTag(GetTag());
-        pObject->SetLayer(GetLayer());
-
-        if (pScene) {
-            pScene->RegisterSceneObject(pObject);
-        }
-
-        for (auto&& pComponent : m_components) {
-            pObject->AddComponent(pComponent->CopyComponent());
-        }
-
-        for (auto&& children : GetChildrenRef()) {
-            pObject->AddChild(children->Copy(pScene, nullptr));
-        }
-
-        if (IsPrefabOwner()) {
-            pObject->SetPrefab(GetPrefab(), true);
-        }
-
-        return pObject;
     }
 
     SceneObject::Ptr SceneObject::Find(const std::string_view& name) const noexcept {
@@ -93,6 +57,26 @@ namespace SR_UTILS_NS {
         });
 
         return std::move(branches);
+    }
+
+    SceneObject::Ptr SceneObject::CloneSceneObject() const {
+        SR_UTILS_NS::SRASerializer serializer;
+        Save(serializer);
+        SR_UTILS_NS::SRADeserializer deserializer = serializer.CreateDeserializer();
+
+        SR_UTILS_NS::SceneObject::Ptr pSceneObject;
+
+        switch (GetSceneObjectType()) {
+        case SceneObjectType::GameObject:
+                pSceneObject = SR_UTILS_NS::GameObject::MakeShared<GameObject, SceneObject>();
+                break;
+            default:
+                SRHalt("Unknown scene object type!");
+                return nullptr;
+        }
+
+        pSceneObject->Load(deserializer);
+        return pSceneObject;
     }
 
     bool SceneObject::MoveToTree(const SceneObject::Ptr &destination) {

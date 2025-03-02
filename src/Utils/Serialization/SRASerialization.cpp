@@ -32,11 +32,18 @@ namespace SR_UTILS_NS {
 
     bool SRAISerialization::SaveToFileImpl(const SR_UTILS_NS::Path& path) const {
         if (path.empty()) {
+            SRHalt("SRAISerialization::SaveToFileImpl() : empty path!");
+            return false;
+        }
+
+        if (!path.CreateIfNotExists()) {
+            SR_ERROR("SRAISerialization::SaveToFileImpl() : failed to create path!\n\tPath: " + path.ToString());
             return false;
         }
 
         std::ofstream file(path.c_str());
         if (!file.is_open()) {
+            SR_ERROR("SRAISerialization::SaveToFileImpl() : failed to open file!\n\tPath: " + path.ToString());
             return false;
         }
 
@@ -156,6 +163,15 @@ namespace SR_UTILS_NS {
         m_root.type = SRASerializationDataType::Root;
     }
 
+    SRADeserializer SRASerializer::CreateDeserializer() const {
+        SR_TRACY_ZONE;
+
+        SRADeserializer deserializer;
+        deserializer.m_root = m_root;
+        deserializer.m_isNeedUseTabs = m_isNeedUseTabs;
+        return deserializer;
+    }
+
     void SRASerializer::WriteString(std::string_view value, const SerializationId& name) {
         SRANode node(name, SRASerializationDataType::String);
         node.string = value;
@@ -225,15 +241,18 @@ namespace SR_UTILS_NS {
 
     bool SRADeserializer::LoadFromFile(const SR_UTILS_NS::Path& path) {
         if (path.empty()) {
+            SRHalt("SRADeserializer::LoadFromFile() : empty path!");
             return false;
         }
 
         if (!path.IsFile()) {
+            SR_ERROR("SRADeserializer::LoadFromFile() : path is not a file!\n\tPath: " + path.ToString());
             return false;
         }
 
         const std::string data = FileSystem::ReadAllText(path.ToStringRef());
         if (data.empty()) {
+            SR_ERROR("SRADeserializer::LoadFromFile() : empty data!\n\tPath: " + path.ToString());
             return false;
         }
 
@@ -243,10 +262,12 @@ namespace SR_UTILS_NS {
     bool SRADeserializer::LoadFromString(const std::string& str) {
         const std::vector<std::string_view> lines = SR_UTILS_NS::StringUtils::SplitView(str, "\n");
         if (lines.empty()) {
+            SR_ERROR("SRADeserializer::LoadFromString() : no lines found!");
             return false;
         }
 
         if (lines[0].find("sra format") == std::string::npos) {
+            SR_ERROR("SRADeserializer::LoadFromString() : invalid format!");
             return false;
         }
 

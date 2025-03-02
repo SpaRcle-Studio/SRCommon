@@ -3,7 +3,7 @@
 //
 
 template<typename T, typename Enable = void>
-    struct DefaultObjectMaker {
+struct DefaultObjectMaker {
     static constexpr bool value = false;
 
     static void MakeDefault(T&) { }

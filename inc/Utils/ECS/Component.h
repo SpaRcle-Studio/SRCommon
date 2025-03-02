@@ -97,8 +97,6 @@ namespace SR_UTILS_NS {
         void SetEnabled(bool value);
         void SetIndexIdSceneUpdater(int32_t index) { m_indexInSceneUpdater = index; }
 
-        SR_NODISCARD virtual Component* CopyComponent() const;
-
         SR_NODISCARD virtual const SR_UTILS_NS::StringAtom& GetComponentName() const = 0;
 
         SR_NODISCARD SR_FORCE_INLINE virtual bool IsComponentLoaded() const noexcept { return m_isComponentLoaded; }
@@ -138,9 +136,9 @@ namespace SR_UTILS_NS {
 
         SR_NODISCARD std::string GetEntityInfo() const override;
 
-    protected:
-        SR_NODISCARD SR_HTYPES_NS::Marshal::Ptr SaveLegacy(SavableContext data) const override;
+        SR_NODISCARD Component::Ptr CloneComponent() const;
 
+    protected:
         void SetParent(IComponentable* pParent);
 
     protected:
@@ -150,7 +148,7 @@ namespace SR_UTILS_NS {
         bool m_isAwake = false;
         bool m_isStarted = false;
 
-        /// @property @hidden
+        /// @property @hidden @setter(SetEnabled)
         bool m_isEnabled = true;
 
         int32_t m_indexInSceneUpdater = SR_ID_INVALID;

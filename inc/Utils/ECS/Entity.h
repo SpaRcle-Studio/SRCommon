@@ -118,21 +118,6 @@ namespace SR_UTILS_NS {
 
         SR_NODISCARD virtual std::list<EntityBranch> GetEntityBranches() const { return {}; }
 
-        SR_NODISCARD SR_HTYPES_NS::Marshal::Ptr SaveLegacy(SavableContext data) const override {
-            if (!(data.pMarshal = Super::SaveLegacy(data))) {
-                return data.pMarshal;
-            }
-
-            if (!(data.flags & SAVABLE_FLAG_ECS_NO_ID)) {
-                data.pMarshal->Write(static_cast<uint64_t>(GetEntityId()));
-            }
-            else {
-                data.pMarshal->Write(static_cast<uint64_t>(ENTITY_ID_MAX));
-            }
-
-            return data.pMarshal;
-        }
-
     protected:
         SR_UTILS_NS::PropertyContainer m_entityMessages;
 

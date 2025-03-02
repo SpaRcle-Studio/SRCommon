@@ -17,13 +17,13 @@ namespace SR_WORLD_NS {
 
 namespace SR_UTILS_NS {
     class IComponentable : public Entity {
+        using Super = Entity;
         SR_CLASS()
     public:
         using ScenePtr = SR_WORLD_NS::Scene*;
         using OriginType = IComponentable;
 
-    protected:
-        IComponentable() = default;
+    public:
         ~IComponentable() override;
 
     public:
@@ -31,8 +31,6 @@ namespace SR_UTILS_NS {
         SR_NODISCARD bool IsDirty() const noexcept;
 
     public:
-        SR_NODISCARD SR_HTYPES_NS::Marshal::Ptr SaveComponents(SavableContext data) const;
-
         /// Вызывает OnAttached у компонентов загруженных через LoadComponent
         virtual bool PostLoad(bool force);
 
@@ -87,6 +85,8 @@ namespace SR_UTILS_NS {
         virtual void OnMatrixDirty();
 
         SR_NODISCARD virtual ScenePtr GetScene() const;
+
+        void OnPostLoad() override;
 
     protected:
         void DestroyComponent(const Component::Ptr& pComponent);

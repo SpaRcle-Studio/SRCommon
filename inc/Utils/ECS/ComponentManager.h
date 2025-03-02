@@ -71,17 +71,12 @@ namespace SR_UTILS_NS {
             SR_TRACY_ZONE;
 
             if (auto&& pComponent = CreateComponentOfName(name)) {
-                if (pComponent->UseNewSerialization()) {
-                    SR_UTILS_NS::SRADeserializer deserializer;
-                    if (!deserializer.LoadFromString(MarshalUtils::LoadStr(marshal))) {
-                        SRHalt("ComponentManager::LoadComponent() : failed to load component!");
-                        return pComponent;
-                    }
-                    pComponent->Load(deserializer);
+                SR_UTILS_NS::SRADeserializer deserializer;
+                if (!deserializer.LoadFromString(MarshalUtils::LoadStr(marshal))) {
+                    SRHalt("ComponentManager::LoadComponent() : failed to load component!");
+                    return pComponent;
                 }
-                else {
-                    pComponent->GetComponentProperties().LoadProperty(marshal);
-                }
+                pComponent->Load(deserializer);
                 return pComponent;
             }
 
@@ -149,15 +144,15 @@ namespace SR_UTILS_NS {
     };
 }
 
-#define SR_REGISTER_COMPONENT_CUSTOM(name, constructor)                                                                                                             \
-    SR_INLINE_STATIC const bool SR_CODEGEN_REGISTER_COMPONENT_##name = SR_UTILS_NS::ComponentManager::Instance().RegisterComponentLoader<name>([]() { /** NOLINT */ \
-         constructor                                                                                                                                                \
-    });                                                                                                                                                             \
-
-#define SR_REGISTER_COMPONENT(name)                                                                                                                                 \
-    SR_INLINE_STATIC const bool SR_CODEGEN_REGISTER_COMPONENT_##name = SR_UTILS_NS::ComponentManager::Instance().RegisterComponentLoader<name>([]() { /** NOLINT */ \
-         return new name ();                                                                                                                                        \
-    });                                                                                                                                                             \
+//#define SR_REGISTER_COMPONENT_CUSTOM(name, constructor)                                                                                                             \
+//    SR_INLINE_STATIC const bool SR_CODEGEN_REGISTER_COMPONENT_##name = SR_UTILS_NS::ComponentManager::Instance().RegisterComponentLoader<name>([]() { /** NOLINT */ \
+//         constructor                                                                                                                                                \
+//    });                                                                                                                                                             \
+//
+//#define SR_REGISTER_COMPONENT(name)                                                                                                                                 \
+//    SR_INLINE_STATIC const bool SR_CODEGEN_REGISTER_COMPONENT_##name = SR_UTILS_NS::ComponentManager::Instance().RegisterComponentLoader<name>([]() { /** NOLINT */ \
+//         return new name ();                                                                                                                                        \
+//    });                                                                                                                                                             \
 
 
 #define SR_REGISTER_NEW_COMPONENT(className, version)                                                                                                     \

@@ -2,14 +2,15 @@
 // Created by Monika on 22.12.2022.
 //
 
-#ifndef SR_ENGINE_SCENELOGIC_H
-#define SR_ENGINE_SCENELOGIC_H
+#ifndef SR_ENGINE_SCENE_LOGIC_H
+#define SR_ENGINE_SCENE_LOGIC_H
 
-#include <Utils/Common/NonCopyable.h>
-#include <Utils/Types/SafePointer.h>
+#include <Utils/Types/SharedPtr.h>
+#include <Utils/Serialization/Serializable.h>
+#include <Utils/World/SceneLogicType.h>
 
 namespace SR_UTILS_NS {
-    class GameObject;
+    class SceneObject;
 }
 
 namespace SR_WORLD_NS {
@@ -27,25 +28,25 @@ namespace SR_WORLD_NS {
 
     public:
         SceneLogic();
-        explicit SceneLogic(const ScenePtr& scene);
-        ~SceneLogic() override = default;
 
     public:
-        /// Метод всегда вернет валидную логику сцены
-        static SceneLogic::Ptr CreateByExt(const ScenePtr& scene, const std::string& ext);
+        SR_NODISCARD virtual bool IsAllowedRootSave() const noexcept { return true; }
+        SR_NODISCARD virtual SceneLogicType GetType() const noexcept = 0;
+        SR_NODISCARD virtual StringAtom GetSceneExtension() const noexcept = 0;
+        SR_NODISCARD const ScenePtr& GetScene() const noexcept { return m_scene; }
+        SR_NODISCARD virtual SR_UTILS_NS::Path GetSceneDataPath(const SR_UTILS_NS::Path& path) const { return path; }
 
-    public:
-        SR_NODISCARD virtual bool IsDefault() const noexcept { return false; }
+        virtual void SetScene(const ScenePtr& pScene);
 
         virtual void Init() { }
         virtual void Update(float_t dt) { }
         virtual void Destroy() { }
-        virtual void PostLoad() { }
+        virtual void Prepare() { }
+
+        virtual bool SaveLogic(const Path& path) { return true; }
+        virtual bool LoadLogic(const Path& path) { return true; }
 
         virtual bool Reload() { return true; }
-
-        virtual bool Load(const Path& path);
-        virtual bool Save(const Path& path);
 
     protected:
         ScenePtr m_scene;
@@ -54,4 +55,4 @@ namespace SR_WORLD_NS {
     };
 }
 
-#endif //SR_ENGINE_SCENELOGIC_H
+#endif //SR_ENGINE_SCENE_LOGIC_H
