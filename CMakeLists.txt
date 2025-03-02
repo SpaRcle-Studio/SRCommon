@@ -314,10 +314,6 @@ if (SR_TRACY_ENABLE)
     target_link_libraries(Utils tracy)
 endif()
 
-if (UNIX)
-    target_compile_options(Utils PRIVATE -fconstexpr-loop-limit=1000000)
-endif()
-
 if (MSVC)
     target_compile_options(Utils PUBLIC /openmp)
 endif()

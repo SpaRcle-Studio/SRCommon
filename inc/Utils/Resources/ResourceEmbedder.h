@@ -24,8 +24,8 @@ namespace SR_UTILS_NS {
     public:
         template<class T> bool RegisterResource() {
             Resource resource;
-            resource.compressedHex = T::data;
-            resource.decompressedSize = T::size;
+            resource.compressedHex = std::string_view(T::data, T::compressedSize);
+            resource.decompressedSize = T::decompressedSize;
             m_resources[T::path] = resource;
             return true;
         }
