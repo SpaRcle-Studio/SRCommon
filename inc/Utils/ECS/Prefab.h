@@ -33,6 +33,7 @@ namespace SR_UTILS_NS {
     public:
         static Prefab* Load(const SR_UTILS_NS::Path& rawPath);
 
+        SR_NODISCARD bool LoadToSO(const SceneObjectPtr& pSO);
         SR_NODISCARD SceneObjectPtr Instance(const ScenePtr& scene) const;
         SR_NODISCARD const SceneObjectPtr& GetData() const noexcept { return m_data; }
 
@@ -42,6 +43,7 @@ namespace SR_UTILS_NS {
 
     private:
         SceneObjectPtr m_data;
+        SR_UTILS_NS::IDeserializer* m_pDeserializer = nullptr;
 
     };
 }

@@ -26,8 +26,8 @@ namespace SR_WORLD_NS {
 
         void Prepare() override;
 
-        bool SaveLogic(const Path& path) override;
-        bool LoadLogic(const Path& path) override;
+        bool SaveLogic(ISerializer& serializer, const Path& path) override;
+        bool LoadLogic(IDeserializer& deserializer, const Path& path) override;
 
         void SetWorldOffset(const SR_WORLD_NS::Offset& offset);
         void SetObserver(const SceneObject::Ptr& target);

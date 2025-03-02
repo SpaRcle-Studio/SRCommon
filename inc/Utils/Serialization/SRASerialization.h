@@ -119,6 +119,8 @@ namespace SR_UTILS_NS {
         SR_NODISCARD bool IsPreserveMode() const noexcept override { return false; }
         SR_NODISCARD bool AllowReAllocPointer(ReAllocPointerReason reason) const noexcept override { return false; }
 
+        void ResetWalker() override { m_walker.clear(); }
+
         bool BeginItem(const SerializationId& id, uint32_t index) override;
         void EndItem() override;
 
@@ -130,6 +132,7 @@ namespace SR_UTILS_NS {
 
         void ReadString(std::string& value, const SerializationId& name) override { return ReadStringImpl(value, name); }
         void ReadString(SR_UTILS_NS::StringAtom& value, const SerializationId& name) override { return ReadStringImpl(value, name); }
+        void ReadString(SR_UTILS_NS::Path& value, const SerializationId& name) override { return ReadStringImpl(value, name); }
 
         void ReadBool(bool& value, const SerializationId& name) override {
             auto&& node = GetWalkNode();

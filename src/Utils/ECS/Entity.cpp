@@ -96,14 +96,26 @@ namespace SR_UTILS_NS {
 
     Entity::Entity()
         : SR_HTYPES_NS::SharedPtr<Entity>(this, SharedPtrPolicy::Manually)
-        , m_entityId(ENTITY_ID_MAX)
-    {
-        m_entityId = EntityManager::Instance().Register(this);
-    }
+    { }
 
     Entity::~Entity() {
-        EntityManager::Instance().Unregister(m_entityId);
+        if (m_entityRegistered) {
+            EntityManager::Instance().Unregister(m_entityId);
+        }
         m_entityMessages.ClearContainer();
+    }
+
+    void Entity::SetEntityId(const EntityId id) {
+        SRAssert2(!IsEntityRegistered(), "Can't change entity id after registration!");
+        m_entityId = id;
+    }
+
+    void Entity::OnEntityRegistered() {
+        if (m_entityId == ENTITY_ID_MAX) {
+            SRHalt("Entity::OnEntityRegistered() : entity id is invalid!");
+            return;
+        }
+        m_entityRegistered = true;
     }
 
     void Entity::SetEntityPath(const EntityPath &path) {

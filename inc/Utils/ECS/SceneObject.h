@@ -45,7 +45,6 @@ namespace SR_UTILS_NS {
         SR_NODISCARD SR_FORCE_INLINE StringAtom GetLocalLayer() const noexcept { return m_layer; }
 
         SR_NODISCARD SR_FORCE_INLINE Prefab* GetPrefab() const noexcept { return m_prefabInfo.pPrefab; }
-        SR_NODISCARD SR_FORCE_INLINE bool IsPrefab() const noexcept { return m_prefabInfo.pPrefab; }
         SR_NODISCARD SR_FORCE_INLINE bool IsPrefabOwner() const noexcept { return m_prefabInfo.isOwner; }
 
         SR_NODISCARD SR_FORCE_INLINE SceneObject::Ptr GetParent() const noexcept { return m_parent; }
@@ -63,13 +62,17 @@ namespace SR_UTILS_NS {
         SR_NODISCARD SceneObject::Ptr Find(const std::string_view& name) const noexcept;
         SR_NODISCARD SceneObject::Ptr Find(StringAtom name) const noexcept;
 
+        SR_NODISCARD Path GetPrefabPath() const;
         SR_NODISCARD std::string GetEntityInfo() const override;
         SR_NODISCARD StringAtom GetTag() const;
         SR_NODISCARD std::list<EntityBranch> GetEntityBranches() const override;
 
         SR_NODISCARD SceneObject::Ptr CloneSceneObject() const;
+        SR_NODISCARD bool IsPrefab() const noexcept override { return m_prefabInfo.pPrefab; }
 
         SR_NODISCARD virtual SceneObjectType GetSceneObjectType() const noexcept = 0;
+
+        void Load(IDeserializer& deserializer) override;
 
         bool MoveToTree(const SceneObject::Ptr& destination);
         void RemoveChild(const SceneObject::Ptr& pChild);
@@ -138,12 +141,17 @@ namespace SR_UTILS_NS {
         SR_UTILS_NS::StringAtom m_tag;
         /// @property @setter(SetName)
         SR_UTILS_NS::StringAtom m_name;
-        /// @property
+        /// @property @propertyCondition(!This.IsPrefab())
+        /// @loadCondition(!This.IsPrefab())
         std::vector<SceneObject::Ptr> m_children;
         /// @property @setter(SetEnabled)
         bool m_isEnabled = true;
         /// @property @setter(SetLayer)
         StringAtom m_layer = LayerManager::GetDefaultLayer();
+
+        /// @virtualProperty(prefab) @dontLoad @getter(GetPrefabPath)
+        /// @propertyCondition(This.IsPrefab() && This.m_prefabInfo.isOwner)
+        SR_VIRTUAL_PROPERTY;
 
     };
 }

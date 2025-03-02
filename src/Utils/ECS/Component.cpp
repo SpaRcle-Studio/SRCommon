@@ -31,10 +31,6 @@ namespace SR_UTILS_NS {
                 m_sceneObject.Reset();
                 m_scene = dynamic_cast<SR_WORLD_NS::Scene*>(m_parent);
             }
-
-            if (m_isComponentLoaded && !m_scene) {
-                SRHalt("Missing scene!");
-            }
         }
         else {
             m_sceneObject.Reset();

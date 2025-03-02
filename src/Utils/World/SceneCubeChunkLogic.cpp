@@ -350,7 +350,7 @@ namespace SR_WORLD_NS {
         return path.Concat("scene.data");
     }
 
-    bool SceneCubeChunkLogic::SaveLogic(const Path& path) {
+    bool SceneCubeChunkLogic::SaveLogic(ISerializer& serializer, const Path& path) {
         SR_TRACY_ZONE;
         SR_LOCK_GUARD;
 
@@ -404,7 +404,7 @@ namespace SR_WORLD_NS {
         return true;
     }
 
-    bool SceneCubeChunkLogic::LoadLogic(const Path& path) {
+    bool SceneCubeChunkLogic::LoadLogic(IDeserializer& deserializer, const Path& path) {
         SR_TRACY_ZONE;
         SR_LOCK_GUARD;
 

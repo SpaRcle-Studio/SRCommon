@@ -20,6 +20,7 @@
 
 namespace SR_UTILS_NS {
     class SceneObject;
+    class Prefab;
 }
 
 namespace SR_HTYPES_NS {
@@ -70,7 +71,7 @@ namespace SR_WORLD_NS {
         SR_NODISCARD std::string GetName() const;
         SR_NODISCARD Path GetPath() const { return m_path; }
         SR_NODISCARD Path GetAbsPath() const;
-        SR_NODISCARD bool IsPrefab() const;
+        SR_NODISCARD bool IsPrefab() const noexcept override;
         SR_NODISCARD SR_HTYPES_NS::DataStorage& GetDataStorage() { return m_dataStorage; }
         SR_NODISCARD const SR_HTYPES_NS::DataStorage& GetDataStorage() const { return m_dataStorage; }
         SR_NODISCARD SR_INLINE SceneUpdater* GetSceneUpdater() const { return m_sceneUpdater; }
@@ -89,7 +90,7 @@ namespace SR_WORLD_NS {
         SceneObjectPtr Find(uint64_t hashName);
         SceneObjectPtr Find(SR_UTILS_NS::StringAtom name);
 
-        void RegisterSceneObject(const SceneObjectPtr& ptr);
+        void RegisterSceneObject(const SceneObjectPtr& pSO);
 
         virtual SceneObjectPtr InstanceFromFile(const SR_UTILS_NS::Path& path);
         virtual SceneObjectPtr Instance(const Types::RawMesh* rawMesh);
@@ -110,6 +111,12 @@ namespace SR_WORLD_NS {
         void OnPostLoad() override;
 
     private:
+        void RegisterSceneObjectImpl(const SceneObjectPtr& pSO);
+
+    private:
+        mutable std::map<EntityId, EntityId> m_registerEntityIdReplaceCache;
+        mutable std::map<SR_UTILS_NS::Prefab*, std::vector<Entity*>> m_registerEntityCache;
+
         SceneUpdater* m_sceneUpdater = nullptr;
 
         bool m_isPreDestroyed = false;

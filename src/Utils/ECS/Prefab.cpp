@@ -15,9 +15,12 @@ namespace SR_UTILS_NS {
             m_data->Destroy();
             m_data = nullptr;
         }
+        SR_SAFE_DELETE_PTR(m_pDeserializer);
     }
 
     Prefab* Prefab::Load(const Path& rawPath) {
+        SR_TRACY_ZONE;
+
         Prefab* pResource = nullptr;
 
         ResourceManager::Instance().Execute([&pResource, &rawPath]() {
@@ -45,11 +48,39 @@ namespace SR_UTILS_NS {
         return pResource;
     }
 
+    bool Prefab::LoadToSO(const SceneObjectPtr& pSO) {
+        SR_TRACY_ZONE;
+
+        if (!m_data || !m_pDeserializer) {
+            SR_ERROR("Prefab::LoadToSO() : prefab data or deserializer is nullptr!");
+            return false;
+        }
+
+        if (!SRVerify2(pSO, "Prefab::LoadToSO() : scene object is nullptr!")) {
+            return false;
+        }
+
+        m_pDeserializer->ResetWalker();
+
+        if (!m_pDeserializer->BeginObject(SerializationId::Create("data"))) {
+            SR_ERROR("Prefab::LoadToSO() : failed to load prefab data!");
+            return false;
+        }
+
+        pSO->Load(*m_pDeserializer);
+
+        m_pDeserializer->EndObject();
+
+        return true;
+    }
+
     bool Prefab::Unload() {
         if (m_data) {
             m_data->Destroy();
             m_data = nullptr;
         }
+
+        SR_SAFE_DELETE_PTR(m_pDeserializer);
 
         return IResource::Unload();
     }
@@ -60,25 +91,27 @@ namespace SR_UTILS_NS {
             path = ResourceManager::Instance().GetResPath().Concat(path);
         }
 
-        SRADeserializer deserializer;
-        if (!deserializer.LoadFromFile(path)) {
+        SR_SAFE_DELETE_PTR(m_pDeserializer);
+        m_pDeserializer = new SR_UTILS_NS::SRADeserializer();
+
+        if (!m_pDeserializer->LoadFromFile(path)) {
             m_loadState = LoadState::Error;
             SR_ERROR("Prefab::Load() : failed to load prefab!\n\tPath: " + path.ToString());
             return false;
         }
 
-        if (!deserializer.BeginObject(SerializationId::Create("info"))) {
+        if (!m_pDeserializer->BeginObject(SerializationId::Create("info"))) {
             m_loadState = LoadState::Error;
             SR_ERROR("Prefab::Load() : failed to load prefab info!\n\tPath: " + path.ToString());
             return false;
         }
 
         SR_UTILS_NS::StringAtom type;
-        deserializer.ReadString(type, SerializationId::Create("type"));
+        m_pDeserializer->ReadString(type, SerializationId::Create("type"));
 
-        deserializer.EndObject();
+        m_pDeserializer->EndObject();
 
-        if (!type.Empty()) {
+        if (type.Empty()) {
             m_loadState = LoadState::Error;
             SR_ERROR("Prefab::Load() : prefab type is empty!\n\tPath: " + path.ToString());
             return false;
@@ -91,9 +124,9 @@ namespace SR_UTILS_NS {
             return false;
         }
 
-        if (deserializer.BeginObject(SerializationId::Create("data"))) {
-            m_data->Load(deserializer);
-            deserializer.EndObject();
+        if (m_pDeserializer->BeginObject(SerializationId::Create("data"))) {
+            m_data->Load(*m_pDeserializer);
+            m_pDeserializer->EndObject();
         }
         else {
             m_loadState = LoadState::Error;

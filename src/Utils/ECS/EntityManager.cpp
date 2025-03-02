@@ -46,17 +46,25 @@ namespace SR_UTILS_NS {
         return Entity::Ptr();
     }
 
-    EntityId EntityManager::Register(const Entity::Ptr& entity) {
-        SRAssert(entity);
+    EntityId EntityManager::Register(const Entity::Ptr& pEntity, EntityId wantedId) {
+        SR_TRACY_ZONE;
 
-        if (entity->GetEntityId() != ENTITY_ID_MAX) {
-            SRHalt("Double entity register!");
-            return entity->GetEntityId();
+        SRAssert(pEntity);
+        SRAssert2(!pEntity->IsEntityRegistered(), "Entity already registered!");
+
+        if (pEntity->GetEntityId() != ENTITY_ID_MAX) {
+            SRHalt("Entity already has id! Id: {}", pEntity->GetEntityId());
+            return pEntity->GetEntityId();
         }
 
         SR_SCOPED_LOCK;
 
         EntityId id = m_nextId;
+
+        if (wantedId != ENTITY_ID_MAX && !IsIdUsed(wantedId)) {
+            id = wantedId;
+            goto complete;
+        }
 
         if (id != ENTITY_ID_MAX) {
             m_reserved.erase(m_nextId);
@@ -65,7 +73,7 @@ namespace SR_UTILS_NS {
         }
 
     retry:
-        id = static_cast<EntityId>(Random::Instance().Int64());
+        id = Random::Instance().UInt64();
 
         if (m_entities.count(id) || m_reserved.count(id) || id == ENTITY_ID_MAX) {
             SR_WARN("EntityManager::Register() : collision detected! Id: " + std::to_string(id));
@@ -73,13 +81,21 @@ namespace SR_UTILS_NS {
         }
 
     complete:
-        m_entities.insert(std::make_pair(id, entity));
+        m_entities.insert(std::make_pair(id, pEntity));
+
+        pEntity->SetEntityId(id);
+        pEntity->OnEntityRegistered();
 
         return id;
     }
 
-    void EntityManager::Unregister(const EntityId &id) {
+    void EntityManager::Unregister(const EntityId& id) {
         SR_SCOPED_LOCK;
+
+        if (id == ENTITY_ID_MAX) {
+            SRHalt("EntityManager::Unregister() : trying to unregister entity with invalid id!");
+            return;
+        }
 
         if (m_entities.count(id) == 0) {
             SRHalt0();
@@ -99,13 +115,19 @@ namespace SR_UTILS_NS {
             uint32_t index = 0;
 
             for (const auto& [id, pEntity] : m_entities) {
-                ids.append("\n\tId[").append(std::to_string(index++)).append("] = ").append(std::to_string(id)).append("; Info = ").append(pEntity->GetEntityInfo());
+                if (SRVerify2(pEntity, "Invalid entity!")) {
+                    ids += "\n\t[{}] = {}; Info = {}"_format(index++, id, pEntity->GetEntityInfo());
+                }
             }
 
             SR_WARN("EntityManager::OnSingletonDestroy() : Ids and info: " + ids);
         }
 
         Singleton::OnSingletonDestroy();
+    }
+
+    bool EntityManager::IsIdUsed(const EntityId& id) const {
+        return m_entities.count(id) != 0 || m_reserved.count(id) != 0;
     }
 
     Entity::Ptr EntityManager::FindById(const EntityId &id) const {

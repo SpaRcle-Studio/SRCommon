@@ -18,13 +18,14 @@ namespace SR_UTILS_NS {
         ~EntityManager() override = default;
 
     public:
-        EntityId Register(const Entity::Ptr& entity);
+        EntityId Register(const Entity::Ptr& pEntity, EntityId wantedId = ENTITY_ID_MAX);
         void Unregister(const EntityId& id);
         bool Reserve(const EntityId& id);
         bool UnReserve(const EntityId& id);
         bool TryUnReserve(const EntityId& id);
         Entity::Ptr GetReserved(const EntityId& id, const EntityAllocator& allocator);
         Entity::Ptr FindById(const EntityId& id) const;
+        bool IsIdUsed(const EntityId& id) const;
 
     private:
         void OnSingletonDestroy() override;

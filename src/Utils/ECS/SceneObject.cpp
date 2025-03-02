@@ -9,13 +9,13 @@
 #include <Utils/World/SceneUpdater.h>
 #include <Utils/World/Scene.h>
 
-#include <Codegen/SceneObject.generated.hpp>
 #include <Utils/ECS/GameObject.h>
+
+#include <Codegen/SceneObject.generated.hpp>
 
 namespace SR_UTILS_NS {
     SceneObject::SceneObject() {
         SetLayer(SR_UTILS_NS::LayerManager::GetDefaultLayer());
-        UpdateEntityPath();
     }
 
     SceneObject::~SceneObject() {
@@ -31,7 +31,9 @@ namespace SR_UTILS_NS {
     }
 
     bool SceneObject::UpdateEntityPath() {
-        SceneObject::Ptr pCurrent = this;
+        SR_TRACY_ZONE;
+
+        /*SceneObject::Ptr pCurrent = this;
         EntityPath path;
 
         do {
@@ -44,7 +46,7 @@ namespace SR_UTILS_NS {
             }
         } while (pCurrent.Valid());
 
-        SetEntityPath(path);
+        SetEntityPath(path);*/
 
         return true;
     }
@@ -77,6 +79,30 @@ namespace SR_UTILS_NS {
 
         pSceneObject->Load(deserializer);
         return pSceneObject;
+    }
+
+    void SceneObject::Load(IDeserializer& deserializer) {
+        SR_TRACY_ZONE;
+
+        SR_UTILS_NS::SerializationId prefabId = SR_UTILS_NS::SerializationId::Create("prefab");
+        SR_UTILS_NS::Path prefabPath;
+        deserializer.ReadString(prefabPath, prefabId);
+
+        if (!prefabPath.empty()) {
+            if (auto&& pPrefab = SR_UTILS_NS::Prefab::Load(prefabPath)) {
+                if (!pPrefab->LoadToSO(this)) {
+                    SR_ERROR("SceneObject::Load() : failed to apply prefab! Path: {}", prefabPath.ToString());
+                }
+                else {
+                    SetPrefab(pPrefab, true);
+                }
+            }
+            else {
+                SR_ERROR("SceneObject::Load() : failed to load prefab! Path: {}", prefabPath.ToString());
+            }
+        }
+
+        Super::Load(deserializer);
     }
 
     bool SceneObject::MoveToTree(const SceneObject::Ptr &destination) {
@@ -209,6 +235,10 @@ namespace SR_UTILS_NS {
         }
 
         return SceneObject::Ptr();
+    }
+
+    Path SceneObject::GetPrefabPath() const {
+        return m_prefabInfo.pPrefab ? m_prefabInfo.pPrefab->GetResourcePath() : Path();
     }
 
     bool SceneObject::PostLoad(bool force) {
@@ -450,6 +480,10 @@ namespace SR_UTILS_NS {
     void SceneObject::SetScene(ScenePtr pScene) {
         SRAssert(!m_scene);
         m_scene = pScene;
+
+        for (auto&& pChild : m_children) {
+            pChild->SetScene(pScene);
+        }
     }
 
     bool SceneObject::Contains(const SceneObject::Ptr& pChild) {
@@ -466,7 +500,6 @@ namespace SR_UTILS_NS {
         SR_TRACY_ZONE;
 
         if (pParent == m_parent) {
-            SRHalt("GameObject::SetParent() : parent is already set!");
             return false;
         }
 
@@ -475,12 +508,12 @@ namespace SR_UTILS_NS {
 
         UpdateRoot();
 
-        if (!UpdateEntityPath()) {
+        /*if (!UpdateEntityPath()) {
             SRHalt("GameObject::SetParent() : failed to update entity path!");
             m_parent = pOldParent;
             UpdateRoot();
             return false;
-        }
+        }*/
 
         if (m_scene) {
             m_scene->OnChanged();

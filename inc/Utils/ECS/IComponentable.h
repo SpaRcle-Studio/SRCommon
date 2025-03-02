@@ -84,6 +84,8 @@ namespace SR_UTILS_NS {
         virtual void OnPriorityChanged();
         virtual void OnMatrixDirty();
 
+        SR_NODISCARD virtual bool IsPrefab() const noexcept { return false; }
+
         SR_NODISCARD virtual ScenePtr GetScene() const;
 
         void OnPostLoad() override;
@@ -93,6 +95,8 @@ namespace SR_UTILS_NS {
 
     protected:
         /// @property
+        /// @propertyCondition(!This.IsPrefab())
+        /// @loadCondition(!This.IsPrefab())
         std::vector<Component::Ptr> m_components;
 
     private:

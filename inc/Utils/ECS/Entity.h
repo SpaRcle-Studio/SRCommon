@@ -101,6 +101,7 @@ namespace SR_UTILS_NS {
     public:
         SR_NODISCARD const SR_UTILS_NS::PropertyContainer& GetEntityMessages() const { return m_entityMessages; }
 
+        SR_NODISCARD bool IsEntityRegistered() const noexcept { return m_entityRegistered; }
         SR_NODISCARD EntityId GetEntityId() const { return m_entityId; }
         SR_NODISCARD EntityPath GetEntityPath() const { return m_entityPath; }
 
@@ -113,6 +114,11 @@ namespace SR_UTILS_NS {
 
         SR_NODISCARD virtual bool InitializeEntity() noexcept { return true; }
 
+        void SetEntityId(EntityId id);
+        void OnEntityRegistered();
+
+        virtual void OnEntityIdReplaced(const std::map<EntityId, EntityId>& replaceMap) { }
+
     protected:
         void SetEntityPath(const EntityPath& path);
 
@@ -122,8 +128,10 @@ namespace SR_UTILS_NS {
         SR_UTILS_NS::PropertyContainer m_entityMessages;
 
     private:
-        /// @property @dontLoad @hidden
-        EntityId m_entityId;
+        /// @property @hidden
+        EntityId m_entityId = ENTITY_ID_MAX;
+
+        bool m_entityRegistered = false;
 
         EntityPath m_entityPath;
 

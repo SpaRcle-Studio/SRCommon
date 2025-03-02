@@ -113,6 +113,7 @@ namespace SR_WORLD_NS {
 
         pScene->SetPath(path);
         pScene->m_logic = pLogic;
+        pLogic->SetScene(pScene);
 
         return pScene;
     }
@@ -149,7 +150,7 @@ namespace SR_WORLD_NS {
 
         pScene->Load(deserializer);
 
-        if (!pScene->m_logic || !pScene->m_logic->LoadLogic(pScene->m_absPath)) {
+        if (!pScene->m_logic || !pScene->m_logic->LoadLogic(deserializer, pScene->m_absPath)) {
             SR_ERROR("Scene::Load() : failed to load scene logic!");
             destroySceneFn(pScene);
             return Scene::Ptr();
@@ -255,13 +256,13 @@ namespace SR_WORLD_NS {
         serializer.SetUseTabs(true);
         Save(serializer);
 
-        if (!serializer.SaveToFile(m_logic->GetSceneDataPath(GetAbsPath(path)))) {
-            SR_ERROR("Scene::SaveAt() : failed to save scene!");
+        if (!m_logic->SaveLogic(serializer, GetAbsPath(path))) {
+            SR_ERROR("Scene::SaveAt() : failed to save scene logic!");
             return false;
         }
 
-        if (!m_logic->SaveLogic(GetAbsPath(path))) {
-            SR_ERROR("Scene::SaveAt() : failed to save scene logic!");
+        if (!serializer.SaveToFile(m_logic->GetSceneDataPath(GetAbsPath(path)))) {
+            SR_ERROR("Scene::SaveAt() : failed to save scene!");
             return false;
         }
 
@@ -381,20 +382,59 @@ namespace SR_WORLD_NS {
         return m_path.GetBaseName();
     }
 
-    bool Scene::IsPrefab() const {
+    bool Scene::IsPrefab() const noexcept {
         return m_logic.DynamicCast<ScenePrefabLogic>();
     }
 
-    void Scene::RegisterSceneObject(const Scene::SceneObjectPtr& ptr) {
-        SRAssert(!m_isPreDestroyed);
-        SRAssert(!ptr->GetScene());
+    void Scene::RegisterSceneObject(const Scene::SceneObjectPtr& pSO) {
+        SR_TRACY_ZONE;
 
-        m_newQueue.emplace_back(ptr);
+        SRAssert2(m_registerEntityCache.empty(), "Scene::RegisterSceneObject() : cache is not empty!");
 
-        ptr->SetScene(this);
+        RegisterSceneObjectImpl(pSO);
+        pSO->SetScene(this);
 
-        for (auto&& pChild : ptr->GetChildrenRef()) {
-            RegisterSceneObject(pChild);
+        auto&& entityManager = SR_UTILS_NS::EntityManager::Instance();
+
+        for (auto& entities : m_registerEntityCache | std::views::values) {
+            m_registerEntityIdReplaceCache.clear();
+
+            for (auto&& pEntity : entities) {
+                const EntityId oldEntityId = pEntity->GetEntityId();
+                pEntity->SetEntityId(ENTITY_ID_MAX);
+                const EntityId newEntityId = entityManager.Register(pEntity, oldEntityId);
+
+                if (oldEntityId != ENTITY_ID_MAX) {
+                    m_registerEntityIdReplaceCache[newEntityId] = oldEntityId;
+                }
+            }
+
+            if (!m_registerEntityIdReplaceCache.empty()) {
+                for (auto&& pEntity : entities) {
+                    pEntity->OnEntityIdReplaced(m_registerEntityIdReplaceCache);
+                }
+            }
+        }
+
+        m_registerEntityCache.clear();
+    }
+
+    void Scene::RegisterSceneObjectImpl(const Scene::SceneObjectPtr& pSO) {
+        SR_TRACY_ZONE;
+
+        SRAssert2(!m_isPreDestroyed, "Scene::RegisterSceneObjectImpl() : scene is pre destroyed!");
+        SRAssert2(!pSO->GetScene(), "Scene::RegisterSceneObjectImpl() : object already registered!");
+        SRAssert2(!pSO->IsEntityRegistered(), "Scene::RegisterSceneObjectImpl() : entity already registered!");
+
+        m_newQueue.emplace_back(pSO);
+
+        m_registerEntityCache[pSO->GetPrefab()].emplace_back(static_cast<Entity*>(const_cast<SceneObject*>(pSO.Get())));
+        for (auto&& pComponent : pSO->GetComponents()) {
+            m_registerEntityCache[pSO->GetPrefab()].emplace_back(static_cast<Entity*>(const_cast<Component*>(pComponent.Get())));
+        }
+
+        for (auto&& pChild : pSO->GetChildrenRef()) {
+            RegisterSceneObjectImpl(pChild);
         }
 
         SetDirty(true);
