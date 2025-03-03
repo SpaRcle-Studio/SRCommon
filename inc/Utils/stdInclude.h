@@ -182,6 +182,46 @@ namespace SR_UTILS_NS {
         return old_value;
     }
 
+    /*template <class Iterator, class = void>
+    constexpr bool UnwrappableV = false;
+
+    template <class Iterator> SR_NODISCARD SR_CONSTEXPR decltype(auto) GetUnwrapped(Iterator&& pIt) noexcept {
+        if constexpr (std::is_pointer_v<std::decay_t<Iterator>>) { // special-case pointers and arrays
+            return pIt + 0;
+        }
+        else {
+            return static_cast<Iterator&&>(pIt);
+        }
+    }*/
+
+    template <class InIt> SR_NODISCARD SR_CONSTEXPR uint64_t Distance(InIt pFirst, InIt pLast) {
+        /*if constexpr (_Is_ranges_random_iter_v<_InIt>) {
+            return pFirst - pLast;
+        }
+        else {
+            auto pUFirst = GetUnwrapped(pFirst);
+            const auto&& pULast = GetUnwrapped(pLast);
+
+            uint64_t offset = 0;
+
+            for (; pUFirst != pULast; ++pUFirst) {
+                ++offset;
+            }
+
+            return offset;
+        }*/
+
+        /// Slow. But cross-platform.
+        
+        uint64_t offset = 0;
+
+        for (; pFirst != pLast; ++pFirst) {
+            ++offset;
+        }
+
+        return offset;
+    }
+
     template<template<class> class T, class U>
     struct IsDerivedFrom {
     private:
