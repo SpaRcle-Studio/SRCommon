@@ -11,9 +11,9 @@
 #include <Utils/ECS/Transform.h>
 
 namespace SR_UTILS_NS {
+    /// @category(Game)
     class SR_DLL_EXPORT LookAtComponent final : public Component {
         SR_CLASS()
-        SR_REGISTER_NEW_COMPONENT(LookAtComponent, 1000);
         using Super = Component;
     public:
         LookAtComponent();

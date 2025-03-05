@@ -97,8 +97,6 @@ namespace SR_UTILS_NS {
         void SetEnabled(bool value);
         void SetIndexIdSceneUpdater(int32_t index) { m_indexInSceneUpdater = index; }
 
-        SR_NODISCARD virtual const SR_UTILS_NS::StringAtom& GetComponentName() const = 0;
-
         SR_NODISCARD SR_FORCE_INLINE virtual bool IsComponentLoaded() const noexcept { return m_isComponentLoaded; }
         SR_NODISCARD SR_FORCE_INLINE virtual bool IsComponentValid() const noexcept { return m_parent; }
         SR_NODISCARD SR_FORCE_INLINE virtual bool IsAttached() const noexcept { return m_isAttached; }
@@ -133,8 +131,6 @@ namespace SR_UTILS_NS {
         SR_NODISCARD SR_UTILS_NS::PropertyContainer& GetComponentProperties() noexcept { return m_properties; }
         SR_NODISCARD const SR_UTILS_NS::PropertyContainer& GetComponentProperties() const noexcept { return m_properties; }
         SR_NODISCARD int32_t GetIndexInSceneUpdater() const noexcept { return m_indexInSceneUpdater; }
-
-        SR_NODISCARD std::string GetEntityInfo() const override;
 
         SR_NODISCARD Component::Ptr CloneComponent() const;
 

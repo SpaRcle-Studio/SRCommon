@@ -20,8 +20,8 @@ namespace SR_UTILS_NS {
     class Transform;
     class Component;
 
+    /// @version(2025.03.04)
     class SR_DLL_EXPORT GameObject final : public SceneObject {
-        SR_ENTITY_SET_VERSION(1010);
         SR_CLASS()
         using Super = SceneObject;
     public:

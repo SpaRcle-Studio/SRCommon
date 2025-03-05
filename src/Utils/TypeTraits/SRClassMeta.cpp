@@ -17,7 +17,7 @@ namespace SR_UTILS_NS {
     	}
     }
 
-    bool SRClassMeta::IsInherited(std::string_view baseClass) const noexcept {
+    bool SRClassMeta::IsInherited(SR_UTILS_NS::StringAtom baseClass) const noexcept {
 		if (GetFactoryName() == baseClass) {
 			return false;
 		}
@@ -49,6 +49,15 @@ namespace SR_UTILS_NS {
     		func(property, *pIndex);
     		++(*pIndex);
     	}
+    }
+
+    std::span<const SR_UTILS_NS::StringAtom> SRClassMeta::GetCategory() const noexcept {
+    	for (auto&& pBase : GetBaseMetas()) {
+			if (!pBase->GetCategory().empty()) {
+				return pBase->GetCategory();
+			}
+		}
+    	return {};
     }
 }
 

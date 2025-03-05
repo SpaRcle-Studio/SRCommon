@@ -106,7 +106,7 @@ namespace SR_UTILS_NS::EntityRefUtils {
                     for (auto&& pComponent : components) {
                         SRAssert1Once(pComponent->Valid());
 
-                        if (pComponent->GetComponentName() != item.name) {
+                        if (pComponent->GetMeta()->GetFactoryName() != item.name) {
                             continue;
                         }
                         if (index > 0) {
@@ -147,12 +147,12 @@ namespace SR_UTILS_NS::EntityRefUtils {
                         if (pComponent == pComponentIteration) {
                             break;
                         }
-                        if (pComponentIteration->GetComponentName() == pComponent->GetComponentName()) {
+                        if (pComponentIteration->GetMeta()->GetFactoryName() == pComponent->GetMeta()->GetFactoryName()) {
                             ++componentIndex;
                         }
                     }
 
-                    PathItem item(pComponent->GetComponentName(), componentIndex, Action::Action_Component);
+                    PathItem item(pComponent->GetMeta()->GetFactoryName(), componentIndex, Action::Action_Component);
 
                     refPath.emplace_back(item);
 

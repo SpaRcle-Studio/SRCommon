@@ -24,11 +24,11 @@ namespace SR_UTILS_NS {
             return pComponent;
         }
 
-        if (auto&& pComponent = ComponentManager::Instance().CreateComponentOfName(name)) {
+        if (auto&& pComponent = SR_UTILS_NS::Factory::Instance().Create<Component>(name)) {
             if (AddComponent(pComponent)) {
                 return pComponent;
             }
-            SRHalt("IComponentable::GetOrCreateComponent() : failed to add component!");
+            SRHalt("IComponentable::GetOrCreateComponent() : failed to add component! Name: {}", name);
         }
 
         return nullptr;
@@ -56,7 +56,7 @@ namespace SR_UTILS_NS {
 
     Component::Ptr IComponentable::GetComponent(StringAtom name) {
         for (auto&& pComponent : m_components) {
-            if (pComponent->GetComponentName() != name) {
+            if (pComponent->GetMeta()->GetFactoryName() != name) {
                 continue;
             }
 
@@ -158,7 +158,7 @@ namespace SR_UTILS_NS {
         auto&& pIt = std::find(m_components.begin(), m_components.end(), pComponent);
 
         if (pIt == m_components.end()) {
-            SR_ERROR("IComponentable::RemoveComponent() : component \"" + pComponent->GetComponentName().ToStringRef() + "\" not found!");
+            SR_ERROR("IComponentable::RemoveComponent() : component \"{}\" not found!", pComponent->GetMeta()->GetFactoryName());
             return false;
         }
         m_components.erase(pIt);

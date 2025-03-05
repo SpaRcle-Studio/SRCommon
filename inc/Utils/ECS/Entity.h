@@ -12,12 +12,6 @@
 #include <Utils/TypeTraits/Properties.h>
 #include <Utils/TypeTraits/SRClass.h>
 
-#define SR_ENTITY_SET_VERSION(version)                                                       \
-    public:                                                                                  \
-        SR_INLINE static const uint16_t VERSION = version;                                   \
-        SR_NODISCARD uint16_t GetEntityVersion() const noexcept override { return VERSION; } \
-    private:                                                                                 \
-
 namespace SR_UTILS_NS {
     class Entity;
 
@@ -110,7 +104,6 @@ namespace SR_UTILS_NS {
         SR_NODISCARD Entity::Ptr GetEntity() const noexcept { return GetThis(); }
 
         SR_NODISCARD virtual std::string GetEntityInfo() const { return "None"; }
-        SR_NODISCARD virtual uint16_t GetEntityVersion() const noexcept = 0;
 
         SR_NODISCARD virtual bool InitializeEntity() noexcept { return true; }
 

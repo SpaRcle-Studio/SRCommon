@@ -413,11 +413,11 @@ namespace SR_WORLD_NS {
         auto&& componentsPath = m_scene->GetAbsPath().Concat("data/components.bin");
 
         if (auto&& rootComponentsMarshal = SR_HTYPES_NS::Marshal::LoadPtr(componentsPath)) {
-            auto&& components = SR_UTILS_NS::ComponentManager::Instance().LoadComponents(*rootComponentsMarshal);
-            delete rootComponentsMarshal;
-            for (auto&& pComponent : components) {
-                m_scene->AddComponent(pComponent);
-            }
+            //auto&& components = SR_UTILS_NS::ComponentManager::Instance().LoadComponents(*rootComponentsMarshal);
+            //delete rootComponentsMarshal;
+            //for (auto&& pComponent : components) {
+            //    m_scene->AddComponent(pComponent);
+            //}
         }
         else {
             SR_ERROR("SceneCubeChunkLogic::Load() : file not found!\n\tPath: " + componentsPath.ToString());

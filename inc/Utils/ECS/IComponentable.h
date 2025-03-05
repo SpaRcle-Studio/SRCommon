@@ -57,13 +57,13 @@ namespace SR_UTILS_NS {
         virtual bool AddComponent(const Component::Ptr& pComponent);
 
         template<typename T> SR_HTYPES_NS::SharedPtr<T> AddComponent() {
-            Component* pComponent = ComponentManager::Instance().CreateComponentOfName(T::COMPONENT_NAME);
+            Component::Ptr pComponent = SR_UTILS_NS::Factory::Instance().Create<Component>(T::GetClassStaticName());
             if (!pComponent) {
-                SR_ERROR("IComponentable::AddComponent() : failed to create component of type: {}", T::COMPONENT_NAME);
+                SR_ERROR("IComponentable::AddComponent() : failed to create component of type: {}", T::GetClassStaticName());
                 return nullptr;
             }
             if (!AddComponent(pComponent)) {
-                SR_ERROR("IComponentable::AddComponent() : failed to add component of type: {}", T::COMPONENT_NAME);
+                SR_ERROR("IComponentable::AddComponent() : failed to add component of type: {}", T::GetClassStaticName());
                 return nullptr;
             }
             return pComponent->template DynamicCast<T>();
@@ -78,7 +78,7 @@ namespace SR_UTILS_NS {
         virtual void DestroyComponents();
 
         template<typename T> SR_HTYPES_NS::SharedPtr<T> GetComponent() {
-            return GetComponent(T::COMPONENT_NAME).template DynamicCast<T>();
+            return GetComponent(T::GetClassStaticName()).template DynamicCast<T>();
         }
 
         virtual void OnPriorityChanged();

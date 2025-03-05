@@ -130,10 +130,6 @@ namespace SR_UTILS_NS {
         return nullptr;
     }
 
-    std::string Component::GetEntityInfo() const {
-        return "Component: " + GetComponentName().ToStringRef();
-    }
-
     Component::Ptr Component::CloneComponent() const {
         SR_TRACY_ZONE;
 
@@ -142,9 +138,11 @@ namespace SR_UTILS_NS {
 
         SR_UTILS_NS::SRADeserializer deserializer = serializer.CreateDeserializer();
 
-        Component::Ptr pComponent = ComponentManager::Instance().CreateComponentOfName(GetComponentName());
+        auto&& pMeta = GetMeta();
+
+        Component::Ptr pComponent = SR_UTILS_NS::Factory::Instance().Create<Component>(pMeta->GetFactoryName());
         if (!pComponent) {
-            SR_ERROR("Component::CloneComponent() : failed to create component of type: {}", GetComponentName());
+            SR_ERROR("Component::CloneComponent() : failed to create component of type: {}", pMeta->GetFactoryName());
             return nullptr;
         }
 

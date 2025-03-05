@@ -33,7 +33,6 @@ namespace SR_WORLD_NS {
 
     class SR_DLL_EXPORT Scene : public SR_UTILS_NS::IComponentable {
         SR_CLASS()
-        SR_ENTITY_SET_VERSION(1000)
     public:
         using Ptr = SR_HTYPES_NS::SharedPtr<Scene>;
         using SceneLogicPtr = SR_HTYPES_NS::SharedPtr<SceneLogic>;

@@ -53,6 +53,7 @@ namespace SR_UTILS_NS::UI {
         SR_MATH_NS::FVector2 childSize;
     };
 
+    /// @hidden @category(UI)
     class UIModifierComponent : public SR_UTILS_NS::Component {
         using Super = SR_UTILS_NS::Component;
         SR_CLASS()

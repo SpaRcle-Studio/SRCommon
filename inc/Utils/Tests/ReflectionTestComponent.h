@@ -68,9 +68,9 @@ namespace SR_UTILS_NS::Tests {
 
     };
 
+    /// @category(Debug)
     class ReflectionTestComponent : public SR_UTILS_NS::Component {
         using Super = Component;
-        SR_REGISTER_NEW_COMPONENT(ReflectionTestComponent, 1002);
         SR_CLASS()
     public:
         SR_NODISCARD const bool& IsWidthChangeable() const { return m_isWidthChangeable; }
