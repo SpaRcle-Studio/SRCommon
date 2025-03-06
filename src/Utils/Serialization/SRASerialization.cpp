@@ -163,13 +163,13 @@ namespace SR_UTILS_NS {
         m_root.type = SRASerializationDataType::Root;
     }
 
-    SRADeserializer SRASerializer::CreateDeserializer() const {
+    std::unique_ptr<IDeserializer> SRASerializer::CreateDeserializer() const {
         SR_TRACY_ZONE;
 
-        SRADeserializer deserializer;
-        deserializer.m_root = m_root;
-        deserializer.m_isNeedUseTabs = m_isNeedUseTabs;
-        return deserializer;
+        auto&& pDeserializer = std::make_unique<SRADeserializer>();
+        pDeserializer->m_root = m_root;
+        pDeserializer->m_isNeedUseTabs = m_isNeedUseTabs;
+        return pDeserializer;
     }
 
     void SRASerializer::WriteString(std::string_view value, const SerializationId& name) {

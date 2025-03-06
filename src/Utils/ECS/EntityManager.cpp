@@ -130,7 +130,7 @@ namespace SR_UTILS_NS {
         return m_entities.count(id) != 0 || m_reserved.count(id) != 0;
     }
 
-    Entity::Ptr EntityManager::FindById(const EntityId &id) const {
+    Entity::Ptr EntityManager::FindById(const EntityId& id) const {
         SR_SCOPED_LOCK;
 
         if (!m_entities.count(id)) {

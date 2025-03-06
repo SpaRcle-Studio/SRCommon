@@ -9,7 +9,7 @@
 
 namespace SR_UTILS_NS {
     Transform::Transform()
-        : Ptr(this, SR_UTILS_NS::SharedPtrPolicy::Manually)
+        : Ptr(this, SR_UTILS_NS::SharedPtrPolicy::Automatic)
     { }
 
     Transform::~Transform() {

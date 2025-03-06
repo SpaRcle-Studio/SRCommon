@@ -12,6 +12,9 @@ namespace SR_UTILS_NS {
 
     class SR_DLL_EXPORT ICommand {
     public:
+        inline static auto DATA_ID = SR_UTILS_NS::SerializationId::Create("command");
+
+    public:
         ICommand() = default;
         virtual ~ICommand() = default;
 

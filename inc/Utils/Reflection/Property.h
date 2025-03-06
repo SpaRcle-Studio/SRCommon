@@ -70,6 +70,7 @@ namespace SR_UTILS_NS::Reflection {
         SR_NODISCARD const Value& GetDefaultValue() const noexcept { return m_defaultValue; }
         SR_NODISCARD const Value& GetResetValue() const noexcept { return m_resetValue; }
         SR_NODISCARD const EditorPropertyParams& GetEditorParams() const noexcept { return m_editorParams; }
+        SR_NODISCARD bool HasExplicitSetter() const noexcept { return m_hasExplicitSetter; }
 
         SR_NODISCARD bool IsActive(SRClass* pOwner) const noexcept {
             if (pOwner && m_propertyActiveCallback) {
@@ -99,6 +100,7 @@ namespace SR_UTILS_NS::Reflection {
         Property& SetResetValue(Value&& value) noexcept { m_resetValue = std::move(value); return *this; }
         Property& SetEditorParams(const EditorPropertyParams& params) noexcept { m_editorParams = params; return *this; }
         Property& SetPropertyCondition(PropertyActiveCallbackFn callback) noexcept { m_propertyActiveCallback = callback; return *this; }
+        Property& SetHasExplicitSetter(bool hasExplicitSetter) noexcept { m_hasExplicitSetter = hasExplicitSetter; return *this; }
 
     private:
         EditorPropertyParams m_editorParams;
@@ -111,6 +113,7 @@ namespace SR_UTILS_NS::Reflection {
         GetCallbackFn m_getCallback = nullptr;
         ChangeCallbackFn m_onChangeCallback = nullptr;
         PropertyActiveCallbackFn m_propertyActiveCallback = nullptr;
+        bool m_hasExplicitSetter = false;
     };
 
     template<typename T> SR_UTILS_NS::StringAtom GetPropertyInspector() {

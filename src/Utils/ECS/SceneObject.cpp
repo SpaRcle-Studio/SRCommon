@@ -64,7 +64,8 @@ namespace SR_UTILS_NS {
     SceneObject::Ptr SceneObject::CloneSceneObject() const {
         SR_UTILS_NS::SRASerializer serializer;
         Save(serializer);
-        SR_UTILS_NS::SRADeserializer deserializer = serializer.CreateDeserializer();
+
+        auto&& pDeserializer = serializer.CreateDeserializer();
 
         SR_UTILS_NS::SceneObject::Ptr pSceneObject;
 
@@ -77,7 +78,7 @@ namespace SR_UTILS_NS {
                 return nullptr;
         }
 
-        pSceneObject->Load(deserializer);
+        pSceneObject->Load(*pDeserializer);
         return pSceneObject;
     }
 

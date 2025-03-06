@@ -10,6 +10,9 @@
 namespace SR_UTILS_NS {
     class IDeserializer {
     public:
+        using UniquePtr = std::unique_ptr<IDeserializer>;
+
+    public:
         /// Если обнаружена проблема при загрузке указателя, то нужно его пересоздать
         enum class ReAllocPointerReason : uint8_t {
             None,

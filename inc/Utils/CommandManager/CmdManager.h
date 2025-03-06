@@ -30,6 +30,7 @@ namespace SR_UTILS_NS {
 
     public:
         SR_NODISCARD std::string GetLastCmdName() const;
+
         bool Execute(ReversibleCommand* cmd, SyncType sync);
         bool Redo();
         bool Cancel();
@@ -37,6 +38,11 @@ namespace SR_UTILS_NS {
         void Update();
 
         void Clear();
+
+        template<typename T, typename... Args> bool Execute(SyncType sync, Args&&... args) {
+            auto&& pCmd = new T(std::forward<Args>(args)...);
+            return Execute(pCmd, sync);
+        }
 
     private:
         bool ExecuteImpl(ReversibleCommand* cmd, SyncType sync);

@@ -72,15 +72,15 @@ namespace SR_UTILS_NS {
 
         mutable bool m_eulersDirty = true;
 
-        /// @property @setter(SetTranslation) @defaultValue(SR_MATH_NS::FVector3::Zero())
+        /// @property @setter(SetTranslation) @defaultValue(SR_MATH_NS::FVector3::Zero()) @drag(0.01f)
         SR_MATH_NS::FVector3 m_translation = SR_MATH_NS::FVector3::Zero();
-        /// @property @dontSave @setter(SetRotation)
+        /// @property @dontSave @setter(SetRotation) @getter(GetRotation) @drag(0.1f)
         mutable SR_MATH_NS::FVector3 m_rotation = SR_MATH_NS::FVector3::Zero();
         /// @property @setter(SetRotation) @hidden
         SR_MATH_NS::Quaternion m_quaternion = SR_MATH_NS::Quaternion::Identity();
-        /// @property @setter(SetScale) @defaultValue(SR_MATH_NS::FVector3::One())
+        /// @property @setter(SetScale) @defaultValue(SR_MATH_NS::FVector3::One()) @drag(0.01f)
         SR_MATH_NS::FVector3 m_scale = SR_MATH_NS::FVector3::One();
-        /// @property @setter(SetSkew) @defaultValue(SR_MATH_NS::FVector3::One())
+        /// @property @setter(SetSkew) @defaultValue(SR_MATH_NS::FVector3::One()) @drag(0.01f)
         SR_MATH_NS::FVector3 m_skew = SR_MATH_NS::FVector3::One();
 
     };

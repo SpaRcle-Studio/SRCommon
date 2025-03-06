@@ -74,7 +74,7 @@ namespace SR_UTILS_NS {
         SRASerializer();
 
     public:
-        SR_NODISCARD SRADeserializer CreateDeserializer() const;
+        SR_NODISCARD std::unique_ptr<IDeserializer> CreateDeserializer() const override;
 
         SR_NODISCARD bool SaveToFile(const SR_UTILS_NS::Path& path) const override { return SaveToFileImpl(path); }
 

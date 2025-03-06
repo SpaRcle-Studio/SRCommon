@@ -8,9 +8,16 @@
 #include <Utils/TypeTraits/TypeTraits.h>
 
 namespace SR_UTILS_NS {
+    class IDeserializer;
+
     class ISerializer {
     public:
+        using UniquePtr = std::unique_ptr<ISerializer>;
+
+    public:
         virtual ~ISerializer() = default;
+
+        SR_NODISCARD virtual std::unique_ptr<IDeserializer> CreateDeserializer() const = 0;
 
         SR_NODISCARD virtual bool IsWriteDefaults() const noexcept { return m_isNeedWriteDefaults; }
         SR_NODISCARD virtual bool IsEditorAllowed() const noexcept { return m_isEditorAllowed; }

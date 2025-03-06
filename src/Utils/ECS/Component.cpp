@@ -136,7 +136,7 @@ namespace SR_UTILS_NS {
         SR_UTILS_NS::SRASerializer serializer;
         Save(serializer);
 
-        SR_UTILS_NS::SRADeserializer deserializer = serializer.CreateDeserializer();
+        auto&& pDeserializer = serializer.CreateDeserializer();
 
         auto&& pMeta = GetMeta();
 
@@ -146,7 +146,7 @@ namespace SR_UTILS_NS {
             return nullptr;
         }
 
-        pComponent->Load(deserializer);
+        pComponent->Load(*pDeserializer);
         return pComponent;
     }
 
