@@ -22,6 +22,7 @@ namespace SR_WORLD_NS {
         SR_NODISCARD SceneLogicType GetType() const noexcept override { return SceneLogicType::Prefab; }
         SR_NODISCARD StringAtom GetSceneExtension() const noexcept override { return "prefab"; }
         SR_NODISCARD bool IsAllowedRootSave() const noexcept override { return false; }
+        SR_NODISCARD SR_HTYPES_NS::SharedPtr<SceneObject> GetPrefabRoot() const noexcept;
 
     };
 }
