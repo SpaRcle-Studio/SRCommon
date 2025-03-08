@@ -45,6 +45,9 @@ namespace SR_WORLD_NS {
 
         SR_SAFE_DELETE_PTR(m_sceneUpdater);
 
+        if (IsEntityRegistered()) {
+            m_pEntityController->Unregister(GetEntityId());
+        }
         m_pEntityController.AutoFree();
     }
 
@@ -152,6 +155,12 @@ namespace SR_WORLD_NS {
         }
 
         pScene->Load(deserializer);
+
+        if (!pScene->IsEntityRegistered()) {
+            const EntityId entityId = pScene->GetEntityId();
+            pScene->SetEntityId(SR_ID_INVALID);
+            pScene->GetEntityController()->Register(pScene.StaticCast<Entity>(), entityId);
+        }
 
         if (!pScene->m_logic || !pScene->m_logic->LoadLogic(deserializer, pScene->m_absPath)) {
             SR_ERROR("Scene::Load() : failed to load scene logic!");

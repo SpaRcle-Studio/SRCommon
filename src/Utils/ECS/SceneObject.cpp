@@ -75,19 +75,19 @@ namespace SR_UTILS_NS {
         Super::Load(deserializer);
     }
 
-    bool SceneObject::MoveToTree(const SceneObject::Ptr &destination) {
+    bool SceneObject::MoveToTree(const SceneObject::Ptr& pDestination) {
         if (m_parent) {
             if (const SceneObject::Ptr pCopy = m_parent) {
                 pCopy->RemoveChild(this);
             }
         }
 
-        if (destination.Valid()){
-            return destination->AddChild(this);
+        if (pDestination) {
+            return pDestination->AddChild(this);
         }
 
-        if (GetParent()){
-            SRHalt("GameObject::MoveToTree() : GameObject has parent!");
+        if (GetParent()) {
+            SRHalt("SceneObject::MoveToTree() : SO has parent!");
             return false;
         }
 
