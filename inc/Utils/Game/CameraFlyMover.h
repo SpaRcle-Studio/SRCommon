@@ -71,7 +71,7 @@ namespace SR_UTILS_NS {
 
         void SetVelocityFactor(const float_t factor) { m_velocityFactor = factor; }
         void SetActive(const bool active) { m_active = active; }
-        void SetExecuteInEditMode(const bool enabled) { m_executeInEditorMode = enabled; }
+        void SetExecuteInEditMode(bool enabled);
         void SetRightMouseButtonToRotate(const bool enabled) { m_rightMouseButtonToRotate = enabled; }
 
         SR_NODISCARD bool ExecuteInEditMode() const override { return m_executeInEditorMode; }
@@ -81,7 +81,7 @@ namespace SR_UTILS_NS {
         bool m_active = true;
         /// @property
         bool m_rightMouseButtonToRotate = false;
-        /// @property
+        /// @property @setter(SetExecuteInEditMode)
         bool m_executeInEditorMode = false;
         /// @property @drag(0.1f)
         float_t m_velocityDegree = 0.8f;

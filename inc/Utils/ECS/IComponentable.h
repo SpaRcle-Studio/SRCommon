@@ -20,6 +20,7 @@ namespace SR_UTILS_NS {
         using Super = Entity;
         SR_CLASS()
     public:
+        using Ptr = SR_HTYPES_NS::SharedPtr<IComponentable>;
         using ScenePtr = SR_WORLD_NS::Scene*;
         using OriginType = IComponentable;
 
@@ -27,7 +28,6 @@ namespace SR_UTILS_NS {
         ~IComponentable() override;
 
     public:
-        SR_NODISCARD SR_FORCE_INLINE const std::vector<Component::Ptr>& GetComponents() const noexcept { return m_components; }
         SR_NODISCARD bool IsDirty() const noexcept;
 
     public:
@@ -53,6 +53,7 @@ namespace SR_UTILS_NS {
         SR_NODISCARD bool HasComponent(const Component::Ptr& pComponent) const;
         SR_NODISCARD int32_t GetComponentIndex(const Component::Ptr& pComponent) const;
         SR_NODISCARD uint32_t GetComponentsCount() const noexcept { return static_cast<uint32_t>(m_components.size()); }
+        SR_NODISCARD const std::vector<Component::Ptr>& GetComponents() const noexcept { return m_components; }
 
         virtual bool AddComponent(const Component::Ptr& pComponent);
 
@@ -69,13 +70,12 @@ namespace SR_UTILS_NS {
             return pComponent->template DynamicCast<T>();
         }
 
+        void RemoveComponents();
         virtual bool RemoveComponent(const Component::Ptr& pComponent);
         virtual bool ContainsComponent(const std::string& name);
 
         virtual void ForEachComponent(const std::function<bool(const Component::Ptr&)>& fun) const;
         virtual void ForEachComponent(const std::function<bool(Component::Ptr&)>& fun);
-
-        virtual void DestroyComponents();
 
         template<typename T> SR_HTYPES_NS::SharedPtr<T> GetComponent() {
             return GetComponent(T::GetClassStaticName()).template DynamicCast<T>();

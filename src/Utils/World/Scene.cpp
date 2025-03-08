@@ -28,6 +28,7 @@ namespace SR_WORLD_NS {
     Scene::Scene()
         : Super()
         , m_sceneUpdater(new SR_WORLD_NS::SceneUpdater(this))
+        , m_pEntityController(SR_UTILS_NS::EntityController::MakeShared())
     { }
 
     Scene::~Scene() {
@@ -43,6 +44,8 @@ namespace SR_WORLD_NS {
         SRAssert(m_freeObjIndices.size() == m_sceneObjects.size());
 
         SR_SAFE_DELETE_PTR(m_sceneUpdater);
+
+        m_pEntityController.AutoFree();
     }
 
     Scene::Ptr Scene::CreateEmptyScene() {
@@ -167,7 +170,7 @@ namespace SR_WORLD_NS {
 
         m_isPreDestroyed = true;
 
-        DestroyComponents();
+        RemoveComponents();
 
         m_logic.AutoFree([](auto&& pLogic) {
             pLogic->Destroy();
@@ -394,17 +397,15 @@ namespace SR_WORLD_NS {
         RegisterSceneObjectImpl(pSO);
         pSO->SetScene(this);
 
-        auto&& entityManager = SR_UTILS_NS::EntityManager::Instance();
-
         for (auto& entities : m_registerEntityCache | std::views::values) {
             m_registerEntityIdReplaceCache.clear();
 
             for (auto&& pEntity : entities) {
                 const EntityId oldEntityId = pEntity->GetEntityId();
-                pEntity->SetEntityId(ENTITY_ID_MAX);
-                const EntityId newEntityId = entityManager.Register(pEntity, oldEntityId);
+                pEntity->SetEntityId(SR_ID_INVALID);
+                const EntityId newEntityId = GetEntityController()->Register(pEntity, oldEntityId);
 
-                if (oldEntityId != ENTITY_ID_MAX) {
+                if (oldEntityId != SR_ID_INVALID) {
                     m_registerEntityIdReplaceCache[newEntityId] = oldEntityId;
                 }
             }
@@ -426,7 +427,12 @@ namespace SR_WORLD_NS {
         SRAssert2(!pSO->GetScene(), "Scene::RegisterSceneObjectImpl() : object already registered!");
         SRAssert2(!pSO->IsEntityRegistered(), "Scene::RegisterSceneObjectImpl() : entity already registered!");
 
-        m_newQueue.emplace_back(pSO);
+        if (m_isInitialized) {
+            m_newQueue.emplace_back(pSO);
+        }
+        else {
+            ProcessNewSO(pSO);
+        }
 
         m_registerEntityCache[pSO->GetPrefab()].emplace_back(static_cast<Entity*>(const_cast<SceneObject*>(pSO.Get())));
         for (auto&& pComponent : pSO->GetComponents()) {
@@ -444,6 +450,8 @@ namespace SR_WORLD_NS {
     void Scene::Prepare() {
         SR_TRACY_ZONE;
 
+        SRAssert2(m_isInitialized, "Scene::Prepare() : scene is not initialized!");
+
         if (auto&& pLogic = GetLogicBase()) {
             pLogic->Prepare();
         }
@@ -455,10 +463,8 @@ namespace SR_WORLD_NS {
 
         if (m_isPreDestroyed) {
             while (!m_newQueue.empty()) {
-                auto&& pGameObject = m_newQueue.front();
-
-                if (pGameObject) {
-                    pGameObject->Destroy();
+                if (auto&& pSO = m_newQueue.front()) {
+                    pSO->Destroy();
                 }
                 else {
                     m_newQueue.pop_front();
@@ -466,25 +472,15 @@ namespace SR_WORLD_NS {
             }
         } 
         else {
-            for (auto&& gameObject : m_newQueue) {
-                const uint64_t id = m_freeObjIndices.empty() ? m_sceneObjects.size() : m_freeObjIndices.front();
-
-                gameObject->SetIdInScene(id);
-
-                if (m_freeObjIndices.empty()) {
-                    m_sceneObjects.emplace_back(gameObject);
-                }
-                else {
-                    m_sceneObjects[m_freeObjIndices.front()] = gameObject;
-                    m_freeObjIndices.erase(m_freeObjIndices.begin());
-                }
+            for (auto&& pSO : m_newQueue) {
+                ProcessNewSO(pSO);
             }
         }
 
         m_newQueue.clear();
 
-        for (auto&& gameObject : m_deleteQueue) {
-            gameObject->DestroyComponents();
+        for (auto&& pSO : m_deleteQueue) {
+            pSO->RemoveComponents();
         }
 
         for (auto&& pComponent : m_destroyedComponents) {
@@ -493,8 +489,8 @@ namespace SR_WORLD_NS {
 
         m_destroyedComponents.clear();
 
-        for (auto&& gameObject : m_deleteQueue) {
-            gameObject->DestroyImpl();
+        for (auto&& pSO : m_deleteQueue) {
+            pSO->DestroyImpl();
         }
 
         m_deleteQueue.clear();
@@ -530,7 +526,23 @@ namespace SR_WORLD_NS {
 
     void Scene::Init() {
         if (m_logic) {
-            m_logic->Init();
+            m_logic->InitLogic();
+        }
+
+        m_isInitialized = true;
+    }
+
+    void Scene::ProcessNewSO(const Scene::SceneObjectPtr &pSO) {
+        const uint64_t id = m_freeObjIndices.empty() ? m_sceneObjects.size() : m_freeObjIndices.front();
+
+        pSO->SetIdInScene(id);
+
+        if (m_freeObjIndices.empty()) {
+            m_sceneObjects.emplace_back(pSO);
+        }
+        else {
+            m_sceneObjects[m_freeObjIndices.front()] = pSO;
+            m_freeObjIndices.erase(m_freeObjIndices.begin());
         }
     }
 }

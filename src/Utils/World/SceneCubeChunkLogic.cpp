@@ -617,12 +617,12 @@ namespace SR_WORLD_NS {
         Super::Prepare();
     }
 
-    void SceneCubeChunkLogic::Init() {
+    void SceneCubeChunkLogic::InitLogic() {
         SRAssert(!m_isAlive);
 
         m_isAlive = true;
 
-        Super::Init();
+        Super::InitLogic();
     }
 
     void SceneCubeChunkLogic::UpdateChunk(const SR_MATH_NS::IVector3& chunk, float_t dt) {

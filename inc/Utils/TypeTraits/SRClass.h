@@ -34,15 +34,6 @@ namespace SR_UTILS_NS {
         std::set<std::string> warnings;
     };
 
-    struct PropertyInfo {
-        StringAtom name;
-        StringAtom className;
-
-        bool operator<(const PropertyInfo& p_info) const {
-            return name < p_info.name;
-        }
-    };
-
     class SRClass {
     public:
         virtual ~SRClass() = default;
@@ -63,7 +54,6 @@ namespace SR_UTILS_NS {
 
     private:
         void SR_CLANG_CODEGEN_MARKER() { }
-        inline static const bool SR_CODEGEN_INITIALIZE = SR_UTILS_NS::ClassDB::Instance().RegisterNewClass(GetClassStaticName());
 
     };
 

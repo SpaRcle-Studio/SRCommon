@@ -15,6 +15,7 @@ namespace SR_WORLD_NS {
         using Ptr = SR_HTYPES_NS::SharedPtr<ScenePrefabLogic>;
 
     public:
+        void InitLogic() override;
         bool SaveLogic(ISerializer& serializer, const Path& path) override;
         bool LoadLogic(IDeserializer& deserializer, const Path& path) override;
 

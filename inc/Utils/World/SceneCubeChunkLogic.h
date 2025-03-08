@@ -19,7 +19,7 @@ namespace SR_WORLD_NS {
     public:
         void SetScene(const ScenePtr& pScene) override;
 
-        void Init() override;
+        void InitLogic() override;
         bool Reload() override;
         void Destroy() override;
         void Update(float_t dt) override;

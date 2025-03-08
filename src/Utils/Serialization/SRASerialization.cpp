@@ -47,12 +47,12 @@ namespace SR_UTILS_NS {
             return false;
         }
 
-        file << ToString();
+        file << ToStringSRA();
         file.close();
         return true;
     }
 
-    std::string SRAISerialization::ToString() const {
+    std::string SRAISerialization::ToStringSRA() const {
         SR_TRACY_ZONE;
 
         std::string result;

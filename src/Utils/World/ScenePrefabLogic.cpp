@@ -84,4 +84,23 @@ namespace SR_WORLD_NS {
 
         return Super::LoadLogic(deserializer, path);
     }
+
+    void ScenePrefabLogic::InitLogic() {
+        Super::InitLogic();
+
+        SceneObject::Ptr pSO;
+
+        auto&& root = GetScene()->GetRootSceneObjects();
+        for (auto&& pObject : root) {
+            if (pObject && !pObject->HasSerializationFlags(SerializationFlags::DontSave)) {
+                pSO = pObject;
+            }
+        }
+
+        if (!pSO) {
+            pSO = GetScene()->InstanceGameObject("Root").StaticCast<SceneObject>();
+        }
+
+        pSO->AddEditorFlags(EditorFlags::DontDelete);
+    }
 }

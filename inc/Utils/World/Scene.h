@@ -75,6 +75,7 @@ namespace SR_WORLD_NS {
         SR_NODISCARD const SR_HTYPES_NS::DataStorage& GetDataStorage() const { return m_dataStorage; }
         SR_NODISCARD SR_INLINE SceneUpdater* GetSceneUpdater() const { return m_sceneUpdater; }
         SR_NODISCARD SR_INLINE SceneLogicPtr GetLogicBase() const { return m_logic; }
+        SR_NODISCARD const SR_UTILS_NS::EntityController::Ptr& GetEntityController() const { return m_pEntityController; }
 
         /// Запущена ли сцена
         SR_NODISCARD virtual bool IsPlayingMode() const { return false; }
@@ -111,6 +112,7 @@ namespace SR_WORLD_NS {
 
     private:
         void RegisterSceneObjectImpl(const SceneObjectPtr& pSO);
+        void ProcessNewSO(const SceneObjectPtr& pSO);
 
     private:
         mutable std::map<EntityId, EntityId> m_registerEntityIdReplaceCache;
@@ -118,6 +120,7 @@ namespace SR_WORLD_NS {
 
         SceneUpdater* m_sceneUpdater = nullptr;
 
+        bool m_isInitialized = false;
         bool m_isPreDestroyed = false;
         bool m_isDestroyed = false;
 
@@ -135,6 +138,8 @@ namespace SR_WORLD_NS {
         Path m_absPath;
 
         SceneObjects m_sceneObjects;
+
+        SR_UTILS_NS::EntityController::Ptr m_pEntityController;
 
     private:
         /// @property

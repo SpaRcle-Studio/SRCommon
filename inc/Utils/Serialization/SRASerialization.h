@@ -47,7 +47,7 @@ namespace SR_UTILS_NS {
         void SetUseTabs(const bool value) noexcept { m_isNeedUseTabs = value; }
         SR_NODISCARD bool IsNeedUseTabs() const noexcept { return m_isNeedUseTabs; }
 
-        SR_NODISCARD std::string ToString() const;
+        SR_NODISCARD std::string ToStringSRA() const;
 
     protected:
         SR_NODISCARD virtual bool IsAllowEmptyElementsInArrayImpl() const noexcept { return true; }
@@ -77,6 +77,7 @@ namespace SR_UTILS_NS {
         SR_NODISCARD std::unique_ptr<IDeserializer> CreateDeserializer() const override;
 
         SR_NODISCARD bool SaveToFile(const SR_UTILS_NS::Path& path) const override { return SaveToFileImpl(path); }
+        SR_NODISCARD std::string ToString() const noexcept override { return ToStringSRA(); }
 
         void WriteString(std::string_view value, const SerializationId& name) override;
         void WriteBool(bool value, const SerializationId& name) override;
@@ -108,6 +109,8 @@ namespace SR_UTILS_NS {
     class SRADeserializer : public IDeserializer, public SRAISerialization {
         friend SRASerializer;
     public:
+        SR_NODISCARD std::string ToString() const noexcept override { return ToStringSRA(); }
+
         SR_NODISCARD bool SaveToFile(const SR_UTILS_NS::Path& path) const override { return SaveToFileImpl(path); }
         SR_NODISCARD bool LoadFromFile(const SR_UTILS_NS::Path& path) override;
         SR_NODISCARD bool LoadFromString(const std::string& str) override;

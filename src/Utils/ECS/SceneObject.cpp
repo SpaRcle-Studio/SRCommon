@@ -30,37 +30,6 @@ namespace SR_UTILS_NS {
         return Find(SR_HASH_STR_REGISTER(name));
     }
 
-    bool SceneObject::UpdateEntityPath() {
-        SR_TRACY_ZONE;
-
-        /*SceneObject::Ptr pCurrent = this;
-        EntityPath path;
-
-        do {
-            path.ConcatBack(pCurrent->GetEntityId());
-            pCurrent = pCurrent->m_parent;
-
-            if (pCurrent && pCurrent->GetEntityId() == GetEntityId()) {
-                SRHalt("Recursive entity path!");
-                return false;
-            }
-        } while (pCurrent.Valid());
-
-        SetEntityPath(path);*/
-
-        return true;
-    }
-
-    std::list<EntityBranch> SceneObject::GetEntityBranches() const {
-        std::list<EntityBranch> branches;
-
-        ForEachChild([&branches](const SceneObject::Ptr &ptr) {
-            branches.emplace_back(ptr->GetEntityTree());
-        });
-
-        return std::move(branches);
-    }
-
     SceneObject::Ptr SceneObject::CloneSceneObject() const {
         SR_UTILS_NS::SRASerializer serializer;
         Save(serializer);
@@ -350,8 +319,6 @@ namespace SR_UTILS_NS {
 
         m_isDestroyed = true;
 
-        /// сцену не блокируем, предполагается, что и так в контексте заблокированной сцены работаем
-
         if (GetPrefab()) {
             UnlinkPrefab();
         }
@@ -359,6 +326,8 @@ namespace SR_UTILS_NS {
         if (auto&& pParent = GetParent()) {
             pParent->RemoveChild(this);
         }
+
+        UnregisterEntity();
 
         if (m_scene) {
             m_scene->Remove(GetThis().DynamicCast<SceneObject>());
@@ -378,7 +347,7 @@ namespace SR_UTILS_NS {
                 }
             }
 
-            DestroyComponents();
+            RemoveComponents();
             DestroyImpl();
         }
     }
@@ -413,6 +382,22 @@ namespace SR_UTILS_NS {
         return m_tag;
     }
 
+    SR_UTILS_NS::EntityIdList SceneObject::GetEntityIdList() const {
+        SR_UTILS_NS::EntityIdList list(m_scene->GetEntityController());
+
+        list.Add(GetEntityId());
+
+        for (auto&& pComponent : m_components) {
+            list.Add(pComponent->GetEntityId());
+        }
+
+        for (auto&& pChild : m_children) {
+            list.Add(pChild->GetEntityId());
+        }
+
+        return list;
+    }
+
     std::string SceneObject::GetEntityInfo() const {
         return "SceneObject: " + GetName();
     }
@@ -445,6 +430,10 @@ namespace SR_UTILS_NS {
         if (Contains(pChild)) {
             SRHalt("This child already exists in this game object!");
             return false;
+        }
+
+        if (!pChild->IsEntityRegistered() && m_scene) {
+            m_scene->RegisterSceneObject(pChild);
         }
 
         if (!pChild->SetParent(GetThis().DynamicCast<SceneObject>())) {
@@ -508,13 +497,6 @@ namespace SR_UTILS_NS {
         m_parent = pParent;
 
         UpdateRoot();
-
-        /*if (!UpdateEntityPath()) {
-            SRHalt("GameObject::SetParent() : failed to update entity path!");
-            m_parent = pOldParent;
-            UpdateRoot();
-            return false;
-        }*/
 
         if (m_scene) {
             m_scene->OnChanged();

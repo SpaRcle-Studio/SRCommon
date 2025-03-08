@@ -75,7 +75,7 @@ namespace SR_UTILS_NS {
     void LookAtComponent::SetExecuteInEditMode(bool enabled) {
         m_editMode = enabled;
 
-        if (auto&& pParent = GetParent()) {
+        if (auto&& pParent = TryGetParent()) {
             pParent->SetDirty(true);
         }
     }

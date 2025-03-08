@@ -5,7 +5,7 @@
 #ifndef SR_ENGINE_UTILS_COMPONENT_H
 #define SR_ENGINE_UTILS_COMPONENT_H
 
-#include <Utils/ECS/EntityManager.h>
+#include <Utils/ECS/Entity.h>
 #include <Utils/Math/Vector3.h>
 #include <Utils/Types/SafePointer.h>
 #include <Utils/Types/SharedPtr.h>
@@ -120,6 +120,7 @@ namespace SR_UTILS_NS {
         SR_NODISCARD virtual Math::FVector3 GetBarycenter() const { return SR_MATH_NS::InfinityFV3; }
         SR_NODISCARD Component* BaseComponent() noexcept { return this; }
         SR_NODISCARD IComponentable* GetParent() const;
+        SR_NODISCARD IComponentable* TryGetParent() const { return m_parent; }
         SR_NODISCARD ScenePtr GetScene() const;
         SR_NODISCARD bool HasScene() const { return TryGetScene(); }
         SR_NODISCARD GameObjectPtr GetGameObject() const;

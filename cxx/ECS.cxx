@@ -7,7 +7,7 @@
 #include "../src/Utils/ECS/GameObject.cpp"
 #include "../src/Utils/ECS/Transform.cpp"
 #include "../src/Utils/ECS/Entity.cpp"
-#include "../src/Utils/ECS/EntityManager.cpp"
+#include "../src/Utils/ECS/EntityController.cpp"
 #include "../src/Utils/ECS/Transform3D.cpp"
 #include "../src/Utils/ECS/Transform2D.cpp"
 #include "../src/Utils/ECS/TransformZero.cpp"

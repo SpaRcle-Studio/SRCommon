@@ -38,11 +38,11 @@ namespace SR_WORLD_NS {
 
         virtual void SetScene(const ScenePtr& pScene);
 
-        virtual void Init() { SRAssert(m_scene); }
         virtual void Update(float_t dt) { }
         virtual void Destroy() { }
         virtual void Prepare() { }
 
+        virtual void InitLogic() { SRAssert(m_scene); }
         virtual bool SaveLogic(ISerializer& serializer, const Path& path) { return true; }
         virtual bool LoadLogic(IDeserializer& deserializer, const Path& path) { return true; }
 

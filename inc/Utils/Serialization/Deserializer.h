@@ -26,6 +26,7 @@ namespace SR_UTILS_NS {
         SR_NODISCARD virtual bool SaveToFile(const SR_UTILS_NS::Path& path) const = 0;
         SR_NODISCARD virtual bool LoadFromFile(const SR_UTILS_NS::Path& path) = 0;
         SR_NODISCARD virtual bool LoadFromString(const std::string& str) = 0;
+        SR_NODISCARD virtual std::string ToString() const noexcept { return ""; }
 
         SR_NODISCARD virtual bool IsDefault(const SerializationId& name) const noexcept = 0;
         SR_NODISCARD virtual bool ShouldSetDefaults(const SerializationId& name) const noexcept = 0;

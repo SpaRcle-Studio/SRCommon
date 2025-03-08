@@ -14,72 +14,16 @@
 
 namespace SR_UTILS_NS {
     class Entity;
+    class EntityController;
 
     typedef uint64_t EntityId;
 
-    static const EntityId ENTITY_ID_MAX = UINT64_MAX;
-
-    class SR_DLL_EXPORT EntityBranch {
-    public:
-        EntityBranch(EntityId entityId, std::list<EntityBranch> branches);
-
-        EntityBranch()
-            : EntityBranch(ENTITY_ID_MAX, {})
-        { }
-
-    public:
-        void Reserve() const;
-        void UnReserve() const;
-        void Clear();
-
-    private:
-        std::list<EntityBranch> m_branches;
-        EntityId m_id;
-
-    };
-
-    class SR_DLL_EXPORT EntityPath {
-    public:
-        explicit EntityPath(std::list<EntityId> path)
-            : m_path(std::move(path))
-        { }
-
-        EntityPath()
-            : EntityPath(std::list<EntityId>())
-        { }
-
-        ~EntityPath() {
-            m_path.clear();
-        }
-
-        explicit EntityPath(const EntityId& id)
-            : EntityPath()
-        {
-            Concat(id);
-        }
-
-        EntityPath(const EntityPath& copy)
-            : EntityPath(copy.m_path)
-        { }
-
-    public:
-        void Reserve() const;
-        void UnReserve() const;
-        void Clear();
-
-        SR_NODISCARD std::list<EntityId> ToEntityIds() const { return m_path; }
-
-        SR_NODISCARD EntityId Last() const;
-        SR_NODISCARD EntityPath Concat(const EntityId& id) const;
-        SR_NODISCARD EntityPath ConcatBack(const EntityId& id) const;
-
-        EntityPath& Concat(const EntityId& id);
-        EntityPath& ConcatBack(const EntityId& id);
-
-    private:
-        std::list<EntityId> m_path;
-
-    };
+    SR_ENUM_NS_STRUCT_T(EditorFlags, uint64_t,
+        None       = 1 << 0,
+        DontDelete = 1 << 1,
+        ReadOnly   = 1 << 2,
+        Hidden     = 1 << 4
+    )
 
     class SR_DLL_EXPORT Entity : public Serializable, public SR_HTYPES_NS::SharedPtr<Entity> {
         SR_CLASS()
@@ -95,11 +39,8 @@ namespace SR_UTILS_NS {
     public:
         SR_NODISCARD const SR_UTILS_NS::PropertyContainer& GetEntityMessages() const { return m_entityMessages; }
 
-        SR_NODISCARD bool IsEntityRegistered() const noexcept { return m_entityRegistered; }
+        SR_NODISCARD bool IsEntityRegistered() const noexcept { return m_pEntityController; }
         SR_NODISCARD EntityId GetEntityId() const { return m_entityId; }
-        SR_NODISCARD EntityPath GetEntityPath() const { return m_entityPath; }
-
-        SR_NODISCARD EntityBranch GetEntityTree() const { return EntityBranch(m_entityId, GetEntityBranches()); }
         SR_NODISCARD EntityRef GetRef() const noexcept { return EntityRef(GetThis()); }
         SR_NODISCARD Entity::Ptr GetEntity() const noexcept { return GetThis(); }
 
@@ -107,26 +48,28 @@ namespace SR_UTILS_NS {
 
         SR_NODISCARD virtual bool InitializeEntity() noexcept { return true; }
 
+        void SetEntityController(EntityController* pEntityController);
         void SetEntityId(EntityId id);
-        void OnEntityRegistered();
+        void UnregisterEntity();
 
         virtual void OnEntityIdReplaced(const std::map<EntityId, EntityId>& replaceMap) { }
 
-    protected:
-        void SetEntityPath(const EntityPath& path);
+        void AddEditorFlags(EditorFlags flags) noexcept { m_editorFlags |= flags; }
+        void RemoveEditorFlags(EditorFlags flags) noexcept { m_editorFlags &= ~flags; }
 
-        SR_NODISCARD virtual std::list<EntityBranch> GetEntityBranches() const { return {}; }
+        SR_NODISCARD bool HasEditorFlags(EditorFlags flags) const noexcept {
+            return SR_MATH_NS::IsMaskIncludedSubMask(m_editorFlags, flags);
+        }
 
     protected:
         SR_UTILS_NS::PropertyContainer m_entityMessages;
 
     private:
         /// @property @hidden
-        EntityId m_entityId = ENTITY_ID_MAX;
+        EntityId m_entityId = SR_ID_INVALID;
 
-        bool m_entityRegistered = false;
-
-        EntityPath m_entityPath;
+        EntityController* m_pEntityController = nullptr;
+        EditorFlags m_editorFlags = EditorFlags::None;
 
     };
 }

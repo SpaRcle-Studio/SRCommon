@@ -7,7 +7,7 @@
 #include <Codegen/Entity.generated.hpp>
 
 namespace SR_UTILS_NS {
-    EntityBranch::EntityBranch(EntityId entityId, std::list<EntityBranch> branches)
+    /*EntityBranch::EntityBranch(EntityId entityId, std::list<EntityBranch> branches)
         : m_branches(std::move(branches))
         , m_id(entityId)
     { }
@@ -90,7 +90,7 @@ namespace SR_UTILS_NS {
             id = ENTITY_ID_MAX;
         }
         m_path.clear();
-    }
+    }*/
 
     ///---------------------------------------------------------------------------------------------------------------------
 
@@ -99,10 +99,13 @@ namespace SR_UTILS_NS {
     { }
 
     Entity::~Entity() {
-        if (m_entityRegistered) {
-            EntityManager::Instance().Unregister(m_entityId);
-        }
+        UnregisterEntity();
         m_entityMessages.ClearContainer();
+    }
+
+    void Entity::SetEntityController(EntityController* pEntityController) {
+        SRAssert2(!pEntityController || !m_pEntityController, "Entity controller already set!");
+        m_pEntityController = pEntityController;
     }
 
     void Entity::SetEntityId(const EntityId id) {
@@ -110,17 +113,16 @@ namespace SR_UTILS_NS {
         m_entityId = id;
     }
 
-    void Entity::OnEntityRegistered() {
-        if (m_entityId == ENTITY_ID_MAX) {
-            SRHalt("Entity::OnEntityRegistered() : entity id is invalid!");
-            return;
+    void Entity::UnregisterEntity() {
+        if (m_pEntityController) {
+            m_pEntityController->Unregister(m_entityId);
+            m_pEntityController = nullptr;
         }
-        m_entityRegistered = true;
     }
 
-    void Entity::SetEntityPath(const EntityPath &path) {
-        m_entityPath = path;
-    }
+    //void Entity::SetEntityPath(const EntityPath &path) {
+    //    m_entityPath = path;
+    //}
 
     ///---------------------------------------------------------------------------------------------------------------------
 }

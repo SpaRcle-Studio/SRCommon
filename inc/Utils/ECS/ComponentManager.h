@@ -5,7 +5,7 @@
 #ifndef SR_ENGINE_COMPONENT_MANAGER_H
 #define SR_ENGINE_COMPONENT_MANAGER_H
 
-#include <Utils/ECS/EntityManager.h>
+#include <Utils/ECS/EntityController.h>
 #include <Utils/ECS/Component.h>
 #include <Utils/Types/Thread.h>
 #include <Utils/Types/Function.h>

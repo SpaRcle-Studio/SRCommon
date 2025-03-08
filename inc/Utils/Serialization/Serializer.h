@@ -22,6 +22,7 @@ namespace SR_UTILS_NS {
         SR_NODISCARD virtual bool IsWriteDefaults() const noexcept { return m_isNeedWriteDefaults; }
         SR_NODISCARD virtual bool IsEditorAllowed() const noexcept { return m_isEditorAllowed; }
         SR_NODISCARD virtual bool IsAllowEmptyElementsInArray() const noexcept { return m_isAllowEmptyElementsInArray; }
+        SR_NODISCARD virtual std::string ToString() const noexcept { return ""; }
 
         void SetWriteDefaults(const bool value) noexcept { m_isNeedWriteDefaults = value; }
         void SetEditorAllowed(const bool value) noexcept { m_isEditorAllowed = value; }

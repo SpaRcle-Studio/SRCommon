@@ -5,7 +5,7 @@
 #ifndef SR_ENGINE_UTILS_SCENE_OBJECT_H
 #define SR_ENGINE_UTILS_SCENE_OBJECT_H
 
-#include <Utils/ECS/EntityManager.h>
+#include <Utils/ECS/EntityController.h>
 #include <Utils/ECS/LayerManager.h>
 #include <Utils/ECS/IComponentable.h>
 
@@ -65,7 +65,7 @@ namespace SR_UTILS_NS {
         SR_NODISCARD Path GetPrefabPath() const;
         SR_NODISCARD std::string GetEntityInfo() const override;
         SR_NODISCARD StringAtom GetTag() const;
-        SR_NODISCARD std::list<EntityBranch> GetEntityBranches() const override;
+        SR_NODISCARD SR_UTILS_NS::EntityIdList GetEntityIdList() const;
 
         SR_NODISCARD SceneObject::Ptr CloneSceneObject() const;
         SR_NODISCARD bool IsPrefab() const noexcept override { return m_prefabInfo.pPrefab; }
@@ -116,8 +116,6 @@ namespace SR_UTILS_NS {
     private:
         virtual void OnAttached() { }
         void OnParentLayerChanged();
-
-        bool UpdateEntityPath();
 
     private:
         struct PrefabInfo {

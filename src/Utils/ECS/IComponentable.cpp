@@ -131,9 +131,17 @@ namespace SR_UTILS_NS {
     }
 
     bool IComponentable::AddComponent(const Component::Ptr& pComponent) {
+        SR_TRACY_ZONE;
+
         if (!pComponent) {
             SRHalt("pComponent is nullptr!");
             return false;
+        }
+
+        if (!pComponent->IsEntityRegistered() && GetScene()) {
+            const uint64_t entityId = pComponent->GetEntityId();
+            pComponent->SetEntityId(SR_ID_INVALID);
+            GetScene()->GetEntityController()->Register(pComponent.Get(), entityId);
         }
 
         m_components.emplace_back(pComponent);
@@ -152,6 +160,18 @@ namespace SR_UTILS_NS {
         SetDirty(true);
 
         return true;
+    }
+
+    void IComponentable::RemoveComponents() {
+        SR_TRACY_ZONE;
+
+        /// Используем такой проход, так как в процессе удаления может измениться список!
+        for (uint32_t i = 0; i < m_components.size(); ++i) { /// NOLINT
+            auto&& pComponent = m_components[i];
+            DestroyComponent(pComponent);
+        }
+
+        m_components.clear();
     }
 
     bool IComponentable::RemoveComponent(const Component::Ptr& pComponent) {
@@ -279,22 +299,12 @@ namespace SR_UTILS_NS {
         }
     }
 
-    void IComponentable::DestroyComponents() {
-        SR_TRACY_ZONE;
-
-        /// Используем такой проход, так как в процессе удаления может измениться список!
-        for (uint32_t i = 0; i < m_components.size(); ++i) { /// NOLINT
-            auto&& pComponent = m_components[i];
-            DestroyComponent(pComponent);
-        }
-
-        m_components.clear();
-    }
-
     void IComponentable::DestroyComponent(const Component::Ptr& pComponent) {
         if (pComponent->IsAttached()) {
             pComponent->OnDetached();
         }
+
+        pComponent->UnregisterEntity();
 
         if (auto&& pScene = GetScene()) {
             pScene->Remove(pComponent);
