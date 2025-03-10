@@ -14,11 +14,14 @@ namespace SR_UTILS_NS {
         const_cast<Serializable&>(static_cast<const Serializable&>(*this)).OnPostSave();
     }
 
-    void Serializable::Load(IDeserializer& deserializer) {
+    bool Serializable::Load(IDeserializer& deserializer) {
         SR_TRACY_ZONE;
         const_cast<Serializable&>(static_cast<const Serializable&>(*this)).OnPreLoad();
-        GetMeta()->Load(deserializer, *this);
+        if (!GetMeta()->Load(deserializer, *this)) {
+            return false;
+        }
         const_cast<Serializable&>(static_cast<const Serializable&>(*this)).OnPostLoad();
+        return true;
     }
 
     bool Serializable::HasSerializationFlags(const SerializationFlags flags) const noexcept {

@@ -11,10 +11,13 @@ namespace SR_UTILS_NS {
 		}
     }
 
-    void SRClassMeta::Load(SR_UTILS_NS::IDeserializer& deserializer, SR_UTILS_NS::Serializable& obj) const {
+    bool SRClassMeta::Load(SR_UTILS_NS::IDeserializer& deserializer, SR_UTILS_NS::Serializable& obj) const {
     	for (auto&& pMeta : GetBaseMetas()) {
-    		pMeta->Load(deserializer, obj);
+    		if (!pMeta->Load(deserializer, obj)) {
+    			return false;
+    		}
     	}
+        return true;
     }
 
     bool SRClassMeta::IsInherited(SR_UTILS_NS::StringAtom baseClass) const noexcept {
@@ -58,6 +61,20 @@ namespace SR_UTILS_NS {
 			}
 		}
     	return {};
+    }
+
+    uint64_t SRClassMeta::GetVersion() const noexcept {
+        if (m_versionCached != SR_UINT64_MAX) {
+            return m_versionCached;
+        }
+
+        m_versionCached = GetVersionImpl();
+
+        for (auto&& pBase : GetBaseMetas()) {
+            m_versionCached = std::max(m_versionCached, pBase->GetVersion());
+        }
+
+        return m_versionCached;
     }
 }
 

@@ -20,7 +20,6 @@ namespace SR_UTILS_NS {
     class Transform;
     class Component;
 
-    /// @version(2025.03.04)
     class SR_DLL_EXPORT GameObject final : public SceneObject {
         SR_CLASS()
         using Super = SceneObject;
@@ -46,6 +45,7 @@ namespace SR_UTILS_NS {
 
     private:
         /// @property @getter(GetTransform) @setter(SetTransform) @notNull
+        /// @loadCondition(!This.IsPrefabLoadingState())
         SR_HTYPES_NS::SharedPtr<Transform> m_transform;
 
     };

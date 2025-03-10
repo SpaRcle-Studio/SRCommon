@@ -60,7 +60,7 @@ namespace SR_WORLD_NS {
 
         if (!pScene) {
             SR_ERROR("Scene::CreateEmptyScene() : failed to allocate scene!");
-            return Scene::Ptr();
+            return nullptr;
         }
 
         return pScene;

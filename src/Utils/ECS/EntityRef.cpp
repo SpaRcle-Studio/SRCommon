@@ -130,17 +130,4 @@ namespace SR_UTILS_NS {
         ref.m_path = m_path;
         return ref;
     }
-
-    /*void EntityRefProperty::SaveProperty(MarshalRef marshal) const noexcept {
-        if (auto&& pBlock = AllocatePropertyBlock()) {
-            m_entityRef.Save(*pBlock);
-            SavePropertyBase(marshal, std::move(pBlock));
-        }
-    }
-
-    void EntityRefProperty::LoadProperty(MarshalRef marshal) noexcept {
-        if (auto&& pBlock = LoadPropertyBase(marshal)) {
-            m_entityRef.Load(*pBlock);
-        }
-    }*/
 }

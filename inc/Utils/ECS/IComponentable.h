@@ -96,7 +96,6 @@ namespace SR_UTILS_NS {
     protected:
         /// @property
         /// @propertyCondition(!This.IsPrefab())
-        /// @loadCondition(!This.IsPrefab())
         std::vector<Component::Ptr> m_components;
 
     private:

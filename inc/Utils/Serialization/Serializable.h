@@ -18,7 +18,7 @@ namespace SR_UTILS_NS {
 
     public:
         virtual void Save(ISerializer& serializer) const;
-        virtual void Load(IDeserializer& deserializer);
+        virtual bool Load(IDeserializer& deserializer);
 
         virtual void VerifyAfterLoad(SerializableVerifyContext& context) const noexcept { }
 

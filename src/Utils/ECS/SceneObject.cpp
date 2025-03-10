@@ -51,8 +51,12 @@ namespace SR_UTILS_NS {
         return pSceneObject;
     }
 
-    void SceneObject::Load(IDeserializer& deserializer) {
+    bool SceneObject::Load(IDeserializer& deserializer) {
         SR_TRACY_ZONE;
+
+        if (!Super::Load(deserializer)) {
+            return false;
+        }
 
         SR_UTILS_NS::SerializationId prefabId = SR_UTILS_NS::SerializationId::Create("prefab");
         SR_UTILS_NS::Path prefabPath;
@@ -60,19 +64,33 @@ namespace SR_UTILS_NS {
 
         if (!prefabPath.empty()) {
             if (auto&& pPrefab = SR_UTILS_NS::Prefab::Load(prefabPath)) {
+                if (GetComponentsCount() > 0) {
+                    SR_ERROR("SceneObject::Load() : prefab not loaded, but components are present! Path: {}", prefabPath.ToString());
+                    RemoveComponents();
+                }
+
+                if (!GetChildrenRef().empty()) {
+                    SR_ERROR("SceneObject::Load() : prefab not loaded, but children are present! Path: {}", prefabPath.ToString());
+                    DestroyChildren();
+                }
+
+                m_isPrefabLoadingState = true;
+
                 if (!pPrefab->LoadToSO(this)) {
                     SR_ERROR("SceneObject::Load() : failed to apply prefab! Path: {}", prefabPath.ToString());
                 }
                 else {
                     SetPrefab(pPrefab, true);
                 }
+
+                m_isPrefabLoadingState = false;
             }
             else {
                 SR_ERROR("SceneObject::Load() : failed to load prefab! Path: {}", prefabPath.ToString());
             }
         }
 
-        Super::Load(deserializer);
+        return true;
     }
 
     bool SceneObject::MoveToTree(const SceneObject::Ptr& pDestination) {
@@ -398,10 +416,6 @@ namespace SR_UTILS_NS {
         return list;
     }
 
-    std::string SceneObject::GetEntityInfo() const {
-        return "SceneObject: " + GetName();
-    }
-
     SceneObject::Ptr SceneObject::Find(uint64_t hashName) const noexcept {
         for (auto&& pChild : m_children) {
             if (pChild->GetName() == hashName) {
@@ -512,7 +526,7 @@ namespace SR_UTILS_NS {
     void SceneObject::RemoveChild(const SceneObject::Ptr& pChild) {
         SR_TRACY_ZONE;
 
-        pChild->SetParent(SceneObject::Ptr());
+        pChild->SetParent(nullptr);
 
         for (uint16_t i = 0; i < m_children.size(); ++i) {
             if (pChild == m_children[i]) {
@@ -524,11 +538,32 @@ namespace SR_UTILS_NS {
         SRHalt("SceneObject {} is not child for {}!", pChild->GetName().c_str(), GetName().c_str());
     }
 
-    void SceneObject::RemoveAllChildren() {
-        for (auto&& pChild : m_children) {
-            pChild->SetParent(SceneObject::Ptr());
+    void SceneObject::RemoveChildren() {
+        SR_TRACY_ZONE;
+        while (!m_children.empty()) {
+            auto&& pChild = *m_children.begin();
+            if (pChild) {
+                pChild->SetParent(nullptr);
+            }
+            else {
+                SRHalt("SceneObject::RemoveChildren() : child is nullptr!");
+                m_children.erase(m_children.begin());
+            }
         }
-        m_children.clear();
+    }
+
+    void SceneObject::DestroyChildren() {
+        SR_TRACY_ZONE;
+        while (!m_children.empty()) {
+            auto&& pChild = *m_children.begin();
+            if (pChild) {
+                pChild->Destroy();
+            }
+            else {
+                SRHalt("SceneObject::DestroyChildren() : child is nullptr!");
+                m_children.erase(m_children.begin());
+            }
+        }
     }
 
     void SceneObject::VerifyAfterLoad(SerializableVerifyContext& context) const noexcept {

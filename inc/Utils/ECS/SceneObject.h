@@ -63,16 +63,16 @@ namespace SR_UTILS_NS {
         SR_NODISCARD SceneObject::Ptr Find(StringAtom name) const noexcept;
 
         SR_NODISCARD Path GetPrefabPath() const;
-        SR_NODISCARD std::string GetEntityInfo() const override;
         SR_NODISCARD StringAtom GetTag() const;
         SR_NODISCARD SR_UTILS_NS::EntityIdList GetEntityIdList() const;
+        SR_NODISCARD bool IsPrefabLoadingState() const noexcept final { return m_isPrefabLoadingState; }
 
         SR_NODISCARD SceneObject::Ptr CloneSceneObject() const;
         SR_NODISCARD bool IsPrefab() const noexcept override { return m_prefabInfo.pPrefab; }
 
         SR_NODISCARD virtual SceneObjectType GetSceneObjectType() const noexcept = 0;
 
-        void Load(IDeserializer& deserializer) override;
+        bool Load(IDeserializer& deserializer) override;
 
         bool MoveToTree(const SceneObject::Ptr& destination);
         void RemoveChild(const SceneObject::Ptr& pChild);
@@ -90,7 +90,8 @@ namespace SR_UTILS_NS {
         void SetPrefab(Prefab* pPrefab, bool isOwner);
 
         void UnlinkPrefab();
-        void RemoveAllChildren();
+        void RemoveChildren();
+        void DestroyChildren();
 
         void VerifyAfterLoad(SerializableVerifyContext& context) const noexcept override;
 
@@ -128,6 +129,7 @@ namespace SR_UTILS_NS {
 
         bool m_isActive = false;
         bool m_isDestroyed = false;
+        bool m_isPrefabLoadingState = false;
 
         StringAtom m_cachedLayer;
 
@@ -136,15 +138,19 @@ namespace SR_UTILS_NS {
 
     private:
         /// @property @setter(SetTag)
+        /// @loadCondition(!This.IsPrefabLoadingState())
         SR_UTILS_NS::StringAtom m_tag;
+        /// @loadCondition(!This.IsPrefabLoadingState())
         /// @property @setter(SetName)
         SR_UTILS_NS::StringAtom m_name;
         /// @property @propertyCondition(!This.IsPrefab())
         /// @loadCondition(!This.IsPrefab())
         std::vector<SceneObject::Ptr> m_children;
         /// @property @setter(SetEnabled)
+        /// @loadCondition(!This.IsPrefabLoadingState())
         bool m_isEnabled = true;
         /// @property @setter(SetLayer)
+        /// @loadCondition(!This.IsPrefabLoadingState())
         StringAtom m_layer = LayerManager::GetDefaultLayer();
 
         /// @virtualProperty(prefab) @dontLoad @getter(GetPrefabPath)

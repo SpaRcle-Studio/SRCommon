@@ -44,8 +44,6 @@ namespace SR_UTILS_NS {
         SR_NODISCARD EntityRef GetRef() const noexcept { return EntityRef(GetThis()); }
         SR_NODISCARD Entity::Ptr GetEntity() const noexcept { return GetThis(); }
 
-        SR_NODISCARD virtual std::string GetEntityInfo() const { return "None"; }
-
         SR_NODISCARD virtual bool InitializeEntity() noexcept { return true; }
 
         void SetEntityController(EntityController* pEntityController);
@@ -61,11 +59,14 @@ namespace SR_UTILS_NS {
             return SR_MATH_NS::IsMaskIncludedSubMask(m_editorFlags, flags);
         }
 
+        SR_NODISCARD virtual bool IsPrefabLoadingState() const noexcept { return false; }
+
     protected:
         SR_UTILS_NS::PropertyContainer m_entityMessages;
 
     private:
         /// @property @hidden
+        /// @loadCondition(!This.IsPrefabLoadingState())
         EntityId m_entityId = SR_ID_INVALID;
 
         EntityController* m_pEntityController = nullptr;

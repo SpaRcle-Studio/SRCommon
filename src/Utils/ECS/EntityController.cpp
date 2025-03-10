@@ -18,7 +18,7 @@ namespace SR_UTILS_NS {
 
             for (const auto& [id, pEntity] : m_entities) {
                 if (SRVerify2(pEntity, "Invalid entity!")) {
-                    ids += "\n\t[{}] = {}; Info = {}"_format(index++, id, pEntity->GetEntityInfo());
+                    ids += "\n\t[{}] = {}; Info = {}"_format(index++, id, pEntity->GetMeta()->GetFactoryName());
                 }
             }
 

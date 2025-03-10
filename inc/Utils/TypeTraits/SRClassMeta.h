@@ -21,7 +21,7 @@ namespace SR_UTILS_NS {
         virtual ~SRClassMeta() = default;
 
         virtual void Save(SR_UTILS_NS::ISerializer& serializer, const SR_UTILS_NS::Serializable& obj) const;
-        virtual void Load(SR_UTILS_NS::IDeserializer& deserializer, SR_UTILS_NS::Serializable& obj) const;
+        virtual bool Load(SR_UTILS_NS::IDeserializer& deserializer, SR_UTILS_NS::Serializable& obj) const;
 
         SR_NODISCARD bool IsInherited(SR_UTILS_NS::StringAtom baseClass) const noexcept;
 
@@ -32,8 +32,9 @@ namespace SR_UTILS_NS {
             return def;
         }
 
+        SR_NODISCARD uint64_t GetVersion() const noexcept;
+
         SR_NODISCARD virtual std::span<const SR_UTILS_NS::StringAtom> GetCategory() const noexcept;
-        SR_NODISCARD virtual uint64_t GetVersion() const noexcept { return 0; }
         SR_NODISCARD virtual bool IsAbstract() const noexcept { return false; }
         SR_NODISCARD virtual bool IsHidden() const noexcept { return false; }
         SR_NODISCARD virtual bool IsEditorOnly() const noexcept { return false; }
@@ -41,6 +42,13 @@ namespace SR_UTILS_NS {
         SR_NODISCARD virtual std::span<const SR_UTILS_NS::Reflection::Property> GetProperties() const noexcept { return {}; }
         SR_NODISCARD virtual SR_UTILS_NS::StringAtom GetFactoryName() const noexcept { return {}; }
         SR_NODISCARD virtual SRClass* Allocate() const noexcept { return nullptr; }
+
+    protected:
+        SR_NODISCARD virtual uint64_t GetVersionImpl() const noexcept { return 0; }
+
+    private:
+        mutable uint64_t m_versionCached = SR_UINT64_MAX;
+
     };
 };
 
