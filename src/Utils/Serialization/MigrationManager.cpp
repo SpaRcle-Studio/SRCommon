@@ -92,7 +92,7 @@ namespace SR_UTILS_NS {
             if (factory.IsAbstract(migratorName)) {
                 continue;
             }
-
+ 
             std::smatch match;
             if (std::regex_match(migratorName.ToStringRef(), match, pattern)) {
                 const SR_UTILS_NS::StringAtom objectName = match[1].str();

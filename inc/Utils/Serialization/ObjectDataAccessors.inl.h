@@ -22,6 +22,16 @@ template<> struct ObjectDataAccessor<SR_UTILS_NS::StringAtom> {
 	}
 };
 
+template<> struct ObjectDataAccessor<SR_HTYPES_NS::UnicodeString> {
+	static void Save(ISerializer& serializer, const SR_HTYPES_NS::UnicodeString& value, const SerializationId& id) {
+		serializer.WriteString(value, id);
+	}
+
+	static void Load(IDeserializer& deserializer, SR_HTYPES_NS::UnicodeString& value, const SerializationId& id) {
+		deserializer.ReadString(value, id);
+	}
+};
+
 template<> struct ObjectDataAccessor<bool> {
 	static void Save(ISerializer& serializer, const bool value, const SerializationId& id) {
 		serializer.WriteBool(value, id);

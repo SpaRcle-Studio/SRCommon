@@ -33,6 +33,7 @@ namespace SR_UTILS_NS {
         void WriteAny(const std::any& value, const SerializationId& name);
 
         virtual void WriteString(std::string_view value, const SerializationId& name) = 0;
+        virtual void WriteString(std::u32string_view value, const SerializationId& name) = 0;
         virtual void WriteBool(bool value, const SerializationId& name) = 0;
         virtual void WriteInt(int8_t value, const SerializationId& name) = 0;
         virtual void WriteInt(int16_t value, const SerializationId& name) = 0;

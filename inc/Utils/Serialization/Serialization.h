@@ -9,6 +9,7 @@
 #include <Utils/Serialization/Deserializer.h>
 #include <Utils/Serialization/ObjectDataAccessor.h>
 #include <Utils/TypeTraits/Factory.h>
+#include <Utils/Types/UnicodeString.h>
 #include <Utils/Types/SharedPtr.h>
 #include <Utils/Math/Size.h>
 #include <Utils/Common/StringAtomLiterals.h>

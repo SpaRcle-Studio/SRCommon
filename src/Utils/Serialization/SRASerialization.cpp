@@ -54,14 +54,26 @@ namespace SR_UTILS_NS {
                         serializeNode(child, depth + 1);
                     }
                     break;
-                case SerializationDataType::String:
+                case SerializationDataType::String: {
                     if (IsNeedUseTabs()) {
                         result += std::string(depth + 1, '\t');
                     }
-                    result += SR_UTILS_NS::ToString(depth + 1) + "-s:";
+
+                    const uint32_t newLineCount = std::ranges::count(node.string, '\n');
+
+                    if (newLineCount > 0) {
+                        result += SR_UTILS_NS::ToString(depth + 1) + "-m:";
+                        result += std::to_string(newLineCount + 1) + "\n";
+                    }
+                    else {
+                        result += SR_UTILS_NS::ToString(depth + 1) + "-s:";
+                    }
+
                     result += node.string + "\n";
+
                     SRAssert2(node.children.empty(), "SerializationDataType::Integer : children is not empty!");
                     break;
+                }
                 case SerializationDataType::Boolean:
                     if (IsNeedUseTabs()) {
                         result += std::string(depth + 1, '\t');
@@ -150,7 +162,7 @@ namespace SR_UTILS_NS {
     }
 
     bool SRADeserializer::LoadFromString(const std::string& str) {
-        const std::vector<std::string_view> lines = SR_UTILS_NS::StringUtils::SplitView(str, "\n");
+        const std::vector<std::string_view> lines = SR_UTILS_NS::StringUtils::SplitViewWithEmpty(str, "\n");
         if (lines.empty()) {
             SR_ERROR("SRADeserializer::LoadFromString() : no lines found!");
             return false;
@@ -239,6 +251,33 @@ namespace SR_UTILS_NS {
                     auto& node = GetCurrentNode();
                     node.type = SerializationDataType::String;
                     node.string = std::string(line.substr(line.find_first_of(':') + 1));
+                    m_stack.pop_back();
+                    continue;
+                }
+                case 'm': {
+                    auto& node = GetCurrentNode();
+                    node.type = SerializationDataType::String;
+                    const uint32_t lineCount = LexicalCast<uint32_t>(line.substr(line.find_first_of(':') + 1));
+
+                    std::string multiline;
+
+                    if (lineCount == 0) {
+                        ReportError("Invalid line count: "s + std::to_string(lineCount));
+                    }
+                    else {
+                        for (int32_t j = 0; j < lineCount; ++j) {
+                            ++i;
+                            if (i >= lines.size()) {
+                                ReportError("Invalid line count: "s + std::to_string(lineCount));
+                                break;
+                            }
+                            multiline += lines[i];
+                            if (j < lineCount - 1) {
+                                multiline += "\n";
+                            }
+                        }
+                    }
+                    node.string = multiline;
                     m_stack.pop_back();
                     continue;
                 }

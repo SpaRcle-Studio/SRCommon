@@ -3,6 +3,7 @@
 //
 
 #include <Utils/Serialization/BaseSerialization.h>
+#include <Utils/Localization/Encoding.h>
 
 namespace SR_UTILS_NS {
     SerializationNode& IBaseSerialization::GetNode(const std::vector<uint64_t>& stack) noexcept {
@@ -115,6 +116,12 @@ namespace SR_UTILS_NS {
         SRAssert2(GetImpl().GetCurrentNode().type == SerializationDataType::Array, "IBaseSerializer::EndArray() : invalid node type!");
         SRAssert2(!GetImpl().m_stack.empty(), "IBaseSerializer::EndArray() : invalid stack size!");
         GetImpl().m_stack.pop_back();
+    }
+
+    void IBaseSerializer::WriteString(std::u32string_view value, const SerializationId& name) {
+        SerializationNode node(name, SerializationDataType::String);
+        node.string = SR_UTILS_NS::Localization::UtfToUtf<char, char32_t>(value);
+        GetImpl().GetCurrentNode().children.emplace_back(node);
     }
 
     /// ========================================== IBaseDeserializer ===================================================

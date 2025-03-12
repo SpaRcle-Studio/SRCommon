@@ -4,6 +4,7 @@
 
 #include <Utils/Serialization/Serializer.h>
 #include <Utils/Serialization/Deserializer.h>
+#include <Utils/Localization/Encoding.h>
 
 #ifndef SR_ENGINE_BASE_SERIALIZATION_H
 #define SR_ENGINE_BASE_SERIALIZATION_H
@@ -73,6 +74,7 @@ namespace SR_UTILS_NS {
         SR_NODISCARD std::string ToString() const noexcept override { return GetImpl().ToStringBase(); }
 
         void WriteString(std::string_view value, const SerializationId& name) override;
+        void WriteString(std::u32string_view value, const SerializationId& name) override;
         void WriteBool(bool value, const SerializationId& name) override;
         void WriteInt(int8_t value, const SerializationId& name) override { WriteInt(static_cast<int64_t>(value), name); }
         void WriteInt(int16_t value, const SerializationId& name) override { WriteInt(static_cast<int64_t>(value), name); }
@@ -128,6 +130,12 @@ namespace SR_UTILS_NS {
         void ReadString(std::string& value, const SerializationId& name) override { return ReadStringImpl(value, name); }
         void ReadString(SR_UTILS_NS::StringAtom& value, const SerializationId& name) override { return ReadStringImpl(value, name); }
         void ReadString(SR_UTILS_NS::Path& value, const SerializationId& name) override { return ReadStringImpl(value, name); }
+
+        void ReadString(SR_HTYPES_NS::UnicodeString& value, const SerializationId& name) override {
+            std::string temp;
+            ReadStringImpl(temp, name);
+            value = SR_UTILS_NS::Localization::UtfToUtf<char32_t, char>(temp);
+        }
 
         void ReadBool(bool& value, const SerializationId& name) override {
             auto&& node = GetImpl().GetWalkNode();

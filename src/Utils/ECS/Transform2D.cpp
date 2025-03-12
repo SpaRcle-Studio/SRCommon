@@ -100,12 +100,13 @@ namespace SR_UTILS_NS {
     }
 
     void Transform2D::UpdateMatrix() const {
-        const SR_MATH_NS::FVector2 size = GetSize();
+        //const SR_MATH_NS::FVector2 size = GetSize();
 
         m_localMatrix = SR_MATH_NS::Matrix4x4(
             m_translation,
             SR_MATH_NS::Quaternion::Identity(),
-            SR_MATH_NS::FVector3(size, 1.f),
+            //SR_MATH_NS::FVector3(size, 1.f),
+            m_scale,
             m_skew
         ) * SR_MATH_NS::Matrix4x4::FromQuaternion(m_quaternion);
 

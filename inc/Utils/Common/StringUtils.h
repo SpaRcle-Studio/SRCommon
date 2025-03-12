@@ -298,6 +298,7 @@ namespace SR_UTILS_NS {
         }
 
         SR_NODISCARD static std::vector<std::string_view> SplitView(std::string_view source, std::string_view delimiter);
+        SR_NODISCARD static std::vector<std::string_view> SplitViewWithEmpty(std::string_view source, std::string_view delimiter);
         SR_NODISCARD static std::vector<std::string> Split(std::string source, const std::string& delimiter);
 
         SR_NODISCARD inline static char** Split(const char* source, char chr, unsigned short start, unsigned short count_strs) {

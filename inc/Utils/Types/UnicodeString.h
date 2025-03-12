@@ -37,7 +37,10 @@ namespace SR_HTYPES_NS {
         bool operator==(const UnicodeString& str) const noexcept { return m_internal == str.m_internal; }
         bool operator!=(const UnicodeString& str) const noexcept { return m_internal != str.m_internal; }
 
+        SR_NODISCARD std::u32string_view View() const noexcept { return m_internal; }
+
         SR_NODISCARD operator std::u32string() const noexcept { return m_internal; } /// NOLINT(google-explicit-constructor)
+        SR_NODISCARD operator std::u32string_view() const noexcept { return m_internal; } /// NOLINT(google-explicit-constructor)
 
     public:
         void resize(size_t size);
