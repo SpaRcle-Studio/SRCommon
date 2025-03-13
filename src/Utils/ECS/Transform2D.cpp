@@ -3,6 +3,7 @@
 //
 
 #include <Utils/ECS/Transform2D.h>
+#include <Utils/ECS/GameObject.h>
 
 #include <Codegen/Transform2D.generated.hpp>
 
