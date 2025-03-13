@@ -11,7 +11,7 @@ namespace SR_UTILS_NS {
         Close();
     }
 
-    bool CmdManager::Execute(ReversibleCommand *cmd) {
+    bool CmdManager::Execute(ReversibleCommand *cmd, bool store) {
         SR_TRACY_ZONE;
 
         if (m_historyPC != UINT32_MAX) {
@@ -38,6 +38,9 @@ namespace SR_UTILS_NS {
         }
 
         m_lastCmdName = cmd->GetName();
+        if (store) {
+            return true;
+        }
         return cmd->Redo();
     }
 
@@ -75,7 +78,10 @@ namespace SR_UTILS_NS {
                 return pPrevCmd->Undo();
             }
             case CmdType::Execute: {
-                return Execute(cmd.m_cmd);
+                return Execute(cmd.m_cmd, false);
+            }
+            case CmdType::Store: {
+                return Execute(cmd.m_cmd, true);
             }
             default:
                 SRHalt("Unknown command type!");
@@ -103,6 +109,28 @@ namespace SR_UTILS_NS {
         }
 
         return ExecuteImpl(cmd, sync);
+    }
+
+    void CmdManager::Store(ReversibleCommand *cmd) {
+        SR_TRACY_ZONE;
+        SR_LOCK_GUARD;
+
+        if (m_historyPC != UINT32_MAX) {
+            for (uint32_t PC = m_history.size() - 1; PC > m_historyPC; --PC) {
+                SR_SAFE_DELETE_PTR(m_history[PC])
+            }
+
+            m_history.resize(m_historyPC + 1);
+        }
+        else {
+            for (auto&& pCommand : m_history) {
+                SR_SAFE_DELETE_PTR(pCommand)
+            }
+
+            m_history.clear();
+        }
+
+        m_commands.push({cmd, CmdType::Store});
     }
 
     void CmdManager::Update() {

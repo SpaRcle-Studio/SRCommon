@@ -11,55 +11,27 @@
 #include <Utils/Serialization/Serialization.h>
 
 namespace SR_UTILS_NS {
-    typedef uint64_t SavableFlags;
-
-    enum SavableFlagBits {
-        SAVABLE_FLAG_NONE = 1 << 0,
-        SAVABLE_FLAG_ECS_NO_ID = 1 << 1,
-    };
-
-    struct SavableContext {
-        SavableContext() = default;
-
-        SavableContext(SR_HTYPES_NS::Marshal::Ptr pMarshal, SavableFlags flags)
-            : pMarshal(pMarshal)
-            , flags(flags)
-        { }
-
-        SR_HTYPES_NS::Marshal::Ptr pMarshal = nullptr;
-        SavableFlags flags = SAVABLE_FLAG_NONE;
-    };
-
-    /// Флаги для сериализатора объектов
-    SR_ENUM_NS_STRUCT_T(SerializationFlags, uint64_t,
-        None = 1 << 0,
-        Compress = 1 << 1,
-        Editor = 1 << 2,
-        NoUID = 1 << 3,
-        DontSave = 1 << 4
-    )
-
     class Serializable : public SRClass {
         SR_CLASS()
     public:
         using OriginType = Serializable;
 
     public:
-        void Save(ISerializer& serializer) const;
-        void Load(IDeserializer& deserializer);
+        virtual void Save(ISerializer& serializer) const;
+        virtual bool Load(IDeserializer& deserializer);
 
         virtual void VerifyAfterLoad(SerializableVerifyContext& context) const noexcept { }
 
-        virtual void OnPostLoaded() { }
+        virtual void OnPreSave() { }
+        virtual void OnPostSave() { }
 
-        SR_NODISCARD virtual bool UseNewSerialization() const noexcept { return false; }
+        virtual void OnPreLoad() { }
+        virtual void OnPostLoad() { }
 
         void AddSerializationFlags(SerializationFlags flags) noexcept { m_flags |= flags; }
         void RemoveSerializationFlags(SerializationFlags flags) noexcept { m_flags &= ~flags; }
 
         SR_NODISCARD bool HasSerializationFlags(SerializationFlags flags) const noexcept;
-
-        SR_DEPRECATED SR_NODISCARD virtual SR_HTYPES_NS::Marshal::Ptr SaveLegacy(SavableContext data) const;
 
     private:
         SerializationFlags m_flags = SerializationFlags::None;

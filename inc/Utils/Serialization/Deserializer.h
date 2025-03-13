@@ -10,6 +10,9 @@
 namespace SR_UTILS_NS {
     class IDeserializer {
     public:
+        using UniquePtr = std::unique_ptr<IDeserializer>;
+
+    public:
         /// Если обнаружена проблема при загрузке указателя, то нужно его пересоздать
         enum class ReAllocPointerReason : uint8_t {
             None,
@@ -23,6 +26,7 @@ namespace SR_UTILS_NS {
         SR_NODISCARD virtual bool SaveToFile(const SR_UTILS_NS::Path& path) const = 0;
         SR_NODISCARD virtual bool LoadFromFile(const SR_UTILS_NS::Path& path) = 0;
         SR_NODISCARD virtual bool LoadFromString(const std::string& str) = 0;
+        SR_NODISCARD virtual std::string ToString() const noexcept { return ""; }
 
         SR_NODISCARD virtual bool IsDefault(const SerializationId& name) const noexcept = 0;
         SR_NODISCARD virtual bool ShouldSetDefaults(const SerializationId& name) const noexcept = 0;
@@ -30,6 +34,8 @@ namespace SR_UTILS_NS {
         SR_NODISCARD virtual bool AllowNewMapKeys() const noexcept = 0;
         SR_NODISCARD virtual bool IsPreserveMode() const noexcept = 0;
         SR_NODISCARD virtual bool AllowReAllocPointer(ReAllocPointerReason reason) const noexcept = 0;
+
+        virtual void ResetWalker() = 0;
 
         virtual bool BeginItem(const SerializationId& id, uint32_t index) = 0;
         virtual void EndItem() = 0;
@@ -40,8 +46,12 @@ namespace SR_UTILS_NS {
         virtual uint64_t BeginArray(const SerializationId& id) = 0;
         virtual void EndArray() = 0;
 
+        void ReadAny(std::any& value, const SerializationId& name);
+
         virtual void ReadString(std::string& value, const SerializationId& name) = 0;
         virtual void ReadString(SR_UTILS_NS::StringAtom& value, const SerializationId& name) = 0;
+        virtual void ReadString(SR_HTYPES_NS::UnicodeString& value, const SerializationId& name) = 0;
+        virtual void ReadString(SR_UTILS_NS::Path& value, const SerializationId& name) = 0;
         virtual void ReadBool(bool& value, const SerializationId& name) = 0;
         virtual void ReadInt(int8_t& value, const SerializationId& name) = 0;
         virtual void ReadInt(int16_t& value, const SerializationId& name) = 0;

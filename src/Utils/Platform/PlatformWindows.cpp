@@ -5,6 +5,7 @@
 #include <Utils/Platform/Platform.h>
 #include <Utils/Common/StringFormat.h>
 #include <Utils/Debug.h>
+#include <Utils/Profile/TracyContext.h>
 
 #include <Windows.h>
 #include <Psapi.h>
@@ -366,6 +367,7 @@ namespace SR_UTILS_NS::Platform {
     }
 
     void Sleep(uint64_t milliseconds) {
+        SR_TRACY_ZONE;
         ::Sleep(static_cast<DWORD>(milliseconds));
     }
 

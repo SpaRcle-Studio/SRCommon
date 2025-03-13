@@ -131,7 +131,7 @@ namespace SR_WORLD_NS {
 
         /// TODO: add version and migration
 
-        if (pMarshal && pMarshal->Valid()) {
+        /*if (pMarshal && pMarshal->Valid()) {
             if (m_position != pMarshal->Read<SR_MATH_NS::IVector3>()) {
                 SRAssert2(false, "Something went wrong...");
                 return false;
@@ -149,7 +149,7 @@ namespace SR_WORLD_NS {
                     m_preloaded.emplace_back(ptr);
                 }
             }
-        }
+        }*/
 
         m_loadState = LoadState::PreLoaded;
 
@@ -195,7 +195,7 @@ namespace SR_WORLD_NS {
         /// сохраняем объекты относительно начала координат чанка
         pContext->SetValue<SR_MATH_NS::FVector3>(-GetWorldPosition());
 
-        const auto gameObjectSaveData = SR_UTILS_NS::SavableContext(nullptr, SAVABLE_FLAG_ECS_NO_ID);
+        /*const auto gameObjectSaveData = SR_UTILS_NS::SavableContext(nullptr, SAVABLE_FLAG_ECS_NO_ID);
 
         for (auto&& gameObject : gameObjects) {
             if (gameObject.RecursiveLockIfValid()) {
@@ -225,7 +225,7 @@ namespace SR_WORLD_NS {
 
                 gameObject.Unlock();
             }
-        }
+        }*/
 
         pContext->RemoveValue<SR_MATH_NS::FVector3>();
 

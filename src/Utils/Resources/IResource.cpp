@@ -29,6 +29,8 @@ namespace SR_UTILS_NS {
 
         m_loadState = LoadState::Reloading;
 
+        Broadcast(RELOAD_BEGIN_EVENT);
+
         Unload();
 
         if (!Load()) {

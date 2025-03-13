@@ -11,15 +11,10 @@
 #include <Utils/ECS/Transform.h>
 
 namespace SR_UTILS_NS {
+    /// @category(Debug)
     class SR_DLL_EXPORT DebugLogComponent final : public Component {
-        SR_ENTITY_SET_VERSION(1000);
-        SR_INITIALIZE_COMPONENT(DebugLogComponent);
+        SR_CLASS()
         using Super = Component;
-    public:
-        static Component* LoadComponent(SR_HTYPES_NS::Marshal& marshal, const SR_HTYPES_NS::DataStorage* dataStorage) {
-            return new DebugLogComponent();
-        }
-
     public:
         void OnLoaded() override { SR_DEBUG_LOG("DebugLogComponent::OnLoaded()"); Super::OnLoaded(); }
         void Start() override { SR_DEBUG_LOG("DebugLogComponent::Start()"); Super::Start(); }

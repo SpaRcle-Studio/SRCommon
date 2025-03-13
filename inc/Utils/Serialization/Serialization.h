@@ -7,7 +7,9 @@
 
 #include <Utils/Serialization/Serializer.h>
 #include <Utils/Serialization/Deserializer.h>
+#include <Utils/Serialization/ObjectDataAccessor.h>
 #include <Utils/TypeTraits/Factory.h>
+#include <Utils/Types/UnicodeString.h>
 #include <Utils/Types/SharedPtr.h>
 #include <Utils/Math/Size.h>
 #include <Utils/Common/StringAtomLiterals.h>
@@ -52,17 +54,7 @@ namespace SR_UTILS_NS {
 
 	#include <Utils/Serialization/DefaultObjectMakers.inl.h>
 
-	/// Specialization for serializable types
-
-	template<typename T, typename Enable = void> struct ObjectDataAccessor {
-		static void Save(ISerializer&, const T&, const SerializationId&) {
-			static_assert(AlwaysFalseV<T>, "Unable to save! Need to inherit from Serializable!");
-		}
-
-		static void Load(IDeserializer&, T&, const SerializationId&) {
-			static_assert(AlwaysFalseV<T>, "Unable to load! Need to inherit from Serializable!");
-		}
-	};
+	#include <Utils/Serialization/SaveCheckers.inl.h>
 
 	namespace Serialization {
 		template<typename T> bool IsValidValue(const T& value) {
@@ -75,7 +67,14 @@ namespace SR_UTILS_NS {
 			}
 		}
 
+		template<typename T> bool CanBeSaved(const T& value) {
+			return SR_UTILS_NS::SaveChecker<T>::CanBeSaved(value);
+		}
+
 		template<typename T> void Save(ISerializer& serializer, const T& value, const SerializationId& key) {
+			if (!CanBeSaved(value)) {
+				return;
+			}
 			SR_UTILS_NS::ObjectDataAccessor<T>::Save(serializer, value, key);
 		}
 
@@ -83,7 +82,7 @@ namespace SR_UTILS_NS {
 			if (!serializer.IsWriteDefaults() && IsDefault(value)) {
 				return;
 			}
-			SR_UTILS_NS::ObjectDataAccessor<T>::Save(serializer, value, key);
+			Save(serializer, value, key);
 		}
 
 		template<typename T> bool Load(IDeserializer& deserializer, T& value, const SerializationId& key) {

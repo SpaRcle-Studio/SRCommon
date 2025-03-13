@@ -13,6 +13,14 @@
 namespace SR_UTILS_NS {
     class SRClassMeta;
 
+    /// Флаги для сериализатора объектов
+    SR_ENUM_NS_STRUCT_T(SerializationFlags, uint64_t,
+        None     = 1 << 0,
+        Compress = 1 << 1,
+        NoUID    = 1 << 2,
+        DontSave = 1 << 3
+    )
+
     struct SerializableVerifyContext {
     public:
         void AddError(const std::string& error) noexcept { errors.insert(error); }
@@ -26,26 +34,18 @@ namespace SR_UTILS_NS {
         std::set<std::string> warnings;
     };
 
-    struct PropertyInfo {
-        StringAtom name;
-        StringAtom className;
-
-        bool operator<(const PropertyInfo& p_info) const {
-            return name < p_info.name;
-        }
-    };
-
     class SRClass {
     public:
         virtual ~SRClass() = default;
 
     public:
-        static std::span<const SRClassMeta*> GetBaseMetas() noexcept {
+        SR_NODISCARD static std::span<const SRClassMeta*> GetBaseMetas() noexcept {
             return {};
         }
 
+        SR_NODISCARD virtual const SR_UTILS_NS::SRClassMeta* GetMeta() const noexcept = 0;
+
         virtual void InitializeClass() noexcept { }
-        virtual const SR_UTILS_NS::SRClassMeta* GetMeta() const noexcept = 0;
 
         static SR_UTILS_NS::StringAtom GetClassStaticName() noexcept;
         static const SR_UTILS_NS::SRClassMeta* GetMetaStatic() noexcept;
@@ -54,7 +54,6 @@ namespace SR_UTILS_NS {
 
     private:
         void SR_CLANG_CODEGEN_MARKER() { }
-        inline static const bool SR_CODEGEN_INITIALIZE = SR_UTILS_NS::ClassDB::Instance().RegisterNewClass(GetClassStaticName());
 
     };
 

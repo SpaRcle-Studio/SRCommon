@@ -9,16 +9,13 @@
 #include <Utils/World/SceneUpdater.h>
 #include <Utils/World/Scene.h>
 
+#include <Utils/ECS/GameObject.h>
+
 #include <Codegen/SceneObject.generated.hpp>
 
 namespace SR_UTILS_NS {
     SceneObject::SceneObject() {
-        UpdateEntityPath();
-    }
-
-    SceneObject::SceneObject(ObjectNameT name) {
-        SetName(name);
-        UpdateEntityPath();
+        SetLayer(SR_UTILS_NS::LayerManager::GetDefaultLayer());
     }
 
     SceneObject::~SceneObject() {
@@ -29,85 +26,86 @@ namespace SR_UTILS_NS {
         SRAssert(!GetPrefab());
     }
 
-    SR_HTYPES_NS::Marshal::Ptr SceneObject::SaveLegacy(SavableContext data) const {
-        if (!(data.pMarshal = Entity::SaveLegacy(data))) {
-            return data.pMarshal;
-        }
-
-        return Entity::SaveLegacy(data);
-    }
-
-    SceneObject::Ptr SceneObject::Copy(const ScenePtr& pScene, const SceneObject::Ptr& pObject) const {
-        pObject->SetEnabled(IsEnabled());
-
-        pObject->SetTag(GetTag());
-        pObject->SetLayer(GetLayer());
-
-        if (pScene) {
-            pScene->RegisterSceneObject(pObject);
-        }
-
-        for (auto&& pComponent : m_components) {
-            pObject->AddComponent(pComponent->CopyComponent());
-        }
-
-        for (auto&& children : GetChildrenRef()) {
-            pObject->AddChild(children->Copy(pScene, nullptr));
-        }
-
-        if (IsPrefabOwner()) {
-            pObject->SetPrefab(GetPrefab(), true);
-        }
-
-        return pObject;
-    }
-
     SceneObject::Ptr SceneObject::Find(const std::string_view& name) const noexcept {
         return Find(SR_HASH_STR_REGISTER(name));
     }
 
-    bool SceneObject::UpdateEntityPath() {
-        SceneObject::Ptr pCurrent = this;
-        EntityPath path;
+    SceneObject::Ptr SceneObject::CloneSceneObject() const {
+        SR_UTILS_NS::SRASerializer serializer;
+        Save(serializer);
 
-        do {
-            path.ConcatBack(pCurrent->GetEntityId());
-            pCurrent = pCurrent->m_parent;
+        auto&& pDeserializer = serializer.CreateDeserializer();
 
-            if (pCurrent && pCurrent->GetEntityId() == GetEntityId()) {
-                SRHalt("Recursive entity path!");
-                return false;
+        SR_UTILS_NS::SceneObject::Ptr pSceneObject;
+
+        switch (GetSceneObjectType()) {
+        case SceneObjectType::GameObject:
+                pSceneObject = SR_UTILS_NS::GameObject::MakeShared<GameObject, SceneObject>();
+                break;
+            default:
+                SRHalt("Unknown scene object type!");
+                return nullptr;
+        }
+
+        pSceneObject->Load(*pDeserializer);
+        return pSceneObject;
+    }
+
+    bool SceneObject::Load(IDeserializer& deserializer) {
+        SR_TRACY_ZONE;
+
+        if (!Super::Load(deserializer)) {
+            return false;
+        }
+
+        SR_UTILS_NS::SerializationId prefabId = SR_UTILS_NS::SerializationId::Create("prefab");
+        SR_UTILS_NS::Path prefabPath;
+        deserializer.ReadString(prefabPath, prefabId);
+
+        if (!prefabPath.empty()) {
+            if (auto&& pPrefab = SR_UTILS_NS::Prefab::Load(prefabPath)) {
+                if (GetComponentsCount() > 0) {
+                    SR_ERROR("SceneObject::Load() : prefab not loaded, but components are present! Path: {}", prefabPath.ToString());
+                    RemoveComponents();
+                }
+
+                if (!GetChildrenRef().empty()) {
+                    SR_ERROR("SceneObject::Load() : prefab not loaded, but children are present! Path: {}", prefabPath.ToString());
+                    DestroyChildren();
+                }
+
+                m_isPrefabLoadingState = true;
+
+                if (!pPrefab->LoadToSO(this)) {
+                    SR_ERROR("SceneObject::Load() : failed to apply prefab! Path: {}", prefabPath.ToString());
+                }
+                else {
+                    SetPrefab(pPrefab, true);
+                }
+
+                m_isPrefabLoadingState = false;
             }
-        } while (pCurrent.Valid());
-
-        SetEntityPath(path);
+            else {
+                SR_ERROR("SceneObject::Load() : failed to load prefab! Path: {}", prefabPath.ToString());
+            }
+        }
 
         return true;
     }
 
-    std::list<EntityBranch> SceneObject::GetEntityBranches() const {
-        std::list<EntityBranch> branches;
-
-        ForEachChild([&branches](const SceneObject::Ptr &ptr) {
-            branches.emplace_back(ptr->GetEntityTree());
-        });
-
-        return std::move(branches);
-    }
-
-    bool SceneObject::MoveToTree(const SceneObject::Ptr &destination) {
+    bool SceneObject::MoveToTree(const SceneObject::Ptr& pDestination) {
         if (m_parent) {
             if (const SceneObject::Ptr pCopy = m_parent) {
                 pCopy->RemoveChild(this);
             }
         }
 
-        if (destination.Valid()){
-            return destination->AddChild(this);
+        if (pDestination) {
+            return pDestination->AddChild(this);
         }
 
-        if (GetParent()){
-            SRHalt("GameObject::MoveToTree() : GameObject has parent!");
+        if (GetParent()) {
+            SRHalt("SceneObject::MoveToTree() : SO has parent!");
             return false;
         }
 
@@ -227,6 +225,10 @@ namespace SR_UTILS_NS {
         return SceneObject::Ptr();
     }
 
+    Path SceneObject::GetPrefabPath() const {
+        return m_prefabInfo.pPrefab ? m_prefabInfo.pPrefab->GetResourcePath() : Path();
+    }
+
     bool SceneObject::PostLoad(bool force) {
         if (!IComponentable::PostLoad(force)) {
             return false;
@@ -335,8 +337,6 @@ namespace SR_UTILS_NS {
 
         m_isDestroyed = true;
 
-        /// сцену не блокируем, предполагается, что и так в контексте заблокированной сцены работаем
-
         if (GetPrefab()) {
             UnlinkPrefab();
         }
@@ -344,6 +344,8 @@ namespace SR_UTILS_NS {
         if (auto&& pParent = GetParent()) {
             pParent->RemoveChild(this);
         }
+
+        UnregisterEntity();
 
         if (m_scene) {
             m_scene->Remove(GetThis().DynamicCast<SceneObject>());
@@ -363,7 +365,7 @@ namespace SR_UTILS_NS {
                 }
             }
 
-            DestroyComponents();
+            RemoveComponents();
             DestroyImpl();
         }
     }
@@ -374,12 +376,12 @@ namespace SR_UTILS_NS {
         AutoFree();
     }
 
-    void SceneObject::OnPostLoaded() {
+    void SceneObject::OnPostLoad() {
         SR_TRACY_ZONE;
         for (auto&& pChild : m_children) {
             pChild->SetParent(this);
         }
-        Super::OnPostLoaded();
+        Super::OnPostLoad();
     }
 
     void SceneObject::UpdateRoot() {
@@ -398,8 +400,20 @@ namespace SR_UTILS_NS {
         return m_tag;
     }
 
-    std::string SceneObject::GetEntityInfo() const {
-        return "SceneObject: " + GetName();
+    SR_UTILS_NS::EntityIdList SceneObject::GetEntityIdList() const {
+        SR_UTILS_NS::EntityIdList list(m_scene->GetEntityController());
+
+        list.Add(GetEntityId());
+
+        for (auto&& pComponent : m_components) {
+            list.Add(pComponent->GetEntityId());
+        }
+
+        for (auto&& pChild : m_children) {
+            list.Add(pChild->GetEntityId());
+        }
+
+        return list;
     }
 
     SceneObject::Ptr SceneObject::Find(uint64_t hashName) const noexcept {
@@ -430,6 +444,10 @@ namespace SR_UTILS_NS {
         if (Contains(pChild)) {
             SRHalt("This child already exists in this game object!");
             return false;
+        }
+
+        if (!pChild->IsEntityRegistered() && m_scene) {
+            m_scene->RegisterSceneObject(pChild);
         }
 
         if (!pChild->SetParent(GetThis().DynamicCast<SceneObject>())) {
@@ -466,6 +484,10 @@ namespace SR_UTILS_NS {
     void SceneObject::SetScene(ScenePtr pScene) {
         SRAssert(!m_scene);
         m_scene = pScene;
+
+        for (auto&& pChild : m_children) {
+            pChild->SetScene(pScene);
+        }
     }
 
     bool SceneObject::Contains(const SceneObject::Ptr& pChild) {
@@ -482,7 +504,6 @@ namespace SR_UTILS_NS {
         SR_TRACY_ZONE;
 
         if (pParent == m_parent) {
-            SRHalt("GameObject::SetParent() : parent is already set!");
             return false;
         }
 
@@ -490,13 +511,6 @@ namespace SR_UTILS_NS {
         m_parent = pParent;
 
         UpdateRoot();
-
-        if (!UpdateEntityPath()) {
-            SRHalt("GameObject::SetParent() : failed to update entity path!");
-            m_parent = pOldParent;
-            UpdateRoot();
-            return false;
-        }
 
         if (m_scene) {
             m_scene->OnChanged();
@@ -512,7 +526,7 @@ namespace SR_UTILS_NS {
     void SceneObject::RemoveChild(const SceneObject::Ptr& pChild) {
         SR_TRACY_ZONE;
 
-        pChild->SetParent(SceneObject::Ptr());
+        pChild->SetParent(nullptr);
 
         for (uint16_t i = 0; i < m_children.size(); ++i) {
             if (pChild == m_children[i]) {
@@ -524,11 +538,32 @@ namespace SR_UTILS_NS {
         SRHalt("SceneObject {} is not child for {}!", pChild->GetName().c_str(), GetName().c_str());
     }
 
-    void SceneObject::RemoveAllChildren() {
-        for (auto&& pChild : m_children) {
-            pChild->SetParent(SceneObject::Ptr());
+    void SceneObject::RemoveChildren() {
+        SR_TRACY_ZONE;
+        while (!m_children.empty()) {
+            auto&& pChild = *m_children.begin();
+            if (pChild) {
+                pChild->SetParent(nullptr);
+            }
+            else {
+                SRHalt("SceneObject::RemoveChildren() : child is nullptr!");
+                m_children.erase(m_children.begin());
+            }
         }
-        m_children.clear();
+    }
+
+    void SceneObject::DestroyChildren() {
+        SR_TRACY_ZONE;
+        while (!m_children.empty()) {
+            auto&& pChild = *m_children.begin();
+            if (pChild) {
+                pChild->Destroy();
+            }
+            else {
+                SRHalt("SceneObject::DestroyChildren() : child is nullptr!");
+                m_children.erase(m_children.begin());
+            }
+        }
     }
 
     void SceneObject::VerifyAfterLoad(SerializableVerifyContext& context) const noexcept {

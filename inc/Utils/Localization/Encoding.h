@@ -54,8 +54,12 @@ namespace SR_UTILS_NS::Localization {
     ///
     /// Convert a Unicode string \a str other Unicode encoding
     ///
-    template<typename CharOut,typename CharIn> std::basic_string<CharOut> UtfToUtf(std::basic_string<CharIn> const &str, EncMethodType how = EncMethodType::Default) {
-        return UtfToUtf<CharOut,CharIn>(str.c_str(), str.c_str() + str.size(), how);
+    template<typename CharOut,typename CharIn> std::basic_string<CharOut> UtfToUtf(std::basic_string<CharIn> const& str, EncMethodType how = EncMethodType::Default) {
+        return UtfToUtf<CharOut, CharIn>(str.c_str(), str.c_str() + str.size(), how);
+    }
+
+    template<typename CharOut,typename CharIn> std::basic_string<CharOut> UtfToUtf(std::basic_string_view<CharIn> const& str, EncMethodType how = EncMethodType::Default) {
+        return UtfToUtf<CharOut, CharIn>(str.data(), str.data() + str.size(), how);
     }
 
     ///std::string Between(const char* begin,

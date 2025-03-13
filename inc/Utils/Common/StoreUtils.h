@@ -18,17 +18,22 @@ namespace SR_UTILS_NS::StoreUtils {
         };
         enum class ValueType {
             AnyType,
-            Float
+            Float,
+            Bool
         };
     private:
         union Value {
             float_t f;
+            bool b;
         };
 
         template<typename T> static T& VisitValue(Value& value) {
             using Type = SR_UTILS_NS::RemoveQualifiersT<T>;
             if constexpr (std::is_same_v<Type, float_t>) {
                 return value.f;
+            }
+            else if constexpr (std::is_same_v<Type, bool>) {
+                return value.b;
             }
             else {
                 static_assert(SR_UTILS_NS::AlwaysFalseV<T>, "Unsupported type!");
@@ -96,6 +101,14 @@ namespace SR_UTILS_NS::StoreUtils {
         }
         static void SetFloat(SR_UTILS_NS::StringAtom key, float_t value) {
             Storage::Instance().Set(storeType, Storage::ValueType::Float, key, value);
+        }
+
+        SR_NODISCARD static bool HasBool(SR_UTILS_NS::StringAtom key) { return Has(key, Storage::ValueType::Bool); }
+        SR_NODISCARD static bool GetBool(SR_UTILS_NS::StringAtom key, const std::optional<bool>& def = std::nullopt) {
+            return Storage::Instance().Get<bool>(storeType, Storage::ValueType::Bool, key, def);
+        }
+        static void SetBool(SR_UTILS_NS::StringAtom key, bool value) {
+            Storage::Instance().Set(storeType, Storage::ValueType::Bool, key, value);
         }
 
     };

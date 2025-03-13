@@ -5,7 +5,7 @@
 #ifndef SR_ENGINE_UTILS_COMPONENT_H
 #define SR_ENGINE_UTILS_COMPONENT_H
 
-#include <Utils/ECS/EntityManager.h>
+#include <Utils/ECS/Entity.h>
 #include <Utils/Math/Vector3.h>
 #include <Utils/Types/SafePointer.h>
 #include <Utils/Types/SharedPtr.h>
@@ -97,10 +97,6 @@ namespace SR_UTILS_NS {
         void SetEnabled(bool value);
         void SetIndexIdSceneUpdater(int32_t index) { m_indexInSceneUpdater = index; }
 
-        SR_NODISCARD virtual Component* CopyComponent() const;
-
-        SR_NODISCARD virtual const SR_UTILS_NS::StringAtom& GetComponentName() const = 0;
-
         SR_NODISCARD SR_FORCE_INLINE virtual bool IsComponentLoaded() const noexcept { return m_isComponentLoaded; }
         SR_NODISCARD SR_FORCE_INLINE virtual bool IsComponentValid() const noexcept { return m_parent; }
         SR_NODISCARD SR_FORCE_INLINE virtual bool IsAttached() const noexcept { return m_isAttached; }
@@ -124,6 +120,7 @@ namespace SR_UTILS_NS {
         SR_NODISCARD virtual Math::FVector3 GetBarycenter() const { return SR_MATH_NS::InfinityFV3; }
         SR_NODISCARD Component* BaseComponent() noexcept { return this; }
         SR_NODISCARD IComponentable* GetParent() const;
+        SR_NODISCARD IComponentable* TryGetParent() const { return m_parent; }
         SR_NODISCARD ScenePtr GetScene() const;
         SR_NODISCARD bool HasScene() const { return TryGetScene(); }
         SR_NODISCARD GameObjectPtr GetGameObject() const;
@@ -136,11 +133,9 @@ namespace SR_UTILS_NS {
         SR_NODISCARD const SR_UTILS_NS::PropertyContainer& GetComponentProperties() const noexcept { return m_properties; }
         SR_NODISCARD int32_t GetIndexInSceneUpdater() const noexcept { return m_indexInSceneUpdater; }
 
-        SR_NODISCARD std::string GetEntityInfo() const override;
+        SR_NODISCARD Component::Ptr CloneComponent() const;
 
     protected:
-        SR_NODISCARD SR_HTYPES_NS::Marshal::Ptr SaveLegacy(SavableContext data) const override;
-
         void SetParent(IComponentable* pParent);
 
     protected:
@@ -150,7 +145,7 @@ namespace SR_UTILS_NS {
         bool m_isAwake = false;
         bool m_isStarted = false;
 
-        /// @property
+        /// @property @hidden @setter(SetEnabled)
         bool m_isEnabled = true;
 
         int32_t m_indexInSceneUpdater = SR_ID_INVALID;

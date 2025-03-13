@@ -9,8 +9,12 @@
 #include <Utils/Math/Mathematics.h>
 #include <Utils/Types/StringAtom.h>
 #include <Utils/Common/Breakpoint.h>
+#include <Utils/Serialization/ObjectDataAccessor.h>
 
 namespace SR_UTILS_NS {
+    class IDeserializer;
+    class ISerializer;
+
     class SR_DLL_EXPORT Path {
     public:
         enum class Type {
@@ -80,6 +84,9 @@ namespace SR_UTILS_NS {
         }
 
     public:
+        void Save(ISerializer& serializer, const SerializationId& id) const;
+        void Load(IDeserializer& deserializer, const SerializationId& id);
+
         SR_DEPRECATED bool Make(Type type = Type::Undefined) const;
         bool Create() const;
         bool CreateIfNotExists() const;
@@ -148,6 +155,18 @@ namespace SR_UTILS_NS {
         uint64_t    m_hash;
         Type        m_type;
 
+    };
+}
+
+namespace SR_UTILS_NS {
+    template<> struct ObjectDataAccessor<SR_UTILS_NS::Path> {
+        static void Save(ISerializer& serializer, const SR_UTILS_NS::Path& value, const SerializationId& id) {
+            value.Save(serializer, id);
+        }
+
+        static void Load(IDeserializer& deserializer, SR_UTILS_NS::Path& value, const SerializationId& id) {
+            value.Load(deserializer, id);
+        }
     };
 }
 

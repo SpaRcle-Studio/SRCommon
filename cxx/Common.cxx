@@ -17,6 +17,9 @@
 #include "../src/Utils/Common/SubscriptionHolder.cpp"
 #include "../src/Utils/Common/StoreUtils.cpp"
 
+#include "../src/Utils/Serialization/BaseSerialization.cpp"
+#include "../src/Utils/Serialization/MigrationManager.cpp"
+#include "../src/Utils/Serialization/IMigrator.cpp"
 #include "../src/Utils/Serialization/Serializable.cpp"
 #include "../src/Utils/Serialization/Serializer.cpp"
 #include "../src/Utils/Serialization/Deserializer.cpp"

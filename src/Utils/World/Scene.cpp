@@ -20,12 +20,15 @@
 
 #include <Utils/Platform/Platform.h>
 
+#include <Enum/SceneLogicType.hpp>
+
 #include <Codegen/Scene.generated.hpp>
 
 namespace SR_WORLD_NS {
     Scene::Scene()
         : Super()
         , m_sceneUpdater(new SR_WORLD_NS::SceneUpdater(this))
+        , m_pEntityController(SR_UTILS_NS::EntityController::MakeShared())
     { }
 
     Scene::~Scene() {
@@ -41,17 +44,38 @@ namespace SR_WORLD_NS {
         SRAssert(m_freeObjIndices.size() == m_sceneObjects.size());
 
         SR_SAFE_DELETE_PTR(m_sceneUpdater);
+
+        if (IsEntityRegistered()) {
+            m_pEntityController->Unregister(GetEntityId());
+        }
+        m_pEntityController.AutoFree();
+    }
+
+    Scene::Ptr Scene::CreateEmptyScene() {
+        if (Debug::Instance().GetLevel() >= Debug::Level::High) {
+            SR_LOG("Scene::CreateEmptyScene() : creating empty scene...");
+        }
+
+        auto&& pScene = SceneAllocator::Instance().Allocate();
+
+        if (!pScene) {
+            SR_ERROR("Scene::CreateEmptyScene() : failed to allocate scene!");
+            return nullptr;
+        }
+
+        return pScene;
     }
 
     GameObject::Ptr Scene::InstanceGameObject(SR_UTILS_NS::StringAtom name) {
         if (Debug::Instance().GetLevel() >= Debug::Level::High) {
-            SR_LOG("Scene::Instance() : instance \"" + name.ToStringRef() + "\" game object at \"" + GetName() + "\" scene.");
+            SR_LOG("Scene::InstanceGameObject() : instance \"" + name.ToStringRef() + "\" game object at \"" + GetName() + "\" scene.");
         }
 
-        const GameObject::Ptr pGameObject = new GameObject(name);
-        const SceneObject::Ptr pSceneObject = pGameObject.StaticCast<SceneObject>();
+        const GameObject::Ptr pGameObject = SRNew<GameObject>();
+        pGameObject->SetName(name);
 
-        RegisterSceneObject(pSceneObject);
+        RegisterSceneObject(pGameObject.StaticCast<SceneObject>());
+
         return pGameObject;
     }
 
@@ -63,29 +87,12 @@ namespace SR_WORLD_NS {
         return InstanceGameObject(name);
     }
 
-    Scene::SceneObjectPtr Scene::Instance(SR_HTYPES_NS::Marshal& marshal) {
-        /// TODO: Implement laod other types of objects
-        return GameObject::Load(marshal, this).StaticCast<SceneObject>();
+    void Scene::SetPath(const Path& path) {
+        m_path = path;
+        m_absPath = GetAbsPath(path);
     }
 
-    Scene::Ptr Scene::Empty() {
-        if (Debug::Instance().GetLevel() > Debug::Level::None) {
-            SR_LOG("Scene::Empty() : creating new empty scene...");
-        }
-
-        auto&& pScene = SceneAllocator::Instance().Allocate();
-
-        if (!pScene) {
-            SR_ERROR("Scene::New() : failed to allocate scene!");
-            return Scene::Ptr();
-        }
-
-        pScene->m_logic = new SceneDefaultLogic(pScene);
-
-        return pScene;
-    }
-
-    Scene::Ptr Scene::New(const Path& path) {
+    Scene::Ptr Scene::NewScene(const Path& path, SceneLogicType type) {
         if (Debug::Instance().GetLevel() > Debug::Level::None) {
             SR_LOG("Scene::New() : creating new scene...");
         }
@@ -95,52 +102,73 @@ namespace SR_WORLD_NS {
             return Scene::Ptr();
         }
 
-        auto&& scene = SceneAllocator::Instance().Allocate();
+        auto&& pLogic = SR_UTILS_NS::Factory::Instance().Create<SceneLogic>("Scene{}Logic"_format(type));
+        if (!pLogic) {
+            SR_ERROR("Scene::New() : failed to create scene logic! Type: {}", type);
+            return Scene::Ptr();
+        }
 
-        if (!scene) {
+        auto&& pScene = SceneAllocator::Instance().Allocate();
+
+        if (!pScene) {
             SR_ERROR("Scene::New() : failed to allocate scene!");
             return Scene::Ptr();
         }
 
         SRAssert(!path.IsAbs());
 
-        scene->m_absPath = GetAbsPath(path);
-        scene->m_path = path;
-        scene->m_logic = SceneLogic::CreateByExt(scene, path.GetExtension());
+        pScene->SetPath(path);
+        pScene->m_logic = pLogic;
+        pLogic->SetScene(pScene);
 
-        return scene;
+        return pScene;
     }
 
-    Scene::Ptr World::Scene::Load(const Path& path) {
+    Scene::Ptr Scene::LoadScene(const Path& path) {
         if (Debug::Instance().GetLevel() > Debug::Level::None) {
             SR_LOG("Scene::Load() : loading scene...\n\tPath: " + path.ToString());
         }
 
-        auto&& scene = SceneAllocator::Instance().Allocate();
+        static auto&& destroySceneFn = [](Scene::Ptr& pScene) {
+            pScene.AutoFree([](SR_WORLD_NS::Scene* pScene) {
+                pScene->Destroy();
+                delete pScene;
+            });
+        };
 
-        if (!scene) {
+        auto&& pScene = SceneAllocator::Instance().Allocate();
+
+        if (!pScene) {
             SR_ERROR("Scene::Load() : failed to allocate scene!");
             return Scene::Ptr();
         }
 
         SRAssert(!path.IsAbs());
 
-        scene->m_absPath = GetAbsPath(path);
-        scene->m_path = path;
-        scene->m_logic = SceneLogic::CreateByExt(scene, path.GetExtension());
+        pScene->SetPath(path);
 
-        if (!scene->m_logic->Load(scene->m_absPath)) {
-            SR_ERROR("Scene::Load() : failed to load scene logic!");
-
-            scene.AutoFree([](SR_WORLD_NS::Scene* pScene) {
-                pScene->Destroy();
-                delete pScene;
-            });
-
+        SRADeserializer deserializer;
+        if (!deserializer.LoadFromFile(pScene->m_absPath)) {
+            SR_ERROR("Scene::Load() : failed to load scene!\n\tPath: " + pScene->m_absPath.ToString());
+            destroySceneFn(pScene);
             return Scene::Ptr();
         }
 
-        return scene;
+        pScene->Load(deserializer);
+
+        if (!pScene->IsEntityRegistered()) {
+            const EntityId entityId = pScene->GetEntityId();
+            pScene->SetEntityId(SR_ID_INVALID);
+            pScene->GetEntityController()->Register(pScene.StaticCast<Entity>(), entityId);
+        }
+
+        if (!pScene->m_logic || !pScene->m_logic->LoadLogic(deserializer, pScene->m_absPath)) {
+            SR_ERROR("Scene::Load() : failed to load scene logic!");
+            destroySceneFn(pScene);
+            return Scene::Ptr();
+        }
+
+        return pScene;
     }
 
     bool Scene::Destroy() {
@@ -151,7 +179,7 @@ namespace SR_WORLD_NS {
 
         m_isPreDestroyed = true;
 
-        IComponentable::DestroyComponents();
+        RemoveComponents();
 
         m_logic.AutoFree([](auto&& pLogic) {
             pLogic->Destroy();
@@ -222,11 +250,11 @@ namespace SR_WORLD_NS {
         m_isHierarchyChanged = true;
     }
 
-    bool Scene::Save() {
-        return SaveAt(m_path);
+    bool Scene::SaveScene() {
+        return SaveSceneAt(m_path);
     }
 
-    bool Scene::SaveAt(const Path& path) {
+    bool Scene::SaveSceneAt(const Path& path) {
         SR_INFO(SR_FORMAT("Scene::SaveAt() : saving scene...\n\tPath: {}", path.CStr()));
 
         SRAssert(!path.IsAbs());
@@ -236,8 +264,17 @@ namespace SR_WORLD_NS {
             return false;
         }
 
-        if (!m_logic->Save(GetAbsPath(path))) {
+        SRASerializer serializer;
+        serializer.SetUseTabs(true);
+        Save(serializer);
+
+        if (!m_logic->SaveLogic(serializer, GetAbsPath(path))) {
             SR_ERROR("Scene::SaveAt() : failed to save scene logic!");
+            return false;
+        }
+
+        if (!serializer.SaveToFile(m_logic->GetSceneDataPath(GetAbsPath(path)))) {
+            SR_ERROR("Scene::SaveAt() : failed to save scene!");
             return false;
         }
 
@@ -286,16 +323,12 @@ namespace SR_WORLD_NS {
         return SceneObject::Ptr();
     }
 
-    SceneObject::Ptr Scene::InstanceFromFile(const std::string& path) {
-        auto&& extension = SR_UTILS_NS::StringUtils::GetExtensionFromFilePath(path);
-
-        if (extension == Prefab::EXTENSION) {
-            auto&& pPrefab = Prefab::Load(path);
-
-            if (pPrefab) {
-                auto&& instanced = pPrefab->Instance(this);
+    SceneObject::Ptr Scene::InstanceFromFile(const SR_UTILS_NS::Path& path) {
+        if (path.GetExtensionView() == Prefab::EXTENSION) {
+            if (auto&& pPrefab = Prefab::Load(path)) {
+                auto&& pInstanced = pPrefab->Instance(this);
                 pPrefab->CheckResourceUsage();
-                return instanced;
+                return pInstanced;
             }
 
             return SceneObject::Ptr();
@@ -317,6 +350,20 @@ namespace SR_WORLD_NS {
     bool Scene::Reload() {
         SR_INFO("Scene::Reload() : reload scene...");
         return m_logic->Reload();
+    }
+
+    void Scene::OnPostLoad() {
+        if (m_logic) {
+            m_logic->SetScene(this);
+        }
+
+        for (auto&& pObject : m_root) {
+            if (SRVerify2(pObject, "Scene::OnPostLoad() : invalid root object!")) {
+                RegisterSceneObject(pObject);
+            }
+        }
+
+        Super::OnPostLoad();
     }
 
     SceneObject::Ptr Scene::Find(uint64_t hashName) {
@@ -347,20 +394,62 @@ namespace SR_WORLD_NS {
         return m_path.GetBaseName();
     }
 
-    bool Scene::IsPrefab() const {
+    bool Scene::IsPrefab() const noexcept {
         return m_logic.DynamicCast<ScenePrefabLogic>();
     }
 
-    void Scene::RegisterSceneObject(const Scene::SceneObjectPtr& ptr) {
-        SRAssert(!m_isPreDestroyed);
-        SRAssert(!ptr->GetScene());
+    void Scene::RegisterSceneObject(const Scene::SceneObjectPtr& pSO) {
+        SR_TRACY_ZONE;
 
-        m_newQueue.emplace_back(ptr);
+        SRAssert2(m_registerEntityCache.empty(), "Scene::RegisterSceneObject() : cache is not empty!");
 
-        ptr->SetScene(this);
+        RegisterSceneObjectImpl(pSO);
+        pSO->SetScene(this);
 
-        for (auto&& pChild : ptr->GetChildrenRef()) {
-            RegisterSceneObject(pChild);
+        for (auto& entities : m_registerEntityCache | std::views::values) {
+            m_registerEntityIdReplaceCache.clear();
+
+            for (auto&& pEntity : entities) {
+                const EntityId oldEntityId = pEntity->GetEntityId();
+                pEntity->SetEntityId(SR_ID_INVALID);
+                const EntityId newEntityId = GetEntityController()->Register(pEntity, oldEntityId);
+
+                if (oldEntityId != SR_ID_INVALID) {
+                    m_registerEntityIdReplaceCache[newEntityId] = oldEntityId;
+                }
+            }
+
+            if (!m_registerEntityIdReplaceCache.empty()) {
+                for (auto&& pEntity : entities) {
+                    pEntity->OnEntityIdReplaced(m_registerEntityIdReplaceCache);
+                }
+            }
+        }
+
+        m_registerEntityCache.clear();
+    }
+
+    void Scene::RegisterSceneObjectImpl(const Scene::SceneObjectPtr& pSO) {
+        SR_TRACY_ZONE;
+
+        SRAssert2(!m_isPreDestroyed, "Scene::RegisterSceneObjectImpl() : scene is pre destroyed!");
+        SRAssert2(!pSO->GetScene(), "Scene::RegisterSceneObjectImpl() : object already registered!");
+        SRAssert2(!pSO->IsEntityRegistered(), "Scene::RegisterSceneObjectImpl() : entity already registered!");
+
+        if (m_isInitialized) {
+            m_newQueue.emplace_back(pSO);
+        }
+        else {
+            ProcessNewSO(pSO);
+        }
+
+        m_registerEntityCache[pSO->GetPrefab()].emplace_back(static_cast<Entity*>(const_cast<SceneObject*>(pSO.Get())));
+        for (auto&& pComponent : pSO->GetComponents()) {
+            m_registerEntityCache[pSO->GetPrefab()].emplace_back(static_cast<Entity*>(const_cast<Component*>(pComponent.Get())));
+        }
+
+        for (auto&& pChild : pSO->GetChildrenRef()) {
+            RegisterSceneObjectImpl(pChild);
         }
 
         SetDirty(true);
@@ -370,8 +459,10 @@ namespace SR_WORLD_NS {
     void Scene::Prepare() {
         SR_TRACY_ZONE;
 
+        SRAssert2(m_isInitialized, "Scene::Prepare() : scene is not initialized!");
+
         if (auto&& pLogic = GetLogicBase()) {
-            pLogic->PostLoad();
+            pLogic->Prepare();
         }
 
         if (!m_deleteQueue.empty() || !m_newQueue.empty() || !m_destroyedComponents.empty()) {
@@ -381,10 +472,8 @@ namespace SR_WORLD_NS {
 
         if (m_isPreDestroyed) {
             while (!m_newQueue.empty()) {
-                auto&& pGameObject = m_newQueue.front();
-
-                if (pGameObject) {
-                    pGameObject->Destroy();
+                if (auto&& pSO = m_newQueue.front()) {
+                    pSO->Destroy();
                 }
                 else {
                     m_newQueue.pop_front();
@@ -392,25 +481,15 @@ namespace SR_WORLD_NS {
             }
         } 
         else {
-            for (auto&& gameObject : m_newQueue) {
-                const uint64_t id = m_freeObjIndices.empty() ? m_sceneObjects.size() : m_freeObjIndices.front();
-
-                gameObject->SetIdInScene(id);
-
-                if (m_freeObjIndices.empty()) {
-                    m_sceneObjects.emplace_back(gameObject);
-                }
-                else {
-                    m_sceneObjects[m_freeObjIndices.front()] = gameObject;
-                    m_freeObjIndices.erase(m_freeObjIndices.begin());
-                }
+            for (auto&& pSO : m_newQueue) {
+                ProcessNewSO(pSO);
             }
         }
 
         m_newQueue.clear();
 
-        for (auto&& gameObject : m_deleteQueue) {
-            gameObject->DestroyComponents();
+        for (auto&& pSO : m_deleteQueue) {
+            pSO->RemoveComponents();
         }
 
         for (auto&& pComponent : m_destroyedComponents) {
@@ -419,8 +498,8 @@ namespace SR_WORLD_NS {
 
         m_destroyedComponents.clear();
 
-        for (auto&& gameObject : m_deleteQueue) {
-            gameObject->DestroyImpl();
+        for (auto&& pSO : m_deleteQueue) {
+            pSO->DestroyImpl();
         }
 
         m_deleteQueue.clear();
@@ -456,7 +535,23 @@ namespace SR_WORLD_NS {
 
     void Scene::Init() {
         if (m_logic) {
-            m_logic->Init();
+            m_logic->InitLogic();
+        }
+
+        m_isInitialized = true;
+    }
+
+    void Scene::ProcessNewSO(const Scene::SceneObjectPtr &pSO) {
+        const uint64_t id = m_freeObjIndices.empty() ? m_sceneObjects.size() : m_freeObjIndices.front();
+
+        pSO->SetIdInScene(id);
+
+        if (m_freeObjIndices.empty()) {
+            m_sceneObjects.emplace_back(pSO);
+        }
+        else {
+            m_sceneObjects[m_freeObjIndices.front()] = pSO;
+            m_freeObjIndices.erase(m_freeObjIndices.begin());
         }
     }
 }

@@ -69,6 +69,7 @@
 
 #include "../src/Utils/Game/LookAtComponent.cpp"
 #include "../src/Utils/Game/DebugLogComponent.cpp"
+#include "../src/Utils/Game/CameraFlyMover.cpp"
 
 #include "../src/Utils/Localization/LocalizationManager.cpp"
 

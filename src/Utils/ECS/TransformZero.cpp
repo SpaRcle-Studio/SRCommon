@@ -4,12 +4,8 @@
 
 #include <Utils/ECS/TransformZero.h>
 
-namespace SR_UTILS_NS {
-    Transform::Ptr TransformZero::Copy() const {
-        return new TransformZero();
-    }
+#include <Codegen/TransformZero.generated.hpp>
 
-    Transform::Ptr TransformHolder::Copy() const {
-        return new TransformHolder();
-    }
+namespace SR_UTILS_NS {
+
 }

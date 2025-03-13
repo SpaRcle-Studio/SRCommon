@@ -27,6 +27,7 @@ namespace SR_UTILS_NS {
         using Super = ResourceContainer;
         using ResourceInfoWeakPtr = std::weak_ptr<ResourceInfo>;
     public:
+        SR_INLINE_STATIC const StringAtom RELOAD_BEGIN_EVENT = "ReloadBegin";
         SR_INLINE_STATIC const StringAtom RELOAD_DONE_EVENT = "ReloadDone";
 
         using Ptr = IResource*;

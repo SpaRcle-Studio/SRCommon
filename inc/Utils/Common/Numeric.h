@@ -44,6 +44,10 @@ namespace SR_UTILS_NS {
             return m_dist(m_e2);
         }
 
+        SR_NODISCARD uint64_t UInt64() {
+            return static_cast<uint64_t>(m_dist(m_e2));
+        }
+
         SR_NODISCARD int32_t Int32() {
             return static_cast<int32_t>(m_dist(m_e2));
         }

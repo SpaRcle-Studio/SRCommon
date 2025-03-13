@@ -6,6 +6,7 @@
 #define SR_ENGINE_UTILS_ENTITY_REF_UTILS_H
 
 #include <Utils/Common/Enumerations.h>
+#include <Utils/Serialization/Serializable.h>
 #include <Utils/Types/SafePointer.h>
 #include <Utils/Types/SharedPtr.h>
 
@@ -18,46 +19,33 @@ namespace SR_UTILS_NS {
 }
 
 namespace SR_UTILS_NS::EntityRefUtils {
-    struct OwnerRef {
+    struct OwnerRef final {
         OwnerRef() = default;
         SR_MAYBE_UNUSED OwnerRef(const SR_HTYPES_NS::SharedPtr<Entity>& ptr); /// NOLINT
         SR_MAYBE_UNUSED OwnerRef(const SR_HTYPES_NS::SharedPtr<SR_WORLD_NS::Scene>& ptr); /// NOLINT
 
-        OwnerRef(OwnerRef&& other) noexcept
-            : pEntity(SR_UTILS_NS::Exchange(other.pEntity, { }))
-            , pScene(SR_UTILS_NS::Exchange(other.pScene, { }))
-        { }
-
-        OwnerRef(const OwnerRef& other) noexcept /** NOLINT */
-            : pEntity(other.pEntity)
-            , pScene(other.pScene)
-        { }
-
-        OwnerRef& operator=(OwnerRef&& other) noexcept {
-            pEntity = (SR_UTILS_NS::Exchange(other.pEntity, { }));
-            pScene = (SR_UTILS_NS::Exchange(other.pScene, { }));
-            return *this;
-        }
-
-        OwnerRef& operator=(const OwnerRef& other) noexcept {
-            pEntity = other.pEntity;
-            pScene = other.pScene;
-            return *this;
-        }
-
         SR_HTYPES_NS::SharedPtr<Entity> pEntity;
         SR_HTYPES_NS::SharedPtr<SR_WORLD_NS::Scene> pScene;
-
     };
 
     SR_ENUM_NS_CLASS_T(Action, uint8_t,
         Action_Parent, Action_Child, Action_Component
     );
 
-    struct PathItem {
+    struct PathItem final : public SR_UTILS_NS::Serializable {
+        SR_STRUCT()
+
+        PathItem() = default;
+        PathItem(const StringAtom name, const uint16_t index, const Action action)
+            : name(name), index(index), action(action)
+        { }
+
+        /// @property
         StringAtom name;
-        uint16_t index;
-        Action action;
+        /// @property
+        uint16_t index = 0;
+        /// @property
+        Action action = Action::Action_Parent;
 
         bool operator==(const PathItem& other) const noexcept {
             return

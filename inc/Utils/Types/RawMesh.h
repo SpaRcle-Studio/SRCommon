@@ -51,7 +51,7 @@ namespace SR_HTYPES_NS {
         void ComputeConvexHull();
 
         SR_NODISCARD uint32_t GetMeshesCount() const;
-        SR_NODISCARD std::string GetGeometryName(uint32_t id) const;
+        SR_NODISCARD std::string_view GetGeometryName(uint32_t id) const;
 
         SR_NODISCARD std::vector<SR_UTILS_NS::Vertex> GetVertices(uint32_t id) const;
         SR_NODISCARD const std::vector<uint32_t>& GetIndices(uint32_t id) const;

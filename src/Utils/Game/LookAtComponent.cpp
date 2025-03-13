@@ -6,40 +6,13 @@
 #include <Utils/ECS/Transform3D.h>
 #include <Utils/ECS/ComponentManager.h>
 
-namespace SR_UTILS_NS {
-    SR_REGISTER_COMPONENT(LookAtComponent);
+#include <Codegen/LookAtComponent.generated.hpp>
 
+namespace SR_UTILS_NS {
     LookAtComponent::LookAtComponent()
         : Super()
     {
         m_target.SetOwner(GetThis());
-    }
-
-    Component* LookAtComponent::LoadComponent(SR_HTYPES_NS::Marshal& marshal, const SR_HTYPES_NS::DataStorage* dataStorage) {
-        auto&& pComponent = new LookAtComponent();
-
-        //pComponent->GetTarget().Load(marshal);
-
-        //pComponent->SetAxis(static_cast<LookAtAxis>(marshal.Read<uint8_t>()));
-        //pComponent->SetExecuteInEditMode(marshal.Read<bool>());
-        //pComponent->SetMirror(marshal.Read<bool>());
-        //pComponent->SetDelay(marshal.Read<float_t>());
-        //pComponent->SetOffset(marshal.Read<SR_MATH_NS::FVector3>());
-
-        return pComponent;
-    }
-
-    Component* LookAtComponent::CopyComponent() const {
-        auto&& pComponent = new LookAtComponent();
-
-        pComponent->SetAxis(m_axis);
-        pComponent->m_target = m_target.Copy(pComponent->GetThis().DynamicCast<Entity>());
-        pComponent->m_editMode = m_editMode;
-        pComponent->m_mirror = m_mirror;
-        pComponent->m_delay = m_delay;
-        pComponent->m_offset = m_offset;
-
-        return pComponent;
     }
 
     void LookAtComponent::Update(float_t dt) {
@@ -91,20 +64,6 @@ namespace SR_UTILS_NS {
         Super::Update(dt);
     }
 
-    SR_NODISCARD SR_HTYPES_NS::Marshal::Ptr LookAtComponent::SaveLegacy(SR_UTILS_NS::SavableContext data) const {
-        auto&& pMarshal = Super::SaveLegacy(data);
-
-        //pMarshal = m_target.Save(pMarshal);
-
-        //pMarshal->Write<uint8_t>(static_cast<uint8_t>(m_axis));
-        //pMarshal->Write<bool>(m_editMode);
-        //pMarshal->Write<bool>(m_mirror);
-        //pMarshal->Write<float_t>(m_delay);
-        //pMarshal->Write<SR_MATH_NS::FVector3>(m_offset);
-
-        return pMarshal;
-    }
-
     void LookAtComponent::OnDestroy() {
         Super::OnDestroy();
 
@@ -116,7 +75,7 @@ namespace SR_UTILS_NS {
     void LookAtComponent::SetExecuteInEditMode(bool enabled) {
         m_editMode = enabled;
 
-        if (auto&& pParent = GetParent()) {
+        if (auto&& pParent = TryGetParent()) {
             pParent->SetDirty(true);
         }
     }

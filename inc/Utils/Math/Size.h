@@ -18,6 +18,12 @@ namespace SR_MATH_NS {
             : value(T())
         { }
 
+
+        Size(T value, SizeMetric metric) noexcept
+            : value(value)
+            , metric(metric)
+        { }
+
         union {
             struct {
                 T value;

@@ -19,7 +19,7 @@ namespace SR_UTILS_NS {
         return *pTmp;
     }
 
-    std::string_view Factory::GetName(const SRClassMeta* pMeta, const bool isMustExists) const {
+    SR_UTILS_NS::StringAtom Factory::GetName(const SRClassMeta* pMeta, const bool isMustExists) const {
         if (IsRegistered(pMeta)) {
             return pMeta->GetFactoryName(); /// NOLINT
         }
@@ -35,8 +35,8 @@ namespace SR_UTILS_NS {
         return {};
     }
 
-    std::vector<std::string_view> Factory::GetInheritances(std::string_view baseClass) const noexcept {
-        std::vector<std::string_view> result;
+    std::vector<SR_UTILS_NS::StringAtom> Factory::GetInheritances(SR_UTILS_NS::StringAtom baseClass) const noexcept {
+        std::vector<SR_UTILS_NS::StringAtom> result;
         for (auto&& [name, info] : m_types) {
             if (auto&& pMeta = info.metaGetter()) {
                 if (pMeta->IsInherited(baseClass)) {
@@ -45,5 +45,13 @@ namespace SR_UTILS_NS {
             }
         }
         return result;
+    }
+
+    bool Factory::IsAbstract(SR_UTILS_NS::StringAtom name) const noexcept {
+        if (auto&& pIt = m_types.find(name); pIt != m_types.end()) {
+            return pIt->second.isAbstract;
+        }
+        SRHalt("Factory::IsAbstract() : unknown type! Name: {}", name);
+        return false;
     }
 }

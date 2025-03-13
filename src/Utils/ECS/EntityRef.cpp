@@ -4,24 +4,16 @@
 
 #include <Utils/ECS/EntityRef.h>
 
+#include <Codegen/EntityRef.generated.hpp>
+
 namespace SR_UTILS_NS {
-    EntityRef::EntityRef(const EntityRefUtils::OwnerRef& owner)
-        : m_owner(owner)
+    EntityRef::EntityRef(EntityRefUtils::OwnerRef owner)
+        : m_owner(std::move(owner))
     { }
 
-    EntityRef::EntityRef(EntityRef&& other) noexcept
-        : m_path(SR_UTILS_NS::Exchange(other.m_path, { }))
-        , m_relative(SR_UTILS_NS::Exchange(other.m_relative, { }))
-        , m_owner(SR_UTILS_NS::Exchange(other.m_owner, { }))
-        , m_target(SR_UTILS_NS::Exchange(other.m_target, { }))
-    { }
-
-    EntityRef &EntityRef::operator=(EntityRef&& other) noexcept {
-        m_path = SR_UTILS_NS::Exchange(other.m_path, { });
-        m_relative = SR_UTILS_NS::Exchange(other.m_relative, { });
-        m_owner = SR_UTILS_NS::Exchange(other.m_owner, { });
-        m_target = SR_UTILS_NS::Exchange(other.m_target, { });
-        return *this;
+    void EntityRef::OnPreSave() {
+        UpdatePath();
+        Serializable::OnPreSave();
     }
 
     GameObject::Ptr EntityRef::GetGameObject() const {
@@ -132,60 +124,10 @@ namespace SR_UTILS_NS {
         UpdatePath();
     }
 
-    SR_HTYPES_NS::Marshal::Ptr EntityRef::Save(SR_HTYPES_NS::Marshal::Ptr pMarshal) const {
-        if (!pMarshal) {
-            pMarshal = new SR_HTYPES_NS::Marshal();
-        }
-
-        Save(*pMarshal);
-
-        return pMarshal;
-    }
-
-    void EntityRef::Load(SR_HTYPES_NS::Marshal& marshal) {
-        m_relative = marshal.Read<bool>();
-        m_path.clear();
-
-        const auto length = marshal.Read<uint16_t>();
-
-        for (uint16_t i = 0; i < length; ++i) {
-            auto&& item = m_path.emplace_back();
-            item.index = marshal.Read<uint16_t>();
-            item.action = static_cast<EntityRefUtils::Action>(marshal.Read<uint8_t>());
-            item.name = marshal.Read<StringAtom>();
-        }
-    }
-
-    void EntityRef::Save(SR_HTYPES_NS::Marshal& marshal) const {
-        UpdatePath();
-
-        marshal.Write<bool>(IsRelative());
-        marshal.Write<uint16_t>(m_path.size());
-
-        for (auto&& path : m_path) {
-            marshal.Write<uint16_t>(path.index);
-            marshal.Write<uint8_t>(static_cast<uint8_t>(path.action));
-            marshal.Write<StringAtom>(path.name);
-        }
-    }
-
     EntityRef EntityRef::Copy(const EntityRefUtils::OwnerRef& owner) const {
         EntityRef ref(owner);
         ref.m_relative = m_relative;
         ref.m_path = m_path;
         return ref;
-    }
-
-    void EntityRefProperty::SaveProperty(MarshalRef marshal) const noexcept {
-        if (auto&& pBlock = AllocatePropertyBlock()) {
-            m_entityRef.Save(*pBlock);
-            SavePropertyBase(marshal, std::move(pBlock));
-        }
-    }
-
-    void EntityRefProperty::LoadProperty(MarshalRef marshal) noexcept {
-        if (auto&& pBlock = LoadPropertyBase(marshal)) {
-            m_entityRef.Load(*pBlock);
-        }
     }
 }

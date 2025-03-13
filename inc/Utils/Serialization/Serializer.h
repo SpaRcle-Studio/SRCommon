@@ -8,19 +8,32 @@
 #include <Utils/TypeTraits/TypeTraits.h>
 
 namespace SR_UTILS_NS {
+    class IDeserializer;
+
     class ISerializer {
     public:
+        using UniquePtr = std::unique_ptr<ISerializer>;
+
+    public:
         virtual ~ISerializer() = default;
+
+        SR_NODISCARD virtual std::unique_ptr<IDeserializer> CreateDeserializer() const = 0;
 
         SR_NODISCARD virtual bool IsWriteDefaults() const noexcept { return m_isNeedWriteDefaults; }
         SR_NODISCARD virtual bool IsEditorAllowed() const noexcept { return m_isEditorAllowed; }
         SR_NODISCARD virtual bool IsAllowEmptyElementsInArray() const noexcept { return m_isAllowEmptyElementsInArray; }
+        SR_NODISCARD virtual bool IsWriteVersion() const noexcept { return m_isNeedWriteVersion; }
+        SR_NODISCARD virtual std::string ToString() const noexcept { return ""; }
 
         void SetWriteDefaults(const bool value) noexcept { m_isNeedWriteDefaults = value; }
         void SetEditorAllowed(const bool value) noexcept { m_isEditorAllowed = value; }
         void SetAllowEmptyElementsInArray(const bool value) noexcept { m_isAllowEmptyElementsInArray = value; }
+        void SetWriteVersion(const bool value) noexcept { m_isNeedWriteVersion = value; }
+
+        void WriteAny(const std::any& value, const SerializationId& name);
 
         virtual void WriteString(std::string_view value, const SerializationId& name) = 0;
+        virtual void WriteString(std::u32string_view value, const SerializationId& name) = 0;
         virtual void WriteBool(bool value, const SerializationId& name) = 0;
         virtual void WriteInt(int8_t value, const SerializationId& name) = 0;
         virtual void WriteInt(int16_t value, const SerializationId& name) = 0;
@@ -48,6 +61,7 @@ namespace SR_UTILS_NS {
         bool m_isAllowEmptyElementsInArray = true;
         bool m_isNeedWriteDefaults = false;
         bool m_isEditorAllowed = false;
+        bool m_isNeedWriteVersion = true;
 
     };
 }

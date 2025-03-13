@@ -137,6 +137,11 @@ namespace SR_HTYPES_NS {
         }
     #endif
 
+        if (m_nameChanged) {
+            SR_TRACY_THREAD_NAME(m_name.c_str());
+            m_nameChanged = false;
+        }
+
         if (m_function) {
             m_executeResult = (*m_function)();
             m_function = nullptr;
@@ -170,6 +175,7 @@ namespace SR_HTYPES_NS {
     void Thread::SetName(const std::string& name) {
         SR_WRITE_LOCK;
         m_name = name;
+        m_nameChanged = true;
     }
 
     uint32_t Thread::Factory::GetThreadsCount() {

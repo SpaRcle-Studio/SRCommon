@@ -6,6 +6,7 @@
 #define SR_UTILS_TYPE_TRAITS_VALUE_H
 
 #include <Utils/Reflection/ValueImpl.h>
+#include <Utils/Types/SharedPtr.h>
 
 #include <entt/entt.hpp>
 
@@ -80,6 +81,8 @@ namespace SR_UTILS_NS::Reflection {
 
     class SR_DLL_EXPORT SR_NODISCARD Value {
         friend ValueSequenceContainerIterator;
+        using SRClassGetterFn = SRClass*(*)(const Value&);
+        using SRClassSetterFn = void(*)(Value&, SRClass*);
     private:
         explicit Value(entt::meta_any&& storage)
             : m_storage(std::move(storage))
@@ -88,22 +91,26 @@ namespace SR_UTILS_NS::Reflection {
     public:
         Value() = default;
 
-        Value(const Value& other)
-            : m_storage(other.IsRef() ? other.m_storage.as_ref() : other.m_storage)
-        { }
+        Value(const Value& other) {
+            if (other.IsRef()) {
+                m_storage = const_cast<entt::meta_any*>(&other.m_storage)->as_ref();
+            } else {
+                m_storage = other.m_storage;
+            }
+        }
 
-        Value(Value& other)
-            : m_storage(other.IsRef() ? other.m_storage.as_ref() : other.m_storage)
-        { }
-
-        Value& operator=(const Value& other) {
+        Value& operator=(const Value& other) noexcept {
             if (this != &other) {
-                m_storage = other.IsRef() ? other.m_storage.as_ref() : other.m_storage;
+                if (other.IsRef()) {
+                    m_storage = const_cast<entt::meta_any*>(&other.m_storage)->as_ref();
+                } else {
+                    m_storage = other.m_storage;
+                }
             }
             return *this;
         }
 
-        Value& operator=(Value& other) {
+        Value& operator=(Value&& other) noexcept {
             if (this != &other) {
                 m_storage = other.IsRef() ? other.m_storage.as_ref() : other.m_storage;
             }
@@ -134,6 +141,12 @@ namespace SR_UTILS_NS::Reflection {
         SR_NODISCARD bool IsBitMap() const;
 
         SR_NODISCARD bool IsSmartPtr() const;
+        SR_NODISCARD bool IsPointer() const;
+        SR_NODISCARD bool IsString() const;
+        SR_NODISCARD bool IsStringView() const;
+        SR_NODISCARD bool IsStringAtom() const;
+        SR_NODISCARD bool IsUnicodeString() const;
+        SR_NODISCARD bool IsPath() const;
         SR_NODISCARD bool IsMathVector() const;
         SR_NODISCARD bool IsMathSize() const;
         SR_NODISCARD bool IsBool() const;
@@ -149,25 +162,62 @@ namespace SR_UTILS_NS::Reflection {
         SR_NODISCARD void* Data();
         SR_NODISCARD const void* Data() const;
         SR_NODISCARD std::string_view GetEnumType() const;
+        SR_NODISCARD SRClass* GetSRClass() const;
+        SR_NODISCARD SR_HTYPES_NS::SharedPtrBase* GetSharedPtrBase() const;
 
         SR_NODISCARD operator bool() const noexcept; /// NOLINT
 
     private:
+        template<typename T> static void InitBase(Value& value);
+
+    private:
         entt::meta_any m_storage;
+
     };
 
     /// Implementation
 
+    template<typename T> void Value::InitBase(Value& value) {
+        /*if constexpr (IsSharedPointerV<T>) {
+            value.m_SRClassGetter = [](const Value& value) -> SRClass* {
+                if (auto&& pData = value.TryCast<T>()) {
+                    return const_cast<SRClass*>(dynamic_cast<const SRClass*>((*pData).Get()));
+                }
+                return nullptr;
+            };
+
+            if constexpr (!std::is_abstract_v<T>) {
+                value.m_SRClassSetter = [](Value& value, SRClass* pSRClass) {
+                    value.m_storage = entt::meta_any(*(dynamic_cast<T*>(pSRClass)));
+                };
+            }
+        }
+        else if constexpr (std::is_base_of_v<SRClass, T> || std::is_same_v<SRClass, T>) {
+            value.m_SRClassGetter = [](const Value& value) -> SRClass* {
+                if (auto&& pData = value.TryCast<T>()) {
+                    return const_cast<SRClass*>(dynamic_cast<const SRClass*>(pData));
+                }
+                return nullptr;
+            };
+        }*/
+    }
+
     template<typename T> Value Value::Create(T&& value) {
-        return Value(entt::meta_any(std::forward<T>(value)));
+        auto&& reflected = Value(entt::meta_any(std::forward<T>(value)));
+        InitBase<T>(reflected);
+        return std::move(reflected);
     }
 
     template<typename T> Value Value::CreateRef(T& value) {
-        return Value(entt::meta_any::create_ref(value));
+        auto&& reflected = Value(entt::meta_any::create_ref(value));
+        InitBase<T>(reflected);
+        return std::move(reflected);
     }
 
     template<typename T> Value Value::CreateCRef(const T& value) {
-        return Value(entt::meta_any::create_cref(value));
+        auto&& reflected = Value(entt::meta_any::create_cref(value));
+        InitBase<T>(reflected);
+        return std::move(reflected);
     }
 }
 

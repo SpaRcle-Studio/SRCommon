@@ -32,9 +32,8 @@ namespace SR_UTILS_NS {
     );
 
     class SR_DLL_EXPORT Transform : public Serializable, public SR_HTYPES_NS::SharedPtr<Transform> {
-        SR_CLASS();
+        SR_CLASS()
         friend class GameObject;
-        SR_INLINE static const uint16_t VERSION = 1002;
         using Super = Serializable;
     public:
         using Ptr = SR_HTYPES_NS::SharedPtr<Transform>;
@@ -44,12 +43,7 @@ namespace SR_UTILS_NS {
         ~Transform() override;
 
     public:
-        static Transform* Load(SR_HTYPES_NS::Marshal& marshal);
-
-    public:
-        SR_NODISCARD SR_HTYPES_NS::Marshal::Ptr SaveLegacy(SavableContext data) const override;
-
-        void SetGameObject(GameObject *gameObject);
+        void SetGameObject(GameObject* pGameObject);
 
         virtual void Translate(const SR_MATH_NS::FVector3& translation) { }
         virtual void Translate(SR_MATH_NS::Unit x, SR_MATH_NS::Unit y, SR_MATH_NS::Unit z);
@@ -111,7 +105,6 @@ namespace SR_UTILS_NS {
         SR_NODISCARD virtual SR_MATH_NS::FVector2 GetTranslation2D() const;
         SR_NODISCARD virtual SR_MATH_NS::FVector2 GetScale2D() const;
 
-        SR_NODISCARD virtual Transform::Ptr Copy() const;
         SR_NODISCARD Transform* GetParentTransform() const;
         SR_NODISCARD SR_HTYPES_NS::SharedPtr<GameObject> GetGameObject() const;
 

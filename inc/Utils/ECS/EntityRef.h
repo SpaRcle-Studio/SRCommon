@@ -13,22 +13,17 @@ namespace SR_UTILS_NS {
     class SceneObject;
     class Component;
 
-    class EntityRef final : public SR_UTILS_NS::NonCopyable {
+    class EntityRef final : public SR_UTILS_NS::Serializable {
+        SR_CLASS()
     public:
         EntityRef() = default;
-        explicit EntityRef(const EntityRefUtils::OwnerRef& owner);
-
-        EntityRef(EntityRef&& other) noexcept;
-
-        EntityRef& operator=(EntityRef&& other) noexcept;
+        explicit EntityRef(EntityRefUtils::OwnerRef owner);
 
     public:
-        SR_NODISCARD SR_HTYPES_NS::Marshal::Ptr Save(SR_HTYPES_NS::Marshal::Ptr pMarshal) const;
+        void OnPreSave() override;
+
         SR_NODISCARD EntityRef Copy(const EntityRefUtils::OwnerRef& owner) const;
         SR_NODISCARD const SR_HTYPES_NS::SharedPtr<Entity>& GetTarget() const { return m_target; }
-
-        void Save(SR_HTYPES_NS::Marshal& marshal) const;
-        void Load(SR_HTYPES_NS::Marshal& marshal);
 
         template<typename T> SR_NODISCARD SR_HTYPES_NS::SharedPtr<T> GetComponent() const {
             if (auto&& pComponent = GetComponent()) {
@@ -53,8 +48,9 @@ namespace SR_UTILS_NS {
         void UpdatePath() const;
 
     private:
+        /// @property
         mutable SR_UTILS_NS::EntityRefUtils::RefPath m_path;
-
+        /// @property
         bool m_relative = true;
 
         EntityRefUtils::OwnerRef m_owner;
@@ -65,8 +61,8 @@ namespace SR_UTILS_NS {
     class EntityRefProperty : public SR_UTILS_NS::Property {
         SR_REGISTER_TYPE_TRAITS_PROPERTY(EntityRefProperty, 1001)
     public:
-        void SaveProperty(MarshalRef marshal) const noexcept override;
-        void LoadProperty(MarshalRef marshal) noexcept override;
+        //void SaveProperty(MarshalRef marshal) const noexcept override;
+        //void LoadProperty(MarshalRef marshal) noexcept override;
 
         SR_UTILS_NS::EntityRef& GetEntityRef() noexcept { return m_entityRef; }
 

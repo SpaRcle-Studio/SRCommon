@@ -2,10 +2,12 @@
 // Created by Monika on 20.03.2023.
 //
 
-#ifndef SR_ENGINE_UTILS_IRAWMESHHOLDER_H
-#define SR_ENGINE_UTILS_IRAWMESHHOLDER_H
+#ifndef SR_ENGINE_UTILS_I_RAW_MESH_HOLDER_H
+#define SR_ENGINE_UTILS_I_RAW_MESH_HOLDER_H
 
-#include <Utils/stdInclude.h>
+#include <Utils/TypeTraits/SRClass.h>
+#include <Utils/Common/Vertices.h>
+#include <Utils/Common/SubscriptionHolder.h>
 
 namespace SR_HTYPES_NS {
     class RawMesh;
@@ -25,14 +27,16 @@ namespace SR_HTYPES_NS {
         SR_NODISCARD std::string GetMeshStringPath() const noexcept;
         SR_NODISCARD bool IsValidMeshId() const noexcept;
         SR_NODISCARD std::vector<SR_UTILS_NS::Vertex> GetVertices() const noexcept;
+        SR_NODISCARD std::string_view GetGeometryName() const noexcept;
 
         virtual void OnRawMeshChanged() { }
 
         void SetRawMesh(const SR_UTILS_NS::Path& path);
         void SetRawMesh(RawMeshPtr pRawMesh);
-        void SetMeshId(MeshIndex meshIndex);
+        void SetMeshId(MeshIndex meshIndex, bool forceReload = false);
 
     private:
+        SR_UTILS_NS::Subscription m_reloadSubscription;
         RawMeshPtr m_rawMesh = nullptr;
         /// определяет порядок меша в файле, если их там несколько
         /// TODO: переделать в int16_t, но нужно написать миграторы.
@@ -41,4 +45,4 @@ namespace SR_HTYPES_NS {
     };
 }
 
-#endif //SR_ENGINE_UTILS_IRAWMESHHOLDER_H
+#endif //SR_ENGINE_UTILS_I_RAW_MESH_HOLDER_H

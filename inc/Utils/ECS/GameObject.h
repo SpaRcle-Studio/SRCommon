@@ -21,26 +21,18 @@ namespace SR_UTILS_NS {
     class Component;
 
     class SR_DLL_EXPORT GameObject final : public SceneObject {
-        SR_ENTITY_SET_VERSION(1009);
         SR_CLASS()
         using Super = SceneObject;
     public:
         using Ptr = SR_HTYPES_NS::SharedPtr<GameObject>;
 
     public:
-        GameObject() = default;
-        explicit GameObject(ObjectNameT name, SR_HTYPES_NS::SharedPtr<Transform> pTransform = nullptr);
         ~GameObject() override;
-
-        static GameObject::Ptr Load(SR_HTYPES_NS::Marshal& marshal, const ScenePtr& scene);
 
     public:
         SR_NODISCARD SceneObjectType GetSceneObjectType() const noexcept override { return SceneObjectType::GameObject; }
-        SR_NODISCARD SceneObject::Ptr Copy(const ScenePtr& pScene, const SceneObject::Ptr& pObject) const override;
-        SR_NODISCARD SR_HTYPES_NS::Marshal::Ptr SaveLegacy(SavableContext data) const override;
-        SR_NODISCARD Transform* GetTransform() noexcept;
-        SR_NODISCARD const Transform* GetTransform() const noexcept;
-        SR_NODISCARD Transform* GetParentTransform() const noexcept;
+        SR_NODISCARD SR_HTYPES_NS::SharedPtr<Transform> GetTransform() const noexcept;
+        SR_NODISCARD SR_HTYPES_NS::SharedPtr<Transform> GetParentTransform() const noexcept;
 
         SR_NODISCARD GameObject::Ptr CreateChild(StringAtom name);
         SR_NODISCARD GameObject::Ptr GetOrCreateChild(StringAtom name);
@@ -52,8 +44,9 @@ namespace SR_UTILS_NS {
         void OnHierarchyChanged() override;
 
     private:
-        /// @property
-        SR_HTYPES_NS::SharedPtr<Transform> m_transform = nullptr;
+        /// @property @getter(GetTransform) @setter(SetTransform) @notNull
+        /// @loadCondition(!This.IsPrefabLoadingState())
+        SR_HTYPES_NS::SharedPtr<Transform> m_transform;
 
     };
 }

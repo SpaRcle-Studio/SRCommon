@@ -3,3 +3,5 @@
 //
 
 #include <Utils/Game/DebugLogComponent.h>
+
+#include <Codegen/DebugLogComponent.generated.hpp>

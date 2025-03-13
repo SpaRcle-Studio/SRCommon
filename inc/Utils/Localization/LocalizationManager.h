@@ -5,7 +5,9 @@
 #define SR_ENGINE_LOCALIZATIONMANAGER_H
 
 ///#include <Graphics/Font/ITextComponent.h>
+///
 #include <Utils/Types/UnicodeString.h>
+#include <Utils/Resources/FileWatcher.h>
 
 namespace SR_CORE_NS {
     class Engine;

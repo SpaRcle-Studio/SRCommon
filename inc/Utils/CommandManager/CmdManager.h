@@ -16,7 +16,7 @@ namespace SR_UTILS_NS {
     class SR_DLL_EXPORT CmdManager : SR_UTILS_NS::NonCopyable {
     private:
         enum class CmdType {
-            Redo, Undo, Execute
+            Redo, Undo, Execute, Store
         };
 
         struct SR_DLL_EXPORT Cmd {
@@ -30,7 +30,9 @@ namespace SR_UTILS_NS {
 
     public:
         SR_NODISCARD std::string GetLastCmdName() const;
+
         bool Execute(ReversibleCommand* cmd, SyncType sync);
+        void Store(ReversibleCommand* cmd);
         bool Redo();
         bool Cancel();
 
@@ -38,9 +40,14 @@ namespace SR_UTILS_NS {
 
         void Clear();
 
+        template<typename T, typename... Args> bool Execute(SyncType sync, Args&&... args) {
+            auto&& pCmd = new T(std::forward<Args>(args)...);
+            return Execute(pCmd, sync);
+        }
+
     private:
         bool ExecuteImpl(ReversibleCommand* cmd, SyncType sync);
-        bool Execute(ReversibleCommand* cmd);
+        bool Execute(ReversibleCommand* cmd, bool store);
         bool DoCmd(const Cmd& cmd);
         bool Close();
 

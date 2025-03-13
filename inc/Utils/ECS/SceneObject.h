@@ -5,7 +5,7 @@
 #ifndef SR_ENGINE_UTILS_SCENE_OBJECT_H
 #define SR_ENGINE_UTILS_SCENE_OBJECT_H
 
-#include <Utils/ECS/EntityManager.h>
+#include <Utils/ECS/EntityController.h>
 #include <Utils/ECS/LayerManager.h>
 #include <Utils/ECS/IComponentable.h>
 
@@ -33,13 +33,9 @@ namespace SR_UTILS_NS {
 
     public:
         SceneObject();
-        explicit SceneObject(ObjectNameT name);
         ~SceneObject() override;
 
     public:
-        SR_NODISCARD SR_HTYPES_NS::Marshal::Ptr SaveLegacy(SavableContext data) const override;
-        SR_NODISCARD virtual SceneObject::Ptr Copy(const ScenePtr& pScene, const SceneObject::Ptr& pObject) const;
-
         SR_NODISCARD SR_FORCE_INLINE const ObjectNameT& GetName() const { return m_name; }
         SR_NODISCARD SR_FORCE_INLINE bool IsEnabled() const noexcept { return m_isEnabled; }
         SR_NODISCARD SR_FORCE_INLINE uint64_t GetIdInScene() const noexcept { return m_idInScene; }
@@ -49,7 +45,6 @@ namespace SR_UTILS_NS {
         SR_NODISCARD SR_FORCE_INLINE StringAtom GetLocalLayer() const noexcept { return m_layer; }
 
         SR_NODISCARD SR_FORCE_INLINE Prefab* GetPrefab() const noexcept { return m_prefabInfo.pPrefab; }
-        SR_NODISCARD SR_FORCE_INLINE bool IsPrefab() const noexcept { return m_prefabInfo.pPrefab; }
         SR_NODISCARD SR_FORCE_INLINE bool IsPrefabOwner() const noexcept { return m_prefabInfo.isOwner; }
 
         SR_NODISCARD SR_FORCE_INLINE SceneObject::Ptr GetParent() const noexcept { return m_parent; }
@@ -67,11 +62,17 @@ namespace SR_UTILS_NS {
         SR_NODISCARD SceneObject::Ptr Find(const std::string_view& name) const noexcept;
         SR_NODISCARD SceneObject::Ptr Find(StringAtom name) const noexcept;
 
-        SR_NODISCARD std::string GetEntityInfo() const override;
+        SR_NODISCARD Path GetPrefabPath() const;
         SR_NODISCARD StringAtom GetTag() const;
-        SR_NODISCARD std::list<EntityBranch> GetEntityBranches() const override;
+        SR_NODISCARD SR_UTILS_NS::EntityIdList GetEntityIdList() const;
+        SR_NODISCARD bool IsPrefabLoadingState() const noexcept final { return m_isPrefabLoadingState; }
+
+        SR_NODISCARD SceneObject::Ptr CloneSceneObject() const;
+        SR_NODISCARD bool IsPrefab() const noexcept override { return m_prefabInfo.pPrefab; }
 
         SR_NODISCARD virtual SceneObjectType GetSceneObjectType() const noexcept = 0;
+
+        bool Load(IDeserializer& deserializer) override;
 
         bool MoveToTree(const SceneObject::Ptr& destination);
         void RemoveChild(const SceneObject::Ptr& pChild);
@@ -89,7 +90,8 @@ namespace SR_UTILS_NS {
         void SetPrefab(Prefab* pPrefab, bool isOwner);
 
         void UnlinkPrefab();
-        void RemoveAllChildren();
+        void RemoveChildren();
+        void DestroyChildren();
 
         void VerifyAfterLoad(SerializableVerifyContext& context) const noexcept override;
 
@@ -106,7 +108,7 @@ namespace SR_UTILS_NS {
         /// Освобождает память объекта
         void DestroyImpl();
 
-        void OnPostLoaded() override;
+        void OnPostLoad() override;
 
     protected:
         virtual void OnHierarchyChanged() { }
@@ -115,8 +117,6 @@ namespace SR_UTILS_NS {
     private:
         virtual void OnAttached() { }
         void OnParentLayerChanged();
-
-        bool UpdateEntityPath();
 
     private:
         struct PrefabInfo {
@@ -129,6 +129,7 @@ namespace SR_UTILS_NS {
 
         bool m_isActive = false;
         bool m_isDestroyed = false;
+        bool m_isPrefabLoadingState = false;
 
         StringAtom m_cachedLayer;
 
@@ -136,16 +137,25 @@ namespace SR_UTILS_NS {
         SRHashType m_idInScene = SR_ID_INVALID;
 
     private:
-        /// @property
+        /// @property @setter(SetTag)
+        /// @loadCondition(!This.IsPrefabLoadingState())
         SR_UTILS_NS::StringAtom m_tag;
-        /// @property
+        /// @loadCondition(!This.IsPrefabLoadingState())
+        /// @property @setter(SetName)
         SR_UTILS_NS::StringAtom m_name;
-        /// @property
+        /// @property @propertyCondition(!This.IsPrefab())
+        /// @loadCondition(!This.IsPrefab())
         std::vector<SceneObject::Ptr> m_children;
-        /// @property
+        /// @property @setter(SetEnabled)
+        /// @loadCondition(!This.IsPrefabLoadingState())
         bool m_isEnabled = true;
-        /// @property
+        /// @property @setter(SetLayer)
+        /// @loadCondition(!This.IsPrefabLoadingState())
         StringAtom m_layer = LayerManager::GetDefaultLayer();
+
+        /// @virtualProperty(prefab) @dontLoad @getter(GetPrefabPath)
+        /// @propertyCondition(This.IsPrefab() && This.m_prefabInfo.isOwner)
+        SR_VIRTUAL_PROPERTY;
 
     };
 }

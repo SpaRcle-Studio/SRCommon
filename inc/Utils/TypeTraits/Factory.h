@@ -16,7 +16,7 @@ namespace SR_UTILS_NS {
     public:
         virtual ~BaseFactory() = default;
 
-        SR_NODISCARD virtual const SRClassMeta* GetType(std::string_view name) const = 0;
+        SR_NODISCARD virtual const SRClassMeta* GetType(SR_UTILS_NS::StringAtom name) const = 0;
 
         SR_NODISCARD bool IsRegistered(const SRClassMeta* pMeta) const {
             return pMeta && GetType(pMeta->GetFactoryName()) == pMeta;
@@ -30,11 +30,12 @@ namespace SR_UTILS_NS {
             AllocatorT allocator;
             MetaGetterT metaGetter = nullptr;
             bool isAbstract = false;
+            uint64_t version = 0;
         };
     public:
         SR_NODISCARD static Factory& Instance() noexcept;
 
-        SR_NODISCARD std::string_view GetName(const SRClassMeta* pMeta, bool isMustExists = true) const;
+        SR_NODISCARD SR_UTILS_NS::StringAtom GetName(const SRClassMeta* pMeta, bool isMustExists = true) const;
 
         template<class T> bool Register() {
             if constexpr (std::is_abstract_v<T>) {
@@ -43,6 +44,7 @@ namespace SR_UTILS_NS {
                     TypeInfo& info = m_types[name];
                     info.isAbstract = true;
                     info.metaGetter = T::GetMetaStatic;
+                    info.version = pMeta->GetVersion();
                 }
                 else {
                     SR_PLATFORM_NS::WriteConsoleError("Failed to get meta for abstract class!");
@@ -62,23 +64,24 @@ namespace SR_UTILS_NS {
                     return static_cast<SRClass*>(SRNew<T>());
                 };
                 info.metaGetter = T::GetMetaStatic;
+                info.version = pMeta->GetVersion();
                 return true;
             }
             return false;
         }
 
-        template<class Y> SR_NODISCARD std::string_view GetName(Y* pObject, const bool isMustExists = true) const {
+        template<class Y> SR_NODISCARD SR_UTILS_NS::StringAtom GetName(Y* pObject, const bool isMustExists = true) const {
             if (SRVerify(pObject)) {
                 return GetName(pObject->GetMeta(), isMustExists);
             }
             return {};
         }
 
-        template<class Y> SR_NODISCARD std::string_view GetName() const {
+        template<class Y> SR_NODISCARD SR_UTILS_NS::StringAtom GetName() const {
             return GetName(Y::GetMetaStatic(), true);
         }
 
-        template<typename T> SR_NODISCARD SR_HTYPES_NS::SharedPtr<T> Create(std::string_view name) const noexcept {
+        template<typename T> SR_NODISCARD SR_HTYPES_NS::SharedPtr<T> Create(SR_UTILS_NS::StringAtom name) const noexcept {
             if constexpr (SR_UTILS_NS::IsSharedPointerV<T>) {
                 if (auto&& pClass = CreateBase(name)) {
                     if (auto&& pCasted = dynamic_cast<T*>(pClass)) {
@@ -95,7 +98,11 @@ namespace SR_UTILS_NS {
             }
         }
 
-        SR_NODISCARD SRClass* CreateBase(std::string_view name) const noexcept {
+        template<typename T> SR_NODISCARD SR_HTYPES_NS::SharedPtr<T> Create() const noexcept {
+            return Create<T>(T::GetClassStaticName());
+        }
+
+        SR_NODISCARD SRClass* CreateBase(SR_UTILS_NS::StringAtom name) const noexcept {
             auto&& pIt = m_types.find(name);
 
             if (pIt != m_types.end()) {
@@ -117,9 +124,11 @@ namespace SR_UTILS_NS {
             return nullptr;
         }
 
-        SR_NODISCARD std::vector<std::string_view> GetInheritances(std::string_view baseClass) const noexcept;
+        SR_NODISCARD std::vector<SR_UTILS_NS::StringAtom> GetInheritances(SR_UTILS_NS::StringAtom baseClass) const noexcept;
 
-        SR_NODISCARD const SRClassMeta* GetType(std::string_view name) const noexcept override {
+        SR_NODISCARD bool IsAbstract(SR_UTILS_NS::StringAtom name) const noexcept;
+
+        SR_NODISCARD const SRClassMeta* GetType(SR_UTILS_NS::StringAtom name) const noexcept override {
             auto&& pIt = m_types.find(name);
             if (pIt != m_types.end()) {
                 return pIt->second.metaGetter();
@@ -128,7 +137,7 @@ namespace SR_UTILS_NS {
         }
 
     private:
-        std::unordered_map<std::string_view, TypeInfo> m_types;
+        std::unordered_map<SR_UTILS_NS::StringAtom, TypeInfo> m_types;
 
     };
 }

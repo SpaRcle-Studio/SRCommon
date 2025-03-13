@@ -9,29 +9,22 @@
 namespace SR_UTILS_NS {
     void Serializable::Save(ISerializer& serializer) const {
         SR_TRACY_ZONE;
+        const_cast<Serializable&>(static_cast<const Serializable&>(*this)).OnPreSave();
         GetMeta()->Save(serializer, *this);
+        const_cast<Serializable&>(static_cast<const Serializable&>(*this)).OnPostSave();
     }
 
-    void Serializable::Load(IDeserializer& deserializer) {
+    bool Serializable::Load(IDeserializer& deserializer) {
         SR_TRACY_ZONE;
-        GetMeta()->Load(deserializer, *this);
+        const_cast<Serializable&>(static_cast<const Serializable&>(*this)).OnPreLoad();
+        if (!GetMeta()->Load(deserializer, *this)) {
+            return false;
+        }
+        const_cast<Serializable&>(static_cast<const Serializable&>(*this)).OnPostLoad();
+        return true;
     }
 
     bool Serializable::HasSerializationFlags(const SerializationFlags flags) const noexcept {
         return SR_MATH_NS::IsMaskIncludedSubMask(m_flags, flags);
-    }
-
-    SR_HTYPES_NS::Marshal::Ptr Serializable::SaveLegacy(SavableContext data) const  {
-        SR_TRACY_ZONE;
-
-        if (HasSerializationFlags(SerializationFlags::DontSave)) {
-            return nullptr;
-        }
-
-        if (data.pMarshal) {
-            return data.pMarshal;
-        }
-
-        return new SR_HTYPES_NS::Marshal();
     }
 }

@@ -74,26 +74,29 @@ def create_array(name, data, path):
     if len(encoded) == 0:
         raise ValueError("ResourceEmbedder.py: encoded data is empty")
 
-    content = (
-        f"\t\t/// Encoded as zlib + hex\n\n"
-        f"\t\tconstexpr static const std::string_view path = \"{path}\";\n"
-        f"\t\tconstexpr static const uint64_t size = {len(data)};\n"
-        f"\t\tconstexpr static const std::string_view data = \n"
-    )
-
     max_line_length = 512
+
+    compressed_data = ''
     # write all data as string, max max_line_length symbols per line
     for i in range(0, len(encoded)):
         if i % max_line_length == 0:
-            content += "\t\t\t\""
-        content += encoded[i]
+            compressed_data += "\t\t\t\""
+        compressed_data += encoded[i]
         if i % max_line_length == (max_line_length - 1) or i == len(encoded) - 1:
             if i == len(encoded) - 1:
-                content += "\";\n"
+                compressed_data += "\";\n"
             else:
-                content += "\"\n"
+                compressed_data += "\"\n"
         else:
-            content += ""
+            compressed_data += ""
+
+    content = (
+        f"\t\t/// Encoded as zlib + hex\n\n"
+        f"\t\tconstexpr static const std::string_view path = \"{path}\";\n"
+        f"\t\tconstexpr static const uint64_t decompressedSize = {len(data)};\n"
+        f"\t\tconstexpr static const uint64_t compressedSize = {len(encoded)};\n"
+        f"\t\tconstexpr static const char* data = \n{compressed_data}"
+    )
 
     return content
 

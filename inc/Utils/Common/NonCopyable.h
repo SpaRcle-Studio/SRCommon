@@ -30,14 +30,14 @@ namespace SR_UTILS_NS {
 
     };
 
-    class SR_DLL_EXPORT Cloneable {
+    class SR_DLL_EXPORT ICloneable {
     protected:
-        constexpr Cloneable() = default;
+        constexpr ICloneable() = default;
         virtual void OnCloned() { }
 
     public:
-        virtual ~Cloneable() = default;
-        SR_NODISCARD virtual Cloneable* Clone() const = 0;
+        virtual ~ICloneable() = default;
+        SR_NODISCARD virtual ICloneable* Clone() const = 0;
 
     };
 }

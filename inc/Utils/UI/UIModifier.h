@@ -53,6 +53,7 @@ namespace SR_UTILS_NS::UI {
         SR_MATH_NS::FVector2 childSize;
     };
 
+    /// @hidden @category(UI)
     class UIModifierComponent : public SR_UTILS_NS::Component {
         using Super = SR_UTILS_NS::Component;
         SR_CLASS()
@@ -60,15 +61,13 @@ namespace SR_UTILS_NS::UI {
         ~UIModifierComponent() override;
 
     public:
-        bool ExecuteInEditMode() const override { return true; }
+        SR_NODISCARD bool ExecuteInEditMode() const override { return true; }
 
         void OnAttached() override;
         void OnDetached() override;
         void OnDestroy() override;
 
         void OnTransformSet() override;
-
-        SR_NODISCARD bool UseNewSerialization() const noexcept override { return true; }
 
         virtual void Prepare(UIModifierContext& context) const { }
         virtual void PostProcess(UIModifierContext& context) const { }

@@ -61,7 +61,7 @@ namespace SR_UTILS_NS {
 
     #ifdef SR_LINUX
         auto&& applicationPath = SR_PLATFORM_NS::GetApplicationPath();
-        Platform::CopyPermissions(applicationPath, path.c_str());
+        Platform::CopyPermissions(applicationPath, path);
     #endif
 
         return true;

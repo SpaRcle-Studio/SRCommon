@@ -208,7 +208,11 @@ namespace SR_HTYPES_NS {
     #endif
     }
 
-    std::string RawMesh::GetGeometryName(uint32_t id) const {
+    std::string_view RawMesh::GetGeometryName(uint32_t id) const {
+        if (GetResourceLoadState() == IResource::LoadState::Error) {
+            return {};
+        }
+
     #ifdef SR_UTILS_ASSIMP
         if (!m_scene || id >= m_scene->mNumMeshes) {
             SRAssert2(false, "Out of range or invalid scene!");
@@ -217,11 +221,15 @@ namespace SR_HTYPES_NS {
 
         return m_scene->mMeshes[id]->mName.C_Str();
     #else
-        return std::string();
+        return std::string_view();
     #endif
     }
 
     std::vector<SR_UTILS_NS::Vertex> RawMesh::GetVertices(uint32_t id) const {
+        if (GetResourceLoadState() == IResource::LoadState::Error) {
+            return {};
+        }
+
         std::vector<SR_UTILS_NS::Vertex> vertices;
 
     #ifdef SR_UTILS_ASSIMP
@@ -365,6 +373,10 @@ namespace SR_HTYPES_NS {
     }
 
     uint32_t RawMesh::GetVerticesCount(uint32_t id) const {
+        if (GetResourceLoadState() == IResource::LoadState::Error) {
+            return 0;
+        }
+
     #ifdef SR_UTILS_ASSIMP
         if (!m_scene || id >= m_scene->mNumMeshes) {
             SRAssert2(false, "Out of range or invalid scene!");
@@ -378,6 +390,10 @@ namespace SR_HTYPES_NS {
     }
 
     uint32_t RawMesh::GetIndicesCount(uint32_t id) const {
+        if (GetResourceLoadState() == IResource::LoadState::Error) {
+            return 0;
+        }
+
     #ifdef SR_UTILS_ASSIMP
         if (!m_scene || id >= m_scene->mNumMeshes) {
             SRAssert2(false, "Out of range or invalid scene!");
@@ -399,11 +415,15 @@ namespace SR_HTYPES_NS {
     }
 
     float_t RawMesh::GetScaleFactor() const {
+        if (GetResourceLoadState() == IResource::LoadState::Error) {
+            return 1.f;
+        }
+
         float_t factor = 0.f;
 
     #ifdef SR_UTILS_ASSIMP
-        if (m_scene->mMetaData->Get("UnitScaleFactor", factor))
-           return static_cast<double_t>(factor);
+        if (m_scene && m_scene->mMetaData->Get("UnitScaleFactor", factor))
+           return static_cast<float_t>(factor);
     #endif
 
         SRHalt0();

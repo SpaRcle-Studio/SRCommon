@@ -22,6 +22,16 @@ template<> struct ObjectDataAccessor<SR_UTILS_NS::StringAtom> {
 	}
 };
 
+template<> struct ObjectDataAccessor<SR_HTYPES_NS::UnicodeString> {
+	static void Save(ISerializer& serializer, const SR_HTYPES_NS::UnicodeString& value, const SerializationId& id) {
+		serializer.WriteString(value, id);
+	}
+
+	static void Load(IDeserializer& deserializer, SR_HTYPES_NS::UnicodeString& value, const SerializationId& id) {
+		deserializer.ReadString(value, id);
+	}
+};
+
 template<> struct ObjectDataAccessor<bool> {
 	static void Save(ISerializer& serializer, const bool value, const SerializationId& id) {
 		serializer.WriteBool(value, id);
@@ -176,9 +186,20 @@ private:
 
 public:
 	static void Save(ISerializer& serializer, const T& value, const SerializationId& id) {
-		serializer.BeginArray(value.size(), id);
+		uint64_t count = 0;
 
 		for (auto&& item : value) {
+			if (SR_UTILS_NS::Serialization::CanBeSaved(item)) {
+				++count;
+			}
+		}
+
+		serializer.BeginArray(count, id);
+
+		for (auto&& item : value) {
+			if (!SR_UTILS_NS::Serialization::CanBeSaved(item)) {
+				continue;
+			}
 			serializer.BeginItem(itemId);
 			Serialization::Save(serializer, item, dataId);
 			serializer.EndItem();
@@ -218,7 +239,7 @@ public:
 
 		while (deserializer.BeginItem(itemId, index)) {
 			if (deserializer.IsPreserveMode() && index < value.size()) {
-				if constexpr (std::is_same_v<T::value_type, bool>) {
+				if constexpr (std::is_same_v<T, std::vector<bool>>) {
 					bool item = false;
 					Serialization::Load(deserializer, item, dataId);
 					value[index] = item;
@@ -228,7 +249,7 @@ public:
 				}
 			}
 			else {
-				if constexpr (std::is_same_v<T::value_type, bool>) {
+				if constexpr (std::is_same_v<T, std::vector<bool>>) {
 					value.emplace_back();
 					bool item = false;
 					Serialization::Load(deserializer, item, dataId);
@@ -258,10 +279,23 @@ struct ObjectDataAccessor<std::vector<T, TOther...>> : ObjectDataAccessorVector<
 
 template<typename T, size_t N> struct ObjectDataAccessor<std::array<T, N>> {
 	static void Save(ISerializer& serializer, const std::array<T, N>& value, const SerializationId& id) {
-		serializer.BeginArray(value.size(), id);
+		uint64_t count = 0;
+
+		for (auto&& item : value) {
+			if (SR_UTILS_NS::Serialization::CanBeSaved(item)) {
+				++count;
+			}
+		}
+
+		serializer.BeginArray(count, id);
 
 		for (uint64_t i = 0; i < value.size(); ++i) {
 			const auto& item = value[i];
+
+			if (!SR_UTILS_NS::Serialization::CanBeSaved(item)) {
+				continue;
+			}
+
 			if (IsValidValue(item) && (serializer.IsWriteDefaults() || !IsDefault(item))) {
 				constexpr auto itemId = SerializationId::Create("item");
 				constexpr auto dataId = SerializationId::Create("data");
@@ -613,6 +647,7 @@ struct ObjectDataAccessor<SR_HTYPES_NS::SharedPtr<T>, std::enable_if_t<Serializa
 		serializer.BeginObject(id);
 
 		serializer.WriteString(typeName, SerializationId::Create("type"));
+
 		Serialization::Save(serializer, *value, SerializationId::Create("ptr"));
 
 		serializer.EndObject();
@@ -651,8 +686,6 @@ struct ObjectDataAccessor<SR_HTYPES_NS::SharedPtr<T>, std::enable_if_t<Serializa
 
 		if (value) {
 			Serialization::Load(deserializer, *value, SerializationId::Create("ptr"));
-
-			value->OnPostLoaded();
 
 			SR_UTILS_NS::SerializableVerifyContext context;
 			value->VerifyAfterLoad(context);

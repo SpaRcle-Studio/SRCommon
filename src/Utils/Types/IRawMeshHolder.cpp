@@ -16,21 +16,27 @@ namespace SR_HTYPES_NS {
 
         if (m_rawMesh) {
             m_rawMesh->RemoveUsePoint();
+            m_reloadSubscription.Reset();
         }
 
         if ((m_rawMesh = pRawMesh)) {
             m_rawMesh->AddUsePoint();
+            m_reloadSubscription = m_rawMesh->Subscribe(SR_UTILS_NS::IResource::RELOAD_DONE_EVENT,
+                [this](const SR_UTILS_NS::SubscriptionMessage& msg) {
+                    OnRawMeshChanged();
+                }
+            );
         }
 
         if (IsValidMeshId()) {
             OnRawMeshChanged();
         }
         else {
-            SetMeshId(static_cast<MeshIndex>(GetMeshId()));
+            SetMeshId(static_cast<MeshIndex>(GetMeshId()), true);
         }
     }
 
-    void IRawMeshHolder::SetMeshId(IRawMeshHolder::MeshIndex meshIndex) {
+    void IRawMeshHolder::SetMeshId(IRawMeshHolder::MeshIndex meshIndex, bool forceReload) {
         if (!m_rawMesh) {
             if (m_meshId != SR_ID_INVALID) {
                 m_meshId = SR_ID_INVALID;
@@ -45,6 +51,11 @@ namespace SR_HTYPES_NS {
 
         if (m_meshId != newIndex) {
             m_meshId = newIndex;
+            OnRawMeshChanged();
+            return;
+        }
+
+        if (forceReload) {
             OnRawMeshChanged();
         }
     }
@@ -78,6 +89,10 @@ namespace SR_HTYPES_NS {
         }
 
         return defaultVertices;
+    }
+
+    std::string_view IRawMeshHolder::GetGeometryName() const noexcept {
+        return GetRawMesh() ? GetRawMesh()->GetGeometryName(GetMeshId()) : std::string_view();
     }
 
     void IRawMeshHolder::SetRawMesh(const SR_UTILS_NS::Path& path) {

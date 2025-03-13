@@ -19,42 +19,16 @@ namespace SR_UTILS_NS {
         return m_dirty;
     }
 
-    SR_HTYPES_NS::Marshal::Ptr IComponentable::SaveComponents(SavableContext data) const {
-        if (!data.pMarshal) {
-            data.pMarshal = new SR_HTYPES_NS::Marshal();
-        }
-
-        std::vector<SR_HTYPES_NS::Marshal::Ptr> components;
-        components.reserve(m_components.size());
-
-        const auto componentSaveData = SR_UTILS_NS::SavableContext(nullptr, data.flags);
-
-        for (auto&& pComponent : m_components) {
-            if (auto&& pMarshalComponent = pComponent->SaveLegacy(componentSaveData)) {
-                components.emplace_back(pMarshalComponent);
-            }
-        }
-
-        data.pMarshal->Write(static_cast<uint16_t>(components.size()));
-
-        for (auto&& pMarshalComponent : components) {
-            data.pMarshal->Write<uint32_t>(pMarshalComponent->Size());
-            data.pMarshal->Append(pMarshalComponent);
-        }
-
-        return data.pMarshal;
-    }
-
     Component::Ptr IComponentable::GetOrCreateComponent(StringAtom name) {
         if (auto&& pComponent = GetComponent(name)) {
             return pComponent;
         }
 
-        if (auto&& pComponent = ComponentManager::Instance().CreateComponentOfName(name)) {
+        if (auto&& pComponent = SR_UTILS_NS::Factory::Instance().Create<Component>(name)) {
             if (AddComponent(pComponent)) {
                 return pComponent;
             }
-            SRHalt("IComponentable::GetOrCreateComponent() : failed to add component!");
+            SRHalt("IComponentable::GetOrCreateComponent() : failed to add component! Name: {}", name);
         }
 
         return nullptr;
@@ -82,7 +56,7 @@ namespace SR_UTILS_NS {
 
     Component::Ptr IComponentable::GetComponent(StringAtom name) {
         for (auto&& pComponent : m_components) {
-            if (pComponent->GetComponentName() != name) {
+            if (pComponent->GetMeta()->GetFactoryName() != name) {
                 continue;
             }
 
@@ -157,9 +131,17 @@ namespace SR_UTILS_NS {
     }
 
     bool IComponentable::AddComponent(const Component::Ptr& pComponent) {
+        SR_TRACY_ZONE;
+
         if (!pComponent) {
             SRHalt("pComponent is nullptr!");
             return false;
+        }
+
+        if (!pComponent->IsEntityRegistered() && GetScene()) {
+            const uint64_t entityId = pComponent->GetEntityId();
+            pComponent->SetEntityId(SR_ID_INVALID);
+            GetScene()->GetEntityController()->Register(pComponent.Get(), entityId);
         }
 
         m_components.emplace_back(pComponent);
@@ -180,11 +162,23 @@ namespace SR_UTILS_NS {
         return true;
     }
 
+    void IComponentable::RemoveComponents() {
+        SR_TRACY_ZONE;
+
+        /// Используем такой проход, так как в процессе удаления может измениться список!
+        for (uint32_t i = 0; i < m_components.size(); ++i) { /// NOLINT
+            auto&& pComponent = m_components[i];
+            DestroyComponent(pComponent);
+        }
+
+        m_components.clear();
+    }
+
     bool IComponentable::RemoveComponent(const Component::Ptr& pComponent) {
         auto&& pIt = std::find(m_components.begin(), m_components.end(), pComponent);
 
         if (pIt == m_components.end()) {
-            SR_ERROR("IComponentable::RemoveComponent() : component \"" + pComponent->GetComponentName().ToStringRef() + "\" not found!");
+            SR_ERROR("IComponentable::RemoveComponent() : component \"{}\" not found!", pComponent->GetMeta()->GetFactoryName());
             return false;
         }
         m_components.erase(pIt);
@@ -305,22 +299,12 @@ namespace SR_UTILS_NS {
         }
     }
 
-    void IComponentable::DestroyComponents() {
-        SR_TRACY_ZONE;
-
-        /// Используем такой проход, так как в процессе удаления может измениться список!
-        for (uint32_t i = 0; i < m_components.size(); ++i) { /// NOLINT
-            auto&& pComponent = m_components[i];
-            DestroyComponent(pComponent);
-        }
-
-        m_components.clear();
-    }
-
     void IComponentable::DestroyComponent(const Component::Ptr& pComponent) {
         if (pComponent->IsAttached()) {
             pComponent->OnDetached();
         }
+
+        pComponent->UnregisterEntity();
 
         if (auto&& pScene = GetScene()) {
             pScene->Remove(pComponent);
@@ -334,6 +318,17 @@ namespace SR_UTILS_NS {
     IComponentable::ScenePtr IComponentable::GetScene() const {
         SRHalt("Not implemented!");
         return nullptr;
+    }
+
+    void IComponentable::OnPostLoad() {
+        Super::OnPostLoad();
+
+        m_hasNotAttachedComponents = !m_components.empty();
+
+        for (uint32_t i = 0; i < m_components.size(); ++i) {
+            m_components[i]->SetParent(this);
+            m_components[i]->OnLoaded();
+        }
     }
 
     void IComponentable::OnPriorityChanged() {

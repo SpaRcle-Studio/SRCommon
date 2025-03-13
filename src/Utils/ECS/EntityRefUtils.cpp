@@ -8,6 +8,8 @@
 #include <Utils/ECS/Component.h>
 #include <Utils/ECS/GameObject.h>
 
+#include <Codegen/EntityRefUtils.generated.hpp>
+
 namespace SR_UTILS_NS::EntityRefUtils {
     EntityRefUtils::OwnerRef::OwnerRef(const SR_HTYPES_NS::SharedPtr<Entity>& ptr)
         : pEntity(ptr)
@@ -104,7 +106,7 @@ namespace SR_UTILS_NS::EntityRefUtils {
                     for (auto&& pComponent : components) {
                         SRAssert1Once(pComponent->Valid());
 
-                        if (pComponent->GetComponentName() != item.name) {
+                        if (pComponent->GetMeta()->GetFactoryName() != item.name) {
                             continue;
                         }
                         if (index > 0) {
@@ -145,16 +147,12 @@ namespace SR_UTILS_NS::EntityRefUtils {
                         if (pComponent == pComponentIteration) {
                             break;
                         }
-                        if (pComponentIteration->GetComponentName() == pComponent->GetComponentName()) {
+                        if (pComponentIteration->GetMeta()->GetFactoryName() == pComponent->GetMeta()->GetFactoryName()) {
                             ++componentIndex;
                         }
                     }
 
-                    PathItem item = {
-                        .name = pComponent->GetComponentName(),
-                        .index = componentIndex,
-                        .action = Action::Action_Component
-                    };
+                    PathItem item(pComponent->GetMeta()->GetFactoryName(), componentIndex, Action::Action_Component);
 
                     refPath.emplace_back(item);
 
@@ -186,11 +184,7 @@ namespace SR_UTILS_NS::EntityRefUtils {
                     }
                 }
 
-                PathItem item = {
-                    .name = pObject->GetName(),
-                    .index = objectIndex,
-                    .action = Action::Action_Child
-                };
+                PathItem item(pObject->GetName(), objectIndex, Action::Action_Child);
 
                 refPath.emplace_back(item);
                 pFromEntity = pParent.DynamicCast<Entity>();

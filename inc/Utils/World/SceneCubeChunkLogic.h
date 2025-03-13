@@ -8,31 +8,34 @@
 #include <Utils/World/SceneLogic.h>
 #include <Utils/World/TensorKey.h>
 
+#include <Utils/ECS/SceneObject.h>
+
 namespace SR_WORLD_NS {
     class SceneCubeChunkLogic : public SceneLogic {
         using Super = SceneLogic;
     public:
-        explicit SceneCubeChunkLogic(const ScenePtr& scene);
         ~SceneCubeChunkLogic() override;
 
     public:
-        void Init() override;
+        void SetScene(const ScenePtr& pScene) override;
+
+        void InitLogic() override;
         bool Reload() override;
         void Destroy() override;
         void Update(float_t dt) override;
 
-        void PostLoad() override;
+        void Prepare() override;
 
-        bool Save(const Path& path) override;
-        bool Load(const Path& path) override;
+        bool SaveLogic(ISerializer& serializer, const Path& path) override;
+        bool LoadLogic(IDeserializer& deserializer, const Path& path) override;
 
         void SetWorldOffset(const SR_WORLD_NS::Offset& offset);
-        void SetObserver(const SceneObjectPtr& target);
+        void SetObserver(const SceneObject::Ptr& target);
 
         bool ReloadChunks();
         void UpdateDebug();
 
-        SR_NODISCARD const SceneObjects& GetGameObjectsAtChunk(const SR_MATH_NS::IVector3& region, const SR_MATH_NS::IVector3& chunk) const;
+        SR_NODISCARD const std::vector<SceneObject::Ptr>& GetGameObjectsAtChunk(const SR_MATH_NS::IVector3& region, const SR_MATH_NS::IVector3& chunk) const;
         SR_NODISCARD Chunk* GetCurrentChunk() const;
         SR_NODISCARD Observer* GetObserver() const { return m_observer; }
         SR_NODISCARD SR_MATH_NS::FVector3 GetWorldPosition(const SR_MATH_NS::IVector3& region, const SR_MATH_NS::IVector3& chunk) const;
@@ -42,6 +45,10 @@ namespace SR_WORLD_NS {
         SR_NODISCARD bool ScopeCheckFunction(int32_t x, int32_t y, int32_t z) const;
         SR_NODISCARD Path GetRegionsPath() const;
         SR_NODISCARD std::pair<SR_MATH_NS::IVector3, SR_MATH_NS::IVector3> GetRegionAndChunk(const SR_MATH_NS::FVector3& pos) const;
+        SR_NODISCARD SR_UTILS_NS::Path GetSceneDataPath(const SR_UTILS_NS::Path& path) const override;
+
+        SR_NODISCARD StringAtom GetSceneExtension() const noexcept override { return "cubeChunk"; }
+        SR_NODISCARD SceneLogicType GetType() const noexcept override { return SceneLogicType::CubeChunk; }
 
     private:
         SR_NODISCARD SR_MATH_NS::IVector3 CalculateCurrentChunk() const;

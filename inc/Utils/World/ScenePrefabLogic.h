@@ -2,37 +2,29 @@
 // Created by Monika on 24.12.2022.
 //
 
-#ifndef SR_ENGINE_SCENEPREFABLOGIC_H
-#define SR_ENGINE_SCENEPREFABLOGIC_H
+#ifndef SR_ENGINE_SCENE_PREFAB_LOGIC_H
+#define SR_ENGINE_SCENE_PREFAB_LOGIC_H
 
 #include <Utils/World/SceneLogic.h>
 
 namespace SR_WORLD_NS {
     class ScenePrefabLogic : public SceneLogic {
+        SR_CLASS()
         using Super = SceneLogic;
     public:
-        explicit ScenePrefabLogic(const ScenePtr& scene);
-        ~ScenePrefabLogic() override = default;
+        using Ptr = SR_HTYPES_NS::SharedPtr<ScenePrefabLogic>;
 
     public:
-        bool Save(const Path& path) override;
-        bool Load(const Path& path) override;
+        void InitLogic() override;
+        bool SaveLogic(ISerializer& serializer, const Path& path) override;
+        bool LoadLogic(IDeserializer& deserializer, const Path& path) override;
 
-        bool Reload() override;
-        void Destroy() override;
-        void Update(float_t dt) override;
-
-        void SetTag(StringAtom tag) { m_tag = tag; }
-        void SetLayer(StringAtom layer) { m_layer = layer; }
-
-        SR_NODISCARD StringAtom GetTag() const noexcept { return m_tag; }
-        SR_NODISCARD StringAtom GetLayer() const noexcept { return m_layer; }
-
-    private:
-        StringAtom m_tag;
-        StringAtom m_layer;
+        SR_NODISCARD SceneLogicType GetType() const noexcept override { return SceneLogicType::Prefab; }
+        SR_NODISCARD StringAtom GetSceneExtension() const noexcept override { return "prefab"; }
+        SR_NODISCARD bool IsAllowedRootSave() const noexcept override { return false; }
+        SR_NODISCARD SR_HTYPES_NS::SharedPtr<SceneObject> GetPrefabRoot() const noexcept;
 
     };
 }
 
-#endif //SR_ENGINE_SCENEPREFABLOGIC_H
+#endif //SR_ENGINE_SCENE_PREFAB_LOGIC_H

@@ -15,11 +15,15 @@ namespace SR_UTILS_NS {
 
     class SubscriptionMessage final : SR_UTILS_NS::NonCopyable {
     public:
-        void SetInt(StringAtom id, uint64_t value) {
+        void SetInt(const StringAtom id, const uint64_t value) {
             m_ints[id] = value;
         }
 
-        SR_NODISCARD uint64_t GetInt(StringAtom id, const std::optional<uint64_t> def = std::nullopt) const {
+        void SetBool(const StringAtom id, const bool value) {
+            m_bools[id] = value;
+        }
+
+        SR_NODISCARD uint64_t GetInt(const StringAtom id, const std::optional<uint64_t> def = std::nullopt) const {
             if (const auto it = m_ints.find(id); it != m_ints.end()) {
                 return it->second;
             }
@@ -30,8 +34,20 @@ namespace SR_UTILS_NS {
             return 0;
         }
 
+        SR_NODISCARD bool GetBool(const StringAtom id, const std::optional<bool> def = std::nullopt) const {
+            if (const auto it = m_bools.find(id); it != m_bools.end()) {
+                return it->second;
+            }
+            if (def.has_value()) {
+                return def.value();
+            }
+            SRHalt("SubscriptionMessage::GetBool() : id \"{}\" not found!", id.ToStringView());
+            return false;
+        }
+
     private:
         std::map<StringAtom, uint64_t> m_ints;
+        std::map<StringAtom, bool> m_bools;
 
     };
 
@@ -63,6 +79,7 @@ namespace SR_UTILS_NS {
         { }
 
         Subscription& operator=(Subscription&& other) noexcept {
+            Reset();
             m_internalInfo = SR_EXCHANGE(other.m_internalInfo, nullptr);
             return *this;
         }

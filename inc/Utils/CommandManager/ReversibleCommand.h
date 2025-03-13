@@ -20,7 +20,7 @@ namespace SR_UTILS_NS {
     public:
         virtual bool Redo() = 0;
         virtual bool Undo() = 0;
-        virtual std::string GetName() = 0;
+        virtual std::string GetName() { return "Unnamed"; }
 
     public:
         virtual bool Load(const Xml::Node& node) { return false; }

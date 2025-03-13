@@ -26,7 +26,7 @@ namespace SR_UTILS_NS::Reflection {
         Ptr
     );*/
 
-    class ValueImpl : public SR_UTILS_NS::NonCopyable, public SR_UTILS_NS::NonMovable, public SR_UTILS_NS::Cloneable {
+    /*class ValueImpl : public SR_UTILS_NS::NonCopyable, public SR_UTILS_NS::NonMovable, public SR_UTILS_NS::ICloneable {
     public:
         SR_NODISCARD virtual StandardType GetType() const noexcept = 0;
 
@@ -59,7 +59,7 @@ namespace SR_UTILS_NS::Reflection {
         StandardType m_vectorType = StandardType::Unknown;
         uint8_t m_dimension = 0;
 
-    };
+    };*/
 }
 
 #endif //SR_UTILS_TYPE_TRAITS_VALUE_IMPL_H

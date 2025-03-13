@@ -27,6 +27,10 @@ namespace SR_UTILS_NS::StoreUtils {
                     node.AppendAttribute("Type", "Float");
                     node.AppendAttribute("Value", value.value.f);
                     break;
+                case ValueType::Bool:
+                    node.AppendAttribute("Type", "Bool");
+                    node.AppendAttribute("Value", value.value.b);
+                    break;
                 default:
                     SRHalt("Storage::Save() : unsupported value type!");
                     break;
@@ -57,6 +61,9 @@ namespace SR_UTILS_NS::StoreUtils {
 
             if (type == "Float") {
                 Set(StorageType::User, ValueType::Float, node.Name(), node.GetAttribute("Value").ToFloat());
+            }
+            else if (type == "Bool") {
+                Set(StorageType::User, ValueType::Bool, node.Name(), node.GetAttribute("Value").ToBool());
             }
             else {
                 SRHalt("Storage::Load() : unsupported value type!");

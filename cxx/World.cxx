@@ -1,5 +1,6 @@
 #include <Utils/stdInclude.h>
 
+#include "../src/Utils/World/SceneAssetLogic.cpp"
 #include "../src/Utils/World/Chunk.cpp"
 #include "../src/Utils/World/Observer.cpp"
 #include "../src/Utils/World/Region.cpp"
