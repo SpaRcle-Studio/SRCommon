@@ -196,14 +196,24 @@ public:
 
 		serializer.BeginArray(count, id);
 
-		for (auto&& item : value) {
-			if (!SR_UTILS_NS::Serialization::CanBeSaved(item)) {
-				continue;
-			}
-			serializer.BeginItem(itemId);
-			Serialization::Save(serializer, item, dataId);
-			serializer.EndItem();
-		}
+        if constexpr (std::is_same_v<T, std::vector<bool>>) {
+            for (uint32_t i = 0; i < value.size(); ++i) {
+                serializer.BeginItem(itemId);
+                const bool b = value[i];
+                Serialization::Save(serializer, b, dataId);
+                serializer.EndItem();
+            }
+        }
+        else {
+            for (auto &&item: value) {
+                if (!SR_UTILS_NS::Serialization::CanBeSaved(item)) {
+                    continue;
+                }
+                serializer.BeginItem(itemId);
+                Serialization::Save(serializer, item, dataId);
+                serializer.EndItem();
+            }
+        }
 
 		serializer.EndArray();
 	}
@@ -603,23 +613,6 @@ struct ObjectDataAccessor<T, typename std::enable_if<IsSREnumV<T>>::type> {
 		if (!SR_UTILS_NS::EnumReflector::FromString<T>(enumName.c_str(), value)) {
 			deserializer.ReportError("Invalid enum value \"" + enumName + " for type: {}, id: {}"_format(typeid(T).name(), id.GetName()));
 		}
-	}
-};
-
-template<typename T>
-struct ObjectDataAccessor<T, typename std::enable_if<SerializationTraits<T>::IsSerializable>::type> {
-	static void Save(ISerializer& serializer, const T& value, const SerializationId& id) {
-		serializer.BeginObject(id);
-		static_cast<const Serializable&>(value).Save(serializer);
-		serializer.EndObject();
-	}
-
-	static void Load(IDeserializer& deserializer, T& value, const SerializationId& id) {
-		if (!deserializer.BeginObject(id)) {
-            return;
-        }
-		static_cast<Serializable&>(value).Load(deserializer);
-		deserializer.EndObject();
 	}
 };
 

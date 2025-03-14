@@ -166,7 +166,7 @@ namespace SR_UTILS_NS {
 
     using SRHashType = uint64_t;
 
-    #ifdef SR_LINUX
+    #if defined(SR_LINUX) && !defined(SR_ANDROID)
         using TimePointType = std::chrono::time_point<std::chrono::system_clock>;
     #else
         #ifdef SR_MINGW

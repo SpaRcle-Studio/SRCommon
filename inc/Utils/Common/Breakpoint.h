@@ -11,7 +11,7 @@ namespace SR_UTILS_NS {
     SR_INLINE_STATIC void Breakpoint() {
     #if defined(SR_WIN32) and defined(SR_MSVC)
         __debugbreak();
-    #elif defined(SR_LINUX)
+    #elif defined(SR_LINUX) || defined(SR_ANDROID)
         raise(SIGTRAP);
     #else
         #error "Breakpoint not implemented for this platform"

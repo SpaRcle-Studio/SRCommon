@@ -52,13 +52,7 @@ endif()
 
 
 if (SR_COMMON_DLL_EXPORTS)
-    add_definitions(
-        -DSR_DLL_EXPORTS=1
-    )
-    add_compile_definitions(
-        -DSR_DLL_EXPORTS=1
-    )
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DSR_DLL_EXPORTS")
+    add_compile_definitions(SR_DLL_EXPORTS)
 endif()
 
 if (SR_COMMON_ZLIB)
@@ -96,8 +90,10 @@ if (SR_COMMON_ASSIMP)
     add_subdirectory(libs/assimp)
 endif()
 
-if (UNIX AND NOT APPLE)
-    find_package(X11 REQUIRED)
+if (NOT ANDROID_NDK)
+    if (UNIX AND NOT APPLE)
+        find_package(X11 REQUIRED)
+    endif()
 endif()
 
 if (SR_COMMON_SDL)
@@ -159,8 +155,20 @@ if (SR_TRACY_ENABLE)
 endif()
 
 add_subdirectory(libs/rapidyaml)
-add_subdirectory(libs/cppcoro)
-add_subdirectory(libs/cpptrace)
+
+set(SR_COMMON_CPPCORO_ENABLED OFF)
+if (NOT ANDROID_NDK)
+    set(SR_COMMON_CPPCORO_ENABLED ON)
+    add_compile_definitions(SR_USE_CPP_CORO)
+    add_subdirectory(libs/cppcoro)
+endif()
+
+set(SR_COMMON_CPPTRACE_ENABLED OFF)
+if (NOT ANDROID_NDK AND UNIX)
+    set(SR_COMMON_CPPTRACE_ENABLED ON)
+    add_subdirectory(libs/cpptrace)
+endif()
+
 add_subdirectory(libs/entt)
 
 list(APPEND SR_UTILS_LINK_LIBRARIES cxx/ICU.cxx)
@@ -217,8 +225,15 @@ SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_SOURCE_DIR}/inc)
 SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_SOURCE_DIR}/libs)
 SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_SOURCE_DIR}/libs/glm)
 SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_SOURCE_DIR}/libs/fmt/include)
-SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_SOURCE_DIR}/libs/cppcoro/include)
-SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_SOURCE_DIR}/libs/cpptrace/include)
+
+if (SR_COMMON_CPPCORO_ENABLED)
+    SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_SOURCE_DIR}/libs/cppcoro/include)
+endif()
+
+if (SR_COMMON_CPPTRACE_ENABLED)
+    SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_SOURCE_DIR}/libs/cpptrace/include)
+endif()
+
 SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_SOURCE_DIR}/libs/rapidyaml/src)
 SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_SOURCE_DIR}/libs/cssparser/cssparser)
 SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_SOURCE_DIR}/libs/entt/src)
@@ -248,20 +263,22 @@ else()
     add_library(Utils::lib ALIAS Utils)
 endif()
 
-if (UNIX AND NOT APPLE)
-    target_link_libraries(Utils ${X11_LIBRARIES})
-    target_link_libraries(Utils ${X11_Xrandr_LIB})
-    SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${X11_Xrandr_INCLUDE_PATH})
+if (NOT ANDROID_NDK)
+    if (UNIX AND NOT APPLE)
+        target_link_libraries(Utils ${X11_LIBRARIES})
+        target_link_libraries(Utils ${X11_Xrandr_LIB})
+        SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${X11_Xrandr_INCLUDE_PATH})
 
-    target_link_libraries(Utils ${X11_Xfixes_LIB})
-    SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${X11_Xfixes_INCLUDE_PATH})
+        target_link_libraries(Utils ${X11_Xfixes_LIB})
+        SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${X11_Xfixes_INCLUDE_PATH})
 
-    if (X11_xcb_randr_FOUND)
-        target_link_libraries(Utils ${X11_xcb_randr_LIB})
-        SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${X11_xcb_randr_INCLUDE_PATH})
+        if (X11_xcb_randr_FOUND)
+            target_link_libraries(Utils ${X11_xcb_randr_LIB})
+            SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${X11_xcb_randr_INCLUDE_PATH})
+        endif()
+
+        target_link_libraries(Utils bfd)
     endif()
-
-    target_link_libraries(Utils bfd)
 endif()
 
 if (SR_COMMON_MYHTML)
@@ -324,7 +341,15 @@ else()
 endif()
 
 target_link_libraries(Utils asio)
-target_link_libraries(Utils ryml::ryml cppcoro cpptrace::cpptrace EnTT)
+target_link_libraries(Utils ryml::ryml EnTT)
+
+if (SR_COMMON_CPPTRACE_ENABLED)
+    target_link_libraries(Utils cpptrace::cpptrace)
+endif()
+
+if (SR_COMMON_CPPCORO_ENABLED)
+    target_link_libraries(Utils cppcoro)
+endif()
 
 get_property(SR_UTILS_INCLUDE_DIRECTORIES_CONTENT GLOBAL PROPERTY SR_UTILS_INCLUDE_DIRECTORIES)
 message("SRCommon include directories: ${SR_UTILS_INCLUDE_DIRECTORIES_CONTENT}")

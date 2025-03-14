@@ -37,6 +37,23 @@ namespace SR_UTILS_NS {
         SerializationFlags m_flags = SerializationFlags::None;
 
     };
+
+    template<typename T>
+    struct ObjectDataAccessor<T, typename std::enable_if<SerializationTraits<T>::IsSerializable>::type> {
+        static void Save(ISerializer& serializer, const T& value, const SerializationId& id) {
+            serializer.BeginObject(id);
+            static_cast<const Serializable&>(value).Save(serializer);
+            serializer.EndObject();
+        }
+
+        static void Load(IDeserializer& deserializer, T& value, const SerializationId& id) {
+            if (!deserializer.BeginObject(id)) {
+                return;
+            }
+            static_cast<Serializable&>(value).Load(deserializer);
+            deserializer.EndObject();
+        }
+    };
 }
 
 #endif //SR_ENGINE_UTILS_SERIALIZABLE_H

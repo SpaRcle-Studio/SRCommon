@@ -19,12 +19,35 @@ namespace SR_UTILS_NS::Platform {
 
     }
 
+    bool GetSystemKeyboardState(uint8_t* pKeyCodes) {
+        return false;
+    }
+
     bool IsConsoleFocused() {
         return true; /// always focused
     }
 
     void SetInstance(void* pInstance) {
         pAndroidInstance = reinterpret_cast<android_app*>(pInstance);
+    }
+
+    void SetCursorVisible(bool isVisible) {
+
+    }
+
+    FileMetadata GetFileMetadata(const Path& file) {
+        FileMetadata fileMetadata;
+        return fileMetadata;
+    }
+
+    MouseState GetMouseState() {
+        MouseState state;
+        return state;
+    }
+
+    std::list<Path> GetAllInDirectory(const Path& dir) {
+        std::list<Path> result;
+        return result;
     }
 
     void Unzip(const SR_UTILS_NS::Path& source, const SR_UTILS_NS::Path& destination) {

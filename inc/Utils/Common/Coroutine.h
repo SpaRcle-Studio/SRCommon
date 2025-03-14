@@ -7,10 +7,9 @@
 
 #include <Utils/stdInclude.h>
 
+#ifdef SR_USE_CPP_CORO
 #include <cppcoro/coroutine.hpp>
 #include <cppcoro/generator.hpp>
-
-#define SR_USE_CPP_CORO
 
 namespace SR_UTILS_NS {
     template<typename T> class SR_NODISCARD CoroutineGenerator : public cppcoro::generator<T> {
@@ -41,5 +40,6 @@ namespace SR_UTILS_NS {
         }
     };
 }
+#endif
 
 #endif //SR_UTILS_ENGINE_COROUTINE_H

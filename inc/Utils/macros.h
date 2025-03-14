@@ -24,22 +24,33 @@
 #endif
 
 #ifdef ANDROID
-    #define SR_ANDROID
-#endif
-
-#ifdef __linux__
-    #define SR_LINUX
-#endif
-
-#ifdef __clang__
-    #define SR_CLANG
-#endif
-
-#ifdef SR_ANDROID
     #pragma clang diagnostic ignored "-Wunused-private-field"
     #pragma clang diagnostic ignored "-Wdeprecated-volatile"
     #pragma clang diagnostic ignored "-Wdefaulted-function-deleted"
     #pragma clang diagnostic ignored "-Winconsistent-missing-override"
+    #pragma clang diagnostic ignored "-Wunused-variable"
+    #pragma clang diagnostic ignored "-Wlogical-op-parentheses"
+    #pragma clang diagnostic ignored "-Wreorder-ctor"
+    #pragma clang diagnostic ignored "-Wunused-function"
+    #pragma clang diagnostic ignored "-Wmismatched-tags"
+    #pragma clang diagnostic ignored "-Woverloaded-virtual"
+    #pragma clang diagnostic ignored "-Wunused-label"
+    #pragma clang diagnostic ignored "-Wformat-security"
+    #pragma clang diagnostic ignored "-Wreturn-type"
+    #pragma clang diagnostic ignored "-Wdelete-incomplete"
+    #pragma clang diagnostic ignored "-Wdeprecated-declarations"
+    #pragma clang diagnostic ignored "-Wignored-attributes"
+    #pragma clang diagnostic ignored "-Wunused-command-line-argument"
+    #pragma clang diagnostic ignored "-Wc++20-attribute-extensions"
+    #define SR_ANDROID
+#else
+    #ifdef __linux__
+        #define SR_LINUX
+    #endif
+#endif
+
+#ifdef __clang__
+    #define SR_CLANG
 #endif
 
 #define CRT_SECURE_NO_WARNINGS
@@ -164,10 +175,19 @@
 #endif
 
 #define SR_FALLTHROUGH [[fallthrough]]
-#define SR_MAYBE_UNUSED [[maybe_unused]]
-#define SR_DEPRECATED_EX(text) [[deprecated(text)]]
-#define SR_DEPRECATED [[deprecated]]
-#define SR_MAYBE_UNUSED_VAR [[maybe_unused]] auto&& SR_COMBINE(unused_var, __LINE__) =
+
+#ifndef SR_ANDROID
+    #define SR_DEPRECATED [[deprecated]]
+    #define SR_DEPRECATED_EX(text) [[deprecated(text)]]
+    #define SR_MAYBE_UNUSED [[maybe_unused]]
+#else
+    typedef int int32_t;
+    #define SR_DEPRECATED
+    #define SR_DEPRECATED_EX(text)
+    #define SR_MAYBE_UNUSED
+#endif
+
+#define SR_MAYBE_UNUSED_VAR SR_MAYBE_UNUSED auto&& SR_COMBINE(unused_var, __LINE__) =
 #define SR_INLINE_STATIC SR_INLINE static
 #define SR_NULL 0
 #define SR_MARSHAL_USE_LIST 1
