@@ -223,6 +223,14 @@ namespace SR_UTILS_NS::Platform {
         return false;
     }
 
+    void SetEnvironmentVar(const std::string_view& name, const std::string_view& value) {
+        setenv(name.data(), value.data(), 1);
+    }
+
+    PlatformType GetType() {
+        return PlatformType::Android;
+    }
+
     std::vector<SR_MATH_NS::UVector2> GetScreenResolutions() {
         if (!pAndroidInstance) {
             SR_ERROR("PlatformAndroid::GetScreenResolutions() : pAndroidInstance is nullptr!");

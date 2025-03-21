@@ -747,4 +747,8 @@ namespace SR_UTILS_NS::Platform {
     PlatformType GetType() {
         return PlatformType::Windows;
     }
+
+    void SetEnvironmentVar(const std::string_view& name, const std::string_view& value) {
+        SetEnvironmentVariableA(name.data(), value.data());
+    }
 }

@@ -609,6 +609,10 @@ namespace SR_PLATFORM_NS {
         return resolutions;
     }
 
+    void SetEnvironmentVar(const std::string_view& name, const std::string_view& value) {
+        setenv(name.data(), value.data(), 1);
+    }
+
     PlatformType GetType() {
         return PlatformType::Linux;
     }
