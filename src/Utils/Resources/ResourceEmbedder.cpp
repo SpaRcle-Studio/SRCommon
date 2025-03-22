@@ -61,7 +61,8 @@ namespace SR_UTILS_NS {
 
     #ifdef SR_LINUX
         auto&& applicationPath = SR_PLATFORM_NS::GetApplicationPath();
-        Platform::CopyPermissions(applicationPath, path);
+        SR_LOG("ResourceEmbedder::ExportToFile() : trying to copy permissions for file \n\t'{}' \n\tApplication path: {}", path, applicationPath);
+        Platform::CopyPermissions(applicationPath, resourcePath);
     #endif
 
         return true;
