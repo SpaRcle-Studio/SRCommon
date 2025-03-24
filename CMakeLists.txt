@@ -156,12 +156,14 @@ endif()
 
 add_subdirectory(libs/rapidyaml)
 
+
+# Disabled cppcoro as is it not longer maintained. We should search for another library.
 set(SR_COMMON_CPPCORO_ENABLED OFF)
-if (NOT ANDROID_NDK)
-    set(SR_COMMON_CPPCORO_ENABLED ON)
-    add_compile_definitions(SR_USE_CPP_CORO)
-    add_subdirectory(libs/cppcoro)
-endif()
+#if (NOT ANDROID_NDK)
+#    set(SR_COMMON_CPPCORO_ENABLED ON)
+#    add_compile_definitions(SR_USE_CPP_CORO)
+#    add_subdirectory(libs/cppcoro)
+#endif()
 
 set(SR_COMMON_CPPTRACE_ENABLED OFF)
 if (NOT ANDROID_NDK AND UNIX)
