@@ -119,6 +119,19 @@ inline std::string_view SRGetClassName(std::string_view func_signature) {
 #define SR_IGNORE_UNUSED(...) SR_UTILS_NS::IgnoreUnused(__VA_ARGS__)
 
 namespace SR_UTILS_NS {
+    template <typename T> constexpr bool HasPublicDestructor() {
+        if constexpr (!std::is_destructible_v<T>) {
+            return false;
+        }
+        else if constexpr (std::is_final_v<T>) {
+            return true;
+        }
+        else {
+            struct Test : T { ~Test() = default; };
+            return std::is_destructible_v<Test>;
+        }
+    }
+
     template<typename T> struct InputIteratorPointer final {
         using ValueType = T;
         using Pointer = T*;

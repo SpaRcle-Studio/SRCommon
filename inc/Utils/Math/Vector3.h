@@ -9,6 +9,11 @@
 #include <Utils/Math/Quaternion.h>
 
 namespace SR_MATH_NS {
+    /// @scriptableClass
+    /// @templateImpl(FVector3, T = float_t)
+    /// @templateImpl(IVector3, T = int32_t)
+    /// @templateImpl(UVector3, T = uint32_t)
+    /// @templateImpl(BVector3, T = bool)
     template<typename T> struct SR_DLL_EXPORT Vector3 {
     public:
         using ValueType = T;
@@ -23,6 +28,7 @@ namespace SR_MATH_NS {
             T coord[3] = { 0 };
         };
     public:
+        /// @constructor
         constexpr SR_FORCE_INLINE Vector3() {
             x = 0;
             y = 0;
@@ -51,11 +57,15 @@ namespace SR_MATH_NS {
             y = (Unit)axis[1];
             z = (Unit)axis[2];
         }
+
+        /// @constructor
         SR_FORCE_INLINE constexpr Vector3(T p_x, T p_y, T p_z) {
             x = p_x;
             y = p_y;
             z = p_z;
         }
+
+        /// @constructor
         SR_FORCE_INLINE constexpr Vector3(T p) {
             x = p;
             y = p;
@@ -112,8 +122,11 @@ namespace SR_MATH_NS {
             );
         }
 
+        /// @method
         SR_NODISCARD T X() const noexcept { return x; }
+        /// @method
         SR_NODISCARD T Y() const noexcept { return y; }
+        /// @method
         SR_NODISCARD T Z() const noexcept { return z; }
 
         SR_NODISCARD Vector2<T> XY() const { return Vector2<T>(x, y); }
@@ -133,16 +146,15 @@ namespace SR_MATH_NS {
             );
         }
 
-        SR_NODISCARD T Max() const {
-            return x > y && x > z ? x : y > x && y > z ? y : z;
-        }
+        /// @method
+        SR_NODISCARD T Max() const { return x > y && x > z ? x : y > x && y > z ? y : z; }
+        /// @method
+        SR_NODISCARD T Min() const { return x < y && x < z ? x : y < x && y < z ? y : z; }
 
-        SR_NODISCARD T Min() const {
-            return x < y && x < z ? x : y < x && y < z ? y : z;
-        }
-
-        SR_NODISCARD Vector3 Max3() const { return Vector3(Max()); }
-        SR_NODISCARD Vector3 Min3() const { return Vector3(Min()); }
+        /// @method
+        SR_NODISCARD Vector3<T> Max3() const { return Vector3<T>(Max()); }
+        /// @method
+        SR_NODISCARD Vector3<T> Min3() const { return Vector3<T>(Min()); }
 
         SR_NODISCARD bool Empty() const {
             return (x == 0 && y == 0 && z == 0);

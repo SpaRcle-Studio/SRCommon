@@ -13,15 +13,19 @@
 namespace SR_UTILS_NS {
     class StringHashInfo;
 
+    /// @scriptableClass
     class SR_DLL_EXPORT StringAtom {
         SR_INLINE_STATIC std::string DEFAULT = std::string();
         static StringHashInfo* DEFAULT_STRING_INFO;
     public:
+        /// @constructor
         StringAtom();
 
-        StringAtom(const StringAtom& str) = default;
+        /// @constructor
+        StringAtom(const StringAtom& other) = default;
 
         StringAtom(StringHashInfo* pInfo); /// NOLINT
+        /// @constructor
         StringAtom(const char* str); /// NOLINT
         StringAtom(const std::string& str); /// NOLINT
         StringAtom(std::string_view str); /// NOLINT
@@ -29,26 +33,36 @@ namespace SR_UTILS_NS {
     public:
         operator const std::string&() const noexcept; /// NOLINT
         operator std::string_view() const noexcept; /// NOLINT
+        /// @operator
         bool operator==(const StringAtom& rhs) const noexcept;
         bool operator==(const std::string& rhs) const noexcept;
+        /// @operator
         bool operator==(const char* rhs) const noexcept;
         StringAtom& operator=(const std::string& str);
+        /// @operator
         StringAtom& operator=(const char* str);
         void operator()(const std::string& str);
-        void operator()(const char* str);
 
+        /// @operator
         bool operator<(const StringAtom& other) const noexcept;
+        /// @operator
         bool operator<(uint64_t hash) const noexcept;
 
+        /// For automatic conversion to hash
         SR_NODISCARD SR_FORCE_INLINE operator uint64_t() const noexcept { return GetHash(); }
 
+        /// @operator
         SR_NODISCARD char operator[](size_t index) const noexcept;
 
     public:
+        /// @method
         SR_NODISCARD uint64_t Size() const;
+        /// @method
         SR_NODISCARD uint64_t size() const;
         SR_NODISCARD bool Contains(const char* str) const;
+        /// @method
         SR_NODISCARD bool Empty() const;
+        /// @method
         SR_NODISCARD bool empty() const;
         SR_NODISCARD uint64_t GetHash() const;
         SR_NODISCARD std::string ToString() const;

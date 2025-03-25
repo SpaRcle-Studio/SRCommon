@@ -347,6 +347,12 @@
 #define SR_FUNCTION_SIGNATURE __PRETTY_FUNCTION__
 #endif
 
+#if defined(__GNUC__) || defined(__clang__)
+    #define SR_GCC_CLANG_REMOVE_PADDING_ATTRIB __attribute__((packed)); // GCC/Clang: Убирает паддинг
+#else
+    #define SR_GCC_CLANG_REMOVE_PADDING_ATTRIB
+#endif
+
 #define SR_OFFSETOF(s,m) ((::size_t)&reinterpret_cast<char const volatile&>((((s*)0)->m)))
 
 #endif //SR_COMMON_MACROS_H

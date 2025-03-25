@@ -68,10 +68,6 @@ namespace SR_UTILS_NS {
         m_info = SR_UTILS_NS::HashManager::Instance().GetOrAddInfo(str);
     }
 
-    void StringAtom::operator()(const char* str) {
-        m_info = SR_UTILS_NS::HashManager::Instance().GetOrAddInfo(str);
-    }
-
     char StringAtom::operator[](size_t index) const noexcept {
         if (!m_info || index >= m_info->size) {
             SRHalt("StringAtom::operator[] : index out of range!");
