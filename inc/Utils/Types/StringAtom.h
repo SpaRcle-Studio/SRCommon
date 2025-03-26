@@ -21,7 +21,6 @@ namespace SR_UTILS_NS {
         /// @constructor
         StringAtom();
 
-        /// @constructor
         StringAtom(const StringAtom& other) = default;
 
         StringAtom(StringHashInfo* pInfo); /// NOLINT
@@ -66,8 +65,11 @@ namespace SR_UTILS_NS {
         SR_NODISCARD bool empty() const;
         SR_NODISCARD uint64_t GetHash() const;
         SR_NODISCARD std::string ToString() const;
+        /// @method
         SR_NODISCARD const char* ToCStr() const;
+        /// @method
         SR_NODISCARD const char* c_str() const;
+        /// @method
         SR_NODISCARD const char* data() const;
         SR_NODISCARD const std::string& ToStringRef() const;
         SR_NODISCARD std::string_view ToStringView() const;
