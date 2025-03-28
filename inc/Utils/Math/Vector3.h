@@ -129,6 +129,13 @@ namespace SR_MATH_NS {
         /// @method
         SR_NODISCARD T Z() const noexcept { return z; }
 
+        /// @method
+        SR_NODISCARD T& X() noexcept { return x; }
+        /// @method
+        SR_NODISCARD T& Y() noexcept { return y; }
+        /// @method
+        SR_NODISCARD T& Z() noexcept { return z; }
+
         SR_NODISCARD Vector2<T> XY() const { return Vector2<T>(x, y); }
         SR_NODISCARD Vector2<T> XZ() const { return Vector2<T>(x, z); }
         SR_NODISCARD Vector2<T> YZ() const { return Vector2<T>(y, z); }
@@ -219,32 +226,55 @@ namespace SR_MATH_NS {
 
         SR_NODISCARD T SqrMagnitude() const { return x * x + y * y + z * z; }
 
-        SR_NODISCARD T Angle(const Vector3& to) const {
-            /// sqrt(a) * sqrt(b) = sqrt(a * b) -- valid for real numbers
-
-            const T denominator = static_cast<T>(sqrt(SqrMagnitude() * to.SqrMagnitude()));
-            if (denominator < static_cast<T>(SR_EPSILON_NORMAL_SQRT)) {
-                return static_cast<T>(0);
+        /// @method
+        SR_NODISCARD T Angle(const Vector3<T>& to) const {
+            if constexpr (std::is_same_v<T, bool>) {
+                return static_cast<T>(0); /// NOT SUPPORTED
             }
+            else {
+                /// sqrt(a) * sqrt(b) = sqrt(a * b) -- valid for real numbers
 
-            const T dot = SR_CLAMP(Dot(to) / denominator, static_cast<T>(-1), static_cast<T>(1));
-            return static_cast<T>(std::acos(dot) * SR_RAD_2_DEG);
+                const T denominator = static_cast<T>(sqrt(SqrMagnitude() * to.SqrMagnitude()));
+                if (denominator < static_cast<T>(SR_EPSILON_NORMAL_SQRT)) {
+                    return static_cast<T>(0);
+                }
+
+                const T dot = SR_CLAMP(Dot(to) / denominator, static_cast<T>(-1), static_cast<T>(1));
+                return static_cast<T>(std::acos(dot) * SR_RAD_2_DEG);
+            }
         }
 
-        SR_NODISCARD Vector3 ProjectOnPlane(const Vector3& planeNormal) const {
-            const T sqrMag = planeNormal.Dot(planeNormal);
+        /*SR_NODISCARD Vector3<T> Angle(const Vector3<T>& vector3) {
+            Vector3 angle;
 
-            if (sqrMag < SR_EPSILON) {
-                return *this;
+            angle.x = (T)(std::atan2(vector3.y, vector3.z) - atan2(y, z));
+            angle.y = (T)(std::atan2(vector3.x, vector3.z) - atan2(x, z));
+            angle.z = (T)(std::atan2(vector3.y, vector3.x) - atan2(y, x));
+
+            Vector3 degrees = Vector3(T(180)) * angle / SR_PI;
+            return (Vector3(T(360)) + degrees.Round()) % Vector3(T(360));
+        }*/
+
+        /// @method
+        SR_NODISCARD Vector3<T> ProjectOnPlane(const Vector3<T>& planeNormal) const {
+            if constexpr (std::is_same_v<T, bool>) {
+                return static_cast<T>(0); /// NOT SUPPORTED
             }
+            else {
+                const T sqrMag = planeNormal.Dot(planeNormal);
 
-            auto&& dot = Dot(planeNormal);
+                if (sqrMag < SR_EPSILON) {
+                    return *this;
+                }
 
-            return Vector3(
-                x - planeNormal.x * dot / sqrMag,
-                y - planeNormal.y * dot / sqrMag,
-                z - planeNormal.z * dot / sqrMag
-           );
+                auto &&dot = Dot(planeNormal);
+
+                return Vector3(
+                        x - planeNormal.x * dot / sqrMag,
+                        y - planeNormal.y * dot / sqrMag,
+                        z - planeNormal.z * dot / sqrMag
+                );
+            }
         }
 
         SR_NODISCARD T SignedAngle(const Vector3& to, const Vector3& axis) const {
@@ -265,17 +295,6 @@ namespace SR_MATH_NS {
             const Unit angle = acos(axis.Dot(direction));
 
             return Quaternion(crossAxis, angle);
-        }
-
-        SR_NODISCARD Vector3 Angle(const Vector3& vector3) {
-            Vector3 angle;
-
-            angle.x = (T)(std::atan2(vector3.y, vector3.z) - atan2(y, z));
-            angle.y = (T)(std::atan2(vector3.x, vector3.z) - atan2(x, z));
-            angle.z = (T)(std::atan2(vector3.y, vector3.x) - atan2(y, x));
-
-            Vector3 degrees = Vector3(T(180)) * angle / SR_PI;
-            return (Vector3(T(360)) + degrees.Round()) % Vector3(T(360));
         }
 
         SR_NODISCARD std::string ToString() const {
@@ -527,19 +546,23 @@ namespace SR_MATH_NS {
                     z == from ? to : z);
         }
 
-        SR_NODISCARD Vector3 Abs() const {
-            return Vector3(static_cast<T>(abs(x)), static_cast<T>(abs(y)), static_cast<T>(abs(z)));
+        /// @method
+        SR_NODISCARD Vector3<T> Abs() const {
+            return Vector3(static_cast<T>(SR_ABS(x)), static_cast<T>(SR_ABS(y)), static_cast<T>(SR_ABS(z)));
         }
 
-        SR_NODISCARD Vector3 Sin() const {
+        /// @method
+        SR_NODISCARD Vector3<T> Sin() const {
             return Vector3(static_cast<T>(sin(x)), static_cast<T>(sin(y)), static_cast<T>(sin(z)));
         }
 
-        SR_NODISCARD Vector3 Cos() const {
+        /// @method
+        SR_NODISCARD Vector3<T> Cos() const {
             return Vector3(static_cast<T>(cos(x)), static_cast<T>(cos(y)), static_cast<T>(cos(z)));
         }
 
-        SR_NODISCARD Vector3 Round() const {
+        /// @method
+        SR_NODISCARD Vector3<T> Round() const {
             return Vector3(static_cast<T>(std::round(x)), static_cast<T>(std::round(y)), static_cast<T>(std::round(z)));
         }
 
@@ -547,9 +570,11 @@ namespace SR_MATH_NS {
             return Vector3(FixAxis(x), FixAxis(y), FixAxis(z));
         }
 
-        SR_NODISCARD T Dot(Vector3 p_b) const { return x * p_b.x + y * p_b.y + z * p_b.z; }
+        /// @method
+        SR_NODISCARD T Dot(const Vector3<T>& p_b) const { return x * p_b.x + y * p_b.y + z * p_b.z; }
 
-        SR_NODISCARD Vector3 Cross(const Vector3 &p_b) const {
+        /// @method
+        SR_NODISCARD Vector3<T> Cross(const Vector3<T>& p_b) const {
             Vector3 ret(
                     (y * p_b.z) - (z * p_b.y),
                     (z * p_b.x) - (x * p_b.z),
@@ -560,16 +585,32 @@ namespace SR_MATH_NS {
 
         SR_NODISCARD Vector3<T> Rotate(const Quaternion& q) const;
 
-        template<typename U> SR_FORCE_INLINE Vector3 &operator+=(const Vector3<U> &p_v){
-            x += p_v.x;
-            y += p_v.y;
-            z += p_v.z;
+        template<typename U> SR_FORCE_INLINE Vector3<T>& SR_FASTCALL TemplateOperatorPlusAssign(const Vector3<U> &p_v){
+            if constexpr (!std::is_same_v<T, bool>) {
+                x += static_cast<T>(p_v.x);
+                y += static_cast<T>(p_v.y);
+                z += static_cast<T>(p_v.z);
+            }
             return *this;
         }
 
-        template<typename U> SR_FORCE_INLINE Vector3 SR_FASTCALL operator+(const Vector3<U> &p_v) const noexcept {
-            return Vector3(x + p_v.x, y + p_v.y, z + p_v.z);
+        /// @operator
+        SR_FORCE_INLINE Vector3<T>& SR_FASTCALL operator+=(const Vector3<float_t>& p_v) { return TemplateOperatorPlusAssign(p_v); }
+        /// @operator
+        SR_FORCE_INLINE Vector3<T>& SR_FASTCALL operator+=(const Vector3<int32_t>& p_v) { return TemplateOperatorPlusAssign(p_v); }
+        /// @operator
+        SR_FORCE_INLINE Vector3<T>& SR_FASTCALL operator+=(const Vector3<uint32_t>& p_v) { return TemplateOperatorPlusAssign(p_v); }
+
+        template<typename U> SR_FORCE_INLINE Vector3<T> SR_FASTCALL TemplateOperatorPlus(const Vector3<U>& p_v) const noexcept {
+            return Vector3<T>(x + static_cast<T>(p_v.x), y + static_cast<T>(p_v.y), z + static_cast<T>(p_v.z));
         }
+
+        /// @operator
+        SR_FORCE_INLINE Vector3<T> SR_FASTCALL operator+(const Vector3<float_t>& p_v) const noexcept { return TemplateOperatorPlus(p_v); }
+        /// @operator
+        SR_FORCE_INLINE Vector3<T> SR_FASTCALL operator+(const Vector3<int32_t>& p_v) const noexcept { return TemplateOperatorPlus(p_v); }
+        /// @operator
+        SR_FORCE_INLINE Vector3<T> SR_FASTCALL operator+(const Vector3<uint32_t>& p_v) const noexcept { return TemplateOperatorPlus(p_v); }
 
         template<typename U> SR_FORCE_INLINE Vector3 operator%(const Vector3<U> &p_v) const {
             return Vector3(
@@ -641,16 +682,31 @@ namespace SR_MATH_NS {
         template<typename U> SR_FORCE_INLINE bool operator==(U p_scalar) const { return *this == Vector3<U>(p_scalar); }
         template<typename U> SR_FORCE_INLINE bool operator!=(U p_scalar) const { return *this != Vector3<U>(p_scalar); }
 
-        SR_FORCE_INLINE Vector3 operator-() const { return Vector3(-x, -y, -z); }
-        SR_FORCE_INLINE Vector3 operator+() const { return *this; }
+        /// @operator
+        SR_FORCE_INLINE Vector3<T> operator-() const {
+            if constexpr (std::is_same_v<T, bool>) {
+                return *this;
+            }
+            else {
+                return Vector3(-x, -y, -z);
+            }
+        }
+        /// @operator
+        SR_FORCE_INLINE Vector3<T> operator+() const { return *this; }
 
-        SR_FORCE_INLINE bool operator==(const Vector3 &p_v) const { return SR_EQUALS(x, p_v.x) && SR_EQUALS(y, p_v.y) && SR_EQUALS(z, p_v.z); }
-        SR_FORCE_INLINE bool operator!=(const Vector3 &p_v) const { return !SR_EQUALS(x, p_v.x) || !SR_EQUALS(y, p_v.y) || !SR_EQUALS(z, p_v.z); }
+        /// @operator
+        SR_FORCE_INLINE bool operator==(const Vector3<T>& p_v) const { return SR_EQUALS(x, p_v.x) && SR_EQUALS(y, p_v.y) && SR_EQUALS(z, p_v.z); }
+        /// @operator
+        SR_FORCE_INLINE bool operator!=(const Vector3<T>& p_v) const { return !SR_EQUALS(x, p_v.x) || !SR_EQUALS(y, p_v.y) || !SR_EQUALS(z, p_v.z); }
 
-        SR_FORCE_INLINE bool operator<=(const Vector3 &p_v) const { return x <= p_v.x && y <= p_v.y && z <= p_v.z; }
-        SR_FORCE_INLINE bool operator>=(const Vector3 &p_v) const { return x >= p_v.x && y >= p_v.y && z >= p_v.z; }
-        SR_FORCE_INLINE bool operator<(const Vector3 &p_v) const { return x < p_v.x && y < p_v.y && z < p_v.z; }
-        SR_FORCE_INLINE bool operator>(const Vector3 &p_v) const { return x > p_v.x && y > p_v.y && z > p_v.z; }
+        /// @operator
+        SR_FORCE_INLINE bool operator<=(const Vector3<T>& p_v) const { return x <= p_v.x && y <= p_v.y && z <= p_v.z; }
+        /// @operator
+        SR_FORCE_INLINE bool operator>=(const Vector3<T>& p_v) const { return x >= p_v.x && y >= p_v.y && z >= p_v.z; }
+        /// @operator
+        SR_FORCE_INLINE bool operator<(const Vector3<T>& p_v) const { return x < p_v.x && y < p_v.y && z < p_v.z; }
+        /// @operator
+        SR_FORCE_INLINE bool operator>(const Vector3<T>& p_v) const { return x > p_v.x && y > p_v.y && z > p_v.z; }
 
     public:
         SR_NODISCARD glm::vec3 ToGLM() const noexcept {

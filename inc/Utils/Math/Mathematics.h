@@ -140,6 +140,9 @@ namespace SR_MATH_NS {
         if constexpr (std::is_same_v<T, bool>) {
             return value;
         }
+        else if constexpr (std::is_same_v<T, uint16_t> || std::is_same_v<T, uint32_t> || std::is_same_v<T, uint64_t>) {
+            return value;
+        }
         else {
             return value >= static_cast<T>(0) ? value : -value;
         }

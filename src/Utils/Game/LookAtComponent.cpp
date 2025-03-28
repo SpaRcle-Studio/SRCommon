@@ -108,8 +108,4 @@ namespace SR_UTILS_NS {
                 return SR_MATH_NS::FVector3();
         }
     }
-
-    SR_MATH_NS::IVector3 LookAtComponent::GetAngle() const {
-        return GetUp().Angle(GetDirection()).Cast<int32_t>();
-    }
 }

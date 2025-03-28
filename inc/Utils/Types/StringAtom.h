@@ -40,7 +40,6 @@ namespace SR_UTILS_NS {
         StringAtom& operator=(const std::string& str);
         /// @operator
         StringAtom& operator=(const char* str);
-        void operator()(const std::string& str);
 
         /// @operator
         bool operator<(const StringAtom& other) const noexcept;
