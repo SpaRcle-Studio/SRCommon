@@ -7,9 +7,12 @@
 #include <Utils/Debug.h>
 
 #include <X11/Xlib.h>
+#include <X11/Xlib-xcb.h>
+
 #include <X11/extensions/Xrandr.h>
 //#include <X11/extensions/XInput.h>
-#include <X11/Xlib-xcb.h>
+#include <X11/extensions/Xfixes.h>
+#include <X11/extensions/shapeconst.h>
 
 #include <xcb/randr.h>
 
@@ -23,7 +26,7 @@
 #include <Utils/Platform/XKeySymToKeyCode.h>
 
 #include <sys/sendfile.h>
-#include <X11/extensions/Xfixes.h>
+
 
 namespace SR_PLATFORM_NS {
     static Display* gLinuxPlatformDisplayPtr = nullptr;
@@ -57,6 +60,8 @@ namespace SR_PLATFORM_NS {
         else {
             XFixesHideCursor(gLinuxPlatformDisplayPtr, root);
         }
+
+        XSync(gLinuxPlatformDisplayPtr, false);
     }
 
     void StdHandler() {
@@ -189,6 +194,34 @@ namespace SR_PLATFORM_NS {
         XWarpPointer(gLinuxPlatformDisplayPtr, None, root, 0, 0, 0, 0, pos.x, pos.y);
 
         XFlush(gLinuxPlatformDisplayPtr);
+    }
+
+    void ConfineCursor() {
+        if (!gLinuxPlatformDisplayPtr) {
+            gLinuxPlatformDisplayPtr = XOpenDisplay(nullptr);
+        }
+
+        Window root = DefaultRootWindow(gLinuxPlatformDisplayPtr);
+
+        XGrabPointer(
+                gLinuxPlatformDisplayPtr,
+                root,
+                False,  // owner_events
+                ButtonPressMask | ButtonReleaseMask | PointerMotionMask,
+                GrabModeAsync,  // pointer_mode
+                GrabModeAsync,  // keyboard_mode
+                root,         // confine_to (the window to confine pointer to)
+                None,           // cursor (use current cursor)
+                CurrentTime
+            );
+    }
+
+    void ReleaseCursorConfinement() {
+        if (!gLinuxPlatformDisplayPtr) {
+            gLinuxPlatformDisplayPtr = XOpenDisplay(nullptr);
+        }
+
+        XUngrabPointer(gLinuxPlatformDisplayPtr, CurrentTime);
     }
 
     void OpenFile(const SR_UTILS_NS::Path& path) {
