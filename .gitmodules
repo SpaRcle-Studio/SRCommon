@@ -40,3 +40,6 @@
 [submodule "libs/entt"]
 	path = libs/entt
 	url = https://github.com/SpaRcle-Studio/entt
+[submodule "libs/asio"]
+	path = libs/asio
+	url = https://github.com/SpaRcle-Studio/asio

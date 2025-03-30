@@ -8,7 +8,6 @@
 #include <Utils/Network/Acceptor.h>
 
 #include <asio/ip/tcp.hpp>
-#include <asio/io_service.hpp>
 
 namespace SR_NETWORK_NS {
     class AsioContext;

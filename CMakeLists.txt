@@ -118,6 +118,12 @@ if (SR_COMMON_GIT_METADATA)
     add_subdirectory(libs/cmake-git-version-tracking)
 endif()
 
+set(SR_COMMON_CPPTRACE_ENABLED OFF)
+if (NOT ANDROID_NDK AND UNIX)
+    set(SR_COMMON_CPPTRACE_ENABLED ON)
+    add_subdirectory(libs/cpptrace)
+endif()
+
 #if (SR_COMMON_OPENSSL)
 #    # Prefer static linking
 #    set(OPENSSL_USE_STATIC_LIBS TRUE)
@@ -293,8 +299,8 @@ SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_BINARY_DIR}/libs/zlib)
 
 add_library(asio INTERFACE)
 
-target_include_directories(asio INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/libs/asio/include)
-target_include_directories(asio INTERFACE ${CMAKE_CURRENT_BINARY_DIR}/libs/asio/include)
+target_include_directories(asio INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/libs/asio/asio/include)
+target_include_directories(asio INTERFACE ${CMAKE_CURRENT_BINARY_DIR}/libs/asio/asio/include)
 
 if (SR_ICU)
     SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_BINARY_DIR}/include/icu)
