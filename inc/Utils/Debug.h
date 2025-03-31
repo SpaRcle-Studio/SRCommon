@@ -19,6 +19,7 @@ namespace SR_UTILS_NS {
 
     static fmt::text_style GetTextStyleColorByLogType(DebugLogType type);
 
+    /// @scriptableClass
     class SR_DLL_EXPORT Debug : public Singleton<Debug> {
         SR_REGISTER_SINGLETON(Debug);
     public:
@@ -31,6 +32,8 @@ namespace SR_UTILS_NS {
         };
 
     public:
+        Debug() = default;
+        Debug(const Debug&) = delete;
         ~Debug() override = default;
 
     private:
@@ -42,7 +45,9 @@ namespace SR_UTILS_NS {
         SR_NODISCARD Level GetLevel() { return m_level; }
         SR_NODISCARD bool IsInitialized() const { return m_isInit; }
 
+        /// @method
         void MakeCrash();
+        /// @method
         void TestPrint();
 
         void Init(const std::string& log_path, bool ShowUsedMemory, Theme colorTheme = Theme::Light);

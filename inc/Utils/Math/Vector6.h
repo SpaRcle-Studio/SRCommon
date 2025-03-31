@@ -39,6 +39,15 @@ namespace SR_MATH_NS {
             x = y = z = w = v = u = 0;
         }
 
+        SR_FAST_CONSTRUCTOR Vector6(const Vector6& p_v) {
+            x = p_v.x;
+            y = p_v.y;
+            z = p_v.z;
+            w = p_v.w;
+            v = p_v.v;
+            u = p_v.u;
+        }
+
         SR_FAST_CONSTRUCTOR Vector6(SR_MATH_NS::Vector3<T> vec3d1, SR_MATH_NS::Vector3<T> vec3d2)
             : vec3d1(vec3d1)
             , vec3d2(vec3d2)

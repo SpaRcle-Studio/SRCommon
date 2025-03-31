@@ -35,6 +35,12 @@ namespace SR_MATH_NS {
             z = 0;
         }
 
+        constexpr SR_FORCE_INLINE Vector3(const Vector3<T>& vec) {
+            x = vec.x;
+            y = vec.y;
+            z = vec.z;
+        }
+
         template<typename U> constexpr SR_FORCE_INLINE explicit Vector3(const Vector3<U>& vec) {
             x = static_cast<T>(vec.x);
             y = static_cast<T>(vec.y);
@@ -116,11 +122,16 @@ namespace SR_MATH_NS {
 
     public:
         template<typename U> SR_NODISCARD Vector3<U> SR_FASTCALL Cast() const noexcept { return Vector3<U>(
-                    static_cast<U>(x),
-                    static_cast<U>(y),
-                    static_cast<U>(z)
+                static_cast<U>(x), static_cast<U>(y), static_cast<U>(z)
             );
         }
+
+        /// @method
+        SR_NODISCARD Vector3<int32_t> CastToInt() const noexcept { return Cast<int32_t>(); }
+        /// @method
+        SR_NODISCARD Vector3<float_t> CastToFloat() const noexcept { return Cast<float_t>(); }
+        /// @method
+        SR_NODISCARD Vector3<uint32_t> CastToUInt() const noexcept { return Cast<uint32_t>(); }
 
         /// @method
         SR_NODISCARD T X() const noexcept { return x; }
@@ -394,8 +405,14 @@ namespace SR_MATH_NS {
             return static_cast<float>(x) == SR_NAN || static_cast<float>(y) == SR_NAN || static_cast<float>(z) == SR_NAN;
         }
 
-        SR_NODISCARD Vector3 Inverse() const {
-            return Vector3(-x, -y, -z);
+        /// @method
+        SR_NODISCARD Vector3<T> Inverse() const {
+            if constexpr (std::is_same_v<T, bool>) {
+                return static_cast<T>(0); /// NOT SUPPORTED
+            }
+            else {
+                return Vector3(-x, -y, -z);
+            }
         }
 
         SR_NODISCARD Vector3 SR_FASTCALL InverseAxis(Axis axis) const {
@@ -465,53 +482,67 @@ namespace SR_MATH_NS {
             return v;
         }
 
-        SR_NODISCARD SR_FORCE_INLINE Vector3 SR_FASTCALL Lerp(const Vector3& vector3, Unit t) const noexcept {
-        #if SR_SIMD_SUPPORT
-            const __m128 t_vec = _mm_set1_ps(t);
-            const __m128 this_vec = _mm_set_ps(0.0f, z, y, x); // Вектор this, добавляем 0.0f для выравнивания
-            const __m128 other_vec = _mm_set_ps(0.0f, vector3.z, vector3.y, vector3.x); // Вектор vector3, добавляем 0.0f для выравнивания
+        /// @method
+        SR_NODISCARD SR_FORCE_INLINE Vector3<T> SR_FASTCALL Lerp(const Vector3<T>& vector3, float_t t) const noexcept {
+            if constexpr (!std::is_same_v<T, float_t>) {
+                return *this;
+            }
+            else {
+            #if SR_SIMD_SUPPORT
+                const __m128 t_vec = _mm_set1_ps(t);
+                const __m128 this_vec = _mm_set_ps(0.0f, z, y, x); // Вектор this, добавляем 0.0f для выравнивания
+                const __m128 other_vec = _mm_set_ps(0.0f, vector3.z, vector3.y, vector3.x); // Вектор vector3, добавляем 0.0f для выравнивания
 
-            const __m128 diff_vec = _mm_sub_ps(other_vec, this_vec); // vector3 - *this
-            const __m128 mul_vec = _mm_mul_ps(diff_vec, t_vec); // (vector3 - *this) * t
-            const __m128 result_vec = _mm_add_ps(this_vec, mul_vec); // *this + ((vector3 - *this) * t)
+                const __m128 diff_vec = _mm_sub_ps(other_vec, this_vec); // vector3 - *this
+                const __m128 mul_vec = _mm_mul_ps(diff_vec, t_vec); // (vector3 - *this) * t
+                const __m128 result_vec = _mm_add_ps(this_vec, mul_vec); // *this + ((vector3 - *this) * t)
 
-            alignas(16) float result_array[4];
-            _mm_store_ps(result_array, result_vec); // Сохраняем результат в массив
+                alignas(16) float result_array[4];
+                _mm_store_ps(result_array, result_vec); // Сохраняем результат в массив
 
-            return { result_array[0], result_array[1], result_array[2] }; // Извлекаем значения из массива
-        #else
-            return static_cast<Vector3>(*this + (vector3 - *this) * t);
-        #endif
+                return { result_array[0], result_array[1], result_array[2] }; // Извлекаем значения из массива
+            #else
+                return static_cast<Vector3>(*this + (vector3 - *this) * t);
+            #endif
+            }
         }
 
-        SR_NODISCARD Vector3 Normalized() const {
+        /// @method
+        SR_NODISCARD Vector3<T> Normalized() const {
             return Normalize();
         }
 
-        SR_NODISCARD Vector3 Normalize() const {
-            auto&& value = x * x + y * y + z * z;
+        /// @method
+        SR_NODISCARD Vector3<T> Normalize() const {
+            if constexpr (std::is_same_v<T, bool>) {
+                return *this; /// NOT SUPPORTED
+            }
+            else {
+                auto&& value = x * x + y * y + z * z;
 
-            if (value > 0) {
-                T len = static_cast<T>(std::sqrt(value));
+                if (value > 0) {
+                    const T len = static_cast<T>(std::sqrt(value));
+                    Vector3 vec3 = *this;
 
-                Vector3 vec3 = *this;
+                    if (len != static_cast<T>(0.)) {
+                        vec3.x /= len;
+                        vec3.y /= len;
+                        vec3.z /= len;
+                    }
 
-                if (len != static_cast<T>(0.)) {
-                    vec3.x /= len;
-                    vec3.y /= len;
-                    vec3.z /= len;
+                    return vec3;
                 }
 
-                return vec3;
+                return *this;
             }
-
-            return *this;
         }
 
+        /// @method
         SR_NODISCARD T SquaredNorm() const noexcept {
             return x * x + y * y + z * z;
         }
 
+        /// @method
         SR_NODISCARD Vector3<T> Clamp(const Vector3<T>& upper, const Vector3<T>& lover) const {
             return Vector3<T>(
                 SR_CLAMP(x, lover.x, upper.x),
@@ -530,6 +561,7 @@ namespace SR_MATH_NS {
             return coord[p_axis];
         }
 
+        /// @method
         SR_NODISCARD SR_FORCE_INLINE T Length() const {
             if constexpr (std::is_same_v<T, float_t> || std::is_same_v<T, float>) {
                 return static_cast<T>(sqrtf(x * x + y * y + z * z));

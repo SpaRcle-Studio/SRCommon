@@ -113,7 +113,7 @@ namespace SR_HTYPES_NS {
     public:
         const SharedPtrDynamicData* GetPtrData() const { return m_data; } /// NOLINT(modernize-use-nodiscard)
         SharedPtrDynamicData* GetPtrData() { return m_data; }
-        virtual SR_NODISCARD SRClass* GetSRClass() const = 0;
+        SR_NODISCARD virtual SRClass* GetSRClass() const = 0;
         virtual void Reset() = 0;
         virtual void SetPointerFromBase(SharedPtrBase* pBase) = 0;
 
@@ -281,7 +281,7 @@ namespace SR_HTYPES_NS {
         m_ptr = ptr;
 
         if constexpr (!SR_UTILS_NS::IsCompleteTypeV<T>) {
-            SR_SAFE_PTR_ASSERT(ptr == nullptr, "Ptr is not nullptr!");
+            SR_SAFE_PTR_ASSERT(ptr == nullptr, "Ptr is not nullptr! But type is incomplete! Check includes.");
         }
         else if constexpr (SR_UTILS_NS::IsDerivedFrom<SharedPtr, T>::value) {
             if ((m_data = ptr->GetPtrData())) {
