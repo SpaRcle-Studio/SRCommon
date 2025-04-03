@@ -298,13 +298,6 @@ namespace SR_UTILS_NS {
     }
 
     void IResource::StopWatch() {
-        for (auto&& pWatcher : m_watchers) {
-            if (!pWatcher) {
-                SRHalt("Watcher is nullptr!");
-                continue;
-            }
-            pWatcher->Stop();
-        }
         m_watchers.clear();
     }
 
@@ -316,7 +309,7 @@ namespace SR_UTILS_NS {
         auto&& resourcesManager = ResourceManager::Instance();
 
         auto&& path = GetResourcePath();
-        auto&& pWatch = resourcesManager.StartWatch(resourcesManager.GetResPath().Concat(path));
+        auto&& pWatch = SR_UTILS_NS::FileWatcher::MakeShared(resourcesManager.GetResPath().Concat(path));
         if (!pWatch) {
             return;
         }

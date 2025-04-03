@@ -40,64 +40,15 @@ namespace SR_UTILS_NS {
 
         m_folder = resourcesFolder;
 
+        m_fileSystemWatcher = FileSystemWatcher::MakeShared();
+        m_fileSystemWatcher->AddListener(m_folder);
+        m_fileSystemWatcher->StartAsyncWatch();
+
         m_resources.max_load_factor(0.9f);
 
         m_isInit = true;
 
         return true;
-    }
-
-    SR_HTYPES_NS::SharedPtr<FileWatcher> ResourceManager::StartWatch(const Path& path) {
-        SR_SCOPED_LOCK;
-        SRAssert(m_isRun);
-
-        if (!path.IsFile()) {
-            SRHalt("ResourceManager::StartWatch() : watching a non-existent file! '{}'", path.ToStringRef());
-            return nullptr;
-        }
-
-        if (path == GetResPath()) {
-            SRHalt("ResourceManager::StartWatch() : watching the resource folder is prohibited!");
-            return nullptr;
-        }
-
-        FileWatcher::Ptr pWatcher = new FileWatcher(path);
-        m_watchers.emplace_back(pWatcher);
-        return pWatcher;
-    }
-
-    void ResourceManager::AsyncUpdateWatchers() {
-        SR_SCOPED_LOCK;
-        SR_TRACY_ZONE;
-
-        if (m_watchers.empty() || !IsWatchingEnabled()) {
-            return;
-        }
-
-        FileWatcher::Ptr pWatcher = m_watchers.front();
-        SRAssert(pWatcher);
-
-        m_watchers.erase(m_watchers.begin());
-
-        if (!pWatcher) {
-            return;
-        }
-
-        /// Watcher может быть уничтожен в конце этой функции
-        /// Так же, учитываем что его состояние может быть изменено сразу после IsActive
-        {
-            std::lock_guard lockWatcher(pWatcher->GetMutex());
-
-            if (!pWatcher->IsActive()) {
-                return;
-            }
-
-            if (!pWatcher->IsDirty() && !pWatcher->IsPaused() && pWatcher->Update()) {
-                m_dirtyWatchers.push(pWatcher);
-            }
-        }
-
-        m_watchers.emplace_back(pWatcher);
     }
 
     void ResourceManager::OnSingletonDestroy() {
@@ -127,17 +78,7 @@ namespace SR_UTILS_NS {
         }
         m_resources.clear();
 
-        for (auto&& pFileWatcher : m_watchers) {
-            if (!pFileWatcher->IsActive()) {
-                continue;
-            }
-
-            SR_ERROR("ResourceManager::OnSingletonDestroy() : file watcher was not stopped!"
-                 "\n\tPath: " + pFileWatcher->GetPath().ToStringRef()
-                + "\n\tName: " + pFileWatcher->GetName()
-            );
-        }
-        m_watchers.clear();
+        m_fileSystemWatcher.AutoFree();
     }
 
     bool ResourceManager::Destroy(IResource* pResource) {
@@ -216,12 +157,6 @@ namespace SR_UTILS_NS {
             m_lastTime = time;
 
             m_GCDt += m_deltaTime;
-            m_hashCheckDt += m_deltaTime;
-
-            if (m_hashCheckDt > 15 /** ms */) {
-                AsyncUpdateWatchers();
-                m_hashCheckDt = 0;
-            }
 
             if (m_GCDt > (m_force ? 100 : 500) /** ms */) {
                 /** если какой-то ресурс больше не используется, то уничтожаем его.
@@ -241,7 +176,7 @@ namespace SR_UTILS_NS {
         SR_LOCK_GUARD;
 
         /// Не можем работать, пока какие-то ресурсы не перезагружены
-        if (!m_dirtyResources.empty() || !m_dirtyWatchers.empty()) {
+        if (!m_dirtyResources.empty()) {
             return;
         }
 
@@ -524,35 +459,9 @@ namespace SR_UTILS_NS {
         }
     }
 
-    void ResourceManager::UpdateWatchers(float_t dt) {
+    void ResourceManager::PullWatchers() {
         SR_TRACY_ZONE;
-
-        /// не блокируем поток, иначе не будет смысла от разделения.
-        /// если прочитаем некорректные данные из empty, будем считать, что не повезло.
-        if (m_dirtyWatchers.empty()) {
-            return;
-        }
-
-        SR_LOCK_GUARD;
-
-        while (!m_dirtyWatchers.empty()) {
-            if (const FileWatcher::Ptr pWatcher = m_dirtyWatchers.front()) {
-                std::lock_guard lockWatcher(pWatcher->GetMutex());
-
-                if (!pWatcher->IsActive()) {
-                    goto skip;
-                }
-
-                if (pWatcher->IsPaused()) {
-                    goto skip;
-                }
-
-                pWatcher->Signal();
-            }
-
-        skip:
-            m_dirtyWatchers.pop();
-        }
+        m_fileSystemWatcher->WatchPull();
     }
 
     void ResourceManager::ReloadResource(IResource* pResource) {
@@ -568,14 +477,6 @@ namespace SR_UTILS_NS {
         SR_WARN("ResourceManager::EnableStackTraceProfiling() : profiling was enabled! ONLY FOR DEV!");
 
         m_usePointStackTraceProfiling = true;
-    }
-
-    bool ResourceManager::IsWatchingEnabled() const {
-        if (!SR_UTILS_NS::Features::Instance().Enabled("FileWatching", true)) {
-            return false;
-        }
-
-        return m_isWatchingEnabled;
     }
 
     bool ResourceManager::ReviveResource(IResource* pResource) {

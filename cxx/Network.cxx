@@ -4,6 +4,7 @@
 #include "../src/Utils/Network/Client.cpp"
 #include "../src/Utils/Network/Acceptor.cpp"
 #include "../src/Utils/Network/Context.cpp"
+#include "../src/Utils/Network/FileDownloader.cpp"
 
 #include "../src/Utils/Network/Asio/AsioContext.cpp"
 #include "../src/Utils/Network/Asio/AsioTCPSocket.cpp"

@@ -59,7 +59,7 @@ namespace SR_UTILS_NS::Platform {
     SR_DLL_EXPORT extern bool Copy(const Path& from, const Path& to);
     SR_DLL_EXPORT extern bool Delete(const Path& path);
     SR_DLL_EXPORT extern bool WaitAndDelete(const Path& path);
-    SR_DLL_EXPORT extern bool IsConsoleFocused();
+    SR_DLL_EXPORT extern bool DownloadFile(const std::string& url, const SR_UTILS_NS::Path& outputPath);
 
     SR_DLL_EXPORT extern uint64_t GetProcessUsedMemory();
     SR_DLL_EXPORT extern uint16_t GetCurrentProcessId();

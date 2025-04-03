@@ -178,7 +178,7 @@ namespace SR_UTILS_NS {
 #endif
     }
 
-    Path Path::Concat(const Path &path) const {
+    Path Path::Concat(const Path& path) const {
         if ((!m_path.empty() && m_path.back() != '/') && (!path.IsEmpty() && path.m_path.front() != '/'))
             return m_path + "/" + path.m_path;
 

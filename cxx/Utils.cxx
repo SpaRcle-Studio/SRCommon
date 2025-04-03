@@ -39,6 +39,7 @@
 #include "../src/Utils/DebugDraw.cpp"
 #include "../src/Utils/Debug.cpp"
 
+#include "../src/Utils/Resources/FileSystemWatcher.cpp"
 #include "../src/Utils/Resources/FileWatcher.cpp"
 #include "../src/Utils/Resources/IResource.cpp"
 #include "../src/Utils/Resources/ResourceInfo.cpp"

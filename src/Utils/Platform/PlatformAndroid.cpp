@@ -227,6 +227,11 @@ namespace SR_UTILS_NS::Platform {
         setenv(name.data(), value.data(), 1);
     }
 
+    bool DownloadFile(const std::string& url, const Path& outputPath) {
+        SRHaltOnce("Not implemented!");
+        return false;
+    }
+
     PlatformType GetType() {
         return PlatformType::Android;
     }
