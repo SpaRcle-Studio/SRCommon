@@ -9,7 +9,7 @@ option(SR_COMMON_OPENSSL "" OFF)
 option(SR_COMMON_SDL "" OFF)
 option(SR_COMMON_CURL "" OFF)
 option(SR_COMMON_JSON "" OFF)
-option(SR_COMMON_MYHTML "" ON)
+option(SR_COMMON_MYHTML "" OFF)
 option(SR_COMMON_LITEHTML "" OFF)
 
 option(SR_COMMON_DLL_EXPORTS "" ON)
