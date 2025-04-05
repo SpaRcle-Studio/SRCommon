@@ -4,10 +4,13 @@
 
 #include <Utils/Web/HTML/Tag.h>
 
-#include <myhtml/api.h>
+#ifdef SR_COMMON_MYHTML
+    #include <myhtml/api.h>
+#endif
 
 namespace SR_UTILS_NS::Web {
     HTMLTag MyHTMLTagToHTMLTag(size_t tag) {
+    #ifdef SR_COMMON_MYHTML
         const myhtml_tag_id_t myhtmlTag = tag;
         static const std::unordered_map<myhtml_tag_id_t, HTMLTag> myhtmlToHTMLTag = {
             {MyHTML_TAG_DIV, HTMLTag::Div}, {MyHTML_TAG_SPAN, HTMLTag::Span}, {MyHTML_TAG_P, HTMLTag::P},
@@ -24,6 +27,9 @@ namespace SR_UTILS_NS::Web {
         if (const auto it = myhtmlToHTMLTag.find(myhtmlTag); it != myhtmlToHTMLTag.end()) {
             return it->second;
         }
+    #endif
+
         return HTMLTag::Undefined;
     }
 }
+

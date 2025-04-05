@@ -618,8 +618,26 @@ namespace SR_PLATFORM_NS {
     }
 
     double_t GetScreenDPI() {
-        SRHaltOnce("Not implemented!");
-        return 0.0;
+        if (!gLinuxPlatformDisplayPtr) {
+            gLinuxPlatformDisplayPtr = XOpenDisplay(nullptr);
+        }
+
+        auto&& screen = DefaultScreen(gLinuxPlatformDisplayPtr);
+
+        // Get the screen width and height in pixels
+        int screenWidth = DisplayWidth(gLinuxPlatformDisplayPtr, screen);
+        int screenHeight = DisplayHeight(gLinuxPlatformDisplayPtr, screen);
+
+        // Get the screen's physical dimensions (in millimeters)
+        int screenWidthMM = DisplayWidthMM(gLinuxPlatformDisplayPtr, screen);
+        int screenHeightMM = DisplayHeightMM(gLinuxPlatformDisplayPtr, screen);
+
+        // Calculate DPI (dots per inch)
+        double dpiX = screenWidth / (screenWidthMM / 25.4);  // 25.4 mm in an inch
+        double dpiY = screenHeight / (screenHeightMM / 25.4);
+
+        // You can return either dpiX or dpiY (assuming they are close to each other)
+        return (dpiX + dpiY) / 2;
     }
 
     std::vector<SR_MATH_NS::UVector2> GetScreenResolutions() {

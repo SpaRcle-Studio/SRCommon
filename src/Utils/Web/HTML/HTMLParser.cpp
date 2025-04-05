@@ -8,8 +8,11 @@
 #include <Utils/Debug.h>
 #include <Utils/Resources/ResourceManager.h>
 
-#include <myhtml/api.h>
+#ifdef SR_COMMON_HTML
+    #include <myhtml/api.h>
+#endif
 
 namespace SR_UTILS_NS::Web {
 
 }
+

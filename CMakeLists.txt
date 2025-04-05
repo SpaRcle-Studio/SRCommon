@@ -342,6 +342,8 @@ if (SR_COMMON_MYHTML)
     set(MyHTML_BUILD_SHARED OFF CACHE INTERNAL "" FORCE)
     set(PROJECT_OPTIMIZATION_LEVEL "" CACHE INTERNAL "" FORCE)
 
+    add_compile_definitions(SR_COMMON_MYHTML)
+
     add_subdirectory(libs/myhtml)
     SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_SOURCE_DIR}/libs/myhtml/include)
     target_link_libraries(Utils myhtml_static)
