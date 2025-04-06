@@ -7,6 +7,7 @@
 
 #include <Utils/FileSystem/Path.h>
 #include <Utils/Common/StringUtils.h>
+#include <Utils/Types/Function.h>
 
 namespace SR_UTILS_NS {
     class SR_DLL_EXPORT FileSystem {
@@ -41,6 +42,8 @@ namespace SR_UTILS_NS {
         static std::string ReadAllText(const std::string& path);
 
         static char* Load(std::string path);
+
+        static void ForEachFileInFolder(const Path& path, bool recursive, const SR_HTYPES_NS::Function<void(const Path&)>& func);
 
         static uint64_t GetFileHash(const std::string& path);
         static uint64_t GetFolderHash(const Path& path, uint64_t deep = SR_UINT64_MAX);

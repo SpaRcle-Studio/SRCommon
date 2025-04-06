@@ -40,6 +40,7 @@ namespace SR_UTILS_NS::Platform {
     SR_DLL_EXPORT extern void* GetInstance();
     SR_DLL_EXPORT extern PlatformType GetType();
 
+    SR_DLL_EXPORT extern std::string ExecuteCommand(const std::string& command);
     SR_DLL_EXPORT extern void SetEnvironmentVar(const std::string_view& name, const std::string_view& value);
     SR_DLL_EXPORT extern std::optional<std::string> ReadFile(const Path& path);
     SR_DLL_EXPORT extern void TextToClipboard(const std::string& text);

@@ -83,6 +83,14 @@ namespace SR_UTILS_NS {
             return m_path[index];
         }
 
+        bool operator<(const Path& path) const noexcept {
+            return m_path < path.ToStringRef();
+        }
+
+        bool operator>(const Path& path) const noexcept {
+            return m_path > path.ToStringRef();
+        }
+
     public:
         void Save(ISerializer& serializer, const SerializationId& id) const;
         void Load(IDeserializer& deserializer, const SerializationId& id);

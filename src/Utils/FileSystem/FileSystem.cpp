@@ -280,4 +280,24 @@ namespace SR_UTILS_NS {
 
         return true;
     }
+
+    void FileSystem::ForEachFileInFolder(const Path& path, bool recursive, const Types::Function<void(const Path&)>& func) {
+        SR_TRACY_ZONE;
+        SR_TRACY_ZONE_TEXT(path.ToStringRef());
+
+        /// scope for files
+        {
+            auto&& files = path.GetFiles();
+            for (auto&& file : files) {
+                func(file);
+            }
+        }
+
+        if (recursive) {
+            auto&& folders = path.GetFolders();
+            for (auto&& folder: folders) {
+                ForEachFileInFolder(folder, recursive, func);
+            }
+        }
+    }
 }

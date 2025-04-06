@@ -227,6 +227,11 @@ namespace SR_UTILS_NS::Platform {
         setenv(name.data(), value.data(), 1);
     }
 
+    std::string ExecuteCommand(const std::string& command) {
+        SRHaltOnce("Not implemented!");
+        return std::string();
+    }
+
     bool DownloadFile(const std::string& url, const Path& outputPath) {
         SRHaltOnce("Not implemented!");
         return false;

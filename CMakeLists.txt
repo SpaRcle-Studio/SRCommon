@@ -18,6 +18,11 @@ option(SR_COMMON_STATIC_LIBRARY "" ON)
 option(SR_COMMON_EMBED_RESOURCES "" OFF)
 option(SR_COMMON_CI_BUILD "" OFF)
 
+set(BUILD_SHARED_LIBS OFF CACHE INTERNAL "" FORCE)
+
+add_subdirectory(libs/tree-sitter-cpp)
+add_subdirectory(libs/tree-sitter/lib)
+
 if (SR_COMMON_SDL)
     add_compile_definitions(SR_COMMON_SDL)
 endif()
@@ -78,7 +83,6 @@ if (SR_COMMON_ASSIMP)
     set(ASSIMP_BUILD_ASSIMP_TOOLS OFF CACHE INTERNAL "" FORCE)
     set(ASSIMP_INSTALL OFF CACHE INTERNAL "" FORCE)
     set(ASSIMP_BUILD_ASSIMP_VIEW OFF CACHE INTERNAL "" FORCE)
-    set(BUILD_SHARED_LIBS OFF CACHE INTERNAL "" FORCE)
     set(ASSIMP_WARNINGS_AS_ERRORS OFF CACHE INTERNAL "" FORCE)
 
     #if (ANDROID_NDK)
@@ -247,6 +251,7 @@ SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${SR_CMAKE_ROOT_BUILD_DIRECTORY}/Codegen)
 
 SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_BINARY_DIR}/include/Utils/EmbedResources)
 SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_BINARY_DIR}/libs/zlib)
+SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_BINARY_DIR}/libs/tree-sitter/lib/include)
 
 add_library(asio INTERFACE)
 
@@ -361,8 +366,7 @@ else()
     target_link_libraries(Utils fmt)
 endif()
 
-target_link_libraries(Utils asio)
-target_link_libraries(Utils ryml::ryml EnTT)
+target_link_libraries(Utils asio tree-sitter tree-sitter-cpp ryml::ryml EnTT)
 
 if (SR_COMMON_CPPTRACE_ENABLED)
     target_link_libraries(Utils cpptrace::cpptrace)

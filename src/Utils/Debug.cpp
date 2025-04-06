@@ -40,7 +40,7 @@ namespace SR_UTILS_NS {
 
             std::lock_guard lock(SR_PLATFORM_NS::g_platformLogMutex);
             try {
-                fmt::print(fmt::emphasis::bold, " " + msg);
+                fmt::print(fmt::emphasis::bold, " {}", msg);
             }
             catch (const std::exception& ex) {
                 std::cout << " Error while printing message: " << ex.what() << "\nMessage: " << msg << std::endl;

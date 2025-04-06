@@ -46,3 +46,9 @@
 [submodule "libs/efsw"]
 	path = libs/efsw
 	url = https://github.com/SpaRcle-Studio/efsw
+[submodule "libs/tree-sitter"]
+	path = libs/tree-sitter
+	url = https://github.com/SpaRcle-Studio/tree-sitter
+[submodule "libs/tree-sitter-cpp"]
+	path = libs/tree-sitter-cpp
+	url = https://github.com/SpaRcle-Studio/tree-sitter-cpp

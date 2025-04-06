@@ -770,6 +770,43 @@ namespace SR_UTILS_NS::Platform {
         SetEnvironmentVariableA(name.data(), value.data());
     }
 
+    std::string ExecuteCommand(const std::string& command) {
+        HANDLE hReadPipe, hWritePipe;
+        SECURITY_ATTRIBUTES sa = { sizeof(SECURITY_ATTRIBUTES), nullptr, TRUE };
+        if (!CreatePipe(&hReadPipe, &hWritePipe, &sa, 0)) {
+            return "Pipe creation failed";
+        }
+
+        STARTUPINFO si = { sizeof(STARTUPINFO) };
+        PROCESS_INFORMATION pi;
+        si.hStdOutput = hWritePipe;
+        si.hStdError = hWritePipe;
+        si.dwFlags |= STARTF_USESTDHANDLES;
+
+        if (!CreateProcess(nullptr, (LPSTR)command.c_str(), nullptr, nullptr, TRUE, 0, nullptr, nullptr, &si, &pi)) {
+            CloseHandle(hReadPipe);
+            CloseHandle(hWritePipe);
+            return "Process creation failed";
+        }
+
+        CloseHandle(hWritePipe); // Закрываем ненужную часть пайпа
+
+        std::string result;
+        char buffer[128];
+        DWORD bytesRead;
+        while (::ReadFile(hReadPipe, buffer, sizeof(buffer) - 1, &bytesRead, nullptr) && bytesRead > 0) {
+            buffer[bytesRead] = '\0';
+            result += buffer;
+        }
+
+        CloseHandle(hReadPipe);
+        WaitForSingleObject(pi.hProcess, INFINITE);
+        CloseHandle(pi.hProcess);
+        CloseHandle(pi.hThread);
+
+        return result;
+    }
+
     bool DownloadFile(const std::string& url, const Path& outputPath) {
         SR_LOG("Platform::DownloadFile() : downloading file from url: {}", url);
 
