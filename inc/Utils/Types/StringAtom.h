@@ -35,6 +35,7 @@ namespace SR_UTILS_NS {
         /// @operator
         bool operator==(const StringAtom& rhs) const noexcept;
         bool operator==(const std::string& rhs) const noexcept;
+        bool operator==(const std::string_view& rhs) const noexcept;
         /// @operator
         bool operator==(const char* rhs) const noexcept;
         StringAtom& operator=(const std::string& str);

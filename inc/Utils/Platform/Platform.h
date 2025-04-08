@@ -16,6 +16,14 @@ namespace SR_UTILS_NS {
 }
 
 namespace SR_UTILS_NS::Platform {
+    static bool IsCompiledUnderMSVC() {
+    #ifdef SR_MSVC
+        return true;
+    #else
+        return false;
+    #endif
+    }
+
     struct FileMetadata {
         uint64_t lastWriteTime = SR_UINT64_MAX;
     };
@@ -40,7 +48,7 @@ namespace SR_UTILS_NS::Platform {
     SR_DLL_EXPORT extern void* GetInstance();
     SR_DLL_EXPORT extern PlatformType GetType();
 
-    SR_DLL_EXPORT extern std::string ExecuteCommand(const std::string& command);
+    SR_DLL_EXPORT extern std::string ExecuteCommand(const std::string& command, const std::vector<std::string>& env = {});
     SR_DLL_EXPORT extern void SetEnvironmentVar(const std::string_view& name, const std::string_view& value);
     SR_DLL_EXPORT extern std::optional<std::string> ReadFile(const Path& path);
     SR_DLL_EXPORT extern void TextToClipboard(const std::string& text);
@@ -61,6 +69,9 @@ namespace SR_UTILS_NS::Platform {
     SR_DLL_EXPORT extern bool Delete(const Path& path);
     SR_DLL_EXPORT extern bool WaitAndDelete(const Path& path);
     SR_DLL_EXPORT extern bool DownloadFile(const std::string& url, const SR_UTILS_NS::Path& outputPath);
+    SR_DLL_EXPORT extern void* LoadLibraryModule(const Path& path);
+    SR_DLL_EXPORT extern bool UnloadLibraryModule(void* pLibrary);
+    SR_DLL_EXPORT extern void* GetLibraryFunctionAddress(void* pLibrary, const char* pFunctionName);
 
     SR_DLL_EXPORT extern uint64_t GetProcessUsedMemory();
     SR_DLL_EXPORT extern uint16_t GetCurrentProcessId();

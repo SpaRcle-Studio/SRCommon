@@ -227,7 +227,7 @@ namespace SR_UTILS_NS::Platform {
         setenv(name.data(), value.data(), 1);
     }
 
-    std::string ExecuteCommand(const std::string& command) {
+    std::string ExecuteCommand(const std::string& command, const std::vector<std::string>& env) {
         SRHaltOnce("Not implemented!");
         return std::string();
     }
@@ -239,6 +239,21 @@ namespace SR_UTILS_NS::Platform {
 
     PlatformType GetType() {
         return PlatformType::Android;
+    }
+
+    void* LoadLibraryModule(const Path& path) {
+        SRHaltOnce("Not implemented!");
+        return nullptr;
+    }
+
+    bool UnloadLibraryModule(void* pLibrary) {
+        SRHaltOnce("Not implemented!");
+        return false;
+    }
+
+    void* GetLibraryFunctionAddress(void* pLibrary, const char* pFunctionName) {
+        SRHaltOnce("Not implemented!");
+        return nullptr;
     }
 
     std::vector<SR_MATH_NS::UVector2> GetScreenResolutions() {

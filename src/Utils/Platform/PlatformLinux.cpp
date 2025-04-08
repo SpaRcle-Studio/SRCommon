@@ -13,6 +13,9 @@
 
 #include <xcb/randr.h>
 
+#include <dlfcn.h>
+#include <errno.h>
+
 #include <filesystem>
 
 #include <spawn.h>
@@ -613,7 +616,17 @@ namespace SR_PLATFORM_NS {
         setenv(name.data(), value.data(), 1);
     }
 
-    std::string ExecuteCommand(const std::string& command) {
+    static std::string GetLastErrorAsString() {
+        if(errno == 0) {
+            return std::string();
+        }
+
+        // Shall we use thread-safe strerror_r() instead of strerror()?
+        std::string message(strerror(errno));
+        return message;
+    }
+
+    std::string ExecuteCommand(const std::string& command, const std::vector<std::string>& env) {
         int pipefd[2];
         if (pipe(pipefd) == -1) {
             return "Error: pipe() failed: " + std::string(strerror(errno));
@@ -666,6 +679,45 @@ namespace SR_PLATFORM_NS {
 
     PlatformType GetType() {
         return PlatformType::Linux;
+    }
+
+    void* LoadLibraryModule(const Path& path) {
+        void* pLibrary = dlopen(path.c_str(), RTLD_LAZY);
+        if (!pLibrary) {
+            SR_ERROR("PlatformLinux::LoadLibraryModule() : failed to load library: {}\n\tError: {}", path, GetLastErrorAsString());
+            return nullptr;
+        }
+
+        return pLibrary;
+    }
+
+    bool UnloadLibraryModule(void* pLibrary) {
+        if (!pLibrary) {
+            SRHalt("PlatformLinux::UnloadLibraryModule() : library is nullptr!");
+            return false;
+        }
+
+        if (!dlclose(pLibrary)) {
+            SR_ERROR("PlatformLinux::UnloadLibraryModule() : failed to unload library: {}\n\tError: {}", GetLastErrorAsString());
+            return false;
+        }
+
+        return true;
+    }
+
+    void* GetLibraryFunctionAddress(void* pLibrary, const char* pFunctionName) {
+        if (!pLibrary) {
+            SRHalt("PlatformLinux::GetLibraryFunctionAddress() : library is nullptr!");
+            return nullptr;
+        }
+
+        void* pFunction = dlsym(pLibrary, pFunctionName);
+        if (!pFunction) {
+            SR_ERROR("PlatformLinux::GetLibraryFunctionAddress() : failed to get function address: {}", pFunctionName);
+            return nullptr;
+        }
+
+        return pFunction;
     }
 }
 

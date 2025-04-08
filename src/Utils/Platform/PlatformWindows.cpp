@@ -219,6 +219,47 @@ namespace SR_UTILS_NS::Platform {
         return nullptr;
     }
 
+    void* LoadLibraryModule(const Path& path) {
+        std::string winAPIPath = path.ToString();
+        std::replace(winAPIPath.begin(), winAPIPath.end(), '/', '\\');
+
+        void* pLibrary = LoadLibrary(winAPIPath.c_str());
+        if (!pLibrary) {
+            SR_ERROR("PlatformWindows::LoadLibraryModule() : failed to load library: {}\n\tError: {}", path, GetLastErrorAsString());
+            return nullptr;
+        }
+
+        return pLibrary;
+    }
+
+    bool UnloadLibraryModule(void* pLibrary) {
+        if (!pLibrary) {
+            SRHalt("PlatformWindows::UnloadLibraryModule() : library is nullptr!");
+            return false;
+        }
+
+        if (!FreeLibrary(static_cast<HMODULE>(pLibrary))) {
+            SR_ERROR("PlatformWindows::UnloadLibraryModule() : failed to unload library: {}\n\tError: {}", GetLastErrorAsString());
+            return false;
+        }
+
+        return true;
+    }
+
+    void* GetLibraryFunctionAddress(void* pLibrary, const char* pFunctionName) {
+        if (!pLibrary) {
+            SRHalt("PlatformWindows::GetLibraryFunctionAddress() : library is nullptr!");
+            return nullptr;
+        }
+
+        void* pFunction = reinterpret_cast<void*>(::GetProcAddress(static_cast<HMODULE>(pLibrary), pFunctionName));
+        if (!pFunction) {
+            SR_ERROR("PlatformWindows::GetLibraryFunctionAddress() : failed to get function address: {}", pFunctionName);
+            return nullptr;
+        }
+
+        return pFunction;
+    }
 
     std::optional<std::string> ReadFile(const Path& path) {
         std::ifstream ifs(path.c_str());
@@ -770,12 +811,35 @@ namespace SR_UTILS_NS::Platform {
         SetEnvironmentVariableA(name.data(), value.data());
     }
 
-    std::string ExecuteCommand(const std::string& command) {
+    std::string ExecuteCommand(const std::string& command, const std::vector<std::string>& env) {
         HANDLE hReadPipe, hWritePipe;
         SECURITY_ATTRIBUTES sa = { sizeof(SECURITY_ATTRIBUTES), nullptr, TRUE };
         if (!CreatePipe(&hReadPipe, &hWritePipe, &sa, 0)) {
             return "Pipe creation failed";
         }
+
+        // Получаем текущее окружение
+        LPCH envStrings = GetEnvironmentStringsA();
+        if (!envStrings) {
+            return "Failed to get environment strings";
+        }
+
+        // Скопировать окружение в модифицируемую структуру
+        std::vector<char> newEnv;
+        LPCH ptr = envStrings;
+        while (*ptr) {
+            std::string entry(ptr);
+            newEnv.insert(newEnv.end(), entry.begin(), entry.end());
+            newEnv.push_back('\0');
+            ptr += entry.size() + 1;
+        }
+
+        for (const auto& entry : env) {
+            newEnv.insert(newEnv.end(), entry.begin(), entry.end());
+            newEnv.push_back('\0');
+        }
+        newEnv.push_back('\0');
+        newEnv.push_back('\0'); // двойной ноль — конец окружения
 
         STARTUPINFO si = { sizeof(STARTUPINFO) };
         PROCESS_INFORMATION pi;
@@ -783,7 +847,7 @@ namespace SR_UTILS_NS::Platform {
         si.hStdError = hWritePipe;
         si.dwFlags |= STARTF_USESTDHANDLES;
 
-        if (!CreateProcess(nullptr, (LPSTR)command.c_str(), nullptr, nullptr, TRUE, 0, nullptr, nullptr, &si, &pi)) {
+        if (!CreateProcess(nullptr, (LPSTR)command.c_str(), nullptr, nullptr, TRUE, 0, newEnv.data(), nullptr, &si, &pi)) {
             CloseHandle(hReadPipe);
             CloseHandle(hWritePipe);
             return "Process creation failed";

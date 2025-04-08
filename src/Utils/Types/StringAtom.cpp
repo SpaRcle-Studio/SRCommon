@@ -135,4 +135,8 @@ namespace SR_UTILS_NS {
     bool StringAtom::operator<(uint64_t hash) const noexcept {
         return m_info ? (m_info->hash < hash) : false;
     }
+
+    bool StringAtom::operator==(const std::string_view& rhs) const noexcept {
+        return m_info != nullptr && m_info->data == rhs;
+    }
 }

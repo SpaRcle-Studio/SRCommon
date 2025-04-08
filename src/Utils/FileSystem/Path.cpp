@@ -212,6 +212,18 @@ namespace SR_UTILS_NS {
         return m_path + "." + ext;
     }
 
+    Path Path::ConcatExt(const std::string_view& ext) const {
+        return ConcatExt(std::string(ext));
+    }
+
+    Path Path::ConcatExt(const char* ext) const {
+        return ConcatExt(std::string(ext));
+    }
+
+    Path Path::ConcatExt(StringAtom ext) const {
+        return ConcatExt(ext.ToStringRef());
+    }
+
     bool Path::Create() const {
         if (m_path.empty())
             return false;
