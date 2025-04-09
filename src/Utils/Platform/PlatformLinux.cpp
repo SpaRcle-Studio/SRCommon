@@ -435,7 +435,7 @@ namespace SR_PLATFORM_NS {
             return true;*/
 
             int source = open(from.c_str(), O_RDONLY, 0);
-            int dest = open(to.c_str(), O_WRONLY | O_CREAT /*| O_TRUNC/**/, 0644);
+            int dest = open(to.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
 
             // struct required, rationale: function stat() exists also
             struct stat stat_source;
