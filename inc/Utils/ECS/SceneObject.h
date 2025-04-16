@@ -21,6 +21,7 @@ namespace SR_UTILS_NS {
         GameObject = 0
     )
 
+    /// @scriptableClass
     class SceneObject : public IComponentable {
         SR_CLASS()
         using Super = IComponentable;
@@ -36,11 +37,14 @@ namespace SR_UTILS_NS {
         ~SceneObject() override;
 
     public:
-        SR_NODISCARD SR_FORCE_INLINE const ObjectNameT& GetName() const { return m_name; }
+        /// @method
+        SR_NODISCARD SR_FORCE_INLINE StringAtom GetName() const { return m_name; }
+        /// @method
         SR_NODISCARD SR_FORCE_INLINE bool IsEnabled() const noexcept { return m_isEnabled; }
         SR_NODISCARD SR_FORCE_INLINE uint64_t GetIdInScene() const noexcept { return m_idInScene; }
 
         SR_NODISCARD SR_FORCE_INLINE ScenePtr GetScene() const override { return m_scene; }
+        /// @method
         SR_NODISCARD SR_FORCE_INLINE StringAtom GetLayer() const noexcept { return m_cachedLayer; }
         SR_NODISCARD SR_FORCE_INLINE StringAtom GetLocalLayer() const noexcept { return m_layer; }
 
@@ -63,6 +67,7 @@ namespace SR_UTILS_NS {
         SR_NODISCARD SceneObject::Ptr Find(StringAtom name) const noexcept;
 
         SR_NODISCARD Path GetPrefabPath() const;
+        /// @method
         SR_NODISCARD StringAtom GetTag() const;
         SR_NODISCARD SR_UTILS_NS::EntityIdList GetEntityIdList() const;
         SR_NODISCARD bool IsPrefabLoadingState() const noexcept final { return m_isPrefabLoadingState; }

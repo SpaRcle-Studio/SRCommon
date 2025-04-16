@@ -115,6 +115,8 @@ namespace SR_HTYPES_NS {
         SharedPtrDynamicData* GetPtrData() { return m_data; }
         SR_NODISCARD virtual SRClass* GetSRClass() const = 0;
         virtual void Reset() = 0;
+        virtual void IncrementPointer() = 0;
+        virtual void DecrementPointer() = 0;
         virtual void SetPointerFromBase(SharedPtrBase* pBase) = 0;
 
     protected:
@@ -241,6 +243,42 @@ namespace SR_HTYPES_NS {
 
         SR_NODISCARD SharedPtr<T> GetThis() const {
             return *this;
+        }
+
+        void IncrementPointer() override {
+            if (m_data) {
+                m_data->IncrementStrong();
+            }
+        }
+
+        void DecrementPointer() override {
+            SharedPtrDynamicData* pData = m_data;
+
+            if (!pData) {
+                return;
+            }
+
+            SR_SAFE_PTR_ASSERT(pData->strongCount != 0, "SharedPtr is corrupted!");
+
+            if (pData->strongCount == 1) {
+                if (pData->policy == SR_UTILS_NS::SharedPtrPolicy::Manually) {
+                    SR_SAFE_PTR_ASSERT(pData->deallocated, "Ptr was not freed!");
+                }
+                else if (pData->policy == SR_UTILS_NS::SharedPtrPolicy::Automatic && pData->valid) {
+                    pData->valid = false;
+                    T* pPtr = m_ptr;
+                    m_ptr = nullptr;
+                    m_data = nullptr;
+                    delete pPtr;
+                }
+
+                if (pData->weakCount == 0) {
+                    delete pData;
+                }
+            }
+            else {
+                pData->DecrementStrong();
+            }
         }
 
         bool Valid() const { return m_data && m_data->valid; } /// NOLINT(modernize-use-nodiscard)
