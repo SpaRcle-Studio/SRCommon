@@ -248,14 +248,17 @@ namespace SR_PLATFORM_NS {
     }
 
     void WriteConsoleLog(const std::string& msg) {
+        std::lock_guard lock(g_platformLogMutex);
         std::cout << msg << std::flush;
     }
 
     void WriteConsoleError(const std::string& msg) {
+        std::lock_guard lock(g_platformLogMutex);
         std::cerr << msg << std::flush;;
     }
 
     void WriteConsoleWarn(const std::string& msg) {
+        std::lock_guard lock(g_platformLogMutex);
         std::cerr << msg << std::flush;
     }
 
