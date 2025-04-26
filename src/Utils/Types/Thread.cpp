@@ -9,6 +9,12 @@
 #include <Utils/Profile/TracyContext.h>
 
 namespace SR_HTYPES_NS {
+    Thread::Factory::Factory()
+        : Singleton<Factory>()
+    { }
+
+    Thread::Factory::~Factory() = default;
+
     Thread::Thread(std::thread &&thread)
         : m_thread(std::exchange(thread, {}))
     {
@@ -176,6 +182,43 @@ namespace SR_HTYPES_NS {
         SR_WRITE_LOCK;
         m_name = name;
         m_nameChanged = true;
+    }
+
+    bool Thread::HasId() const {
+        if (m_id.empty()) {
+            return false;
+        }
+
+        if (m_id == "0") {
+            return false;
+        }
+
+        if (m_id == EmptyThreadId()) {
+            return false;
+        }
+
+        return true;
+    }
+
+    void Thread::Detach() {
+        m_thread.detach();
+    }
+
+    void Thread::Join() {
+        m_thread.join();
+    }
+
+    bool Thread::Joinable() const {
+        return m_thread.joinable();
+    }
+
+    DataStorage *Thread::GetContext() {
+        return m_context;
+    }
+
+    Thread::ThreadId Thread::EmptyThreadId() {
+        static const auto id = SR_UTILS_NS::StringAtom("[EMPTY]");
+        return id;
     }
 
     uint32_t Thread::Factory::GetThreadsCount() {

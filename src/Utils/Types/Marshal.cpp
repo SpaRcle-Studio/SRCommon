@@ -138,4 +138,27 @@ namespace SR_HTYPES_NS {
         copy.SetPosition(GetPosition());
         return std::move(copy);
     }
+
+    void Marshal::WriteBlock(void *pData, uint64_t size) {
+        Write<uint64_t>(size);
+
+        if (size == 0) {
+            return;
+        }
+
+        write(pData, size);
+    }
+
+    void Marshal::ReadBlock(void *pDestination) {
+        const auto size = Read<uint64_t>();
+
+        if (size == 0) {
+            return;
+        }
+
+        read(pDestination, size);
+    }
+
+    Marshal::Marshal() = default;
+    Marshal::~Marshal() = default;
 }

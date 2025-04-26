@@ -20,13 +20,15 @@ namespace SR_UTILS_NS {
     class Transform;
     class Component;
 
-    class SR_DLL_EXPORT GameObject final : public SceneObject {
+    /// @scriptableClass
+    class SR_COMMON_DLL_API GameObject final : public SceneObject {
         SR_CLASS()
         using Super = SceneObject;
     public:
         using Ptr = SR_HTYPES_NS::SharedPtr<GameObject>;
 
     public:
+        GameObject() = default;
         ~GameObject() override;
 
     public:

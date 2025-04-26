@@ -298,13 +298,6 @@ namespace SR_UTILS_NS {
     }
 
     void IResource::StopWatch() {
-        for (auto&& pWatcher : m_watchers) {
-            if (!pWatcher) {
-                SRHalt("Watcher is nullptr!");
-                continue;
-            }
-            pWatcher->Stop();
-        }
         m_watchers.clear();
     }
 
@@ -316,7 +309,7 @@ namespace SR_UTILS_NS {
         auto&& resourcesManager = ResourceManager::Instance();
 
         auto&& path = GetResourcePath();
-        auto&& pWatch = resourcesManager.StartWatch(resourcesManager.GetResPath().Concat(path));
+        auto&& pWatch = SR_UTILS_NS::FileWatcher::MakeShared(resourcesManager.GetResPath().Concat(path));
         if (!pWatch) {
             return;
         }
@@ -338,5 +331,21 @@ namespace SR_UTILS_NS {
 
     bool IResource::IsResourceWillBeDeleted() const {
         return GetCountUses() == 1 && !IsDestroyed() && !IsRegistered();
+    }
+
+    bool IResource::IsLoaded() const noexcept {
+        return m_loadState == LoadState::Loaded;
+    }
+
+    uint16_t IResource::GetReloadCount() const noexcept {
+        return m_reloadCount;
+    }
+
+    SR_UTILS_NS::StringAtom IResource::GetResourceId() const noexcept {
+        return m_resourceId;
+    }
+
+    bool IResource::IsDestroyed() const noexcept {
+        return m_isDestroyed;
     }
 }

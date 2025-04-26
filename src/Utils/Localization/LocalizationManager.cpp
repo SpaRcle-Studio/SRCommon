@@ -22,7 +22,7 @@ namespace SR_UTILS_NS::Localization {
 
     void LocalizationFile::LoadLocalizationStrings(const Path& filePath) {
         auto&& resourceManager = SR_UTILS_NS::ResourceManager::Instance();
-        m_watchedFile = resourceManager.StartWatch(filePath);
+        //m_watchedFile = resourceManager.StartWatch(filePath);
         std::string fileContents = FileSystem::ReadAllText(filePath.ToString());
         ryml::Tree tree = ryml::parse_in_arena(ryml::to_csubstr(fileContents));
         ryml::ConstNodeRef root = tree.crootref();

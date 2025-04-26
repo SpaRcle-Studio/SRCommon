@@ -12,7 +12,7 @@
 
 namespace SR_UTILS_NS {
     /// @category(Game)
-    class SR_DLL_EXPORT LookAtComponent final : public Component {
+    class SR_COMMON_DLL_API LookAtComponent final : public Component {
         SR_CLASS()
         using Super = Component;
     public:
@@ -32,7 +32,6 @@ namespace SR_UTILS_NS {
 
         SR_NODISCARD bool ExecuteInEditMode() const override { return m_editMode; }
         SR_NODISCARD bool GetMirror() const noexcept { return m_mirror; }
-        SR_NODISCARD SR_MATH_NS::IVector3 GetAngle() const;
         SR_NODISCARD SR_MATH_NS::FVector3 GetOffset() const noexcept { return m_offset; }
         SR_NODISCARD SR_MATH_NS::FVector3 GetUp() const noexcept;
         SR_NODISCARD SR_MATH_NS::FVector3 GetDirection() const noexcept { return m_direction; }

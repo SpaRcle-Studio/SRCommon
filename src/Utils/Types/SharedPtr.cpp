@@ -16,4 +16,18 @@ namespace SR_HTYPES_NS {
         }
         return true;
     }
+
+    SharedPtrBase::SharedPtrBase() = default;
+    SharedPtrBase::SharedPtrBase(SharedPtrDynamicData* data)
+        : m_data(data)
+    { }
+    SharedPtrBase::~SharedPtrBase() = default;
+
+    SharedPtrDynamicData *SharedPtrBase::GetPtrData() {
+        return m_data;
+    }
+
+    const SharedPtrDynamicData *SharedPtrBase::GetPtrData() const {
+        return m_data;
+    }
 }

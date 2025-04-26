@@ -65,4 +65,20 @@ namespace SR_UTILS_NS {
         std::recursive_mutex& mutex = m_creationMutexes[name];
         return mutex;
     }
+
+    void SingletonBase::OnSingletonDestroy() {
+
+    }
+
+    void SingletonBase::InitSingleton() {
+
+    }
+
+    bool SingletonBase::IsSingletonCanBeDestroyed() const {
+        return true;
+    }
+
+    SingletonBase::~SingletonBase() = default;
+
+    SingletonBase::SingletonBase() = default;
 }

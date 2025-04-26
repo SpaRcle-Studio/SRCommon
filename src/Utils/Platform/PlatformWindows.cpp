@@ -17,6 +17,8 @@
 #include <ImageHlp.h>
 #include <csignal>
 #include <sddl.h>
+#include <wininet.h>
+#include <shobjidl.h>
 
 #include <filesystem>
 
@@ -74,12 +76,28 @@ namespace SR_UTILS_NS::Platform {
         //Ask Win32 to give us the string version of that message ID.
         //The parameters we pass in, tell Win32 to create the buffer that holds the message for us (because we don't yet know how long the message string will be).
         size_t size = FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
-                                     NULL, errorMessageID, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPSTR)&messageBuffer, 0, NULL);
+                                     NULL, errorMessageID, MAKELANGID(LANG_ENGLISH, SUBLANG_DEFAULT), (LPSTR)&messageBuffer, 0, NULL);
         //Copy the error message into a std::string.
         std::string message(messageBuffer, size - 3);
         //Free the Win32's string's buffer.
         LocalFree(messageBuffer);
         return message;
+    }
+
+    void PrintErrorMessage(HRESULT hr) {
+        LPVOID msgBuffer;
+        DWORD dw = FormatMessage(
+            FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+            NULL, hr, MAKELANGID(LANG_ENGLISH, SUBLANG_DEFAULT), (LPSTR)&msgBuffer, 0, NULL
+        );
+
+        if (dw) {
+            SR_ERROR("PlatformWindows::PrintErrorMessage() : " + std::string((char*)msgBuffer));
+            LocalFree(msgBuffer);
+        }
+        else {
+            SR_ERROR("PlatformWindows::PrintErrorMessage() : unknown error code: " + std::to_string(hr));
+        }
     }
 
     std::string ErrorCodeToString(const DWORD a_error_code)
@@ -201,6 +219,47 @@ namespace SR_UTILS_NS::Platform {
         return nullptr;
     }
 
+    void* LoadLibraryModule(const Path& path) {
+        std::string winAPIPath = path.ToString();
+        std::replace(winAPIPath.begin(), winAPIPath.end(), '/', '\\');
+
+        void* pLibrary = LoadLibrary(winAPIPath.c_str());
+        if (!pLibrary) {
+            SR_ERROR("PlatformWindows::LoadLibraryModule() : failed to load library: {}\n\tError: {}", path, GetLastErrorAsString());
+            return nullptr;
+        }
+
+        return pLibrary;
+    }
+
+    bool UnloadLibraryModule(void* pLibrary) {
+        if (!pLibrary) {
+            SRHalt("PlatformWindows::UnloadLibraryModule() : library is nullptr!");
+            return false;
+        }
+
+        if (!FreeLibrary(static_cast<HMODULE>(pLibrary))) {
+            SR_ERROR("PlatformWindows::UnloadLibraryModule() : failed to unload library: {}\n\tError: {}", GetLastErrorAsString());
+            return false;
+        }
+
+        return true;
+    }
+
+    void* GetLibraryFunctionAddress(void* pLibrary, const char* pFunctionName) {
+        if (!pLibrary) {
+            SRHalt("PlatformWindows::GetLibraryFunctionAddress() : library is nullptr!");
+            return nullptr;
+        }
+
+        void* pFunction = reinterpret_cast<void*>(::GetProcAddress(static_cast<HMODULE>(pLibrary), pFunctionName));
+        if (!pFunction) {
+            SR_ERROR("PlatformWindows::GetLibraryFunctionAddress() : failed to get function address: {}", pFunctionName);
+            return nullptr;
+        }
+
+        return pFunction;
+    }
 
     std::optional<std::string> ReadFile(const Path& path) {
         std::ifstream ifs(path.c_str());
@@ -758,5 +817,103 @@ namespace SR_UTILS_NS::Platform {
 
     void SetEnvironmentVar(const std::string_view& name, const std::string_view& value) {
         SetEnvironmentVariableA(name.data(), value.data());
+    }
+
+    std::string ExecuteCommand(const std::string& command, const std::vector<std::string>& env) {
+        HANDLE hReadPipe, hWritePipe;
+        SECURITY_ATTRIBUTES sa = { sizeof(SECURITY_ATTRIBUTES), nullptr, TRUE };
+        if (!CreatePipe(&hReadPipe, &hWritePipe, &sa, 0)) {
+            return "Pipe creation failed";
+        }
+
+        // Получаем текущее окружение
+        LPCH envStrings = GetEnvironmentStringsA();
+        if (!envStrings) {
+            return "Failed to get environment strings";
+        }
+
+        // Скопировать окружение в модифицируемую структуру
+        std::vector<char> newEnv;
+        LPCH ptr = envStrings;
+        while (*ptr) {
+            std::string entry(ptr);
+            newEnv.insert(newEnv.end(), entry.begin(), entry.end());
+            newEnv.push_back('\0');
+            ptr += entry.size() + 1;
+        }
+
+        for (const auto& entry : env) {
+            newEnv.insert(newEnv.end(), entry.begin(), entry.end());
+            newEnv.push_back('\0');
+        }
+        newEnv.push_back('\0');
+        newEnv.push_back('\0'); // двойной ноль — конец окружения
+
+        STARTUPINFO si = { sizeof(STARTUPINFO) };
+        PROCESS_INFORMATION pi;
+        si.hStdOutput = hWritePipe;
+        si.hStdError = hWritePipe;
+        si.dwFlags |= STARTF_USESTDHANDLES;
+
+        if (!CreateProcess(nullptr, (LPSTR)command.c_str(), nullptr, nullptr, TRUE, 0, newEnv.data(), nullptr, &si, &pi)) {
+            CloseHandle(hReadPipe);
+            CloseHandle(hWritePipe);
+            return "Process creation failed";
+        }
+
+        CloseHandle(hWritePipe); // Закрываем ненужную часть пайпа
+
+        std::string result;
+        char buffer[128];
+        DWORD bytesRead;
+        while (::ReadFile(hReadPipe, buffer, sizeof(buffer) - 1, &bytesRead, nullptr) && bytesRead > 0) {
+            buffer[bytesRead] = '\0';
+            result += buffer;
+        }
+
+        CloseHandle(hReadPipe);
+        WaitForSingleObject(pi.hProcess, INFINITE);
+        CloseHandle(pi.hProcess);
+        CloseHandle(pi.hThread);
+
+        return result;
+    }
+
+    bool DownloadFile(const std::string& url, const Path& outputPath) {
+        SR_LOG("Platform::DownloadFile() : downloading file from url: {}", url);
+
+        if (!outputPath.Create()) {
+            SR_ERROR("Platform::DownloadFile() : failed to create output path: {}", outputPath.ToStringRef());
+            return false;
+        }
+
+        HINTERNET hInternet = InternetOpenA("SREngine", INTERNET_OPEN_TYPE_DIRECT, NULL, NULL, 0);
+        if (!hInternet) {
+            SR_ERROR("Platform::DownloadFile() : failed to open internet: {}", GetLastErrorAsString());
+            return false;
+        }
+
+        HINTERNET hUrl = InternetOpenUrlA(hInternet, url.c_str(), NULL, 0, INTERNET_FLAG_RELOAD, 0);
+        if (!hUrl) {
+            SR_ERROR("Platform::DownloadFile() : failed to open URL: {}", GetLastErrorAsString());
+            InternetCloseHandle(hInternet);
+            return false;
+        }
+
+        std::ofstream file(outputPath.ToStringRef(), std::ios::binary);
+        char buffer[4096];
+        DWORD bytesRead;
+
+        while (InternetReadFile(hUrl, buffer, sizeof(buffer), &bytesRead) && bytesRead) {
+            file.write(buffer, bytesRead);
+        }
+
+        file.close();
+        InternetCloseHandle(hUrl);
+        InternetCloseHandle(hInternet);
+
+        SR_LOG("Platform::DownloadFile() : file downloaded successfully to: {}", outputPath.ToStringRef());
+
+        return true;
     }
 }

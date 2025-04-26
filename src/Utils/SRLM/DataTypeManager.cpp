@@ -50,7 +50,7 @@ namespace SR_SRLM_NS {
     void DataTypeManager::ReloadSettings() {
         SR_LOCK_GUARD;
 
-        auto&& xmlDocument = SR_XML_NS::Document::Load(m_watcher->GetPath());
+        /*auto&& xmlDocument = SR_XML_NS::Document::Load(m_watcher->GetPath());
         if (!xmlDocument.Valid()) {
             SR_ERROR("DataTypeManager::ReloadSettings() : failed to read xml!\n\tPath: " + m_watcher->GetPath().ToStringRef());
             return;
@@ -77,29 +77,26 @@ namespace SR_SRLM_NS {
                     SRHalt("Type \"" + xmlVar.Name() + "\" not found!");
                 }
             }
-        }
+        }*/
     }
 
     void DataTypeManager::OnSingletonDestroy() {
         Singleton::OnSingletonDestroy();
-
-        if (m_watcher) {
-            m_watcher->Stop();
-        }
+        m_watcher.AutoFree();
     }
 
     void DataTypeManager::InitSingleton() {
         Singleton::InitSingleton();
 
-        m_watcher = SR_UTILS_NS::ResourceManager::Instance().StartWatch(
-                SR_UTILS_NS::ResourceManager::Instance().GetResPath().Concat("Engine/Configs/SRLMTypes.xml")
-        );
+        // m_watcher = SR_UTILS_NS::ResourceManager::Instance().StartWatch(
+        //     SR_UTILS_NS::ResourceManager::Instance().GetResPath().Concat("Engine/Configs/SRLMTypes.xml")
+        // );
 
         ReloadSettings();
 
-        m_watcher->SetCallBack([this](FileWatcher* pWatcher) {
-            ReloadSettings();
-        });
+        //m_watcher->SetCallBack([this](FileWatcher* pWatcher) {
+        //    ReloadSettings();
+        //});
     }
 
     const DataTypeStruct* DataTypeManager::GetStruct(DataTypeManager::Hash hashName) const {

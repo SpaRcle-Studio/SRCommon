@@ -2,6 +2,7 @@
 // Created by Monika on 19.11.2023.
 //
 
+#include "../src/Utils/Common/NonCopyable.cpp"
 #include "../src/Utils/Common/StringFormat.cpp"
 #include "../src/Utils/Common/StringUtils.cpp"
 #include "../src/Utils/Common/Features.cpp"
@@ -16,6 +17,7 @@
 #include "../src/Utils/Common/Coroutine.cpp"
 #include "../src/Utils/Common/SubscriptionHolder.cpp"
 #include "../src/Utils/Common/StoreUtils.cpp"
+#include "../src/Utils/Common/Numeric.cpp"
 
 #include "../src/Utils/Serialization/BaseSerialization.cpp"
 #include "../src/Utils/Serialization/MigrationManager.cpp"

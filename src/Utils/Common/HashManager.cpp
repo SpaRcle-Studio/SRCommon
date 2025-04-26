@@ -89,7 +89,7 @@ namespace SR_UTILS_NS {
         if (auto&& pIt = m_strings.find(hash); pIt != m_strings.end()) {
             return pIt->second;
         }
-        return Register(str.data(), hash);
+        return Register(std::string(str.data(), str.size()), hash);
     }
 
     StringHashInfo* HashManager::GetOrAddInfo(const char* str) {

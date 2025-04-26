@@ -554,4 +554,12 @@ namespace SR_WORLD_NS {
             m_freeObjIndices.erase(m_freeObjIndices.begin());
         }
     }
+
+    SR_HTYPES_NS::DataStorage &Scene::GetDataStorage() {
+        return m_dataStorage;
+    }
+
+    const SR_HTYPES_NS::DataStorage &Scene::GetDataStorage() const {
+        return m_dataStorage;
+    }
 }

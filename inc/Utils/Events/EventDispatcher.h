@@ -10,7 +10,7 @@
 namespace SR_UTILS_NS {
     class IEvent;
 
-    class SR_DLL_EXPORT EventDispatcher {
+    class SR_COMMON_DLL_API EventDispatcher {
     public:
         EventDispatcher() = default;
         virtual ~EventDispatcher();

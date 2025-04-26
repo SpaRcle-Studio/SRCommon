@@ -6,6 +6,7 @@
 #include <Utils/Common/HashManager.h>
 
 namespace SR_UTILS_NS {
+    std::string StringAtom::DEFAULT = std::string();
     StringHashInfo* StringAtom::DEFAULT_STRING_INFO = SR_UTILS_NS::HashManager::Instance().GetOrAddInfo("");
 
     StringAtom::StringAtom() {
@@ -62,14 +63,6 @@ namespace SR_UTILS_NS {
     StringAtom& StringAtom::operator=(const char* str) {
         m_info = SR_UTILS_NS::HashManager::Instance().GetOrAddInfo(str);
         return *this;
-    }
-
-    void StringAtom::operator()(const std::string& str) {
-        m_info = SR_UTILS_NS::HashManager::Instance().GetOrAddInfo(str);
-    }
-
-    void StringAtom::operator()(const char* str) {
-        m_info = SR_UTILS_NS::HashManager::Instance().GetOrAddInfo(str);
     }
 
     char StringAtom::operator[](size_t index) const noexcept {
@@ -142,5 +135,17 @@ namespace SR_UTILS_NS {
 
     bool StringAtom::operator<(uint64_t hash) const noexcept {
         return m_info ? (m_info->hash < hash) : false;
+    }
+
+    bool StringAtom::operator==(const std::string_view& rhs) const noexcept {
+        return m_info != nullptr && m_info->data == rhs;
+    }
+
+    void StringAtom::clear() {
+        Clear();
+    }
+
+    StringAtom::operator uint64_t() const noexcept {
+        return GetHash();
     }
 }

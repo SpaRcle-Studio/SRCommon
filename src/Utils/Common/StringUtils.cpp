@@ -409,4 +409,89 @@ namespace SR_UTILS_NS {
 
         return numberStr;
     }
+
+    std::string StringUtils::ReplaceAllRecursive(const std::string &original, const std::vector<std::string> &fromList, const std::string &to) noexcept {
+        std::string result = original;
+
+    repeat:
+        for (const auto& from : fromList) {
+            size_t pos = result.find(from);
+
+            if (pos != std::string::npos) {
+                result.replace(pos, from.size(), to);
+                goto repeat;
+            }
+        }
+
+        return result;
+    }
+
+    std::string StringUtils::GetBetween(const std::string &source, int64_t begin, uint64_t end) {
+        return source.substr(begin + 1, (end - begin) - 1);
+    }
+
+    std::string_view StringUtils::GetBetween(std::string_view source, char begin, char end, int8_t *pResult) {
+        if (pResult) {
+            *pResult = 0;
+        }
+
+        auto first = source.find(begin);
+        if (first == std::string::npos) {
+            first = 0;
+            if (pResult) {
+                *pResult -= 1;
+            }
+        }
+
+        auto last = source.find(end);
+        if (last == std::string::npos) {
+            last = source.size() - 1;
+            if (pResult) {
+                *pResult -= 1;
+            }
+        }
+
+        return source.substr(first + 1, (last - first) - 1);
+    }
+
+    std::string StringUtils::GetBetween(const std::string &source, const std::string &begin, const std::string &end) {
+        auto first = source.find(begin);
+        if (first == std::string::npos)
+            first = 0;
+
+        auto last = source.find(end);
+        if (last == std::string::npos)
+            last = source.size() - 1;
+
+        return source.substr(first + 1, (last - first) - 1);
+    }
+
+    std::string_view StringUtils::SubstringView(const std::string_view &source, StringAtom substr, uint32_t offset) {
+        if (auto&& pos = source.find(substr.ToStringView()); pos == std::string::npos) {
+            return source;
+        }
+        else {
+            return source.substr(pos + offset, source.size() - 1);
+        }
+    }
+
+    std::string_view StringUtils::SubstringView(const std::string_view &source, char symbol, uint32_t offset) {
+        if (auto&& pos = source.find(symbol); pos == std::string::npos) {
+            return source;
+        }
+        else {
+            return source.substr(pos + offset, source.size() - 1);
+        }
+    }
+
+    std::pair<std::string, std::string> StringUtils::SplitTwo(std::string source, const std::string &delimiter) {
+        std::pair<std::string, std::string> result = {};
+        auto pos = source.find(delimiter);
+
+        result.first = source.substr(0, pos);
+        source.erase(0, pos + delimiter.length());
+        result.second = source;
+
+        return result;
+    }
 }

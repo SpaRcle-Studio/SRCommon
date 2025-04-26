@@ -16,6 +16,9 @@
 
 #include <xcb/randr.h>
 
+#include <dlfcn.h>
+#include <errno.h>
+
 #include <filesystem>
 
 #include <spawn.h>
@@ -670,8 +673,108 @@ namespace SR_PLATFORM_NS {
         setenv(name.data(), value.data(), 1);
     }
 
+    static std::string GetLastErrorAsString() {
+        if(errno == 0) {
+            return std::string();
+        }
+
+        // Shall we use thread-safe strerror_r() instead of strerror()?
+        std::string message(strerror(errno));
+        return message;
+    }
+
+    std::string ExecuteCommand(const std::string& command, const std::vector<std::string>& env) {
+        int pipefd[2];
+        if (pipe(pipefd) == -1) {
+            return "Error: pipe() failed: " + std::string(strerror(errno));
+        }
+
+        pid_t pid = fork();
+        if (pid == -1) {
+            return "Error: fork() failed: " + std::string(strerror(errno));
+        }
+
+        if (pid == 0) { // Дочерний процесс
+            close(pipefd[0]); // Закрываем чтение
+
+            // Перенаправляем stdout и stderr в pipe
+            dup2(pipefd[1], STDOUT_FILENO);
+            dup2(pipefd[1], STDERR_FILENO);
+            close(pipefd[1]);
+
+            execvp(command, const_cast<char* const*>(args.data()));
+            exit(errno); // Возвращаем ошибку, если execvp не сработал
+        }
+
+        // Родительский процесс
+        close(pipefd[1]); // Закрываем запись
+        char buffer[128];
+        std::string result;
+        ssize_t count;
+        while ((count = read(pipefd[0], buffer, sizeof(buffer))) > 0) {
+            result.append(buffer, count);
+        }
+        close(pipefd[0]);
+
+        // Ждем завершения процесса и получаем код выхода
+        int status;
+        waitpid(pid, &status, 0);
+        if (WIFEXITED(status)) {
+            exitCode = WEXITSTATUS(status);
+        } else {
+            exitCode = -1; // Если процесс завершился ненормально
+            result += "Error: Process terminated abnormally\n";
+        }
+
+        return result;
+    }
+
+    bool DownloadFile(const std::string& url, const Path& outputPath) {
+        SRHaltOnce("Not implemented!");
+        return false;
+    }
+
     PlatformType GetType() {
         return PlatformType::Linux;
+    }
+
+    void* LoadLibraryModule(const Path& path) {
+        void* pLibrary = dlopen(path.c_str(), RTLD_LAZY);
+        if (!pLibrary) {
+            SR_ERROR("PlatformLinux::LoadLibraryModule() : failed to load library: {}\n\tError: {}", path, GetLastErrorAsString());
+            return nullptr;
+        }
+
+        return pLibrary;
+    }
+
+    bool UnloadLibraryModule(void* pLibrary) {
+        if (!pLibrary) {
+            SRHalt("PlatformLinux::UnloadLibraryModule() : library is nullptr!");
+            return false;
+        }
+
+        if (!dlclose(pLibrary)) {
+            SR_ERROR("PlatformLinux::UnloadLibraryModule() : failed to unload library: {}\n\tError: {}", GetLastErrorAsString());
+            return false;
+        }
+
+        return true;
+    }
+
+    void* GetLibraryFunctionAddress(void* pLibrary, const char* pFunctionName) {
+        if (!pLibrary) {
+            SRHalt("PlatformLinux::GetLibraryFunctionAddress() : library is nullptr!");
+            return nullptr;
+        }
+
+        void* pFunction = dlsym(pLibrary, pFunctionName);
+        if (!pFunction) {
+            SR_ERROR("PlatformLinux::GetLibraryFunctionAddress() : failed to get function address: {}", pFunctionName);
+            return nullptr;
+        }
+
+        return pFunction;
     }
 }
 

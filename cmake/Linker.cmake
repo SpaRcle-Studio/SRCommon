@@ -1,0 +1,31 @@
+# Функция для включения статической линковки CRT
+function(SR_COMMON_ENABLE_STATIC_RUNTIME target)
+    if(MSVC)
+        if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+            target_compile_options(${target} PRIVATE /MTd)
+            target_link_options(${target} PRIVATE /MTd)
+        else()
+            target_compile_options(${target} PRIVATE /MT)
+            target_link_options(${target} PRIVATE /MT)
+        endif()
+    elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID MATCHES "GNU")
+        # Для GCC и Clang можно настроить статическую линковку в случае необходимости
+        target_compile_options(${target} PRIVATE -static)
+    endif()
+endfunction()
+
+# Функция для включения динамической линковки CRT
+function(SR_COMMON_ENABLE_DYNAMIC_RUNTIME target)
+    if(MSVC)
+        if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+            target_compile_options(${target} PRIVATE /MDd)
+            target_link_options(${target} PRIVATE /MDd)
+        else()
+            target_compile_options(${target} PRIVATE /MD)
+            target_link_options(${target} PRIVATE /MD)
+        endif()
+    elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID MATCHES "GNU")
+        # Для GCC и Clang можно оставить стандартную динамическую линковку
+        target_compile_options(${target} PRIVATE -shared)
+    endif()
+endfunction()

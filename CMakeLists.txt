@@ -5,7 +5,7 @@ set(CMAKE_CXX_STANDARD 20)
 
 option(SR_COMMON_ZLIB "" ON)
 option(SR_COMMON_ASSIMP "" ON)
-option(SR_COMMON_OPENSSL "" OFF)
+option(SR_COMMON_OPENSSL "" ON)
 option(SR_COMMON_SDL "" OFF)
 option(SR_COMMON_CURL "" OFF)
 option(SR_COMMON_JSON "" OFF)
@@ -18,6 +18,7 @@ option(SR_COMMON_STATIC_LIBRARY "" ON)
 option(SR_COMMON_EMBED_RESOURCES "" OFF)
 option(SR_COMMON_CI_BUILD "" OFF)
 
+
 if (SR_COMMON_CURL)
     set(SR_COMMON_OPENSSL ON)
 endif()
@@ -25,6 +26,14 @@ endif()
 if (SR_COMMON_OPENSSL)
     add_compile_definitions(SR_COMMON_OPENSSL)
 endif()
+
+set(BUILD_SHARED_LIBS OFF CACHE INTERNAL "" FORCE)
+
+add_subdirectory(libs/tree-sitter-cpp)
+add_subdirectory(libs/tree-sitter/lib)
+
+include(cmake/Linker.cmake)
+
 
 if (SR_COMMON_SDL)
     add_compile_definitions(SR_COMMON_SDL)
@@ -60,7 +69,7 @@ endif()
 
 
 if (SR_COMMON_DLL_EXPORTS)
-    add_compile_definitions(SR_DLL_EXPORTS)
+    add_compile_definitions(SR_COMMON_DLL_EXPORTS)
 endif()
 
 if (SR_COMMON_ZLIB)
@@ -86,7 +95,6 @@ if (SR_COMMON_ASSIMP)
     set(ASSIMP_BUILD_ASSIMP_TOOLS OFF CACHE INTERNAL "" FORCE)
     set(ASSIMP_INSTALL OFF CACHE INTERNAL "" FORCE)
     set(ASSIMP_BUILD_ASSIMP_VIEW OFF CACHE INTERNAL "" FORCE)
-    set(BUILD_SHARED_LIBS OFF CACHE INTERNAL "" FORCE)
     set(ASSIMP_WARNINGS_AS_ERRORS OFF CACHE INTERNAL "" FORCE)
 
     #if (ANDROID_NDK)
@@ -102,6 +110,9 @@ if (NOT ANDROID_NDK)
     if (UNIX AND NOT APPLE)
         find_package(X11 REQUIRED)
     endif()
+    set(SR_EFSW_USE ON CACHE INTERNAL "" FORCE)
+else()
+    set(SR_EFSW_USE OFF CACHE INTERNAL "" FORCE)
 endif()
 
 if (SR_COMMON_SDL)
@@ -188,6 +199,9 @@ endif()
 #endif()
 
 if (SR_COMMON_CURL)
+    set(BUILD_LIBCURL_DOCS OFF CACHE INTERNAL "" FORCE)
+    set(ENABLE_CURL_MANUAL OFF CACHE INTERNAL "" FORCE)
+    set(BUILD_MISC_DOCS OFF CACHE INTERNAL "" FORCE)
     set(USE_MANUAL OFF CACHE INTERNAL "" FORCE)
     set(BUILD_CURL_EXE OFF CACHE INTERNAL "" FORCE)
     set(BUILD_TESTING OFF CACHE INTERNAL "" FORCE)
@@ -296,6 +310,7 @@ SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${SR_CMAKE_ROOT_BUILD_DIRECTORY}/Codegen)
 
 SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_BINARY_DIR}/include/Utils/EmbedResources)
 SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_BINARY_DIR}/libs/zlib)
+SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_BINARY_DIR}/libs/tree-sitter/lib/include)
 
 add_library(asio INTERFACE)
 
@@ -311,9 +326,24 @@ if (SR_TRACY_ENABLE)
     SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_SOURCE_DIR}/libs/tracy/tracy)
 endif()
 
+if (SR_EFSW_USE)
+    set(BUILD_SHARED_LIBS OFF CACHE INTERNAL "" FORCE)
+    add_subdirectory(libs/efsw)
+    SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_SOURCE_DIR}/libs/efsw/include)
+    add_compile_definitions(SR_EFSW_USE)
+endif()
+
 if (SR_COMMON_STATIC_LIBRARY)
+    if(MSVC AND CMAKE_CXX_FLAGS MATCHES "/MD")
+        message(FATAL_ERROR "SRCommon: SR_COMMON_STATIC_LIBRARY is set to ON, but /MD flag is used. Please use /MT flag.")
+    endif()
+
     add_library(Utils STATIC ${SR_UTILS_LINK_LIBRARIES})
 else()
+    if(MSVC AND CMAKE_CXX_FLAGS MATCHES "/MT")
+        message(FATAL_ERROR "SRCommon: SR_COMMON_STATIC_LIBRARY is set to OFF, but /MT flag is used. Please use /MD flag.")
+    endif()
+
     add_library(Utils SHARED ${SR_UTILS_LINK_LIBRARIES})
     add_library(Utils::lib ALIAS Utils)
 endif()
@@ -334,6 +364,10 @@ if (NOT ANDROID_NDK)
 
         target_link_libraries(Utils bfd)
     endif()
+endif()
+
+if (WIN32)
+    target_link_libraries(Utils wininet)
 endif()
 
 if (SR_COMMON_MYHTML)
@@ -388,6 +422,10 @@ if (SR_TRACY_ENABLE)
     target_link_libraries(Utils tracy)
 endif()
 
+if (SR_EFSW_USE)
+    target_link_libraries(Utils efsw)
+endif()
+
 if (MSVC)
     target_compile_options(Utils PUBLIC /openmp)
 endif()
@@ -397,8 +435,7 @@ else()
     target_link_libraries(Utils fmt)
 endif()
 
-target_link_libraries(Utils asio)
-target_link_libraries(Utils ryml::ryml EnTT)
+target_link_libraries(Utils asio tree-sitter tree-sitter-cpp ryml::ryml EnTT)
 
 if (SR_COMMON_CPPTRACE_ENABLED)
     target_link_libraries(Utils cpptrace::cpptrace)
@@ -416,7 +453,7 @@ include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/CopyFiles.cmake)
 if (SR_COMMON_DLL_EXPORTS)
     message("SRCommon will be using DLL exports")
     target_compile_definitions(Utils PUBLIC
-        SR_DLL_EXPORTS
+        SR_COMMON_DLL_EXPORTS
     )
 endif()
 

@@ -33,6 +33,8 @@ namespace SR_UTILS_NS {
         return def;
     }
 
+    FeatureGroup::~FeatureGroup() = default;
+
     bool Features::Enabled(const std::string &group, const std::string &name) const {
         return GetGroup(group).Enabled(name);
     }
