@@ -97,16 +97,16 @@ namespace SR_NETWORK_NS {
     }
 
     void AsioPinger::Ping(const std::string& destination) {
-        asio::ip::icmp::resolver::query query(asio::ip::icmp::v4(), destination, "");
-
-        asio::io_service io_service;
-        asio::ip::icmp::resolver resolver(io_service);
-
-        m_destination = *resolver.resolve(query);
-
-        while (m_successes < 5) {
-            StartSend();
-            StartReceive();
-        }
+        // asio::ip::icmp::resolver::query query(asio::ip::icmp::v4(), destination, "");
+        //
+        // asio::io_service io_service;
+        // asio::ip::icmp::resolver resolver(io_service);
+        //
+        // m_destination = *resolver.resolve(query);
+        //
+        // while (m_successes < 5) {
+        //     StartSend();
+        //     StartReceive();
+        // }
     }
 }

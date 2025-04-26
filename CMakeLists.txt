@@ -9,7 +9,7 @@ option(SR_COMMON_OPENSSL "" ON)
 option(SR_COMMON_SDL "" OFF)
 option(SR_COMMON_CURL "" OFF)
 option(SR_COMMON_JSON "" OFF)
-option(SR_COMMON_MYHTML "" ON)
+option(SR_COMMON_MYHTML "" OFF)
 option(SR_COMMON_LITEHTML "" OFF)
 
 option(SR_COMMON_DLL_EXPORTS "" ON)
@@ -18,12 +18,22 @@ option(SR_COMMON_STATIC_LIBRARY "" ON)
 option(SR_COMMON_EMBED_RESOURCES "" OFF)
 option(SR_COMMON_CI_BUILD "" OFF)
 
+
+if (SR_COMMON_CURL)
+    set(SR_COMMON_OPENSSL ON)
+endif()
+
+if (SR_COMMON_OPENSSL)
+    add_compile_definitions(SR_COMMON_OPENSSL)
+endif()
+
 set(BUILD_SHARED_LIBS OFF CACHE INTERNAL "" FORCE)
 
 add_subdirectory(libs/tree-sitter-cpp)
 add_subdirectory(libs/tree-sitter/lib)
 
 include(cmake/Linker.cmake)
+
 
 if (SR_COMMON_SDL)
     add_compile_definitions(SR_COMMON_SDL)
@@ -119,9 +129,74 @@ if (SR_COMMON_GIT_METADATA)
     add_subdirectory(libs/cmake-git-version-tracking)
 endif()
 
-if (SR_COMMON_CURL OR SR_COMMON_OPENSSL)
-    add_compile_definitions(SR_COMMON_OPENSSL)
+set(SR_COMMON_CPPTRACE_ENABLED OFF)
+if (NOT ANDROID_NDK AND UNIX)
+    set(SR_COMMON_CPPTRACE_ENABLED ON)
+    add_subdirectory(libs/cpptrace)
 endif()
+
+#if (SR_COMMON_OPENSSL)
+#    # Prefer static linking
+#    set(OPENSSL_USE_STATIC_LIBS TRUE)
+#    set(OPENSSL_MSVC_STATIC_RUNTIME TRUE)
+#
+#    # Additional paths to search for OpenSSL
+#    if (UNIX AND NOT ANDROID_NDK)
+#        # Common Linux OpenSSL paths
+#        list(APPEND CMAKE_PREFIX_PATH
+#                "/usr/local/openssl"
+#                "/usr/local/ssl"
+#                "/usr/local"
+#                "/usr"
+#        )
+#
+#        # Additional library and include paths
+#        list(APPEND CMAKE_LIBRARY_PATH
+#                "/usr/local/openssl/lib"
+#                "/usr/local/ssl/lib"
+#                "/usr/local/lib"
+#                "/usr/lib/x86_64-linux-gnu"
+#        )
+#
+#        list(APPEND CMAKE_INCLUDE_PATH
+#                "/usr/local/openssl/include"
+#                "/usr/local/ssl/include"
+#                "/usr/local/include"
+#                "/usr/include/openssl"
+#        )
+#    endif()
+#
+#    # On macOS
+#    if (APPLE)
+#        # Homebrew OpenSSL paths
+#        list(APPEND CMAKE_PREFIX_PATH "/usr/local/opt/openssl")
+#        list(APPEND CMAKE_LIBRARY_PATH "/usr/local/opt/openssl/lib")
+#        list(APPEND CMAKE_INCLUDE_PATH "/usr/local/opt/openssl/include")
+#    endif()
+#
+#    # On Windows
+#    if (WIN32)
+#        # Potential OpenSSL installation paths
+#        list(APPEND CMAKE_PREFIX_PATH
+#                "C:/OpenSSL-Win64"
+#                "C:/Program Files/OpenSSL"
+#                "C:/Program Files/OpenSSL-Win64"
+#        )
+#    endif()
+#
+#    add_compile_definitions(SR_COMMON_OPENSSL)
+#    find_package(OpenSSL REQUIRED)
+#
+#    include_directories(${OPENSSL_INCLUDE_DIR})
+#
+#    if (OpenSSL_FOUND)
+#        message(STATUS "OpenSSL version: ${OPENSSL_VERSION}")
+#        message(STATUS "OpenSSL include dir: ${OPENSSL_INCLUDE_DIR}")
+#        message(STATUS "OpenSSL libraries: ${OPENSSL_LIBRARIES}")
+#    else()
+#        message(FATAL_ERROR "System OpenSSL is not found.")
+#    endif()
+#endif()
 
 if (SR_COMMON_CURL)
     set(BUILD_LIBCURL_DOCS OFF CACHE INTERNAL "" FORCE)
@@ -167,20 +242,6 @@ if (SR_TRACY_ENABLE)
 endif()
 
 add_subdirectory(libs/rapidyaml)
-
-set(SR_COMMON_CPPCORO_ENABLED OFF)
-if (NOT ANDROID_NDK)
-    set(SR_COMMON_CPPCORO_ENABLED ON)
-    add_compile_definitions(SR_USE_CPP_CORO)
-    add_subdirectory(libs/cppcoro)
-endif()
-
-set(SR_COMMON_CPPTRACE_ENABLED OFF)
-if (NOT ANDROID_NDK AND UNIX)
-    set(SR_COMMON_CPPTRACE_ENABLED ON)
-    add_subdirectory(libs/cpptrace)
-endif()
-
 add_subdirectory(libs/entt)
 
 list(APPEND SR_UTILS_LINK_LIBRARIES cxx/ICU.cxx)
@@ -206,7 +267,7 @@ if (SR_COMMON_ZLIB)
 endif()
 
 if (SR_COMMON_GIT_METADATA)
-    SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_SOURCE_DIR}/libs/cmake-get-version-tracking)
+    SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_SOURCE_DIR}/libs/cmake-git-version-tracking)
 endif()
 
 if (SR_COMMON_ASSIMP)
@@ -222,7 +283,7 @@ if (SR_COMMON_JSON)
     SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_SOURCE_DIR}/libs/json/include)
 endif()
 
-if (SR_COMMON_CURL OR SR_COMMON_OPENSSL)
+if (SR_COMMON_OPENSSL)
     SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_SOURCE_DIR}/libs/openssl/include)
 endif()
 
@@ -237,10 +298,6 @@ SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_SOURCE_DIR}/inc)
 SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_SOURCE_DIR}/libs)
 SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_SOURCE_DIR}/libs/glm)
 SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_SOURCE_DIR}/libs/fmt/include)
-
-if (SR_COMMON_CPPCORO_ENABLED)
-    SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_SOURCE_DIR}/libs/cppcoro/include)
-endif()
 
 if (SR_COMMON_CPPTRACE_ENABLED)
     SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_SOURCE_DIR}/libs/cpptrace/include)
@@ -257,8 +314,8 @@ SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_BINARY_DIR}/libs/tree-sitter
 
 add_library(asio INTERFACE)
 
-target_include_directories(asio INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/libs/asio/include)
-target_include_directories(asio INTERFACE ${CMAKE_CURRENT_BINARY_DIR}/libs/asio/include)
+target_include_directories(asio INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/libs/asio/asio/include)
+target_include_directories(asio INTERFACE ${CMAKE_CURRENT_BINARY_DIR}/libs/asio/asio/include)
 
 if (SR_ICU)
     SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_BINARY_DIR}/include/icu)
@@ -318,6 +375,8 @@ if (SR_COMMON_MYHTML)
     set(MyCORE_BUILD_WITHOUT_THREADS ON CACHE INTERNAL "" FORCE)
     set(MyHTML_BUILD_SHARED OFF CACHE INTERNAL "" FORCE)
     set(PROJECT_OPTIMIZATION_LEVEL "" CACHE INTERNAL "" FORCE)
+
+    add_compile_definitions(SR_COMMON_MYHTML)
 
     add_subdirectory(libs/myhtml)
     SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_SOURCE_DIR}/libs/myhtml/include)
@@ -380,10 +439,6 @@ target_link_libraries(Utils asio tree-sitter tree-sitter-cpp ryml::ryml EnTT)
 
 if (SR_COMMON_CPPTRACE_ENABLED)
     target_link_libraries(Utils cpptrace::cpptrace)
-endif()
-
-if (SR_COMMON_CPPCORO_ENABLED)
-    target_link_libraries(Utils cppcoro)
 endif()
 
 get_property(SR_UTILS_INCLUDE_DIRECTORIES_CONTENT GLOBAL PROPERTY SR_UTILS_INCLUDE_DIRECTORIES)

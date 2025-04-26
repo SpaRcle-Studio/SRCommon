@@ -10,9 +10,6 @@
 [submodule "libs/rapidyaml"]
 	path = libs/rapidyaml
 	url = https://github.com/SpaRcle-Studio/rapidyaml.git
-[submodule "libs/cppcoro"]
-	path = libs/cppcoro
-	url = https://github.com/SpaRcle-Studio/cppcoro
 [submodule "libs/zlib"]
 	path = libs/zlib
 	url = https://github.com/SpaRcle-Studio/zlib.git
@@ -43,6 +40,9 @@
 [submodule "libs/entt"]
 	path = libs/entt
 	url = https://github.com/SpaRcle-Studio/entt
+[submodule "libs/asio"]
+	path = libs/asio
+	url = https://github.com/SpaRcle-Studio/asio
 [submodule "libs/efsw"]
 	path = libs/efsw
 	url = https://github.com/SpaRcle-Studio/efsw

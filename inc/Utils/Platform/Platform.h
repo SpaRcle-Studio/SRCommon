@@ -96,8 +96,9 @@ namespace SR_UTILS_NS::Platform {
 
     SR_COMMON_DLL_API extern void SetMousePos(const SR_MATH_NS::IVector2& pos);
     SR_COMMON_DLL_API extern void SetCursorVisible(bool isVisible);
+    SR_COMMON_DLL_API extern void ConfineCursor(); // TODO: add ability to confine cursor to a specific window
+    SR_COMMON_DLL_API extern void ReleaseCursorConfinement(); // TODO: add ability to confine cursor to a specific window
     SR_COMMON_DLL_API extern void SetThreadPriority(void* nativeHandle, ThreadPriority priority);
     SR_COMMON_DLL_API extern void CopyPermissions(const SR_UTILS_NS::Path& source, const SR_UTILS_NS::Path& destination);
-
 }
 #endif //SR_ENGINE_UTILS_PLATFORM_H

@@ -55,6 +55,43 @@ namespace SR_UTILS_NS {
         return result;
     }
 
+    std::string StringUtils::ToKebabCase(std::string_view str) {
+        std::string result;
+        bool was_lower_or_digit = false; // to detect camelCase boundaries
+        bool in_separator = false;
+
+        for (size_t i = 0; i < str.size(); ++i) {
+            char ch = str[i];
+
+            if (std::isalnum(static_cast<unsigned char>(ch))) {
+                if (std::isupper(static_cast<unsigned char>(ch))) {
+                    if (was_lower_or_digit && !in_separator) {
+                        result += '-';
+                    }
+                    result += std::tolower(static_cast<unsigned char>(ch));
+                    in_separator = false;
+                } else {
+                    result += std::tolower(static_cast<unsigned char>(ch));
+                    in_separator = false;
+                }
+                was_lower_or_digit = std::islower(ch) || std::isdigit(ch);
+            }
+            else if (ch == ' ' || ch == '_' || ch == '-') {
+                if (!in_separator && !result.empty()) {
+                    result += '-';
+                    in_separator = true;
+                }
+                was_lower_or_digit = false;
+            }
+        }
+
+        if (!result.empty() && result.back() == '-') {
+            result.pop_back();
+        }
+
+        return result;
+    }
+
     glm::vec2 StringUtils::MakeVec2FromString(const char *source, char chr, unsigned short start) {
         glm::vec2 position = glm::vec3();
         unsigned char found_floats = 0;

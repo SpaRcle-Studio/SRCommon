@@ -47,7 +47,7 @@ namespace SR_NETWORK_NS {
     bool AsioContext::Run() {
         asio::error_code errorCode;
 
-        m_context.run(errorCode);
+        m_context.run();
 
         if (errorCode) {
             SR_ERROR("AsioContext::Run() : failed to run context: {}", errorCode.message());
@@ -67,7 +67,7 @@ namespace SR_NETWORK_NS {
             return false;
         }
 
-        m_context.poll(errorCode);
+        m_context.poll();
 
         if (errorCode) {
             SR_ERROR("AsioContext::Pool() : failed to pool context: {}", errorCode.message());

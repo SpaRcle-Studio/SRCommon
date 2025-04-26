@@ -7,9 +7,12 @@
 #include <Utils/Debug.h>
 
 #include <X11/Xlib.h>
+#include <X11/Xlib-xcb.h>
+
 #include <X11/extensions/Xrandr.h>
 //#include <X11/extensions/XInput.h>
-#include <X11/Xlib-xcb.h>
+#include <X11/extensions/Xfixes.h>
+#include <X11/extensions/shapeconst.h>
 
 #include <xcb/randr.h>
 
@@ -26,7 +29,7 @@
 #include <Utils/Platform/XKeySymToKeyCode.h>
 
 #include <sys/sendfile.h>
-#include <X11/extensions/Xfixes.h>
+
 
 namespace SR_PLATFORM_NS {
     static Display* gLinuxPlatformDisplayPtr = nullptr;
@@ -60,6 +63,8 @@ namespace SR_PLATFORM_NS {
         else {
             XFixesHideCursor(gLinuxPlatformDisplayPtr, root);
         }
+
+        XSync(gLinuxPlatformDisplayPtr, false);
     }
 
     void StdHandler() {
@@ -143,7 +148,10 @@ namespace SR_PLATFORM_NS {
 
     void CopyPermissions(const SR_UTILS_NS::Path& source, const SR_UTILS_NS::Path& destination) {
         if (!source.Exists() || !destination.Exists()) {
-            SR_ERROR("Platform::CopyPermissions() : either source or destination path does not exist.");
+            SR_ERROR("Platform::CopyPermissions() : either source or destination path does not exist."
+                "\n\tSource: '{}'\n\tDestination: '{}'", source.ToString(), destination.ToString()
+            );
+
             return;
         }
 
@@ -191,6 +199,34 @@ namespace SR_PLATFORM_NS {
         XFlush(gLinuxPlatformDisplayPtr);
     }
 
+    void ConfineCursor() {
+        if (!gLinuxPlatformDisplayPtr) {
+            gLinuxPlatformDisplayPtr = XOpenDisplay(nullptr);
+        }
+
+        Window root = DefaultRootWindow(gLinuxPlatformDisplayPtr);
+
+        XGrabPointer(
+                gLinuxPlatformDisplayPtr,
+                root,
+                False,  // owner_events
+                ButtonPressMask | ButtonReleaseMask | PointerMotionMask,
+                GrabModeAsync,  // pointer_mode
+                GrabModeAsync,  // keyboard_mode
+                root,         // confine_to (the window to confine pointer to)
+                None,           // cursor (use current cursor)
+                CurrentTime
+            );
+    }
+
+    void ReleaseCursorConfinement() {
+        if (!gLinuxPlatformDisplayPtr) {
+            gLinuxPlatformDisplayPtr = XOpenDisplay(nullptr);
+        }
+
+        XUngrabPointer(gLinuxPlatformDisplayPtr, CurrentTime);
+    }
+
     void OpenFile(const SR_UTILS_NS::Path& path) {
         std::string command;
 
@@ -215,14 +251,17 @@ namespace SR_PLATFORM_NS {
     }
 
     void WriteConsoleLog(const std::string& msg) {
+        std::lock_guard lock(g_platformLogMutex);
         std::cout << msg << std::flush;
     }
 
     void WriteConsoleError(const std::string& msg) {
+        std::lock_guard lock(g_platformLogMutex);
         std::cerr << msg << std::flush;;
     }
 
     void WriteConsoleWarn(const std::string& msg) {
+        std::lock_guard lock(g_platformLogMutex);
         std::cerr << msg << std::flush;
     }
 
@@ -402,7 +441,7 @@ namespace SR_PLATFORM_NS {
             return true;*/
 
             int source = open(from.c_str(), O_RDONLY, 0);
-            int dest = open(to.c_str(), O_WRONLY | O_CREAT /*| O_TRUNC/**/, 0644);
+            int dest = open(to.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
 
             // struct required, rationale: function stat() exists also
             struct stat stat_source;
@@ -585,8 +624,26 @@ namespace SR_PLATFORM_NS {
     }
 
     double_t GetScreenDPI() {
-        SRHaltOnce("Not implemented!");
-        return 0.0;
+        if (!gLinuxPlatformDisplayPtr) {
+            gLinuxPlatformDisplayPtr = XOpenDisplay(nullptr);
+        }
+
+        auto&& screen = DefaultScreen(gLinuxPlatformDisplayPtr);
+
+        // Get the screen width and height in pixels
+        int screenWidth = DisplayWidth(gLinuxPlatformDisplayPtr, screen);
+        int screenHeight = DisplayHeight(gLinuxPlatformDisplayPtr, screen);
+
+        // Get the screen's physical dimensions (in millimeters)
+        int screenWidthMM = DisplayWidthMM(gLinuxPlatformDisplayPtr, screen);
+        int screenHeightMM = DisplayHeightMM(gLinuxPlatformDisplayPtr, screen);
+
+        // Calculate DPI (dots per inch)
+        double dpiX = screenWidth / (screenWidthMM / 25.4);  // 25.4 mm in an inch
+        double dpiY = screenHeight / (screenHeightMM / 25.4);
+
+        // You can return either dpiX or dpiY (assuming they are close to each other)
+        return (dpiX + dpiY) / 2;
     }
 
     std::vector<SR_MATH_NS::UVector2> GetScreenResolutions() {

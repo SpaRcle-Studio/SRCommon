@@ -49,6 +49,7 @@ namespace SR_UTILS_NS {
 
         void LockCursor();
         void UnlockCursor();
+        void ForceUnlockCursor();
 
     private:
         void Reset();

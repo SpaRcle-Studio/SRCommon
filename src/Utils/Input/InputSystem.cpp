@@ -19,8 +19,6 @@ namespace SR_UTILS_NS {
         m_mouseScroll = m_mouseScrollCurrent;
         m_mouseScrollCurrent = SR_MATH_NS::FVector2(0, 0);
 
-        m_mousePrev = m_mouse;
-
         if (!m_arr) {
             m_arr = new uint8_t[256];
             memset(m_arr, 0, 256);
@@ -32,17 +30,26 @@ namespace SR_UTILS_NS {
 
         auto&& mouseState = SR_PLATFORM_NS::GetMouseState();
 
+        m_mousePrev = m_mouse;
         m_mouse = mouseState.position;
         m_mouseDrag = m_mouse - m_mousePrev;
 
-        if (m_counterLock >= 1 && m_lockCursorCallback) {
+        if (m_counterLock >= 1) {
             if(m_isVisible) {
                 SetCursorVisible(false);
+                SR_PLATFORM_NS::ConfineCursor();
             }
-            m_lockCursorCallback();
+
+            SR_PLATFORM_NS::SetMousePos(m_mousePrev.Cast<int32_t>());
+            m_mouse = m_mousePrev;
+
+            if (m_lockCursorCallback) {
+                m_lockCursorCallback();
+            }
         }
         else if(!m_isVisible) {
             SetCursorVisible(true);
+            SR_PLATFORM_NS::ReleaseCursorConfinement();
         }
 
     #if defined(SR_WIN32)
@@ -191,12 +198,18 @@ namespace SR_UTILS_NS {
         m_lockCursorCallback = std::move(callback);
     }
 
-    void Input::LockCursor(){
+    void Input::LockCursor() {
         ++m_counterLock;
     }
 
-    void Input::UnlockCursor(){
-        --m_counterLock;
+    void Input::UnlockCursor() {
+        if (m_counterLock > 0) {
+            --m_counterLock;
+        }
+    }
+
+    void Input::ForceUnlockCursor() {
+        m_counterLock = 0;
     }
 
     SR_MATH_NS::FVector2 Input::GetMousePos() const {

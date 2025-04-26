@@ -803,6 +803,14 @@ namespace SR_UTILS_NS::Platform {
         // ::SetCursor(hCursor);
     }
 
+    void ConfineCursor() {
+        SRHaltOnce("Not implemented!");
+    }
+
+    void ReleaseCursorConfinement() {
+        SRHaltOnce("Not implemented!");
+    }
+
     PlatformType GetType() {
         return PlatformType::Windows;
     }
