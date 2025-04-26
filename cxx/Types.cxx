@@ -24,3 +24,4 @@
 #include "../src/Utils/Types/ObjectPool.cpp"
 #include "../src/Utils/Types/PoolSet.cpp"
 #include "../src/Utils/Types/Vector.cpp"
+#include "../src/Utils/Types/DataStorage.cpp"

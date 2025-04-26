@@ -31,7 +31,7 @@ namespace SR_UTILS_NS {
         InvAxisZ
     );
 
-    class SR_DLL_EXPORT Transform : public Serializable, public SR_HTYPES_NS::SharedPtr<Transform> {
+    class Transform : public Serializable, public SR_HTYPES_NS::SharedPtr<Transform> {
         SR_CLASS()
         friend class GameObject;
         using Super = Serializable;

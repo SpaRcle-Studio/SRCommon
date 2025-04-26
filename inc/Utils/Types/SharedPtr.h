@@ -24,7 +24,7 @@ namespace SR_UTILS_NS {
 namespace SR_HTYPES_NS {
     class SharedPtrDynamicData;
 
-    class SR_DLL_EXPORT SharedPtrDynamicDataCounter : public Singleton<SharedPtrDynamicDataCounter> {
+    class SharedPtrDynamicDataCounter : public Singleton<SharedPtrDynamicDataCounter> {
         SR_REGISTER_SINGLETON(SharedPtrDynamicDataCounter);
     public:
         SR_NODISCARD uint64_t GetCount() const { return m_count; }
@@ -104,15 +104,15 @@ namespace SR_HTYPES_NS {
 
     };
 
-    class SR_DLL_EXPORT SharedPtrBase {
+    class SR_COMMON_DLL_API SharedPtrBase {
     public:
-        SharedPtrBase() = default;
-        explicit SharedPtrBase(SharedPtrDynamicData* data) : m_data(data) { }
-        virtual ~SharedPtrBase() = default;
+        SharedPtrBase();
+        explicit SharedPtrBase(SharedPtrDynamicData* data);
+        virtual ~SharedPtrBase();
 
     public:
-        const SharedPtrDynamicData* GetPtrData() const { return m_data; } /// NOLINT(modernize-use-nodiscard)
-        SharedPtrDynamicData* GetPtrData() { return m_data; }
+        const SharedPtrDynamicData* GetPtrData() const; /// NOLINT(modernize-use-nodiscard)
+        SharedPtrDynamicData* GetPtrData();
         SR_NODISCARD virtual SRClass* GetSRClass() const = 0;
         virtual void Reset() = 0;
         virtual void IncrementPointer() = 0;
@@ -125,7 +125,8 @@ namespace SR_HTYPES_NS {
 
     };
 
-    template<class T> class SR_DLL_EXPORT SharedPtr : public SharedPtrBase {
+    /// SR_COMMON_DLL_API
+    template<class T> class SharedPtr : public SharedPtrBase {
     public:
         using Ptr = SharedPtr<T>;
         using SharedPointerType = T;

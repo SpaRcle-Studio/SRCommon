@@ -117,6 +117,12 @@ namespace SR_UTILS_NS {
         return std::nullopt;
     }
 
+    const std::vector<SR_UTILS_NS::StringAtom>& EnumReflector::GetNamesInternal() const { return m_data->names; }
+    const SR_UTILS_NS::StringAtom& EnumReflector::GetNameInternal() const { return m_data->enumName; }
+    uint64_t EnumReflector::GetIntegralTypeSizeInternal() const { return m_integralTypeSize; }
+    uint64_t EnumReflector::GetHashNameInternal() const { return m_data->hashName; }
+    EnumVariant EnumReflector::GetEnumVariantInternal() const { return m_enumVariant; }
+
     std::optional<int64_t> EnumReflector::FromStringLowerCaseInternal(const std::string& value) const {
         if (!m_data) {
             std::cerr << "EnumReflector::FromStringLowerCaseInternal() : reflector is empty!\n";

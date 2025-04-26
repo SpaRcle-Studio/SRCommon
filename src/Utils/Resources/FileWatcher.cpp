@@ -4,8 +4,6 @@
 
 #include <Utils/Resources/FileWatcher.h>
 
-#include <utility>
-
 namespace SR_UTILS_NS {
     FileWatcher::FileWatcher(SR_UTILS_NS::Path path)
         : SR_HTYPES_NS::SharedPtr<FileWatcher>(this, SharedPtrPolicy::Automatic)
@@ -55,4 +53,14 @@ namespace SR_UTILS_NS {
             m_callBack(this);
         }
     }
+
+    void FileWatcher::Pause() {
+        Unsubscribe();
+    }
+
+    void FileWatcher::Resume() {
+        Subscribe();
+    }
+
+    FileWatcher::~FileWatcher() = default;
 }

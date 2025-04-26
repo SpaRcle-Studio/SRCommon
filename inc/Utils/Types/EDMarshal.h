@@ -27,7 +27,7 @@ namespace SR_HTYPES_NS {
         std::string m_data;
     };
 
-    class SR_DLL_EXPORT MarshalEncodeNode : public SR_UTILS_NS::NonCopyable {
+    class SR_COMMON_DLL_API MarshalEncodeNode : public SR_UTILS_NS::NonCopyable {
         friend class MarshalDecodeNode;
     public:
         MarshalEncodeNode();
@@ -137,7 +137,7 @@ namespace SR_HTYPES_NS {
 
     };
 
-    class SR_DLL_EXPORT MarshalDecodeNode {
+    class SR_COMMON_DLL_API MarshalDecodeNode {
         friend class MarshalEncodeNode;
     public:
         explicit MarshalDecodeNode(const char *name)

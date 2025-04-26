@@ -64,7 +64,9 @@
 #include <numeric>
 #include <numbers>
 
-#include <zlib.h>
+#ifndef SR_ENGINE_SCRIPT_API_MODE
+    #include <zlib.h>
+#endif
 
 #ifdef SR_SUPPORT_PARALLEL
     #include <omp.h>

@@ -756,4 +756,26 @@ namespace SR_HTYPES_NS {
     #endif
         return SR_ID_INVALID;
     }
+
+    const std::vector<SR_MATH_NS::Matrix4x4> &RawMesh::GetBoneOffsets() const {
+        return m_boneOffsets;
+    }
+
+    const ska::flat_hash_map<SR_UTILS_NS::StringAtom, uint16_t> &RawMesh::GetOptimizedBones() const {
+        return m_optimizedBones;
+    }
+
+#ifdef SR_UTILS_ASSIMP
+    const void* RawMesh::GetAssimpScene() const noexcept {
+        return m_scene;
+    }
+#endif
+
+    bool RawMesh::IsAllowedToRevive() const {
+        return true;
+    }
+
+    bool RawMeshParams::operator==(const RawMeshParams &rhs) const {
+        return animation == rhs.animation && convexHull == rhs.convexHull;
+    }
 }

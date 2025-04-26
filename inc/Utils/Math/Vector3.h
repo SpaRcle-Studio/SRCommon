@@ -14,7 +14,7 @@ namespace SR_MATH_NS {
     /// @templateImpl(IVector3, T = int32_t)
     /// @templateImpl(UVector3, T = uint32_t)
     /// @templateImpl(BVector3, T = bool)
-    template<typename T> struct SR_DLL_EXPORT Vector3 {
+    template<typename T> struct Vector3 {
     public:
         using ValueType = T;
 
@@ -29,50 +29,46 @@ namespace SR_MATH_NS {
         };
     public:
         /// @constructor
-        constexpr SR_FORCE_INLINE Vector3() {
-            x = 0;
-            y = 0;
-            z = 0;
-        }
+        Vector3();
 
-        constexpr SR_FORCE_INLINE Vector3(const Vector3<T>& vec) {
+        Vector3(const Vector3<T>& vec) {
             x = vec.x;
             y = vec.y;
             z = vec.z;
         }
 
-        template<typename U> constexpr SR_FORCE_INLINE explicit Vector3(const Vector3<U>& vec) {
+        template<typename U> explicit Vector3(const Vector3<U>& vec) {
             x = static_cast<T>(vec.x);
             y = static_cast<T>(vec.y);
             z = static_cast<T>(vec.z);
         }
 
-        template<typename U> constexpr SR_FORCE_INLINE explicit Vector3(const Vector2<U>& vec, U value) {
+        template<typename U> explicit Vector3(const Vector2<U>& vec, U value) {
             x = static_cast<T>(vec.x);
             y = static_cast<T>(vec.y);
             z = static_cast<T>(value);
         }
 
-        SR_FORCE_INLINE constexpr explicit Vector3(const float* vec) {
+        explicit Vector3(const float* vec) {
             x = (Unit)vec[0];
             y = (Unit)vec[1];
             z = (Unit)vec[2];
         }
-        SR_FORCE_INLINE constexpr explicit Vector3(const uint8_t* axis) {
+        explicit Vector3(const uint8_t* axis) {
             x = (Unit)axis[0];
             y = (Unit)axis[1];
             z = (Unit)axis[2];
         }
 
         /// @constructor
-        SR_FORCE_INLINE constexpr Vector3(T p_x, T p_y, T p_z) {
+        Vector3(T p_x, T p_y, T p_z) {
             x = p_x;
             y = p_y;
             z = p_z;
         }
 
         /// @constructor
-        SR_FORCE_INLINE constexpr Vector3(T p) {
+        Vector3(T p) {
             x = p;
             y = p;
             z = p;
@@ -95,18 +91,18 @@ namespace SR_MATH_NS {
             return Vector3<T>(static_cast<T>(value), static_cast<T>(v.x), static_cast<T>(v.y));
         }
 
-        static constexpr Vector3<T> Zero() { return Vector3(static_cast<T>(0)); }
-        static constexpr Vector3<T> One() { return Vector3(static_cast<T>(1)); }
+        static Vector3<T> Zero() { return Vector3(static_cast<T>(0)); }
+        static Vector3<T> One() { return Vector3(static_cast<T>(1)); }
 
-        static constexpr Vector3<T> UnitX() { return Vector3(static_cast<T>(1), static_cast<T>(0), static_cast<T>(0)); }
-        static constexpr Vector3<T> UnitY() { return Vector3(static_cast<T>(0), static_cast<T>(1), static_cast<T>(0)); }
-        static constexpr Vector3<T> UnitZ() { return Vector3(static_cast<T>(0), static_cast<T>(0), static_cast<T>(1)); }
+        static Vector3<T> UnitX() { return Vector3(static_cast<T>(1), static_cast<T>(0), static_cast<T>(0)); }
+        static Vector3<T> UnitY() { return Vector3(static_cast<T>(0), static_cast<T>(1), static_cast<T>(0)); }
+        static Vector3<T> UnitZ() { return Vector3(static_cast<T>(0), static_cast<T>(0), static_cast<T>(1)); }
 
-        static constexpr Vector3<T> Right() { return UnitX(); }
-        static constexpr Vector3<T> Up() { return UnitY(); }
-        static constexpr Vector3<T> Forward() { return UnitZ(); }
+        static Vector3<T> Right() { return UnitX(); }
+        static Vector3<T> Up() { return UnitY(); }
+        static Vector3<T> Forward() { return UnitZ(); }
 
-        static constexpr Vector3<T> AxisByIndex(uint8_t axis) {
+        static Vector3<T> AxisByIndex(uint8_t axis) {
             switch (axis) {
                 case 0: return UnitX();
                 case 1: return UnitY();
@@ -553,11 +549,11 @@ namespace SR_MATH_NS {
 
         SR_NODISCARD Quaternion ToQuat() const;
 
-        SR_FORCE_INLINE constexpr const T &operator[](int p_axis) const {
+        SR_FORCE_INLINE const T &operator[](int p_axis) const {
             return coord[p_axis];
         }
 
-        SR_FORCE_INLINE constexpr T &operator[](int p_axis) {
+        SR_FORCE_INLINE T &operator[](int p_axis) {
             return coord[p_axis];
         }
 
@@ -769,6 +765,25 @@ namespace SR_MATH_NS {
         }
     };
 
+    typedef Vector3<Unit> FVector3;
+    typedef Vector3<int32_t> IVector3;
+    typedef Vector3<uint32_t> UVector3;
+    typedef Vector3<bool> BVector3;
+
+    SR_INLINE static const FVector3 InfinityFV3 = FVector3 { UnitMAX, UnitMAX, UnitMAX };
+    SR_INLINE static const FVector3 CmpEpsilonFV3 = FVector3 {
+            static_cast<Unit>(CMP_EPSILON),
+            static_cast<Unit>(CMP_EPSILON),
+            static_cast<Unit>(CMP_EPSILON),
+    };
+
+    template<typename T> Vector3<T>::Vector3() {
+        x = 0;
+        y = 0;
+        z = 0;
+    }
+
+#ifdef SR_COMMON_DLL_EXPORTS
     // bool inRads
     template<typename T>
     Quaternion Vector3<T>::ToQuat() const {
@@ -790,18 +805,7 @@ namespace SR_MATH_NS {
                + v * (s*s - Dot(u, u))
                + Cross(u, v) * 2.0f * s;
     }
-
-    typedef Vector3<Unit> FVector3;
-    typedef Vector3<int32_t> IVector3;
-    typedef Vector3<uint32_t> UVector3;
-    typedef Vector3<bool> BVector3;
-
-    SR_INLINE static const FVector3 InfinityFV3 = FVector3 { UnitMAX, UnitMAX, UnitMAX };
-    SR_INLINE static const FVector3 CmpEpsilonFV3 = FVector3 {
-            static_cast<Unit>(CMP_EPSILON),
-            static_cast<Unit>(CMP_EPSILON),
-            static_cast<Unit>(CMP_EPSILON),
-    };
+#endif
 }
 
 namespace std {

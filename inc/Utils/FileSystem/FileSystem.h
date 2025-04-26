@@ -10,7 +10,7 @@
 #include <Utils/Types/Function.h>
 
 namespace SR_UTILS_NS {
-    class SR_DLL_EXPORT FileSystem {
+    class SR_COMMON_DLL_API FileSystem {
     public:
         FileSystem() = delete;
         ~FileSystem() = delete;
@@ -20,16 +20,7 @@ namespace SR_UTILS_NS {
         static bool WriteToFile(const std::string& path, const std::string& text);
         static std::string NormalizePath(const std::string& path);
 
-        static std::vector<std::string> ReadAllLines(const SR_UTILS_NS::Path& path) {
-            std::ifstream file(path.c_str());
-            std::vector<std::string> lines = { };
-            while (file.good()) {
-                std::string line;
-                std::getline(file,line);
-                lines.push_back(line);
-            }
-            return lines;
-        }
+        static std::vector<std::string> ReadAllLines(const SR_UTILS_NS::Path& path);
 
         static uint64_t ReadHashFromFile(const SR_UTILS_NS::Path& path);
         static bool WriteHashToFile(const SR_UTILS_NS::Path& path, uint64_t hash);

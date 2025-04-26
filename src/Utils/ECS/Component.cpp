@@ -130,6 +130,11 @@ namespace SR_UTILS_NS {
         return nullptr;
     }
 
+    SR_UTILS_NS::PropertyContainer& Component::GetComponentProperties() noexcept { return m_properties; }
+    const SR_UTILS_NS::PropertyContainer& Component::GetComponentProperties() const noexcept { return m_properties; }
+    int32_t Component::GetIndexInSceneUpdater() const noexcept { return m_indexInSceneUpdater; }
+    bool Component::HasParent() const { return m_parent; }
+
     Component::Ptr Component::CloneComponent() const {
         SR_TRACY_ZONE;
 
@@ -184,6 +189,22 @@ namespace SR_UTILS_NS {
 
     }
 
+    void Component::OnMatrixDirty() { }
+    void Component::OnPriorityChanged() { }
+    void Component::OnTransformSet() { }
+
+    void Component::OnLoaded() { m_isComponentLoaded = true; }
+    void Component::OnAttached() { m_isAttached = true; SRAssert(GetParent()); }
+    void Component::OnDestroy() { SetParent(nullptr); }
+
+    void Component::Awake() { m_isAwake = true; }
+    void Component::Update(float_t dt) { }
+    void Component::FixedUpdate() { }
+    void Component::LateUpdate() { }
+
+    void Component::OnBeforeLayerChanged() { }
+    void Component::OnLayerChanged() { }
+
     void Component::Start() {
         m_isStarted = true;
     }
@@ -194,5 +215,44 @@ namespace SR_UTILS_NS {
         }
         m_isAttached = false;
     }
+
+    void Component::OnCollisionEnter(const CollisionData& data) { }
+    void Component::OnCollisionStay(const CollisionData& data) { }
+    void Component::OnCollisionExit(const CollisionData& data) { }
+    void Component::OnTriggerEnter(const CollisionData& data) { }
+    void Component::OnTriggerStay(const CollisionData& data) { }
+    void Component::OnTriggerExit(const CollisionData& data) { }
+
+    void Component::SetIndexIdSceneUpdater(int32_t index) {
+        m_indexInSceneUpdater = index;
+    }
+
+    SR_NODISCARD bool Component::IsComponentLoaded() const noexcept { return m_isComponentLoaded; }
+    SR_NODISCARD bool Component::IsComponentValid() const noexcept { return m_parent; }
+    SR_NODISCARD bool Component::IsAttached() const noexcept { return m_isAttached; }
+
+    SR_NODISCARD bool Component::IsActive() const noexcept { return m_isActive; }
+    SR_NODISCARD bool Component::IsEnabled() const noexcept { return m_isEnabled; }
+
+    SR_NODISCARD bool Component::IsAwake() const noexcept { return m_isAwake; }
+    SR_NODISCARD bool Component::IsStarted() const noexcept { return m_isStarted; }
+
+    bool Component::ExecuteInEditMode() const {
+        return false;
+    }
+
+    Math::FVector3 Component::GetBarycenter() const {
+        return SR_MATH_NS::InfinityFV3;
+    }
+
+    Component *Component::BaseComponent() noexcept {
+        return this;
+    }
+
+    IComponentable *Component::TryGetParent() const {
+        return m_parent;
+    }
+
+    Component::Component() = default;
 }
 

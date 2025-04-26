@@ -332,4 +332,20 @@ namespace SR_UTILS_NS {
     bool IResource::IsResourceWillBeDeleted() const {
         return GetCountUses() == 1 && !IsDestroyed() && !IsRegistered();
     }
+
+    bool IResource::IsLoaded() const noexcept {
+        return m_loadState == LoadState::Loaded;
+    }
+
+    uint16_t IResource::GetReloadCount() const noexcept {
+        return m_reloadCount;
+    }
+
+    SR_UTILS_NS::StringAtom IResource::GetResourceId() const noexcept {
+        return m_resourceId;
+    }
+
+    bool IResource::IsDestroyed() const noexcept {
+        return m_isDestroyed;
+    }
 }

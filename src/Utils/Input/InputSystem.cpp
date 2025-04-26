@@ -135,6 +135,10 @@ namespace SR_UTILS_NS {
         return m_mouseScroll.y;
     }
 
+    bool Input::GetMouseDown(MouseCode code) { return GetKeyDown(static_cast<KeyCode>(code)); }
+    bool Input::GetMouseUp(MouseCode code) { return GetKeyUp(static_cast<KeyCode>(code)); }
+    bool Input::GetMouse(MouseCode code) { return GetKey(static_cast<KeyCode>(code)); }
+
     void Input::Reset() {
         for (auto& key : m_keys) {
             key = State::UnPressed;
@@ -193,5 +197,42 @@ namespace SR_UTILS_NS {
 
     void Input::UnlockCursor(){
         --m_counterLock;
+    }
+
+    SR_MATH_NS::FVector2 Input::GetMousePos() const {
+        return m_mouse;
+    }
+
+    SR_MATH_NS::FVector2 Input::GetPrevMousePos() const {
+        return m_mousePrev;
+    }
+
+    void Input::SetMouseScroll(double_t xOffset, double_t yOffset) {
+        m_mouseScrollCurrent = { (float_t)xOffset, (float_t)yOffset };
+    }
+
+    Input::~Input() = default;
+
+    CursorLock::CursorLock() {
+        m_isLock  = true;
+        Input::Instance().LockCursor();
+    };
+
+    CursorLock::~CursorLock() {
+        if (m_isLock) {
+            m_isLock = false;
+            Input::Instance().UnlockCursor();
+        }
+    };
+
+    CursorLock::CursorLock(CursorLock&& ref) noexcept {
+        m_isLock = SR_UTILS_NS::Exchange(ref.m_isLock, {});
+    }
+
+    CursorLock& CursorLock::operator=(CursorLock&& other) noexcept {
+        if (this != &other){
+            m_isLock = SR_UTILS_NS::Exchange(other.m_isLock, { });
+        }
+        return *this;
     }
 }

@@ -25,7 +25,8 @@ namespace SR_UTILS_NS {
         Hidden     = 1 << 4
     )
 
-    class SR_DLL_EXPORT Entity : public Serializable, public SR_HTYPES_NS::SharedPtr<Entity> {
+    /// @scriptableClass
+    class Entity : public Serializable, public SR_HTYPES_NS::SharedPtr<Entity> {
         SR_CLASS()
         using Super = Serializable;
     public:
@@ -44,7 +45,7 @@ namespace SR_UTILS_NS {
         SR_NODISCARD EntityRef GetRef() const noexcept { return EntityRef(GetThis()); }
         SR_NODISCARD Entity::Ptr GetEntity() const noexcept { return GetThis(); }
 
-        SR_NODISCARD virtual bool InitializeEntity() noexcept { return true; }
+        SR_NODISCARD virtual bool InitializeEntity() noexcept;
 
         void SetEntityController(EntityController* pEntityController);
         void SetEntityId(EntityId id);

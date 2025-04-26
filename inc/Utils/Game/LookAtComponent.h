@@ -12,7 +12,7 @@
 
 namespace SR_UTILS_NS {
     /// @category(Game)
-    class SR_DLL_EXPORT LookAtComponent final : public Component {
+    class SR_COMMON_DLL_API LookAtComponent final : public Component {
         SR_CLASS()
         using Super = Component;
     public:

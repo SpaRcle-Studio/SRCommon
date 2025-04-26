@@ -65,4 +65,42 @@ namespace SR_UTILS_NS {
                 break;
         }
     }
+
+    bool InputHandler::IsKeyPressed(KeyCode code) {
+        return Input::Instance().GetKey(code);
+    }
+
+    void InputHandler::OnMouseMove(const MouseInputData *data) {
+
+    }
+
+    void InputHandler::OnMousePress(const MouseInputData *data) {
+
+    }
+
+    void InputHandler::OnMouseUp(const MouseInputData *data) {
+
+    }
+
+    void InputHandler::OnMouseDown(const MouseInputData *data) {
+
+    }
+
+    void InputHandler::OnKeyPress(const KeyboardInputData *data) {
+
+    }
+
+    void InputHandler::OnKeyDown(const KeyboardInputData *data) {
+
+    }
+
+    void InputHandler::OnKeyUp(const KeyboardInputData *data) {
+
+    }
+
+    InputHandler::InputHandler()
+        : Event(typeid(InputHandler).name())
+    { }
+
+    InputHandler::~InputHandler() = default;
 }

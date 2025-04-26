@@ -11,17 +11,17 @@
 #include <Utils/Profile/TracyContext.h>
 
 namespace SR_UTILS_NS {
-    void FileSystem::UnmapFile(const char *str) {
+    SR_COMMON_DLL_API void FileSystem::UnmapFile(const char *str) {
 
     }
 
-    const char *FileSystem::FileMapView(std::string path) {
+    SR_COMMON_DLL_API const char *FileSystem::FileMapView(std::string path) {
         const char *data = nullptr;
 
         return data;
     }
 
-    char* FileSystem::Load(std::string path) {
+    SR_COMMON_DLL_API char* FileSystem::Load(std::string path) {
         /// open file
         std::ifstream infile(path);
         if (!infile.is_open()) {
@@ -43,7 +43,7 @@ namespace SR_UTILS_NS {
         return buffer;
     }
 
-    std::string FileSystem::ReadAllText(const std::string& path) {
+    SR_COMMON_DLL_API std::string FileSystem::ReadAllText(const std::string& path) {
         std::string data = std::string();
         std::ifstream stream(path, std::ios::in);
         if (stream.is_open()) {
@@ -62,7 +62,7 @@ namespace SR_UTILS_NS {
         return data;
     }
 
-    std::vector<uint8_t> FileSystem::ReadFileAsVector(const std::string &path) {
+    SR_COMMON_DLL_API std::vector<uint8_t> FileSystem::ReadFileAsVector(const std::string &path) {
         std::ifstream file(path, std::ifstream::binary | std::ios::in);
 
         if (file.fail()) {
@@ -82,7 +82,7 @@ namespace SR_UTILS_NS {
         return result;
     }
 
-    std::vector<char> FileSystem::ReadBinary(const std::string_view path) {
+    SR_COMMON_DLL_API std::vector<char> FileSystem::ReadBinary(const std::string_view path) {
         /*std::ifstream ifd(path,  std::ios::binary |  std::ios::ate);
         int size = ifd.tellg();
         ifd.seekg(0,  std::ios::beg);
@@ -111,7 +111,7 @@ namespace SR_UTILS_NS {
         return buffer;
     }
 
-    bool FileSystem::CreatePath(std::string path, uint32_t offset) {
+    SR_COMMON_DLL_API bool FileSystem::CreatePath(std::string path, uint32_t offset) {
         if (path.empty()) {
             return false;
         }
@@ -148,7 +148,7 @@ namespace SR_UTILS_NS {
     //#endif
     //}
 
-    std::string FileSystem::NormalizePath(const std::string &path) {
+    SR_COMMON_DLL_API std::string FileSystem::NormalizePath(const std::string &path) {
         SR_TRACY_ZONE;
 
         auto newPath = StringUtils::MakePath(path);
@@ -168,7 +168,7 @@ namespace SR_UTILS_NS {
         return newPath;
     }
 
-    bool FileSystem::WriteToFile(const std::string& path, const std::string& text) {
+    SR_COMMON_DLL_API bool FileSystem::WriteToFile(const std::string& path, const std::string& text) {
         std::ofstream stream(path);
         if (!stream.is_open()) {
             return false;
@@ -179,7 +179,7 @@ namespace SR_UTILS_NS {
         return true;
     }
 
-    std::string FileSystem::ReadBinaryAsString(const Path& path, bool checkError) {
+    SR_COMMON_DLL_API std::string FileSystem::ReadBinaryAsString(const Path& path, bool checkError) {
         std::ifstream file(path.ToStringRef(), std::ios::ate | std::ios::binary);
 
         if (!file.is_open()) {
@@ -200,7 +200,7 @@ namespace SR_UTILS_NS {
         return buffer;
     }
 
-    uint64_t FileSystem::GetFileHash(const std::string& path) {
+    SR_COMMON_DLL_API uint64_t FileSystem::GetFileHash(const std::string& path) {
         SR_TRACY_ZONE;
 
         const std::string& buffer = ReadBinaryAsString(path, false);
@@ -215,7 +215,7 @@ namespace SR_UTILS_NS {
         return SR_HASH_STR(buffer);
     }
 
-    uint64_t FileSystem::GetFolderHash(const Path& path, uint64_t deep) {
+    SR_COMMON_DLL_API uint64_t FileSystem::GetFolderHash(const Path& path, uint64_t deep) {
         if (deep == 0) {
             return 0;
         }
@@ -241,11 +241,11 @@ namespace SR_UTILS_NS {
         return hash;
     }
 
-    std::shared_ptr<std::vector<uint8_t>> FileSystem::ReadFileAsBlob(const std::string &path) {
+    SR_COMMON_DLL_API std::shared_ptr<std::vector<uint8_t>> FileSystem::ReadFileAsBlob(const std::string &path) {
         return std::make_shared<std::vector<uint8_t>>(std::move(ReadFileAsVector(path)));
     }
 
-    uint64_t FileSystem::ReadHashFromFile(const Path& path) {
+    SR_COMMON_DLL_API uint64_t FileSystem::ReadHashFromFile(const Path& path) {
         SR_TRACY_ZONE;
         SR_TRACY_ZONE_TEXT(path.ToStringRef());
 
@@ -262,7 +262,7 @@ namespace SR_UTILS_NS {
         return hash;
     }
 
-    bool FileSystem::WriteHashToFile(const Path& path, uint64_t hash) {
+    SR_COMMON_DLL_API bool FileSystem::WriteHashToFile(const Path& path, uint64_t hash) {
         if (!path.Create()) {
             SR_ERROR("FileSystem::WriteHashToFile() : failed to create file!\n\tPath: " + path.ToString());
             return false;
@@ -281,7 +281,7 @@ namespace SR_UTILS_NS {
         return true;
     }
 
-    void FileSystem::ForEachFileInFolder(const Path& path, bool recursive, const Types::Function<void(const Path&)>& func) {
+    SR_COMMON_DLL_API void FileSystem::ForEachFileInFolder(const Path& path, bool recursive, const Types::Function<void(const Path&)>& func) {
         SR_TRACY_ZONE;
         SR_TRACY_ZONE_TEXT(path.ToStringRef());
 
@@ -299,5 +299,16 @@ namespace SR_UTILS_NS {
                 ForEachFileInFolder(folder, recursive, func);
             }
         }
+    }
+
+    std::vector<std::string> FileSystem::ReadAllLines(const Path &path) {
+        std::ifstream file(path.c_str());
+        std::vector<std::string> lines = { };
+        while (file.good()) {
+            std::string line;
+            std::getline(file,line);
+            lines.push_back(line);
+        }
+        return lines;
     }
 }

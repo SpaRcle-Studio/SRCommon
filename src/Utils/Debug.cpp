@@ -99,6 +99,23 @@ namespace SR_UTILS_NS {
     #endif
     }
 
+    void Debug::Log(const std::string& msg) { Print(msg, DebugLogType::Log); }
+    void Debug::Success(const std::string& msg) { Print(msg, DebugLogType::Success); }
+    void Debug::VulkanLog(const std::string& msg) { Print(msg, DebugLogType::VulkanLog); }
+    void Debug::Info(const std::string& msg) { Print(msg, DebugLogType::Info); }
+    void Debug::Graph(const std::string& msg) { Print(msg, DebugLogType::Graph); }
+    void Debug::Vulkan(const std::string& msg) { Print(msg, DebugLogType::Vulkan); }
+    void Debug::Shader(const std::string& msg) { Print(msg, DebugLogType::Shader); }
+    void Debug::Script(const std::string& msg) { Print(msg, DebugLogType::Script); }
+    void Debug::System(const std::string& msg) { Print(msg, DebugLogType::System); }
+    void Debug::Warn(const std::string& msg) { Print(msg, DebugLogType::Warn); m_countWarnings++; }
+    void Debug::Error(const std::string& msg) { Print(msg, DebugLogType::Error); m_countErrors++; }
+    void Debug::VulkanError(const std::string& msg) { Print(msg, DebugLogType::VulkanError); m_countErrors++; }
+    bool Debug::Assert(const std::string& msg) { Print(msg, DebugLogType::Assert); m_countErrors++; return false; }
+
+    void Debug::ScriptLog(const std::string& msg) { Print(msg, DebugLogType::ScriptLog); }
+    void Debug::ScriptError(const std::string& msg) { Print(msg, DebugLogType::ScriptError); }
+
     void Debug::OnSingletonDestroy() {
         if (!m_countErrors && !m_countWarnings) {
             std::string msg = "Debugger has been stopped.";
@@ -160,6 +177,21 @@ namespace SR_UTILS_NS {
             Print("The quick brown fox jumps over the lazy dog.", SR_UTILS_NS::EnumReflector::FromString<DebugLogType>(logTypeName));
         }
     }
+
+    void Debug::SetLevel(Debug::Level level) {
+        m_level = level;
+    }
+
+    Debug::Level Debug::GetLevel() {
+        return m_level;
+    }
+
+    bool Debug::IsInitialized() const {
+        return m_isInit;
+    }
+
+    Debug::Debug() = default;
+    Debug::~Debug() = default;
 
     fmt::text_style GetTextStyleColorByLogType(DebugLogType type) {
         static auto errorWarnStyle = fmt::emphasis::blink | fmt::emphasis::bold;

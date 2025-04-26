@@ -199,4 +199,34 @@ namespace SR_HTYPES_NS {
         m_pos = position;
         SRAssert(m_pos <= m_size);
     }
+
+    bool Stream::Valid() const noexcept {
+        return m_data;
+    }
+
+    uint64_t Stream::GetPosition() const noexcept {
+        return m_pos;
+    }
+
+    uint64_t Stream::Size() const noexcept {
+        return m_size;
+    }
+
+    uint64_t Stream::GetCapacity() const noexcept {
+        return m_capacity;
+    }
+
+    const char* Stream::View() const noexcept {
+        return m_data;
+    }
+
+    Stream& Stream::write(const void *pSrc, uint64_t count) noexcept {
+        return Write(pSrc, count);
+    }
+
+    Stream& Stream::read(void *pDst, uint64_t count) noexcept {
+        return Read(pDst, count);
+    }
+
+    Stream::Stream() = default;
 }

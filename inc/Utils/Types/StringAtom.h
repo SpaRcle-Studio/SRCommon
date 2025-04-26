@@ -14,8 +14,8 @@ namespace SR_UTILS_NS {
     class StringHashInfo;
 
     /// @scriptableClass
-    class SR_DLL_EXPORT StringAtom {
-        SR_INLINE_STATIC std::string DEFAULT = std::string();
+    class SR_COMMON_DLL_API StringAtom {
+        static std::string DEFAULT;
         static StringHashInfo* DEFAULT_STRING_INFO;
     public:
         /// @constructor
@@ -48,7 +48,7 @@ namespace SR_UTILS_NS {
         bool operator<(uint64_t hash) const noexcept;
 
         /// For automatic conversion to hash
-        SR_NODISCARD SR_FORCE_INLINE operator uint64_t() const noexcept { return GetHash(); }
+        SR_NODISCARD SR_FORCE_INLINE operator uint64_t() const noexcept;
 
         /// @operator
         SR_NODISCARD char operator[](size_t index) const noexcept;
@@ -74,10 +74,7 @@ namespace SR_UTILS_NS {
         SR_NODISCARD const std::string& ToStringRef() const;
         SR_NODISCARD std::string_view ToStringView() const;
 
-        void clear() {
-            Clear();
-        }
-
+        void clear();
         void Clear();
 
     private:

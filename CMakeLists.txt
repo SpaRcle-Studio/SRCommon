@@ -23,6 +23,8 @@ set(BUILD_SHARED_LIBS OFF CACHE INTERNAL "" FORCE)
 add_subdirectory(libs/tree-sitter-cpp)
 add_subdirectory(libs/tree-sitter/lib)
 
+include(cmake/Linker.cmake)
+
 if (SR_COMMON_SDL)
     add_compile_definitions(SR_COMMON_SDL)
 endif()
@@ -57,7 +59,7 @@ endif()
 
 
 if (SR_COMMON_DLL_EXPORTS)
-    add_compile_definitions(SR_DLL_EXPORTS)
+    add_compile_definitions(SR_COMMON_DLL_EXPORTS)
 endif()
 
 if (SR_COMMON_ZLIB)
@@ -275,8 +277,16 @@ if (SR_EFSW_USE)
 endif()
 
 if (SR_COMMON_STATIC_LIBRARY)
+    if(MSVC AND CMAKE_CXX_FLAGS MATCHES "/MD")
+        message(FATAL_ERROR "SRCommon: SR_COMMON_STATIC_LIBRARY is set to ON, but /MD flag is used. Please use /MT flag.")
+    endif()
+
     add_library(Utils STATIC ${SR_UTILS_LINK_LIBRARIES})
 else()
+    if(MSVC AND CMAKE_CXX_FLAGS MATCHES "/MT")
+        message(FATAL_ERROR "SRCommon: SR_COMMON_STATIC_LIBRARY is set to OFF, but /MT flag is used. Please use /MD flag.")
+    endif()
+
     add_library(Utils SHARED ${SR_UTILS_LINK_LIBRARIES})
     add_library(Utils::lib ALIAS Utils)
 endif()
@@ -388,7 +398,7 @@ include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/CopyFiles.cmake)
 if (SR_COMMON_DLL_EXPORTS)
     message("SRCommon will be using DLL exports")
     target_compile_definitions(Utils PUBLIC
-        SR_DLL_EXPORTS
+        SR_COMMON_DLL_EXPORTS
     )
 endif()
 

@@ -31,7 +31,7 @@ namespace SR_UTILS_NS {
     #define SR_S2WS(str) s2ws(str)
     #define SR_WS2S(wstr) ws2s(wstr)
 
-    class SR_DLL_EXPORT StringUtils {
+    class SR_COMMON_DLL_API StringUtils {
     public:
         StringUtils() = delete;
         StringUtils(StringUtils&) = delete;
@@ -127,47 +127,11 @@ namespace SR_UTILS_NS {
         static std::string Remove(std::string source, uint32_t count);
         static std::string Remove(std::string source, uint32_t start, uint32_t count);
 
-        static std::string GetBetween(const std::string& source, int64_t begin, uint64_t end) {
-            return source.substr(begin + 1, (end - begin) - 1);
-        }
-
-        static std::string_view GetBetween(std::string_view source, char begin, char end, int8_t* pResult = nullptr) {
-            if (pResult) {
-                *pResult = 0;
-            }
-
-            auto first = source.find(begin);
-            if (first == std::string::npos) {
-                first = 0;
-                if (pResult) {
-                    *pResult -= 1;
-                }
-            }
-
-            auto last = source.find(end);
-            if (last == std::string::npos) {
-                last = source.size() - 1;
-                if (pResult) {
-                    *pResult -= 1;
-                }
-            }
-
-            return source.substr(first + 1, (last - first) - 1);
-        }
+        static std::string GetBetween(const std::string& source, int64_t begin, uint64_t end);
+        static std::string_view GetBetween(std::string_view source, char begin, char end, int8_t* pResult = nullptr);
+        static std::string GetBetween(const std::string& source, const std::string& begin, const std::string& end);
 
         static std::string Tab(std::string code, uint32_t count = 1);
-
-        static std::string GetBetween(const std::string& source, const std::string& begin, const std::string& end) {
-            auto first = source.find(begin);
-            if (first == std::string::npos)
-                first = 0;
-
-            auto last = source.find(end);
-            if (last == std::string::npos)
-                last = source.size() - 1;
-
-            return source.substr(first + 1, (last - first) - 1);
-        }
 
         static std::string Substring(const std::string& source, char symbol, uint32_t offset = 0) {
             if (auto&& pos = source.find(symbol); pos == std::string::npos)
@@ -192,23 +156,8 @@ namespace SR_UTILS_NS {
             }
         }
 
-        static std::string_view SubstringView(const std::string_view& source, char symbol, uint32_t offset = 0) {
-            if (auto&& pos = source.find(symbol); pos == std::string::npos) {
-                return source;
-            }
-            else {
-                return source.substr(pos + offset, source.size() - 1);
-            }
-        }
-
-        static std::string_view SubstringView(const std::string_view& source, StringAtom substr, uint32_t offset = 0) {
-            if (auto&& pos = source.find(substr.ToStringView()); pos == std::string::npos) {
-                return source;
-            }
-            else {
-                return source.substr(pos + offset, source.size() - 1);
-            }
-        }
+        static std::string_view SubstringView(const std::string_view& source, char symbol, uint32_t offset = 0);
+        static std::string_view SubstringView(const std::string_view& source, StringAtom substr, uint32_t offset = 0);
 
         static SR_FORCE_INLINE std::string BackRead(const std::string& str, const char c, const int offset = 0) {
             std::string result = std::string();
@@ -286,16 +235,7 @@ namespace SR_UTILS_NS {
             return len;
         }
 
-        SR_NODISCARD inline static std::pair<std::string, std::string> SplitTwo(std::string source, const std::string& delimiter) {
-            std::pair<std::string, std::string> result = {};
-            auto pos = source.find(delimiter);
-
-            result.first = source.substr(0, pos);
-            source.erase(0, pos + delimiter.length());
-            result.second = source;
-
-            return result;
-        }
+        SR_NODISCARD static std::pair<std::string, std::string> SplitTwo(std::string source, const std::string& delimiter);
 
         SR_NODISCARD static std::vector<std::string_view> SplitView(std::string_view source, std::string_view delimiter);
         SR_NODISCARD static std::vector<std::string_view> SplitViewWithEmpty(std::string_view source, std::string_view delimiter);
@@ -409,21 +349,7 @@ namespace SR_UTILS_NS {
             return count;
         }
 
-        SR_NODISCARD inline static std::string ReplaceAllRecursive(const std::string& original, const std::vector<std::string>& fromList, const std::string& to) noexcept {
-            std::string result = original;
-
-        repeat:
-            for (const auto& from : fromList) {
-                size_t pos = result.find(from);
-
-                if (pos != std::string::npos) {
-                    result.replace(pos, from.size(), to);
-                    goto repeat;
-                }
-            }
-
-            return result;
-        }
+        SR_NODISCARD static std::string ReplaceAllRecursive(const std::string& original, const std::vector<std::string>& fromList, const std::string& to) noexcept;
 
         template<typename stringType> SR_NODISCARD static stringType ReplaceAll(stringType const& original, stringType const& from, stringType const& to) noexcept {
             stringType results;

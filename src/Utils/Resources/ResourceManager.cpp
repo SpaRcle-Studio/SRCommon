@@ -508,4 +508,12 @@ namespace SR_UTILS_NS {
             return false;
         });
     }
+
+    Path ResourceManager::GetResPath() const {
+        return GetResPathRef();
+    }
+
+    Path ResourceManager::GetCachePath() const {
+        return GetResPathRef().Concat("Cache");
+    }
 }

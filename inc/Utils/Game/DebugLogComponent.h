@@ -12,7 +12,7 @@
 
 namespace SR_UTILS_NS {
     /// @category(Debug)
-    class SR_DLL_EXPORT DebugLogComponent final : public Component {
+    class SR_COMMON_DLL_API DebugLogComponent final : public Component {
         SR_CLASS()
         using Super = Component;
     public:

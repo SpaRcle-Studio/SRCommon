@@ -34,7 +34,7 @@ namespace Codegen {
 namespace SR_UTILS_NS {
     class EnumReflector;
 
-    class SR_DLL_EXPORT EnumReflectorManager : public SR_UTILS_NS::Singleton<EnumReflectorManager> {
+    class EnumReflectorManager : public SR_UTILS_NS::Singleton<EnumReflectorManager> {
         SR_REGISTER_SINGLETON(EnumReflectorManager);
         using Reflectors = ska::flat_hash_map<uint64_t, EnumReflector*>;
     public:
@@ -63,7 +63,7 @@ namespace SR_UTILS_NS {
         static constexpr size_t NumItems = Codegen::GetEnumItemsCount(EnumSelectorType{});
     };
 
-    class SR_DLL_EXPORT EnumReflector : public NonCopyable {
+    class SR_COMMON_DLL_API EnumReflector : public NonCopyable {
     public:
         struct Enumerator {
             SR_UTILS_NS::StringAtom name;
@@ -101,13 +101,13 @@ namespace SR_UTILS_NS {
         SR_NODISCARD SR_MAYBE_UNUSED std::optional<int64_t> FromStringLowerCaseInternal(const std::string& value) const;
         SR_NODISCARD SR_MAYBE_UNUSED std::optional<int64_t> GetIndexInternal(int64_t value) const;
         SR_NODISCARD SR_MAYBE_UNUSED std::optional<int64_t> AtInternal(uint64_t index) const;
-        SR_NODISCARD SR_MAYBE_UNUSED const std::vector<SR_UTILS_NS::StringAtom>& GetNamesInternal() const { return m_data->names; }
-        SR_NODISCARD SR_MAYBE_UNUSED const SR_UTILS_NS::StringAtom& GetNameInternal() const { return m_data->enumName; }
-        SR_NODISCARD SR_MAYBE_UNUSED uint64_t GetIntegralTypeSizeInternal() const { return m_integralTypeSize; }
-        SR_NODISCARD SR_MAYBE_UNUSED uint64_t GetHashNameInternal() const { return m_data->hashName; }
+        SR_NODISCARD SR_MAYBE_UNUSED const std::vector<SR_UTILS_NS::StringAtom>& GetNamesInternal() const;
+        SR_NODISCARD SR_MAYBE_UNUSED const SR_UTILS_NS::StringAtom& GetNameInternal() const;
+        SR_NODISCARD SR_MAYBE_UNUSED uint64_t GetIntegralTypeSizeInternal() const;
+        SR_NODISCARD SR_MAYBE_UNUSED uint64_t GetHashNameInternal() const;
         SR_NODISCARD SR_MAYBE_UNUSED int64_t ReadEnumValueFromPointerInternal(const void* pEnum) const;
         SR_NODISCARD SR_MAYBE_UNUSED void WriteEnumValueToPointerInternal(void* pEnum, int64_t value) const;
-        SR_NODISCARD SR_MAYBE_UNUSED EnumVariant GetEnumVariantInternal() const { return m_enumVariant; }
+        SR_NODISCARD SR_MAYBE_UNUSED EnumVariant GetEnumVariantInternal() const;
 
     private:
         static bool IsIdentChar(char c);

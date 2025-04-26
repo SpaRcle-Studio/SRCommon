@@ -3,3 +3,8 @@
 //
 
 #include <Utils/Events/Event.h>
+
+namespace SR_UTILS_NS {
+    IEvent::IEvent() = default;
+    IEvent::~IEvent() = default;
+}

@@ -15,7 +15,7 @@
 namespace SR_UTILS_NS {
     class ResourceManager;
 
-    class SR_DLL_EXPORT FileWatcher final : public SR_HTYPES_NS::SharedPtr<FileWatcher>, SR_UTILS_NS::NonCopyable {
+    class FileWatcher final : public SR_HTYPES_NS::SharedPtr<FileWatcher>, SR_UTILS_NS::NonCopyable {
         using CallBack = SR_HTYPES_NS::Function<void(FileWatcher* pWatcher)>;
         friend class ResourceManager;
     public:
@@ -23,13 +23,14 @@ namespace SR_UTILS_NS {
 
     public:
         explicit FileWatcher(SR_UTILS_NS::Path path);
+        ~FileWatcher() override;
 
     public:
         void SetCallBack(CallBack callBack);
         void SetName(std::string name);
 
-        void Pause() { Unsubscribe(); }
-        void Resume() { Subscribe(); }
+        void Pause();
+        void Resume();
 
         SR_NODISCARD std::string GetName() const noexcept;
         SR_NODISCARD const SR_UTILS_NS::Path& GetPath() const noexcept;

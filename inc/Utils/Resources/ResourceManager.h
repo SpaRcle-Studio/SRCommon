@@ -22,7 +22,7 @@ namespace SR_UTILS_NS {
 
     std::optional<Path> GetResourceFolder(const Path& appFolder);
 
-    class SR_DLL_EXPORT ResourceManager final : public Singleton<ResourceManager> {
+    class ResourceManager final : public Singleton<ResourceManager> {
         SR_REGISTER_SINGLETON(ResourceManager)
         using Hash = uint64_t;
     public:
@@ -31,9 +31,9 @@ namespace SR_UTILS_NS {
     public:
         SR_NODISCARD bool IsLastResource(IResource* resource);
         SR_NODISCARD bool IsUsePointStackTraceProfilingEnabled() const { return m_usePointStackTraceProfiling; }
-        SR_NODISCARD Path GetResPath() const { return GetResPathRef(); }
+        SR_NODISCARD Path GetResPath() const;
         SR_NODISCARD const Path& GetResPathRef() const;
-        SR_NODISCARD Path GetCachePath() const { return GetResPathRef().Concat("Cache"); }
+        SR_NODISCARD Path GetCachePath() const;
         SR_NODISCARD std::string_view GetTypeName(Hash hashName) const;
         SR_NODISCARD FileSystemWatcher::Ptr GetFileSystemWatcher() const { return m_fileSystemWatcher; }
 

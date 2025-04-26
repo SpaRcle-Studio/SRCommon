@@ -6,6 +6,7 @@
 #include <Utils/Common/HashManager.h>
 
 namespace SR_UTILS_NS {
+    std::string StringAtom::DEFAULT = std::string();
     StringHashInfo* StringAtom::DEFAULT_STRING_INFO = SR_UTILS_NS::HashManager::Instance().GetOrAddInfo("");
 
     StringAtom::StringAtom() {
@@ -138,5 +139,13 @@ namespace SR_UTILS_NS {
 
     bool StringAtom::operator==(const std::string_view& rhs) const noexcept {
         return m_info != nullptr && m_info->data == rhs;
+    }
+
+    void StringAtom::clear() {
+        Clear();
+    }
+
+    StringAtom::operator uint64_t() const noexcept {
+        return GetHash();
     }
 }

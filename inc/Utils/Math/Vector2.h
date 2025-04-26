@@ -9,7 +9,7 @@
 #include <Utils/Math/Axis.h>
 
 namespace SR_MATH_NS {
-    template<typename T> struct SR_DLL_EXPORT Vector2 {
+    template<typename T> struct Vector2 {
     public:
         using ValueType = T;
 

@@ -69,5 +69,19 @@ namespace SR_UTILS_NS {
     void Settings::Do(const SR_HTYPES_NS::Function<void(Settings*)> &fun) {
         fun(this);
     }
+
+    Settings::Settings()
+        : IResource(SR_COMPILE_TIME_CRC32_TYPE_NAME(Settings))
+    { }
+
+    void Settings::ClearSettings() {
+
+    }
+
+    bool Settings::LoadSettings(const Xml::Node& node) {
+        return true;
+    }
+
+    Settings::~Settings() = default;
 }
 

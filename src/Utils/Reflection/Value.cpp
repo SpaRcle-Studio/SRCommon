@@ -35,6 +35,39 @@ namespace SR_UTILS_NS::Reflection {
 
     /// ----------------------------------------------------------------------------------------------------------------
 
+    Value::Value(entt::meta_any&& storage)
+        : m_storage(std::move(storage))
+    { }
+
+    Value::Value() = default;
+
+    Value::Value(const Value& other) {
+        if (other.IsRef()) {
+            m_storage = const_cast<entt::meta_any*>(&other.m_storage)->as_ref();
+        } else {
+            m_storage = other.m_storage;
+        }
+    }
+
+    Value& Value::operator=(const Value& other) noexcept {
+        if (this != &other) {
+            if (other.IsRef()) {
+                m_storage = const_cast<entt::meta_any*>(&other.m_storage)->as_ref();
+            } else {
+                m_storage = other.m_storage;
+            }
+        }
+        return *this;
+    }
+
+    Value& Value::operator=(Value&& other) noexcept {
+        if (this != &other) {
+            m_storage = other.IsRef() ? other.m_storage.as_ref() : other.m_storage;
+        }
+        return *this;
+    }
+
+
     Value Value::Ref() {
         return Value(m_storage.as_ref());
     }
@@ -267,4 +300,6 @@ namespace SR_UTILS_NS::Reflection {
     ValueSequenceContainer Value::AsSequenceContainer() const {
         return ValueSequenceContainer(m_storage.as_sequence_container());
     }
+
+    Value::~Value() = default;
 }

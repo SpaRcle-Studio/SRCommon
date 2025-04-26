@@ -94,6 +94,37 @@ namespace SR_UTILS_NS {
         return m_valid ? m_attribute.as_ullong() : def;
     }
 
+    Xml::Attribute::Attribute()
+        : m_attribute()
+        , m_valid(false)
+    { }
+
+    Xml::Attribute::Attribute(const pugi::xml_attribute &attribute) {
+        m_attribute = attribute;
+        m_valid = !m_attribute.empty();
+    }
+
+    bool Xml::Attribute::CheckError(const std::string &msg) const {
+        if (m_valid) {
+            return true;
+        }
+        else {
+            SRAssert2(false, msg);
+            g_xml_last_error = -1;
+            return false;
+        }
+    }
+
+    Xml::Attribute::operator bool() const {
+        return Valid();
+    }
+
+    bool Xml::Attribute::Valid() const {
+        return m_valid;
+    }
+
+    Xml::Attribute::~Attribute() = default;
+
     Xml::Document Xml::Document::Load(const Path &path) {
         SR_TRACY_ZONE;
         SR_TRACY_TEXT_N("Path", path.ToStringRef());
@@ -127,6 +158,95 @@ namespace SR_UTILS_NS {
         m_document->save(stream, PUGIXML_TEXT("    "));
 
         return stream.str();
+    }
+
+    Xml::Document::operator bool() const {
+        return Valid();
+    }
+
+    Xml::Node Xml::Document::DocumentElement() const {
+        return Node(m_document->document_element());
+    }
+
+    Xml::Node Xml::Document::TryRoot() const {
+        if (!Valid()) {
+            return Node();
+        }
+
+        return Node(m_document->root());
+    }
+
+    Xml::Node Xml::Document::Root() const {
+        return Node(m_document->root());
+    }
+
+    bool Xml::Document::Save(const Path &path) const {
+        if (!path.Exists()) {
+            path.Create();
+        }
+
+        if (!m_document->save_file(path.CStr())) {
+            SR_ERROR("Document::Save() : failed save to file!\n\tPath: " + path.ToString());
+            return false;
+        }
+
+        return true;
+    }
+
+    Xml::Node Xml::Document::AppendChild(const std::string &name) {
+        if (!m_valid) {
+            SRAssert2(false,"Document::AppendChild() : document is not valid!");
+            g_xml_last_error = -2;
+            return Node();
+        }
+
+        auto node = m_document->append_child(name.c_str());
+        return Node(node);
+    }
+
+    int32_t Xml::Document::GetLastError() {
+        auto last = Xml::g_xml_last_error;
+        Xml::g_xml_last_error = 0;
+        return last;
+    }
+
+    Xml::Document Xml::Document::New() {
+        auto xml = Document();
+        xml.m_valid = true;
+        xml.m_path = "None";
+        xml.m_document = new pugi::xml_document();
+        return xml;
+    }
+
+    Xml::Document Xml::Document::Empty() {
+        return Document();
+    }
+
+    Xml::Document::Document() {
+        m_valid = false;
+    }
+
+    Xml::Document::Document(Xml::Document &&document) noexcept
+        : m_document(std::exchange(document.m_document, {}))
+        , m_valid(std::exchange(document.m_valid, {}))
+        , m_path(std::exchange(document.m_path, {}))
+    { }
+
+    Xml::Document::~Document() {
+        if (m_document) {
+            delete m_document;
+        }
+    }
+
+    Xml::Document &Xml::Document::operator=(Xml::Document &&document) noexcept {
+        m_document = std::exchange(document.m_document, {});
+        m_valid = std::exchange(document.m_valid, {});
+        m_path = std::exchange(document.m_path, {});
+        return *this;
+    }
+
+    bool Xml::Document::Valid() const {
+        return m_valid;
     }
 
     Xml::Node::Node()
@@ -196,5 +316,92 @@ namespace SR_UTILS_NS {
 
     Xml::Node Xml::Node::AppendChild(const Xml::Node& node) {
         return Xml::Node(m_node.append_copy(node.m_node));
+    }
+
+    Xml::Node Xml::Node::GetNode(const std::string &name) const  {
+        if (!m_valid) {
+            SRAssert2(false, "Node::GetNode() : node is not valid!");
+            g_xml_last_error = -2;
+            return Node();
+        }
+
+        return Node(m_node.child(name.c_str()));
+    }
+
+    Xml::Node Xml::Node::TryGetNode(const std::string &name) const  {
+        return m_valid ? Node(m_node.child(name.c_str())) : Node();
+    }
+
+    bool Xml::Node::HasAttribute(const std::string &name) const {
+        return m_valid ? !m_node.attribute(name.c_str()).empty() : false;
+    }
+
+    Xml::Attribute Xml::Node::TryGetAttribute(const std::string &name) const {
+        return m_valid ? Attribute(m_node.attribute(name.c_str())) : Attribute();
+    }
+
+    Xml::Attribute Xml::Node::GetAttribute(const std::string &name) const {
+        if (!m_valid) {
+            SRAssert2(false, "Node::GetAttribute() : node is not valid!");
+            g_xml_last_error = -4;
+            return Attribute();
+        }
+
+        return Attribute(m_node.attribute(name.c_str()));
+    }
+
+    std::string_view Xml::Node::NameView() const {
+        if (!m_valid) {
+            SRAssert2(false, "Node::Name() : node is not valid!");
+            g_xml_last_error = -4;
+            return {};
+        }
+
+        return m_node.name();
+    }
+
+    std::string Xml::Node::Name() const {
+        if (!m_valid) {
+            SRAssert2(false, "Node::Name() : node is not valid!");
+            g_xml_last_error = -4;
+            return {};
+        }
+
+        return m_node.name();
+    }
+
+    bool Xml::Node::Valid() const {
+        return m_valid;
+    }
+
+    Xml::Node::operator bool() const {
+        return Valid();
+    }
+
+    Xml::Node::Node(pugi::xml_node node) {
+        m_node = node;
+        m_valid = !m_node.empty();
+    }
+
+    Xml::Node Xml::Node::Empty() {
+        return Node();
+    }
+
+    Xml::Node Xml::Node::AppendNode(const std::string &name) {
+        return AppendChild(name);
+    }
+
+    Xml::Node Xml::Node::AppendNode(const Xml::Node &node) {
+        return AppendChild(node);
+    }
+
+    Xml::Node::~Node() = default;
+
+    void Xml::AppendColorNode(Xml::Node &node, const Math::FColor &color) {
+        node.AppendChild("Color")
+            .NAppendAttribute("r", color.r * 255.f)
+            .NAppendAttribute("g", color.g * 255.f)
+            .NAppendAttribute("b", color.b * 255.f)
+            .NAppendAttribute("a", color.a * 255.f);
     }
 }

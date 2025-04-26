@@ -112,8 +112,13 @@ namespace SR_MATH_NS {
        return Quaternion(q);
    }
 
+    SR_NODISCARD Quaternion::T Quaternion::X() const noexcept { return static_cast<T>(self.x); }
+    SR_NODISCARD Quaternion::T Quaternion::Y() const noexcept { return static_cast<T>(self.y); }
+    SR_NODISCARD Quaternion::T Quaternion::Z() const noexcept { return static_cast<T>(self.z); }
+    SR_NODISCARD Quaternion::T Quaternion::W() const noexcept { return static_cast<T>(self.w); }
+
     Quaternion Quaternion::LookAt(const Vector3<Unit>& direction) {
-        static constexpr Vector3<Unit> up = Vector3<Unit>(0, 1, 0);
+        static Vector3<Unit> up = Vector3<Unit>(0, 1, 0);
         return Quaternion::LookAt(direction, up);
     }
 
@@ -232,7 +237,7 @@ namespace SR_MATH_NS {
         return 2 * atan2(qd.Vector().Length(), qd.W());
     }
 
-    constexpr Quaternion::Quaternion(const Matrix4x4& matrix) {
+    Quaternion::Quaternion(const Matrix4x4& matrix) {
         Vector3 m0 = matrix[0].XYZ(),
                 m1 = matrix[1].XYZ(),
                 m2 = matrix[2].XYZ();
@@ -295,5 +300,239 @@ namespace SR_MATH_NS {
             z = 0.25f * S;
             w = (m1[0] - m0[1]) / S;
         }
+    }
+
+    glm::mat4 Quaternion::ToMat4x4GLM() const noexcept {
+        return mat4_cast(self);
+    }
+
+    glm::quat Quaternion::ToGLM() const noexcept {
+        return self;
+    }
+
+    Quaternion::Quaternion(const Quaternion &p_q)
+        : x(p_q.x)
+        , y(p_q.y)
+        , z(p_q.z)
+        , w(p_q.w)
+    { }
+
+    Quaternion::Quaternion() {
+        x = y = z = static_cast<T>(0);
+        w = static_cast<T>(1);
+    }
+
+    Quaternion::Quaternion(const glm::quat &q) {
+        self = q;
+    }
+
+    Quaternion::Quaternion(Quaternion::T x, Quaternion::T y, Quaternion::T z, Quaternion::T w)
+        : x(x)
+        , y(y)
+        , z(z)
+        , w(w)
+    { }
+
+    Quaternion Quaternion::Identity() {
+        return Quaternion(0.0, 0.0, 0.0, 1.0);
+    }
+
+    Quaternion Quaternion::Inverse() const {
+        return Quaternion(glm::inverse(self));
+    }
+
+    bool Quaternion::IsEquals(const Quaternion &q, Unit tolerance) const noexcept {
+#if SR_SIMD_SUPPORT
+        // Загружаем компоненты текущего кватерниона и значения в SIMD регистры
+        __m128 this_vec = _mm_set_ps(w, z, y, x);
+        __m128 value_vec = _mm_set_ps(q.w, q.z, q.y, q.x);
+
+        // Вычисляем разницу между компонентами
+        __m128 diff_vec = _mm_sub_ps(this_vec, value_vec);
+
+        // Загружаем допуск в SIMD регистр
+        __m128 tolerance_vec = _mm_set1_ps(tolerance);
+
+        // Вычисляем абсолютное значение разницы
+        __m128 abs_diff_vec = _mm_andnot_ps(_mm_set1_ps(-0.0f), diff_vec); // получаем abs
+        abs_diff_vec = _mm_cmpge_ps(abs_diff_vec, tolerance_vec); // сравниваем на больше или равно по модулю
+
+        // Проверяем, все ли компоненты проходят проверку на равенство
+        int mask = _mm_movemask_ps(abs_diff_vec); // применяем маску
+        return mask == 0; // если все 0, то результаты совпадают
+#else
+        if (!SR_EQUALS_T(x, q.x, tolerance)) {
+                return false;
+            }
+
+            if (!SR_EQUALS_T(y, q.y, tolerance)) {
+                return false;
+            }
+
+            if (!SR_EQUALS_T(z, q.z, tolerance)) {
+                return false;
+            }
+
+            if (!SR_EQUALS_T(w, q.w, tolerance)) {
+                return false;
+            }
+
+            SR_NOOP;
+
+            return true;
+#endif
+    }
+
+    Quaternion Quaternion::Slerp(const Quaternion &q, Unit t) const {
+#if SR_SIMD_SUPPORT
+        // Load q1 and q2 into SIMD registers
+        __m128 q1_vec = _mm_set_ps(w, z, y, x); // Загрузка в обратном порядке для корректного выравнивания
+        __m128 q2_vec = _mm_set_ps(q.w, q.z, q.y, q.x); // Загрузка в обратном порядке для корректного выравнивания
+
+        // Compute the dot product
+        __m128 dot_vec = _mm_dp_ps(q1_vec, q2_vec, 0xFF); // Вычисление dot product с использованием SIMD
+
+        // Распаковка результатов
+        float dot_result;
+        _mm_store_ss(&dot_result, dot_vec);
+
+        // Если dot product отрицателен, инвертируем один кватернион
+        __m128 q2_copy = q2_vec;
+        if (dot_result < 0.0f) {
+            q2_copy = _mm_mul_ps(q2_vec, _mm_set1_ps(-1.0f));
+            dot_result = -dot_result;
+        }
+
+        const float DOT_THRESHOLD = 0.9995f;
+        if (dot_result > DOT_THRESHOLD) {
+            // Если кватернионы слишком близки, выполняем линейную интерполяцию и нормализацию результата
+            __m128 result_vec = _mm_add_ps(q1_vec, _mm_mul_ps(_mm_sub_ps(q2_copy, q1_vec), _mm_set1_ps(t)));
+            float result_array[4];
+            _mm_store_ps(result_array, result_vec);
+            Quaternion result(result_array[0], result_array[1], result_array[2], result_array[3]);
+            return result.Normalized();
+        }
+
+        // Вычисляем угол и sin(theta)
+        float theta_0 = std::acos(dot_result); // Угол между входными векторами
+        float theta = theta_0 * t;      // Угол между q1 и результатом
+        float sin_theta = std::sin(theta);        // Вычисляем значение только один раз
+        float sin_theta_0 = std::sin(theta_0);    // Вычисляем значение только один раз
+
+        float s0 = std::cos(theta) - dot_result * sin_theta / sin_theta_0;  // == sin(theta_0 - theta) / sin(theta_0)
+        float s1 = sin_theta / sin_theta_0;
+
+        // Интерполируем
+        __m128 s0_vec = _mm_set1_ps(s0);
+        __m128 s1_vec = _mm_set1_ps(s1);
+        __m128 interp_vec = _mm_add_ps(_mm_mul_ps(q1_vec, s0_vec), _mm_mul_ps(q2_copy, s1_vec));
+
+        // Сохраняем результат
+        float result_array[4];
+        _mm_store_ps(result_array, interp_vec);
+        return Quaternion(result_array[0], result_array[1], result_array[2], result_array[3]);
+#else
+        return glm::slerp(self, q.self, static_cast<float_t>(t));
+#endif
+    }
+
+    Quaternion Quaternion::Normalized() const {
+        return Normalize();
+    }
+
+    Quaternion Quaternion::Normalize() const {
+        return Quaternion(glm::normalize(self));
+    }
+
+    Unit Quaternion::Roll() const noexcept {
+        return static_cast<Unit>(atan2(static_cast<Unit>(2) * (x * y + w * z), w * w + x * x - y * y - z * z));
+    }
+
+    Unit Quaternion::Yaw() const noexcept {
+        return asin(SR_CLAMP(static_cast<Unit>(-2) * (x * z - w * y), static_cast<Unit>(-1), static_cast<Unit>(1)));
+    }
+
+    std::string Quaternion::ToString() const {
+        return "(" + std::to_string(self.x) + ", " + std::to_string(self.y) + ", " + std::to_string(self.z) + ", " + std::to_string(self.w) + ")";
+    }
+
+    bool Quaternion::operator!=(const Quaternion &q) const noexcept {
+        return !(*this == q);
+    }
+
+    bool Quaternion::operator==(const Quaternion &q) const noexcept {
+        return
+            SR_EQUALS(x, q.x) &&
+            SR_EQUALS(y, q.y) &&
+            SR_EQUALS(z, q.z) &&
+            SR_EQUALS(w, q.w);
+    }
+
+    Unit Quaternion::Angle(const Quaternion &q) const {
+        return Distance(q);
+    }
+
+    bool Quaternion::IsFinite() const noexcept {
+        /// если будет inf или nan, то вернет false
+        return std::isfinite(x) && std::isfinite(y) && std::isfinite(z) && std::isfinite(w);
+    }
+
+    bool Quaternion::IsIdentity() const noexcept {
+        return
+            SR_EQUALS(x, 1.f) &&
+            SR_EQUALS(y, 1.f) &&
+            SR_EQUALS(z, 1.f) &&
+            SR_EQUALS(w, 1.f);
+    }
+
+    void Quaternion::operator+=(const Quaternion &p_q) {
+        self += p_q.self;
+    }
+
+    void Quaternion::operator-=(const Quaternion &p_q) {
+        self -= p_q.self;
+    }
+
+    void Quaternion::operator*=(const Quaternion &p_q) {
+        self *= p_q.self;
+    }
+
+    void Quaternion::operator*=(const double &s){
+        self *= s;
+    }
+
+    void Quaternion::operator/=(const double &s) {
+        self *= 1.0 / s;
+    }
+
+    Quaternion Quaternion::operator+(const Quaternion &q2) const {
+        const Quaternion &q1 = *this;
+        return Quaternion(q1.self + q2.self);
+    }
+
+    Quaternion Quaternion::operator-(const Quaternion &q2) const {
+        const Quaternion &q1 = *this;
+        return Quaternion(q1.self - q2.self);
+    }
+
+    Quaternion Quaternion::operator-() const {
+        const Quaternion &q2 = *this;
+        return Quaternion(-q2.self);
+    }
+
+    Quaternion Quaternion::operator*(const double &s) const {
+        glm::quat q = self;
+        q *= s;
+        return Quaternion(q);
+    }
+
+    Quaternion Quaternion::operator/(const double &s) const {
+        glm::quat q = self;
+        q *= 1.0 / s;
+        return Quaternion(q);
+    }
+
+    Quaternion Quaternion::operator*(const Quaternion &rhs) const {
+        return Quaternion(self * rhs.self);
     }
 }
