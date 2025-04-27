@@ -206,7 +206,7 @@ namespace SR_UTILS_NS {
             case DebugLogType::Warn: return fmt::fg(fmt::color::yellow) | errorWarnStyle;
             case DebugLogType::Error: return fmt::fg(fmt::color::red) | errorWarnStyle;
             case DebugLogType::ScriptError: return fmt::fg(fmt::color::red) | errorWarnStyle;
-            case DebugLogType::ScriptLog: return fmt::fg(fmt::color::dark_cyan);
+            case DebugLogType::ScriptLog: return fmt::fg(fmt::color::peach_puff);
             case DebugLogType::Vulkan: return fmt::fg(fmt::color::deep_sky_blue);
             case DebugLogType::VulkanLog: return fmt::fg(fmt::color::deep_sky_blue);
             case DebugLogType::VulkanError: return fmt::fg(fmt::color::red) | errorWarnStyle;

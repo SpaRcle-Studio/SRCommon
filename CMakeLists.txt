@@ -18,7 +18,6 @@ option(SR_COMMON_STATIC_LIBRARY "" ON)
 option(SR_COMMON_EMBED_RESOURCES "" OFF)
 option(SR_COMMON_CI_BUILD "" OFF)
 
-
 if (SR_COMMON_CURL)
     set(SR_COMMON_OPENSSL ON)
 endif()
@@ -33,7 +32,7 @@ add_subdirectory(libs/tree-sitter-cpp)
 add_subdirectory(libs/tree-sitter/lib)
 
 include(cmake/Linker.cmake)
-
+include(cmake/CopyDLLToExeFolder.cmake)
 
 if (SR_COMMON_SDL)
     add_compile_definitions(SR_COMMON_SDL)
@@ -346,6 +345,8 @@ else()
 
     add_library(Utils SHARED ${SR_UTILS_LINK_LIBRARIES})
     add_library(Utils::lib ALIAS Utils)
+
+    SR_COPY_SHARED_MODULE_TO_EXECUTABLE_FOLDER(Utils)
 endif()
 
 if (NOT ANDROID_NDK)

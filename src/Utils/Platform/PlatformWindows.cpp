@@ -803,12 +803,22 @@ namespace SR_UTILS_NS::Platform {
         // ::SetCursor(hCursor);
     }
 
+    static HWND gWindowsPlatformWindow = nullptr;
+
     void ConfineCursor() {
-        SRHaltOnce("Not implemented!");
+        if (!gWindowsPlatformWindow) {
+            // Получаем дескриптор окна - можно заменить на своё окно
+            gWindowsPlatformWindow = GetForegroundWindow();
+        }
+
+        RECT rect;
+        if (GetWindowRect(gWindowsPlatformWindow, &rect)) {
+            ClipCursor(&rect);
+        }
     }
 
     void ReleaseCursorConfinement() {
-        SRHaltOnce("Not implemented!");
+        ClipCursor(nullptr);
     }
 
     PlatformType GetType() {
