@@ -253,6 +253,10 @@ namespace SR_UTILS_NS {
         return m_parent;
     }
 
+    bool Component::HasScene() const {
+        return TryGetScene();
+    }
+
     Component::Component() = default;
 }
 

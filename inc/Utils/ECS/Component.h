@@ -123,7 +123,7 @@ namespace SR_UTILS_NS {
         SR_NODISCARD IComponentable* GetParent() const;
         SR_NODISCARD IComponentable* TryGetParent() const;
         SR_NODISCARD ScenePtr GetScene() const;
-        SR_NODISCARD bool HasScene() const { return TryGetScene(); }
+        SR_NODISCARD bool HasScene() const;
         SR_NODISCARD GameObjectPtr GetGameObject() const;
         SR_NODISCARD SceneObjectPtr GetSceneObject() const;
         SR_NODISCARD ScenePtr TryGetScene() const;

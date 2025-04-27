@@ -66,11 +66,6 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
 endif()
 
-
-if (SR_COMMON_DLL_EXPORTS)
-    add_compile_definitions(SR_COMMON_DLL_EXPORTS)
-endif()
-
 if (SR_COMMON_ZLIB)
     set(ZLIB_BUILD_EXAMPLES OFF)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DASSIMP_BUILD_ZLIB=OFF")
@@ -243,6 +238,7 @@ endif()
 add_subdirectory(libs/rapidyaml)
 add_subdirectory(libs/entt)
 
+list(APPEND SR_UTILS_LINK_LIBRARIES cxx/Allocator.cxx)
 list(APPEND SR_UTILS_LINK_LIBRARIES cxx/ICU.cxx)
 list(APPEND SR_UTILS_LINK_LIBRARIES cxx/Utils.cxx)
 list(APPEND SR_UTILS_LINK_LIBRARIES cxx/ECS.cxx)
@@ -333,16 +329,8 @@ if (SR_EFSW_USE)
 endif()
 
 if (SR_COMMON_STATIC_LIBRARY)
-    if(MSVC AND CMAKE_CXX_FLAGS MATCHES "/MD")
-        message(FATAL_ERROR "SRCommon: SR_COMMON_STATIC_LIBRARY is set to ON, but /MD flag is used. Please use /MT flag.")
-    endif()
-
     add_library(Utils STATIC ${SR_UTILS_LINK_LIBRARIES})
 else()
-    if(MSVC AND CMAKE_CXX_FLAGS MATCHES "/MT")
-        message(FATAL_ERROR "SRCommon: SR_COMMON_STATIC_LIBRARY is set to OFF, but /MT flag is used. Please use /MD flag.")
-    endif()
-
     add_library(Utils SHARED ${SR_UTILS_LINK_LIBRARIES})
     add_library(Utils::lib ALIAS Utils)
 
@@ -453,9 +441,7 @@ include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/CopyFiles.cmake)
 
 if (SR_COMMON_DLL_EXPORTS)
     message("SRCommon will be using DLL exports")
-    target_compile_definitions(Utils PUBLIC
-        SR_COMMON_DLL_EXPORTS
-    )
+    target_compile_definitions(Utils PUBLIC SR_COMMON_DLL_EXPORTS)
 endif()
 
 set(SR_UTILS_DEPENDENCIES "")
