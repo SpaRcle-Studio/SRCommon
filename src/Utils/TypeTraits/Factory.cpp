@@ -54,4 +54,34 @@ namespace SR_UTILS_NS {
         SRHalt("Factory::IsAbstract() : unknown type! Name: {}", name);
         return false;
     }
+
+    SRClass* Factory::CreateBase(SR_UTILS_NS::StringAtom name) const noexcept {
+        auto&& pIt = m_types.find(name);
+
+        if (pIt != m_types.end()) {
+            if (pIt->second.isAbstract) {
+                SR_ERROR("Factory::CreateBase() : type \"{}\" is abstract!", name);
+                return nullptr;
+            }
+
+            auto&& pClass = pIt->second.allocator();
+            if (pClass) {
+                return pClass;
+            }
+
+            SRHalt("Failed to create object \"{}\"!", name);
+            return nullptr;
+        }
+
+        SRHalt("Type \"{}\" is not registered!", name);
+        return nullptr;
+    }
+
+    const SRClassMeta* Factory::GetType(SR_UTILS_NS::StringAtom name) const noexcept {
+        auto&& pIt = m_types.find(name);
+        if (pIt != m_types.end()) {
+            return pIt->second.metaGetter();
+        }
+        return nullptr;
+    }
 }

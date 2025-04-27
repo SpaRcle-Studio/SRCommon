@@ -41,6 +41,11 @@ namespace SR_UTILS_NS {
             if constexpr (std::is_abstract_v<T>) {
                 if (auto&& pMeta = T::GetMetaStatic()) {
                     auto&& name = pMeta->GetFactoryName();
+
+                    if (m_types.count(name) > 0) {
+                        return true;
+                    }
+
                     TypeInfo& info = m_types[name];
                     info.isAbstract = true;
                     info.metaGetter = T::GetMetaStatic;
@@ -59,6 +64,11 @@ namespace SR_UTILS_NS {
             }
             else if (auto&& pMeta = T::GetMetaStatic()) {
                 auto&& name = pMeta->GetFactoryName();
+
+                if (m_types.count(name) > 0) {
+                     return true;
+                }
+
                 TypeInfo& info = m_types[name];
                 info.allocator = []() -> SRClass* {
                     return static_cast<SRClass*>(SRNew<T>());
@@ -102,39 +112,10 @@ namespace SR_UTILS_NS {
             return Create<T>(T::GetClassStaticName());
         }
 
-        SR_NODISCARD SRClass* CreateBase(SR_UTILS_NS::StringAtom name) const noexcept {
-            auto&& pIt = m_types.find(name);
-
-            if (pIt != m_types.end()) {
-                if (pIt->second.isAbstract) {
-                    SR_ERROR("Factory::CreateBase() : type \"{}\" is abstract!", name);
-                    return nullptr;
-                }
-
-                auto&& pClass = pIt->second.allocator();
-                if (pClass) {
-                    return pClass;
-                }
-
-                SRHalt("Failed to create object \"{}\"!", name);
-                return nullptr;
-            }
-
-            SRHalt("Type \"{}\" is not registered!", name);
-            return nullptr;
-        }
-
+        SR_NODISCARD SRClass* CreateBase(SR_UTILS_NS::StringAtom name) const noexcept;
         SR_NODISCARD std::vector<SR_UTILS_NS::StringAtom> GetInheritances(SR_UTILS_NS::StringAtom baseClass) const noexcept;
-
         SR_NODISCARD bool IsAbstract(SR_UTILS_NS::StringAtom name) const noexcept;
-
-        SR_NODISCARD const SRClassMeta* GetType(SR_UTILS_NS::StringAtom name) const noexcept override {
-            auto&& pIt = m_types.find(name);
-            if (pIt != m_types.end()) {
-                return pIt->second.metaGetter();
-            }
-            return nullptr;
-        }
+        SR_NODISCARD const SRClassMeta* GetType(SR_UTILS_NS::StringAtom name) const noexcept override;
 
     private:
         std::unordered_map<SR_UTILS_NS::StringAtom, TypeInfo> m_types;

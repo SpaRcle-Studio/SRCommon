@@ -11,7 +11,6 @@
 #include <Utils/Serialization/Serialization.h>
 
 namespace SR_UTILS_NS {
-    /// @scriptableClass
     class Serializable : public SRClass {
         SR_CLASS()
     public:

@@ -5,6 +5,8 @@
 #include <Utils/TypeTraits/SRClassMeta.h>
 
 namespace SR_UTILS_NS {
+    SRClassMeta::~SRClassMeta() = default;
+
     void SRClassMeta::Save(SR_UTILS_NS::ISerializer& serializer, const SR_UTILS_NS::Serializable& obj) const {
 		for (auto&& pMeta : GetBaseMetas()) {
 			pMeta->Save(serializer, obj);
@@ -75,6 +77,43 @@ namespace SR_UTILS_NS {
         }
 
         return m_versionCached;
+    }
+
+    SR_UTILS_NS::StringAtom SRClassMeta::GetInspectorName() const noexcept {
+        static const SR_UTILS_NS::StringAtom def = "ObjectPropertyDrawer";
+        return def;
+    }
+
+    uint64_t SRClassMeta::GetVersionImpl() const noexcept {
+        return 0;
+    }
+
+    bool SRClassMeta::IsAbstract() const noexcept {
+        return false;
+    }
+
+    bool SRClassMeta::IsHidden() const noexcept {
+        return false;
+    }
+
+    bool SRClassMeta::IsEditorOnly() const noexcept {
+        return false;
+    }
+
+    std::span<const SRClassMeta*> SRClassMeta::GetBaseMetas() const noexcept {
+        return std::span<const SRClassMeta*>();
+    }
+
+    std::span<const SR_UTILS_NS::Reflection::Property> SRClassMeta::GetProperties() const noexcept {
+        return std::span<const SR_UTILS_NS::Reflection::Property>();
+    }
+
+    SR_UTILS_NS::StringAtom SRClassMeta::GetFactoryName() const noexcept {
+        return SR_UTILS_NS::StringAtom();
+    }
+
+    SRClass* SRClassMeta::Allocate() const noexcept {
+        return nullptr;
     }
 }
 
