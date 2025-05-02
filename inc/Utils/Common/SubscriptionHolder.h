@@ -154,6 +154,10 @@ namespace SR_UTILS_NS {
         uint32_t m_count = 0;
 
     };
+
+    namespace Events {
+        extern SR_UTILS_NS::StringAtom EVENT_ON_SCRIPT_MODULE_RELOADED_ID;
+    }
 }
 
 #endif //SR_ENGINE_UTILS_SUBSCRIPTION_HOLDER_H

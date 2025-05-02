@@ -321,15 +321,28 @@
 #define SR_CORE_DLL_API
 
 #if defined(SR_ANDROID)
-    #define SR_COMMON_DLL_API
+    #define SR_DLL_API_IMPORT
+    #define SR_DLL_API_EXPORT
 #elif defined(SR_LINUX)
-    #define SR_COMMON_DLL_API __attribute__((visibility("default")))
+    #define SR_DLL_API_IMPORT __attribute__((visibility("default")))
+    #define SR_DLL_API_EXPORT __attribute__((visibility("default")))
 #else
-    #ifdef SR_COMMON_DLL_EXPORTS
-        #define SR_COMMON_DLL_API __declspec(dllexport)
-    #else
-        #define SR_COMMON_DLL_API __declspec(dllimport)
-    #endif
+    #define SR_DLL_API_IMPORT __declspec(dllimport)
+    #define SR_DLL_API_EXPORT __declspec(dllexport)
+#endif
+
+#ifdef SR_ENGINE_SCRIPT_API_MODE
+    #define SR_CODEGEN_DLL_API_IMPORT
+    #define SR_CODEGEN_DLL_API_EXPORT
+#else
+    #define SR_CODEGEN_DLL_API_IMPORT SR_DLL_API_IMPORT
+    #define SR_CODEGEN_DLL_API_EXPORT SR_DLL_API_EXPORT
+#endif
+
+#ifdef SR_COMMON_DLL_EXPORTS
+    #define SR_COMMON_DLL_API SR_DLL_API_EXPORT
+#else
+    #define SR_COMMON_DLL_API SR_DLL_API_IMPORT
 #endif
 
 #if defined(SR_MSVC)

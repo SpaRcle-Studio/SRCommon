@@ -37,4 +37,8 @@ namespace SR_UTILS_NS {
         ++m_count;
         return Subscription(pSubscription);
     }
+
+    namespace Events {
+        SR_UTILS_NS::StringAtom EVENT_ON_SCRIPT_MODULE_RELOADED_ID = "OnScriptModuleReloaded";
+    }
 }
