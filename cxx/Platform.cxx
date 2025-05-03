@@ -17,3 +17,9 @@
 #endif
 
 #include "../src/Utils/Platform/PlatformSharedVars.cpp"
+
+#ifdef SR_COMMON_USE_TINY_FILE_DIALOGS
+    #include "../src/Utils/Platform/MessageBoxDesktop.cpp"
+#elif SR_ANDROID
+    #include "../src/Utils/Platform/MessageBoxAndroid.cpp"
+#endif

@@ -28,9 +28,6 @@ endif()
 
 set(BUILD_SHARED_LIBS OFF CACHE INTERNAL "" FORCE)
 
-add_subdirectory(libs/tree-sitter-cpp)
-add_subdirectory(libs/tree-sitter/lib)
-
 include(cmake/Linker.cmake)
 include(cmake/CopyDLLToExeFolder.cmake)
 
@@ -215,6 +212,7 @@ set(ICU_PREBUILT_VERSION "69.1")
 
 if (NOT ANDROID_NDK)
     add_subdirectory(libs/nativefiledialog)
+    add_subdirectory(libs/tinyfiledialogs)
 else()
     #set(ASSIMP_ANDROID_JNIIOSYSTEM ON CACHE INTERNAL "" FORCE)
     #set(ASSIMP_BUILD_ALL_EXPORTERS_BY_DEFAULT OFF CACHE INTERNAL "" FORCE)
@@ -402,9 +400,10 @@ if (SR_COMMON_JSON)
     target_link_libraries(Utils nlohmann_json)
 endif()
 
-if (ANDROID_NDK)
-else()
-    target_link_libraries(Utils nfd)
+if (NOT ANDROID_NDK)
+    target_link_libraries(Utils nfd) # nativefiledialog
+    target_link_libraries(Utils TinyFileDialogs)
+    target_compile_definitions(Utils PUBLIC SR_COMMON_USE_TINY_FILE_DIALOGS)
 endif()
 
 if (SR_TRACY_ENABLE)
@@ -424,7 +423,7 @@ else()
     target_link_libraries(Utils fmt)
 endif()
 
-target_link_libraries(Utils asio tree-sitter tree-sitter-cpp ryml::ryml EnTT)
+target_link_libraries(Utils asio ryml::ryml EnTT)
 
 if (SR_COMMON_CPPTRACE_ENABLED)
     target_link_libraries(Utils cpptrace::cpptrace)

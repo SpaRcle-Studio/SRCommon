@@ -40,7 +40,7 @@ namespace SR_UTILS_NS::Platform {
 
     extern std::mutex g_platformLogMutex;
 
-    SR_NORETURN SR_COMMON_DLL_API extern void Terminate();
+    SR_NORETURN SR_COMMON_DLL_API extern void Terminate(bool isError = true);
 
     SR_COMMON_DLL_API extern void InitializePlatform();
     SR_COMMON_DLL_API extern void InitSegmentationHandler();

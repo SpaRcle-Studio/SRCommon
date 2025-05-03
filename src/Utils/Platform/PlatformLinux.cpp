@@ -423,10 +423,16 @@ namespace SR_PLATFORM_NS {
         SRHaltOnce("Not implemented!");
     }
 
-    void Terminate() {
-        SR_PLATFORM_NS::WriteConsoleError("Function \"Terminate\" has been called... >_<\n" + SR_UTILS_NS::GetStacktrace());
-        SR_UTILS_NS::Breakpoint();
-        std::terminate(); // TODO: std::terminate() or abort()?
+    void Terminate(bool isError) {
+        if (isError) {
+            SR_PLATFORM_NS::WriteConsoleError("Function \"Terminate\" has been called... >_<\n" + SR_UTILS_NS::GetStacktrace());
+            SR_UTILS_NS::Breakpoint();
+            std::terminate();
+        }
+        else {
+            SR_PLATFORM_NS::WriteConsoleLog("Function \"Terminate\" has been called...\n" + SR_UTILS_NS::GetStacktrace());
+            std::exit(0);
+        }
     }
 
     void OpenWithAssociatedApp(const Path &filepath) {

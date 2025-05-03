@@ -146,7 +146,7 @@ namespace SR_UTILS_NS::Platform {
         SRHaltOnce("Not implemented!");
     }
 
-    void Terminate() {
+    void Terminate(bool isError) {
         SRHaltOnce("Not implemented!");
     }
 

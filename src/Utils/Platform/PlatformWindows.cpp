@@ -498,16 +498,26 @@ namespace SR_UTILS_NS::Platform {
         }
     }
 
-    void Terminate() {
-        SR_PLATFORM_NS::WriteConsoleError("Function \"Terminate\" has been called... >_<\n" + SR_UTILS_NS::GetStacktrace());
-        SR_UTILS_NS::Breakpoint();
+    void Terminate(bool isError) {
+        if (isError) {
+            SR_PLATFORM_NS::WriteConsoleError("Function \"Terminate\" has been called... >_<\n" + SR_UTILS_NS::GetStacktrace());
+            SR_UTILS_NS::Breakpoint();
+        }
+        else {
+            SR_PLATFORM_NS::WriteConsoleLog("Function \"Terminate\" has been called...\n" + SR_UTILS_NS::GetStacktrace());
+        }
 #ifdef SR_ANDROID
 
 #endif
 #ifdef SR_MINGW
 
 #else
-        terminate();
+        if (isError) {
+            terminate();
+        }
+        else {
+            exit(0);
+        }
 #endif
     }
 
