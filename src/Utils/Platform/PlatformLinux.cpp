@@ -700,7 +700,7 @@ namespace SR_PLATFORM_NS {
             return "Error: fork() failed: " + std::string(strerror(errno));
         }
 
-        if (pid == 0) { // Дочерний процесс
+        /*if (pid == 0) { // Дочерний процесс
             close(pipefd[0]); // Закрываем чтение
 
             // Перенаправляем stdout и stderr в pipe
@@ -710,7 +710,7 @@ namespace SR_PLATFORM_NS {
 
             execvp(command, const_cast<char* const*>(env.data()));
             exit(errno); // Возвращаем ошибку, если execvp не сработал
-        }
+        }*/
 
         // Родительский процесс
         close(pipefd[1]); // Закрываем запись
