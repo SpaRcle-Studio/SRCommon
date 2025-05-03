@@ -28,10 +28,10 @@ namespace SR_MATH_NS {
             glm::quat self{};
         };
     public:
-        SR_NODISCARD SR_FORCE_INLINE glm::quat ToGLM() const noexcept;
+        SR_NODISCARD glm::quat ToGLM() const noexcept;
         SR_NODISCARD Vector4<Unit> Vector() const noexcept;
         SR_NODISCARD Matrix4x4 ToMat4x4() const;
-        SR_NODISCARD SR_FORCE_INLINE glm::mat4 ToMat4x4GLM() const noexcept;
+        SR_NODISCARD glm::mat4 ToMat4x4GLM() const noexcept;
         SR_NODISCARD Vector3<T> EulerAngle() const;
         SR_NODISCARD Quaternion Rotate(const Vector3<T>& v) const;
 
