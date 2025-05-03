@@ -332,6 +332,8 @@ else()
     add_library(Utils SHARED ${SR_UTILS_LINK_LIBRARIES})
     add_library(Utils::lib ALIAS Utils)
 
+    target_compile_options(Utils PRIVATE -fPIC)
+
     SR_COPY_SHARED_MODULE_TO_EXECUTABLE_FOLDER(Utils)
 endif()
 
