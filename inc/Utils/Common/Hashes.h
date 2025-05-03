@@ -8,7 +8,7 @@
 #include <Utils/stdInclude.h>
 #include <Utils/Types/MerkleTree.h>
 
-#ifdef SR_COMMON_DLL_EXPORTS
+#ifdef SR_COMMON_OPENSSL
     #include <openssl/sha.h>
     #include <xxHash/xxhash.h>
 #endif
@@ -195,7 +195,7 @@ namespace SR_UTILS_NS {
     template <class T, class... Types> constexpr bool IsAnyOfV = std::disjunction_v<std::is_same<T, Types>...>;
     template <class T> SR_INLINE constexpr bool IsECharT = IsAnyOfV<T, char, wchar_t, char8_t, char16_t, char32_t>;
 
-#ifdef SR_COMMON_DLL_EXPORTS
+#ifdef SR_COMMON_OPENSSL
     template<Hash::Detail::SHA256HashType HashType, typename DataTypePtr>
         requires std::is_pointer_v<DataTypePtr>
         HashType sha256(const DataTypePtr data, uint32_t size) {

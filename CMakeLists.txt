@@ -5,7 +5,7 @@ set(CMAKE_CXX_STANDARD 20)
 
 option(SR_COMMON_ZLIB "" ON)
 option(SR_COMMON_ASSIMP "" ON)
-option(SR_COMMON_OPENSSL "" ON)
+option(SR_COMMON_OPENSSL "" OFF)
 option(SR_COMMON_SDL "" OFF)
 option(SR_COMMON_CURL "" OFF)
 option(SR_COMMON_JSON "" OFF)
