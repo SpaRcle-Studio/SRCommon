@@ -29,7 +29,7 @@
 #include <Utils/Platform/XKeySymToKeyCode.h>
 
 #include <sys/sendfile.h>
-
+#include <sys/wait.h>
 
 namespace SR_PLATFORM_NS {
     static Display* gLinuxPlatformDisplayPtr = nullptr;
@@ -708,7 +708,7 @@ namespace SR_PLATFORM_NS {
             dup2(pipefd[1], STDERR_FILENO);
             close(pipefd[1]);
 
-            execvp(command, const_cast<char* const*>(args.data()));
+            execvp(command, const_cast<char* const*>(env.data()));
             exit(errno); // Возвращаем ошибку, если execvp не сработал
         }
 
@@ -723,7 +723,8 @@ namespace SR_PLATFORM_NS {
         close(pipefd[0]);
 
         // Ждем завершения процесса и получаем код выхода
-        int status;
+        int status = 0;
+        int exitCode = 0;
         waitpid(pid, &status, 0);
         if (WIFEXITED(status)) {
             exitCode = WEXITSTATUS(status);
