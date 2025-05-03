@@ -47,8 +47,7 @@ namespace SR_UTILS_NS {
         /// @operator
         bool operator<(uint64_t hash) const noexcept;
 
-        /// For automatic conversion to hash
-        SR_NODISCARD SR_FORCE_INLINE operator uint64_t() const noexcept;
+        SR_NODISCARD operator uint64_t() const noexcept;
 
         /// @operator
         SR_NODISCARD char operator[](size_t index) const noexcept;
