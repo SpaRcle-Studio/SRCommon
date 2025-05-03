@@ -370,7 +370,11 @@
 #define SR_OFFSETOF(s,m) ((::size_t)&reinterpret_cast<char const volatile&>((((s*)0)->m)))
 
 namespace SR_UTILS_NS {
+#ifdef SR_ANDROID
+    using SizeType = unsigned long;
+#else
     using SizeType = unsigned long long int;
+#endif
 
     template<typename T> struct RemoveReference      { using Type = T; };
     template<typename T> struct RemoveReference<T&>  { using Type = T; };
