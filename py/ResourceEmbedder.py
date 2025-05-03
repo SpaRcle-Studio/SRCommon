@@ -1,5 +1,8 @@
-from Common import *
-import base64, zlib
+import os
+import numpy as np
+import argparse
+import hashlib
+import zlib
 
 print("ResourceEmbedder.py: running...")
 def needs_update(path, export_path):

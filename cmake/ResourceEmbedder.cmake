@@ -6,13 +6,13 @@ function(EmbedResources EXPORT_DIRECTORY WORKING_DIRECTORY EMBED_RESOURCES_LIST)
         if (${WORKING_DIRECTORY} STREQUAL " ")
             if (${EMBED_RESOURCES_LIST} STREQUAL " ")
                 add_custom_target(EmbedResourcesTarget
-                        COMMAND python ResourceEmbedder.py --working-directory "\"\"" --export-directory "\"\"" --resources "\""
+                        COMMAND ${SR_PYTHON_EXECUTABLE} ResourceEmbedder.py --working-directory "\"\"" --export-directory "\"\"" --resources "\""
                         WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/py")
             endif()
         endif()
     else()
         add_custom_target(EmbedResourcesTarget
-                COMMAND python ResourceEmbedder.py --working-directory "${WORKING_DIRECTORY}" --export-directory ${EXPORT_DIRECTORY} --resources "\"${EMBED_RESOURCES_LIST}\""
+                COMMAND ${SR_PYTHON_EXECUTABLE} ResourceEmbedder.py --working-directory "${WORKING_DIRECTORY}" --export-directory ${EXPORT_DIRECTORY} --resources "\"${EMBED_RESOURCES_LIST}\""
                 WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/Engine/Core/libs/Utils/py")
     endif()
 endfunction()
