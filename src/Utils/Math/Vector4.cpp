@@ -70,11 +70,11 @@ namespace SR_MATH_NS {
         { "khaki"_atom_hash, FColor(240, 230, 140, 255) / 255.f },
     };
 
-    FVector4 Math::BuildPlan(const FVector3 &point, const FVector3 &normal) {
+    FVector4 BuildPlan(const FVector3 &point, const FVector3 &normal) {
         return SR_MATH_NS::FVector4(normal, normal.Normalize().Dot(point));
     }
 
-    FVector4 Math::BuildPlan(const FVector4 &point, const FVector4 &p_normal) {
+    FVector4 BuildPlan(const FVector4 &point, const FVector4 &p_normal) {
         FVector4 normal, res;
         normal = p_normal.Normalize();
         res.w = normal.Dot(point);
