@@ -8,8 +8,6 @@
 #include <Utils/stdInclude.h>
 #include <Utils/Common/Hashes.h>
 
-#include <fmt/format.h>
-
 namespace SR_UTILS_NS {
     class StringHashInfo;
 

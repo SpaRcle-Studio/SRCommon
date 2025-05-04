@@ -89,6 +89,8 @@ namespace SR_UTILS_NS::Tests {
 
     private:
         /// @property @onChanged(OnChanged)
+        std::string m_string = "Hello world!";
+        /// @property @onChanged(OnChanged)
         SR_UTILS_NS::PlatformType m_platformType = SR_UTILS_NS::PlatformType::Windows;
         /// @property
         ReflectionTestComponentData m_data;

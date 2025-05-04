@@ -6,11 +6,14 @@
 #define SR_ENGINE_UTILS_HASHES_H
 
 #include <Utils/stdInclude.h>
-#include <Utils/Types/MerkleTree.h>
 
-#ifdef SR_COMMON_OPENSSL
-    #include <openssl/sha.h>
-    #include <xxHash/xxhash.h>
+#ifndef SR_ENGINE_CODEGEN_CLANG_PARSE_MODE
+    #include <Utils/Types/MerkleTree.h>
+
+    #ifdef SR_COMMON_OPENSSL
+        #include <openssl/sha.h>
+        #include <xxHash/xxhash.h>
+    #endif
 #endif
 
 namespace SR_UTILS_NS {

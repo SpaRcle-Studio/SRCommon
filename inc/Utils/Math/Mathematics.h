@@ -81,10 +81,12 @@
 #define RAD3(v) glm::vec3(RAD(v.x), RAD(v.y), RAD(v.z))
 #define DEG3(v) glm::vec3(DEG(v.x), DEG(v.y), DEG(v.z))
 
-#include <glm/glm.hpp>
-#include <glm/gtc/type_ptr.hpp>
-#include <glm/gtx/string_cast.hpp>
-#include <glm/gtc/quaternion.hpp>
+#ifndef SR_ENGINE_CODEGEN_CLANG_PARSE_MODE
+    #include <glm/glm.hpp>
+    #include <glm/gtc/type_ptr.hpp>
+    #include <glm/gtx/string_cast.hpp>
+    #include <glm/gtc/quaternion.hpp>
+#endif
 
 namespace SR_MATH_NS {
     static SR_FORCE_INLINE bool IsNumber(std::string_view str) {

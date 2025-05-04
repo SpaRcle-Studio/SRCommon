@@ -12,10 +12,6 @@
 #include <Utils/Platform/Platform.h>
 #include <Utils/Common/StringUtils.h>
 
-#include <fmt/format.h>
-#include <fmt/printf.h>
-#include <fmt/color.h>
-
 namespace SR_UTILS_NS {
     /// Функция для преобразования hex символа в целое число
 

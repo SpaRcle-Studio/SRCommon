@@ -13,6 +13,8 @@
 #include <Utils/Math/Vector2.h>
 #include <Utils/Common/NonCopyable.h>
 
+#ifndef SR_ENGINE_CODEGEN_CLANG_PARSE_MODE
+
 #include <assimp/contrib/pugixml/src/pugixml.hpp>
 
 namespace SR_UTILS_NS::Xml {
@@ -466,5 +468,6 @@ namespace SR_UTILS_NS::Xml {
         return true;
     }
 }
+#endif
 
 #endif //SR_COMMON_XML_H
