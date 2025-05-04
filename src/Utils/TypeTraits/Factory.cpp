@@ -84,4 +84,43 @@ namespace SR_UTILS_NS {
         }
         return nullptr;
     }
+
+    void Factory::ForEachClassInModule(SR_UTILS_NS::StringAtom moduleName, const std::function<void(const SRClassMeta*)>& func) const noexcept {
+        for (auto&& [name, info] : m_types) {
+            if (info.moduleName == moduleName) {
+                if (auto&& pMeta = info.metaGetter()) {
+                    func(pMeta);
+                }
+            }
+        }
+    }
+
+    const Factory::TypeInfo* Factory::GetTypeInfo(SR_UTILS_NS::StringAtom name) const noexcept {
+        auto&& pIt = m_types.find(name);
+        if (pIt != m_types.end()) {
+            return &pIt->second;
+        }
+        return nullptr;
+    }
+
+    void Factory::WriteLog(const std::string& message) const noexcept {
+        if (SR_UTILS_NS::Debug::IsSingletonInitialized()) {
+            if (SR_UTILS_NS::Debug::Instance().IsInitialized()) {
+                SR_LOG(message);
+                return;
+            }
+        }
+        SR_PLATFORM_NS::WriteConsoleLog(message);
+    }
+
+    void Factory::WriteError(const std::string& message) const noexcept {
+        if (SR_UTILS_NS::Debug::IsSingletonInitialized()) {
+            if (SR_UTILS_NS::Debug::Instance().IsInitialized()) {
+                SRHalt(message);
+                return;
+            }
+        }
+        SR_PLATFORM_NS::WriteConsoleError(message);
+        SR_MAKE_BREAKPOINT;
+    }
 }

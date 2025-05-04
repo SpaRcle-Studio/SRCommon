@@ -56,6 +56,9 @@ namespace SR_UTILS_NS {
         SetSkew(GetSkew() * skew);
     }
 
+    void Transform::RotateAround(const SR_MATH_NS::FVector3& point, const SR_MATH_NS::FVector3& eulers) { }
+    void Transform::RotateAroundParent(const SR_MATH_NS::FVector3& eulers) { }
+
     void Transform::Rotate(Math::Unit x, Math::Unit y, Math::Unit z) {
         Rotate(Math::FVector3(x, y, z));
     }
@@ -84,6 +87,11 @@ namespace SR_UTILS_NS {
         Translate(Math::FVector3(x, y, z));
     }
 
+    void Transform::Translate(const SR_MATH_NS::FVector3& translation) { }
+    void Transform::Rotate(const SR_MATH_NS::FVector3& eulers) { }
+    void Transform::Rotate(const SR_MATH_NS::Quaternion& q) { }
+    void Transform::Scale(const SR_MATH_NS::FVector3& scale) { }
+
     void Transform::Scale(Math::Unit x, Math::Unit y, Math::Unit z) {
         Scale(Math::FVector3(x, y, z));
     }
@@ -92,9 +100,44 @@ namespace SR_UTILS_NS {
         return GetTranslation().XY();
     }
 
+    SR_MATH_NS::FVector3 Transform::GetTranslation() const {
+        return SR_MATH_NS::FVector3();
+    }
+
+    SR_MATH_NS::FVector3 Transform::GetRotation() const {
+        return SR_MATH_NS::FVector3();
+    }
+
+    SR_MATH_NS::FVector3 Transform::GetScale() const {
+        return SR_MATH_NS::FVector3();
+    }
+
+    SR_MATH_NS::FVector3 Transform::GetSkew() const {
+        return SR_MATH_NS::FVector3();
+    }
+
+
     SR_MATH_NS::FVector2 Transform::GetScale2D() const {
         return GetScale().XY();
     }
+
+    void Transform::SetMatrix(const std::optional<SR_MATH_NS::FVector3>& translation,
+                   const std::optional<SR_MATH_NS::Quaternion>& rotation,
+                   const std::optional<SR_MATH_NS::FVector3>& scale) { }
+
+    void Transform::SetGlobalTranslation(const SR_MATH_NS::FVector3& translation) { }
+
+    void Transform::SetGlobalRotation(const SR_MATH_NS::Quaternion& quaternion) { }
+
+    void Transform::SetTranslation(const SR_MATH_NS::FVector3& translation) { }
+    void Transform::SetTranslationAndRotation(const SR_MATH_NS::FVector3& translation, const SR_MATH_NS::FVector3& euler) { }
+    void Transform::SetRotation(const SR_MATH_NS::FVector3& euler) { }
+    void Transform::SetRotation(const SR_MATH_NS::Quaternion& quaternion) { }
+    void Transform::SetScale(const SR_MATH_NS::FVector3& scale) { }
+    void Transform::SetSkew(const SR_MATH_NS::FVector3& skew) { }
+
+    void Transform::LookAt(const SR_MATH_NS::FVector3& position) { }
+    void Transform::LookAt(const SR_MATH_NS::FVector3& position, LookAtAxis axis) { }
 
     const SR_MATH_NS::Matrix4x4& Transform::GetMatrix() const {
         static SR_MATH_NS::Matrix4x4 matrix4X4 = SR_MATH_NS::Matrix4x4::Identity();
@@ -148,5 +191,17 @@ namespace SR_UTILS_NS {
 
     void Transform::GlobalRotate(const SR_MATH_NS::Quaternion& quaternion) {
         SetRotation(GetQuaternion() * quaternion);
+    }
+
+    void Transform::UpdateMatrix() const {
+        m_dirtyMatrix = false;
+    }
+
+    SR_MATH_NS::Quaternion Transform::GetQuaternion() const {
+        return SR_MATH_NS::Quaternion::Identity();
+    }
+
+    void Transform::SetGlobalRotation(const SR_MATH_NS::FVector3& eulers) {
+        SetGlobalRotation(eulers.Radians().ToQuat());
     }
 }

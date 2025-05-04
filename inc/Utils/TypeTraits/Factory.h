@@ -28,6 +28,7 @@ namespace SR_UTILS_NS {
         using AllocatorT = std::function<SRClass*()>;
         using MetaGetterT = const SRClassMeta*(*)();
         struct TypeInfo {
+            SR_UTILS_NS::StringAtom moduleName;
             AllocatorT allocator;
             MetaGetterT metaGetter = nullptr;
             bool isAbstract = false;
@@ -38,7 +39,7 @@ namespace SR_UTILS_NS {
 
         SR_NODISCARD SR_UTILS_NS::StringAtom GetName(const SRClassMeta* pMeta, bool isMustExists = true) const;
 
-        template<class T> bool Register();
+        template<class T> bool Register(SR_UTILS_NS::StringAtom moduleName);
         template<class T> bool Unregister();
 
         template<class Y> SR_NODISCARD SR_UTILS_NS::StringAtom GetName(Y* pObject, const bool isMustExists = true) const {
@@ -77,13 +78,19 @@ namespace SR_UTILS_NS {
         SR_NODISCARD std::vector<SR_UTILS_NS::StringAtom> GetInheritances(SR_UTILS_NS::StringAtom baseClass) const noexcept;
         SR_NODISCARD bool IsAbstract(SR_UTILS_NS::StringAtom name) const noexcept;
         SR_NODISCARD const SRClassMeta* GetType(SR_UTILS_NS::StringAtom name) const noexcept override;
+        SR_NODISCARD const TypeInfo* GetTypeInfo(SR_UTILS_NS::StringAtom name) const noexcept;
+        SR_NODISCARD void ForEachClassInModule(SR_UTILS_NS::StringAtom moduleName, const std::function<void(const SRClassMeta*)>& func) const noexcept;
+
+    private:
+        void WriteLog(const std::string& message) const noexcept;
+        void WriteError(const std::string& message) const noexcept;
 
     private:
         std::unordered_map<SR_UTILS_NS::StringAtom, TypeInfo> m_types;
 
     };
 
-    template<class T> bool Factory::Register() {
+    template<class T> bool Factory::Register(SR_UTILS_NS::StringAtom moduleName) {
         if constexpr (std::is_same_v<T, void>) {
             static_assert(AlwaysFalseV<T>, "Type must be specified!");
         }
@@ -94,12 +101,11 @@ namespace SR_UTILS_NS {
             auto&& name = pMeta->GetFactoryName();
 
             if (m_types.count(name) > 0) {
-                SR_PLATFORM_NS::WriteConsoleError("Factory::Register() : type \"{}\" is already registered!\n"_format(name));
-                SR_MAKE_BREAKPOINT;
+                WriteError("Factory::Register() : type \"{}\" is already registered!\n"_format(name));
                 return false;
             }
 
-            SR_PLATFORM_NS::WriteConsoleLog("Factory::Register() : registering type \"{}\"\n"_format(name));
+            WriteLog("Factory::Register() : registering type \"{}\"\n"_format(name));
 
             TypeInfo& info = m_types[name];
 
@@ -112,6 +118,7 @@ namespace SR_UTILS_NS {
                 };
             }
 
+            info.moduleName = moduleName;
             info.metaGetter = T::GetMetaStatic;
             info.version = pMeta->GetVersion();
             return true;
@@ -126,12 +133,11 @@ namespace SR_UTILS_NS {
 
             auto&& pIt = m_types.find(name);
             if (pIt == m_types.end()) {
-                SR_PLATFORM_NS::WriteConsoleError("Factory::Register() : type \"{}\" is not registered!\n"_format(name));
-                SR_MAKE_BREAKPOINT;
+                WriteError("Factory::Register() : type \"{}\" is not registered!\n"_format(name));
                 return false;
             }
 
-            SR_PLATFORM_NS::WriteConsoleLog("Factory::Unregister() : unregistering type \"{}\"\n"_format(name));
+            WriteLog("Factory::Unregister() : unregistering type \"{}\"\n"_format(name));
 
             m_types.erase(pIt);
             return true;
