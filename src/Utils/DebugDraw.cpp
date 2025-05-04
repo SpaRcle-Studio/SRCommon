@@ -7,8 +7,6 @@
 
 #include <Utils/Types/RawMesh.h>
 
-#include <utility>
-
 namespace SR_UTILS_NS {
     /// ---------------------------------------------- CALLBACKS INITIALIZATIONS ---------------------------------------
 

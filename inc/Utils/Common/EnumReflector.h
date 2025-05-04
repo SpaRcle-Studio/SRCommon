@@ -359,14 +359,14 @@ namespace SR_UTILS_NS {
     {                                                                                                                   \
         __VA_ARGS__, SR_MACRO_CONCAT(enumName, MAX)                                                                     \
     };                                                                                                                  \
-    SR_ENUM_DETAIL_SPEC_##spec void CODEGEN_ENUM_DETAILS_FUNCTION_##enumName() {                                        \
-        static SR_UTILS_NS::EnumVariant CODEGEN_ENUM_VARIANT = enumVariant;                                             \
-        static uint64_t CODEGEN_ENUM_COUNT = SR_COUNT_ARGS(__VA_ARGS__);                                                \
-        static const char* CODEGEN_ENUM_NAME = SR_EXPAND_AND_STRINGIFY(enumName);                                       \
-        static const char* CODEGEN_ENUM_VA_ARGS = SR_ENUM_DETAIL_STR((__VA_ARGS__));                                    \
-        static const char* CODEGEN_ENUM_TYPE = SR_EXPAND_AND_STRINGIFY(integral);                                       \
-        static const char* CODEGEN_ENUM_CLASS = SR_EXPAND_AND_STRINGIFY(enumClass);                                     \
-    }                                                                                                                   \
+    struct CODEGEN_ENUM_DETAILS_STRUCT_##enumName {                                                                     \
+        SR_UTILS_NS::EnumVariant CODEGEN_ENUM_VARIANT = enumVariant;                                                    \
+        uint64_t CODEGEN_ENUM_COUNT = SR_COUNT_ARGS(__VA_ARGS__);                                                       \
+        const char* CODEGEN_ENUM_NAME = SR_EXPAND_AND_STRINGIFY(enumName);                                              \
+        const char* CODEGEN_ENUM_VA_ARGS = SR_ENUM_DETAIL_STR((__VA_ARGS__));                                           \
+        const char* CODEGEN_ENUM_TYPE = SR_EXPAND_AND_STRINGIFY(integral);                                              \
+        const char* CODEGEN_ENUM_CLASS = SR_EXPAND_AND_STRINGIFY(enumClass);                                            \
+    };                                                                                                                  \
     SR_ENUM_DETAIL_SPEC_##spec uint64_t SR_CODEGEN_GET_ENUM_HASH_NAME_BY_TYPE(enumName) {                               \
         static const uint64_t enumHashName = SR_UTILS_NS::StringAtom(SR_EXPAND_AND_STRINGIFY(enumName)).GetHash();      \
         return enumHashName;                                                                                            \
