@@ -18,7 +18,6 @@ namespace SR_UTILS_NS {
         /// если срабатывает ассерт, значит, вероятнее всего, какой-то игровой объект до сих пор удерживает компонент,
         /// а значит, будет падение.
         SRAssert(!HasParent());
-        m_properties.ClearContainer();
     }
 
     void Component::SetParent(IComponentable* pParent) {
@@ -130,8 +129,6 @@ namespace SR_UTILS_NS {
         return nullptr;
     }
 
-    SR_UTILS_NS::PropertyContainer& Component::GetComponentProperties() noexcept { return m_properties; }
-    const SR_UTILS_NS::PropertyContainer& Component::GetComponentProperties() const noexcept { return m_properties; }
     int32_t Component::GetIndexInSceneUpdater() const noexcept { return m_indexInSceneUpdater; }
     bool Component::HasParent() const { return m_parent; }
 

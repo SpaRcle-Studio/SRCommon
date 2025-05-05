@@ -129,8 +129,6 @@ namespace SR_UTILS_NS {
         SR_NODISCARD ScenePtr TryGetScene() const;
         SR_NODISCARD SceneObjectPtr GetRoot() const;
         SR_NODISCARD Transform* GetTransform() const noexcept;
-        SR_NODISCARD SR_UTILS_NS::PropertyContainer& GetComponentProperties() noexcept;
-        SR_NODISCARD const SR_UTILS_NS::PropertyContainer& GetComponentProperties() const noexcept;
         SR_NODISCARD int32_t GetIndexInSceneUpdater() const noexcept;
         SR_NODISCARD bool HasParent() const;
 
@@ -154,8 +152,6 @@ namespace SR_UTILS_NS {
         SceneObjectPtr m_sceneObject = nullptr;
         IComponentable* m_parent = nullptr;
         SR_WORLD_NS::Scene* m_scene = nullptr;
-
-        SR_UTILS_NS::PropertyContainer m_properties;
 
     };
 }

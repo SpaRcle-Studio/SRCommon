@@ -9,6 +9,7 @@
 #include "../src/Utils/SRLM/LogicalNodeManager.cpp"
 #include "../src/Utils/SRLM/ConvertorNode.cpp"
 
+#include "../src/Utils/Events/Broadcaster.cpp"
 #include "../src/Utils/Events/EventManager.cpp"
 #include "../src/Utils/Events/Event.cpp"
 #include "../src/Utils/Events/EventDispatcher.cpp"

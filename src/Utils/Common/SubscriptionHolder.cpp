@@ -5,6 +5,35 @@
 #include <Utils/Common/SubscriptionHolder.h>
 
 namespace SR_UTILS_NS {
+    void SubscriptionMessage::SetInt(const StringAtom id, const uint64_t value) { m_ints[id] = value; }
+    void SubscriptionMessage::SetBool(const StringAtom id, const bool value) { m_bools[id] = value; }
+    void SubscriptionMessage::SetString(const StringAtom id, const std::string& value) { m_strings[id] = value; }
+    void SubscriptionMessage::SetPath(const StringAtom id, const SR_UTILS_NS::Path& value) { m_paths[id] = value; }
+
+    uint64_t SubscriptionMessage::GetInt(const StringAtom id, const std::optional<uint64_t>& def) const {
+        return GetValue<uint64_t>(id, m_ints, def);
+    }
+
+    bool SubscriptionMessage::GetBool(const StringAtom id, const std::optional<bool>& def) const {
+        return GetValue<bool>(id, m_bools, def);
+    }
+
+    std::string SubscriptionMessage::GetString(const StringAtom id, const std::optional<std::string>& def) const {
+        return GetValue<std::string>(id, m_strings, def);
+    }
+
+    SR_UTILS_NS::Path SubscriptionMessage::GetPath(const StringAtom id, const std::optional<SR_UTILS_NS::Path>& def) const {
+        return GetValue<SR_UTILS_NS::Path>(id, m_paths, def);
+    }
+
+    const SR_UTILS_NS::Path& SubscriptionMessage::GetPathRef(const StringAtom id) const {
+        return GetValueRef<SR_UTILS_NS::Path>(id, m_paths);
+    }
+
+    SubscriptionMessage::SubscriptionMessage() = default;
+
+    SubscriptionMessage::~SubscriptionMessage() = default;
+
     Subscription::~Subscription() {
         Reset();
     }
@@ -17,6 +46,22 @@ namespace SR_UTILS_NS {
             m_internalInfo = nullptr;
         }
     }
+
+    Subscription::Subscription(SubscriptionInternalInfo* pInternalInfo)
+        : m_internalInfo(pInternalInfo)
+    { }
+
+    Subscription::Subscription(Subscription&& other) noexcept
+        : m_internalInfo(SR_EXCHANGE(other.m_internalInfo, nullptr))
+    { }
+
+    Subscription &Subscription::operator=(Subscription &&other) noexcept {
+        Reset();
+        m_internalInfo = SR_EXCHANGE(other.m_internalInfo, nullptr);
+        return *this;
+    }
+
+    Subscription::Subscription() = default;
 
     SubscriptionHolder::~SubscriptionHolder() {
         SRAssert2(m_count == 0, "Not all subscriptions were unsubscribed!");
@@ -38,7 +83,45 @@ namespace SR_UTILS_NS {
         return Subscription(pSubscription);
     }
 
-    namespace Events {
-        SR_UTILS_NS::StringAtom EVENT_ON_SCRIPT_MODULE_RELOADED_ID = "OnScriptModuleReloaded";
+    void SubscriptionHolder::Broadcast(const StringAtom id) {
+        static SubscriptionMessage message;
+        if (const auto it = m_subscriptions.find(id); it != m_subscriptions.end()) {
+            it->second.ForEach([](uint32_t, auto&& pSubscription) {
+                pSubscription->callback(message);
+            });
+        }
     }
+
+    void SubscriptionHolder::Broadcast(const StringAtom id, const SubscriptionMessage &message) {
+        if (const auto it = m_subscriptions.find(id); it != m_subscriptions.end()) {
+            it->second.ForEach([&message](uint32_t, auto&& pSubscription) {
+                pSubscription->callback(message);
+            });
+        }
+    }
+
+    void SubscriptionHolder::Unsubscribe(const SubscriptionInternalInfo *pSubscription) {
+        if (auto it = m_subscriptions.find(pSubscription->id); it != m_subscriptions.end()) {
+            auto& pool = it->second;
+            pool.RemoveByIndex(pSubscription->index);
+            delete pSubscription;
+            SRAssert(m_count > 0);
+            --m_count;
+        }
+        else {
+            SRHalt("SubscriptionHolder::Unsubscribe() : subscription not found!");
+        }
+    }
+
+    bool SubscriptionHolder::HasSubscriptions() const noexcept {
+        return m_count > 0;
+    }
+
+    SubscriptionHolder::SubscriptionHolder() = default;
+
+    SubscriptionInternalInfo::SubscriptionInternalInfo(SR_HTYPES_NS::Function<void(const SubscriptionMessage &)>&& callback, SubscriptionHolder* pHolder)
+        : SR_UTILS_NS::NonCopyable()
+        , callback(std::move(callback))
+        , pHolder(pHolder)
+    { }
 }
