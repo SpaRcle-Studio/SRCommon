@@ -439,6 +439,80 @@ namespace SR_PLATFORM_NS {
         SRHaltOnce("Not implemented!");
     }
 
+    std::pair<std::vector<std::string>, std::vector<char*>> BuildArgv(const std::string& command) {
+        std::istringstream iss(command);
+        std::vector<std::string> args;
+        std::string token;
+
+        while (iss >> token) {
+            args.push_back(token);
+        }
+
+        std::vector<char*> argv;
+        for (auto& arg : args) {
+            argv.push_back(arg.data());
+        }
+        argv.push_back(nullptr);
+
+        return {std::move(args), std::move(argv)};
+    }
+
+    std::string ExecuteCommand(const std::string& command, const std::vector<std::string>& env) {
+        int pipefd[2];
+        if (pipe(pipefd) == -1) {
+            return "Error: pipe() failed: " + std::string(strerror(errno));
+        }
+
+        pid_t pid = fork();
+        if (pid == -1) {
+            return "Error: fork() failed: " + std::string(strerror(errno));
+        }
+
+        /*auto [args2, argv2] = BuildArgv(command);
+        for (auto&& a : argv2)
+        {
+            if (a && pid == 0)
+            {
+                SR_LOG("{}: {}", pid, a);
+            }
+        }*/
+
+        if (pid == 0) {
+            // Дочерний процесс
+            close(pipefd[0]); // Закрыть чтение
+
+            dup2(pipefd[1], STDOUT_FILENO);
+            dup2(pipefd[1], STDERR_FILENO);
+            close(pipefd[1]);
+
+            auto [args, argv] = BuildArgv(command);
+            execvp(argv[0], argv.data());
+
+            // Если execvp завершился, значит ошибка
+            perror("execvp");
+            _exit(127);
+        }
+
+        // Родительский процесс
+        close(pipefd[1]); // Закрыть запись
+
+        std::string result;
+        char buffer[256];
+        ssize_t count;
+        while ((count = read(pipefd[0], buffer, sizeof(buffer))) > 0) {
+            result.append(buffer, count);
+        }
+        close(pipefd[0]);
+
+        int status = 0;
+        waitpid(pid, &status, 0);
+        if (!WIFEXITED(status)) {
+            result += "Error: Process terminated abnormally\n";
+        }
+
+        return result;
+    }
+
     bool Copy(const Path &from, const Path &to) {
         if (from.IsFile()) {
             /*/// TODO: Find another way to copy a file without using system() function WHILE preserving the current permissions.
@@ -689,52 +763,6 @@ namespace SR_PLATFORM_NS {
         return message;
     }
 
-    std::string ExecuteCommand(const std::string& command, const std::vector<std::string>& env) {
-        int pipefd[2];
-        if (pipe(pipefd) == -1) {
-            return "Error: pipe() failed: " + std::string(strerror(errno));
-        }
-
-        pid_t pid = fork();
-        if (pid == -1) {
-            return "Error: fork() failed: " + std::string(strerror(errno));
-        }
-
-        /*if (pid == 0) { // Дочерний процесс
-            close(pipefd[0]); // Закрываем чтение
-
-            // Перенаправляем stdout и stderr в pipe
-            dup2(pipefd[1], STDOUT_FILENO);
-            dup2(pipefd[1], STDERR_FILENO);
-            close(pipefd[1]);
-
-            execvp(command, const_cast<char* const*>(env.data()));
-            exit(errno); // Возвращаем ошибку, если execvp не сработал
-        }*/
-
-        // Родительский процесс
-        close(pipefd[1]); // Закрываем запись
-        char buffer[128];
-        std::string result;
-        ssize_t count;
-        while ((count = read(pipefd[0], buffer, sizeof(buffer))) > 0) {
-            result.append(buffer, count);
-        }
-        close(pipefd[0]);
-
-        // Ждем завершения процесса и получаем код выхода
-        int status = 0;
-        int exitCode = 0;
-        waitpid(pid, &status, 0);
-        if (WIFEXITED(status)) {
-            exitCode = WEXITSTATUS(status);
-        } else {
-            exitCode = -1; // Если процесс завершился ненормально
-            result += "Error: Process terminated abnormally\n";
-        }
-
-        return result;
-    }
 
     bool DownloadFile(const std::string& url, const Path& outputPath) {
         SRHaltOnce("Not implemented!");

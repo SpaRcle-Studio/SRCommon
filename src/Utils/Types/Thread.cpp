@@ -135,9 +135,13 @@ namespace SR_HTYPES_NS {
         SR_WRITE_LOCK;
 
     #if defined(SR_DEBUG) && SR_THREAD_SAFE_CHECKS
-        auto&& thread = Thread::Factory::Instance().GetThisThread();
+        auto&& pThread = Thread::Factory::Instance().GetThisThread();
+        if (!pThread) {
+            SRHalt("Thread::Synchronize() : unknown thread!");
+            return;
+        }
 
-        if (GetId() != thread->GetId()) {
+        if (GetId() != pThread->GetId()) {
             SRHalt("Synchronization can only be performed by the owner thread!");
             return;
         }
