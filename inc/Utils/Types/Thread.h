@@ -56,8 +56,6 @@ namespace SR_HTYPES_NS {
             template<class Functor, typename... Args> bool Create(Ptr& pThread, Functor&& fn, Args&&... args);
 
         private:
-            friend class Thread::Factory;
-
             void Remove(Thread* pThread);
 
         private:
