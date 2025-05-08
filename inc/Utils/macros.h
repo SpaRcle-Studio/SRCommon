@@ -316,7 +316,6 @@
 #endif
 
 #define SR_RENDERER_DLL_API
-#define SR_PHYSICS_DLL_API
 #define SR_CORE_DLL_API
 
 #if defined(SR_ANDROID)
