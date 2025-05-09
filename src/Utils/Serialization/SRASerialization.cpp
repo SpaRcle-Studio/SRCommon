@@ -313,6 +313,11 @@ namespace SR_UTILS_NS {
         return true;
     }
 
+    bool SRADeserializer::LoadFromNode(SerializationNode&& node) {
+        m_root = std::move(node);
+        return true;
+    }
+
     void SRADeserializer::ReportError(const std::string& message) {
         SRHalt("SRADeserializer::ReportError() : {}!", message);
     }
