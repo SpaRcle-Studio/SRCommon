@@ -130,6 +130,7 @@ namespace SR_MATH_NS {
 
     FColor::FColor(const FColor& color) = default;
     FColor::FColor(FColor&& color) = default;
+
     FColor::FColor(double_t _x, double_t _y, double_t _z, double_t _w) {
         r = static_cast<Unit>(_x);
         g = static_cast<Unit>(_y);
