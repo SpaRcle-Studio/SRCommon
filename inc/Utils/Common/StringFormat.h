@@ -188,7 +188,7 @@ namespace SR_UTILS_NS {
             return fmt::format(fmt::runtime(fmt), args...);
         }
         catch (std::exception& exception) {
-            std::cerr << "Format: an exception has been occurred! Exception: " << exception.what() << std::endl;
+            std::cerr << "Format: an exception has occurred! Exception: " << exception.what() << std::endl;
             SR_MAKE_BREAKPOINT;
             return std::string(); /// NOLINT
         }
@@ -199,7 +199,7 @@ namespace SR_UTILS_NS {
             return fmt::sprintf(fmt, args...);
         }
         catch (std::exception& exception) {
-            std::cerr << "SPrintFFormat: an exception has been occurred! Exception: " << exception.what() << std::endl;
+            std::cerr << "SPrintFFormat: an exception has occurred! Exception: " << exception.what() << std::endl;
             SR_MAKE_BREAKPOINT;
             return std::string(); /// NOLINT
         }

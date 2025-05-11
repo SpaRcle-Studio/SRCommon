@@ -776,7 +776,7 @@ namespace SR_PLATFORM_NS {
     void* LoadLibraryModule(const Path& path) {
         void* pLibrary = dlopen(path.c_str(), RTLD_LAZY);
         if (!pLibrary) {
-            SR_ERROR("PlatformLinux::LoadLibraryModule() : failed to load library: {}\n\tError: {}", path, GetLastErrorAsString());
+            SR_ERROR("PlatformLinux::LoadLibraryModule() : failed to load library: {}\n\tError: {}", path, std::string(dlerror()));
             return nullptr;
         }
 
@@ -790,7 +790,13 @@ namespace SR_PLATFORM_NS {
         }
 
         if (!dlclose(pLibrary)) {
-            SR_ERROR("PlatformLinux::UnloadLibraryModule() : failed to unload library: {}\n\tError: {}", GetLastErrorAsString());
+            auto&& errorMessage = dlerror();
+            if (errorMessage) {
+                SR_ERROR("PlatformLinux::UnloadLibraryModule() : failed to unload library!\n\tError: {}", std::string(errorMessage));
+                return false;
+            }
+
+            SR_ERROR("PlatformLinux::UnloadLibraryModule() : failed to unload library, but the OS didn't return any errors!");
             return false;
         }
 
@@ -812,4 +818,3 @@ namespace SR_PLATFORM_NS {
         return pFunction;
     }
 }
-
