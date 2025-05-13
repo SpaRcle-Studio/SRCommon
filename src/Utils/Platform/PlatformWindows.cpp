@@ -19,6 +19,8 @@
 #include <sddl.h>
 #include <wininet.h>
 #include <shobjidl.h>
+#include <winsock2.h>
+#include <ws2tcpip.h>
 
 #include <filesystem>
 

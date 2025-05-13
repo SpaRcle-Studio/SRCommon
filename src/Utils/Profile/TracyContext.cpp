@@ -44,6 +44,15 @@ namespace SR_UTILS_NS {
 
         SRHalt("Failed to free tracy context!");
     }
+
+
+    void StartupEngineProfiler() {
+        tracy::StartupProfiler();
+    }
+
+    void ShutdownEngineProfiler() {
+        tracy::ShutdownProfiler();
+    }
 }
 
 #endif

@@ -518,9 +518,9 @@ namespace SR_WORLD_NS {
     }
 
     Path Scene::GetAbsPath(const Path& path) {
-        if (path.Contains(RuntimeScenePath.ToStringRef()) ||
-            path.Contains(NewScenePath.ToStringRef()) ||
-            path.Contains(NewPrefabPath.ToStringRef())
+        if (path.Contains(RuntimeScenePath) ||
+            path.Contains(NewScenePath) ||
+            path.Contains(NewPrefabPath)
         ) {
             return SR_UTILS_NS::ResourceManager::Instance().GetCachePath().Concat(path);
         }

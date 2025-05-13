@@ -230,7 +230,7 @@ endif()
 add_subdirectory(libs/fmt)
 
 if (SR_TRACY_ENABLE)
-    add_subdirectory(libs/tracy)
+    list(APPEND SR_UTILS_LINK_LIBRARIES libs/tracy/TracyClient.cpp)
 endif()
 
 add_subdirectory(libs/rapidyaml)
@@ -412,7 +412,9 @@ if (NOT ANDROID_NDK)
 endif()
 
 if (SR_TRACY_ENABLE)
-    target_link_libraries(Utils tracy)
+    target_compile_definitions(Utils PUBLIC TRACY_DELAYED_INIT)
+    target_compile_definitions(Utils PUBLIC TRACY_MANUAL_LIFETIME)
+    target_compile_definitions(Utils PUBLIC TRACY_BROADCAST_PORT=8086)
 endif()
 
 if (SR_EFSW_USE)

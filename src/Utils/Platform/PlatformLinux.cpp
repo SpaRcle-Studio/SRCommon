@@ -789,7 +789,7 @@ namespace SR_PLATFORM_NS {
             return false;
         }
 
-        if (!dlclose(pLibrary)) {
+        if (dlclose(pLibrary) != 0) {
             auto&& errorMessage = dlerror();
             if (errorMessage) {
                 SR_ERROR("PlatformLinux::UnloadLibraryModule() : failed to unload library!\n\tError: {}", std::string(errorMessage));
