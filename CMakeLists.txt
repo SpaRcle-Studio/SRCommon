@@ -11,16 +11,13 @@ option(SR_COMMON_CURL "" OFF)
 option(SR_COMMON_JSON "" OFF)
 option(SR_COMMON_MYHTML "" OFF)
 option(SR_COMMON_LITEHTML "" OFF)
+option(SR_COMMON_ASIO "" OFF)
 
 option(SR_COMMON_DLL_EXPORTS "" ON)
 option(SR_COMMON_GIT_METADATA "" ON)
 option(SR_COMMON_STATIC_LIBRARY "" ON)
 option(SR_COMMON_EMBED_RESOURCES "" OFF)
 option(SR_COMMON_CI_BUILD "" OFF)
-
-#if (SR_COMMON_CURL)
-#    set(SR_COMMON_OPENSSL ON)
-#endif()
 
 set(BUILD_SHARED_LIBS OFF CACHE INTERNAL "" FORCE)
 
@@ -55,27 +52,14 @@ endif()
 if (SR_COMMON_ASSIMP)
     message("SRCommon will be using Assimp")
 
-    add_definitions(
-        -DSR_UTILS_ASSIMP=1
-    )
+    add_definitions(-DSR_UTILS_ASSIMP=1)
+    add_compile_definitions(SR_UTILS_ASSIMP)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DSR_UTILS_ASSIMP")
-    add_compile_definitions(
-        SR_UTILS_ASSIMP
-    )
 
-    set(ASSIMP_BUILD_TESTS OFF CACHE INTERNAL "" FORCE)
-    set(ASSIMP_BUILD_ASSIMP_TOOLS OFF CACHE INTERNAL "" FORCE)
-    set(ASSIMP_INSTALL OFF CACHE INTERNAL "" FORCE)
-    set(ASSIMP_BUILD_ASSIMP_VIEW OFF CACHE INTERNAL "" FORCE)
-    set(ASSIMP_WARNINGS_AS_ERRORS OFF CACHE INTERNAL "" FORCE)
-
-    #if (ANDROID_NDK)
-    #    set(ASSIMP_BUILD_ZLIB OFF CACHE INTERNAL "" FORCE)
-    #else()
-    #    set(ASSIMP_BUILD_ZLIB ON CACHE INTERNAL "" FORCE)
-    #endif()
-
+    include(cmake/AssimpConfigure.cmake)
     add_subdirectory(libs/assimp)
+
+    target_compile_definitions(assimp PUBLIC ${SR_ASSIMP_DISABLED_IMPORTERS})
 endif()
 
 if (NOT ANDROID_NDK)
@@ -106,69 +90,6 @@ if (NOT ANDROID_NDK AND UNIX)
     set(SR_COMMON_CPPTRACE_ENABLED ON)
     add_subdirectory(libs/cpptrace)
 endif()
-
-#if (SR_COMMON_OPENSSL)
-#    # Prefer static linking
-#    set(OPENSSL_USE_STATIC_LIBS TRUE)
-#    set(OPENSSL_MSVC_STATIC_RUNTIME TRUE)
-#
-#    # Additional paths to search for OpenSSL
-#    if (UNIX AND NOT ANDROID_NDK)
-#        # Common Linux OpenSSL paths
-#        list(APPEND CMAKE_PREFIX_PATH
-#                "/usr/local/openssl"
-#                "/usr/local/ssl"
-#                "/usr/local"
-#                "/usr"
-#        )
-#
-#        # Additional library and include paths
-#        list(APPEND CMAKE_LIBRARY_PATH
-#                "/usr/local/openssl/lib"
-#                "/usr/local/ssl/lib"
-#                "/usr/local/lib"
-#                "/usr/lib/x86_64-linux-gnu"
-#        )
-#
-#        list(APPEND CMAKE_INCLUDE_PATH
-#                "/usr/local/openssl/include"
-#                "/usr/local/ssl/include"
-#                "/usr/local/include"
-#                "/usr/include/openssl"
-#        )
-#    endif()
-#
-#    # On macOS
-#    if (APPLE)
-#        # Homebrew OpenSSL paths
-#        list(APPEND CMAKE_PREFIX_PATH "/usr/local/opt/openssl")
-#        list(APPEND CMAKE_LIBRARY_PATH "/usr/local/opt/openssl/lib")
-#        list(APPEND CMAKE_INCLUDE_PATH "/usr/local/opt/openssl/include")
-#    endif()
-#
-#    # On Windows
-#    if (WIN32)
-#        # Potential OpenSSL installation paths
-#        list(APPEND CMAKE_PREFIX_PATH
-#                "C:/OpenSSL-Win64"
-#                "C:/Program Files/OpenSSL"
-#                "C:/Program Files/OpenSSL-Win64"
-#        )
-#    endif()
-#
-#    add_compile_definitions(SR_COMMON_OPENSSL)
-#    find_package(OpenSSL REQUIRED)
-#
-#    include_directories(${OPENSSL_INCLUDE_DIR})
-#
-#    if (OpenSSL_FOUND)
-#        message(STATUS "OpenSSL version: ${OPENSSL_VERSION}")
-#        message(STATUS "OpenSSL include dir: ${OPENSSL_INCLUDE_DIR}")
-#        message(STATUS "OpenSSL libraries: ${OPENSSL_LIBRARIES}")
-#    else()
-#        message(FATAL_ERROR "System OpenSSL is not found.")
-#    endif()
-#endif()
 
 if (SR_COMMON_CURL)
     set(BUILD_LIBCURL_DOCS OFF CACHE INTERNAL "" FORCE)
@@ -236,69 +157,12 @@ define_property(GLOBAL PROPERTY SR_UTILS_INCLUDE_DIRECTORIES
 
 set_property(GLOBAL PROPERTY SR_UTILS_INCLUDE_DIRECTORIES "")
 
-if (SR_COMMON_ZLIB)
-    SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_SOURCE_DIR}/libs/zlib)
-endif()
+include(cmake/SRCommonIncludes.cmake)
 
-if (SR_COMMON_GIT_METADATA)
-    SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_SOURCE_DIR}/libs/cmake-git-version-tracking)
-endif()
-
-if (SR_COMMON_ASSIMP)
-    SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_BINARY_DIR}/libs/assimp/include)
-    SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_SOURCE_DIR}/libs/assimp/include)
-endif()
-
-if (SR_COMMON_SDL)
-    SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_SOURCE_DIR}/libs/SDL/include)
-endif()
-
-if (SR_COMMON_JSON)
-    SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_SOURCE_DIR}/libs/json/include)
-endif()
-
-if (SR_COMMON_OPENSSL)
-    SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_SOURCE_DIR}/libs/openssl/include)
-endif()
-
-if (SR_COMMON_CURL)
-    set(SR_CURL_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/libs/curl/include)
-    SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${SR_CURL_INCLUDE_DIRS})
-endif()
-
-SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_BINARY_DIR}/libs/nativefiledialog/src/include)
-SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_SOURCE_DIR}/libs/nativefiledialog/src/include)
-
-SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_SOURCE_DIR}/inc)
-SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_SOURCE_DIR}/libs)
-SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_SOURCE_DIR}/libs/glm)
-SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_SOURCE_DIR}/libs/fmt/include)
-
-if (SR_COMMON_CPPTRACE_ENABLED)
-    SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_SOURCE_DIR}/libs/cpptrace/include)
-endif()
-
-SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_SOURCE_DIR}/libs/rapidyaml/src)
-SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_SOURCE_DIR}/libs/cssparser/cssparser)
-SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_SOURCE_DIR}/libs/entt/src)
-SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${SR_CMAKE_ROOT_BUILD_DIRECTORY}/Codegen)
-
-SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_BINARY_DIR}/include/Utils/EmbedResources)
-SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_BINARY_DIR}/libs/zlib)
-SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_BINARY_DIR}/libs/tree-sitter/lib/include)
-
-add_library(asio INTERFACE)
-
-target_include_directories(asio INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/libs/asio/asio/include)
-target_include_directories(asio INTERFACE ${CMAKE_CURRENT_BINARY_DIR}/libs/asio/asio/include)
-
-if (SR_ICU)
-    SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_BINARY_DIR}/include/icu)
-endif()
-
-if (SR_TRACY_ENABLE)
-    SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_BINARY_DIR}/include/tracy/tracy)
-    SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_SOURCE_DIR}/libs/tracy/tracy)
+if (SR_COMMON_ASIO)
+    add_library(asio INTERFACE)
+    target_include_directories(asio INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/libs/asio/asio/include)
+    target_include_directories(asio INTERFACE ${CMAKE_CURRENT_BINARY_DIR}/libs/asio/asio/include)
 endif()
 
 if (SR_EFSW_USE)
@@ -363,66 +227,7 @@ if (SR_COMMON_LITEHTML)
     target_link_libraries(Utils litehtml)
 endif()
 
-
-if (SR_COMMON_OPENSSL)
-    target_compile_definitions(Utils PUBLIC SR_COMMON_OPENSSL)
-endif()
-
-if (SR_COMMON_SDL)
-    target_compile_definitions(Utils PUBLIC SR_COMMON_SDL)
-endif()
-
-if (SR_COMMON_LITEHTML)
-    target_compile_definitions(Utils PUBLIC SR_COMMON_LITEHTML)
-endif()
-
-if (SR_COMMON_EMBED_RESOURCES)
-    target_compile_definitions(Utils PUBLIC SR_COMMON_EMBED_RESOURCES)
-endif()
-
-if (SR_COMMON_GIT_METADATA)
-    target_compile_definitions(Utils PUBLIC SR_COMMON_GIT_METADATA)
-endif()
-
-if (SR_COMMON_SDL)
-    target_link_libraries(Utils SDL3::SDL3)
-endif()
-
-if (SR_COMMON_ZLIB)
-    target_link_libraries(Utils zlibstatic)
-endif()
-
-if (SR_COMMON_ASSIMP)
-    target_link_libraries(Utils assimp)
-endif()
-
-if (SR_COMMON_CURL)
-    target_link_libraries(Utils libcurl)
-endif()
-
-if (SR_COMMON_GIT_METADATA)
-    target_link_libraries(Utils cmake_git_version_tracking)
-endif()
-
-if (SR_COMMON_JSON)
-    target_link_libraries(Utils nlohmann_json)
-endif()
-
-if (NOT ANDROID_NDK)
-    target_link_libraries(Utils nfd) # nativefiledialog
-    target_link_libraries(Utils TinyFileDialogs)
-    target_compile_definitions(Utils PUBLIC SR_COMMON_USE_TINY_FILE_DIALOGS)
-endif()
-
-if (SR_TRACY_ENABLE)
-    target_compile_definitions(Utils PUBLIC TRACY_DELAYED_INIT)
-    target_compile_definitions(Utils PUBLIC TRACY_MANUAL_LIFETIME)
-    target_compile_definitions(Utils PUBLIC TRACY_BROADCAST_PORT=8086)
-endif()
-
-if (SR_EFSW_USE)
-    target_link_libraries(Utils efsw)
-endif()
+include(cmake/SRCommonLinking.cmake)
 
 if (MSVC)
     target_compile_options(Utils PUBLIC /openmp)
@@ -433,7 +238,7 @@ else()
     target_link_libraries(Utils fmt)
 endif()
 
-target_link_libraries(Utils asio ryml::ryml EnTT)
+target_link_libraries(Utils ryml::ryml EnTT)
 
 if (SR_COMMON_CPPTRACE_ENABLED)
     target_link_libraries(Utils cpptrace::cpptrace)
@@ -469,7 +274,7 @@ if (NOT SR_COMMON_CI_BUILD)
         COMMENT "SRCommon: Copy utils source files to build directory"
     )
 
-    set(SR_UTILS_DEPENDENCIES  ${SR_UTILS_DEPENDENCIES} "CopyUtilsFiles ")
+    set(SR_UTILS_DEPENDENCIES ${SR_UTILS_DEPENDENCIES} "CopyUtilsFiles")
 endif()
 
 SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_BINARY_DIR}/include)
@@ -484,8 +289,6 @@ if (SR_COMMON_CI_BUILD)
     target_link_libraries(SR_UTILS_CI Utils)
 endif()
 
-#set(SR_UTILS_DEPENDENCIES  ${SR_UTILS_DEPENDENCIES} "EmbedResourcesTarget")
-
 if (SR_COMMON_EMBED_RESOURCES)
-    add_dependencies(${PROJECT_NAME} CopyUtilsFiles EmbedResourcesTarget) #SRUtilsCodegenTarget
+    add_dependencies(${PROJECT_NAME} CopyUtilsFiles EmbedResourcesTarget)
 endif()

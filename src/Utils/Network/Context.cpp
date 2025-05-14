@@ -6,7 +6,9 @@
 #include <Utils/Network/Acceptor.h>
 #include <Utils/Network/Socket.h>
 
-#include <Utils/Network/Asio/AsioContext.h>
+#ifdef SR_COMMON_ASIO
+    #include <Utils/Network/Asio/AsioContext.h>
+#endif
 
 namespace SR_NETWORK_NS {
     Context::Context()
@@ -14,7 +16,12 @@ namespace SR_NETWORK_NS {
     { }
 
     SR_HTYPES_NS::SharedPtr<Context> Context::Create() {
+    #ifdef SR_COMMON_ASIO
         return AsioContext::MakeShared<AsioContext, Context>();
+    #else
+        SR_ERROR("Context::Create() : no implementation for this platform!");
+        return nullptr;
+    #endif
     }
 
     SR_HTYPES_NS::SharedPtr<Context> Context::CreateAndRun() {

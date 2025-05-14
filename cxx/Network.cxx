@@ -6,8 +6,10 @@
 #include "../src/Utils/Network/Context.cpp"
 #include "../src/Utils/Network/FileDownloader.cpp"
 
-#include "../src/Utils/Network/Asio/AsioContext.cpp"
-#include "../src/Utils/Network/Asio/AsioTCPSocket.cpp"
-#include "../src/Utils/Network/Asio/AsioTCPAcceptor.cpp"
-#include "../src/Utils/Network/Asio/AsioPinger.cpp"
-#include "../src/Utils/Network/Asio/AsioICMPSocket.cpp"
+#ifdef SR_COMMON_ASIO
+    #include "../src/Utils/Network/Asio/AsioContext.cpp"
+    #include "../src/Utils/Network/Asio/AsioTCPSocket.cpp"
+    #include "../src/Utils/Network/Asio/AsioTCPAcceptor.cpp"
+    #include "../src/Utils/Network/Asio/AsioPinger.cpp"
+    #include "../src/Utils/Network/Asio/AsioICMPSocket.cpp"
+#endif
