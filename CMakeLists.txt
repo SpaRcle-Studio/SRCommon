@@ -18,34 +18,14 @@ option(SR_COMMON_STATIC_LIBRARY "" ON)
 option(SR_COMMON_EMBED_RESOURCES "" OFF)
 option(SR_COMMON_CI_BUILD "" OFF)
 
-if (SR_COMMON_CURL)
-    set(SR_COMMON_OPENSSL ON)
-endif()
-
-if (SR_COMMON_OPENSSL)
-    add_compile_definitions(SR_COMMON_OPENSSL)
-endif()
+#if (SR_COMMON_CURL)
+#    set(SR_COMMON_OPENSSL ON)
+#endif()
 
 set(BUILD_SHARED_LIBS OFF CACHE INTERNAL "" FORCE)
 
 include(cmake/Linker.cmake)
 include(cmake/CopyDLLToExeFolder.cmake)
-
-if (SR_COMMON_SDL)
-    add_compile_definitions(SR_COMMON_SDL)
-endif()
-
-if (SR_COMMON_LITEHTML)
-    add_compile_definitions(SR_COMMON_LITEHTML)
-endif()
-
-if (SR_COMMON_EMBED_RESOURCES)
-    add_compile_definitions(SR_COMMON_EMBED_RESOURCES)
-endif()
-
-if (SR_COMMON_GIT_METADATA)
-    add_compile_definitions(SR_COMMON_GIT_METADATA)
-endif()
 
 macro(SR_UTILS_INCLUDE_DIRECTORIES_APPEND var)
     set_property(GLOBAL APPEND PROPERTY SR_UTILS_INCLUDE_DIRECTORIES "${var}")
@@ -68,6 +48,7 @@ if (SR_COMMON_ZLIB)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DASSIMP_BUILD_ZLIB=OFF")
     set(ASSIMP_BUILD_ZLIB OFF CACHE INTERNAL "" FORCE)
     set(ZLIB_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/libs/zlib ${CMAKE_CURRENT_BINARY_DIR}/libs/zlib)
+    set(SR_ZLIB_INCLUDE_DIRS ${ZLIB_INCLUDE_DIR})
     add_subdirectory(libs/zlib)
 endif()
 
@@ -197,8 +178,8 @@ if (SR_COMMON_CURL)
     set(BUILD_CURL_EXE OFF CACHE INTERNAL "" FORCE)
     set(BUILD_TESTING OFF CACHE INTERNAL "" FORCE)
     set(BUILD_SHARED_LIBS OFF CACHE INTERNAL "" FORCE)
-    set(USE_OPENSSL ON CACHE INTERNAL "" FORCE)
-    set(CURL_USE_OPENSSL ON CACHE INTERNAL "" FORCE)
+    set(USE_OPENSSL ${SR_COMMON_OPENSSL} CACHE INTERNAL "" FORCE)
+    set(CURL_USE_OPENSSL ${SR_COMMON_OPENSSL} CACHE INTERNAL "" FORCE)
     set(BUILD_STATIC_CURL ON CACHE INTERNAL "" FORCE)
 
     if(WIN32)
@@ -281,7 +262,8 @@ if (SR_COMMON_OPENSSL)
 endif()
 
 if (SR_COMMON_CURL)
-    SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_SOURCE_DIR}/libs/curl/include)
+    set(SR_CURL_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/libs/curl/include)
+    SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${SR_CURL_INCLUDE_DIRS})
 endif()
 
 SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_BINARY_DIR}/libs/nativefiledialog/src/include)
@@ -379,6 +361,27 @@ if (SR_COMMON_LITEHTML)
     add_subdirectory(libs/litehtml)
     SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_SOURCE_DIR}/libs/litehtml/include)
     target_link_libraries(Utils litehtml)
+endif()
+
+
+if (SR_COMMON_OPENSSL)
+    target_compile_definitions(Utils PUBLIC SR_COMMON_OPENSSL)
+endif()
+
+if (SR_COMMON_SDL)
+    target_compile_definitions(Utils PUBLIC SR_COMMON_SDL)
+endif()
+
+if (SR_COMMON_LITEHTML)
+    target_compile_definitions(Utils PUBLIC SR_COMMON_LITEHTML)
+endif()
+
+if (SR_COMMON_EMBED_RESOURCES)
+    target_compile_definitions(Utils PUBLIC SR_COMMON_EMBED_RESOURCES)
+endif()
+
+if (SR_COMMON_GIT_METADATA)
+    target_compile_definitions(Utils PUBLIC SR_COMMON_GIT_METADATA)
 endif()
 
 if (SR_COMMON_SDL)

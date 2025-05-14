@@ -11,6 +11,8 @@ namespace SR_UTILS_NS {
 
     bool ResourceEmbedder::ExportAllResources(const SR_UTILS_NS::Path& newDirectory) {
         bool result = true;
+        SR_LOG("ResourceEmbedder::ExportAllResources() : exporting {} resources to '{}'", m_resources.size(), newDirectory);
+
         if (!newDirectory.IsEmpty() && !newDirectory.Exists()) {
             if (!newDirectory.Create()) {
                 SR_ERROR("ResourceEmbedder::ExportAllResources() : failed to create new directory!");
@@ -130,5 +132,10 @@ namespace SR_UTILS_NS {
         inflateEnd(&strm);
 
         return {decompressedData.begin(), decompressedData.begin() + decompressedSize };
+    }
+
+    ResourceEmbedder& ResourceEmbedder::Instance() {
+        static ResourceEmbedder instance;
+        return instance;
     }
 }
