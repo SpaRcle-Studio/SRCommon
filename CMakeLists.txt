@@ -20,6 +20,11 @@ option(SR_COMMON_EMBED_RESOURCES "" OFF)
 option(SR_COMMON_CI_BUILD "" OFF)
 
 set(BUILD_SHARED_LIBS OFF CACHE INTERNAL "" FORCE)
+set(SKIP_INSTALL_ALL ON)
+
+if (SR_EMSCRIPTEN)
+    set(ZLIB_ONLY_STATIC ON)
+endif()
 
 include(cmake/Linker.cmake)
 include(cmake/CopyDLLToExeFolder.cmake)
@@ -127,6 +132,10 @@ if (SR_UTILS_FMT_HEADER_ONLY)
     add_definitions(
         -DFMT_HEADER_ONLY
     )
+endif()
+
+if (SR_EMSCRIPTEN)
+    add_definitions(-DFMT_USE_CONSTEXPR=0)
 endif()
 
 add_subdirectory(libs/fmt)
