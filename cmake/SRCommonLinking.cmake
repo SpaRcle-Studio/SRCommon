@@ -42,7 +42,7 @@ if (SR_COMMON_JSON)
     target_link_libraries(Utils nlohmann_json)
 endif()
 
-if (NOT ANDROID_NDK)
+if (NOT ANDROID_NDK AND NOT SR_EMSCRIPTEN)
     target_link_libraries(Utils nfd) # nativefiledialog
     target_link_libraries(Utils TinyFileDialogs)
     target_compile_definitions(Utils PUBLIC SR_COMMON_USE_TINY_FILE_DIALOGS)
