@@ -13,6 +13,8 @@ namespace SR_UTILS_NS {
         __debugbreak();
     #elif defined(SR_LINUX) || defined(SR_ANDROID)
         raise(SIGTRAP);
+    #elif defined(SR_EMSCRIPTEN)
+        /// nothing
     #else
         #error "Breakpoint not implemented for this platform"
     #endif

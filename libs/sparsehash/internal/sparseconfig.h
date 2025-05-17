@@ -15,7 +15,7 @@
 
 #define HASH_FUN_H  <unordered_set>
 
-#elif defined(ANDROID)
+#elif defined(ANDROID) || defined(EMSCRIPTEN)
     #define HASH_FUN_H  <unordered_set>
 #else /* Earlier than VSC++ 2013 */ 
 
