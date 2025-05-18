@@ -18,9 +18,11 @@ namespace SR_HTYPES_NS {
     }
 
     SharedPtrBase::SharedPtrBase() = default;
+
     SharedPtrBase::SharedPtrBase(SharedPtrDynamicData* data)
         : m_data(data)
     { }
+
     SharedPtrBase::~SharedPtrBase() = default;
 
     SharedPtrDynamicData *SharedPtrBase::GetPtrData() {

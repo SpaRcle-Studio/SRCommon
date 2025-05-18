@@ -39,11 +39,6 @@ namespace SR_UTILS_NS::UI {
         });
     }
 
-    void UIModifierComponent::OnTransformSet() {
-        ConnectModifier();
-        Super::OnTransformSet();
-    }
-
     void UIModifierComponent::SetUITreeDirty() {
         SR_TRACY_ZONE;
 

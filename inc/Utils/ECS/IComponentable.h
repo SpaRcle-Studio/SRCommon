@@ -96,7 +96,7 @@ namespace SR_UTILS_NS {
         void DestroyComponent(const Component::Ptr& pComponent);
 
     protected:
-        /// @property
+        /// @property @hidden @dontSaveTags(Inspector)
         /// @propertyCondition(!This.IsPrefab())
         std::vector<Component::Ptr> m_components;
 

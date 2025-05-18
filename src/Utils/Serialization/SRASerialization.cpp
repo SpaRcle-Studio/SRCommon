@@ -136,6 +136,8 @@ namespace SR_UTILS_NS {
         auto&& pDeserializer = std::make_unique<SRADeserializer>();
         pDeserializer->m_root = m_root;
         pDeserializer->SetUseTabs(IsNeedUseTabs());
+        pDeserializer->SetDontLoadTags(GetDontSaveTags());
+
         return pDeserializer;
     }
 

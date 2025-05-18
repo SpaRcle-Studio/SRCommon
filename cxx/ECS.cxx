@@ -16,3 +16,4 @@
 #include "../src/Utils/ECS/Prefab.cpp"
 #include "../src/Utils/ECS/TagManager.cpp"
 #include "../src/Utils/ECS/LayerManager.cpp"
+#include "../src/Utils/ECS/Node.cpp"

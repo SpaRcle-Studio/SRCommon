@@ -88,7 +88,7 @@ namespace SR_UTILS_NS {
         return m_sceneObject.DynamicCast<GameObject>();
     }
 
-    Component::SceneObjectPtr Component::GetSceneObject() const {
+    const Component::SceneObjectPtr& Component::GetSceneObject() const {
         SRAssert(m_parent);
         return m_sceneObject;
     }
@@ -130,6 +130,7 @@ namespace SR_UTILS_NS {
     }
 
     int32_t Component::GetIndexInSceneUpdater() const noexcept { return m_indexInSceneUpdater; }
+
     bool Component::HasParent() const { return m_parent; }
 
     Component::Ptr Component::CloneComponent() const {
@@ -188,7 +189,6 @@ namespace SR_UTILS_NS {
 
     void Component::OnMatrixDirty() { }
     void Component::OnPriorityChanged() { }
-    void Component::OnTransformSet() { }
 
     void Component::OnLoaded() { m_isComponentLoaded = true; }
     void Component::OnAttached() { m_isAttached = true; SRAssert(GetParent()); }

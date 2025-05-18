@@ -59,7 +59,6 @@ namespace SR_UTILS_NS {
     public:
         virtual void OnMatrixDirty();
         virtual void OnPriorityChanged();
-        virtual void OnTransformSet();
 
         /// Вызывается при загрузке компонента на игровой объект
         virtual void OnLoaded();
@@ -125,7 +124,7 @@ namespace SR_UTILS_NS {
         SR_NODISCARD ScenePtr GetScene() const;
         SR_NODISCARD bool HasScene() const;
         SR_NODISCARD GameObjectPtr GetGameObject() const;
-        SR_NODISCARD SceneObjectPtr GetSceneObject() const;
+        SR_NODISCARD const SceneObjectPtr& GetSceneObject() const;
         SR_NODISCARD ScenePtr TryGetScene() const;
         SR_NODISCARD SceneObjectPtr GetRoot() const;
         SR_NODISCARD Transform* GetTransform() const noexcept;

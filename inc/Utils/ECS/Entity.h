@@ -66,7 +66,7 @@ namespace SR_UTILS_NS {
         SR_UTILS_NS::PropertyContainer m_entityMessages;
 
     private:
-        /// @property @hidden
+        /// @property @hidden @dontSaveTags(Inspector)
         /// @loadCondition(!This.IsPrefabLoadingState())
         EntityId m_entityId = SR_ID_INVALID;
 

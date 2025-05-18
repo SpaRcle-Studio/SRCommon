@@ -174,6 +174,17 @@ namespace SR_UTILS_NS::Reflection {
         return GetTypeName() == compare;
     }
 
+    bool Value::IsRect() const {
+        if (!IsClass() || !IsTemplate()) {
+            return false;
+        }
+
+        static const auto meta = entt::meta_any(SR_MATH_NS::FRect());
+        static const std::string_view compare = meta.base().type().name().substr(0, meta.base().type().name().find('<') - 1);
+
+        return GetTypeName().starts_with(compare);
+    }
+
     bool Value::IsMathVector() const {
         if (!IsClass() || !IsTemplate()) {
             return false;

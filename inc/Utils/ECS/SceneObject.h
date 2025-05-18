@@ -18,10 +18,10 @@ namespace SR_UTILS_NS {
 
     SR_ENUM_NS_CLASS_T(SceneObjectType, int16_t,
         Invalid = -1,
-        GameObject = 0
+        GameObject = 0,
+        Node
     )
 
-    /// @scriptableClass
     class SceneObject : public IComponentable {
         SR_CLASS()
         using Super = IComponentable;
@@ -142,23 +142,23 @@ namespace SR_UTILS_NS {
         SRHashType m_idInScene = SR_ID_INVALID;
 
     private:
-        /// @property @setter(SetTag)
+        /// @property @setter(SetTag) @hidden @dontSaveTags(Inspector)
         /// @loadCondition(!This.IsPrefabLoadingState())
         SR_UTILS_NS::StringAtom m_tag;
         /// @loadCondition(!This.IsPrefabLoadingState())
-        /// @property @setter(SetName)
+        /// @property @setter(SetName) @hidden @dontSaveTags(Inspector)
         SR_UTILS_NS::StringAtom m_name;
-        /// @property @propertyCondition(!This.IsPrefab())
+        /// @property @propertyCondition(!This.IsPrefab()) @hidden @dontSaveTags(Inspector)
         /// @loadCondition(!This.IsPrefab())
         std::vector<SceneObject::Ptr> m_children;
-        /// @property @setter(SetEnabled)
+        /// @property @setter(SetEnabled) @hidden @dontSaveTags(Inspector)
         /// @loadCondition(!This.IsPrefabLoadingState())
         bool m_isEnabled = true;
-        /// @property @setter(SetLayer)
+        /// @property @setter(SetLayer) @hidden @dontSaveTags(Inspector)
         /// @loadCondition(!This.IsPrefabLoadingState())
         StringAtom m_layer = LayerManager::GetDefaultLayer();
 
-        /// @virtualProperty(prefab) @dontLoad @getter(GetPrefabPath)
+        /// @virtualProperty(prefab) @dontLoad @getter(GetPrefabPath) @hidden @dontSaveTags(Inspector)
         /// @propertyCondition(This.IsPrefab() && This.m_prefabInfo.isOwner)
         SR_VIRTUAL_PROPERTY;
 

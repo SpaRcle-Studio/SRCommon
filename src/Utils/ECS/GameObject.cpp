@@ -45,6 +45,10 @@ namespace SR_UTILS_NS {
     }
 
     void GameObject::SetTransform(const SR_HTYPES_NS::SharedPtr<Transform>& pTransform) {
+        if (m_transform == pTransform) {
+            return;
+        }
+
         if (!pTransform) {
             SRHalt("pTransform is nullptr!");
             return;
@@ -55,19 +59,12 @@ namespace SR_UTILS_NS {
             return;
         }
 
-        if (m_transform == pTransform) {
-            SR_WARN("GameObject::SetTransform() : invalid transform!");
-        }
-        else {
-            m_transform.AutoFree();
-            m_transform = pTransform;
-            m_transform->SetGameObject(this);
-            SetDirty(true);
-        }
+        m_transform.AutoFree();
+        m_transform = pTransform;
+        m_transform->SetGameObject(this);
+        SetDirty(true);
 
-        for (auto&& pComponent : m_components) {
-            pComponent->OnTransformSet();
-        }
+        m_transform->UpdateTree();
     }
 
     void GameObject::OnHierarchyChanged() {

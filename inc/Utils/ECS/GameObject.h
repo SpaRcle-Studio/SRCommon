@@ -20,7 +20,6 @@ namespace SR_UTILS_NS {
     class Transform;
     class Component;
 
-    /// @scriptableClass
     class SR_COMMON_DLL_API GameObject final : public SceneObject {
         SR_CLASS()
         using Super = SceneObject;
