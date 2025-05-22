@@ -93,6 +93,12 @@ endif()
 set(SR_COMMON_CPPTRACE_ENABLED OFF)
 if (NOT ANDROID_NDK AND UNIX AND NOT SR_EMSCRIPTEN)
     set(SR_COMMON_CPPTRACE_ENABLED ON)
+
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+        message(WARNING "Clang compiler is used. Stack tracing will not work.")
+        set(CPPTRACE_UNWIND_WITH_NOTHING ON)
+    endif()
+
     add_subdirectory(libs/cpptrace)
 endif()
 

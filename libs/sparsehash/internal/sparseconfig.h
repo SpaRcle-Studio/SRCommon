@@ -20,8 +20,10 @@
 #else /* Earlier than VSC++ 2013 */ 
 
 /* the location of the header defining hash functions */
-#define HASH_FUN_H  <hash_map>
-
+#ifdef SR_CLANG
+    #define HASH_FUN_H  <unordered_map>
+#else
+    #define HASH_FUN_H  <hash_map>
 #endif
 
 #if (defined(__MINGW32__) || defined(__MINGW64__) || defined(ANDROID))
