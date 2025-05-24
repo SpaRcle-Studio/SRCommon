@@ -120,10 +120,6 @@ namespace SR_UTILS_NS {
         }
     }
 
-    bool Entity::InitializeEntity() noexcept {
-        return true;
-    }
-
     //void Entity::SetEntityPath(const EntityPath &path) {
     //    m_entityPath = path;
     //}

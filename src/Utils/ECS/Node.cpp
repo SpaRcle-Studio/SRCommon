@@ -18,8 +18,4 @@ namespace SR_UTILS_NS {
     void Node::OnHierarchyChanged() {
         Super::OnHierarchyChanged();
     }
-
-    void Node::OnAttached() {
-
-    }
 }

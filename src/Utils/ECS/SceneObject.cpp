@@ -303,7 +303,10 @@ namespace SR_UTILS_NS {
             return;
         }
 
-        SRAssert(m_parent);
+        if (!m_parent) {
+            return; /// находимся в состоянии загрузки объекта
+        }
+
         SRAssert(!m_layer.Empty());
 
         if (m_cachedLayer == m_parent->m_cachedLayer) {
@@ -458,7 +461,7 @@ namespace SR_UTILS_NS {
         m_children.emplace_back(pChild);
 
         pChild->OnParentLayerChanged();
-        pChild->OnAttached();
+        pChild->OnAttachedToParent();
 
         if (m_scene) {
             m_scene->OnChanged();
@@ -509,6 +512,8 @@ namespace SR_UTILS_NS {
 
         const SceneObject::Ptr pOldParent = m_parent;
         m_parent = pParent;
+
+        OnParentChanged(pOldParent);
 
         UpdateRoot();
 
@@ -593,5 +598,14 @@ namespace SR_UTILS_NS {
                 child.Unlock();
             }
         }
+    }
+
+    int32_t SceneObject::GetChildIndex(const SceneObject& child) const {
+        for (int32_t i = 0; i < m_children.size(); ++i) {
+            if (m_children[i] == child.GetThis()) {
+                return i;
+            }
+        }
+        return SR_ID_INVALID;
     }
 }

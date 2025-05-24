@@ -73,6 +73,8 @@ namespace SR_UTILS_NS {
     }
 
     Subscription SubscriptionHolder::Subscribe(const StringAtom id, SR_HTYPES_NS::Function<void(const SubscriptionMessage& msg)>&& callback) {
+        SR_TRACY_ZONE;
+
         SRAssert(callback);
         auto& pool = m_subscriptions[id];
         auto&& pSubscription = new SubscriptionInternalInfo(std::move(callback), this);
@@ -84,6 +86,8 @@ namespace SR_UTILS_NS {
     }
 
     void SubscriptionHolder::Broadcast(const StringAtom id) {
+        SR_TRACY_ZONE;
+
         static SubscriptionMessage message;
         if (const auto it = m_subscriptions.find(id); it != m_subscriptions.end()) {
             it->second.ForEach([](uint32_t, auto&& pSubscription) {
@@ -93,6 +97,8 @@ namespace SR_UTILS_NS {
     }
 
     void SubscriptionHolder::Broadcast(const StringAtom id, const SubscriptionMessage &message) {
+        SR_TRACY_ZONE;
+
         if (const auto it = m_subscriptions.find(id); it != m_subscriptions.end()) {
             it->second.ForEach([&message](uint32_t, auto&& pSubscription) {
                 pSubscription->callback(message);
@@ -101,6 +107,8 @@ namespace SR_UTILS_NS {
     }
 
     void SubscriptionHolder::Unsubscribe(const SubscriptionInternalInfo *pSubscription) {
+        SR_TRACY_ZONE;
+
         if (auto it = m_subscriptions.find(pSubscription->id); it != m_subscriptions.end()) {
             auto& pool = it->second;
             pool.RemoveByIndex(pSubscription->index);
