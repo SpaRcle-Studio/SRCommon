@@ -62,14 +62,13 @@ namespace SR_UTILS_NS {
 
         m_pDeserializer->ResetWalker();
 
-        if (!m_pDeserializer->BeginObject(SerializationId::Create("data"))) {
-            SR_ERROR("Prefab::LoadToSO() : failed to load prefab data!");
-            return false;
+        if (m_pDeserializer->BeginObject(SerializationId::Create("data"))) {
+            pSO->Load(*m_pDeserializer);
+            m_pDeserializer->EndObject();
         }
-
-        pSO->Load(*m_pDeserializer);
-
-        m_pDeserializer->EndObject();
+        else {
+            /// Empty prefab, nothing to load
+        }
 
         return true;
     }
@@ -100,16 +99,16 @@ namespace SR_UTILS_NS {
             return false;
         }
 
-        if (!m_pDeserializer->BeginObject(SerializationId::Create("info"))) {
-            m_loadState = LoadState::Error;
-            SR_ERROR("Prefab::Load() : failed to load prefab info!\n\tPath: " + path.ToString());
-            return false;
-        }
-
         SR_UTILS_NS::StringAtom type;
-        m_pDeserializer->ReadString(type, SerializationId::Create("type"));
 
-        m_pDeserializer->EndObject();
+        if (m_pDeserializer->BeginObject(SerializationId::Create("info"))) {
+            m_pDeserializer->ReadString(type, SerializationId::Create("type"));
+            m_pDeserializer->EndObject();
+        }
+        else {
+            /// Empty prefab, create default SceneObject
+            type = SR_UTILS_NS::GameObject::GetClassStaticName();
+        }
 
         if (type.Empty()) {
             m_loadState = LoadState::Error;
@@ -129,9 +128,7 @@ namespace SR_UTILS_NS {
             m_pDeserializer->EndObject();
         }
         else {
-            m_loadState = LoadState::Error;
-            SR_ERROR("Prefab::Load() : failed to load prefab data!\n\tPath: " + path.ToString());
-            return false;
+            /// Empty prefab
         }
 
         return IResource::Load();

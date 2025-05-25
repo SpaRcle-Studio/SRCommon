@@ -563,7 +563,7 @@ namespace SR_UTILS_NS {
         while (!m_children.empty()) {
             auto&& pChild = *m_children.begin();
             if (pChild) {
-                pChild->SetParent(nullptr);
+                RemoveChild(pChild);
             }
             else {
                 SRHalt("SceneObject::RemoveChildren() : child is nullptr!");
