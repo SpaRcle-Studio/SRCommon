@@ -103,6 +103,10 @@ namespace SR_UTILS_NS {
         if (pDestination) {
             return pDestination->AddChild(this);
         }
+        else {
+            /// Если объект был выключен, нужно просигналить сцене чтобы она его включила.
+            SetDirty(true);
+        }
 
         if (GetParent()) {
             SRHalt("SceneObject::MoveToTree() : SO has parent!");
@@ -467,7 +471,18 @@ namespace SR_UTILS_NS {
             m_scene->OnChanged();
         }
 
-        SetDirty(true);
+        if (!IsActive()) {
+            /// Если объект был выключен, то сцена не будет вызывать CheckActivity(), так как родитель уже выключен
+            /// Значит, нужно вручную вызвать CheckActivity() для дочернего объекта и его дерева
+            pChild->SetDirty(true);
+            pChild->CheckActivity(false);
+        }
+        else {
+            /// В случае если не активны, то ребенок сам позвонит в SetDirty() и поднимет флаг вверх
+            /// А в данном кейсе чтобы сцена знала, что объект изменился, и если у нас дочерний объект был выключен,
+            /// то сцена его включит
+            SetDirty(true);
+        }
 
         return true;
     }
