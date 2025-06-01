@@ -19,11 +19,13 @@
     #define HASH_FUN_H  <unordered_set>
 #else /* Earlier than VSC++ 2013 */ 
 
-/* the location of the header defining hash functions */
-#ifdef SR_CLANG
-    #define HASH_FUN_H  <unordered_map>
-#else
-    #define HASH_FUN_H  <hash_map>
+    /* the location of the header defining hash functions */
+    #ifdef SR_CLANG
+        #define HASH_FUN_H  <unordered_map>
+    #else
+        #define HASH_FUN_H  <hash_map>
+    #endif
+
 #endif
 
 #if (defined(__MINGW32__) || defined(__MINGW64__) || defined(ANDROID))
