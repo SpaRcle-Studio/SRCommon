@@ -248,7 +248,7 @@ endif()
 
 if (SR_UTILS_FMT_HEADER_ONLY)
 else()
-    target_link_libraries(Utils fmt)
+    target_link_libraries(Utils fmt::fmt)
 endif()
 
 target_link_libraries(Utils ryml::ryml EnTT)
