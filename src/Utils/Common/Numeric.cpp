@@ -42,4 +42,8 @@ namespace SR_UTILS_NS {
     SR_NODISCARD uint32_t Random::UInt32() {
         return static_cast<uint32_t>(m_dist(m_e2));
     }
+
+    bool Random::Bool() {
+        return Int32Range(0, 1) == 1;
+    }
 }

@@ -311,4 +311,31 @@ namespace SR_UTILS_NS {
         }
         return lines;
     }
+
+    uint64_t FileSystem::GetExecutableAndModulesHash() {
+        SR_TRACY_ZONE;
+
+        static uint64_t hash = SR_UINT64_MAX;
+        if (hash != SR_UINT64_MAX) {
+            return hash;
+        }
+
+        auto&& appPath = SR_PLATFORM_NS::GetApplicationPath();
+        if (!appPath.IsFile()) {
+            SR_ERROR("FileSystem::GetExecutableAndModulesHash() : application path is not a file!");
+            return 0;
+        }
+
+        hash = GetFileHash(appPath.ToStringRef());
+        for (auto&& filePath : appPath.GetFolder().GetFiles()) {
+            if (filePath.GetExtensionView() == "dll" || filePath.GetExtensionView() == "so" || filePath.GetExtensionView() == "dylib") {
+                auto&& fileHash = GetFileHash(filePath.ToStringRef());
+                if (fileHash != SR_UINT64_MAX) {
+                    hash = CombineTwoHashes(hash, fileHash);
+                }
+            }
+        }
+
+        return hash;
+    }
 }

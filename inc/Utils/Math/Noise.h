@@ -142,7 +142,7 @@ namespace SR_MATH_NS {
         double_t sz = rz0 * rz0 * (3.0 - 2.0 * rz0);
         double_t st = rt0 * rt0 * (3.0 - 2.0 * rt0);
 
-        const double_t *g;
+        const double_t* g;
         double_t u, v;
         double_t a, b, c, d, e, f;
 
@@ -177,7 +177,7 @@ namespace SR_MATH_NS {
 
         e = Lerp(sz, c, d);
 
-        /// at it+1
+        /// at it + 1
         g = NoiseTable::grads4[idxfunc(ix, iy, iz, it + 1)];
         u = g[0] * rx0 + g[1] * ry0 + g[2] * rz0 + g[3] * rt1;
         g = NoiseTable::grads4[idxfunc(ix + 1, iy, iz, it + 1)];
