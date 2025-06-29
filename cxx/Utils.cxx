@@ -32,6 +32,7 @@
 #include "../src/Utils/Math/Vector6.cpp"
 #include "../src/Utils/Math/Noise.cpp"
 #include "../src/Utils/Math/Rect.cpp"
+#include "../src/Utils/Math/AABB.cpp"
 
 #include "../src/Utils/TaskManager/TaskManager.cpp"
 #include "../src/Utils/TaskManager/ThreadWorker.cpp"
