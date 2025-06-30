@@ -234,6 +234,8 @@ namespace SR_UTILS_NS {
     }
 
     bool SceneObject::PostLoad(bool force) {
+        SR_TRACY_ZONE;
+
         if (!IComponentable::PostLoad(force)) {
             return false;
         }
@@ -260,6 +262,8 @@ namespace SR_UTILS_NS {
             return;
         }
 
+        SR_TRACY_ZONE;
+
         const bool isActivePrev = m_isActive;
         m_isActive = IsEnabled() && (!m_parent || m_parent->m_isActive);
 
@@ -283,6 +287,8 @@ namespace SR_UTILS_NS {
             return;
         }
 
+        SR_TRACY_ZONE;
+
         IComponentable::Awake(force, isPaused);
 
         for (auto&& pChild : m_children) {
@@ -294,6 +300,8 @@ namespace SR_UTILS_NS {
         if (!force && !IsDirty()) {
             return;
         }
+
+        SR_TRACY_ZONE;
 
         IComponentable::Start(force);
 

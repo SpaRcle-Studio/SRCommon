@@ -195,6 +195,8 @@ namespace SR_UTILS_NS {
             return false;
         }
 
+        SR_TRACY_ZONE;
+
         if (!m_components.empty()) {
             SRAssert2(GetScene(), "Missing scene!");
 
@@ -221,6 +223,8 @@ namespace SR_UTILS_NS {
         if (!force && !IsDirty()) {
             return;
         }
+
+        SR_TRACY_ZONE;
 
         for (uint32_t i = 0; i < m_components.size(); ++i) {
             auto&& pComponent = m_components[i];
@@ -249,6 +253,8 @@ namespace SR_UTILS_NS {
         if (!force && !IsDirty()) {
             return;
         }
+
+        SR_TRACY_ZONE;
 
         SetDirty(false);
 
@@ -283,6 +289,8 @@ namespace SR_UTILS_NS {
         if (!force && !IsDirty()) {
             return;
         }
+
+        SR_TRACY_ZONE;
 
         for (uint32_t i = 0; i < m_components.size(); ++i) { /// NOLINT
             auto&& pComponent = m_components[i];
