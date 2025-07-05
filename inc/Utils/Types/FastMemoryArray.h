@@ -16,6 +16,7 @@ namespace SR_HTYPES_NS {
         FastMemoryArray() = default;
 
         FastMemoryArray(const FastMemoryArray& other) {
+            SR_TRACY_ZONE;
             m_size = other.m_size;
             m_capacity = other.m_capacity;
             if (m_capacity > 0) {
@@ -26,12 +27,14 @@ namespace SR_HTYPES_NS {
 
         FastMemoryArray(FastMemoryArray&& other) noexcept
             : m_size(other.m_size), m_capacity(other.m_capacity), m_data(other.m_data) {
+            SR_TRACY_ZONE;
             other.m_size = 0;
             other.m_capacity = 0;
             other.m_data = nullptr;
         }
 
         FastMemoryArray& operator=(const FastMemoryArray& other) {
+            SR_TRACY_ZONE;
             if (this != &other) {
                 if (m_data) {
                     delete[] m_data;
@@ -49,6 +52,7 @@ namespace SR_HTYPES_NS {
         }
 
         FastMemoryArray(const std::vector<T>& other) {
+            SR_TRACY_ZONE;
             m_size = other.size();
             m_capacity = m_size;
             if (m_capacity > 0) {
@@ -60,6 +64,7 @@ namespace SR_HTYPES_NS {
         }
 
         FastMemoryArray& operator=(FastMemoryArray&& other) noexcept {
+            SR_TRACY_ZONE;
             if (this != &other) {
                 if (m_data) {
                     delete[] m_data;
@@ -88,9 +93,24 @@ namespace SR_HTYPES_NS {
         SR_NODISCARD T& operator[](SizeType index) noexcept { return m_data[index]; }
         SR_NODISCARD const T& operator[](SizeType index) const noexcept { return m_data[index]; }
 
+        void FillZero() noexcept {
+            SR_TRACY_ZONE;
+            if (m_data) {
+                memset(m_data, 0, m_size * sizeof(T));
+            }
+        }
+
+        void FillInt(int32_t value) noexcept {
+            SR_TRACY_ZONE;
+            if (m_data) {
+                memset(m_data, value, m_size * sizeof(T));
+            }
+        }
+
         void clear() noexcept { m_size = 0; }
 
         void shrink_to_fit() {
+            SR_TRACY_ZONE;
             if (m_size < m_capacity) {
                 T* pNewData = new T[m_size];
                 if (m_data) {
@@ -103,6 +123,7 @@ namespace SR_HTYPES_NS {
         }
 
         void push_back(const T& value) {
+            SR_TRACY_ZONE;
             if (m_size >= m_capacity) {
                 SizeType newCapacity = m_capacity == 0 ? 1 : m_capacity * 2;
                 T* pNewData = new T[newCapacity];
@@ -117,6 +138,7 @@ namespace SR_HTYPES_NS {
         }
 
         void push_back(T&& value) {
+            SR_TRACY_ZONE;
             if (m_size >= m_capacity) {
                 SizeType newCapacity = m_capacity == 0 ? 1 : m_capacity * 2;
                 T* pNewData = new T[newCapacity];
@@ -131,6 +153,7 @@ namespace SR_HTYPES_NS {
         }
 
         void resize(SizeType newSize) {
+            SR_TRACY_ZONE;
             if (newSize > m_capacity) {
                 T* pNewData = new T[newSize];
                 if (m_data) {
@@ -144,6 +167,7 @@ namespace SR_HTYPES_NS {
         }
 
         void reserve(SizeType newCapacity) {
+            SR_TRACY_ZONE;
             if (newCapacity > m_capacity) {
                 T* pNewData = new T[newCapacity];
                 if (m_data) {
