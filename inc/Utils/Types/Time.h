@@ -16,35 +16,44 @@ namespace SR_HTYPES_NS {
         using ClockT = std::chrono::high_resolution_clock;
 
     public:
-        ~Time() override {
-            delete m_timeInfo.load();
-        }
+        ~Time() override = default;
 
         void Update() {
             SR_TRACY_ZONE;
-            m_timeInfo = new TimeInfo {
+
+            m_timeInfo = TimeInfo(
                 ClockT::now(),
                 static_cast<uint64_t>(clock())
-            };
+            );
         }
 
-        SR_NODISCARD TimePointType Now() const noexcept { return m_timeInfo.load()->m_point; }
-        SR_NODISCARD uint64_t Count() const noexcept { return m_timeInfo.load()->m_point.time_since_epoch().count(); }
+        SR_NODISCARD TimePointType Now() const noexcept { return m_timeInfo.load().m_point; }
+        SR_NODISCARD uint64_t Count() const noexcept { return m_timeInfo.load().m_point.time_since_epoch().count(); }
         SR_NODISCARD float_t FClock() const noexcept { return static_cast<float_t>(Count()) / SR_CLOCKS_PER_SEC / SR_CLOCKS_PER_SEC; }
 
 #ifdef SR_LINUX
-        SR_NODISCARD uint64_t Clock() const noexcept { return static_cast<uint64_t>(m_timeInfo.load()->m_clock) / SR_CLOCKS_PER_SEC; }
+        SR_NODISCARD uint64_t Clock() const noexcept { return static_cast<uint64_t>(m_timeInfo.load().m_clock) / SR_CLOCKS_PER_SEC; }
 #else
         SR_NODISCARD uint64_t Clock() const noexcept { return static_cast<uint64_t>(m_timeInfo.load().m_clock); }
 #endif
 
     private:
         struct TimeInfo {
-            TimePointType m_point;
+            TimeInfo() = default;
+
+            TimeInfo(TimePointType point, uint64_t clock)
+                : m_point(point)
+                , m_clock(clock)
+            { }
+
+            TimeInfo(const TimeInfo& other) = default;
+            TimeInfo& operator=(const TimeInfo& other) = default;
+
+            TimePointType m_point = TimePointType();
             uint64_t m_clock = 0;
         };
 
-        std::atomic<TimeInfo*> m_timeInfo;
+        std::atomic<TimeInfo> m_timeInfo;
     };
 }
 
