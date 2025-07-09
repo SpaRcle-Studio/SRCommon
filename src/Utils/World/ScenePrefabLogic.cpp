@@ -9,28 +9,15 @@
 #include <Codegen/ScenePrefabLogic.generated.hpp>
 
 namespace SR_WORLD_NS {
-    bool ScenePrefabLogic::SaveLogic(ISerializer& serializer, const Path& path) {
-        SR_UTILS_NS::SceneObject::Ptr pSO;
-
-        if (auto&& pScene = GetScene(); SRVerify2(pScene, "Scene is nullptr!")) {
-            uint64_t rootObjectsCount = 0;
-            for (auto&& pObject : pScene->GetRootSceneObjects()) {
-                if (pObject && !pObject->HasSerializationFlags(SerializationFlags::DontSave)) {
-                    ++rootObjectsCount;
-                    pSO = pObject;
-                }
-            }
-            if (rootObjectsCount != 1) {
-                SRHalt("ScenePrefabLogic::SaveLogic() : invalid root objects count!");
-                return false;
-            }
+    bool ScenePrefabLogic::SaveSOAsPrefab(ISerializer& serializer, const SR_HTYPES_NS::SharedPtr<SceneObject>& pSO) {
+        if (!pSO) {
+            SRHalt("ScenePrefabLogic::SaveSOAsPrefab() : pSO is nullptr!");
+            return false;
         }
-
-        SRAssert(pSO);
 
         serializer.BeginObject(SR_UTILS_NS::SerializationId::Create("info"));
         {
-            serializer.WriteString(SR_UTILS_NS::EnumReflector::ToStringAtom(pSO->GetSceneObjectType()), SR_UTILS_NS::SerializationId::Create("type"));
+            serializer.WriteString(pSO->GetMeta()->GetFactoryName(), SR_UTILS_NS::SerializationId::Create("type"));
         }
         serializer.EndObject();
 
@@ -40,10 +27,10 @@ namespace SR_WORLD_NS {
         }
         serializer.EndObject();
 
-        return Super::SaveLogic(serializer, path);
+        return true;
     }
 
-    bool ScenePrefabLogic::LoadLogic(IDeserializer& deserializer, const Path& path) {
+    bool ScenePrefabLogic::LoadSOData(IDeserializer& deserializer) {
         SR_UTILS_NS::SceneObject::Ptr pSO;
 
         auto&& pScene = GetScene();
@@ -59,8 +46,8 @@ namespace SR_WORLD_NS {
             deserializer.EndObject();
         }
         else {
-            SRHalt("ScenePrefabLogic::LoadLogic() : failed to load info object!");
-            return false;
+            /// Empty prefab, create default SceneObject or load from custom data
+            return true;
         }
 
         if (!pSO) {
@@ -82,11 +69,53 @@ namespace SR_WORLD_NS {
 
         pScene->RegisterSceneObject(pSO);
 
+        return true;
+    }
+
+    bool ScenePrefabLogic::SaveLogic(ISerializer& serializer, const Path& path) {
+        SR_UTILS_NS::SceneObject::Ptr pSO;
+        uint64_t rootObjectsCount = 0;
+
+        if (auto&& pScene = GetScene(); SRVerify2(pScene, "Scene is nullptr!")) {
+            for (auto&& pObject : pScene->GetRootSceneObjects()) {
+                if (pObject && !pObject->HasSerializationFlags(SerializationFlags::DontSave)) {
+                    ++rootObjectsCount;
+                    pSO = pObject;
+                }
+            }
+            if (rootObjectsCount == 0) {
+                /// Empty prefab, create default SceneObject or load from custom data
+            }
+            else if (rootObjectsCount != 1) {
+                SRHalt("ScenePrefabLogic::SaveLogic() : invalid root objects count!");
+                return false;
+            }
+        }
+
+        if (rootObjectsCount == 1 && !SaveSOAsPrefab(serializer, pSO)) {
+            SR_ERROR("ScenePrefabLogic::SaveLogic() : failed to save scene object as prefab!");
+            return false;
+        }
+
+        return Super::SaveLogic(serializer, path);
+    }
+
+    bool ScenePrefabLogic::LoadLogic(IDeserializer& deserializer, const Path& path) {
+        if (!LoadSOData(deserializer)) {
+            SR_ERROR("ScenePrefabLogic::LoadLogic() : failed to load scene object data!");
+            return false;
+        }
+
         return Super::LoadLogic(deserializer, path);
     }
 
     void ScenePrefabLogic::InitLogic() {
         Super::InitLogic();
+
+        if (m_pSOCustomData) {
+            LoadSOData(*m_pSOCustomData);
+            m_pSOCustomData = nullptr;
+        }
 
         SceneObject::Ptr pSO = GetPrefabRoot();
 
@@ -106,5 +135,9 @@ namespace SR_WORLD_NS {
         }
 
         return nullptr;
+    }
+
+    void ScenePrefabLogic::SetCustomSOData(IDeserializer::UniquePtr pCustomData) {
+        m_pSOCustomData = std::move(pCustomData);
     }
 }

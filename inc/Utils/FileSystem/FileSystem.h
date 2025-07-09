@@ -15,6 +15,8 @@ namespace SR_UTILS_NS {
         FileSystem() = delete;
         ~FileSystem() = delete;
     public:
+        static uint64_t GetExecutableAndModulesHash();
+
         static bool CreatePath(std::string path, uint32_t offset = 0);
 
         static bool WriteToFile(const std::string& path, const std::string& text);

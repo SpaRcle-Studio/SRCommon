@@ -206,6 +206,9 @@ namespace SR_UTILS_NS {
         if (m_counterLock > 0) {
             --m_counterLock;
         }
+        else {
+            SRHalt("Input::UnlockCursor() : counter lock is already 0!");
+        }
     }
 
     void Input::ForceUnlockCursor() {

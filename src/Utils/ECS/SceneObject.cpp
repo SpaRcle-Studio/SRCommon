@@ -103,6 +103,10 @@ namespace SR_UTILS_NS {
         if (pDestination) {
             return pDestination->AddChild(this);
         }
+        else {
+            /// Если объект был выключен, нужно просигналить сцене чтобы она его включила.
+            SetDirty(true);
+        }
 
         if (GetParent()) {
             SRHalt("SceneObject::MoveToTree() : SO has parent!");
@@ -230,6 +234,8 @@ namespace SR_UTILS_NS {
     }
 
     bool SceneObject::PostLoad(bool force) {
+        SR_TRACY_ZONE;
+
         if (!IComponentable::PostLoad(force)) {
             return false;
         }
@@ -256,6 +262,8 @@ namespace SR_UTILS_NS {
             return;
         }
 
+        SR_TRACY_ZONE;
+
         const bool isActivePrev = m_isActive;
         m_isActive = IsEnabled() && (!m_parent || m_parent->m_isActive);
 
@@ -279,6 +287,8 @@ namespace SR_UTILS_NS {
             return;
         }
 
+        SR_TRACY_ZONE;
+
         IComponentable::Awake(force, isPaused);
 
         for (auto&& pChild : m_children) {
@@ -290,6 +300,8 @@ namespace SR_UTILS_NS {
         if (!force && !IsDirty()) {
             return;
         }
+
+        SR_TRACY_ZONE;
 
         IComponentable::Start(force);
 
@@ -303,7 +315,10 @@ namespace SR_UTILS_NS {
             return;
         }
 
-        SRAssert(m_parent);
+        if (!m_parent) {
+            return; /// находимся в состоянии загрузки объекта
+        }
+
         SRAssert(!m_layer.Empty());
 
         if (m_cachedLayer == m_parent->m_cachedLayer) {
@@ -458,13 +473,24 @@ namespace SR_UTILS_NS {
         m_children.emplace_back(pChild);
 
         pChild->OnParentLayerChanged();
-        pChild->OnAttached();
+        pChild->OnAttachedToParent();
 
         if (m_scene) {
             m_scene->OnChanged();
         }
 
-        SetDirty(true);
+        if (!IsActive()) {
+            /// Если объект был выключен, то сцена не будет вызывать CheckActivity(), так как родитель уже выключен
+            /// Значит, нужно вручную вызвать CheckActivity() для дочернего объекта и его дерева
+            pChild->SetDirty(true);
+            pChild->CheckActivity(false);
+        }
+        else {
+            /// В случае если не активны, то ребенок сам позвонит в SetDirty() и поднимет флаг вверх
+            /// А в данном кейсе чтобы сцена знала, что объект изменился, и если у нас дочерний объект был выключен,
+            /// то сцена его включит
+            SetDirty(true);
+        }
 
         return true;
     }
@@ -510,6 +536,8 @@ namespace SR_UTILS_NS {
         const SceneObject::Ptr pOldParent = m_parent;
         m_parent = pParent;
 
+        OnParentChanged(pOldParent);
+
         UpdateRoot();
 
         if (m_scene) {
@@ -543,7 +571,7 @@ namespace SR_UTILS_NS {
         while (!m_children.empty()) {
             auto&& pChild = *m_children.begin();
             if (pChild) {
-                pChild->SetParent(nullptr);
+                RemoveChild(pChild);
             }
             else {
                 SRHalt("SceneObject::RemoveChildren() : child is nullptr!");
@@ -593,5 +621,14 @@ namespace SR_UTILS_NS {
                 child.Unlock();
             }
         }
+    }
+
+    int32_t SceneObject::GetChildIndex(const SceneObject& child) const {
+        for (int32_t i = 0; i < m_children.size(); ++i) {
+            if (m_children[i] == child.GetThis()) {
+                return i;
+            }
+        }
+        return SR_ID_INVALID;
     }
 }

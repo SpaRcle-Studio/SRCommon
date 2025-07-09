@@ -324,10 +324,10 @@ namespace SR_HTYPES_NS {
         return vertices;
     }
 
-    const std::vector<uint32_t>& RawMesh::GetIndices(uint32_t id) const {
+    const SR_HTYPES_NS::FastMemoryArray<uint32_t>& RawMesh::GetIndices(uint32_t id) const {
         SR_TRACY_ZONE;
 
-        static std::vector<uint32_t> empty;
+        static SR_HTYPES_NS::FastMemoryArray<uint32_t> empty;
 
         if (id >= m_indices.size()) {
             SRHalt("Out of range!");
@@ -338,7 +338,7 @@ namespace SR_HTYPES_NS {
             return m_indices[id];
         }
 
-        std::vector<uint32_t> indices;
+        SR_HTYPES_NS::FastMemoryArray<uint32_t> indices;
 
     #ifdef SR_UTILS_ASSIMP
         if (!m_scene || id >= m_scene->mNumMeshes) {

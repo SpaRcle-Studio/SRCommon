@@ -64,6 +64,7 @@
     #include <condition_variable>
     #include <numeric>
     #include <numbers>
+    #include <execution>
 
     #ifndef SR_ENGINE_SCRIPT_API_MODE
         #include <zlib.h>
@@ -125,6 +126,13 @@ inline std::string_view SRGetClassName(std::string_view func_signature) {
 #define SR_GET_COMPILE_TIME_CLASS_NAME(T) SR_UTILS_NS::GetCompileTimeTypeName<T>()
 
 #define SR_IGNORE_UNUSED(...) SR_UTILS_NS::IgnoreUnused(__VA_ARGS__)
+
+constexpr uint32_t SR_INVALID_VBO = SR_ID_INVALID;
+constexpr uint32_t SR_INVALID_IBO = SR_ID_INVALID;
+constexpr uint32_t SR_INVALID_UBO = SR_ID_INVALID;
+constexpr uint32_t SR_INVALID_SSBO = SR_ID_INVALID;
+constexpr uint32_t SR_INVALID_DESCRIPTOR_SET = SR_ID_INVALID;
+constexpr uint32_t SR_INVALID_FBO = SR_ID_INVALID;
 
 namespace SR_UTILS_NS {
     template <typename T> constexpr bool HasPublicDestructor() {
@@ -267,6 +275,25 @@ namespace SR_UTILS_NS {
         }
 
         return std::is_same_v<T, volatile bool>;
+    }
+}
+
+namespace SR_UTILS_NS {
+    enum class EnumVariant : uint8_t {
+        Undefined, List, Flags
+    };
+}
+
+namespace Codegen {
+    template <typename EnumType> struct EnumSelector {};
+
+    template<typename T>
+    constexpr SR_UTILS_NS::EnumVariant GetEnumVariant(T) noexcept {
+        return SR_UTILS_NS::EnumVariant::Undefined;
+    }
+
+    template<typename T> constexpr size_t GetEnumItemsCount(T) noexcept {
+        return 0;
     }
 }
 

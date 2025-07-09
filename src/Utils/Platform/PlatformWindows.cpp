@@ -162,6 +162,8 @@ namespace SR_UTILS_NS::Platform {
             return;
         }
 
+        SetPriorityClass(GetCurrentProcess(), REALTIME_PRIORITY_CLASS);
+
         DWORD dwIndex = 0;
 
         TCHAR szValueName[2048];

@@ -71,6 +71,7 @@ namespace SR_UTILS_NS {
         SR_NODISCARD StringAtom GetTag() const;
         SR_NODISCARD SR_UTILS_NS::EntityIdList GetEntityIdList() const;
         SR_NODISCARD bool IsPrefabLoadingState() const noexcept final { return m_isPrefabLoadingState; }
+        SR_NODISCARD int32_t GetChildIndex(const SceneObject& child) const;
 
         SR_NODISCARD SceneObject::Ptr CloneSceneObject() const;
         SR_NODISCARD bool IsPrefab() const noexcept override { return m_prefabInfo.pPrefab; }
@@ -110,6 +111,8 @@ namespace SR_UTILS_NS {
         /// Ставит объект на очередь уничтожения, если есть сцена. Если сцены нет - сразу уничтожает.
         void Destroy();
 
+        virtual void OnParentChanged(const SceneObject::Ptr& pOldParent) { }
+
         /// Освобождает память объекта
         void DestroyImpl();
 
@@ -120,7 +123,7 @@ namespace SR_UTILS_NS {
         void UpdateRoot();
 
     private:
-        virtual void OnAttached() { }
+        virtual void OnAttachedToParent() { }
         void OnParentLayerChanged();
 
     private:

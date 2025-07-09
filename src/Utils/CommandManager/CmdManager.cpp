@@ -35,7 +35,10 @@ namespace SR_UTILS_NS {
             auto&& pIt = m_history.begin();
             delete *pIt;
             m_history.erase(pIt);
+            --m_historyPC;
         }
+
+        SRAssert2(m_historyPC < m_history.size(), "Invalid history PC!");
 
         m_lastCmdName = cmd->GetName();
         if (store) {
@@ -220,5 +223,32 @@ namespace SR_UTILS_NS {
     std::string CmdManager::GetLastCmdName() const {
         SR_LOCK_GUARD;
         return m_lastCmdName;
+    }
+
+    void CmdManager::SetMaxHistorySize(uint32_t size) {
+        SR_TRACY_ZONE;
+        SR_LOCK_GUARD;
+
+        m_maxHistorySize = SR_CLAMP(size, 1, SR_UINT32_MAX);
+
+        while (m_history.size() > m_maxHistorySize) {
+            delete m_history.front();
+            m_history.erase(m_history.begin());
+        }
+    }
+
+    uint32_t CmdManager::GetMaxHistorySize() const {
+        SR_LOCK_GUARD;
+        return m_maxHistorySize;
+    }
+
+    uint32_t CmdManager::GetHistorySize() const {
+        SR_LOCK_GUARD;
+        return static_cast<uint32_t>(m_history.size());
+    }
+
+    uint32_t CmdManager::GetHistoryPC() const {
+        SR_LOCK_GUARD;
+        return m_historyPC;
     }
 }

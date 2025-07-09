@@ -74,12 +74,12 @@ namespace SR_UTILS_NS {
         }
     }
 
-    void GameObject::OnAttached() {
+    void GameObject::OnAttachedToParent() {
         if (GetParentTransform()) {
             GetTransform()->UpdateTree();
         }
         else {
-            SR_WARN("GameObject::OnAttached() : GameObject doesn't have parent to get transform!");
+            SR_WARN("GameObject::OnAttachedToParent() : GameObject doesn't have parent to get transform!");
         }
     }
 
