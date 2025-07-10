@@ -62,8 +62,7 @@ if (UNIX)
 endif()
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND NOT MSVC AND NOT ANDROID_NDK)
-    add_compile_options(-stdlib=libc++ -std=c++20)
-    add_link_options(-stdlib=libc++ -fuse-ld=lld)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++ -std=c++20")
 endif()
 
 if (SR_COMMON_ZLIB)
