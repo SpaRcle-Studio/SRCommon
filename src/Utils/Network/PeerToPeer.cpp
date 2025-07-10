@@ -169,7 +169,11 @@ namespace SR_NETWORK_NS {
         );
 
         m_newPeers.erase(pSocket);
-        m_connections[std::move(pSocket)] = Connection(address, port);
+
+        m_connections[std::move(pSocket)] = Connection {
+            .address = address,
+            .port = port
+        };
 
         return true;
     }
