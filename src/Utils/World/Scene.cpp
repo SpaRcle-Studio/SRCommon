@@ -517,6 +517,10 @@ namespace SR_WORLD_NS {
         return GetAbsPath(path).Exists();
     }
 
+    Scene::SceneLogicPtr Scene::GetLogicBase() const {
+        return m_logic;
+    }
+
     Path Scene::GetAbsPath(const Path& path) {
         if (path.Contains(RuntimeScenePath) ||
             path.Contains(NewScenePath) ||

@@ -3,8 +3,28 @@ project(Utils)
 
 set(CMAKE_CXX_STANDARD 20)
 
+set(SR_COMMON_USE_CLANG_EMULATION OFF CACHE INTERNAL "" FORCE)
+
+if (MSVC)
+    if (CMAKE_CXX_COMPILER MATCHES "clang-cl")
+        set(SR_COMMON_USE_CLANG_EMULATION ON CACHE INTERNAL "" FORCE)
+
+        add_definitions(-DSR_COMMON_USE_CLANG_EMULATION=1)
+        add_compile_definitions(SR_COMMON_USE_CLANG_EMULATION)
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DSR_COMMON_USE_CLANG_EMULATION")
+
+        message(STATUS "Using Clang compiler emulation for MSVC")
+    endif()
+endif()
+
+if (NOT SR_COMMON_USE_CLANG_EMULATION)
+    option(SR_COMMON_ASSIMP "" ON)
+else()
+    option(SR_COMMON_ASSIMP "" OFF)
+    message(STATUS "Assimp is disabled because Clang emulation is used")
+endif()
+
 option(SR_COMMON_ZLIB "" ON)
-option(SR_COMMON_ASSIMP "" ON)
 option(SR_COMMON_OPENSSL "" OFF)
 option(SR_COMMON_SDL "" OFF)
 option(SR_COMMON_CURL "" OFF)
@@ -41,7 +61,7 @@ if (UNIX)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
 endif()
 
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND NOT MSVC)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
 endif()
 
@@ -54,7 +74,7 @@ if (SR_COMMON_ZLIB)
     add_subdirectory(libs/zlib)
 endif()
 
-if (SR_COMMON_ASSIMP)
+if (SR_COMMON_ASSIMP AND NOT SR_COMMON_USE_CLANG_EMULATION)
     message("SRCommon will be using Assimp")
 
     add_definitions(-DSR_UTILS_ASSIMP=1)
