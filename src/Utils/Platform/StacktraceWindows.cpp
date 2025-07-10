@@ -161,7 +161,7 @@ DWORD getStack(EXCEPTION_POINTERS* ep) {
 #endif
 
 void GetStacktraceImpl() {
-#ifdef SR_MSVC
+#if defined(SR_MSVC) && !defined(SR_COMMON_USE_CLANG_EMULATION)
     __try {
             int f = 0;
             f = 7 / f;   // Trigger a divide-by-zero exception
