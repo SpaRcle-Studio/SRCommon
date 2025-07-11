@@ -13,7 +13,7 @@
 namespace SR_UTILS_NS {
     class SRClassMeta;
 
-    class BaseFactory {
+    class SR_COMMON_DLL_API BaseFactory {
     public:
         virtual ~BaseFactory() = default;
 
@@ -24,7 +24,7 @@ namespace SR_UTILS_NS {
         }
     };
 
-    class Factory : public BaseFactory {
+    class SR_COMMON_DLL_API Factory : public BaseFactory {
         using AllocatorT = std::function<SRClass*()>;
         using MetaGetterT = const SRClassMeta*(*)();
         struct TypeInfo {

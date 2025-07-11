@@ -53,7 +53,7 @@ namespace SR_HTYPES_NS {
             uint64_t m_clock = 0;
         };
 
-        std::atomic<TimeInfo> m_timeInfo;
+        std::atomic<TimeInfo> m_timeInfo = TimeInfo();
     };
 }
 
