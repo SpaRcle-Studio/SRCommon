@@ -6,10 +6,13 @@
 #include <Utils/Resources/ResourceManager.h>
 #include <Utils/Resources/FileWatcher.h>
 
+#include <Codegen/IResource.generated.hpp>
+
 namespace SR_UTILS_NS {
-    IResource::IResource(uint64_t hashName)
-        : Super()
-        , m_resourceHashName(hashName)
+    IResource::IResource()
+        : ResourceContainer()
+        , SubscriptionHolder()
+        , Serializable()
         , m_lifetime(ResourceManager::ResourceLifeTime)
     { }
 
@@ -59,10 +62,6 @@ namespace SR_UTILS_NS {
         return Destroy();
     }
 
-    std::string_view IResource::GetResourceName() const {
-        return ResourceManager::Instance().GetTypeName(m_resourceHashName);
-    }
-
     void IResource::OnReloadDone() {
         Broadcast(RELOAD_DONE_EVENT);
     }
@@ -70,8 +69,11 @@ namespace SR_UTILS_NS {
     void IResource::DeleteResource() {
         Unload();
         StopWatch();
-        m_deleteVerifyFlag = true;
-        delete this;
+
+        AutoFree([this](auto&& pData) {
+            m_deleteVerifyFlag = true;
+            delete pData;
+        });
     }
 
     void IResource::SetId(SR_UTILS_NS::StringAtom id, bool autoRegister) {

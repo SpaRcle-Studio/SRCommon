@@ -4,6 +4,8 @@
 
 #include <Utils/Settings.h>
 
+#include <Codegen/Settings.generated.hpp>
+
 namespace SR_UTILS_NS {
     bool Settings::Load() {
         Path path = GetResourcePath();
@@ -11,13 +13,13 @@ namespace SR_UTILS_NS {
             path = GetAssociatedPath().Concat(path);
         }
 
-        auto&& document = SR_XML_NS::Document::Load(path);
-        if (!document.Valid()) {
+        m_document = SR_XML_NS::Document::Load(path);
+        if (!m_document.Valid()) {
             SR_ERROR("Settings::Load() : file not found! \n\tPath: " + path.ToString());
             return false;
         }
 
-        if (auto&& settings = document.Root().GetNode("Settings")) {
+        if (auto&& settings = m_document.Root().GetNode("Settings")) {
             LoadSettings(settings);
         }
         else {
@@ -70,10 +72,6 @@ namespace SR_UTILS_NS {
         fun(this);
     }
 
-    Settings::Settings()
-        : IResource(SR_COMPILE_TIME_CRC32_TYPE_NAME(Settings))
-    { }
-
     void Settings::ClearSettings() {
 
     }
@@ -81,6 +79,12 @@ namespace SR_UTILS_NS {
     bool Settings::LoadSettings(const Xml::Node& node) {
         return true;
     }
+
+    const SR_XML_NS::Document& Settings::GetDocument() const {
+        return m_document;
+    }
+
+    Settings::Settings() = default;
 
     Settings::~Settings() = default;
 }

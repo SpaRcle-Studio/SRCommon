@@ -6,6 +6,10 @@
 #include <Utils/Resources/IResource.h>
 
 namespace SR_UTILS_NS {
+    ResourceContainer::ResourceContainer()
+        : SR_HTYPES_NS::SharedPtr<ResourceContainer>(this, SR_UTILS_NS::SharedPtrPolicy::Automatic)
+    { }
+
     ResourceContainer::~ResourceContainer() {
         SRAssert2(m_dependencies.empty(), "ResourceContainer::~ResourceContainer() : dependencies are not empty!");
 
@@ -14,8 +18,8 @@ namespace SR_UTILS_NS {
         }
     }
 
-    void ResourceContainer::AddDependency(ResourceContainer* pContainer) {
-        if (auto&& pResource = dynamic_cast<IResource*>(pContainer)) {
+    void ResourceContainer::AddDependency(const ResourceContainer::Ptr& pContainer) {
+        if (auto&& pResource = pContainer.DynamicCast<IResource>()) {
             pResource->AddUsePoint();
         }
 
@@ -23,7 +27,7 @@ namespace SR_UTILS_NS {
         pContainer->m_parents.insert(this);
     }
 
-    void ResourceContainer::RemoveDependency(ResourceContainer* pContainer) {
+    void ResourceContainer::RemoveDependency(const ResourceContainer::Ptr& pContainer) {
         if (!SRVerifyFalse(m_dependencies.count(pContainer) == 0)) {
             return;
         }
@@ -35,7 +39,7 @@ namespace SR_UTILS_NS {
         m_dependencies.erase(pContainer);
         pContainer->m_parents.erase(this);
 
-        if (auto&& pResource = dynamic_cast<IResource*>(pContainer)) {
+        if (auto&& pResource = pContainer.DynamicCast<IResource>()) {
             pResource->RemoveUsePoint();
         }
     }

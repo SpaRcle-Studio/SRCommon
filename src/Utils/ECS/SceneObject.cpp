@@ -149,7 +149,7 @@ namespace SR_UTILS_NS {
         return false;
     }
 
-    void SceneObject::SetPrefab(Prefab* pPrefab, bool isOwner) { /// NOLINT (recursion)
+    void SceneObject::SetPrefab(const Prefab::Ptr& pPrefab, bool isOwner) { /// NOLINT (recursion)
         SRAssert2(pPrefab, "Invalid prefab!");
         SRAssert2(!GetPrefab() && !IsPrefabOwner(), "Prefab is already set!");
 

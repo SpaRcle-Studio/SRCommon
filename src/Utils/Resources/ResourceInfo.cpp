@@ -10,7 +10,7 @@ namespace SR_UTILS_NS {
         SetReloader(nullptr);
     }
 
-    IResource* ResourceType::Find(const ResourceType::ResourceId &id)  {
+    IResource::Ptr ResourceType::Find(const ResourceType::ResourceId &id)  {
         auto&& pIt = m_copies.find(id);
         if (pIt == m_copies.end()) {
             return nullptr;
@@ -39,7 +39,7 @@ namespace SR_UTILS_NS {
             return pIt->second.size() == 1;
     }
 
-    void ResourceType::Remove(IResource *pResource) {
+    void ResourceType::Remove(const IResource::Ptr& pResource) {
         const auto id = pResource->GetResourceId();
         auto&& path = pResource->GetResourcePath();
 
@@ -72,7 +72,7 @@ namespace SR_UTILS_NS {
         m_resources.erase(pResource);
     }
 
-    void ResourceType::Add(IResource* pResource) {
+    void ResourceType::Add(const IResource::Ptr& pResource) {
         if (pResource->GetResourcePath().empty() && pResource->IsFileResource()) {
             SRHalt("ResourceType::Add() : resource empty path!");
             return;
@@ -100,6 +100,10 @@ namespace SR_UTILS_NS {
     }
 
     const ResourceType::CopiesMap& ResourceType::GetCopiesRef() const {
+        return m_copies;
+    }
+
+    ResourceType::CopiesMap& ResourceType::GetCopiesRef() {
         return m_copies;
     }
 
@@ -152,7 +156,7 @@ namespace SR_UTILS_NS {
         return *m_loaded.begin();
     }
 
-    IResource *ResourceInfo::GetFirstResource() const {
+    IResource::Ptr ResourceInfo::GetFirstResource() const {
         if (m_loaded.size() == 0) {
             SRHalt("Incorrect function usage!");
             return nullptr;
@@ -161,7 +165,7 @@ namespace SR_UTILS_NS {
         return *m_loaded.begin();
     }
 
-    IResourceReloader *ResourceInfo::GetReloader() const {
+    IResourceReloader* ResourceInfo::GetReloader() const {
         return m_resourceType->GetReloader();
     }
 }

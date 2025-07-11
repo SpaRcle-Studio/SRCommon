@@ -41,6 +41,7 @@
 #include "../src/Utils/DebugDraw.cpp"
 #include "../src/Utils/Debug.cpp"
 
+#include "../src/Utils/Resources/Asset.cpp"
 #include "../src/Utils/Resources/FileSystemWatcher.cpp"
 #include "../src/Utils/Resources/FileWatcher.cpp"
 #include "../src/Utils/Resources/IResource.cpp"
@@ -75,6 +76,8 @@
 #include "../src/Utils/Game/CameraFlyMover.cpp"
 
 #include "../src/Utils/Localization/LocalizationManager.cpp"
+
+#include "../src/Utils/Tests/TestManager.cpp"
 
 #ifdef SR_TRACY_ENABLE
     #include "../src/Utils/Profile/TracyContext.cpp"

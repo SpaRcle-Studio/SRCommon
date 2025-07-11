@@ -12,20 +12,6 @@
 #include <Utils/Common/StringUtils.h>
 
 namespace SR_UTILS_NS {
-    std::optional<Path> GetResourceFolder(const Path& appFolder) {
-        for (int32_t i = 0; i < 5; i++) {
-            auto&& pathToConcat = StringUtils::MultiConcat("../", i) + "Resources";
-
-            auto&& resPath = appFolder.Concat(pathToConcat);
-            if (resPath.Exists(SR_UTILS_NS::Path::Type::Folder)) {
-                return resPath;
-            }
-        }
-
-        return std::nullopt;
-    }
-
-
     /// Seconds
     const uint64_t ResourceManager::ResourceLifeTime = 30 * SR_CLOCKS_PER_SEC;
 
@@ -81,11 +67,11 @@ namespace SR_UTILS_NS {
         m_fileSystemWatcher.AutoFree();
     }
 
-    bool ResourceManager::Destroy(IResource* pResource) {
+    bool ResourceManager::Destroy(const IResource::Ptr& pResource) {
         SR_TRACY_ZONE;
 
         if (Debug::Instance().GetLevel() >= Debug::Level::High) {
-            SR_LOG("ResourceManager::Destroy() : destroying \"" + std::string(pResource->GetResourceName()) + "\"");
+            SR_LOG("ResourceManager::Destroy() : destroying \"{}\"", pResource->GetMeta()->GetFactoryName());
         }
 
         SR_SCOPED_LOCK;
@@ -102,39 +88,23 @@ namespace SR_UTILS_NS {
         return true;
     }
 
-    bool ResourceManager::RegisterType(const std::string& name, uint64_t hashTypeName) {
-        SR_INFO("ResourceManager::RegisterType() : registering new \"" + name + "\" type...");
-
-        if (m_resources.count(hashTypeName) == 1) {
-            SRHalt("ResourceManager::RegisterType() : type is already registered!");
-            return false;
-        }
-
-        m_resources.insert(std::make_pair(
-            hashTypeName,
-            new ResourceType(name)
-        ));
-
-        return true;
-    }
-
-    void ResourceManager::Remove(IResource* pResource) {
+    void ResourceManager::Remove(const IResource::Ptr& pResource) {
         SR_TRACY_ZONE;
 
         if (pResource->IsRegistered()) {
-            auto&& pGroupIt = m_resources.find(pResource->GetResourceHashName());
+            auto&& pGroupIt = m_resources.find(pResource->GetMeta()->GetFactoryName());
             auto&& [name, resourcesGroup] = *pGroupIt;
             resourcesGroup->Remove(pResource);
         }
         else {
-           SRHalt("Resource ins't registered! "
-                "\n\tType: " + std::string(pResource->GetResourceName()) +
-                "\n\tId: " + std::string(pResource->GetResourceId()));
+            SRHalt("ResourceManager::Remove() : resource isn't registered!\n\tType: {}, Id: {}",
+                   pResource->GetMeta()->GetFactoryName(),
+                   pResource->GetResourceId());
         }
     }
 
-    bool ResourceManager::IsLastResource(IResource* pResource) {
-        auto&& [name, resourcesGroup] = *m_resources.find(pResource->GetResourceHashName());
+    bool ResourceManager::IsLastResource(const IResource::Ptr& pResource) {
+        auto&& [name, resourcesGroup] = *m_resources.find(pResource->GetMeta()->GetFactoryName());
         return resourcesGroup->IsLast(pResource->GetResourceId());
     }
 
@@ -243,28 +213,17 @@ namespace SR_UTILS_NS {
         }
     }
 
-    void ResourceManager::RegisterResource(IResource *pResource) {
+    void ResourceManager::RegisterResource(const IResource::Ptr& pResource) {
         SRAssert(!pResource->IsRegistered());
 
         if (Debug::Instance().GetLevel() >= Debug::Level::Full) {
-            SR_LOG("ResourceManager::RegisterResource() : add new \"" + std::string(pResource->GetResourceName()) + "\" resource.");
+            SR_LOG("ResourceManager::RegisterResource() : add new \"" + std::string(pResource->GetMeta()->GetFactoryName()) + "\" resource.");
         }
 
         SR_SCOPED_LOCK;
 
-    #ifdef SR_DEBUG
-        if (m_resources.count(pResource->GetResourceHashName()) == 0) {
-            SRAssert2(false, "Unknown resource type!");
-            return;
-        }
-    #endif
-
         pResource->StartWatch();
-
-        auto&& pGroupIt = m_resources.find(pResource->GetResourceHashName());
-        auto&& [name, resourcesGroup] = *pGroupIt;
-
-        resourcesGroup->Add(pResource);
+        GetOrCreateResourceType(pResource->GetMeta()->GetFactoryName())->Add(pResource);
     }
 
     void ResourceManager::PrintMemoryDump() {
@@ -303,18 +262,16 @@ namespace SR_UTILS_NS {
         }
     }
 
-    IResource *ResourceManager::Find(uint64_t hashTypeName, const std::string& id) {
+    IResource::Ptr ResourceManager::Find(SR_UTILS_NS::StringAtom typeName, SR_UTILS_NS::StringAtom id) const {
         SR_TRACY_ZONE;
         SR_SCOPED_LOCK;
 
-    #if defined(SR_DEBUG)
-        if (m_resources.count(hashTypeName) == 0) {
-            SRHalt("Unknown resource type!");
+        auto&& pIt = m_resources.find(typeName);
+        if (pIt == m_resources.end()) {
             return nullptr;
         }
-    #endif
 
-        auto&& [name, resourcesGroup] = *m_resources.find(hashTypeName);
+        auto&& [name, resourcesGroup] = *pIt;
 
         if (auto&& pResource = resourcesGroup->Find(id)) {
             /// раз ресурс ищем, значит он все еще может быть нужен.
@@ -366,22 +323,9 @@ namespace SR_UTILS_NS {
         fun();
     }
 
-    void ResourceManager::InspectResources(const SR_HTYPES_NS::Function<void(const ResourcesTypes &)> &callback) {
+    void ResourceManager::InspectResources(const SR_HTYPES_NS::Function<void(ResourcesTypes &)> &callback) {
         SR_LOCK_GUARD;
-
         callback(m_resources);
-    }
-
-    std::string_view ResourceManager::GetTypeName(uint64_t hashName) const {
-        SR_LOCK_GUARD;
-
-        if (auto&& pIt = m_resources.find(hashName); pIt != m_resources.end()) {
-            return pIt->second->GetName();
-        }
-
-        SRHalt("ResourceManager::GetTypeName() : unknown hash name!");
-
-        return "Unknown";
     }
 
     bool ResourceManager::Run() {
@@ -402,18 +346,10 @@ namespace SR_UTILS_NS {
         return true;
     }
 
-    bool ResourceManager::RegisterReloader(IResourceReloader *pReloader, uint64_t hashTypeName) {
+    bool ResourceManager::RegisterReloader(IResourceReloader* pReloader, SR_UTILS_NS::StringAtom typeName) {
         SR_LOCK_GUARD;
-
-        if (auto&& pIt = m_resources.find(hashTypeName); pIt != m_resources.end()) {
-            auto&& [_, resourceType] = *pIt;
-            resourceType->SetReloader(pReloader);
-            return true;
-        }
-
-        SRHalt("ResourceManager::RegisterReloader() : unknown hash name!");
-
-        return false;
+        GetOrCreateResourceType(typeName)->SetReloader(pReloader);
+        return true;
     }
 
     void ResourceManager::ReloadResources(float_t dt) {
@@ -464,7 +400,7 @@ namespace SR_UTILS_NS {
         m_fileSystemWatcher->WatchPull();
     }
 
-    void ResourceManager::ReloadResource(IResource* pResource) {
+    void ResourceManager::ReloadResource(const IResource::Ptr& pResource) {
         SR_LOCK_GUARD;
         m_dirtyResources.push(pResource->GetResourceInfo());
     }
@@ -479,7 +415,7 @@ namespace SR_UTILS_NS {
         m_usePointStackTraceProfiling = true;
     }
 
-    bool ResourceManager::ReviveResource(IResource* pResource) {
+    bool ResourceManager::ReviveResource(const IResource::Ptr& pResource) {
         SR_LOCK_GUARD;
 
         return pResource->Execute([pResource, this](){
@@ -515,5 +451,21 @@ namespace SR_UTILS_NS {
 
     Path ResourceManager::GetCachePath() const {
         return GetResPathRef().Concat("Cache");
+    }
+
+    ResourceType* ResourceManager::GetOrCreateResourceType(SR_UTILS_NS::StringAtom typeName) {
+        SR_LOCK_GUARD;
+
+        auto&& pIt = m_resources.find(typeName);
+        if (pIt != m_resources.end()) {
+            return pIt->second;
+        }
+
+        auto&& pResourceType = new ResourceType(typeName);
+        m_resources.emplace(std::make_pair(typeName, pResourceType));
+
+        SR_INFO("ResourceManager::GetOrCreateResourceType() : registered new resource type \"{}\"", typeName);
+
+        return pResourceType;
     }
 }

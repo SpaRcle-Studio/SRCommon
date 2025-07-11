@@ -547,7 +547,7 @@ namespace SR_UTILS_NS {
 namespace std {
     template<typename T> struct hash<SR_HTYPES_NS::SharedPtr<T>> {
         size_t operator()(SR_HTYPES_NS::SharedPtr<T> const& ptr) const {
-            return std::hash<void*>()(ptr.GetRawPtr());
+            return std::hash<const void*>()(ptr.GetRawPtr());
         }
     };
 

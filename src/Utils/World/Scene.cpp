@@ -335,7 +335,7 @@ namespace SR_WORLD_NS {
         }
 
         if (auto&& raw = SR_HTYPES_NS::RawMesh::Load(path)) {
-            SceneObject::Ptr root = Instance(raw);
+            SceneObject::Ptr root = Instance(raw.Get());
 
             if (raw->GetCountUses() == 0) {
                 raw->Destroy();

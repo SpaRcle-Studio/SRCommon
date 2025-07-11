@@ -16,6 +16,8 @@
     #include <assimp/include/assimp/cexport.h>
 #endif
 
+#include <Codegen/RawMesh.generated.hpp>
+
 namespace SR_HTYPES_NS {
 #ifdef SR_UTILS_ASSIMP
     SR_INLINE_STATIC int SR_RAW_MESH_ASSIMP_FLAGS = aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_MakeLeftHanded | aiProcess_FlipWindingOrder | aiProcess_JoinIdenticalVertices | aiProcess_GenUVCoords | aiProcess_TransformUVCoords | aiProcess_SortByPType | aiProcess_GlobalScale;
@@ -24,7 +26,7 @@ namespace SR_HTYPES_NS {
 #endif
 
     RawMesh::RawMesh()
-        : IResource(SR_COMPILE_TIME_CRC32_TYPE_NAME(RawMesh))
+        : Super()
     {
     #ifdef SR_UTILS_ASSIMP
         m_importer = new Assimp::Importer();
@@ -66,7 +68,7 @@ namespace SR_HTYPES_NS {
                 return;
             }
 
-            pRawMesh = new RawMesh();
+            pRawMesh = RawMesh::MakeShared<RawMesh>();
             pRawMesh->m_params = params;
             pRawMesh->SetId(id.ToStringRef(), false /** auto register */);
 
@@ -78,7 +80,7 @@ namespace SR_HTYPES_NS {
             }
 
             /// отложенная ручная регистрация
-            ResourceManager::Instance().RegisterResource(pRawMesh);
+            ResourceManager::Instance().RegisterResource(pRawMesh.StaticCast<IResource>());
         });
 
         return pRawMesh;

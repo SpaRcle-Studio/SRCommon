@@ -6,7 +6,7 @@
 
 namespace SR_HTYPES_NS {
     IRawMeshHolder::~IRawMeshHolder() {
-        SetRawMesh(nullptr);
+        SetRawMesh(RawMeshPtr());
     }
 
     void IRawMeshHolder::SetRawMesh(IRawMeshHolder::RawMeshPtr pRawMesh) {
@@ -97,7 +97,7 @@ namespace SR_HTYPES_NS {
 
     void IRawMeshHolder::SetRawMesh(const SR_UTILS_NS::Path& path) {
         if (path.empty()) {
-            SetRawMesh(nullptr);
+            SetRawMesh(RawMeshPtr());
             return;
         }
 

@@ -5,10 +5,10 @@
 #include <Utils/ECS/Prefab.h>
 #include <Utils/Resources/ResourceManager.h>
 
+#include <Codegen/Prefab.generated.hpp>
+
 namespace SR_UTILS_NS {
-    Prefab::Prefab()
-        : IResource(SR_COMPILE_TIME_CRC32_TYPE_NAME(Prefab))
-    { }
+    Prefab::Prefab() = default;
 
     Prefab::~Prefab() {
         if (m_data) {
@@ -18,34 +18,9 @@ namespace SR_UTILS_NS {
         SR_SAFE_DELETE_PTR(m_pDeserializer);
     }
 
-    Prefab* Prefab::Load(const Path& rawPath) {
+    Prefab::Ptr Prefab::Load(const Path& rawPath) {
         SR_TRACY_ZONE;
-
-        Prefab* pResource = nullptr;
-
-        ResourceManager::Instance().Execute([&pResource, &rawPath]() {
-            Path&& path = Path(rawPath).RemoveSubPath(ResourceManager::Instance().GetResPath());
-
-            if ((pResource = ResourceManager::Instance().Find<Prefab>(path))) {
-                return;
-            }
-
-            pResource = new Prefab();
-
-            pResource->SetId(path.ToStringRef(), false /** auto register */);
-
-            if (!pResource->Reload()) {
-                SR_ERROR("RawMesh::Load() : failed to load prefab! \n\tPath: " + path.ToString());
-                pResource->DeleteResource();
-                pResource = nullptr;
-                return;
-            }
-
-            /// отложенная ручная регистрация
-            ResourceManager::Instance().RegisterResource(pResource);
-        });
-
-        return pResource;
+        return ResourceManager::Instance().GetOrLoadResource<Prefab>(rawPath);
     }
 
     bool Prefab::LoadToSO(const SceneObjectPtr& pSO) {

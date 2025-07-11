@@ -20,7 +20,7 @@ namespace SR_UTILS_NS {
         return true;
     }
 
-    bool IResourceReloader::IsResourceSuitableForReload(IResource *pResource) const {
+    bool IResourceReloader::IsResourceSuitableForReload(const IResource::Ptr& pResource) const {
         SR_TRACY_ZONE;
 
         if (pResource->IsDestroyed()) {

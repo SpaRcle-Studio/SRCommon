@@ -9,9 +9,7 @@
 #include <Utils/Resources/Xml.h>
 
 namespace SR_SRLM_NS {
-    LogicalMachine::LogicalMachine()
-        : IResource(SR_COMPILE_TIME_CRC32_TYPE_NAME(LogicalMachine))
-    { }
+    LogicalMachine::LogicalMachine() = default;
 
     LogicalMachine::~LogicalMachine() {
         Clear();
