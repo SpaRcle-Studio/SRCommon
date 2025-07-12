@@ -173,10 +173,6 @@ namespace SR_SRLM_NS {
         return false;
     }
 
-    IResource* LogicalMachine::CopyResource(SR_UTILS_NS::IResource* pDestination) const {
-        return nullptr;
-    }
-
     LogicalNode* LogicalMachine::GetCurrentNode() const {
         if (m_currentNode >= m_active.size()) {
             return nullptr;

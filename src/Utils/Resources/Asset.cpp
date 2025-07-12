@@ -3,11 +3,88 @@
 //
 
 #include <Utils/Resources/Asset.h>
+#include <Utils/Serialization/SRASerialization.h>
 
 #include <Codegen/Asset.generated.hpp>
 
 namespace SR_UTILS_NS {
-    Asset::Ptr Asset::Load(const SR_UTILS_NS::Path& path) {
-        return nullptr;
+    Asset::Ptr Asset::LoadImpl(const Path& rawPath) {
+        SR_TRACY_ZONE;
+        SR_TRACY_ZONE_TEXT_C(rawPath.c_str());
+        SR_GLOBAL_LOCK;
+
+        auto&& resourceManager = ResourceManager::Instance();
+        SR_UTILS_NS::Path&& path = rawPath.RemoveSubPath(resourceManager.GetResPath());
+
+        Asset::Ptr pAsset = resourceManager.Find<Asset>(rawPath);
+        if (pAsset) {
+            return pAsset;
+        }
+
+        SR_UTILS_NS::SRADeserializer deserializer;
+        if (!deserializer.LoadFromFile(resourceManager.GetResPath().Concat(path))) {
+            SR_ERROR("Asset::LoadImpl() : failed to deserialize asset from file!\n\tPath: {}", path);
+            return nullptr;
+        }
+
+        if (!Serialization::Load(deserializer, pAsset, SerializationId::Create("asset"))) {
+            SR_ERROR("Asset::LoadImpl() : failed to load asset from deserializer!\n\tPath: {}", path);
+            return nullptr;
+        }
+
+        if (!pAsset) {
+            SR_ERROR("Asset::LoadImpl() : asset is null after deserialization!\n\tPath: {}", path);
+            return nullptr;
+        }
+
+        pAsset->m_loadState = IResource::LoadState::Loaded;
+        pAsset->SetId(path.ToStringRef(), true);
+
+        return pAsset;
+    }
+
+    bool Asset::SaveAsset(const Path& path) const {
+        SR_UTILS_NS::SRASerializer serializer;
+
+        Asset::Ptr pThis = GetThis().StaticCast<Asset>();
+        Serialization::Save(serializer, pThis, SerializationId::Create("asset"));
+
+        if (!serializer.SaveToFile(path)) {
+            SR_ERROR("Asset::SaveAsset() : failed to save asset to file!\n\tPath: {}", path);
+            return false;
+        }
+
+        return true;
+    }
+
+    bool Asset::Load() {
+        SR_UTILS_NS::SRADeserializer deserializer;
+        if (!deserializer.LoadFromFile(GetResourcePath())) {
+            SR_ERROR("Asset::Load() : failed to deserialize asset from file!\n\tPath: {}", GetResourcePath());
+            return false;
+        }
+
+        if (deserializer.BeginObject(SerializationId::Create("asset"))) {
+            const bool success = Serialization::Load(deserializer, *this, SerializationId::Create("ptr"));
+            deserializer.EndObject();
+            if (!success) {
+                SR_ERROR("Asset::Load() : failed to load asset from deserializer!\n\tPath: {}", GetResourcePath());
+                return false;
+            }
+        }
+
+        return Super::Load();
+    }
+
+    bool Asset::Unload() {
+        GetMeta()->ForEachProperty([&](auto&& property, uint64_t index) {
+            property.Set(this, property.GetDefaultValue());
+        });
+
+        return Super::Unload();
+    }
+
+    bool Asset::SaveAsset() const {
+        return SaveAsset(GetResourcePath());
     }
 }

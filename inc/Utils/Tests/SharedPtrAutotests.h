@@ -40,6 +40,8 @@ namespace SR_UTILS_NS {
     }
 
     static bool RunTestSharedPtr() {
+        SR_TRACY_ZONE;
+
         if (!SR_HTYPES_NS::SharedPtrDynamicDataCounter::CheckMemoryLeaks()) {
             SR_PLATFORM_NS::WriteConsoleError("Memory leaks detected before tests!\n");
             return false;
@@ -56,7 +58,7 @@ namespace SR_UTILS_NS {
             SR_HTYPES_NS::SharedPtr<TestClass> pInt2;
             {
                 SR_HTYPES_NS::SharedPtr<AutoTests::ManuallySharedPtrTestClass> pInt = new TestClass();
-                pInt->AutoFree();
+                pInt.AutoFree();
                 pInt2 = pInt.DynamicCast<TestClass>();
             }
             if (pInt2) {

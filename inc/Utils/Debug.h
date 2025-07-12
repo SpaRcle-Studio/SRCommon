@@ -44,13 +44,13 @@ namespace SR_UTILS_NS {
         SR_NODISCARD Level GetLevel();
         SR_NODISCARD bool IsInitialized() const;
 
-        /// @method
         void MakeCrash();
-        /// @method
         void TestPrint();
 
-        void Init(const std::string& log_path, bool ShowUsedMemory, Theme colorTheme = Theme::Light);
-        void OnSingletonDestroy() override;
+        void Initialize(const std::string& log_path, bool ShowUsedMemory, Theme colorTheme = Theme::Light);
+        void DeInitialize();
+
+        bool IsSingletonCanBeDestroyed() const override { return false; }
 
     public:
         void Log(const std::string& msg);

@@ -59,7 +59,7 @@ namespace SR_UTILS_NS {
         }
     }
 
-    void Debug::Init(const std::string& log_path, bool ShowUsedMemory, Theme colorTheme) {
+    void Debug::Initialize(const std::string& log_path, bool ShowUsedMemory, Theme colorTheme) {
         m_theme = colorTheme;
 
         InitColorTheme();
@@ -71,8 +71,14 @@ namespace SR_UTILS_NS {
     #endif
 
         m_logPath = Path(log_path);
-        if (m_logPath.Exists(Path::Type::File))
+
+        if (!m_logPath.GetFolder().CreateIfNotExists()) {
+            SR_PLATFORM_NS::WriteConsoleError("Failed to create log folder!\n\tLog path: " + m_logPath.ToString());
+        }
+
+        if (m_logPath.Exists(Path::Type::File)) {
             Platform::Delete(m_logPath);
+        }
 
         m_file.open(m_logPath);
         if (!m_file.is_open()) {
@@ -116,7 +122,14 @@ namespace SR_UTILS_NS {
     void Debug::ScriptLog(const std::string& msg) { Print(msg, DebugLogType::ScriptLog); }
     void Debug::ScriptError(const std::string& msg) { Print(msg, DebugLogType::ScriptError); }
 
-    void Debug::OnSingletonDestroy() {
+    void Debug::DeInitialize() {
+        SR_LOCK_GUARD;
+
+        if (!m_isInit) {
+            SR_PLATFORM_NS::WriteConsoleError("Debug::DeInitialize() : debugger isn't initialized!\n");
+            return;
+        }
+
         if (!m_countErrors && !m_countWarnings) {
             std::string msg = "Debugger has been stopped.";
             Print(msg, DebugLogType::Debug);
@@ -138,6 +151,8 @@ namespace SR_UTILS_NS {
             success.close();
         }
     #endif
+
+        m_isInit = false;
     }
 
     void Debug::InitColorTheme() {

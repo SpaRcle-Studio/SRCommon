@@ -1,5 +1,7 @@
 #include <Utils/stdInclude.h>
 
+#include "../src/Utils/Platform/PlatformCommon.cpp"
+
 #ifdef SR_LINUX
     #include "../src/Utils/Platform/PlatformLinux.cpp"
     #include "../src/Utils/Platform/StacktraceLinux.cpp"

@@ -59,12 +59,12 @@ namespace SR_UTILS_NS {
 
         /// -------------------------------------------------------------
 
-        auto&& pInfo = m_info.at(path);
+        auto&& pInfo = m_info.at(SR_UTILS_NS::StringAtom(path));
 
         pInfo->m_loaded.erase(pResource);
 
         if (pInfo->m_loaded.empty()) {
-            m_info.erase(path);
+            m_info.erase(SR_UTILS_NS::StringAtom(path));
         }
 
         /// -------------------------------------------------------------
@@ -84,7 +84,7 @@ namespace SR_UTILS_NS {
         pResource->OnResourceRegistered();
 
         auto&& path = pResource->GetResourcePath();
-        auto&& pIt = m_info.find(path);
+        auto&& pIt = m_info.find(SR_UTILS_NS::StringAtom(path));
 
     retry:
         if (pIt != m_info.end()) {
@@ -93,7 +93,7 @@ namespace SR_UTILS_NS {
             pResource->m_resourceInfo = pInfo;
         }
         else {
-            auto&& pInfo = std::make_shared<ResourceInfo>(pResource->GetResourceHash(), path, this);
+            auto&& pInfo = std::make_shared<ResourceInfo>(pResource->GetResourceHash(), SR_UTILS_NS::StringAtom(path), this);
             pIt = m_info.insert(std::make_pair(path, pInfo)).first;
             goto retry;
         }

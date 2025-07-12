@@ -27,6 +27,7 @@ namespace SR_UTILS_NS {
         static const uint64_t ResourceLifeTime;
 
     public:
+        SR_NODISCARD bool IsInitialized() const { return m_isInit; }
         SR_NODISCARD bool IsLastResource(const IResource::Ptr& pResource);
         SR_NODISCARD bool IsUsePointStackTraceProfilingEnabled() const { return m_usePointStackTraceProfiling; }
         SR_NODISCARD Path GetResPath() const;
@@ -70,11 +71,11 @@ namespace SR_UTILS_NS {
 
         bool ReviveResource(const IResource::Ptr& pResource);
 
-    public:
-        bool Init(const SR_UTILS_NS::Path& resourcesFolder);
-        bool Run();
+        bool IsSingletonCanBeDestroyed() const override { return false; }
 
-        void OnSingletonDestroy() override;
+    public:
+        bool Initialize(const SR_UTILS_NS::Path& resourcesFolder);
+        void DeInitialize();
 
         /// Проверить хэши ресурсов и перезагрузить их, если это требуется
         void ReloadResources(float_t dt);

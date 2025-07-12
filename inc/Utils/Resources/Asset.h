@@ -5,21 +5,85 @@
 #ifndef SR_ENGINE_COMMON_ASSET_H
 #define SR_ENGINE_COMMON_ASSET_H
 
-#include <Utils/Serialization/Serializable.h>
-#include <Utils/Types/SharedPtr.h>
-#include <Utils/FileSystem/Path.h>
+#include <Utils/Resources/IResource.h>
 
 namespace SR_UTILS_NS {
-    class Asset : public SR_UTILS_NS::IResource {
+    class Asset : public IResource {
         SR_CLASS()
+        using Super = IResource;
     public:
+        SR_INLINE static const char* EXTENSION_NAME = "sras";
         using Ptr = SR_HTYPES_NS::SharedPtr<Asset>;
         using OriginType = Asset;
 
     public:
-        SR_NODISCARD static Asset::Ptr Load(const SR_UTILS_NS::Path& path);
+        SR_NODISCARD bool SaveAsset(const Path& path) const;
+        SR_NODISCARD bool SaveAsset() const;
+
+        template<class AssetT = Asset> SR_NODISCARD static SR_HTYPES_NS::SharedPtr<AssetT> Load(const Path& path);
+        template<class AssetT> SR_NODISCARD static SR_HTYPES_NS::SharedPtr<AssetT> CreateNew(const Path& path);
+
+    private:
+        SR_NODISCARD static Asset::Ptr LoadImpl(const Path& path);
+
+    protected:
+        bool Load() override;
+        bool Unload() override;
 
     };
+
+    template<class AssetT> SR_HTYPES_NS::SharedPtr<AssetT> Asset::Load(const Path& path) {
+        if constexpr (!std::is_base_of_v<Asset, AssetT>) {
+            static_assert(AlwaysFalseV<AssetT>, "AssetT must be derived from Asset!");
+        }
+        else {
+            auto&& pAsset = Asset::LoadImpl(path);
+            if (!pAsset) {
+                SR_ERROR("Asset::Load() : failed to load asset from path: {}", path);
+                return nullptr;
+            }
+
+            if constexpr (std::is_same_v<AssetT, Asset>) {
+                return pAsset;
+            }
+
+            auto&& pImpl = pAsset->DynamicCast<AssetT>();
+            if (!pImpl) {
+                SRHalt("Asset::Load() : failed to cast asset to type: {}\n\tPath:", AssetT::GetClassStaticName(), path);
+                pImpl->CheckResourceUsage();
+                return nullptr;
+            }
+
+            return pImpl;
+        }
+    }
+
+    template<class AssetT> SR_HTYPES_NS::SharedPtr<AssetT> Asset::CreateNew(const Path& rawPath) {
+        auto&& resourceManager = ResourceManager::Instance();
+        SR_UTILS_NS::Path&& path = rawPath.RemoveSubPath(resourceManager.GetResPath());
+
+        if (resourceManager.GetResPath().Concat(path).Exists()) {
+            SR_ERROR("Asset::CreateNew() : asset already exists at path: {}", path);
+            return nullptr;
+        }
+
+        if constexpr (!std::is_base_of_v<Asset, AssetT>) {
+            static_assert(AlwaysFalseV<AssetT>, "AssetT must be derived from Asset!");
+        }
+        else {
+            SR_HTYPES_NS::SharedPtr<AssetT> pAsset = AssetT::template MakeShared<AssetT>();
+            pAsset->m_loadState = IResource::LoadState::Loaded;
+
+            if (!pAsset->SaveAsset(resourceManager.GetResPath().Concat(path))) {
+                SR_ERROR("Asset::CreateNew() : failed to save asset to path: {}", path);
+                pAsset->DeleteResource();
+                return nullptr;
+            }
+
+            pAsset->SetId(path.ToStringRef(), true);
+            return pAsset;
+        }
+    }
 }
 
 #endif //SR_ENGINE_COMMON_ASSET_H

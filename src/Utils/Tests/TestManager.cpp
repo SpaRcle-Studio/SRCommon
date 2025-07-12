@@ -8,93 +8,125 @@
 #include <Codegen/TestManager.generated.hpp>
 
 namespace SR_UTILS_NS {
-    void TestManager::RunAll() {
-        /*int32_t successes = 0;
+    ITestController::ITestController()
+        : SR_HTYPES_NS::SharedPtr<ITestController>(this, SR_UTILS_NS::SharedPtrPolicy::Automatic)
+    { }
 
-       for (auto&& test : m_tests) {
-           if (RunTest(test)) {
-               successes++;
-           }
-       }
+    TestExecutionResult TestManager::RunAll() {
+        auto&& applicationPath = SR_PLATFORM_NS::GetApplicationPath().GetFolder();
+        auto&& resourcePath = SR_PLATFORM_NS::GetApplicationResourcesPath();
 
-       if (m_engineTests.empty()) {
-           if (m_tests.empty()) {
-               SR_PLATFORM_NS::WriteConsoleLog("TestManager::RunAll() : no tests to run!\n");
-           } else {
-               SR_PLATFORM_NS::WriteConsoleLog(SR_FORMAT("TestManager::RunAll() : unit tests passed: {}/{}.", successes, m_tests.size()));
-           }
-           return;
-       }
+        if (!SR_UTILS_NS::Debug::Instance().IsInitialized()) {
+            SR_UTILS_NS::Debug::Instance().Initialize(applicationPath.Concat("srengine-tests.log"), true, SR_UTILS_NS::Debug::Theme::Dark);
+            SR_UTILS_NS::Debug::Instance().SetLevel(SR_UTILS_NS::Debug::Level::Low);
+        }
 
-      SR_HTYPES_NS::SharedPtr pLauncher = new SR_CORE_NS::Launcher();
-       auto&& launcherInitStatus = pLauncher->InitLauncher();
+        if (!SR_UTILS_NS::ResourceManager::Instance().IsInitialized()) {
+            SR_UTILS_NS::ResourceManager::Instance().Initialize(resourcePath);
+        }
 
-       if (launcherInitStatus == SR_CORE_NS::LauncherInitStatus::Error) {
-           SR_PLATFORM_NS::WriteConsoleError("TestManager::RunAll() : failed to initialize launcher!\n");
-           return;
-       }
+        SR_LOG_TEST("TestManager::RunAll() : loading TestManagerAsset...");
 
-       if (!pLauncher->EarlyInit()) {
-           SR_ERROR("TestManager::RunAll() : failed to early initialize application!");
-           return;
-       }
+        SRAssert(!m_pTestManagerAsset);
+        m_pTestManagerAsset = SR_UTILS_NS::Asset::Load<TestManagerAsset>("ModuleTests/TestManagerAsset.sras");
+        if (!m_pTestManagerAsset) {
+            SR_LOG_TEST("TestManager::RunAll() : TestManagerAsset not found, creating a new one...");
+            m_pTestManagerAsset = SR_UTILS_NS::Asset::CreateNew<TestManagerAsset>("ModuleTests/TestManagerAsset.sras");
+            if (!m_pTestManagerAsset) {
+                SR_LOG_TEST("TestManager::RunAll() : failed to create TestManagerAsset!");
+                return TestExecutionResult::Fatal;
+            }
+        }
 
-       if (!pLauncher->Init()) {
-           SR_ERROR("TestManager::RunAll() : failed to initialize application!");
-           return;
-       }
+        m_pTestManagerAsset->AddUsePoint();
 
-       SR_LOG_TEST("TestManager::RunAll() : SpaRcle Engine is being run in unit test mode!");
+        uint32_t totalTests = 0;
+        for (auto&& pTest : m_pTestManagerAsset->m_tests) {
+            if (pTest) {
+                totalTests += pTest->GetTotalTestsCount();
+            }
+        }
 
-       for (auto&& test : m_engineTests) {
-           if (RunEngineTest(test)) {
-               successes++;
-           }
-       }
+        if (totalTests == 0) {
+            SR_LOG_TEST("TestManager::RunAll() : no tests found to run!");
+            m_pTestManagerAsset->RemoveUsePoint();
+            m_pTestManagerAsset.Reset();
+            return TestExecutionResult::Success;
+        }
 
-       SR_LOG_TEST("TestManager::RunAll() : unit tests passed: {}/{}.", successes, m_tests.size());
-       SR_LOG_TEST("TestManager::RunAll() : destroying test instances...");
+        SR_LOG_TEST("TestManager::RunAll() : running {} tests...", totalTests);
 
-       pLauncher.AutoFree([](auto&& pData) {
-           delete pData;
-       });*/
+        m_testResults.fill(0);
+
+        for (auto&& pTest : m_pTestManagerAsset->m_tests) {
+            if (!pTest) {
+                SR_LOG_TEST("TestManager::RunAll() : test is null, skipping...");
+                OnTestResult(TestExecutionResult::Skipped);
+                continue;
+            }
+
+            SR_LOG_TEST("TestManager::RunAll() : running test '{}'.", pTest->GetMeta()->GetFactoryName());
+
+            OnTestResult(pTest->Run());
+
+            if (HasFatalError()) {
+                SR_LOG_TEST("TestManager::RunAll() : test '{}' finished with fatal error!", pTest->GetMeta()->GetFactoryName());
+                return TestExecutionResult::Fatal;
+            }
+        }
+
+        m_pTestManagerAsset->RemoveUsePoint();
+        m_pTestManagerAsset.Reset();
+
+        SR_LOG_TEST("TestManager::RunAll() : all tests finished! Test results:"
+                    "\n\tSuccess: {}\n\tError: {}\n\tSkipped: {}",
+                    m_testResults[static_cast<uint32_t>(TestExecutionResult::Success)],
+                    m_testResults[static_cast<uint32_t>(TestExecutionResult::Error)],
+                    m_testResults[static_cast<uint32_t>(TestExecutionResult::Skipped)]);
+
+        if (m_testResults[static_cast<uint32_t>(TestExecutionResult::Error)] > 0) {
+            SR_LOG_TEST("TestManager::RunAll() : some tests finished with errors!");
+            return TestExecutionResult::Error;
+        }
+
+        return TestExecutionResult::Success;
     }
 
-    /*bool TestManager::RunTest(const TestManager::Test& test) {
-        auto&& pApplication = SR_CORE_NS::Application::MakeShared();
-
-        if (!pApplication->PreInit()) {
-            SR_PLATFORM_NS::WriteConsoleError("Failed to pre-initialize application!\n");
-            return false;
+    void TestManager::OnTestResult(TestExecutionResult result) {
+        if (result == TestExecutionResult::Fatal) {
+            m_hasFatalError = true;
         }
-
-        if (!pApplication->InitializeResourcesFolder()) {
-            SR_ERROR("Failed to initialize resources folder!");
-            return false;
-        }
-
-        if (!pApplication->EarlyInit()) {
-            SR_ERROR("Failed to early initialize application!");
-            return false;
-        }
-
-        SR_LOG_TEST("TestManager::RunTest() : running test '{}'.", test.first);
-
-        auto&& result = test.second();
-
-        SR_LOG_TEST("TestManager::RunTest() : test '{}' finished with result: {}.", test.first, result ? "success" : "failure");
-
-        pApplication->AutoFree([](auto&& pData) {
-            delete pData;
-        });
-
-        return result;
+        m_testResults[static_cast<uint32_t>(result)]++;
     }
 
-    bool TestManager::RunEngineTest(const TestManager::Test& test) {
-        SR_LOG_TEST("TestManager::RunEngineTest() : running test '{}'.", test.first);
+    uint32_t TestGroupController::GetTotalTestsCount() const {
+        uint32_t count = 0;
+        for (auto&& pTest : m_tests) {
+            if (pTest) {
+                count += pTest->GetTotalTestsCount();
+            }
+        }
+        return count;
+    }
 
-        auto&& result = test.second();
-        return result;
-    }*/
+    TestExecutionResult TestGroupController::Run() {
+        for (auto&& pTest : m_tests) {
+            if (!pTest) {
+                SR_LOG_TEST("TestGroupController::Run() : test is null, skipping...");
+                TestManager::Instance().OnTestResult(TestExecutionResult::Skipped);
+                continue;
+            }
+
+            SR_LOG_TEST("TestGroupController::Run() : running test '{}'.", pTest->GetMeta()->GetFactoryName());
+
+            TestManager::Instance().OnTestResult(pTest->Run());
+
+            if (TestManager::Instance().HasFatalError()) {
+                SR_LOG_TEST("TestGroupController::Run() : test '{}' finished with fatal error!", pTest->GetMeta()->GetFactoryName());
+                return TestExecutionResult::Fatal;
+            }
+        }
+
+        return TestExecutionResult::Success;
+    }
 }

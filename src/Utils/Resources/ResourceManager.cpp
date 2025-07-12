@@ -15,12 +15,16 @@ namespace SR_UTILS_NS {
     /// Seconds
     const uint64_t ResourceManager::ResourceLifeTime = 30 * SR_CLOCKS_PER_SEC;
 
-    bool ResourceManager::Init(const SR_UTILS_NS::Path& resourcesFolder) {
+    bool ResourceManager::Initialize(const SR_UTILS_NS::Path& resourcesFolder) {
     #ifdef SR_ANDROID
-        SR_INFO("ResourceManager::Init() : initializing resource manager...");
+        SR_INFO("ResourceManager::Initialize() : initializing resource manager...");
     #else
-        SR_INFO("ResourceManager::Init() : initializing resource manager...\n\tResources folder: " + resourcesFolder.ToString());
+        SR_INFO("ResourceManager::Initialize() : initializing resource manager...\n\tResources folder: " + resourcesFolder.ToString());
     #endif
+        if (m_isInit) {
+            SRHalt("ResourceManager::Initialize() : is already initialized!");
+            return false;
+        }
 
         m_defaultReloader = new DefaultResourceReloader();
 
@@ -34,11 +38,35 @@ namespace SR_UTILS_NS {
 
         m_isInit = true;
 
+        if (m_isRun) {
+            SRHalt("ResourceManager::Initialize() : is already ran!");
+            return false;
+        }
+
+        m_isRun = true;
+
+        if (!SR_HTYPES_NS::Thread::Factory::Instance().Create(m_thread, &ResourceManager::Thread, this)) {
+            SRHalt("ResourceManager::Initialize() : failed to create thread!");
+            return false;
+        }
+
+        m_thread->SetName("Resources manager");
+
         return true;
     }
 
-    void ResourceManager::OnSingletonDestroy() {
-        SR_INFO("ResourceManager::OnSingletonDestroy() : stopping resource manager...");
+    void ResourceManager::DeInitialize() {
+        if (!m_isInit) {
+            SRHalt("ResourceManager::DeInitialize() : is not initialized!");
+            return;
+        }
+
+        if (!m_isRun) {
+            SRHalt("ResourceManager::DeInitialize() : is not running!");
+            return;
+        }
+
+        SR_INFO("ResourceManager::DeInitialize() : stopping resource manager...");
 
         PrintMemoryDump();
 
@@ -47,7 +75,7 @@ namespace SR_UTILS_NS {
 
         Synchronize(true);
 
-        SR_INFO("ResourceManager::OnSingletonDestroy() : stopping thread...");
+        SR_INFO("ResourceManager::DeInitialize() : stopping thread...");
 
         if (m_thread) {
             m_thread->TryJoin();
@@ -217,7 +245,7 @@ namespace SR_UTILS_NS {
         SRAssert(!pResource->IsRegistered());
 
         if (Debug::Instance().GetLevel() >= Debug::Level::Full) {
-            SR_LOG("ResourceManager::RegisterResource() : add new \"" + std::string(pResource->GetMeta()->GetFactoryName()) + "\" resource.");
+            SR_LOG("ResourceManager::RegisterResource() : add new \"{}\" resource.", pResource->GetMeta()->GetFactoryName());
         }
 
         SR_SCOPED_LOCK;
@@ -326,24 +354,6 @@ namespace SR_UTILS_NS {
     void ResourceManager::InspectResources(const SR_HTYPES_NS::Function<void(ResourcesTypes &)> &callback) {
         SR_LOCK_GUARD;
         callback(m_resources);
-    }
-
-    bool ResourceManager::Run() {
-        if (m_isRun) {
-            SRHalt("ResourceManager::Run() : is already ran!");
-            return false;
-        }
-
-        m_isRun = true;
-
-        if (!SR_HTYPES_NS::Thread::Factory::Instance().Create(m_thread, &ResourceManager::Thread, this)) {
-            SRHalt("ResourceManager::Run() : failed to create thread!");
-            return false;
-        }
-
-        m_thread->SetName("Resources manager");
-
-        return true;
     }
 
     bool ResourceManager::RegisterReloader(IResourceReloader* pReloader, SR_UTILS_NS::StringAtom typeName) {

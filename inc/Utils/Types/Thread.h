@@ -43,6 +43,7 @@ namespace SR_HTYPES_NS {
         public:
             void SetMainThread();
             void PrintThreads();
+            void DeInitialize();
 
             SR_NODISCARD Ptr GetMainThread();
             SR_NODISCARD Ptr GetThisThread();
@@ -54,6 +55,8 @@ namespace SR_HTYPES_NS {
             SR_NODISCARD Ptr CreateEmpty();
 
             template<class Functor, typename... Args> bool Create(Ptr& pThread, Functor&& fn, Args&&... args);
+
+            bool IsSingletonCanBeDestroyed() const override { return false; }
 
         private:
             void Remove(Thread* pThread);

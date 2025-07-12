@@ -647,8 +647,10 @@ namespace SR_UTILS_NS::Platform {
     Path GetApplicationPath() {
         const std::size_t buf_len = 260;
         auto s = new TCHAR[buf_len];
-        auto path_len = GetModuleFileName(GetModuleHandle(nullptr), s, buf_len);
-        return s;
+        GetModuleFileName(GetModuleHandle(nullptr), s, buf_len);
+        Path appPath(s);
+        delete[] s;
+        return appPath;
     }
 
     Path GetApplicationDirectory() {

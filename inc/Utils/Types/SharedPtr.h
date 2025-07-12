@@ -19,7 +19,7 @@ namespace SR_UTILS_NS {
     };
 }
 
-// #define SR_SHARED_PTR_TRACE
+/// #define SR_SHARED_PTR_TRACE
 
 namespace SR_HTYPES_NS {
     class SharedPtrDynamicData;
@@ -466,6 +466,9 @@ namespace SR_HTYPES_NS {
             const bool valid = m_data->valid;
             const auto pPtr = m_ptr;
             SharedPtrDynamicData* pData = m_data;
+
+            SharedPtr<T> pCopy = *this;
+            Reset();
 
             if (valid) {
                 pData->deallocated = true;

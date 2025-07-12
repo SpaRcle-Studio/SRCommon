@@ -13,7 +13,9 @@ namespace SR_HTYPES_NS {
         : Singleton<Factory>()
     { }
 
-    Thread::Factory::~Factory() = default;
+    Thread::Factory::~Factory() {
+        DeInitialize();
+    }
 
     Thread::Thread(std::thread &&thread)
         : m_thread(std::exchange(thread, {}))
@@ -111,9 +113,11 @@ namespace SR_HTYPES_NS {
     void Thread::Factory::Remove(Thread* pThread) {
         SR_SCOPED_LOCK;
 
+        SRAssert2(pThread, "Thread::Factory::Remove() : thread is null!");
         SR_LOG("Thread::Free() : free \"{}\" thread...", pThread->GetId().c_str());
 
         if (pThread == m_main) {
+            delete m_main;
             m_main = nullptr;
         }
         else {
@@ -281,6 +285,14 @@ namespace SR_HTYPES_NS {
         }
 
         return nullptr;
+    }
+
+    void Thread::Factory::DeInitialize() {
+        SRAssert(m_threads.empty() && "Thread::Factory::~Factory() : not all threads were freed!");
+        if (m_main) {
+            delete m_main;
+            m_main = nullptr;
+        }
     }
 }
 

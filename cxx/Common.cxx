@@ -2,6 +2,7 @@
 // Created by Monika on 19.11.2023.
 //
 
+#include "../src/Utils/Common/CLIManager.cpp"
 #include "../src/Utils/Common/NonCopyable.cpp"
 #include "../src/Utils/Common/StringFormat.cpp"
 #include "../src/Utils/Common/StringUtils.cpp"

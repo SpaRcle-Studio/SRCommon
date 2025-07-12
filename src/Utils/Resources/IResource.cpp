@@ -80,7 +80,7 @@ namespace SR_UTILS_NS {
         SRAssert2(!id.empty(), "Invalid id!");
 
         if (m_resourceId.empty()) {
-            SRAssert2(m_resourcePath.Empty(), "Resource path already set!");
+            SRAssert2(m_resourcePath.empty(), "Resource path already set!");
 
             m_resourceId = id;
             m_resourcePath = InitializeResourcePath();
@@ -173,15 +173,6 @@ namespace SR_UTILS_NS {
         return m_countUses;
     }
 
-    IResource* IResource::CopyResource(IResource* pDestination) const {
-        pDestination->m_resourcePath = m_resourcePath;
-        pDestination->m_loadState.store(m_loadState);
-
-        pDestination->SetId(m_resourceId, true /** auto register */);
-
-        return pDestination;
-    }
-
     bool IResource::Destroy() {
         SRAssert(!IsDestroyed());
         m_isDestroyed = true;
@@ -236,7 +227,7 @@ namespace SR_UTILS_NS {
         m_resourceHash = hash;
     }
 
-    StringAtom IResource::GetResourcePath() const {
+    SR_UTILS_NS::Path IResource::GetResourcePath() const {
         return m_resourcePath;
     }
 

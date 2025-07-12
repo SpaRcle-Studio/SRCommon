@@ -8,15 +8,15 @@
 #include <Utils/Common/Singleton.h>
 #include <Utils/Common/Coroutine.h>
 #include <Utils/Common/Enumerations.h>
-#include <Utils/Serialization/Serializable.h>
-#include <Utils/Types/SharedPtr.h>
+#include <Utils/Resources/Asset.h>
 
 namespace SR_UTILS_NS {
     SR_ENUM_NS_CLASS_T(TestExecutionResult, uint8_t,
         Success,
         Error,
         Fatal,
-        Skipped
+        Skipped,
+        Count
     );
 
     class ITestController : public SR_UTILS_NS::Serializable, public SR_HTYPES_NS::SharedPtr<ITestController> {
@@ -26,20 +26,53 @@ namespace SR_UTILS_NS {
         using OriginType = ITestController;
 
     public:
+        ITestController();
+
+    public:
         virtual TestExecutionResult Run() = 0;
         SR_NODISCARD virtual uint32_t GetTotalTestsCount() const { return 1; }
+
+    };
+
+    class TestGroupController : public ITestController {
+        SR_CLASS()
+    public:
+        using Ptr = SR_HTYPES_NS::SharedPtr<TestGroupController>;
+
+    public:
+        TestExecutionResult Run() override;
+        SR_NODISCARD uint32_t GetTotalTestsCount() const override;
+
+    private:
+        /// @property
+        std::vector<ITestController::Ptr> m_tests;
+
+    };
+
+    class TestManagerAsset : public SR_UTILS_NS::Asset {
+        SR_CLASS()
+    public:
+        using Ptr = SR_HTYPES_NS::SharedPtr<TestManagerAsset>;
+
+    public:
+        /// @property
+        std::vector<ITestController::Ptr> m_tests;
 
     };
 
     class TestManager : public Singleton<TestManager> {
         SR_REGISTER_SINGLETON(TestManager)
     public:
-        void RunAll();
+        SR_NODISCARD TestExecutionResult RunAll();
+        SR_NODISCARD bool HasFatalError() const { return m_hasFatalError; }
 
-        bool IsSingletonCanBeDestroyed() const override { return false; }
+        void OnTestResult(TestExecutionResult result);
 
     private:
-        ITestController::Ptr m_pTestController = nullptr;
+        TestManagerAsset::Ptr m_pTestManagerAsset;
+        std::array<uint32_t, static_cast<uint32_t>(TestExecutionResult::Count)> m_testResults;
+
+        bool m_hasFatalError = false;
 
     };
 }
