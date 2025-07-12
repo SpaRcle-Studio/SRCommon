@@ -70,10 +70,10 @@ namespace SR_UTILS_NS {
 
         PrintMemoryDump();
 
+        Synchronize(true);
+
         m_isInit = false;
         m_isRun = false;
-
-        Synchronize(true);
 
         SR_INFO("ResourceManager::DeInitialize() : stopping thread...");
 

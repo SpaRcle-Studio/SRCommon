@@ -78,6 +78,7 @@
 #include "../src/Utils/Localization/LocalizationManager.cpp"
 
 #include "../src/Utils/Tests/TestManager.cpp"
+#include "../src/Utils/Tests/SharedPtrAutotests.cpp"
 
 #ifdef SR_TRACY_ENABLE
     #include "../src/Utils/Profile/TracyContext.cpp"

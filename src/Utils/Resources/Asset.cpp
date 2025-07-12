@@ -59,7 +59,7 @@ namespace SR_UTILS_NS {
 
     bool Asset::Load() {
         SR_UTILS_NS::SRADeserializer deserializer;
-        if (!deserializer.LoadFromFile(GetResourcePath())) {
+        if (!deserializer.LoadFromFile(ResourceManager::Instance().GetResPath().Concat(GetResourcePath()))) {
             SR_ERROR("Asset::Load() : failed to deserialize asset from file!\n\tPath: {}", GetResourcePath());
             return false;
         }
@@ -85,6 +85,6 @@ namespace SR_UTILS_NS {
     }
 
     bool Asset::SaveAsset() const {
-        return SaveAsset(GetResourcePath());
+        return SaveAsset(SR_UTILS_NS::ResourceManager::Instance().GetResPath().Concat(GetResourcePath()));
     }
 }

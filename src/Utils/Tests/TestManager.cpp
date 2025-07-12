@@ -13,6 +13,8 @@ namespace SR_UTILS_NS {
     { }
 
     TestExecutionResult TestManager::RunAll() {
+        SR_TRACY_ZONE;
+
         auto&& applicationPath = SR_PLATFORM_NS::GetApplicationPath().GetFolder();
         auto&& resourcePath = SR_PLATFORM_NS::GetApplicationResourcesPath();
 
@@ -71,6 +73,8 @@ namespace SR_UTILS_NS {
 
             if (HasFatalError()) {
                 SR_LOG_TEST("TestManager::RunAll() : test '{}' finished with fatal error!", pTest->GetMeta()->GetFactoryName());
+                m_pTestManagerAsset->RemoveUsePoint();
+                m_pTestManagerAsset.Reset();
                 return TestExecutionResult::Fatal;
             }
         }
