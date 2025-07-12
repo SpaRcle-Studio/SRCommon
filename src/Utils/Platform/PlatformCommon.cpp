@@ -26,7 +26,7 @@ namespace SR_PLATFORM_NS {
 
         #ifdef SR_LINUX
             if (fullPath.View().size() == 1) {
-                return false;
+                return SR_UTILS_NS::Path();
             }
         #endif
 

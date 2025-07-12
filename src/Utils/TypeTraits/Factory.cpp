@@ -110,7 +110,7 @@ namespace SR_UTILS_NS {
                 return;
             }
         }
-        SR_PLATFORM_NS::WriteConsoleLog(message);
+        SR_PLATFORM_NS::WriteConsoleLog(std::string(message).append("\n"));
     }
 
     void Factory::WriteError(const std::string& message) const noexcept {
@@ -120,7 +120,7 @@ namespace SR_UTILS_NS {
                 return;
             }
         }
-        SR_PLATFORM_NS::WriteConsoleError(message);
+        SR_PLATFORM_NS::WriteConsoleError(std::string(message).append("\n"));
         SR_MAKE_BREAKPOINT;
     }
 }
