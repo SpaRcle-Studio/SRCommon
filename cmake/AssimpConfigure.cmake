@@ -5,6 +5,31 @@ set(ASSIMP_INSTALL OFF CACHE INTERNAL "" FORCE)
 set(ASSIMP_BUILD_ASSIMP_VIEW OFF CACHE INTERNAL "" FORCE)
 set(ASSIMP_WARNINGS_AS_ERRORS OFF CACHE INTERNAL "" FORCE)
 
+set(SR_COMMON_ASSIMP_UNITY_BUILD_SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/py/AssimpUnityBuild.py")
+set(SR_COMMON_ASSIMP_UNITY_BUILD_OUT_FOLDER "${CMAKE_CURRENT_BINARY_DIR}/AssimpUnityBuild")
+
+function(SR_COMMON_ASSIMP_SOURCES_MODIFY_HOOK value)
+    execute_process(
+        COMMAND ${SR_PYTHON_EXECUTABLE} ${SR_COMMON_ASSIMP_UNITY_BUILD_SCRIPT}
+        --sources "${value}"
+        --out "${SR_COMMON_ASSIMP_UNITY_BUILD_OUT_FOLDER}"
+        RESULT_VARIABLE result
+        OUTPUT_VARIABLE output
+        ERROR_VARIABLE error_output
+    )
+
+    file(GLOB cxx_files "${SR_COMMON_ASSIMP_UNITY_BUILD_OUT_FOLDER}/*.assimp-codegen.*")
+    set(assimp_src_updated ${cxx_files} CACHE INTERNAL "" FORCE )
+
+    if (result EQUAL "0")
+        message(STATUS "Assimp sources modified successfully:\n${output}")
+    else()
+        message(FATAL_ERROR "Assimp sources modification failed with error:\n${error_output}")
+    endif()
+endfunction()
+
+set(ASSIMP_SOURCES_MODIFY_HOOK SR_COMMON_ASSIMP_SOURCES_MODIFY_HOOK)
+
 set(SR_ASSIMP_DISABLED_IMPORTERS
     ASSIMP_BUILD_NO_AC_IMPORTER
     ASSIMP_BUILD_NO_AMF_IMPORTER
