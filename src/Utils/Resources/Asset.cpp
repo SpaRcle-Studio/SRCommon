@@ -39,6 +39,7 @@ namespace SR_UTILS_NS {
 
         pAsset->m_loadState = IResource::LoadState::Loaded;
         pAsset->SetId(path.ToStringRef(), true);
+        pAsset->OnAssetLoaded();
 
         return pAsset;
     }
@@ -72,6 +73,8 @@ namespace SR_UTILS_NS {
                 return false;
             }
         }
+
+        OnAssetLoaded();
 
         return Super::Load();
     }

@@ -689,10 +689,6 @@ namespace SR_PLATFORM_NS {
         return false;
     }
 
-    void OpenInNativeFileExplorer(const Path &path){
-        SRHaltOnce("Not implemented!");
-    }
-
     bool IsExists(const Path &path) {
         struct stat buffer{};
         return (stat(path.c_str(), &buffer) == 0);

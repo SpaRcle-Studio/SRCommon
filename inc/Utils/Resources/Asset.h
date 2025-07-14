@@ -23,6 +23,9 @@ namespace SR_UTILS_NS {
         template<class AssetT = Asset> SR_NODISCARD static SR_HTYPES_NS::SharedPtr<AssetT> Load(const Path& path);
         template<class AssetT> SR_NODISCARD static SR_HTYPES_NS::SharedPtr<AssetT> CreateNew(const Path& path);
 
+    protected:
+        virtual void OnAssetLoaded() { }
+
     private:
         SR_NODISCARD static Asset::Ptr LoadImpl(const Path& path);
 

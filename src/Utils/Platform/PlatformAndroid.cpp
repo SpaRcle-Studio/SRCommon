@@ -197,10 +197,6 @@ namespace SR_UTILS_NS::Platform {
         return false;
     }
 
-    void OpenInNativeFileExplorer(const Path &path){
-        SRHaltOnce("Not implemented!");
-    }
-
     SR_MATH_NS::UVector2 GetScreenResolution() {
         SRHaltOnce("Not implemented!");
         return SR_MATH_NS::UVector2();
