@@ -380,6 +380,7 @@ namespace SR_UTILS_NS {
     }
 
     SR_COMMON_DLL_API bool Path::Copy(const Path &destination) const {
+        SR_TRACY_ZONE;
         return Platform::Copy(*this, destination);
     }
 

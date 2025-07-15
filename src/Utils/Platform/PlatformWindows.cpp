@@ -527,6 +527,8 @@ namespace SR_UTILS_NS::Platform {
 
 
     bool Copy(const Path &from, const Path &to) {
+        SR_TRACY_ZONE;
+
         if (from.IsFile()) {
             const bool result = CopyFileA(
                     reinterpret_cast<LPCSTR>(from.ToString().c_str()),

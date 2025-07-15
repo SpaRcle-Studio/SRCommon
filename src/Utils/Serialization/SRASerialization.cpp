@@ -144,6 +144,8 @@ namespace SR_UTILS_NS {
     /// ========================================== SRADeserializer =====================================================
 
     bool SRADeserializer::LoadFromFile(const SR_UTILS_NS::Path& path) {
+        SR_TRACY_ZONE;
+
         if (path.empty()) {
             SRHalt("SRADeserializer::LoadFromFile() : empty path!");
             return false;
@@ -164,6 +166,8 @@ namespace SR_UTILS_NS {
     }
 
     bool SRADeserializer::LoadFromString(const std::string& str) {
+        SR_TRACY_ZONE;
+
         const std::vector<std::string_view> lines = SR_UTILS_NS::StringUtils::SplitViewWithEmpty(str, "\n");
         if (lines.empty()) {
             SR_ERROR("SRADeserializer::LoadFromString() : no lines found!");
@@ -189,7 +193,7 @@ namespace SR_UTILS_NS {
             }
 
             const std::string_view depthStr = line.substr(0, line.find_first_of('-'));
-            const int32_t depth = LexicalCast<int32_t>(depthStr);
+            const int32_t depth = FastSToI(depthStr);
             if (depth == 0) {
                 if (!m_stack.empty()) {
                     ReportError("Double root on line: "s + std::to_string(i + 1));
@@ -259,7 +263,7 @@ namespace SR_UTILS_NS {
                 case 'm': {
                     auto& node = GetCurrentNode();
                     node.type = SerializationDataType::String;
-                    const uint32_t lineCount = LexicalCast<uint32_t>(line.substr(line.find_first_of(':') + 1));
+                    const uint32_t lineCount = FastSToU(line.substr(line.find_first_of(':') + 1));
 
                     std::string multiline;
 
@@ -293,14 +297,14 @@ namespace SR_UTILS_NS {
                 case 'i': {
                     auto& node = GetCurrentNode();
                     node.type = SerializationDataType::Integer;
-                    node.data.integer = LexicalCast<int64_t>(line.substr(line.find_first_of(':') + 1));
+                    node.data.integer = FastSToL(line.substr(line.find_first_of(':') + 1));
                     m_stack.pop_back();
                     continue;
                 }
                 case 'f': {
                     auto& node = GetCurrentNode();
                     node.type = SerializationDataType::Floating;
-                    node.data.floating = LexicalCast<double_t>(line.substr(line.find_first_of(':') + 1));
+                    node.data.floating = FastSToD(line.substr(line.find_first_of(':') + 1));
                     m_stack.pop_back();
                     continue;
                 }
@@ -321,6 +325,7 @@ namespace SR_UTILS_NS {
     }
 
     void SRADeserializer::ReportError(const std::string& message) {
+        SR_TRACY_ZONE;
         SRHalt("SRADeserializer::ReportError() : {}!", message);
     }
 } // namespace SR_UTILS_NS

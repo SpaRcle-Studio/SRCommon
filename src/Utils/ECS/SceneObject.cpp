@@ -388,7 +388,7 @@ namespace SR_UTILS_NS {
     void SceneObject::DestroyImpl() {
         /// это должно быть единственное место,
         /// где мы уничтожаем объект
-        AutoFree();
+        GetThis().AutoFree();
     }
 
     void SceneObject::OnPostLoad() {

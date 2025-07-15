@@ -92,8 +92,8 @@ namespace SR_HTYPES_NS {
             --strongCount;
         }
 
-        uint16_t strongCount = 0;
-        uint16_t weakCount = 0;
+        std::atomic<uint16_t> strongCount = 0;
+        std::atomic<uint16_t> weakCount = 0;
         bool valid = false;
         bool deallocated = false;
         SR_UTILS_NS::SharedPtrPolicy policy = SR_UTILS_NS::SharedPtrPolicy::Automatic;
@@ -467,7 +467,7 @@ namespace SR_HTYPES_NS {
             const auto pPtr = m_ptr;
             SharedPtrDynamicData* pData = m_data;
 
-            SharedPtr<T> pCopy = *this;
+            SR_MAYBE_UNUSED SharedPtr<T> pCopy = GetThis();
             Reset();
 
             if (valid) {
@@ -476,8 +476,6 @@ namespace SR_HTYPES_NS {
                 pData->valid = false;
                 return true;
             }
-
-            pData->valid = false;
 
             return false;
         }
@@ -494,6 +492,11 @@ namespace SR_HTYPES_NS {
     }
 
     template<class T> void SharedPtr<T>::Reset() {
+        if (m_basicManually) {
+            SR_SAFE_PTR_ASSERT(false, "SharedPtr cannot reset itself!");
+            return;
+        }
+
         /// Делаем копию, так как в процессе удаления можем потярять this,
         /// а так же зануляем m_data, чтобы не войти в рекурсию
         SharedPtrDynamicData* pData = m_data;
@@ -505,7 +508,7 @@ namespace SR_HTYPES_NS {
             return;
         }
 
-        const auto strongCount = pData->strongCount;
+        const auto strongCount = pData->strongCount.load();
 
         SR_SAFE_PTR_ASSERT(strongCount != 0, "SharedPtr is corrupted!");
 

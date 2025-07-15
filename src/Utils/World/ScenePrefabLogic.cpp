@@ -73,6 +73,7 @@ namespace SR_WORLD_NS {
     }
 
     bool ScenePrefabLogic::SaveLogic(ISerializer& serializer, const Path& path) {
+        SR_TRACY_ZONE;
         SR_UTILS_NS::SceneObject::Ptr pSO;
         uint64_t rootObjectsCount = 0;
 

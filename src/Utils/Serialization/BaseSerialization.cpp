@@ -11,6 +11,8 @@ namespace SR_UTILS_NS {
     }
 
     const SerializationNode& IBaseSerialization::GetNode(const std::vector<uint64_t>& stack) const noexcept {
+        SR_TRACY_ZONE;
+
         if (stack.empty()) {
             return m_root;
         }
@@ -30,6 +32,8 @@ namespace SR_UTILS_NS {
     }
 
     bool IBaseSerialization::SaveToFileImpl(const SR_UTILS_NS::Path& path) const {
+        SR_TRACY_ZONE;
+
         if (path.empty()) {
             SRHalt("IBaseSerialization::SaveToFileImpl() : empty path!");
             return false;
@@ -49,6 +53,10 @@ namespace SR_UTILS_NS {
         file << ToStringBase();
         file.close();
         return true;
+    }
+
+    void IBaseSerialization::WriteNode(const SerializationNode& node) noexcept {
+        GetCurrentNode().children.emplace_back(node);
     }
 
     /// ========================================== IBaseSerializer =====================================================

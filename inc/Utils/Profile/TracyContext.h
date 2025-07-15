@@ -11,13 +11,6 @@
 #include <Utils/Common/Singleton.h>
 #include <Utils/Common/Enumerations.h>
 #include <Utils/Types/Map.h>
-#include <Utils/Debug.h>
-
-// #ifdef SR_COMMON_DLL_EXPORTS
-//     #define TRACY_EXPORTS
-// #else
-//     #define TRACY_IMPORTS
-// #endif
 
 #ifndef SR_ENGINE_CODEGEN_CLANG_PARSE_MODE
     #include <Tracy.hpp>
@@ -42,7 +35,8 @@ namespace SR_UTILS_NS {
     public:
         TracyContextPtr& GetContext(TracyType type, IdentifierPtr pIdentifier) {
             if (type >= TracyType::TracyTypeMAX - 1) {
-                SRHalt0();
+                SR_PLATFORM_NS::WriteConsoleError("TracyContextManager::GetContext() : Invalid TracyType!");
+                SR_UTILS_NS::Breakpoint();
                 static TracyContextPtr pNull = nullptr;
                 return pNull;
             }

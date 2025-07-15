@@ -125,6 +125,8 @@ namespace SR_WORLD_NS {
     }
 
     Scene::Ptr Scene::LoadScene(const Path& path) {
+        SR_TRACY_ZONE;
+
         if (Debug::Instance().GetLevel() > Debug::Level::None) {
             SR_LOG("Scene::Load() : loading scene...\n\tPath: " + path.ToString());
         }
@@ -172,6 +174,8 @@ namespace SR_WORLD_NS {
     }
 
     bool Scene::Destroy() {
+        SR_TRACY_ZONE;
+
         if (m_isDestroyed) {
             SR_ERROR("Scene::Destroy() : scene \"" + GetName() + "\" already destroyed!");
             return false;
@@ -251,10 +255,12 @@ namespace SR_WORLD_NS {
     }
 
     bool Scene::SaveScene() {
+        SR_TRACY_ZONE;
         return SaveSceneAt(m_path);
     }
 
     bool Scene::SaveSceneAt(const Path& path) {
+        SR_TRACY_ZONE;
         SR_INFO(SR_FORMAT("Scene::SaveAt() : saving scene...\n\tPath: {}", path.CStr()));
 
         SRAssert(!path.IsAbs());

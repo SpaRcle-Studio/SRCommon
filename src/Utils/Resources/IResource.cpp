@@ -70,7 +70,7 @@ namespace SR_UTILS_NS {
         Unload();
         StopWatch();
 
-        AutoFree([this](auto&& pData) {
+        GetThis().AutoFree([this](auto&& pData) {
             m_deleteVerifyFlag = true;
             delete pData;
         });

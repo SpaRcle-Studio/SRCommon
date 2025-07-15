@@ -44,6 +44,8 @@ namespace SR_UTILS_NS {
     }
 
     SR_COMMON_DLL_API std::string FileSystem::ReadAllText(const std::string& path) {
+        SR_TRACY_ZONE;
+
         std::string data = std::string();
         std::ifstream stream(path, std::ios::in);
         if (stream.is_open()) {
