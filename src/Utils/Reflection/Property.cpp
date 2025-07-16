@@ -5,18 +5,26 @@
 #include <Utils/Reflection/Property.h>
 
 namespace SR_UTILS_NS::Reflection {
-    SR_UTILS_NS::StringAtom MakeSerializePropertyName(std::string_view id) {
+    std::string_view MakeSerializePropertyName(std::string_view id) {
         if (id.rfind("m_", 0) == 0) {
             id = id.substr(2);
         }
         if (!id.empty() && id[0] == '_') {
             id = id.substr(1);
         }
-        return id;
+        return id; /// NOLINT
     }
 
-    SR_UTILS_NS::StringAtom MakeDisplayName(const std::string_view id) {
-        std::string serializeId = MakeSerializePropertyName(id);
+    SR_UTILS_NS::StringAtom MakeDisplayName(SR_UTILS_NS::StringAtom id) {
+        SR_TRACY_ZONE;
+        SR_GLOBAL_LOCK;
+
+        static ska::flat_hash_map<SR_UTILS_NS::StringAtom, SR_UTILS_NS::StringAtom> cache;
+        if (auto&& pIt = cache.find(id); pIt != cache.end()) {
+            return pIt->second;
+        }
+
+        std::string serializeId = std::string(MakeSerializePropertyName(id));
 
         serializeId = std::regex_replace(serializeId, std::regex("_+"), " ");
         serializeId = std::regex_replace(serializeId, std::regex("([a-z])([A-Z])"), "$1 $2");
@@ -39,6 +47,7 @@ namespace SR_UTILS_NS::Reflection {
             }
         }
 
+        cache[id] = result;
         return result;
     }
 }

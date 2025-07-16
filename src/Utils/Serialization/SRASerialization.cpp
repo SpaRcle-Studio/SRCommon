@@ -152,23 +152,28 @@ namespace SR_UTILS_NS {
         }
 
         if (!path.IsFile()) {
-            SR_ERROR("SRADeserializer::LoadFromFile() : path is not a file!\n\tPath: " + path.ToString());
+            SR_ERROR("SRADeserializer::LoadFromFile() : path is not a file!\n\tPath: {}", path);
             return false;
         }
 
-        const std::string data = FileSystem::ReadAllText(path.ToStringRef());
-        if (data.empty()) {
-            SR_ERROR("SRADeserializer::LoadFromFile() : empty data!\n\tPath: " + path.ToString());
+        std::string buffer;
+        std::vector<std::string_view> lines = FileSystem::ReadAllTextAsStringViewVector(path, buffer);
+        if (lines.empty()) {
+            SR_ERROR("SRADeserializer::LoadFromFile() : empty data!\n\tPath: {}", path);
             return false;
         }
 
-        return LoadFromString(data);
+        return LoadFromStringsBuffer(lines);
     }
 
     bool SRADeserializer::LoadFromString(const std::string& str) {
+        const std::vector<std::string_view> lines = SR_UTILS_NS::StringUtils::SplitViewWithEmpty(str, "\n");
+        return LoadFromStringsBuffer(lines);
+    }
+
+    bool SRADeserializer::LoadFromStringsBuffer(const std::vector<std::string_view>& lines) {
         SR_TRACY_ZONE;
 
-        const std::vector<std::string_view> lines = SR_UTILS_NS::StringUtils::SplitViewWithEmpty(str, "\n");
         if (lines.empty()) {
             SR_ERROR("SRADeserializer::LoadFromString() : no lines found!");
             return false;
@@ -195,7 +200,7 @@ namespace SR_UTILS_NS {
             const std::string_view depthStr = line.substr(0, line.find_first_of('-'));
             const int32_t depth = FastSToI(depthStr);
             if (depth == 0) {
-                if (!m_stack.empty()) {
+                if (m_stack.size() > 1) {
                     ReportError("Double root on line: "s + std::to_string(i + 1));
                     continue;
                 }
@@ -207,7 +212,7 @@ namespace SR_UTILS_NS {
                 continue;
             }
 
-            while (m_stack.size() + 1 > static_cast<size_t>(depth) && !m_stack.empty()) {
+            while (m_stack.size() > static_cast<size_t>(depth) && m_stack.size() > 1) {
                 m_stack.pop_back();
             }
 
@@ -223,7 +228,7 @@ namespace SR_UTILS_NS {
                     auto& node = GetCurrentNode();
                     auto&& newNode = node.children.emplace_back();
                     newNode.id = SerializationId::CreateFromString(line.substr(line.find_first_of(':') + 1));
-                    m_stack.emplace_back(node.children.size() - 1);
+                    m_stack.emplace_back(&newNode);
                     continue;
                 }
                 case 'o': {
@@ -232,7 +237,7 @@ namespace SR_UTILS_NS {
                     auto&& newNode = node.children.emplace_back();
                     newNode.id = SerializationId::CreateFromString(line.substr(line.find_first_of(':') + 1));
                     newNode.type = SerializationDataType::Object;
-                    m_stack.emplace_back(node.children.size() - 1);
+                    m_stack.emplace_back(&newNode);
                     break;
                 }
                 case 'a': {
@@ -241,7 +246,7 @@ namespace SR_UTILS_NS {
                     auto&& newNode = node.children.emplace_back();
                     newNode.id = SerializationId::CreateFromString(line.substr(line.find_first_of(':') + 1));
                     newNode.type = SerializationDataType::Array;
-                    m_stack.emplace_back(node.children.size() - 1);
+                    m_stack.emplace_back(&newNode);
                     break;
                 }
                 case 'k': {
@@ -250,7 +255,7 @@ namespace SR_UTILS_NS {
                     auto&& newNode = node.children.emplace_back();
                     newNode.id = SerializationId::CreateFromString(line.substr(line.find_first_of(':') + 1));
                     newNode.type = SerializationDataType::Item;
-                    m_stack.emplace_back(node.children.size() - 1);
+                    m_stack.emplace_back(&newNode);
                     break;
                 }
                 case 's': {

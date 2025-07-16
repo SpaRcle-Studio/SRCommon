@@ -56,6 +56,8 @@ namespace SR_UTILS_NS {
     }
 
     SRClass* Factory::CreateBase(SR_UTILS_NS::StringAtom name) const noexcept {
+        SR_TRACY_ZONE;
+
         auto&& pIt = m_types.find(name);
 
         if (pIt != m_types.end()) {

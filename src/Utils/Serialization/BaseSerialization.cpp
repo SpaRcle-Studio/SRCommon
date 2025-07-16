@@ -6,29 +6,12 @@
 #include <Utils/Localization/Encoding.h>
 
 namespace SR_UTILS_NS {
-    SerializationNode& IBaseSerialization::GetNode(const std::vector<uint64_t>& stack) noexcept {
-        return const_cast<SerializationNode&>(static_cast<const IBaseSerialization*>(this)->GetNode(stack));
-    }
+    IBaseSerialization::IBaseSerialization() {
+        m_walker.reserve(64);
+        m_stack.reserve(64);
 
-    const SerializationNode& IBaseSerialization::GetNode(const std::vector<uint64_t>& stack) const noexcept {
-        SR_TRACY_ZONE;
-
-        if (stack.empty()) {
-            return m_root;
-        }
-        const std::vector<SerializationNode>* current = &m_root.children;
-        for (uint64_t i = 0; i < stack.size(); ++i) {
-            if (current->size() <= stack[i]) {
-                SR_ERROR("IBaseSerialization::GetNode() : invalid stack!");
-                return m_root;
-            }
-            if (i == stack.size() - 1) {
-                return (*current)[stack[i]];
-            }
-            current = &current->at(stack[i]).children;
-        }
-        SR_ERROR("IBaseSerialization::GetNode() : invalid stack!");
-        return m_root;
+        m_walker.emplace_back(&m_root);
+        m_stack.emplace_back(&m_root);
     }
 
     bool IBaseSerialization::SaveToFileImpl(const SR_UTILS_NS::Path& path) const {
@@ -93,7 +76,7 @@ namespace SR_UTILS_NS {
 
         SerializationNode node(id, SerializationDataType::Item);
         currentNode.children.emplace_back(node);
-        GetImpl().m_stack.emplace_back(GetImpl().GetCurrentNode().children.size() - 1);
+        GetImpl().m_stack.emplace_back(&currentNode.children.back());
     }
 
     void IBaseSerializer::EndItem() {
@@ -102,25 +85,31 @@ namespace SR_UTILS_NS {
     }
 
     void IBaseSerializer::BeginObject(const SerializationId& name) {
+        SR_TRACY_ZONE;
         SerializationNode node(name, SerializationDataType::Object);
-        GetImpl().GetCurrentNode().children.emplace_back(node);
-        GetImpl().m_stack.emplace_back(GetImpl().GetCurrentNode().children.size() - 1);
+        auto&& currentNode = GetImpl().GetCurrentNode();
+        currentNode.children.emplace_back(node);
+        GetImpl().m_stack.emplace_back(&currentNode.children.back());
     }
 
     void IBaseSerializer::EndObject() {
+        SR_TRACY_ZONE;
         SRAssert2(GetImpl().GetCurrentNode().type == SerializationDataType::Object, "IBaseSerializer::EndObject() : invalid node type!");
         SRAssert2(!GetImpl().m_stack.empty(), "IBaseSerializer::EndObject() : invalid stack size!");
         GetImpl().m_stack.pop_back();
     }
 
     void IBaseSerializer::BeginArray(const uint64_t size, const SerializationId& name) {
+        SR_TRACY_ZONE;
         SerializationNode node(name, SerializationDataType::Array);
         node.children.reserve(size);
-        GetImpl().GetCurrentNode().children.emplace_back(node);
-        GetImpl().m_stack.emplace_back(GetImpl().GetCurrentNode().children.size() - 1);
+        auto&& currentNode = GetImpl().GetCurrentNode();
+        currentNode.children.emplace_back(node);
+        GetImpl().m_stack.emplace_back(&currentNode.children.back());
     }
 
     void IBaseSerializer::EndArray() {
+        SR_TRACY_ZONE;
         SRAssert2(GetImpl().GetCurrentNode().type == SerializationDataType::Array, "IBaseSerializer::EndArray() : invalid node type!");
         SRAssert2(!GetImpl().m_stack.empty(), "IBaseSerializer::EndArray() : invalid stack size!");
         GetImpl().m_stack.pop_back();
@@ -133,6 +122,10 @@ namespace SR_UTILS_NS {
     }
 
     /// ========================================== IBaseDeserializer ===================================================
+
+    IBaseDeserializer::IBaseDeserializer()
+        : Super()
+    { }
 
     bool IBaseDeserializer::IsDefault(const SerializationId& name) const noexcept {
         for (auto&& child : GetImpl().GetWalkNode().children) {
@@ -151,7 +144,7 @@ namespace SR_UTILS_NS {
         if (node.children[index].id.GetHash() != id.GetHash()) {
             return false;
         }
-        GetImpl().m_walker.emplace_back(index);
+        GetImpl().m_walker.emplace_back(&node.children[index]);
         return true;
     }
 
@@ -175,7 +168,7 @@ namespace SR_UTILS_NS {
 
         for (uint64_t i = 0; i < node.children.size(); ++i) {
             if (node.children[i].id.GetHash() == id.GetHash()) {
-                GetImpl().m_walker.emplace_back(i);
+                GetImpl().m_walker.emplace_back(&node.children[i]);
                 return true;
             }
         }
@@ -202,7 +195,7 @@ namespace SR_UTILS_NS {
                 if (node.children[i].children.empty()) {
                     return 0;
                 }
-                GetImpl().m_walker.emplace_back(i);
+                GetImpl().m_walker.emplace_back(&node.children[i]);
                 return node.children[i].children.size();
             }
         }

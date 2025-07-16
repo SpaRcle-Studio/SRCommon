@@ -43,11 +43,66 @@ namespace SR_UTILS_NS {
         return buffer;
     }
 
+    SR_COMMON_DLL_API std::vector<std::string_view> FileSystem::ReadAllTextAsStringViewVector(const Path& path, std::string& buffer) {
+        SR_TRACY_ZONE;
+        std::vector<std::string_view> result;
+
+        // Открываем файл в бинарном режиме и сразу получаем размер
+        std::ifstream file(path.c_str(), std::ios::binary | std::ios::ate);
+        if (!file) {
+            return result;
+        }
+
+        const std::streamsize size = file.tellg();
+        if (size <= 0) {
+            return result;
+        }
+
+        buffer.resize(static_cast<size_t>(size));
+        file.seekg(0, std::ios::beg);
+        if (!file.read(buffer.data(), size)) {
+            buffer.clear();
+            return result;
+        }
+
+        result.reserve(buffer.size() / 32); // Предварительно резервируем память для строк
+
+        // Разбиваем buffer на строки, каждая строка — отдельный string_view
+        const char* start = buffer.data();
+        const char* end = buffer.data() + buffer.size();
+        const char* line_start = start;
+
+        for (const char* ptr = start; ptr < end; ++ptr) {
+            if (*ptr == '\n') {
+                size_t len = ptr - line_start;
+                if (len > 0 && *(ptr - 1) == '\r') {
+                    --len;  // Убираем \r для Windows-строк
+                }
+                result.emplace_back(line_start, len);
+                line_start = ptr + 1;
+            }
+        }
+
+        // Последняя строка (если файл не заканчивается на \n)
+        if (line_start < end) {
+            size_t len = end - line_start;
+            result.emplace_back(line_start, len);
+        }
+
+        return result;
+    }
+
     SR_COMMON_DLL_API std::string FileSystem::ReadAllText(const std::string& path) {
         SR_TRACY_ZONE;
 
         std::string data = std::string();
         std::ifstream stream(path, std::ios::in);
+
+        stream.seekg(0, std::ios::end);
+        std::streampos bytes = stream.tellg();
+        stream.seekg(0, std::ios::beg);
+        data.reserve(bytes);
+
         if (stream.is_open()) {
             std::string line;
             bool first = false;
@@ -56,8 +111,10 @@ namespace SR_UTILS_NS {
                     first = true;
                     data += line;
                 }
-                else
-                    data += "\n" + line;
+                else {
+                    data += "\n";
+                    data += line;
+                }
             }
             stream.close();
         }
