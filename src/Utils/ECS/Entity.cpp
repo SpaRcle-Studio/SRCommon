@@ -3,6 +3,7 @@
 //
 
 #include <Utils/ECS/Entity.h>
+#include <Utils/Reflection/SRClassUtils.h>
 
 #include <Codegen/Entity.generated.hpp>
 
@@ -100,7 +101,6 @@ namespace SR_UTILS_NS {
 
     Entity::~Entity() {
         UnregisterEntity();
-        m_entityMessages.ClearContainer();
     }
 
     void Entity::SetEntityController(EntityController* pEntityController) {
@@ -118,6 +118,37 @@ namespace SR_UTILS_NS {
             m_pEntityController->Unregister(m_entityId);
             m_pEntityController = nullptr;
         }
+    }
+
+    void Entity::OnPostLoad() {
+        Super::OnPostLoad();
+    }
+
+    void Entity::OnEntityIdReplaced(const EntityReplaceMap& replaceMap) {
+        if (replaceMap.empty()) {
+            return;
+        }
+
+        GetMeta()->ForEachSRClass(*this, [&replaceMap](SR_UTILS_NS::SRClass& srClass) {
+            if (srClass.GetMeta()->GetFactoryName() == EntityRefBase::GetClassStaticName()) {
+                static_cast<EntityRefBase&>(srClass).OnEntityIdReplaced(replaceMap);
+            }
+        });
+    }
+
+    void Entity::ResolveRefs() {
+        SR_TRACY_ZONE;
+
+        if (!m_pEntityController) {
+            SRHalt("Entity controller is not set!");
+            return;
+        }
+
+        GetMeta()->ForEachSRClass(*this, [pController = m_pEntityController](SR_UTILS_NS::SRClass& srClass) {
+            if (srClass.GetMeta()->GetFactoryName() == EntityRefBase::GetClassStaticName()) {
+                static_cast<EntityRefBase&>(srClass).SetEntityController(pController);
+            }
+        });
     }
 
     //void Entity::SetEntityPath(const EntityPath &path) {

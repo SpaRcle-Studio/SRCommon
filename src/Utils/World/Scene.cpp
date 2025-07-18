@@ -359,6 +359,8 @@ namespace SR_WORLD_NS {
     }
 
     void Scene::OnPostLoad() {
+        SR_TRACY_ZONE;
+
         if (m_logic) {
             m_logic->SetScene(this);
         }
@@ -412,13 +414,15 @@ namespace SR_WORLD_NS {
         RegisterSceneObjectImpl(pSO);
         pSO->SetScene(this);
 
-        for (auto& entities : m_registerEntityCache | std::views::values) {
+        EntityController& entityController = *GetEntityController();
+
+        for (const auto& entities : m_registerEntityCache | std::views::values) {
             m_registerEntityIdReplaceCache.clear();
 
             for (auto&& pEntity : entities) {
                 const EntityId oldEntityId = pEntity->GetEntityId();
                 pEntity->SetEntityId(SR_ID_INVALID);
-                const EntityId newEntityId = GetEntityController()->Register(pEntity, oldEntityId);
+                const EntityId newEntityId = entityController.Register(pEntity, oldEntityId);
 
                 if (oldEntityId != SR_ID_INVALID) {
                     m_registerEntityIdReplaceCache[newEntityId] = oldEntityId;
@@ -433,6 +437,8 @@ namespace SR_WORLD_NS {
         }
 
         m_registerEntityCache.clear();
+
+        pSO->ResolveRefs();
     }
 
     void Scene::RegisterSceneObjectImpl(const Scene::SceneObjectPtr& pSO) {
@@ -449,9 +455,9 @@ namespace SR_WORLD_NS {
             ProcessNewSO(pSO);
         }
 
-        m_registerEntityCache[pSO->GetPrefab()].emplace_back(static_cast<Entity*>(const_cast<SceneObject*>(pSO.Get())));
+        m_registerEntityCache[pSO->GetPrefab().GetRawPtr()].emplace_back(static_cast<Entity*>(const_cast<SceneObject*>(pSO.Get())));
         for (auto&& pComponent : pSO->GetComponents()) {
-            m_registerEntityCache[pSO->GetPrefab()].emplace_back(static_cast<Entity*>(const_cast<Component*>(pComponent.Get())));
+            m_registerEntityCache[pSO->GetPrefab().GetRawPtr()].emplace_back(static_cast<Entity*>(const_cast<Component*>(pComponent.Get())));
         }
 
         for (auto&& pChild : pSO->GetChildrenRef()) {

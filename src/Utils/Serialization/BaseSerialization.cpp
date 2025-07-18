@@ -42,6 +42,13 @@ namespace SR_UTILS_NS {
         GetCurrentNode().children.emplace_back(node);
     }
 
+    IBaseSerialization::~IBaseSerialization() {
+        SR_TRACY_ZONE;
+        m_stack.Destroy();
+        m_walker.Destroy();
+        m_root.Clear();
+    }
+
     /// ========================================== IBaseSerializer =====================================================
 
     void IBaseSerializer::WriteString(std::string_view value, const SerializationId& name) {

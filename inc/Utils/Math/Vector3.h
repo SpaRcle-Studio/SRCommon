@@ -9,11 +9,6 @@
 #include <Utils/Math/Quaternion.h>
 
 namespace SR_MATH_NS {
-    /// @scriptableClass
-    /// @templateImpl(FVector3, T = float_t)
-    /// @templateImpl(IVector3, T = int32_t)
-    /// @templateImpl(UVector3, T = uint32_t)
-    /// @templateImpl(BVector3, T = bool)
     template<typename T> struct Vector3 {
     public:
         using ValueType = T;

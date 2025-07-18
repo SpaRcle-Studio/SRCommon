@@ -8,14 +8,12 @@
 
 namespace SR_UTILS_NS {
     void Serializable::Save(ISerializer& serializer) const {
-        SR_TRACY_ZONE;
         const_cast<Serializable&>(static_cast<const Serializable&>(*this)).OnPreSave();
         GetMeta()->Save(serializer, *this);
         const_cast<Serializable&>(static_cast<const Serializable&>(*this)).OnPostSave();
     }
 
     bool Serializable::Load(IDeserializer& deserializer) {
-        SR_TRACY_ZONE;
         const_cast<Serializable&>(static_cast<const Serializable&>(*this)).OnPreLoad();
         if (!GetMeta()->Load(deserializer, *this)) {
             return false;

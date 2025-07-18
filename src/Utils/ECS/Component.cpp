@@ -21,20 +21,36 @@ namespace SR_UTILS_NS {
     }
 
     void Component::SetParent(IComponentable* pParent) {
+        SR_TRACY_ZONE;
+
+        /*if ((m_parent = pParent)) {
+            if (m_parent->GetMeta()->IsSameOrInherited(SceneObject::GetClassStaticName())) {
+                m_sceneObject = static_cast<SceneObject*>(m_parent);
+                m_scene = m_sceneObject->GetScene();
+                return;
+            }
+            else if (m_parent->GetMeta()->IsSameOrInherited(SR_WORLD_NS::Scene::GetClassStaticName())) {
+                m_sceneObject.Reset();
+                m_scene = static_cast<SR_WORLD_NS::Scene*>(m_parent);
+                return;
+            }
+        }*/
+
         if ((m_parent = pParent)) {
-            if (auto&& pSceneObject = dynamic_cast<SR_UTILS_NS::SceneObject*>(m_parent)) {
+            if (auto&& pSceneObject = dynamic_cast<SceneObject*>(m_parent)) {
                 m_sceneObject = pSceneObject;
                 m_scene = m_sceneObject->GetScene();
+                return;
             }
-            else {
+            else if (auto&& pScene = dynamic_cast<SR_WORLD_NS::Scene*>(m_parent)) {
                 m_sceneObject.Reset();
-                m_scene = dynamic_cast<SR_WORLD_NS::Scene*>(m_parent);
+                m_scene = pScene;
+                return;
             }
         }
-        else {
-            m_sceneObject.Reset();
-            m_scene = nullptr;
-        }
+
+        m_sceneObject.Reset();
+        m_scene = nullptr;
     }
 
     void Component::SetEnabled(bool value) {

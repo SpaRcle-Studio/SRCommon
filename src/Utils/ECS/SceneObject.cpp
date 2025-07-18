@@ -6,10 +6,10 @@
 #include <Utils/ECS/LayerManager.h>
 #include <Utils/ECS/Prefab.h>
 #include <Utils/ECS/SceneObject.h>
+#include <Utils/ECS/GameObject.h>
+#include <Utils/Reflection/SRClassUtils.h>
 #include <Utils/World/SceneUpdater.h>
 #include <Utils/World/Scene.h>
-
-#include <Utils/ECS/GameObject.h>
 
 #include <Codegen/SceneObject.generated.hpp>
 
@@ -58,26 +58,26 @@ namespace SR_UTILS_NS {
             return false;
         }
 
-        SR_UTILS_NS::SerializationId prefabId = SR_UTILS_NS::SerializationId::Create("prefab");
-        SR_UTILS_NS::Path prefabPath;
+        static constexpr SR_UTILS_NS::SerializationId prefabId = SR_UTILS_NS::SerializationId::Create("prefab");
+        std::string prefabPath;
         deserializer.ReadString(prefabPath, prefabId);
 
         if (!prefabPath.empty()) {
             if (auto&& pPrefab = SR_UTILS_NS::Prefab::Load(prefabPath)) {
                 if (GetComponentsCount() > 0) {
-                    SR_ERROR("SceneObject::Load() : prefab not loaded, but components are present! Path: {}", prefabPath.ToString());
+                    SR_ERROR("SceneObject::Load() : prefab not loaded, but components are present! Path: {}", prefabPath);
                     RemoveComponents();
                 }
 
                 if (!GetChildrenRef().empty()) {
-                    SR_ERROR("SceneObject::Load() : prefab not loaded, but children are present! Path: {}", prefabPath.ToString());
+                    SR_ERROR("SceneObject::Load() : prefab not loaded, but children are present! Path: {}", prefabPath);
                     DestroyChildren();
                 }
 
                 m_isPrefabLoadingState = true;
 
                 if (!pPrefab->LoadToSO(this)) {
-                    SR_ERROR("SceneObject::Load() : failed to apply prefab! Path: {}", prefabPath.ToString());
+                    SR_ERROR("SceneObject::Load() : failed to apply prefab! Path: {}", prefabPath);
                 }
                 else {
                     SetPrefab(pPrefab, true);
@@ -86,7 +86,7 @@ namespace SR_UTILS_NS {
                 m_isPrefabLoadingState = false;
             }
             else {
-                SR_ERROR("SceneObject::Load() : failed to load prefab! Path: {}", prefabPath.ToString());
+                SR_ERROR("SceneObject::Load() : failed to load prefab! Path: {}", prefabPath);
             }
         }
 
@@ -392,9 +392,8 @@ namespace SR_UTILS_NS {
     }
 
     void SceneObject::OnPostLoad() {
-        SR_TRACY_ZONE;
         for (auto&& pChild : m_children) {
-            pChild->SetParent(this);
+            pChild->SetParent(GetThis().StaticCast<SceneObject>());
         }
         Super::OnPostLoad();
     }
@@ -496,7 +495,6 @@ namespace SR_UTILS_NS {
     }
 
     void SceneObject::SetName(const ObjectNameT name) {
-        SR_TRACY_ZONE;
         m_name = name;
         if (m_scene) {
             m_scene->OnChanged();
@@ -527,11 +525,11 @@ namespace SR_UTILS_NS {
     }
 
     bool SceneObject::SetParent(const SceneObject::Ptr& pParent) {
-        SR_TRACY_ZONE;
-
         if (pParent == m_parent) {
             return false;
         }
+
+        SR_TRACY_ZONE;
 
         const SceneObject::Ptr pOldParent = m_parent;
         m_parent = pParent;

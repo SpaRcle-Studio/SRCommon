@@ -11,7 +11,6 @@
 namespace SR_UTILS_NS {
     class StringHashInfo;
 
-    /// @scriptableClass
     class SR_COMMON_DLL_API StringAtom {
         static std::string DEFAULT;
         static StringHashInfo* DEFAULT_STRING_INFO;

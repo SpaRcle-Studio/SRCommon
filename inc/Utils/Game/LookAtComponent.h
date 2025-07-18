@@ -5,7 +5,7 @@
 #ifndef SR_ENGINE_LOOKATCOMPONENT_H
 #define SR_ENGINE_LOOKATCOMPONENT_H
 
-#include <Utils/ECS/EntityRef.h>
+#include <Utils/ECS/EntityRefOld.h>
 #include <Utils/ECS/Component.h>
 #include <Utils/ECS/GameObject.h>
 #include <Utils/ECS/Transform.h>
@@ -35,7 +35,7 @@ namespace SR_UTILS_NS {
         SR_NODISCARD SR_MATH_NS::FVector3 GetOffset() const noexcept { return m_offset; }
         SR_NODISCARD SR_MATH_NS::FVector3 GetUp() const noexcept;
         SR_NODISCARD SR_MATH_NS::FVector3 GetDirection() const noexcept { return m_direction; }
-        SR_NODISCARD SR_UTILS_NS::EntityRef& GetTarget() { return m_target; }
+        SR_NODISCARD SR_UTILS_NS::EntityRefOld& GetTarget() { return m_target; }
         SR_NODISCARD float_t GetDelay() const noexcept { return m_delay; }
         SR_NODISCARD LookAtAxis GetAxis() const noexcept { return m_axis; }
 
@@ -44,7 +44,7 @@ namespace SR_UTILS_NS {
         bool m_reached = false;
 
         /// @property
-        SR_UTILS_NS::EntityRef m_target;
+        SR_UTILS_NS::EntityRefOld m_target;
         /// @property @getter(GetAxis) @setter(SetAxis)
         LookAtAxis m_axis = LookAtAxis::AxisY;
         /// @property @getter(GetOffset) @setter(SetOffset)

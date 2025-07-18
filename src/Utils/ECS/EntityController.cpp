@@ -67,12 +67,10 @@ namespace SR_UTILS_NS {
     }
 
     EntityId EntityController::Register(const Entity::Ptr& pEntity, EntityId wantedId) {
-        SR_TRACY_ZONE;
-
         SRAssert(pEntity);
         SRAssert2(!pEntity->IsEntityRegistered(), "Entity already registered!");
 
-        if (pEntity->GetEntityId() != SR_ID_INVALID) {
+        if (pEntity->GetEntityId() != SR_ID_INVALID) SR_UNLIKELY_ATTRIBUTE {
             SRHalt("Entity already has id! Id: {}", pEntity->GetEntityId());
             return pEntity->GetEntityId();
         }

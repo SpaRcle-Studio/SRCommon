@@ -19,7 +19,6 @@ namespace SR_UTILS_NS {
 
     static fmt::text_style GetTextStyleColorByLogType(DebugLogType type);
 
-    /// @scriptableClass
     class Debug : public Singleton<Debug> {
         SR_REGISTER_SINGLETON(Debug);
     public:

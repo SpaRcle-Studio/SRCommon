@@ -40,7 +40,7 @@ namespace SR_UTILS_NS {
     	return false;
     }
 
-    void SRClassMeta::ForEachProperty(const std::function<void(const SR_UTILS_NS::Reflection::Property& property, uint64_t index)>& func, uint64_t* pIndex) const  {
+    void SRClassMeta::ForEachProperty(const std::function<void(const SR_UTILS_NS::Reflection::Property& property, uint64_t index)>& func, uint64_t* pIndex) const {
     	uint64_t index = 0;
     	if (!pIndex) {
     		pIndex = &index;
@@ -114,6 +114,24 @@ namespace SR_UTILS_NS {
 
     SRClass* SRClassMeta::Allocate() const noexcept {
         return nullptr;
+    }
+
+    void SRClassMeta::ForEachSRClass(SRClass& srClass, const SR_HTYPES_NS::Function<void(SRClass&)>& function) const noexcept {
+        for (auto&& pBase : GetBaseMetas()) {
+            pBase->ForEachSRClass(srClass, function);
+        }
+    }
+
+    bool SRClassMeta::IsSameOrInherited(SR_UTILS_NS::StringAtom name) const {
+        if (GetFactoryName() == name) {
+            return true;
+        }
+        for (auto&& pBase : GetBaseMetas()) {
+            if (pBase->IsSameOrInherited(name)) {
+                return true;
+            }
+        }
+        return false;
     }
 }
 

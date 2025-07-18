@@ -16,7 +16,6 @@ namespace SR_WORLD_NS {
 }
 
 namespace SR_UTILS_NS {
-    /// @scriptableClass
     class IComponentable : public Entity {
         using Super = Entity;
         SR_CLASS()

@@ -60,7 +60,7 @@ namespace SR_HTYPES_NS {
             Path&& id = Path(rawPath).RemoveSubPath(ResourceManager::Instance().GetResPath());
 
             auto&& paramsHash = SR_HASH(params);
-            id = id.EmplaceFront(SR_FORMAT("{}|", paramsHash));
+            id = SR_FORMAT("{}|", paramsHash) + id.ToStringRef();
 
             if (auto&& pResource = ResourceManager::Instance().Find<RawMesh>(id)) {
                 pRawMesh = pResource;

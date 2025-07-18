@@ -1,5 +1,6 @@
 #include <Utils/stdInclude.h>
 
+#include "../src/Utils/ECS/EntityRef.cpp"
 #include "../src/Utils/ECS/SceneObject.cpp"
 #include "../src/Utils/ECS/Component.cpp"
 #include "../src/Utils/ECS/IComponentable.cpp"
@@ -11,7 +12,7 @@
 #include "../src/Utils/ECS/Transform3D.cpp"
 #include "../src/Utils/ECS/Transform2D.cpp"
 #include "../src/Utils/ECS/TransformZero.cpp"
-#include "../src/Utils/ECS/EntityRef.cpp"
+#include "../src/Utils/ECS/EntityRefOld.cpp"
 #include "../src/Utils/ECS/EntityRefUtils.cpp"
 #include "../src/Utils/ECS/Prefab.cpp"
 #include "../src/Utils/ECS/TagManager.cpp"

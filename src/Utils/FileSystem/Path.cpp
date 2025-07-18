@@ -10,90 +10,59 @@
 #include <Utils/Serialization/Deserializer.h>
 
 namespace SR_UTILS_NS {
-    SR_COMMON_DLL_API Path::Path()
-        : m_path()
-        , m_name()
-        , m_ext()
-        , m_hash(SR_UINT64_MAX)
-        , m_type(Type::Undefined)
-    { }
-
+    Path::Path() = default;
     Path::~Path() = default;
 
-    SR_COMMON_DLL_API Path::Path(Path &&path) noexcept
+    Path::Path(Path&& path) noexcept
         : m_path(SR_UTILS_NS::Exchange(path.m_path, {}))
-        , m_name(std::exchange(path.m_name, {}))
-        , m_ext(std::exchange(path.m_ext, {}))
         , m_hash(std::exchange(path.m_hash, {}))
-        , m_type(std::exchange(path.m_type, {}))
+        , m_isNormalized(std::exchange(path.m_isNormalized, {}))
     { }
 
-    SR_COMMON_DLL_API Path::Path(std::string_view path)
+    Path::Path(std::string_view path)
         : Path(std::string(path))
     { }
 
-    SR_COMMON_DLL_API Path::Path(std::wstring path)
+    Path::Path(const std::wstring& path)
         : m_path(SR_WS2S(path))
-        , m_name()
-        , m_ext()
-        , m_hash(SR_UINT64_MAX)
-        , m_type(Type::Undefined)
-    {
-        Update();
-        m_hash = SR_HASH_STR(m_path);
-    }
+    { }
 
-    SR_COMMON_DLL_API Path::Path(SR_UTILS_NS::StringAtom stringAtom)
+    Path::Path(SR_UTILS_NS::StringAtom stringAtom)
         : m_path(stringAtom)
-        , m_name()
-        , m_ext()
-        , m_hash(SR_UINT64_MAX)
-        , m_type(Type::Undefined)
-    {
-        Update();
-        m_hash = SR_HASH_STR(m_path);
-    }
+    { }
 
-    SR_COMMON_DLL_API Path::Path(std::string path)
+    Path::Path(std::string path)
         : m_path(std::move(path))
-        , m_name()
-        , m_ext()
-        , m_hash(SR_UINT64_MAX)
-        , m_type(Type::Undefined)
-    {
-        Update();
-        m_hash = SR_HASH_STR(m_path);
-    }
+    { }
 
-    SR_COMMON_DLL_API Path::Path(const char* path)
+    Path::Path(const Path& path) = default;
+
+    Path::Path(const char* path)
         : m_path(path)
-        , m_name()
-        , m_ext()
-        , m_hash(SR_UINT64_MAX)
-        , m_type(Type::Undefined)
-    {
-        Update();
-        m_hash = SR_HASH_STR(m_path);
-    }
+    { }
 
-    SR_COMMON_DLL_API Path Path::Normalize() {
-        NormalizeSelf();
+    Path& Path::operator=(Path&& path) noexcept {
+        m_path = std::exchange(path.m_path, {});
+        m_hash = std::exchange(path.m_hash, {});
+        m_isNormalized = std::exchange(path.m_isNormalized, {});
         return *this;
     }
 
-    SR_COMMON_DLL_API std::string Path::ToString() const {
-        return m_path;
+    Path& Path::operator=(const Path& path) = default;
+
+    std::string Path::ToString() const {
+        return GetNormalized();
     }
 
-    SR_COMMON_DLL_API const std::string& Path::ToStringRef() const {
-        return m_path;
+    const std::string& Path::ToStringRef() const {
+        return GetNormalized();
     }
 
-    SR_COMMON_DLL_API std::string_view Path::ToStringView() const {
-        return m_path;
+    std::string_view Path::ToStringView() const {
+        return GetNormalized();
     }
 
-    SR_COMMON_DLL_API bool Path::IsDir() const {
+    bool Path::IsDir() const {
         return GetType() == Type::Folder;
     }
 
@@ -105,65 +74,50 @@ namespace SR_UTILS_NS {
         return SR_PLATFORM_NS::GetInDirectory(*this, Path::Type::File);
     }
 
-    SR_COMMON_DLL_API std::list<Path> Path::GetAll() const {
+    std::list<Path> Path::GetAll() const {
         return SR_PLATFORM_NS::GetAllInDirectory(*this);
     }
 
-    SR_COMMON_DLL_API std::list<Path> Path::GetFolders() const {
+    std::list<Path> Path::GetFolders() const {
         return SR_PLATFORM_NS::GetInDirectory(*this, Path::Type::Folder);
     }
 
-    SR_COMMON_DLL_API bool Path::Valid() const {
-        return m_type != Type::Undefined;
+    const char* Path::CStr() const {
+        return GetNormalized().c_str();
     }
 
-    SR_COMMON_DLL_API const char* Path::CStr() const {
-        return m_path.c_str();
+    std::string Path::GetExtension() const {
+        return std::string(GetExtensionView());
     }
 
-    SR_COMMON_DLL_API void Path::Update() {
-        SR_TRACY_ZONE;
-
-        NormalizeSelf();
-        ExtractNameAndExt();
+    std::string Path::GetBaseName() const {
+        return std::string(GetBaseNameView());
     }
 
-    SR_COMMON_DLL_API std::string Path::GetExtension() const {
-        return std::string(m_ext);
-    }
-
-    SR_COMMON_DLL_API std::string Path::GetBaseName() const {
-        return std::string(m_name);
-    }
-
-    SR_COMMON_DLL_API Path::Path(const Path& path) {
-        m_path = path.m_path;
-
-        ExtractNameAndExt();
-
-        m_hash = path.m_hash;
-        m_type = path.m_type;
-    }
-
-    SR_COMMON_DLL_API size_t Path::GetHash() const {
+    size_t Path::GetHash() const {
+        if (m_hash == SR_UINT64_MAX) {
+            m_hash = SR_HASH_STR(GetNormalized());
+        }
         return m_hash;
     }
 
-    SR_COMMON_DLL_API Path::Type Path::GetType() const {
-#ifdef SR_WIN32
-    if (m_path.size() < 2 || m_path[1] != ':') {
-        return Type::Undefined;
-    }
-#elif defined(SR_LINUX)
-    if (m_path.empty() || m_path[0] != '/') {
-        return Type::Undefined;
-    }
-#endif
+    Path::Type Path::GetType() const {
+        auto&& normalized = GetNormalized();
+    #ifdef SR_WIN32
+        if (normalized.size() < 2 || normalized[1] != ':') {
+            return Type::Undefined;
+        }
+    #elif defined(SR_LINUX)
+        if (normalized.empty() || normalized[0] != '/') {
+            return Type::Undefined;
+        }
+    #endif
 
         SR_TRACY_ZONE;
-#if defined(SR_MSVC) || defined (SR_LINUX)
+
+    #if defined(SR_MSVC) || defined (SR_LINUX)
         struct stat s{};
-        if(stat(m_path.c_str(), &s) == 0) {
+        if(stat(normalized.c_str(), &s) == 0) {
             if (s.st_mode & S_IFDIR) {
                 return Type::Folder;
             } else if (s.st_mode & S_IFREG) {
@@ -172,80 +126,85 @@ namespace SR_UTILS_NS {
         }
 
         return Type::Undefined;
-#elif defined(SR_WIN32)
-        DWORD attrib = GetFileAttributes(m_path.c_str());
+    #elif defined(SR_WIN32)
+        DWORD attrib = GetFileAttributes(normalized.c_str());
 
         if ((attrib & FILE_ATTRIBUTE_DIRECTORY) != 0)
             return Type::Folder;
 
         return Type::File;
-#elif defined(SR_ANDROID)
+    #elif defined(SR_ANDROID)
         /// TODO: будем считать что мы обращаемся только к файлам. Это заглушка - нужно переделать
         return Type::File;
-#else
+    #else
         SRHalt("Unsupported OS!");
         return Type::Undefined;
-#endif
+    #endif
     }
 
-    SR_COMMON_DLL_API Path Path::Concat(const Path& path) const {
-        if ((!m_path.empty() && m_path.back() != '/') && (!path.IsEmpty() && path.m_path.front() != '/'))
-            return m_path + "/" + path.m_path;
+    Path Path::Concat(const Path& path) const {
+        auto&& normalized = GetNormalized();
 
-        return m_path + path.m_path;
+        if ((!normalized.empty() && normalized.back() != '/') && (!path.IsEmpty() && path.GetNormalized().front() != '/')) {
+            return normalized + "/" + path.GetNormalized();
+        }
+
+        return normalized + path.GetNormalized();
     }
 
-    SR_COMMON_DLL_API bool Path::Exists() const {
+    bool Path::Exists() const {
         return GetType() != Type::Undefined;
     }
 
-    SR_COMMON_DLL_API bool Path::Exists(Type type) const {
+    bool Path::Exists(Type type) const {
         if (type == Type::Undefined) {
             return false;
         }
         return GetType() == type;
     }
 
-    SR_COMMON_DLL_API void Path::NormalizeSelf() {
-        SR_TRACY_ZONE;
-        m_path = FileSystem::NormalizePath(m_path);
-        m_type = GetType();
-    }
+    Path Path::ConcatExt(const std::string& ext) const {
+        auto&& normalized = GetNormalized();
 
-    SR_COMMON_DLL_API Path Path::ConcatExt(const std::string& ext) const {
-        if (ext.empty())
+        if (ext.empty()) {
             return *this;
+        }
 
-        if (ext[0] == '.')
-            return m_path + ext;
+        if (ext[0] == '.') {
+            return normalized + ext;
+        }
 
-        return m_path + "." + ext;
+        return normalized + "." + ext;
     }
 
-    SR_COMMON_DLL_API Path Path::ConcatExt(const std::string_view& ext) const {
+    Path Path::ConcatExt(const std::string_view& ext) const {
         return ConcatExt(std::string(ext));
     }
 
-    SR_COMMON_DLL_API Path Path::ConcatExt(const char* ext) const {
+    Path Path::ConcatExt(const char* ext) const {
         return ConcatExt(std::string(ext));
     }
 
-    SR_COMMON_DLL_API Path Path::ConcatExt(StringAtom ext) const {
+    Path Path::ConcatExt(StringAtom ext) const {
         return ConcatExt(ext.ToStringRef());
     }
 
-    SR_COMMON_DLL_API bool Path::Create() const {
-        if (m_path.empty())
-            return false;
+    bool Path::Create() const {
+        auto&& normalized = GetNormalized();
 
-        if (m_ext.empty()) {
-            return FileSystem::CreatePath(m_path);
+        if (normalized.empty()) {
+            return false;
         }
 
-        return FileSystem::CreatePath(m_path.substr(0, m_path.size() - (m_name.size() + m_ext.size() + 1)));
+        std::string_view extension = GetExtensionView();
+        if (extension.empty()) {
+            return FileSystem::CreatePath(normalized);
+        }
+
+        return FileSystem::CreatePath(normalized.substr(0, normalized.size() - (GetBaseNameView().size() + extension.size() + 1)));
     }
 
-    SR_COMMON_DLL_API bool Path::CreateIfNotExists() const {
+    bool Path::CreateIfNotExists() const {
         if (!Exists()) {
             return Create();
         }
@@ -253,19 +212,20 @@ namespace SR_UTILS_NS {
         return true;
     }
 
-    SR_COMMON_DLL_API void Path::Save(ISerializer& serializer, const SerializationId& id) const {
-        serializer.WriteString(m_path, id);
+    void Path::Save(ISerializer& serializer, const SerializationId& id) const {
+        serializer.WriteString(GetNormalized(), id);
     }
 
-    SR_COMMON_DLL_API void Path::Load(IDeserializer& deserializer, const SerializationId& id) {
+    void Path::Load(IDeserializer& deserializer, const SerializationId& id) {
         deserializer.ReadString(m_path, id);
-        Update();
-        m_hash = SR_HASH_STR(m_path);
+        m_isNormalized = false;
     }
 
-    SR_COMMON_DLL_API bool Path::Make(Type type) const {
-        if (m_path.empty())
+    bool Path::Make(Type type) const {
+        auto&& normalized = GetNormalized();
+        if (normalized.empty()) {
             return false;
+        }
 
         switch (type) {
             default:
@@ -273,147 +233,191 @@ namespace SR_UTILS_NS {
                 SR_FALLTHROUGH;
             case Type::Undefined:
             case Type::File:
-                return FileSystem::CreatePath(m_path.substr(0, m_path.size() - (m_name.size() + m_ext.size() + 1)));
+                return FileSystem::CreatePath(normalized.substr(0, normalized.size() - (GetBaseNameView().size() + GetExtensionView().size() + 1)));
             case Type::Folder:
-                return FileSystem::CreatePath(m_path);
+                return FileSystem::CreatePath(normalized);
         }
     }
 
-    SR_COMMON_DLL_API Path Path::GetPrevious() const {
-        if (m_path.empty())
-            return m_path;
-
-        if (const auto&& pos = m_path.rfind('/'); pos != std::string::npos) {
-            if (pos <= 1)
-                return m_path;
-
-            return m_path.substr(0, pos);
+    Path Path::GetPrevious() const {
+        auto&& normalized = GetNormalized();
+        if (normalized.empty()) {
+            return normalized;
         }
 
-        return m_path;
+        if (const auto&& pos = normalized.rfind('/'); pos != std::string::npos) {
+            if (pos <= 1) {
+                return normalized;
+            }
+
+            return normalized.substr(0, pos);
+        }
+
+        return normalized;
     }
 
-    SR_COMMON_DLL_API Path Path::GetFolder() const {
+    Path Path::GetFolder() const {
         switch (GetType()) {
             case Type::File:
-                return SR_UTILS_NS::StringUtils::GetDirToFileFromFullPath(m_path);
+                return SR_UTILS_NS::StringUtils::GetDirToFileFromFullPath(GetNormalized());
             default:
                 SRHalt0();
                 SR_FALLTHROUGH;
             case Type::Folder:
             case Type::Undefined:
-                return m_path;
+                return GetNormalized();
         }
     }
 
-    SR_COMMON_DLL_API std::string_view Path::GetExtensionView() const {
-        return m_ext;
+    std::string_view Path::GetExtensionView() const {
+        auto&& normalized = GetNormalized();
+
+        SizeType size = normalized.size();
+
+        for (SizeType i = size; i-- > 0;) {
+            char c = normalized[i];
+            if (c == '/' || c == '\\') {
+                break;  // нет расширения
+            }
+            if (c == '.') {
+                // Если точка последняя — расширения нет
+                if (i + 1 == size) {
+                    return std::string_view();
+                }
+                return std::string_view(normalized).substr(i + 1);
+            }
+        }
+
+        return std::string_view();
     }
 
-    SR_COMMON_DLL_API std::string_view Path::GetBaseNameView() const {
-        return m_name;
+    std::string_view Path::GetBaseNameView() const {
+        auto&& normalized = GetNormalized();
+
+        SizeType size = normalized.size();
+        SizeType dotPos = size;
+        SizeType slashPos = 0;
+
+        for (SizeType i = size; i-- > 0;) {
+            char c = normalized[i];
+            if (c == '/' || c == '\\') {
+                slashPos = i + 1;
+                break;
+            }
+            else if (c == '.' && dotPos == size) {
+                dotPos = i;
+            }
+        }
+
+        if (dotPos < slashPos) {
+            dotPos = size;
+        }
+
+        return std::string_view(normalized).substr(slashPos, dotPos - slashPos);
     }
 
-    SR_COMMON_DLL_API uint64_t Path::GetFileHash() const {
-        return FileSystem::GetFileHash(m_path);
+    uint64_t Path::GetFileHash() const {
+        return FileSystem::GetFileHash(GetNormalized());
     }
 
-    SR_COMMON_DLL_API uint64_t Path::GetFolderHash(uint64_t deep) const {
-        return FileSystem::GetFolderHash(m_path, deep);
+    uint64_t Path::GetFolderHash(uint64_t deep) const {
+        return FileSystem::GetFolderHash(GetNormalized(), deep);
     }
 
-    SR_COMMON_DLL_API bool Path::IsAbs() const {
-        return Platform::IsAbsolutePath(m_path);
+    bool Path::IsAbs() const {
+        return Platform::IsAbsolutePath(GetNormalized());
     }
 
-    SR_COMMON_DLL_API bool Path::IsSubPath(const Path &subPath) const {
-        return m_path.find(subPath.m_path) != std::string::npos;
+    bool Path::IsSubPath(const Path &subPath) const {
+        return GetNormalized().find(subPath.GetNormalized()) != std::string::npos;
     }
 
-    SR_COMMON_DLL_API Path Path::RemoveSubPath(const Path &subPath) const {
-        auto&& index = m_path.find(subPath.m_path);
+    Path Path::RemoveSubPath(const Path &subPath) const {
+        auto&& normalized = GetNormalized();
+        auto&& index = normalized.find(subPath.ToStringRef());
 
         if (index == std::string::npos) {
             return *this;
         }
 
-        if (m_path.size() == subPath.m_path.size()) {
+        if (normalized.size() == subPath.ToStringRef().size()) {
             return Path();
         }
 
-        return StringUtils::Remove(m_path, index, subPath.m_path.size() + 1);
+        return StringUtils::Remove(normalized, index, subPath.ToStringRef().size() + 1);
     }
 
-    SR_COMMON_DLL_API Path Path::SelfRemoveSubPath(const Path &subPath) const {
-        auto&& index = m_path.find(subPath.m_path);
-
-        if (index == std::string::npos) {
-            return std::move(*this);
-        }
-
-        if (m_path.size() == subPath.m_path.size()) {
-            return Path();
-        }
-
-        return StringUtils::Remove(m_path, index, subPath.m_path.size() + 1);
+    bool Path::IsHidden() const {
+        return Platform::FileIsHidden(GetNormalized());
     }
 
-    SR_COMMON_DLL_API bool Path::IsHidden() const {
-        return Platform::FileIsHidden(m_path);
+    std::wstring Path::ToUnicodeString() const {
+        return SR_S2WS(GetNormalized());
     }
 
-    SR_COMMON_DLL_API std::wstring Path::ToUnicodeString() const {
-        return SR_S2WS(m_path);
-    }
-
-    SR_COMMON_DLL_API std::wstring Path::ToWinApiPath() const {
+    std::wstring Path::ToWinApiPath() const {
         auto&& wstring = ToUnicodeString();
         return SR_UTILS_NS::StringUtils::ReplaceAll<std::wstring>(wstring, L"/", L"\\");
     }
 
-    SR_COMMON_DLL_API bool Path::IsEmpty() const {
-        return m_path.empty();
+    bool Path::IsEmpty() const {
+        return GetNormalized().empty();
     }
 
-    SR_NODISCARD SR_COMMON_DLL_API bool Path::IsDirEmpty() const {
+    bool Path::IsDirEmpty() const {
         return GetAll().empty();
     }
 
-    SR_COMMON_DLL_API bool Path::Copy(const Path &destination) const {
+    bool Path::Copy(const Path &destination) const {
         SR_TRACY_ZONE;
         return Platform::Copy(*this, destination);
     }
 
-    SR_COMMON_DLL_API std::string Path::GetBaseNameAndExt() const {
-        if (m_ext.empty()) {
-            return std::string(m_name);
+     std::string_view Path::GetBaseNameAndExtView() const {
+        auto&& normalized = GetNormalized();
+        if (const auto pos = normalized.rfind('/'); pos != std::string::npos) {
+            return std::string_view(normalized.data() + pos + 1, normalized.size() - pos - 1);
         }
-        return std::string(m_name) + "." + std::string(m_ext);
+        return normalized;
     }
 
-    SR_COMMON_DLL_API std::string_view Path::View() const {
-        return m_path;
+     std::string Path::GetBaseNameAndExt() const {
+        return std::string(GetBaseNameAndExtView());
     }
 
-    SR_COMMON_DLL_API std::string Path::GetWithoutExtension() const {
-        if (m_ext.empty()) {
-            return m_path;
+    std::string_view Path::View() const {
+        return GetNormalized();
+    }
+
+    std::string_view Path::GetWithoutExtensionView() const {
+        auto&& normalized = GetNormalized();
+        SR_UTILS_NS::SizeType pos = std::string::npos;
+        for (uint32_t i = normalized.size(); i > 0; --i) {
+            if (normalized[i] == '/') {
+                return normalized;
+            }
+            if (normalized[i] == '.') {
+                pos = i;
+                break;
+            }
         }
 
-        std::string path = m_path;
-        path.resize(path.size() - (m_ext.size() + 1));
-        return path;
+        if (pos == std::string::npos) {
+            return normalized;
+        }
+
+        return std::string_view(normalized.data(), pos);
     }
 
-    SR_COMMON_DLL_API bool Path::Contains(const std::string &str) const {
-        return m_path.find(str) != std::string::npos;
+    std::string Path::GetWithoutExtension() const {
+        return std::string(GetWithoutExtensionView());
     }
 
-    SR_COMMON_DLL_API Path Path::EmplaceFront(const std::string &str) const {
-        return str + m_path;
+    bool Path::Contains(const std::string_view& str) const {
+        return GetNormalized().find(str) != std::string::npos;
     }
 
-    SR_COMMON_DLL_API std::string Path::ConvertToFileName() const {
+    std::string Path::ConvertToFileName() const {
         std::string str = ToString();
 
         if (str.size() >= 2 && str[1] == ':') {
@@ -429,91 +433,45 @@ namespace SR_UTILS_NS {
         return str;
     }
 
-    SR_COMMON_DLL_API void Path::ExtractNameAndExt() {
-        if (auto&& index = m_path.find_last_of("/\\"); index == std::string::npos) {
-            if (index = m_path.find_last_of('.'); index != std::string::npos) {
-                m_name = std::string_view { m_path.data(), index };
-                m_ext = std::string_view { m_path.data() + index + 1, m_path.size() - index - 1 };
-            }
-            else {
-                m_name = m_path;
-                m_ext = std::string_view();
-            }
-        }
-        else {
-            ++index;
-
-            if (auto dot = m_path.find_last_of('.'); dot != std::string::npos && dot > index) {
-                m_name = std::string_view { m_path.data() + index, dot - index };
-                m_ext = std::string_view { m_path.data() + dot + 1, m_path.size() - dot - 1 };
-            }
-            else {
-                m_name = std::string_view { m_path.data() + index, m_path.size() - index };
-                m_ext = std::string_view();
-            }
-        }
-    }
-
-    SR_COMMON_DLL_API Path& Path::operator=(Path&& path) noexcept {
-        m_path = std::exchange(path.m_path, {});
-        m_name = std::exchange(path.m_name, {});
-        m_ext = std::exchange(path.m_ext, {});
-        m_hash = std::exchange(path.m_hash, {});
-        m_type = std::exchange(path.m_type, {});
-        return *this;
-    }
-
-    SR_COMMON_DLL_API Path& Path::operator=(const Path& path) {
-        m_path = path.m_path;
-
-        ExtractNameAndExt();
-
-        m_hash = path.m_hash;
-        m_type = path.m_type;
-
-        return *this;
-    }
-
-    SR_COMMON_DLL_API const char* Path::c_str() const {
+    const char* Path::c_str() const {
         return CStr();
     }
 
-    SR_COMMON_DLL_API bool Path::empty() const {
+    bool Path::empty() const {
         return IsEmpty();
     }
 
-    SR_COMMON_DLL_API Path::operator const std::string&() {
-        return m_path;
+    Path::operator const std::string&() {
+        return GetNormalized();
     }
 
-    SR_COMMON_DLL_API char Path::operator[](size_t index) const noexcept {
-        if (index >= m_path.size()) {
+    char Path::operator[](size_t index) const noexcept {
+        if (index >= GetNormalized().size()) {
             std::cerr << "Path::operator[] : index is out of range!\n";
             SR_MAKE_BREAKPOINT;
             return char();
         }
-        return m_path[index];
+        return GetNormalized()[index];
     }
 
-    SR_COMMON_DLL_API bool Path::operator==(const Path &path) const noexcept {
-        return m_path == path.ToStringRef();
+    bool Path::operator==(const Path &path) const noexcept {
+        return GetNormalized() == path.ToStringRef();
     }
 
-    SR_COMMON_DLL_API char& Path::operator[](size_t index) noexcept {
-        if (index >= m_path.size()) {
-            std::cerr << "Path::operator[] : index is out of range!\n";
-            SR_MAKE_BREAKPOINT;
-            static char def = char();
-            return def;
+    bool Path::operator<(const Path& path) const noexcept {
+        return GetNormalized() < path.ToStringRef();
+    }
+
+    bool Path::operator>(const Path& path) const noexcept {
+        return GetNormalized() > path.ToStringRef();
+    }
+
+    const std::string& Path::GetNormalized() const {
+        if (m_isNormalized) {
+            return m_path;
         }
-        return m_path[index];
-    }
-
-    SR_COMMON_DLL_API bool Path::operator<(const Path& path) const noexcept {
-        return m_path < path.ToStringRef();
-    }
-
-    SR_COMMON_DLL_API bool Path::operator>(const Path& path) const noexcept {
-        return m_path > path.ToStringRef();
+        m_path = FileSystem::NormalizePath(m_path);
+        m_isNormalized = true;
+        return m_path;
     }
 }
