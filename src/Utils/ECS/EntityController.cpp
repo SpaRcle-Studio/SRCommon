@@ -7,11 +7,17 @@
 #include <Utils/Common/VectorUtils.h>
 
 namespace SR_UTILS_NS {
+    std::atomic<EntityController*> EntityController::ACTIVE_CONTROLLER = nullptr;
+
     EntityController::EntityController()
         : Super(this, SR_UTILS_NS::SharedPtrPolicy::Manually)
     { }
 
     EntityController::~EntityController() {
+        if (ACTIVE_CONTROLLER == this) {
+            ACTIVE_CONTROLLER = nullptr;
+        }
+
         if (!m_entities.empty()) {
             std::string ids;
             uint32_t index = 0;
@@ -158,6 +164,14 @@ namespace SR_UTILS_NS {
         m_reserved.erase(id);
 
         return true;
+    }
+
+    EntityController* EntityController::GetActiveController() {
+        return ACTIVE_CONTROLLER.load(std::memory_order_acquire);
+    }
+
+    void EntityController::SetActiveController() {
+        ACTIVE_CONTROLLER.store(this, std::memory_order_release);
     }
 
     /// ----------------------------------------------------------------------------------------------------------------

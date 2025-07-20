@@ -1,0 +1,11 @@
+function(SRUseAssimpIfPossible target)
+    if (SR_COMMON_ASSIMP AND NOT SR_COMMON_USE_CLANG_EMULATION)
+        message(STATUS "SpaRcle: ${target} will be using Assimp")
+
+        add_definitions(-DSR_UTILS_ASSIMP=1)
+        add_compile_definitions(SR_UTILS_ASSIMP)
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DSR_UTILS_ASSIMP")
+    else()
+        message(STATUS "SpaRcle: ${target} will NOT be using Assimp")
+    endif()
+endfunction()

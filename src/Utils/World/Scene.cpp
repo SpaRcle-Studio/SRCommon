@@ -124,8 +124,11 @@ namespace SR_WORLD_NS {
         return pScene;
     }
 
-    Scene::Ptr Scene::LoadScene(const Path& path) {
+    Scene::Ptr Scene::LoadScene(const Path& rawPath) {
         SR_TRACY_ZONE;
+
+        auto&& resourceManager = SR_UTILS_NS::ResourceManager::Instance();
+        const SR_UTILS_NS::Path path = rawPath.RemoveSubPath(resourceManager.GetResPathRef());
 
         if (Debug::Instance().GetLevel() > Debug::Level::None) {
             SR_LOG("Scene::Load() : loading scene...\n\tPath: " + path.ToString());
@@ -144,8 +147,6 @@ namespace SR_WORLD_NS {
             SR_ERROR("Scene::Load() : failed to allocate scene!");
             return Scene::Ptr();
         }
-
-        SRAssert(!path.IsAbs());
 
         pScene->SetPath(path);
 
@@ -200,7 +201,9 @@ namespace SR_WORLD_NS {
             pObject->Destroy();
         }
 
-        Prepare();
+        if (m_isInitialized) {
+            Prepare();
+        }
 
         if (m_sceneObjects.size() != m_freeObjIndices.size()) {
             SRHalt("Scene::Destroy() : after destroying the root objects, "
@@ -425,7 +428,7 @@ namespace SR_WORLD_NS {
                 const EntityId newEntityId = entityController.Register(pEntity, oldEntityId);
 
                 if (oldEntityId != SR_ID_INVALID) {
-                    m_registerEntityIdReplaceCache[newEntityId] = oldEntityId;
+                    m_registerEntityIdReplaceCache[oldEntityId] = newEntityId;
                 }
             }
 
@@ -437,8 +440,6 @@ namespace SR_WORLD_NS {
         }
 
         m_registerEntityCache.clear();
-
-        pSO->ResolveRefs();
     }
 
     void Scene::RegisterSceneObjectImpl(const Scene::SceneObjectPtr& pSO) {

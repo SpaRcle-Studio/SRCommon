@@ -136,21 +136,6 @@ namespace SR_UTILS_NS {
         });
     }
 
-    void Entity::ResolveRefs() {
-        SR_TRACY_ZONE;
-
-        if (!m_pEntityController) {
-            SRHalt("Entity controller is not set!");
-            return;
-        }
-
-        GetMeta()->ForEachSRClass(*this, [pController = m_pEntityController](SR_UTILS_NS::SRClass& srClass) {
-            if (srClass.GetMeta()->GetFactoryName() == EntityRefBase::GetClassStaticName()) {
-                static_cast<EntityRefBase&>(srClass).SetEntityController(pController);
-            }
-        });
-    }
-
     //void Entity::SetEntityPath(const EntityPath &path) {
     //    m_entityPath = path;
     //}

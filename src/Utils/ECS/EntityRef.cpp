@@ -16,14 +16,9 @@ namespace SR_UTILS_NS {
         return StringAtom();
     }
 
-    Entity::Ptr EntityRefBase::GetEntity() const noexcept {
+    const Entity::Ptr& EntityRefBase::GetEntity() const noexcept {
         Resolve();
         return m_pEntity;
-    }
-
-    void EntityRefBase::SetEntityController(EntityController* pEntityController) noexcept {
-        m_pEntityController = pEntityController;
-        Resolve();
     }
 
     void EntityRefBase::OnEntityIdReplaced(const EntityReplaceMap& replaceMap) {
@@ -33,6 +28,7 @@ namespace SR_UTILS_NS {
 
         if (auto&& pIt = replaceMap.find(m_entityId); pIt != replaceMap.end()) {
             m_entityId = pIt->second;
+            m_pEntity = nullptr;
         }
     }
 
@@ -41,12 +37,12 @@ namespace SR_UTILS_NS {
             return;
         }
 
-        if (!m_pEntityController) SR_UNLIKELY_ATTRIBUTE {
-            SRHalt("EntityRefBase::Resolve() : EntityController is not set!");
+        auto&& pActiveController = EntityController::GetActiveController();
+        if (!pActiveController) SR_UNLIKELY_ATTRIBUTE {
             return;
         }
 
-        auto&& pEntity = m_pEntityController->FindById(m_entityId);
+        auto&& pEntity = pActiveController->FindById(m_entityId);
         if (!pEntity) SR_UNLIKELY_ATTRIBUTE {
             SR_WARN("EntityRefBase::Resolve() : Entity with id {} not found!", m_entityId);
             return;
@@ -59,5 +55,23 @@ namespace SR_UTILS_NS {
         }
 
         m_pEntity = pEntity;
+    }
+
+    void EntityRefBase::SetEntityId(EntityId entityId) noexcept {
+        if (m_entityId == entityId) SR_LIKELY_ATTRIBUTE {
+            return;
+        }
+
+        m_entityId = entityId;
+        m_pEntity = nullptr;
+        Resolve();
+    }
+
+    EntityRefBase::operator bool() const noexcept {
+        return GetEntity();
+    }
+
+    bool EntityRefBase::IsResolved() const noexcept {
+        return m_pEntity;
     }
 }

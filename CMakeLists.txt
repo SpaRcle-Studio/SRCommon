@@ -52,6 +52,7 @@ endif()
 
 include(cmake/Linker.cmake)
 include(cmake/CopyDLLToExeFolder.cmake)
+include(cmake/UseAssimp.cmake)
 
 macro(SR_UTILS_INCLUDE_DIRECTORIES_APPEND var)
     set_property(GLOBAL APPEND PROPERTY SR_UTILS_INCLUDE_DIRECTORIES "${var}")
@@ -74,13 +75,9 @@ if (SR_COMMON_ZLIB)
     add_subdirectory(libs/zlib)
 endif()
 
+SRUseAssimpIfPossible(SRCommon)
+
 if (SR_COMMON_ASSIMP AND NOT SR_COMMON_USE_CLANG_EMULATION)
-    message("SRCommon will be using Assimp")
-
-    add_definitions(-DSR_UTILS_ASSIMP=1)
-    add_compile_definitions(SR_UTILS_ASSIMP)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DSR_UTILS_ASSIMP")
-
     include(cmake/AssimpConfigure.cmake)
     add_subdirectory(libs/assimp)
 
