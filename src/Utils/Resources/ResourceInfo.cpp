@@ -89,6 +89,13 @@ namespace SR_UTILS_NS {
     retry:
         if (pIt != m_info.end()) {
             auto&& [_, pInfo] = *pIt;
+            if (pInfo->m_loaded.count(pResource) > 0) {
+                SRHalt("Resource already registered in ResourceInfo!");
+                return;
+            }
+            if (pInfo->m_loaded.size() == 1 && !pResource->IsAllowedMultiInstance()) {
+                SRHalt("Resource already registered in ResourceInfo, but it is not allowed to have multiple instances!");
+            }
             pInfo->m_loaded.insert(pResource);
             pResource->m_resourceInfo = pInfo;
         }

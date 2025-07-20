@@ -16,7 +16,7 @@ namespace SR_UTILS_NS {
         auto&& resourceManager = ResourceManager::Instance();
         SR_UTILS_NS::Path&& path = rawPath.RemoveSubPath(resourceManager.GetResPath());
 
-        Asset::Ptr pAsset = resourceManager.Find<Asset>(rawPath);
+        Asset::Ptr pAsset = resourceManager.FindAnyType(path.ToStringRef()).DynamicCast<Asset>();
         if (pAsset) {
             return pAsset;
         }
@@ -44,13 +44,17 @@ namespace SR_UTILS_NS {
         return pAsset;
     }
 
-    bool Asset::SaveAsset(const Path& path) const {
+    bool Asset::SaveAsset(const Path& rawPath) const {
+        auto&& resourceManager = ResourceManager::Instance();
+        SR_UTILS_NS::Path&& path = rawPath.RemoveSubPath(resourceManager.GetResPath());
+
         SR_UTILS_NS::SRASerializer serializer;
+        serializer.SetUseTabs(true);
 
         Asset::Ptr pThis = GetThis().StaticCast<Asset>();
         Serialization::Save(serializer, pThis, SerializationId::Create("asset"));
 
-        if (!serializer.SaveToFile(path)) {
+        if (!serializer.SaveToFile(resourceManager.GetResPath().Concat(path))) {
             SR_ERROR("Asset::SaveAsset() : failed to save asset to file!\n\tPath: {}", path);
             return false;
         }

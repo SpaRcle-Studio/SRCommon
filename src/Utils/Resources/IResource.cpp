@@ -341,4 +341,8 @@ namespace SR_UTILS_NS {
     bool IResource::IsDestroyed() const noexcept {
         return m_isDestroyed;
     }
+
+    SR_UTILS_NS::StringAtom IResource::GetResourceType() const noexcept {
+        return GetMeta()->GetFactoryName();
+    }
 }

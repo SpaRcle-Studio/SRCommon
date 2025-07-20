@@ -99,7 +99,7 @@ namespace SR_UTILS_NS {
         SR_TRACY_ZONE;
 
         if (Debug::Instance().GetLevel() >= Debug::Level::High) {
-            SR_LOG("ResourceManager::Destroy() : destroying \"{}\"", pResource->GetMeta()->GetFactoryName());
+            SR_LOG("ResourceManager::Destroy() : destroying \"{}\"", pResource->GetResourceType());
         }
 
         SR_SCOPED_LOCK;
@@ -120,20 +120,25 @@ namespace SR_UTILS_NS {
         SR_TRACY_ZONE;
 
         if (pResource->IsRegistered()) {
-            auto&& pGroupIt = m_resources.find(pResource->GetMeta()->GetFactoryName());
+            auto&& pGroupIt = m_resources.find(pResource->GetResourceType());
             auto&& [name, resourcesGroup] = *pGroupIt;
             resourcesGroup->Remove(pResource);
         }
         else {
             SRHalt("ResourceManager::Remove() : resource isn't registered!\n\tType: {}, Id: {}",
-                   pResource->GetMeta()->GetFactoryName(),
+                   pResource->GetResourceType(),
                    pResource->GetResourceId());
         }
     }
 
     bool ResourceManager::IsLastResource(const IResource::Ptr& pResource) {
-        auto&& [name, resourcesGroup] = *m_resources.find(pResource->GetMeta()->GetFactoryName());
-        return resourcesGroup->IsLast(pResource->GetResourceId());
+        if (auto&& pIt = m_resources.find(pResource->GetResourceType()); pIt != m_resources.end()) {
+            return pIt->second->IsLast(pResource->GetResourceId());
+        }
+        SRHalt("ResourceManager::IsLastResource() : resource type not found!\n\tType: {}, Id: {}",
+               pResource->GetResourceType(),
+               pResource->GetResourceId());
+        return false;
     }
 
     const Path& ResourceManager::GetResPathRef() const {
@@ -245,13 +250,13 @@ namespace SR_UTILS_NS {
         SRAssert(!pResource->IsRegistered());
 
         if (Debug::Instance().GetLevel() >= Debug::Level::Full) {
-            SR_LOG("ResourceManager::RegisterResource() : add new \"{}\" resource.", pResource->GetMeta()->GetFactoryName());
+            SR_LOG("ResourceManager::RegisterResource() : add new \"{}\" resource.", pResource->GetResourceType());
         }
 
         SR_SCOPED_LOCK;
 
         pResource->StartWatch();
-        GetOrCreateResourceType(pResource->GetMeta()->GetFactoryName())->Add(pResource);
+        GetOrCreateResourceType(pResource->GetResourceType())->Add(pResource);
     }
 
     void ResourceManager::PrintMemoryDump() {
@@ -290,7 +295,7 @@ namespace SR_UTILS_NS {
         }
     }
 
-    IResource::Ptr ResourceManager::Find(SR_UTILS_NS::StringAtom typeName, SR_UTILS_NS::StringAtom id) const {
+    IResource::Ptr ResourceManager::Find(SR_UTILS_NS::StringAtom id, SR_UTILS_NS::StringAtom typeName) const {
         SR_TRACY_ZONE;
         SR_SCOPED_LOCK;
 
@@ -305,6 +310,21 @@ namespace SR_UTILS_NS {
             /// раз ресурс ищем, значит он все еще может быть нужен.
             pResource->UpdateResourceLifeTime();
             return pResource;
+        }
+
+        return nullptr;
+    }
+
+    IResource::Ptr ResourceManager::FindAnyType(SR_UTILS_NS::StringAtom id) const {
+        SR_TRACY_ZONE;
+        SR_SCOPED_LOCK;
+
+        for (auto&& [typeName, resourcesGroup] : m_resources) {
+            if (auto&& pResource = resourcesGroup->Find(id)) {
+                /// раз ресурс ищем, значит он все еще может быть нужен.
+                pResource->UpdateResourceLifeTime();
+                return pResource;
+            }
         }
 
         return nullptr;
