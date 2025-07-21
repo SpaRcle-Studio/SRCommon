@@ -80,7 +80,7 @@ namespace SR_UTILS_NS {
                     }
                     result += SR_UTILS_NS::ToString(depth + 1) + "-b:";
                     result += node.data.boolean ? "true\n" : "false\n";
-                    SRAssert2(node.children.empty(), "SerializationDataType::Integer : children is not empty!");
+                    SRAssert2(node.children.empty(), "SerializationDataType::Boolean : children is not empty!");
                     break;
                 case SerializationDataType::Integer:
                     if (IsNeedUseTabs()) {
@@ -90,13 +90,21 @@ namespace SR_UTILS_NS {
                     result += std::to_string(node.data.integer) + "\n";
                     SRAssert2(node.children.empty(), "SerializationDataType::Integer : children is not empty!");
                     break;
+                case SerializationDataType::Double:
+                    if (IsNeedUseTabs()) {
+                        result += std::string(depth + 1, '\t');
+                    }
+                    result += SR_UTILS_NS::ToString(depth + 1) + "-d:";
+                    result += SerializeDouble(node.data.floatingDouble) + "\n";
+                    SRAssert2(node.children.empty(), "SerializationDataType::Double : children is not empty!");
+                    break;
                 case SerializationDataType::Floating:
                     if (IsNeedUseTabs()) {
                         result += std::string(depth + 1, '\t');
                     }
                     result += SR_UTILS_NS::ToString(depth + 1) + "-f:";
-                    result += std::to_string(node.data.floating) + "\n";
-                    SRAssert2(node.children.empty(), "SerializationDataType::Integer : children is not empty!");
+                    result += SerializeFloat(node.data.floating) + "\n";
+                    SRAssert2(node.children.empty(), "SerializationDataType::Floating : children is not empty!");
                     break;
                 case SerializationDataType::Object:
                     for (auto&& child : node.children) {
@@ -309,7 +317,18 @@ namespace SR_UTILS_NS {
                 case 'f': {
                     auto& node = GetCurrentNode();
                     node.type = SerializationDataType::Floating;
-                    node.data.floating = FastSToD(line.substr(line.find_first_of(':') + 1));
+                    node.data.floating = ParseFloat(line.substr(line.find_first_of(':') + 1));
+                    //node.data.floating = FastSToD(line.substr(line.find_first_of(':') + 1));
+                    //node.data.floating = std::stod(std::string(line.substr(line.find_first_of(':') + 1)));
+                    m_stack.pop_back();
+                    continue;
+                }
+                case 'd': {
+                    auto& node = GetCurrentNode();
+                    node.type = SerializationDataType::Double;
+                    node.data.floatingDouble = ParseDouble(line.substr(line.find_first_of(':') + 1));
+                    //node.data.floating = FastSToD(line.substr(line.find_first_of(':') + 1));
+                    //node.data.floating = std::stod(std::string(line.substr(line.find_first_of(':') + 1)));
                     m_stack.pop_back();
                     continue;
                 }

@@ -70,6 +70,12 @@ namespace SR_UTILS_NS {
     }
 
     void IBaseSerializer::WriteDouble(const double_t value, const SerializationId& name) {
+        SerializationNode node(name, SerializationDataType::Double);
+        node.data.floatingDouble = value;
+        GetImpl().GetCurrentNode().children.emplace_back(node);
+    }
+
+    void IBaseSerializer::WriteFloat(const float_t value, const SerializationId& name) {
         SerializationNode node(name, SerializationDataType::Floating);
         node.data.floating = value;
         GetImpl().GetCurrentNode().children.emplace_back(node);

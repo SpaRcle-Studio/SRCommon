@@ -93,9 +93,22 @@ namespace SR_UTILS_NS {
                 SRHalt("Resource already registered in ResourceInfo!");
                 return;
             }
-            if (pInfo->m_loaded.size() == 1 && !pResource->IsAllowedMultiInstance()) {
-                SRHalt("Resource already registered in ResourceInfo, but it is not allowed to have multiple instances!");
+
+            if (!pResource->IsAllowedMultiInstance() && !pResource->IsAllowedToRevive()) {
+                bool hasNotDestroyed = false;
+
+                for (auto&& pLoadedResource: pInfo->m_loaded) {
+                    if (!pLoadedResource->IsDestroyed()) {
+                        hasNotDestroyed = true;
+                        break;
+                    }
+                }
+
+                if (hasNotDestroyed) {
+                    SRHalt("Resource already registered in ResourceInfo, but it is not allowed to have multiple instances!");
+                }
             }
+
             pInfo->m_loaded.insert(pResource);
             pResource->m_resourceInfo = pInfo;
         }

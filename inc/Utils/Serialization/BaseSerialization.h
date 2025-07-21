@@ -14,7 +14,8 @@ namespace SR_UTILS_NS {
     union SerializationTrivialDataType {
         bool boolean;
         int64_t integer;
-        double_t floating;
+        double_t floatingDouble;
+        float_t floating;
     };
 
     enum class SerializationDataType : uint8_t {
@@ -24,6 +25,7 @@ namespace SR_UTILS_NS {
         Boolean,
         Integer,
         Floating,
+        Double,
         Object,
         Item,
         Array
@@ -131,7 +133,7 @@ namespace SR_UTILS_NS {
         void WriteUInt(uint16_t value, const SerializationId& name) override { WriteInt(static_cast<int64_t>(value), name); }
         void WriteUInt(uint32_t value, const SerializationId& name) override { WriteInt(static_cast<int64_t>(value), name); }
         void WriteUInt(uint64_t value, const SerializationId& name) override { WriteInt(static_cast<int64_t>(value), name); }
-        void WriteFloat(float_t value, const SerializationId& name) override { WriteDouble(static_cast<double_t>(value), name); }
+        void WriteFloat(float_t value, const SerializationId& name) override;
         void WriteDouble(double_t value, const SerializationId& name) override;
 
         void BeginItem(const SerializationId& id) override;
@@ -209,7 +211,7 @@ namespace SR_UTILS_NS {
         void ReadUInt(uint64_t& value, const SerializationId& name) override { return ReadIntegerImpl(value, name); }
 
         void ReadFloat(float_t& value, const SerializationId& name) override { return ReadFloatingImpl(value, name); }
-        void ReadDouble(double_t& value, const SerializationId& name) override { return ReadFloatingImpl(value, name); }
+        void ReadDouble(double_t& value, const SerializationId& name) override { return ReadDoubleImpl(value, name); }
 
     private:
         template<typename T> void ReadIntegerImpl(T& value, const SerializationId& name) {
@@ -228,6 +230,24 @@ namespace SR_UTILS_NS {
             auto&& node = GetImpl().GetWalkNode();
             for (auto&& child : node.children) {
                 if (child.id.GetHash() == name.GetHash()) {
+                    if (child.type == SerializationDataType::Floating) {
+                        value = static_cast<T>(child.data.floating);
+                    }
+                    if (child.type == SerializationDataType::Double) {
+                        value = static_cast<T>(child.data.floatingDouble);
+                    }
+                    break;
+                }
+            }
+        }
+
+        template<typename T> void ReadDoubleImpl(T& value, const SerializationId& name) {
+            auto&& node = GetImpl().GetWalkNode();
+            for (auto&& child : node.children) {
+                if (child.id.GetHash() == name.GetHash()) {
+                    if (child.type == SerializationDataType::Double) {
+                        value = static_cast<T>(child.data.floatingDouble);
+                    }
                     if (child.type == SerializationDataType::Floating) {
                         value = static_cast<T>(child.data.floating);
                     }
