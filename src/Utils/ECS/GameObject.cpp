@@ -36,11 +36,11 @@ namespace SR_UTILS_NS {
         return pChild.StaticCast<GameObject>();
     }
 
-    Transform::Ptr GameObject::GetTransform() const noexcept {
+    const Transform::Ptr& GameObject::GetTransform() const noexcept {
         if (!m_transform) {
             const_cast<GameObject&>(*this).SetTransform(Transform3D::MakeShared<Transform3D, Transform>());
+            SRAssert(m_transform);
         }
-        SRAssert(m_transform);
         return m_transform;
     }
 
@@ -83,10 +83,12 @@ namespace SR_UTILS_NS {
         }
     }
 
-    Transform::Ptr GameObject::GetParentTransform() const noexcept {
-        if (GetParent() && GetParent()->GetSceneObjectType() == SceneObjectType::GameObject) {
-            return GetParent().StaticCast<GameObject>()->GetTransform();
+    const Transform::Ptr& GameObject::GetParentTransform() const noexcept {
+        auto&& parent = GetParent();
+        if (parent && parent->GetSceneObjectType() == SceneObjectType::GameObject) {
+            return static_cast<const GameObject*>(parent.Get())->GetTransform();
         }
-        return nullptr;
+        static const Transform::Ptr nullTransform;
+        return nullTransform;
     }
 }

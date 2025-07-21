@@ -630,4 +630,8 @@ namespace SR_MATH_NS {
     Matrix4x4 Matrix4x4::operator-(Matrix4x4 mat) {
         return Matrix4x4(this->self - mat.self);
     }
+
+    void Matrix4x4::Multiply(Matrix4x4& result, const Matrix4x4& left, const Matrix4x4& right) {
+        GLMMultiplyMat4x4(result.self, left.self, right.self);
+    }
 }

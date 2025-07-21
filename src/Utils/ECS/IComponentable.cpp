@@ -364,7 +364,7 @@ namespace SR_UTILS_NS {
         for (uint32_t i = 0; i < size; ++i) {
             auto&& pComponent = m_components[i];
 
-            if (!pComponent->IsAttached()) {
+            if (!pComponent->IsAttached()) SR_UNLIKELY_ATTRIBUTE {
                 continue;
             }
 

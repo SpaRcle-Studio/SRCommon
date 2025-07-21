@@ -126,7 +126,7 @@ namespace SR_UTILS_NS {
         SRAssert(m_parent);
 
         if (m_sceneObject && m_sceneObject->GetSceneObjectType() == SceneObjectType::GameObject) {
-            return m_sceneObject.StaticCast<GameObject>()->GetTransform().Get();
+            return const_cast<Transform*>(m_sceneObject.StaticCast<GameObject>()->GetTransform().Get());
         }
 
         return nullptr;

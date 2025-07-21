@@ -9,7 +9,9 @@
 
 namespace SR_UTILS_NS {
     void Transform3D::UpdateMatrix() const {
-        if (m_skew.IsEqualsLikely(SR_MATH_NS::FVector3::One(), SR_EPSILON)) SR_LIKELY_ATTRIBUTE {
+        static const auto oneVector = SR_MATH_NS::FVector3::One();
+
+        if (m_skew.IsEqualsLikely(oneVector, SR_EPSILON)) SR_LIKELY_ATTRIBUTE {
             m_localMatrix = SR_MATH_NS::Matrix4x4(
                 m_translation,
                 m_quaternion,
@@ -33,7 +35,7 @@ namespace SR_UTILS_NS {
             UpdateMatrix();
 
             if (auto&& pTransform = m_gameObject->GetParentTransform()) SR_LIKELY_ATTRIBUTE {
-                m_matrix = pTransform->GetMatrix() * m_localMatrix;
+                SR_MATH_NS::Matrix4x4::Multiply(m_matrix, pTransform->GetMatrix(), m_localMatrix);
             }
             else {
                 m_matrix = m_localMatrix;

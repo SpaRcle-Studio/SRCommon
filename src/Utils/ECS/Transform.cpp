@@ -29,7 +29,7 @@ namespace SR_UTILS_NS {
 
         if (auto&& pParent = m_gameObject->GetParent()) {
             if (auto&& pGameObject = pParent.DynamicCast<GameObject>()) {
-                return pGameObject->GetTransform().Get();
+                return const_cast<Transform*>(pGameObject->GetTransform().Get());
             }
         }
 
@@ -145,8 +145,6 @@ namespace SR_UTILS_NS {
     }
 
     void Transform::UpdateTree() {
-        SR_TRACY_ZONE;
-
         if (!m_gameObject) SR_UNLIKELY_ATTRIBUTE {
             return;
         }
@@ -163,14 +161,12 @@ namespace SR_UTILS_NS {
         m_gameObject->OnMatrixDirty();
 
         for (auto&& pChild : m_gameObject->GetChildrenRef()) {
-            if (auto&& pGameObject = pChild.DynamicCast<GameObject>()) {
-                pGameObject->GetTransform()->UpdateTree();
+            if (pChild->GetSceneObjectType() != SceneObjectType::GameObject) SR_UNLIKELY_ATTRIBUTE {
+                continue;
             }
-        }
-    }
 
-    bool Transform::IsDirty() const noexcept {
-        return m_dirtyMatrix;
+            static_cast<GameObject*>(pChild.Get())->GetTransform()->UpdateTree();
+        }
     }
 
     void Transform::OnHierarchyChanged() {

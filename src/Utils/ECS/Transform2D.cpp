@@ -134,7 +134,7 @@ namespace SR_UTILS_NS {
                     continue;
                 }
 
-                auto&& pTransform2D = static_cast<Transform2D*>(pGameObject->GetTransform().Get());
+                auto&& pTransform2D = const_cast<Transform2D*>(static_cast<const Transform2D*>(pGameObject->GetTransform().Get()));
 
                 pTransform2D->BuildUITree();
 
@@ -258,7 +258,7 @@ namespace SR_UTILS_NS {
 
         for (auto&& pChild : m_gameObject->GetChildrenRef()) {
             if (auto&& pGameObject = pChild.DynamicCast<GameObject>()) {
-                if (auto&& pTransform2D = dynamic_cast<Transform2D*>(pGameObject->GetTransform().Get())) {
+                if (auto&& pTransform2D = const_cast<Transform2D*>(dynamic_cast<const Transform2D*>(pGameObject->GetTransform().Get()))) {
                     pTransform2D->UpdatePriorityTree();
                 }
             }

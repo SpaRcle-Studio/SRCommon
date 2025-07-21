@@ -306,7 +306,7 @@ namespace SR_MATH_NS {
         return mat4_cast(self);
     }
 
-    glm::quat Quaternion::ToGLM() const noexcept {
+    const glm::quat& Quaternion::ToGLM() const noexcept {
         return self;
     }
 
