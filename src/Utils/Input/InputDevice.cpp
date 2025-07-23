@@ -10,7 +10,7 @@ namespace SR_UTILS_NS {
     }
 
     SR_MATH_NS::FVector2 MouseInputData::GetDrag() const {
-        return m_position - m_prevPos;
+        return m_drag;
     }
 
     bool MouseInputData::IsDrag() const {

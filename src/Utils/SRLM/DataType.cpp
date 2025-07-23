@@ -6,40 +6,40 @@
 #include <Utils/SRLM/DataTypeManager.h>
 
 namespace SR_SRLM_NS {
-    bool DataTypeAllocator::Register(DataTypeClass dataTypeClass, Hash hashName, Allocator allocator) {
-        m_allocators[static_cast<uint32_t>(dataTypeClass)] = std::move(allocator);
-        m_hashes[static_cast<uint32_t>(dataTypeClass)] = hashName;
-        return true;
-    }
+// bool DataTypeAllocator::Register(DataTypeClass dataTypeClass, Hash hashName, Allocator allocator) {
+//     m_allocators[static_cast<uint32_t>(dataTypeClass)] = std::move(allocator);
+//     m_hashes[static_cast<uint32_t>(dataTypeClass)] = hashName;
+//     return true;
+// }
 
-    DataType* DataTypeAllocator::Allocate(DataTypeClass dataTypeClass) {
-        auto&& index = static_cast<uint32_t>(dataTypeClass);
-        if (m_allocators[index]) {
-            return m_allocators[index]();
-        }
-        return nullptr;
-    }
+// DataType* DataTypeAllocator::Allocate(DataTypeClass dataTypeClass) {
+//     auto&& index = static_cast<uint32_t>(dataTypeClass);
+//     if (m_allocators[index]) {
+//         return m_allocators[index]();
+//     }
+//     return nullptr;
+// }
 
-    DataType* DataTypeAllocator::Allocate(DataTypeAllocator::Hash hashName) {
-        for (uint32_t i = 0; i < EnumMax; ++i) {
-            if (m_hashes[i] == hashName) {
-                return Allocate(static_cast<DataTypeClass>(i));
-            }
-        }
-        return nullptr;
-    }
+// DataType* DataTypeAllocator::Allocate(DataTypeAllocator::Hash hashName) {
+//     for (uint32_t i = 0; i < EnumMax; ++i) {
+//         if (m_hashes[i] == hashName) {
+//             return Allocate(static_cast<DataTypeClass>(i));
+//         }
+//     }
+//     return nullptr;
+// }
 
     /// ----------------------------------------------------------------------------------------------------------------
 
-    DataType* DataTypeStruct::Copy() const {
-        auto&& pStruct = new DataTypeStruct(m_name);
+ //  DataType* DataTypeStruct::Copy() const {
+ //      auto&& pStruct = new DataTypeStruct(m_name);
 
-        for (auto&& [hash, pData] : m_variables) {
-            pStruct->m_variables[hash] = pData->Copy();
-        }
+ //      for (auto&& [hash, pData] : m_variables) {
+ //          pStruct->m_variables[hash] = pData->Copy();
+ //      }
 
-        return pStruct;
-    }
+ //      return pStruct;
+ //  }
 
     DataTypeStruct::~DataTypeStruct() {
         for (auto&& [hash, pData] : m_variables) {
@@ -84,11 +84,11 @@ namespace SR_SRLM_NS {
 
     /// ----------------------------------------------------------------------------------------------------------------
 
-    DataTypeArray::DataTypeArray()
-        : DataType()
-    {
-        SetType(new DataTypeNone());
-    }
+//  DataTypeArray::DataTypeArray()
+//      : DataType()
+//  {
+//      SetType(new DataTypeNone());
+//  }
 
     DataTypeArray::~DataTypeArray() {
         SetType(nullptr);
@@ -104,18 +104,18 @@ namespace SR_SRLM_NS {
         Reset();
     }
 
-    DataType* DataTypeArray::Copy() const {
-        auto&& pData = AllocateNew();
+ //  DataType* DataTypeArray::Copy() const {
+ //      auto&& pData = AllocateNew();
 
-        pData->m_type = m_type ? m_type->Copy() : nullptr;
-        pData->m_value.reserve(m_value.size());
+ //      pData->m_type = m_type ? m_type->Copy() : nullptr;
+ //      pData->m_value.reserve(m_value.size());
 
-        for (auto&& pValue : m_value) {
-            pData->m_value.emplace_back(pValue->Copy());
-        }
+ //      for (auto&& pValue : m_value) {
+ //          pData->m_value.emplace_back(pValue->Copy());
+ //      }
 
-        return pData;
-    }
+ //      return pData;
+ //  }
 
     void DataTypeArray::Reset() {
         for (auto&& pValue : m_value) {
@@ -136,7 +136,7 @@ namespace SR_SRLM_NS {
         }
     }
 
-    void DataType::SaveXml(SR_XML_NS::Node& xmlNode) {
+  /*  void DataType::SaveXml(SR_XML_NS::Node& xmlNode) {
         xmlNode.AppendAttribute("Name", GetName());
         xmlNode.AppendAttribute("Class", SR_UTILS_NS::EnumReflector::ToStringAtom(GetClass()).ToStringRef());
 
@@ -280,5 +280,5 @@ namespace SR_SRLM_NS {
 
     std::string DataTypeEnum::GetName() const noexcept {
         return m_reflector ? m_reflector->GetNameInternal().ToStringRef() : NAME;
-    }
+    }*/
 }

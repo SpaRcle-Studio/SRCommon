@@ -64,13 +64,14 @@ namespace SR_UTILS_NS {
             else if (input.GetMouse(code)) {
                 m_mouseData->m_state = KeyState::Press;
             }
-            else
+            else {
                 continue;
+            }
 
             m_mouseData->m_code = code;
             m_mouseData->m_wheel = input.GetMouseWheel();
             m_mouseData->m_position = input.GetMousePos();
-            m_mouseData->m_prevPos = input.GetPrevMousePos();
+            m_mouseData->m_drag = input.GetMouseDrag();
 
             Dispatch<InputHandler>(dynamic_cast<InputDeviceData*>(m_mouseData));
         }

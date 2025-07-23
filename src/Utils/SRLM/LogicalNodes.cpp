@@ -45,16 +45,16 @@ namespace SR_SRLM_NS {
     void DebugPrintNode::InitNode() {
         Super::InitNode();
 
-        AddInputData<DataTypeFlow>();
+     //   AddInputData<DataTypeFlow>();
 
-        AddInputData<DataTypeString>(SR_HASH_STR_REGISTER("Msg"));
+    //    AddInputData<DataTypeString>(SR_HASH_STR_REGISTER("Msg"));
 
-        AddInputData(new DataTypeEnum(
-            static_cast<uint64_t>(SR_UTILS_NS::DebugLogType::Log),
-            SR_UTILS_NS::EnumReflector::GetReflector<SR_UTILS_NS::DebugLogType>()
-        ), SR_HASH_STR_REGISTER("Type"));
+     // AddInputData(new DataTypeEnum(
+     //     static_cast<uint64_t>(SR_UTILS_NS::DebugLogType::Log),
+     //     SR_UTILS_NS::EnumReflector::GetReflector<SR_UTILS_NS::DebugLogType>()
+     // ), SR_HASH_STR_REGISTER("Type"));
 
-        AddOutputData<DataTypeFlow>();
+   //     AddOutputData<DataTypeFlow>();
     }
 
     void DebugPrintNode::InitValues() {
@@ -64,7 +64,7 @@ namespace SR_SRLM_NS {
 
     void StartNode::InitNode() {
         Super::InitNode();
-        AddOutputData<DataTypeFlow>();
+      //  AddOutputData<DataTypeFlow>();
     }
 
     void StartNode::Execute(float_t dt) {
@@ -190,10 +190,10 @@ namespace SR_SRLM_NS {
     void SequenceNode::InitNode() {
         Super::InitNode();
 
-        AddInputData<DataTypeFlow>();
+     //  AddInputData<DataTypeFlow>();
 
-        AddOutputData<DataTypeFlow>(SR_HASH_STR_REGISTER("Then 0"));
-        AddOutputData<DataTypeFlow>(SR_HASH_STR_REGISTER("Then 1"));
+     //  AddOutputData<DataTypeFlow>(SR_HASH_STR_REGISTER("Then 0"));
+     //  AddOutputData<DataTypeFlow>(SR_HASH_STR_REGISTER("Then 1"));
     }
 
     void BranchNode::Execute(float_t dt) {
@@ -212,16 +212,16 @@ namespace SR_SRLM_NS {
     void BranchNode::InitNode() {
         Super::InitNode();
 
-        AddInputData<DataTypeFlow>();
-        AddInputData<DataTypeBool>(SR_HASH_STR_REGISTER("Condition"));
+    // AddInputData<DataTypeFlow>();
+    // AddInputData<DataTypeBool>(SR_HASH_STR_REGISTER("Condition"));
 
-        AddOutputData<DataTypeFlow>(SR_HASH_STR_REGISTER("True"));
-        AddOutputData<DataTypeFlow>(SR_HASH_STR_REGISTER("False"));
+    // AddOutputData<DataTypeFlow>(SR_HASH_STR_REGISTER("True"));
+    // AddOutputData<DataTypeFlow>(SR_HASH_STR_REGISTER("False"));
     }
 
     void StartResetNode::InitNode() {
-        AddInputData<DataTypeFlow>();
-        AddOutputData<DataTypeFlow>();
+    //  AddInputData<DataTypeFlow>();
+    //  AddOutputData<DataTypeFlow>();
         Super::InitNode();
     }
 
@@ -231,8 +231,8 @@ namespace SR_SRLM_NS {
     }
 
     void EndResetNode::InitNode() {
-        AddInputData<DataTypeFlow>();
-        AddOutputData<DataTypeFlow>();
+       // AddInputData<DataTypeFlow>();
+       // AddOutputData<DataTypeFlow>();
         Super::InitNode();
     }
 
@@ -258,9 +258,9 @@ namespace SR_SRLM_NS {
     void SynchronizeNode::InitNode() {
         Base::InitNode();
 
-        AddInputData<DataTypeFlow>(SR_HASH_STR_REGISTER("If 0"));
-        AddInputData<DataTypeFlow>(SR_HASH_STR_REGISTER("If 1"));
-
-        AddOutputData<DataTypeFlow>();
+       // AddInputData<DataTypeFlow>(SR_HASH_STR_REGISTER("If 0"));
+       // AddInputData<DataTypeFlow>(SR_HASH_STR_REGISTER("If 1"));
+//
+       // AddOutputData<DataTypeFlow>();
     }
 }

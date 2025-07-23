@@ -3,103 +3,48 @@
 //
 
 #include <Utils/Input/InputSystem.h>
+#include <Utils/Common/Numeric.h>
 #include <Utils/Platform/Platform.h>
 #include <Utils/Profile/TracyContext.h>
 #include <Utils/Common/StringAtomLiterals.h>
 
 namespace SR_UTILS_NS {
-    void Input::Check() {
-        SR_TRACY_ZONE;
+    Input::~Input() = default;
 
-        if (!m_init) {
-            Reset();
-            m_init = true;
-        }
+    void Input::UpdateMouse() {
+        auto&& mouseState = SR_PLATFORM_NS::GetMouseState();
 
         m_mouseScroll = m_mouseScrollCurrent;
         m_mouseScrollCurrent = SR_MATH_NS::FVector2(0, 0);
 
-        if (!m_arr) {
-            m_arr = new uint8_t[256];
-            memset(m_arr, 0, 256);
+        auto&& pActiveLock = GetActiveLock();
+        const bool isLocked = IsAppFocused() && pActiveLock;
+
+        if (isLocked) {
+            m_mousePrev = pActiveLock->lockRect ? pActiveLock->lockRect->Center() : m_focusedWindowRect->Center();
+
+            if (!m_isLocked) {
+                m_mouse = m_mousePrev;
+                m_isLocked = true;
+            }
+            else {
+                m_mouse = mouseState.position;
+            }
+
+            SetCursorVisible(false);
+            SR_PLATFORM_NS::SetMousePos(m_mousePrev.CastToInt());
+        }
+        else {
+            m_mousePrev = m_mouse;
+            m_mouse = mouseState.position;
+            m_isLocked = false;
+            SetCursorVisible(true);
         }
 
-        if (!SR_PLATFORM_NS::GetSystemKeyboardState(m_arr)) {
-            return;
-        }
-
-        auto&& mouseState = SR_PLATFORM_NS::GetMouseState();
-
-        m_mousePrev = m_mouse;
-        m_mouse = mouseState.position;
         m_mouseDrag = m_mouse - m_mousePrev;
 
-        if (m_counterLock >= 1) {
-            if(m_isVisible) {
-                SetCursorVisible(false);
-                SR_PLATFORM_NS::ConfineCursor();
-            }
-
-            SR_PLATFORM_NS::SetMousePos(m_mousePrev.Cast<int32_t>());
-            m_mouse = m_mousePrev;
-
-            if (m_lockCursorCallback) {
-                m_lockCursorCallback();
-            }
-        }
-        else if(!m_isVisible) {
-            SetCursorVisible(true);
-            SR_PLATFORM_NS::ReleaseCursorConfinement();
-        }
-
-    #if defined(SR_WIN32)
-        for (uint16_t i = 5; i < 256; ++i) {
-            if (m_arr[i] >> 7 != 0) {
-                switch (m_keys[i]) {
-                case State::UnPressed:
-                case State::Up:
-                    SetState(i, State::Down);
-                    break;
-                case State::Down:
-                    SetState(i, State::Pressed);
-                    break;
-                case State::Pressed:
-                    /// skip
-                    break;
-                }
-            }
-            else {
-                switch (m_keys[i]) {
-                case State::UnPressed:
-                    /// skip
-                    break;
-                case State::Down:
-                case State::Pressed:
-                    SetState(i, State::Up);
-                    break;
-                case State::Up:
-                    SetState(i, State::UnPressed);
-                    break;
-                }
-            }
-        }
-    #elif defined(SR_LINUX)
-        for (uint16_t i = 5; i < 256; ++i) {
-            if (m_arr[i] == 0 && (m_keys[i] == State::Down || m_keys[i] == State::Pressed)) {
-                /// If a key was already Pressed or Down and now is not pressed, then it's Up
-                SetState(i, State::Up);
-            }
-            else {
-                /// Otherwise, set the key state to the current state
-                SetState(i, static_cast<State>(m_arr[i]));
-            }
-        }
-
-        memset(m_arr, 0, 256);
-    #endif
-
         for (uint8_t i = 0; i < 5; ++i) {
-            if (mouseState.buttonStates[i]) {
+            if (IsAppFocused() && mouseState.buttonStates[i]) {
                 switch (m_keys[i]) {
                     case State::UnPressed: SetState(i, State::Down); break;
                     case State::Down: SetState(i, State::Pressed); break;
@@ -122,6 +67,80 @@ namespace SR_UTILS_NS {
         }
     }
 
+    void Input::UpdateKeyboard() {
+        if (!IsAppFocused()) {
+            return;
+        }
+
+        if (!m_keysArray) {
+            m_keysArray = new uint8_t[256];
+            memset(m_keysArray, 0, 256);
+        }
+
+        if (!SR_PLATFORM_NS::GetSystemKeyboardState(m_keysArray)) {
+            return;
+        }
+
+    #if defined(SR_WIN32)
+        for (uint16_t i = 5; i < 256; ++i) {
+            if (m_keysArray[i] >> 7 != 0) {
+                switch (m_keys[i]) {
+                    case State::UnPressed:
+                    case State::Up:
+                        SetState(i, State::Down);
+                        break;
+                    case State::Down:
+                        SetState(i, State::Pressed);
+                        break;
+                    case State::Pressed:
+                        /// skip
+                        break;
+                }
+            }
+            else {
+                switch (m_keys[i]) {
+                    case State::UnPressed:
+                        /// skip
+                        break;
+                    case State::Down:
+                    case State::Pressed:
+                        SetState(i, State::Up);
+                        break;
+                    case State::Up:
+                        SetState(i, State::UnPressed);
+                        break;
+                }
+            }
+        }
+    #elif defined(SR_LINUX)
+        for (uint16_t i = 5; i < 256; ++i) {
+            if (m_keysArray[i] == 0 && (m_keys[i] == State::Down || m_keys[i] == State::Pressed)) {
+                /// If a key was already Pressed or Down and now is not pressed, then it's Up
+                SetState(i, State::Up);
+            }
+            else {
+                /// Otherwise, set the key state to the current state
+                SetState(i, static_cast<State>(m_keysArray[i]));
+            }
+        }
+
+        memset(m_keysArray, 0, 256);
+    #endif
+    }
+
+    void Input::Update() {
+        SR_TRACY_ZONE;
+        SR_LOCK_GUARD;
+
+        if (!m_init) {
+            Reset();
+            m_init = true;
+        }
+
+        UpdateMouse();
+        UpdateKeyboard();
+    }
+
     bool Input::GetKeyDown(KeyCode key) {
         return m_keys[(int)key] == State::Down;
     }
@@ -138,7 +157,7 @@ namespace SR_UTILS_NS {
         return m_mouseDrag;
     }
 
-    int32_t Input::GetMouseWheel() {
+    int32_t Input::GetMouseWheel() const {
         return m_mouseScroll.y;
     }
 
@@ -174,17 +193,13 @@ namespace SR_UTILS_NS {
     }
 
     void Input::ResetMouse() {
-        m_mousePrev = m_mouse = SR_UTILS_NS::Platform::GetMousePos();
+        m_mouse = m_mousePrev = SR_PLATFORM_NS::GetMousePos();
         m_mouseScroll = m_mouseScrollCurrent = SR_MATH_NS::FVector2(0.f);
     }
 
     void Input::Reload() {
         m_init = false;
         Reset();
-    }
-
-    bool Input::IsMouseMoved() const {
-        return GetMousePos() != GetPrevMousePos();
     }
 
     void Input::SetCursorVisible(bool isVisible) {
@@ -194,60 +209,98 @@ namespace SR_UTILS_NS {
         }
     }
 
-    void Input::SetCursorLockCallback(CursorLockCallback&& callback) {
-        m_lockCursorCallback = std::move(callback);
+    void Input::LockCursor(CursorLockInfo& info) {
+        SR_LOCK_GUARD;
+
+    retry:
+        info.id = SR_UTILS_NS::Random::Instance().UInt64();
+        for (const auto& lock : m_cursorLocks[static_cast<uint32_t>(info.lockMode)]) {
+            if (lock.id == info.id) {
+                goto retry;
+            }
+        }
+
+        m_cursorLocks[static_cast<uint32_t>(info.lockMode)].emplace_back(info);
     }
 
-    void Input::LockCursor() {
-        ++m_counterLock;
-    }
+    void Input::UnlockCursor(const CursorLockInfo& info) {
+        SR_LOCK_GUARD;
+        auto&& locks = m_cursorLocks[static_cast<uint32_t>(info.lockMode)];
+        auto&& pIt = std::find_if(locks.begin(), locks.end(), [&info](const CursorLockInfo& lock) { return lock.id == info.id; });
 
-    void Input::UnlockCursor() {
-        if (m_counterLock > 0) {
-            --m_counterLock;
+        if (pIt != locks.end()) {
+            locks.erase(pIt);
         }
         else {
-            SRHalt("Input::UnlockCursor() : counter lock is already 0!");
+            SRHalt("Failed to unlock cursor! Lock not found!");
         }
-    }
-
-    void Input::ForceUnlockCursor() {
-        m_counterLock = 0;
     }
 
     SR_MATH_NS::FVector2 Input::GetMousePos() const {
         return m_mouse;
     }
 
-    SR_MATH_NS::FVector2 Input::GetPrevMousePos() const {
-        return m_mousePrev;
-    }
-
     void Input::SetMouseScroll(double_t xOffset, double_t yOffset) {
         m_mouseScrollCurrent = { (float_t)xOffset, (float_t)yOffset };
     }
 
-    Input::~Input() = default;
+    void Input::SetFocusedWindowRect(const std::optional<SR_MATH_NS::FRect>& rect) {
+        m_focusedWindowRect = rect;
+    }
 
-    CursorLock::CursorLock() {
-        m_isLock  = true;
-        Input::Instance().LockCursor();
-    };
+    void Input::SetPlayMode(bool isPlayMode) {
+        m_isPlayMode = isPlayMode;
+    }
+
+    bool Input::IsPlayMode() const {
+        return m_isPlayMode;
+    }
+
+    bool Input::IsAppFocused() const {
+        return m_focusedWindowRect.has_value();
+    }
+
+    const CursorLockInfo* Input::GetActiveLock() const {
+        if (!m_cursorLocks[static_cast<uint32_t>(CursorLockMode::Everywhere)].empty()) {
+            return &m_cursorLocks[static_cast<uint32_t>(CursorLockMode::Everywhere)].back();
+        }
+
+        if (!m_cursorLocks[static_cast<uint32_t>(CursorLockMode::Editor)].empty() && !m_isPlayMode) {
+            return &m_cursorLocks[static_cast<uint32_t>(CursorLockMode::Editor)].back();
+        }
+
+        if (!m_cursorLocks[static_cast<uint32_t>(CursorLockMode::PlayMode)].empty() && m_isPlayMode) {
+            return &m_cursorLocks[static_cast<uint32_t>(CursorLockMode::PlayMode)].back();
+        }
+
+        return nullptr;
+    }
+
+    CursorLock::CursorLock(CursorLockMode lockMode, std::optional<SR_MATH_NS::FRect> lockRect)
+        : Super()
+        , m_isLock(true)
+    {
+        m_info.lockMode = lockMode;
+        m_info.lockRect = lockRect;
+        Input::Instance().LockCursor(m_info);
+    }
 
     CursorLock::~CursorLock() {
         if (m_isLock) {
             m_isLock = false;
-            Input::Instance().UnlockCursor();
+            Input::Instance().UnlockCursor(m_info);
         }
     };
 
-    CursorLock::CursorLock(CursorLock&& ref) noexcept {
-        m_isLock = SR_UTILS_NS::Exchange(ref.m_isLock, {});
+    CursorLock::CursorLock(CursorLock&& other) noexcept {
+        std::swap(m_isLock, other.m_isLock);
+        std::swap(m_info, other.m_info);
     }
 
     CursorLock& CursorLock::operator=(CursorLock&& other) noexcept {
-        if (this != &other){
-            m_isLock = SR_UTILS_NS::Exchange(other.m_isLock, { });
+        if (this != &other) {
+            std::swap(m_isLock, other.m_isLock);
+            std::swap(m_info, other.m_info);
         }
         return *this;
     }

@@ -16,24 +16,24 @@ namespace SR_SRLM_NS {
     DataType* DataTypeManager::CreateByName(uint64_t hashName) {
         SR_LOCK_GUARD;
 
-        if (auto&& pIt = m_structs.find(hashName); pIt != m_structs.end()) {
-            return pIt->second->Copy();
-        }
+  // if (auto&& pIt = m_structs.find(hashName); pIt != m_structs.end()) {
+  //     return pIt->second->Copy();
+  // }
 
-        if (auto&& pData = DataTypeAllocator::Instance().Allocate(hashName)) {
-            return pData;
-        }
+  // if (auto&& pData = DataTypeAllocator::Instance().Allocate(hashName)) {
+  //     return pData;
+  // }
 
-        if (auto&& pReflector = SR_UTILS_NS::EnumReflectorManager::Instance().GetReflector(hashName)) {
-            return new DataTypeEnum(0, pReflector);
-        }
+  // if (auto&& pReflector = SR_UTILS_NS::EnumReflectorManager::Instance().GetReflector(hashName)) {
+  //     return new DataTypeEnum(0, pReflector);
+  // }
 
-        if (auto&& stringName = SR_UTILS_NS::HashManager::Instance().HashToString(hashName); !stringName.empty()) {
-            SR_ERROR("DataTypeManager::CreateByName() : failed to create \"{}\"!", stringName);
-        }
-        else {
-            SRHalt("Type by hash \"" + SR_UTILS_NS::ToString(hashName) + "\" not found!");
-        }
+  // if (auto&& stringName = SR_UTILS_NS::HashManager::Instance().HashToString(hashName); !stringName.empty()) {
+  //     SR_ERROR("DataTypeManager::CreateByName() : failed to create \"{}\"!", stringName);
+  // }
+  // else {
+  //     SRHalt("Type by hash \"" + SR_UTILS_NS::ToString(hashName) + "\" not found!");
+  // }
 
         return nullptr;
     }

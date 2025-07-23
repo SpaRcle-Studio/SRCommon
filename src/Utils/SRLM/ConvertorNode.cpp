@@ -6,8 +6,8 @@
 
 namespace SR_SRLM_NS {
     void ConvertorNode::InitNode() {
-        AddInputData(DataTypeAllocator::Instance().Allocate(m_initInputTypeHashName));
-        AddOutputData(DataTypeAllocator::Instance().Allocate(m_initOutputTypeHashName));
+      // AddInputData(DataTypeAllocator::Instance().Allocate(m_initInputTypeHashName));
+      // AddOutputData(DataTypeAllocator::Instance().Allocate(m_initOutputTypeHashName));
 
         LogicalNode::InitNode();
     }
