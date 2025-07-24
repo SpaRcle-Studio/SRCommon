@@ -151,6 +151,13 @@ namespace SR_UTILS_NS::Platform {
         std::set_terminate(StdHandler);
     }
 
+    LONG WINAPI SRCustomExceptionHandler(EXCEPTION_POINTERS* ExceptionInfo) {
+        char buffer[256];
+        std::snprintf(buffer, sizeof(buffer), "SRCustomExceptionHandler() : SEH exception: code = 0x%08lX", ExceptionInfo->ExceptionRecord->ExceptionCode);
+        SR_PLATFORM_NS::WriteConsoleError(buffer);
+        return EXCEPTION_EXECUTE_HANDLER;
+    }
+
     void InitializePlatform() {
         SR_PLATFORM_NS::WriteConsoleLog("Platform::InitializePlatform() : initializing Windows platform...\n");
         HKEY hKey;
@@ -161,6 +168,8 @@ namespace SR_UTILS_NS::Platform {
             SR_PLATFORM_NS::WriteConsoleError("InitializePlatform() : failed to open registry key!");
             return;
         }
+
+        SetUnhandledExceptionFilter(SRCustomExceptionHandler);
 
         SetPriorityClass(GetCurrentProcess(), REALTIME_PRIORITY_CLASS);
 

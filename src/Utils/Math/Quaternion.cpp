@@ -362,24 +362,22 @@ namespace SR_MATH_NS {
         return mask == 0; // если все 0, то результаты совпадают
 #else
         if (!SR_EQUALS_T(x, q.x, tolerance)) {
-                return false;
-            }
+            return false;
+        }
 
-            if (!SR_EQUALS_T(y, q.y, tolerance)) {
-                return false;
-            }
+        if (!SR_EQUALS_T(y, q.y, tolerance)) {
+            return false;
+        }
 
-            if (!SR_EQUALS_T(z, q.z, tolerance)) {
-                return false;
-            }
+        if (!SR_EQUALS_T(z, q.z, tolerance)) {
+            return false;
+        }
 
-            if (!SR_EQUALS_T(w, q.w, tolerance)) {
-                return false;
-            }
+        if (!SR_EQUALS_T(w, q.w, tolerance)) {
+            return false;
+        }
 
-            SR_NOOP;
-
-            return true;
+        return true;
 #endif
     }
 
