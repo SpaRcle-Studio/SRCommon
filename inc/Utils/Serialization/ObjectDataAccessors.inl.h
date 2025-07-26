@@ -601,6 +601,28 @@ template<> struct ObjectDataAccessor<SR_MATH_NS::FRect> {
     }
 };
 
+template<> struct ObjectDataAccessor<SR_MATH_NS::FColor> {
+    static void Save(ISerializer& serializer, const SR_MATH_NS::FColor& value, const SerializationId& id) {
+        serializer.BeginObject(id);
+        Serialization::SaveCheckDefault(serializer, value.r, SerializationId::Create("r"));
+        Serialization::SaveCheckDefault(serializer, value.g, SerializationId::Create("g"));
+        Serialization::SaveCheckDefault(serializer, value.b, SerializationId::Create("b"));
+        Serialization::SaveCheckDefault(serializer, value.a, SerializationId::Create("a"));
+        serializer.EndObject();
+    }
+
+    static void Load(IDeserializer& deserializer, SR_MATH_NS::FColor& value, const SerializationId& id) {
+        if (!deserializer.BeginObject(id)) {
+            return;
+        }
+        Serialization::Load(deserializer, value.r, SerializationId::Create("r"));
+        Serialization::Load(deserializer, value.g, SerializationId::Create("g"));
+        Serialization::Load(deserializer, value.b, SerializationId::Create("b"));
+        Serialization::Load(deserializer, value.a, SerializationId::Create("a"));
+        deserializer.EndObject();
+    }
+};
+
 template<> struct ObjectDataAccessor<SR_MATH_NS::IRect> {
     static void Save(ISerializer& serializer, const SR_MATH_NS::IRect& value, const SerializationId& id) {
         serializer.BeginObject(id);

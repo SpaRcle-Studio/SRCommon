@@ -27,6 +27,7 @@ namespace SR_UTILS_NS {
 
         void ForEachProperty(const std::function<void(const SR_UTILS_NS::Reflection::Property& property, uint64_t index)>& func, uint64_t* pIndex = nullptr) const;
         virtual void ForEachSRClass(SRClass& srClass, const SR_HTYPES_NS::Function<void(SRClass&)>& function) const noexcept;
+        virtual void CloneTo(const SRClass& src, SRClass& dest) const noexcept;
 
         SR_NODISCARD virtual SR_UTILS_NS::StringAtom GetInspectorName() const noexcept;
 

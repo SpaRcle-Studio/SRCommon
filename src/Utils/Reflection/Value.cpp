@@ -196,6 +196,16 @@ namespace SR_UTILS_NS::Reflection {
         return GetTypeName().starts_with(compare);
     }
 
+    bool Value::IsFColor() const {
+        if (!IsClass() || IsTemplate()) {
+            return false;
+        }
+
+        static const auto meta = entt::meta_any(SR_MATH_NS::FColor());
+        static const std::string_view compare = meta.base().type().name();
+        return GetTypeName().starts_with(compare);
+    }
+
     bool Value::IsMathSize() const {
         if (!IsClass() || !IsTemplate()) {
             return false;

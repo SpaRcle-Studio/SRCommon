@@ -133,5 +133,44 @@ namespace SR_UTILS_NS {
         }
         return false;
     }
-}
 
+    void SRClassMeta::CloneTo(const SRClass& src, SRClass& dest) const noexcept {
+        if (src.GetMeta() != dest.GetMeta()) SR_UNLIKELY_ATTRIBUTE {
+            SRHalt("Cannot clone from {} to {}: meta mismatch!", src.GetMeta()->GetFactoryName(), dest.GetMeta()->GetFactoryName());
+        }
+
+        for (auto&& pBase : GetBaseMetas()) {
+            pBase->CloneTo(src, dest);
+        }
+
+        /*auto&& properties = src.GetMeta()->GetProperties();
+
+        for (auto&& property : properties) {
+            switch (property.GetSRClassContainsMode()) {
+                case Reflection::PropertySRClassContainsMode::NotContains:
+                    property.Set(&dest, property.Get(const_cast<SRClass*>(&src)));
+                    break;
+                case Reflection::PropertySRClassContainsMode::SharedPointer: {
+                    if (auto&& pSrcSharedPtrBase = property.Get(const_cast<SRClass*>(&src)).GetSharedPtrBase()) {
+                        if (auto&& pSrcSRClass = pSrcSharedPtrBase->GetSRClass()) {
+                            SR_HTYPES_NS::SharedPtr<SRClass> pClone = SR_UTILS_NS::Factory::Instance().CreateBase(pSrcSRClass->GetMeta()->GetFactoryName());
+                            pSrcSRClass->CloneTo(*pClone);
+                            property.Set(&dest, SR_UTILS_NS::Reflection::Value::Create(pClone));
+                        }
+                    }
+                    break;
+                }
+                case Reflection::PropertySRClassContainsMode::Contains: {
+                    SRClass* pDestination = property.Get(&dest).GetSRClass();
+                    property.Get(const_cast<SRClass*>(&src)).GetSRClass()->CloneTo(*pDestination);
+                    break;
+                }
+                case Reflection::PropertySRClassContainsMode::Inner:
+                    break;
+                default:
+                    SRHalt("Unknown SRClassContainsMode!");
+                    break;
+            }
+        }*/
+    }
+}

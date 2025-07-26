@@ -124,6 +124,7 @@ namespace SR_UTILS_NS::Reflection {
         SR_NODISCARD bool IsUnicodeString() const;
         SR_NODISCARD bool IsPath() const;
         SR_NODISCARD bool IsRect() const;
+        SR_NODISCARD bool IsFColor() const;
         SR_NODISCARD bool IsMathVector() const;
         SR_NODISCARD bool IsMathSize() const;
         SR_NODISCARD bool IsBool() const;
