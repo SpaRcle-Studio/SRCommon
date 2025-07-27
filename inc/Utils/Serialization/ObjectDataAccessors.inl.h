@@ -668,16 +668,38 @@ template<> struct ObjectDataAccessor<SR_MATH_NS::URect> {
 };
 
 template<typename T> struct ObjectDataAccessor<std::optional<T>> {
+    static constexpr SerializationId hasValueId = SerializationId::Create("has");
+
 	static void Save(ISerializer& serializer, const std::optional<T>& value, const SerializationId& id) {
-		if (value.is_initialized()) {
-			Serialization::Save(serializer, value.get(), id);
-		}
+        serializer.BeginObject(id);
+        if (value.has_value()) {
+            serializer.WriteBool(true, hasValueId);
+            Serialization::Save(serializer, value.value(), SerializationId::Create("value"));
+        }
+        else {
+            serializer.WriteBool(false, hasValueId);
+        }
+        serializer.EndObject();
 	}
+
 	static void Load(IDeserializer& deserializer, std::optional<T>& value, const SerializationId& id) {
-		if (!value.is_initialized()) {
-			value = T();
-		}
-		Serialization::Load(deserializer, value.get(), id);
+		if (!deserializer.BeginObject(id)) {
+            return;
+        }
+
+        bool hasValue = false;
+        deserializer.ReadBool(hasValue, hasValueId);
+
+        if (hasValue) {
+            T item = T();
+            Serialization::Load(deserializer, item, SerializationId::Create("value"));
+            value = std::move(item);
+        }
+        else {
+            value.reset();
+        }
+
+        deserializer.EndObject();
 	}
 };
 

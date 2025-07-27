@@ -27,6 +27,7 @@
 #include "../src/Utils/Serialization/Serializer.cpp"
 #include "../src/Utils/Serialization/Deserializer.cpp"
 #include "../src/Utils/Serialization/SRASerialization.cpp"
+#include "../src/Utils/Serialization/OptionalTypes.cpp"
 
 #include "../src/Utils/Tests/ReflectionTestComonent.cpp"
 

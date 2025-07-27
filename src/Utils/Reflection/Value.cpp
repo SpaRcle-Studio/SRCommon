@@ -322,5 +322,16 @@ namespace SR_UTILS_NS::Reflection {
         return ValueSequenceContainer(m_storage.as_sequence_container());
     }
 
+    bool Value::IsOptional() const {
+        if (!IsClass() || !IsTemplate()) {
+            return false;
+        }
+
+        static auto meta = entt::meta_any(std::optional<uint64_t>());
+        static const std::string_view compare = meta.base().type().name().substr(0, meta.base().type().name().find('<'));
+
+        return GetTypeName().starts_with(compare);
+    }
+
     Value::~Value() = default;
 }

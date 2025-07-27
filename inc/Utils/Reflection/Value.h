@@ -129,6 +129,7 @@ namespace SR_UTILS_NS::Reflection {
         SR_NODISCARD bool IsMathSize() const;
         SR_NODISCARD bool IsBool() const;
         SR_NODISCARD bool IsArithmetic() const;
+        SR_NODISCARD bool IsOptional() const;
         SR_NODISCARD bool IsClass() const;
         SR_NODISCARD bool IsTemplate() const;
         SR_NODISCARD bool IsIntegral() const;
