@@ -35,6 +35,44 @@ namespace SR_UTILS_NS::Reflection {
 
     /// ----------------------------------------------------------------------------------------------------------------
 
+    Value ValueAssociativeContainerIterator::First() const {
+        return Value(m_iterator->first.as_ref());
+    }
+
+    Value ValueAssociativeContainerIterator::Second() const {
+        return Value(m_iterator->second.as_ref());
+    }
+
+    void ValueAssociativeContainer::Clear() {
+        m_storage.clear();
+    }
+
+    void ValueAssociativeContainer::Reserve(uint64_t size) {
+        m_storage.reserve(size);
+    }
+
+    Value ValueAssociativeContainer::GetValueType() const {
+        return Value(m_storage.value_type().construct());
+    }
+
+    Value ValueAssociativeContainer::GetMappedType() const {
+        return Value(m_storage.mapped_type().construct());
+    }
+
+    Value ValueAssociativeContainer::GetKeyType() const {
+        return Value(m_storage.key_type().construct());
+    }
+
+    bool ValueAssociativeContainer::Insert(const Value& key, const Value& value) {
+        return m_storage.insert(key.m_storage, value.m_storage);
+    }
+
+    void ValueAssociativeContainer::Erase(const Value& key) {
+        m_storage.erase(key.m_storage);
+    }
+
+    /// ----------------------------------------------------------------------------------------------------------------
+
     Value::Value(entt::meta_any&& storage)
         : m_storage(std::move(storage))
     { }
@@ -237,6 +275,14 @@ namespace SR_UTILS_NS::Reflection {
         return m_storage.base().policy() == entt::any_policy::cref;
     }
 
+    bool Value::IsEmbedded() const {
+        return m_storage.base().policy() == entt::any_policy::embedded;
+    }
+
+    bool Value::IsDynamic() const {
+        return m_storage.base().policy() == entt::any_policy::dynamic;
+    }
+
     std::string_view Value::GetTypeName() const {
         return m_storage.base().type().name();
     }
@@ -320,6 +366,14 @@ namespace SR_UTILS_NS::Reflection {
 
     ValueSequenceContainer Value::AsSequenceContainer() const {
         return ValueSequenceContainer(m_storage.as_sequence_container());
+    }
+
+    ValueAssociativeContainer Value::AsAssociativeContainer() {
+        return ValueAssociativeContainer(m_storage.as_associative_container());
+    }
+
+    ValueAssociativeContainer Value::AsAssociativeContainer() const {
+        return ValueAssociativeContainer(m_storage.as_associative_container());
     }
 
     bool Value::IsOptional() const {

@@ -110,6 +110,8 @@ namespace SR_UTILS_NS {
         mutable bool m_isNormalized = false;
 
     };
+
+    template <> struct SupportsNullptrComparison<SR_UTILS_NS::Path> : std::false_type {};
 }
 
 namespace SR_UTILS_NS {

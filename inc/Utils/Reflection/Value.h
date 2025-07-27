@@ -13,6 +13,7 @@
 namespace SR_UTILS_NS::Reflection {
     class Value;
     class ValueSequenceContainer;
+    class ValueAssociativeContainer;
 
     class ValueSequenceContainerIterator {
         friend ValueSequenceContainer;
@@ -55,6 +56,69 @@ namespace SR_UTILS_NS::Reflection {
 
     };
 
+    class ValueAssociativeContainerIterator {
+        friend ValueAssociativeContainer;
+    private:
+        explicit ValueAssociativeContainerIterator(entt::meta_associative_container::iterator&& iterator)
+            : m_iterator(std::move(iterator))
+        { }
+
+    public:
+        ValueAssociativeContainerIterator& operator++() noexcept { ++m_iterator; return *this; }
+
+        ValueAssociativeContainerIterator operator++(int32_t value) noexcept {
+            ValueAssociativeContainerIterator orig = *this;
+            ++m_iterator;
+            return orig;
+        }
+
+        SR_NODISCARD Value First() const;
+        SR_NODISCARD Value Second() const;
+
+        SR_NODISCARD operator bool() const noexcept { return static_cast<bool>(m_iterator); } /// NOLINT
+
+        SR_NODISCARD bool operator==(const ValueAssociativeContainerIterator& other) const noexcept {
+            return m_iterator == other.m_iterator;
+        }
+
+        SR_NODISCARD bool operator!=(const ValueAssociativeContainerIterator& other) const noexcept {
+            return !(*this == other);
+        }
+
+    private:
+        entt::meta_associative_container::iterator m_iterator;
+
+    };
+
+    class SR_COMMON_DLL_API SR_NODISCARD ValueAssociativeContainer {
+        friend Value;
+    private:
+        explicit ValueAssociativeContainer(entt::meta_associative_container&& storage)
+            : m_storage(storage)
+        { }
+
+    public:
+        SR_NODISCARD ValueAssociativeContainerIterator begin() { return ValueAssociativeContainerIterator(m_storage.begin()); }
+        SR_NODISCARD ValueAssociativeContainerIterator end() { return ValueAssociativeContainerIterator(m_storage.end()); }
+
+        void Clear();
+        void Reserve(uint64_t size);
+
+        void Erase(const Value& key);
+
+        SR_NODISCARD Value GetKeyType() const;
+        SR_NODISCARD Value GetValueType() const;
+        SR_NODISCARD Value GetMappedType() const;
+
+        SR_NODISCARD uint64_t Size() const { return m_storage.size(); }
+        SR_NODISCARD bool Empty() const { return Size() == 0; }
+
+        bool Insert(const Value& key, const Value& value);
+
+    private:
+        entt::meta_associative_container m_storage;
+    };
+
     class SR_COMMON_DLL_API SR_NODISCARD ValueSequenceContainer {
         friend Value;
     private:
@@ -70,6 +134,10 @@ namespace SR_UTILS_NS::Reflection {
         void Resize(uint64_t size);
         void Reserve(uint64_t size);
 
+        ValueSequenceContainerIterator Erase(ValueSequenceContainerIterator it) {
+            return ValueSequenceContainerIterator(m_storage.erase(it.m_iterator));
+        }
+
         SR_NODISCARD uint64_t Size() const { return m_storage.size(); }
         SR_NODISCARD bool Empty() const { return Size() == 0; }
 
@@ -81,6 +149,8 @@ namespace SR_UTILS_NS::Reflection {
 
     class SR_COMMON_DLL_API SR_NODISCARD Value {
         friend ValueSequenceContainerIterator;
+        friend ValueAssociativeContainerIterator;
+        friend ValueAssociativeContainer;
         using SRClassGetterFn = SRClass*(*)(const Value&);
         using SRClassSetterFn = void(*)(Value&, SRClass*);
     private:
@@ -106,11 +176,16 @@ namespace SR_UTILS_NS::Reflection {
         SR_NODISCARD ValueSequenceContainer AsSequenceContainer();
         SR_NODISCARD ValueSequenceContainer AsSequenceContainer() const;
 
+        SR_NODISCARD ValueAssociativeContainer AsAssociativeContainer();
+        SR_NODISCARD ValueAssociativeContainer AsAssociativeContainer() const;
+
         SR_NODISCARD Value Ref();
         SR_NODISCARD Value Copy() const;
 
         SR_NODISCARD bool IsRef() const;
         SR_NODISCARD bool IsConst() const;
+        SR_NODISCARD bool IsEmbedded() const;
+        SR_NODISCARD bool IsDynamic() const;
 
         SR_NODISCARD bool IsSequenceContainer() const;
         SR_NODISCARD bool IsAssociativeContainer() const;
@@ -146,8 +221,8 @@ namespace SR_UTILS_NS::Reflection {
 
         SR_NODISCARD operator bool() const noexcept; /// NOLINT
 
-    private:
-        template<typename T> static void InitBase(Value& value);
+    //private:
+    //    template<typename T> static void InitBase(Value& value);
 
     private:
         entt::meta_any m_storage;
@@ -156,7 +231,7 @@ namespace SR_UTILS_NS::Reflection {
 
     /// Implementation
 
-    template<typename T> void Value::InitBase(Value& value) {
+    //template<typename T> void Value::InitBase(Value& value) {
         /*if constexpr (IsSharedPointerV<T>) {
             value.m_SRClassGetter = [](const Value& value) -> SRClass* {
                 if (auto&& pData = value.TryCast<T>()) {
@@ -179,24 +254,27 @@ namespace SR_UTILS_NS::Reflection {
                 return nullptr;
             };
         }*/
-    }
+    //}
 
     template<typename T> Value Value::Create(T&& value) {
-        auto&& reflected = Value(entt::meta_any(std::forward<T>(value)));
-        InitBase<T>(reflected);
-        return std::move(reflected);
+        return Value(entt::meta_any(std::forward<T>(value)));
+        //auto&& reflected = Value(entt::meta_any(std::forward<T>(value)));
+        //InitBase<T>(reflected);
+        //return std::move(reflected);
     }
 
     template<typename T> Value Value::CreateRef(T& value) {
-        auto&& reflected = Value(entt::meta_any::create_ref(value));
-        InitBase<T>(reflected);
-        return std::move(reflected);
+        return Value(entt::meta_any::create_ref(value));
+        //auto&& reflected = Value(entt::meta_any::create_ref(value));
+        //InitBase<T>(reflected);
+        //return std::move(reflected);
     }
 
     template<typename T> Value Value::CreateCRef(const T& value) {
-        auto&& reflected = Value(entt::meta_any::create_cref(value));
-        InitBase<T>(reflected);
-        return std::move(reflected);
+        return Value(entt::meta_any::create_cref(value));
+        //auto&& reflected = Value(entt::meta_any::create_cref(value));
+        //InitBase<T>(reflected);
+        //return std::move(reflected);
     }
 }
 

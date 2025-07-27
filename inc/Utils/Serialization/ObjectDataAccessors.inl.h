@@ -364,17 +364,32 @@ struct ObjectDataAccessor<std::map<T, U, Compare, Allocator>> {
 
 	static_assert(std::is_arithmetic_v<T> || IsSREnumV<T> || std::is_same_v<T, std::string> || std::is_same_v<T, SR_UTILS_NS::StringAtom>, "Custom types and structs are not supported as id of map");
 
+    static constexpr SerializationId itemId = SerializationId::Create("item");
+    static constexpr SerializationId firstId = SerializationId::Create("first");
+    static constexpr SerializationId secondId = SerializationId::Create("second");
+
 	static void Save(ISerializer& serializer, const MapType& value, const SerializationId& id) {
-		serializer.BeginArray(value.size(), id);
+        uint64_t count = 0;
+
+        for (auto&& item : value) {
+            if (SR_UTILS_NS::Serialization::CanBeSaved(item)) {
+                ++count;
+            }
+        }
+
+        serializer.BeginArray(count, id);
 
 		for (auto&& item : value) {
-			SR_CONSTEXPR SerializationId itemId = SerializationId::Create("item");
-			serializer.BeginObject(itemId);
+            if (!SR_UTILS_NS::Serialization::CanBeSaved(item)) {
+                continue;
+            }
 
-			Serialization::Save(serializer, item.first, SerializationId::Create("first"));
-			Serialization::Save(serializer, item.second, SerializationId::Create("second"));
+            serializer.BeginItem(itemId);
 
-			serializer.EndObject();
+            Serialization::Save(serializer, item.first, firstId);
+            Serialization::Save(serializer, item.second, secondId);
+
+            serializer.EndItem();
 		}
 
 		serializer.EndArray();
@@ -382,54 +397,51 @@ struct ObjectDataAccessor<std::map<T, U, Compare, Allocator>> {
 
 	template<typename MapT>
 	static void Load(IDeserializer& deserializer, MapT& value, const SerializationId& id) {
+        if (!deserializer.IsPreserveMode()) {
+            value.clear();
+        }
+
 		const uint64_t size = deserializer.BeginArray(id);
+        if (size == 0) {
+            return;
+        }
 
-		if (!deserializer.IsPreserveMode()) {
-			value.clear();
-		}
-		else if (deserializer.ShouldSetDefaults()) {
-			for (auto it = value.begin(); it != value.end();) {
-				if (deserializer.ShouldSetDefaults(SerializationId(it->first.c_str(), 0))) {
-					it = value.erase(it);
-				}
-				else {
-					++it;
-				}
-			}
-		}
+        if constexpr (SR_UTILS_NS::IsDetectedV<Details::ReserveMethodT, MapT>) {
+            value.reserve(size);
+        }
 
-		if constexpr (SR_UTILS_NS::IsDetectedV<Details::ReserveMethodT, MapT>) {
-			value.reserve(size + value.size());
-		}
+        uint64_t index = 0;
 
-		/*while (deserializer.NextItem(id)) {
-			if (deserializer.IsPreserveMode()) {
-				deserializer.BeginObject(id);
-				T element = {};
-				Serialization::Load(deserializer, element, SerializationId::Create("first"));
-				auto&& it = value.find(element);
-				if (it != value.end()) {
-					Serialization::Load(deserializer, it->second, SerializationId::Create("second"));
-				}
-				else if (deserializer.AllowNewMapKeys()) {
-					U itemValue = {};
-					Serialization::Load(deserializer, itemValue, SerializationId::Create("second"));
-					if (IsValidValue(element) && IsValidValue(itemValue)) {
-						value.emplace(std::move(element), std::move(itemValue));
-					}
-				}
-				deserializer.EndObject();
-			}
-			else {
-				std::pair<T, U> pair;
+        while (deserializer.BeginItem(itemId, index)) {
+            if (deserializer.IsPreserveMode() && index < value.size()) {
+                T key = {};
+                Serialization::Load(deserializer, key, firstId);
+                auto it = value.find(key);
+                if (it != value.end()) {
+                    Serialization::Load(deserializer, it->second, secondId);
+                }
+                else if (deserializer.AllowNewMapKeys()) {
+                    U itemValue = {};
+                    Serialization::Load(deserializer, itemValue, secondId);
+                    if (SR_UTILS_NS::Serialization::IsValidValue(key) && SR_UTILS_NS::Serialization::IsValidValue(itemValue)) {
+                        value.emplace(std::move(key), std::move(itemValue));
+                    }
+                }
+            }
+            else {
+                std::pair<T, U> pair;
 
-				Serialization::Load(deserializer, pair, id);
+                Serialization::Load(deserializer, pair.first, firstId);
+                Serialization::Load(deserializer, pair.second, secondId);
 
-				if (IsValidValue(pair.first) && IsValidValue(pair.second)) {
-					value.insert(std::move(pair));
-				}
-			}
-		}*/
+                if (SR_UTILS_NS::Serialization::IsValidValue(pair.first) && SR_UTILS_NS::Serialization::IsValidValue(pair.second)) {
+                    value.insert(std::move(pair));
+                }
+            }
+
+            deserializer.EndItem();
+            index++;
+        }
 
 		deserializer.EndArray();
 	}
@@ -469,12 +481,14 @@ public:
     }
 
     static void Load(IDeserializer& deserializer, SetType& value, const SerializationId& id) {
+        if (!deserializer.IsPreserveMode()) {
+            value.clear();
+        }
+
         const uint64_t size = deserializer.BeginArray(id);
         if (size == 0) {
             return;
         }
-
-        value.clear();
 
         uint64_t index = 0;
 
@@ -494,10 +508,13 @@ public:
 };
 
 template<typename T, typename U> struct ObjectDataAccessor<std::pair<T, U>> {
+    static constexpr SerializationId firstId = SerializationId::Create("first");
+    static constexpr SerializationId secondId = SerializationId::Create("second");
+
 	static void Save(ISerializer& serializer, const std::pair<T, U>& value, const SerializationId& id) {
 		serializer.BeginObject(id);
-		Serialization::Save(serializer, value.first, SerializationId::Create("first"));
-		Serialization::Save(serializer, value.second, SerializationId::Create("second"));
+		Serialization::Save(serializer, value.first, firstId);
+		Serialization::Save(serializer, value.second, secondId);
 		serializer.EndObject();
 	}
 
@@ -506,8 +523,8 @@ template<typename T, typename U> struct ObjectDataAccessor<std::pair<T, U>> {
 			return;
 		}
 
-		Serialization::Load(deserializer, value.first, SerializationId::Create("first"));
-		Serialization::Load(deserializer, value.second, SerializationId::Create("second"));
+		Serialization::Load(deserializer, value.first, firstId);
+		Serialization::Load(deserializer, value.second, secondId);
 
 		deserializer.EndObject();
 	}

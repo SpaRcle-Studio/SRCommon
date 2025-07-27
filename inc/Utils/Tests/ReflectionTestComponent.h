@@ -9,6 +9,24 @@
 #include <Utils/ECS/ComponentManager.h>
 
 namespace SR_UTILS_NS::Tests {
+    struct ReflectionTestComponentAssociative : public SR_UTILS_NS::Serializable {
+        SR_STRUCT()
+
+        /// @property
+        std::map<SR_UTILS_NS::StringAtom, int> associativeMapAtom;
+        /// @property
+        std::map<std::string, int> associativeMapString;
+        /// @property
+        std::map<int, std::string> associativeMap2;
+        /// @property
+        std::map<SR_UTILS_NS::PlatformType, int> associativeMap33;
+        /// @property
+        std::map<SR_UTILS_NS::PlatformType, std::string> associativeMap3;
+        /// @property
+        std::map<SR_UTILS_NS::PlatformType, SR_UTILS_NS::Path> associativeMap4;
+
+    };
+
     struct ReflectionTestComponentDataBase : public SR_UTILS_NS::Serializable {
         SR_STRUCT()
 
@@ -88,6 +106,8 @@ namespace SR_UTILS_NS::Tests {
         }
 
     private:
+        /// @property @onChanged(OnChanged)
+        ReflectionTestComponentAssociative m_associative;
         /// @property @onChanged(OnChanged)
         std::string m_string = "Hello world!";
         /// @property @onChanged(OnChanged)
