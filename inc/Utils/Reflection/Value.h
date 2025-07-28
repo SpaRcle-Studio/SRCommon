@@ -138,6 +138,8 @@ namespace SR_UTILS_NS::Reflection {
             return ValueSequenceContainerIterator(m_storage.erase(it.m_iterator));
         }
 
+        ValueSequenceContainerIterator Insert(ValueSequenceContainerIterator it, Value value);
+
         SR_NODISCARD uint64_t Size() const { return m_storage.size(); }
         SR_NODISCARD bool Empty() const { return Size() == 0; }
 
@@ -151,6 +153,7 @@ namespace SR_UTILS_NS::Reflection {
         friend ValueSequenceContainerIterator;
         friend ValueAssociativeContainerIterator;
         friend ValueAssociativeContainer;
+        friend ValueSequenceContainer;
         using SRClassGetterFn = SRClass*(*)(const Value&);
         using SRClassSetterFn = void(*)(Value&, SRClass*);
     private:

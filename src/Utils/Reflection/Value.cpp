@@ -33,6 +33,10 @@ namespace SR_UTILS_NS::Reflection {
         m_storage.reserve(size);
     }
 
+    ValueSequenceContainerIterator ValueSequenceContainer::Insert(ValueSequenceContainerIterator it, Value value) {
+        return ValueSequenceContainerIterator(m_storage.insert(it.m_iterator, value.m_storage));
+    }
+
     /// ----------------------------------------------------------------------------------------------------------------
 
     Value ValueAssociativeContainerIterator::First() const {

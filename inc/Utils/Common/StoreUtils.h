@@ -19,18 +19,23 @@ namespace SR_UTILS_NS::StoreUtils {
         enum class ValueType {
             AnyType,
             Float,
+            Int,
             Bool
         };
     private:
         union Value {
             float_t f;
             bool b;
+            int64_t i;
         };
 
         template<typename T> static T& VisitValue(Value& value) {
             using Type = SR_UTILS_NS::RemoveQualifiersT<T>;
             if constexpr (std::is_same_v<Type, float_t>) {
                 return value.f;
+            }
+            else if constexpr (std::is_same_v<Type, int64_t>) {
+                return value.i;
             }
             else if constexpr (std::is_same_v<Type, bool>) {
                 return value.b;
@@ -109,6 +114,14 @@ namespace SR_UTILS_NS::StoreUtils {
         }
         static void SetBool(SR_UTILS_NS::StringAtom key, bool value) {
             Storage::Instance().Set(storeType, Storage::ValueType::Bool, key, value);
+        }
+
+        SR_NODISCARD static bool HasInt(SR_UTILS_NS::StringAtom key) { return Has(key, Storage::ValueType::Int); }
+        SR_NODISCARD static int64_t GetInt(SR_UTILS_NS::StringAtom key, const std::optional<int64_t>& def = std::nullopt) {
+            return Storage::Instance().Get<int64_t>(storeType, Storage::ValueType::Int, key, def);
+        }
+        static void SetInt(SR_UTILS_NS::StringAtom key, int64_t value) {
+            Storage::Instance().Set(storeType, Storage::ValueType::Int, key, value);
         }
 
     };
