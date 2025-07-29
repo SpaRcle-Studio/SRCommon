@@ -45,8 +45,9 @@ namespace SR_UTILS_NS {
 			return id;
 		}
 
-		SR_NODISCARD SR_INLINE  const char* GetName() const noexcept { return name; }
-		SR_NODISCARD SR_INLINE  uint64_t GetHash() const noexcept { return hash; }
+		SR_NODISCARD SR_INLINE const char* GetName() const noexcept { return name; }
+		SR_NODISCARD SR_INLINE uint64_t GetHash() const noexcept { return hash; }
+		SR_NODISCARD SR_INLINE std::string ToString() const noexcept { return std::string(name); }
 
 	private:
 		static constexpr uint64_t MaxNameLength = 256;
