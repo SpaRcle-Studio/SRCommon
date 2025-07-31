@@ -9,6 +9,7 @@
 
 #include <Utils/Debug.h>
 #include <Utils/Platform/Platform.h>
+#include <Utils/Types/Time.h>
 
 #include <rapidyaml/src/ryml.hpp>
 #include <rapidyaml/src/ryml_std.hpp>

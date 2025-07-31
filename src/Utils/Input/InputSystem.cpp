@@ -22,6 +22,7 @@ namespace SR_UTILS_NS {
 
         if (isLocked) {
             m_mousePrev = pActiveLock->lockRect ? pActiveLock->lockRect->Center() : m_focusedWindowRect->Center();
+            m_mousePrev = m_mousePrev.Round();
 
             if (!m_isLocked) {
                 m_mouse = m_mousePrev;

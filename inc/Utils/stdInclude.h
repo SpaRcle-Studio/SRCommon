@@ -19,6 +19,7 @@
     #include <cfloat>
     #include <span>
     #include <limits>
+    #include <bitset>
     #include <type_traits>
     #include <cstdio>
     #include <iosfwd>
