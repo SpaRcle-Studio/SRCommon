@@ -15,7 +15,7 @@ namespace SR_UTILS_NS {
         }
     }
 
-    SR_UTILS_NS::Path TagManager::InitializeResourcePath() const {
+    SR_UTILS_NS::Path TagManager::GetSettingsPath() const {
         return "Engine/Configs/TagManagerSettings.xml";
     }
 

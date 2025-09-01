@@ -66,6 +66,9 @@ namespace SR_UTILS_NS {
     protected:
         ~GlobalSettings() override = default;
 
+    public:
+        virtual SR_UTILS_NS::Path GetSettingsPath() const = 0;
+
     private:
         void OnSingletonDestroy() final;
         void InitSingleton() final;
@@ -103,7 +106,7 @@ namespace SR_UTILS_NS {
     }
 
     template<typename T> void GlobalSettings<T>::InitSingleton() {
-        SetId(InitializeResourcePath().ToString());
+        SetId(GetSettingsPath().ToString());
 
         AddUsePoint();
 

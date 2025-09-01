@@ -44,46 +44,15 @@ namespace SR_HTYPES_NS {
     #endif
     }
 
-    SR_UTILS_NS::Path RawMesh::InitializeResourcePath() const {
-        auto&& resourceId = GetResourceId();
-        return SR_UTILS_NS::Path(SR_UTILS_NS::StringUtils::SubstringView(resourceId, '|', 1));
-    }
-
     RawMesh::Ptr RawMesh::Load(const SR_UTILS_NS::Path &rawPath) {
         return Load(rawPath, RawMeshParams());
     }
 
     RawMesh::Ptr RawMesh::Load(const SR_UTILS_NS::Path &rawPath, RawMeshParams params) {
-        RawMesh::Ptr pRawMesh = nullptr;
-
-        ResourceManager::Instance().Execute([&]() {
-            Path&& id = Path(rawPath).RemoveSubPath(ResourceManager::Instance().GetResPath());
-
-            auto&& paramsHash = SR_HASH(params);
-            id = SR_FORMAT("{}|", paramsHash) + id.ToStringRef();
-
-            if (auto&& pResource = ResourceManager::Instance().Find<RawMesh>(id)) {
-                pRawMesh = pResource;
-                SRAssert(pRawMesh->m_params == params);
-                return;
-            }
-
-            pRawMesh = RawMesh::MakeShared<RawMesh>();
-            pRawMesh->m_params = params;
-            pRawMesh->SetId(id.ToStringRef(), false /** auto register */);
-
-            if (!pRawMesh->Reload()) {
-                SR_ERROR("RawMesh::Load() : failed to load raw mesh! \n\tPath: " + rawPath.ToString());
-                pRawMesh->DeleteResource();
-                pRawMesh = nullptr;
-                return;
-            }
-
-            /// отложенная ручная регистрация
-            ResourceManager::Instance().RegisterResource(pRawMesh.StaticCast<IResource>());
-        });
-
-        return pRawMesh;
+        return ResourceManager::Instance().GetOrLoadResource<RawMesh>(rawPath,
+            [&params](RawMesh& mesh) { mesh.m_params = params; },
+            [&params]() { return SR_UTILS_NS::ToString(SR_HASH(params)); }
+        );
     }
 
     bool RawMesh::Unload() {

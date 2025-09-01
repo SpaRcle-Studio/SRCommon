@@ -5,7 +5,7 @@
 #include <Utils/ECS/LayerManager.h>
 
 namespace SR_UTILS_NS {
-    SR_UTILS_NS::Path LayerManager::InitializeResourcePath() const {
+    SR_UTILS_NS::Path LayerManager::GetSettingsPath() const {
         return "Engine/Configs/Layers.xml";
     }
 

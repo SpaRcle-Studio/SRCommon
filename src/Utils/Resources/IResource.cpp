@@ -76,14 +76,14 @@ namespace SR_UTILS_NS {
         });
     }
 
-    void IResource::SetId(SR_UTILS_NS::StringAtom id, bool autoRegister) {
+    void IResource::SetId(SR_UTILS_NS::StringAtom id, const SR_UTILS_NS::Path& path, bool autoRegister) {
         SRAssert2(!id.empty(), "Invalid id!");
 
         if (m_resourceId.empty()) {
             SRAssert2(m_resourcePath.empty(), "Resource path already set!");
 
             m_resourceId = id;
-            m_resourcePath = InitializeResourcePath();
+            m_resourcePath = path;
 
             if (autoRegister) {
                 ResourceManager::Instance().RegisterResource(this);
@@ -92,6 +92,10 @@ namespace SR_UTILS_NS {
         else {
             SRHalt("Double set resource id!");
         }
+    }
+
+    void IResource::SetId(SR_UTILS_NS::StringAtom id, bool autoRegister) {
+        SetId(id, SR_UTILS_NS::Path(id), autoRegister);
     }
 
     void IResource::CheckResourceUsage() {
@@ -229,10 +233,6 @@ namespace SR_UTILS_NS {
 
     SR_UTILS_NS::Path IResource::GetResourcePath() const {
         return m_resourcePath;
-    }
-
-    Path IResource::InitializeResourcePath() const {
-        return SR_UTILS_NS::Path(GetResourceId());
     }
 
     Path IResource::GetAssociatedPath() const {
