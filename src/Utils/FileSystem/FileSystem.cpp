@@ -97,6 +97,10 @@ namespace SR_UTILS_NS {
 
         std::string data = std::string();
         std::ifstream stream(path, std::ios::in);
+        if (!stream) {
+            SR_ERROR("FileSystem::ReadAllText() : failed to open \"" + path + "\" file!");
+            return data;
+        }
 
         stream.seekg(0, std::ios::end);
         std::streampos bytes = stream.tellg();
@@ -227,7 +231,7 @@ namespace SR_UTILS_NS {
         return newPath;
     }
 
-    SR_COMMON_DLL_API bool FileSystem::WriteToFile(const std::string& path, const std::string& text) {
+    SR_COMMON_DLL_API bool FileSystem::WriteToFile(const std::string& path, const std::string_view& text) {
         std::ofstream stream(path);
         if (!stream.is_open()) {
             return false;
