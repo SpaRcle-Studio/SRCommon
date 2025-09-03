@@ -66,10 +66,6 @@ namespace SR_UTILS_NS {
 
     void LookAtComponent::OnDestroy() {
         Super::OnDestroy();
-
-        GetThis().AutoFree([](auto&& pData) {
-            delete pData;
-        });
     }
 
     void LookAtComponent::SetExecuteInEditMode(bool enabled) {

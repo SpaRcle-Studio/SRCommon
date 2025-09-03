@@ -33,6 +33,7 @@ namespace SR_UTILS_NS {
     }
 
     void DebugDraw::SwitchCallbacks(void* pUserIdentifier) {
+        SR_TRACY_ZONE;
         SR_LOCK_GUARD;
 
         if (m_currentSwitcher == pUserIdentifier) {

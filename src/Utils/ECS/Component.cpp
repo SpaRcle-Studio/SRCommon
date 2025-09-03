@@ -195,7 +195,14 @@ namespace SR_UTILS_NS {
 
     void Component::OnLoaded() { m_isComponentLoaded = true; }
     void Component::OnAttached() { m_isAttached = true; SRAssert(GetParent()); }
-    void Component::OnDestroy() { SetParent(nullptr); }
+
+    void Component::OnDestroy() {
+        SetParent(nullptr);
+
+        GetThis().AutoFree([](auto&& pData) {
+            delete pData;
+        });
+    }
 
     void Component::Awake() { m_isAwake = true; }
     void Component::Update(float_t dt) { }

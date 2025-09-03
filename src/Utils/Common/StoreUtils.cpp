@@ -129,4 +129,68 @@ namespace SR_UTILS_NS::StoreUtils {
             m_storage[storageTepe] = { { key, { value, valueType } } };
         }
     }
+
+    Storage::ValueHolder::ValueHolder() = default;
+
+    Storage::ValueHolder::ValueHolder(Value val, ValueType type)
+        : value(val)
+        , type(type)
+    { }
+
+    Storage::ValueHolder::ValueHolder(const ValueHolder& other)
+        : type(other.type)
+        , value(other.value)
+    {
+        if (type == ValueType::String && other.value.s) {
+            value.s = new std::string(*other.value.s);
+        }
+    }
+
+    Storage::ValueHolder::ValueHolder(ValueHolder&& other) noexcept
+        : type(other.type)
+        , value(other.value)
+    {
+        other.type = ValueType::AnyType;
+        other.value = {};
+    }
+
+    Storage::ValueHolder& Storage::ValueHolder::operator=(const Storage::ValueHolder& other) {
+        if (this != &other) {
+            if (type == ValueType::String && value.s) {
+                delete value.s;
+                value.s = nullptr;
+            }
+
+            type = other.type;
+            value = other.value;
+
+            if (type == ValueType::String && other.value.s) {
+                value.s = new std::string(*other.value.s);
+            }
+        }
+        return *this;
+    }
+
+    Storage::ValueHolder& Storage::ValueHolder::operator=(Storage::ValueHolder&& other) noexcept {
+        if (this != &other) {
+            if (type == ValueType::String && value.s) {
+                delete value.s;
+                value.s = nullptr;
+            }
+
+            type = other.type;
+            value = other.value;
+
+            other.type = ValueType::AnyType;
+            other.value = {};
+        }
+        return *this;
+    }
+
+    Storage::ValueHolder::~ValueHolder() {
+        if (type == ValueType::String && value.s) {
+            delete value.s;
+            value.s = nullptr;
+        }
+    }
 }

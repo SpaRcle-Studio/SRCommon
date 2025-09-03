@@ -112,6 +112,10 @@ namespace SR_UTILS_NS {
         return SR_UTILS_NS::StringAtom();
     }
 
+    SR_UTILS_NS::StringAtom SRClassMeta::GetDisplayName() const noexcept {
+        return GetFactoryName();
+    }
+
     SRClass* SRClassMeta::Allocate() const noexcept {
         return nullptr;
     }

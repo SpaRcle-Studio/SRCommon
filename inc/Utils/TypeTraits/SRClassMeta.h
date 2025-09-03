@@ -40,6 +40,7 @@ namespace SR_UTILS_NS {
         SR_NODISCARD virtual std::span<const SRClassMeta*> GetBaseMetas() const noexcept;
         SR_NODISCARD virtual std::span<const SR_UTILS_NS::Reflection::Property> GetProperties() const noexcept;
         SR_NODISCARD virtual SR_UTILS_NS::StringAtom GetFactoryName() const noexcept;
+        SR_NODISCARD virtual SR_UTILS_NS::StringAtom GetDisplayName() const noexcept;
         SR_NODISCARD virtual SRClass* Allocate() const noexcept;
 
         SR_NODISCARD bool IsSameOrInherited(SR_UTILS_NS::StringAtom name) const;

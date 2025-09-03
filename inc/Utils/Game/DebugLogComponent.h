@@ -27,9 +27,6 @@ namespace SR_UTILS_NS {
         void OnDestroy() override {
             SR_DEBUG_LOG("DebugLogComponent::OnDestroy()");
             Super::OnDestroy();
-            GetThis().AutoFree([](auto&& pData) {
-                delete pData;
-            });
         }
     };
 }

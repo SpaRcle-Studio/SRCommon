@@ -34,9 +34,6 @@ namespace SR_UTILS_NS::UI {
 
     void UIModifierComponent::OnDestroy() {
         Super::OnDestroy();
-        GetThis().AutoFree([](auto&& pData) {
-            delete pData;
-        });
     }
 
     void UIModifierComponent::SetUITreeDirty() {

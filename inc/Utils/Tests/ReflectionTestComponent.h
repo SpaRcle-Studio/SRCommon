@@ -98,13 +98,6 @@ namespace SR_UTILS_NS::Tests {
             m_hasChanged = true;
         }
 
-        void OnDestroy() override {
-            Super::OnDestroy();
-            GetThis().AutoFree([](auto&& pData) {
-                delete pData;
-            });
-        }
-
     private:
         /// @property @onChanged(OnChanged)
         ReflectionTestComponentAssociative m_associative;
