@@ -13,12 +13,16 @@ namespace SR_HTYPES_NS {
         Stream();
         Stream(std::ifstream& ifs);  /** NOLINT */
         Stream(const std::string& str);  /** NOLINT */
-        Stream(const char* pData, uint64_t size);
+        Stream(const char* pData, uint64_t size, bool copy = true);
 
         Stream(const Stream& other) noexcept;
         Stream(Stream&& other) noexcept;
 
         ~Stream();
+
+    public:
+        static char* Allocate(uint64_t size);
+        static void Free(char* pData);
 
     public:
         Stream& SR_FASTCALL operator=(const Stream& other) noexcept;
@@ -52,10 +56,6 @@ namespace SR_HTYPES_NS {
         void SR_FASTCALL Reserve(uint64_t capacity);
 
         void Skip(uint64_t count);
-
-    private:
-        static char* Allocate(uint64_t size);
-        static void Free(char* pData);
 
     private:
         uint64_t m_size = 0;

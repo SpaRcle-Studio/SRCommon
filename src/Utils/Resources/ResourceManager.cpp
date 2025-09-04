@@ -430,6 +430,20 @@ namespace SR_UTILS_NS {
         m_fileSystemWatcher->WatchPull();
     }
 
+    void ResourceManager::ReloadAll(SR_UTILS_NS::StringAtom typeName) {
+        SR_LOCK_GUARD;
+        SR_TRACY_ZONE;
+
+        auto&& pIt = m_resources.find(typeName);
+        if (pIt == m_resources.end()) {
+            return;
+        }
+
+        for (auto&& pResource : pIt->second->GetResources()) {
+            m_dirtyResources.push(pResource->GetResourceInfo());
+        }
+    }
+
     void ResourceManager::ReloadResource(const IResource::Ptr& pResource) {
         SR_LOCK_GUARD;
         m_dirtyResources.push(pResource->GetResourceInfo());

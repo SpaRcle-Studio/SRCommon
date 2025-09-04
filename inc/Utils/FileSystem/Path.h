@@ -63,6 +63,7 @@ namespace SR_UTILS_NS {
         SR_NODISCARD uint64_t GetFolderHash(uint64_t deep = SR_UINT64_MAX) const;
         SR_NODISCARD const char* CStr() const;
         SR_NODISCARD const char* c_str() const;
+        SR_NODISCARD uint64_t size() const;
 
         SR_NODISCARD Path GetPrevious() const;
         SR_NODISCARD Path GetFolder() const;

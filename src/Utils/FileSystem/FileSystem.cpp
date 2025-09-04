@@ -243,6 +243,8 @@ namespace SR_UTILS_NS {
     }
 
     SR_COMMON_DLL_API std::string FileSystem::ReadBinaryAsString(const Path& path, bool checkError) {
+        SR_TRACY_ZONE;
+
         std::ifstream file(path.ToStringRef(), std::ios::ate | std::ios::binary);
 
         if (!file.is_open()) {
@@ -265,17 +267,31 @@ namespace SR_UTILS_NS {
 
     SR_COMMON_DLL_API uint64_t FileSystem::GetFileHash(const std::string& path) {
         SR_TRACY_ZONE;
+        SR_TRACY_ZONE_TEXT(path);
 
-        const std::string& buffer = ReadBinaryAsString(path, false);
-        if (buffer.empty()) {
-            SR_WARN("FileSystem::GetFileHash() : failed to read file!\n\tPath: " + path);
-            return SR_UINT64_MAX;
+        std::vector<char> buffer;
+        {
+            SR_TRACY_ZONE_N("Read file");
+
+            FILE* f = fopen(path.c_str(), "rb");
+            if (!f) {
+                SR_WARN("FileSystem::GetFileHash() : failed to read file!\n\tPath: " + path);
+                return SR_UINT64_MAX;
+            }
+
+            fseek(f, 0, SEEK_END);
+            size_t size = ftell(f);
+            fseek(f, 0, SEEK_SET);
+
+            buffer.resize(size);
+            fread(buffer.data(), 1, size, f);
+            fclose(f);
         }
 
-        /// static constexpr XXH64_hash_t seed = 0;
-        /// return XXH64(buffer.data(), buffer.size(), seed);
-
-        return SR_HASH_STR(buffer);
+        {
+            SR_TRACY_ZONE_N("Hash file");
+            return SR_HASH_STR_VIEW(std::string_view(buffer.data(), buffer.size()));
+        }
     }
 
     SR_COMMON_DLL_API uint64_t FileSystem::GetFolderHash(const Path& path, uint64_t deep) {
@@ -326,6 +342,8 @@ namespace SR_UTILS_NS {
     }
 
     SR_COMMON_DLL_API bool FileSystem::WriteHashToFile(const Path& path, uint64_t hash) {
+        SR_TRACY_ZONE;
+
         if (!path.Create()) {
             SR_ERROR("FileSystem::WriteHashToFile() : failed to create file!\n\tPath: " + path.ToString());
             return false;

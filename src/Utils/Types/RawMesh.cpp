@@ -135,10 +135,14 @@ namespace SR_HTYPES_NS {
             NormalizeWeights();
 
             if (needFastLoad) {
+                SR_TRACY_ZONE_N("Export to cache");
                 SR_LOG("RawMesh::Load() : export model to cache... \n\tPath: " + binary.ToString());
 
                 Assimp::Exporter exporter;
-                const aiExportFormatDesc* format = exporter.GetExportFormatDescription(14);
+                const aiExportFormatDesc* format = exporter.GetExportFormatDescription(10);
+                if (std::string_view(format->id) != "assbin") {
+                    SRHalt("RawMesh::Load() : assimp exporter has been changed! Update the index! Current format: " + std::string(format->id));
+                }
 
                 exporter.Export(m_scene, format->id, binary.ToString(), m_params.animation ? SR_RAW_MESH_ASSIMP_ANIMATION_FLAGS : SR_RAW_MESH_ASSIMP_FLAGS);
 
@@ -479,6 +483,7 @@ namespace SR_HTYPES_NS {
     }
 
     void RawMesh::CalculateBones() {
+        SR_TRACY_ZONE;
     #ifdef SR_UTILS_ASSIMP
         m_bones.resize(m_scene->mNumMeshes);
         m_indices.resize(m_scene->mNumMeshes);
@@ -500,6 +505,8 @@ namespace SR_HTYPES_NS {
     }
 
     void RawMesh::CalculateAnimations() {
+        SR_TRACY_ZONE;
+
     #ifdef SR_UTILS_ASSIMP
         if (!m_params.animation || !m_scene) {
             return;
@@ -513,6 +520,8 @@ namespace SR_HTYPES_NS {
     }
 
     void RawMesh::OptimizeSkeleton() {
+        SR_TRACY_ZONE;
+
         m_optimizedBones.clear();
 
         for (auto&& mesh : m_bones) {
@@ -527,6 +536,8 @@ namespace SR_HTYPES_NS {
     }
 
     void RawMesh::CalculateOffsets() {
+        SR_TRACY_ZONE;
+
     #ifdef SR_UTILS_ASSIMP
         for (uint32_t meshId = 0; meshId < m_scene->mNumMeshes; ++meshId) {
             auto&& pMesh = m_scene->mMeshes[meshId];
@@ -566,6 +577,8 @@ namespace SR_HTYPES_NS {
     }
 
     void RawMesh::CalculateTransforms() {
+        SR_TRACY_ZONE;
+
 #ifdef SR_UTILS_ASSIMP
         std::map<SR_UTILS_NS::StringAtom, SR_MATH_NS::Matrix4x4> matrices;
 
@@ -624,6 +637,8 @@ namespace SR_HTYPES_NS {
     }
 
     void RawMesh::NormalizeWeights() {
+        SR_TRACY_ZONE;
+
     #ifdef SR_UTILS_ASSIMP
         if (!m_scene) {
             SR_ERROR("RawMesh::NormalizeWeights() : scene is nullptr!");
@@ -698,6 +713,8 @@ namespace SR_HTYPES_NS {
 #endif
 
     void RawMesh::ComputeConvexHull() {
+        SR_TRACY_ZONE;
+
         if (!m_params.convexHull) {
             return;
         }

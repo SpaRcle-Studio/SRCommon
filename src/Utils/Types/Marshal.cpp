@@ -16,8 +16,8 @@ namespace SR_HTYPES_NS {
         : Super(str)
     { }
 
-    Marshal::Marshal(const char *pData, uint64_t size)
-        : Super(pData, size)
+    Marshal::Marshal(const char *pData, uint64_t size, bool copy)
+        : Super(pData, size, copy)
     { }
 
     void Marshal::Append(Marshal&& marshal) {
@@ -41,6 +41,9 @@ namespace SR_HTYPES_NS {
     }
 
     bool Marshal::Save(const Path& path) const {
+        SR_TRACY_ZONE;
+        SR_TRACY_ZONE_TEXT(path);
+
         if (!path.Make()) {
             return false;
         }
@@ -61,19 +64,25 @@ namespace SR_HTYPES_NS {
         SR_TRACY_ZONE;
         SR_TRACY_ZONE_TEXT(path.ToStringRef());
 
-        std::ifstream file(path.ToString(), std::ios::binary);
-        if (!file.is_open()) {
+        FILE* f = fopen(path.c_str(), "rb");
+        if (!f) {
             return nullptr;
         }
 
-        auto&& pMarshal = new Marshal(file);
+        fseek(f, 0, SEEK_END);
+        size_t size = ftell(f);
+        fseek(f, 0, SEEK_SET);
+
+        char* buffer = Allocate(size);
+        fread(buffer, 1, size, f);
+        fclose(f);
+
+        auto&& pMarshal = new Marshal(buffer, size, false);
 
         if (!pMarshal->Valid()) {
             delete pMarshal;
             pMarshal = nullptr;
         }
-
-        file.close();
 
         return pMarshal;
     }
@@ -82,15 +91,20 @@ namespace SR_HTYPES_NS {
         SR_TRACY_ZONE;
         SR_TRACY_ZONE_TEXT(path.ToStringRef());
 
-        std::ifstream file(path.ToString(), std::ios::binary);
-        if (!file.is_open()) {
+        FILE* f = fopen(path.c_str(), "rb");
+        if (!f) {
             return Marshal();
         }
 
-        Marshal marshal(file);
-        file.close();
+        fseek(f, 0, SEEK_END);
+        size_t size = ftell(f);
+        fseek(f, 0, SEEK_SET);
 
-        return marshal;
+        char* buffer = Allocate(size);
+        fread(buffer, 1, size, f);
+        fclose(f);
+
+        return Marshal(buffer, size, false);
     }
 
     Marshal Marshal::Copy() const {

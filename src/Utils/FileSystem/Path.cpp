@@ -474,4 +474,8 @@ namespace SR_UTILS_NS {
         m_isNormalized = true;
         return m_path;
     }
+
+    uint64_t Path::size() const {
+        return GetNormalized().size();
+    }
 }

@@ -24,7 +24,7 @@ namespace SR_HTYPES_NS {
         Marshal();
         Marshal(std::ifstream& ifs); /** NOLINT */
         Marshal(const std::string& str); /** NOLINT */
-        Marshal(const char* pData, uint64_t size);
+        Marshal(const char* pData, uint64_t size, bool copy = true);
         ~Marshal();
 
     public:

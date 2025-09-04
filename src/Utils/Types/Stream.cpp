@@ -6,14 +6,19 @@
 #include <Utils/Common/StringUtils.h>
 
 namespace SR_HTYPES_NS {
-    Stream::Stream(const char *pData, uint64_t size)
+    Stream::Stream(const char* pData, uint64_t size, bool copy)
         : m_capacity(size)
         , m_size(size)
         , m_pos(0)
     {
         if (m_capacity > 0) {
-            m_data = Allocate(m_capacity);
-            memcpy(m_data, pData, size);
+            if (copy) {
+                m_data = Allocate(m_capacity);
+                memcpy(m_data, pData, size);
+            }
+            else {
+                m_data = const_cast<char*>(pData);
+            }
         }
     }
 

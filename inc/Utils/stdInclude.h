@@ -68,6 +68,9 @@
     #include <numbers>
     #include <execution>
 
+    #define XXH_STATIC_LINKING_ONLY
+    #include <xxHash/xxhash.h>
+
     #ifndef SR_ENGINE_SCRIPT_API_MODE
         #include <zlib.h>
     #endif

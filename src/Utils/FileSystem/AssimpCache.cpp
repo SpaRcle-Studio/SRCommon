@@ -17,6 +17,8 @@ namespace SR_UTILS_NS {
     const uint8_t AssimpCache::SR_ASSIMP_MAX_NUMBER_OF_TEXTURECOORDS = AI_MAX_NUMBER_OF_TEXTURECOORDS;
 
     bool AssimpCache::Save(const SR_UTILS_NS::Path& path, const aiScene* pScene) const {
+        SR_TRACY_ZONE;
+
         SR_HTYPES_NS::Marshal marshal;
 
         marshal.Write<uint64_t>(VERSION);

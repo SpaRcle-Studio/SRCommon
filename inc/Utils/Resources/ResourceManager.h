@@ -42,6 +42,7 @@ namespace SR_UTILS_NS {
         void Synchronize(bool force);
 
         void ReloadResource(const IResource::Ptr& pResource);
+        void ReloadAll(SR_UTILS_NS::StringAtom typeName);
 
         void Execute(const SR_HTYPES_NS::Function<void()>& fun);
         void InspectResources(const SR_HTYPES_NS::Function<void(ResourcesTypes &)>& callback);
