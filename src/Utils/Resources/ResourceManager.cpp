@@ -394,8 +394,8 @@ namespace SR_UTILS_NS {
         SR_LOCK_GUARD;
 
         while (!m_dirtyResources.empty()) {
-            ResourceInfo::WeakPtr pResourceInfo = m_dirtyResources.front();
-            m_dirtyResources.pop();
+            ResourceInfo::WeakPtr pResourceInfo = m_dirtyResources.back();
+            m_dirtyResources.pop_back();
 
             /// ресурс мог быть освобожден в GC
             auto&& pHardPtr = pResourceInfo.lock();
@@ -440,13 +440,19 @@ namespace SR_UTILS_NS {
         }
 
         for (auto&& pResource : pIt->second->GetResources()) {
-            m_dirtyResources.push(pResource->GetResourceInfo());
+            ReloadResource(pResource);
         }
     }
 
     void ResourceManager::ReloadResource(const IResource::Ptr& pResource) {
+        SR_TRACY_ZONE;
         SR_LOCK_GUARD;
-        m_dirtyResources.push(pResource->GetResourceInfo());
+        for (auto&& pDirtyResource : m_dirtyResources) {
+            if (pDirtyResource.lock() == pResource->GetResourceInfo().lock()) {
+                return;
+            }
+        }
+        m_dirtyResources.emplace_back(pResource->GetResourceInfo());
     }
 
     void ResourceManager::EnableStackTraceProfiling() {

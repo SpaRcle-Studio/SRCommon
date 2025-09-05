@@ -109,7 +109,7 @@ namespace SR_UTILS_NS {
 
         IResourceReloader* m_defaultReloader = nullptr;
 
-        std::queue<ResourceInfo::WeakPtr> m_dirtyResources;
+        std::vector<ResourceInfo::WeakPtr> m_dirtyResources;
 
         std::unordered_map<Hash, SR_HTYPES_NS::Thread::Ptr> m_asyncTasks;
 
