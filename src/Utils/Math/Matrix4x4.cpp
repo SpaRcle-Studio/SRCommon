@@ -107,7 +107,7 @@ namespace SR_MATH_NS {
         Result[3][2] = - zNear / (zFar - zNear);
 #else
         Result[2][2] = - static_cast<T>(2) / (zFar - zNear);
-			Result[3][2] = - (zFar + zNear) / (zFar - zNear);
+        Result[3][2] = - (zFar + zNear) / (zFar - zNear);
 #endif
 
         return Result;
@@ -594,6 +594,18 @@ namespace SR_MATH_NS {
         return GetQuat().EulerAngle();
     }
 
+    SR_NODISCARD FVector3 Matrix4x4::Right() const {
+        return value[0].XYZ().Normalize();
+    }
+
+    SR_NODISCARD FVector3 Matrix4x4::Up() const {
+        return value[1].XYZ().Normalize();
+    }
+
+    SR_NODISCARD FVector3 Matrix4x4::Forward() const {
+        return value[2].XYZ().Normalize();
+    }
+
     const SR_MATH_NS::FVector4& Matrix4x4::operator[](int32_t row) const {
         return value[row];
     }
@@ -633,5 +645,20 @@ namespace SR_MATH_NS {
 
     void Matrix4x4::Multiply(Matrix4x4& result, const Matrix4x4& left, const Matrix4x4& right) {
         GLMMultiplyMat4x4(result.self, left.self, right.self);
+    }
+
+    Matrix4x4 Matrix4x4::CreateOrthographicOffCenter(Unit left, Unit right, Unit bottom, Unit top, Unit zNear, Unit zFar) {
+        Matrix4x4 result = Matrix4x4::Identity();
+
+        result.mm[0]  = 2.0f / (right - left);
+        result.mm[5]  = 2.0f / (top - bottom);
+        result.mm[10] = -2.0f / (zFar - zNear);
+
+        result.mm[12] = -(right + left) / (right - left);
+        result.mm[13] = -(top + bottom) / (top - bottom);
+        result.mm[14] = -(zFar + zNear) / (zFar - zNear);
+        result.mm[15] = 1.0f;
+
+        return result;
     }
 }
