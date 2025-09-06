@@ -291,7 +291,7 @@ namespace SR_UTILS_NS {
     }
 
     void IResource::StopWatch() {
-        m_watchers.clear();
+        m_watchers.clear(); /// тут был краш, надо исследовать. крашнуло перезагрузке и удалении вотчера, хотя ресурс корректен.
     }
 
     void IResource::StartWatch() {
