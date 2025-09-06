@@ -21,6 +21,7 @@ namespace SR_UTILS_NS {
 
         static bool WriteToFile(const std::string& path, const std::string_view& text);
         static std::string NormalizePath(const std::string& path);
+        static void NormalizePathInPlace(std::string& path);
 
         static std::vector<std::string> ReadAllLines(const SR_UTILS_NS::Path& path);
 

@@ -142,14 +142,30 @@ namespace SR_UTILS_NS {
     #endif
     }
 
-    Path Path::Concat(const Path& path) const {
+    Path Path::Concat(const std::string_view path) const {
+        return Concat(std::string(path));
+    }
+
+    Path Path::Concat(const SR_UTILS_NS::StringAtom path) const {
+        return Concat(path.ToStringRef());
+    }
+
+    Path Path::Concat(const char* path) const {
+        return Concat(std::string(path));
+    }
+
+    Path Path::Concat(const std::string& path) const {
         auto&& normalized = GetNormalized();
 
-        if ((!normalized.empty() && normalized.back() != '/') && (!path.IsEmpty() && path.GetNormalized().front() != '/')) {
-            return normalized + "/" + path.GetNormalized();
+        if ((!normalized.empty() && normalized.back() != '/') && (!path.empty() && path.front() != '/')) {
+            return normalized + "/" + path;
         }
 
-        return normalized + path.GetNormalized();
+        return normalized + path;
+    }
+
+    Path Path::Concat(const Path& path) const {
+        return Concat(path.GetNormalized());
     }
 
     bool Path::Exists() const {
@@ -470,7 +486,8 @@ namespace SR_UTILS_NS {
         if (m_isNormalized) {
             return m_path;
         }
-        m_path = FileSystem::NormalizePath(m_path);
+        //m_path = FileSystem::NormalizePath(m_path);
+        FileSystem::NormalizePathInPlace(m_path);
 
         //SR_MAYBE_UNUSED auto&& original = m_path;
 

@@ -419,4 +419,95 @@ namespace SR_UTILS_NS {
 
         return hash;
     }
+
+    void FileSystem::NormalizePathInPlace(std::string& path) {
+        SR_TRACY_ZONE;
+
+        if (path.empty()) {
+            return;
+        }
+
+        // заменяем все \ на /
+        for (char& c : path) {
+            if (c == '\\') c = '/';
+        }
+
+        size_t read = 0;   // откуда читаем сегменты
+        size_t write = 0;  // куда пишем результат
+        bool absolute = false;
+        bool hasDrive = false;
+
+        // обрабатываем префикс (C: или /)
+        if (path.size() >= 2 && std::isalpha(static_cast<unsigned char>(path[0])) && path[1] == ':') {
+            // "C:" копируем как есть
+            path[write++] = path[0];
+            path[write++] = path[1];
+            read = 2;
+            hasDrive = true;
+            if (read < path.size() && path[read] == '/') {
+                read++;
+                path[write++] = '/';
+            }
+        }
+        else if (!path.empty() && path[0] == '/') {
+            absolute = true;
+            read = 1;
+            path[write++] = '/';
+        }
+
+        // стек: индексы начала сегментов внутри path
+        SR_UTILS_NS::SmallStack<size_t, 256> segments;
+
+        while (read <= path.size()) {
+            size_t start = read;
+            size_t end = path.find('/', read);
+            if (end == std::string::npos) end = path.size();
+            size_t len = end - start;
+
+            if (len > 0) {
+                const char* token = path.data() + start;
+
+                if (len == 1 && token[0] == '.') {
+                    // "." → пропускаем
+                }
+                else if (len == 2 && token[0] == '.' && token[1] == '.') {
+                    // ".." → откатываем последний сегмент
+                    if (!segments.empty()) {
+                        write = segments.back();
+                        segments.pop();
+                    }
+                    else if (!absolute && !hasDrive) {
+                        // относительный путь — оставляем ".."
+                        if (write && path[write - 1] != '/') {
+                            path[write++] = '/';
+                        }
+                        segments.push(write);
+                        std::memmove(&path[write], token, len);
+                        write += len;
+                    }
+                }
+                else {
+                    // обычный сегмент
+                    if (write && path[write - 1] != '/') {
+                        path[write++] = '/';
+                    }
+                    segments.push(write);
+                    std::memmove(&path[write], token, len);
+                    write += len;
+                }
+            }
+
+            read = end + 1;
+        }
+
+        if (write == 0) {
+            if (absolute) {
+                path[0] = '/';
+            } else {
+                path[0] = '.';
+            }
+            write = 1;
+        }
+        path.resize(write);
+    }
 }

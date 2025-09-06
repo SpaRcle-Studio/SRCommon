@@ -140,6 +140,25 @@ constexpr uint32_t SR_INVALID_DESCRIPTOR_SET = SR_ID_INVALID;
 constexpr uint32_t SR_INVALID_FBO = SR_ID_INVALID;
 
 namespace SR_UTILS_NS {
+    template<typename T, size_t N> struct SmallStack {
+    public:
+        void push(T v) {
+            if (top >= N) {
+                std::cerr << "SmallStack overflow! Max size: " << N << std::endl;
+                throw std::overflow_error("SmallStack overflow");
+            }
+            data[top++] = v;
+        }
+        void pop() { --top; }
+
+        SR_NODISCARD T& back() { return data[top - 1]; }
+        SR_NODISCARD bool empty() const { return top == 0; }
+
+    private:
+        T data[N];
+        size_t top = 0;
+    };
+
     template <typename T> constexpr bool HasPublicDestructor() {
         if constexpr (!std::is_destructible_v<T>) {
             return false;

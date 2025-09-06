@@ -19,18 +19,12 @@ namespace SR_PLATFORM_NS {
             }
         }
 
-        static const std::vector<std::string> potentialPaths = { "", "..", "../..", "../../..", "../../../.." };
+        static const std::vector<std::string> potentialPaths = {
+            "Resources", "../Resources", "../../Resources", "../../../Resources", "../../../../Resources",
+        };
 
         for (auto&& relativePath : potentialPaths) {
             auto&& fullPath = GetApplicationPath().Concat(relativePath);
-
-        #ifdef SR_LINUX
-            if (fullPath.View().size() == 1) {
-                return SR_UTILS_NS::Path();
-            }
-        #endif
-
-            fullPath = fullPath.Concat("Resources");
             if (fullPath.Exists(SR_UTILS_NS::Path::Type::Folder)) {
                 if (fullPath.Concat("Engine").Exists(SR_UTILS_NS::Path::Type::Folder)) { /// Check is folder correct
                     return fullPath;
