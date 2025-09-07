@@ -35,6 +35,10 @@ namespace SR_UTILS_NS::StoreUtils {
                     node.AppendAttribute("Type", "Int");
                     node.AppendAttribute("Value", value.value.i);
                     break;
+                case ValueType::String:
+                    node.AppendAttribute("Type", "String");
+                    node.AppendAttribute("Value", *value.value.s);
+                    break;
                 default:
                     SRHalt("Storage::Save() : unsupported value type!");
                     break;
@@ -71,6 +75,9 @@ namespace SR_UTILS_NS::StoreUtils {
             }
             else if (type == "Int") {
                 Set(StorageType::User, ValueType::Int, node.Name(), node.GetAttribute("Value").ToInt64());
+            }
+            else if (type == "String") {
+                Set(StorageType::User, ValueType::String, node.Name(), node.GetAttribute("Value").ToString());
             }
             else {
                 SRHalt("Storage::Load() : unsupported value type!");
