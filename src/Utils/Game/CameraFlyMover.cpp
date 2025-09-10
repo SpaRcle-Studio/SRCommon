@@ -22,37 +22,60 @@ namespace SR_UTILS_NS {
             m_lock.reset();
         }
 
-        m_velocity *= m_velocityDegree;
-
         if (!m_velocity.Empty()) {
             GetTransform()->Translate(m_velocity);
         }
 
         if (!m_active) {
+            m_velocity *= m_velocityDegree;
             return;
         }
 
         const float_t velocitySpeed = m_moveSpeed * m_velocityFactor;
         auto&& dir = SR_UTILS_NS::Input::Instance().GetMouseDrag();
-        auto&& wheel = SR_UTILS_NS::Input::Instance().GetMouseWheel() * m_wheelSpeed * m_velocityFactor;
+        auto&& wheel = SR_UTILS_NS::Input::Instance().GetMouseWheel() * m_wheelSpeed;
 
         if (!SR_UTILS_NS::Input::Instance().GetKey(SR_UTILS_NS::KeyCode::Ctrl)) {
+            bool accelerateX = false;
+            bool accelerateZ = false;
+
             if (SR_UTILS_NS::Input::Instance().GetKey(SR_UTILS_NS::KeyCode::W)) {
+                m_velocity.z = SR_MAX(m_velocity.z, 0.f);
                 m_velocity += SR_UTILS_NS::Transform3D::FORWARD * velocitySpeed;
+                accelerateZ = true;
             }
 
             if (SR_UTILS_NS::Input::Instance().GetKey(SR_UTILS_NS::KeyCode::S)) {
+                m_velocity.z = SR_MIN(m_velocity.z, 0.f);
                 m_velocity -= SR_UTILS_NS::Transform3D::FORWARD * velocitySpeed;
+                accelerateZ = true;
             }
 
             if (SR_UTILS_NS::Input::Instance().GetKey(SR_UTILS_NS::KeyCode::A)) {
+                m_velocity.x = SR_MIN(m_velocity.x, 0.f);
                 m_velocity -= SR_UTILS_NS::Transform3D::RIGHT * velocitySpeed;
+                accelerateX = true;
             }
 
             if (SR_UTILS_NS::Input::Instance().GetKey(SR_UTILS_NS::KeyCode::D)) {
+                m_velocity.x = SR_MAX(m_velocity.x, 0.f);
                 m_velocity += SR_UTILS_NS::Transform3D::RIGHT * velocitySpeed;
+                accelerateX = true;
+            }
+
+            if (!accelerateX) {
+                m_velocity.x *= m_velocityDegree;
+            }
+
+            if (!accelerateZ) {
+                m_velocity.z *= m_velocityDegree;
             }
         }
+        else {
+            m_velocity *= m_velocityDegree;
+        }
+
+        m_velocity = m_velocity.Clamp(-m_maxVelocity, m_maxVelocity);
 
         if (wheel != 0) {
             GetTransform()->Translate(SR_UTILS_NS::Transform3D::FORWARD * wheel);

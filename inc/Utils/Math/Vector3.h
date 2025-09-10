@@ -548,7 +548,7 @@ namespace SR_MATH_NS {
         }
 
         /// @method
-        SR_NODISCARD Vector3<T> Clamp(const Vector3<T>& upper, const Vector3<T>& lover) const {
+        SR_NODISCARD Vector3<T> Clamp(const Vector3<T>& lover, const Vector3<T>& upper) const {
             return Vector3<T>(
                 SR_CLAMP(x, lover.x, upper.x),
                 SR_CLAMP(y, lover.y, upper.y),
