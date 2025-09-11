@@ -86,6 +86,20 @@ namespace SR_UTILS_NS {
         return Subscription(pSubscription);
     }
 
+    Subscription* SubscriptionHolder::SubscribeDynamic(const StringAtom id, SR_HTYPES_NS::Function<void(const SubscriptionMessage& msg)>&& callback) {
+        SR_TRACY_ZONE;
+        SR_TRACY_ZONE_TEXT(id);
+
+        SRAssert(callback);
+        auto& pool = m_subscriptions[id];
+        auto&& pSubscription = new SubscriptionInternalInfo(std::move(callback), this);
+        const auto index = pool.Add(pSubscription);
+        pSubscription->index = index;
+        pSubscription->id = id;
+        ++m_count;
+        return new Subscription(pSubscription);
+    }
+
     void SubscriptionHolder::Broadcast(const StringAtom id) {
         SR_TRACY_ZONE;
         SR_TRACY_ZONE_TEXT(id);

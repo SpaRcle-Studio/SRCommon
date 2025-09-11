@@ -48,7 +48,7 @@ namespace SR_UTILS_NS {
         /// @property @drag(0.1f)
         float_t m_moveSpeed = 0.2f;
         /// @property
-        float_t m_maxVelocity = 2.f;
+        SR_MATH_NS::FVector3 m_maxVelocity = SR_MATH_NS::FVector3(0.5f, 0.5f, 2.f);
         /// @property @dontSave @readonly
         SR_MATH_NS::FVector3 m_velocity;
 

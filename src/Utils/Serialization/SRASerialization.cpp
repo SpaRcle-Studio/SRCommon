@@ -13,6 +13,7 @@ namespace SR_UTILS_NS {
         std::string result;
 
         result += "sra format\n";
+        result += "use tabs: "s + (IsNeedUseTabs() ? "true\n" : "false\n");
 
         std::function<void(const SerializationNode&, size_t)> serializeNode;
 
@@ -192,8 +193,30 @@ namespace SR_UTILS_NS {
             return false;
         }
 
+        bool restoreMode = SR_UTILS_NS::Features::Instance().Enabled("SRARestoreMode");
+
         for (int32_t i = 1; i < lines.size(); ++i) {
             std::string_view line = lines[i];
+
+            if (i == 1 && line.find("use tabs:") != std::string::npos) {
+                const auto useTabs = line.substr(line.find_first_of(':') + 1);
+                restoreMode &= (useTabs == " true" || useTabs == "true");
+                continue;
+            }
+
+            int32_t depth = 0;
+
+            if (restoreMode) {
+                /// подсчитаем количество табов в начале строки
+                for (const char c : line) {
+                    if (c == '\t') {
+                        ++depth;
+                    }
+                    else {
+                        break;
+                    }
+                }
+            }
 
             if (!line.empty() && line[0] == '\t') {
                 if (const size_t pos = line.find_first_not_of('\t'); pos != std::string::npos) {
@@ -205,8 +228,11 @@ namespace SR_UTILS_NS {
                 continue;
             }
 
-            const std::string_view depthStr = line.substr(0, line.find_first_of('-'));
-            const int32_t depth = FastSToI(depthStr);
+            if (!restoreMode) {
+                const std::string_view depthStr = line.substr(0, line.find_first_of('-'));
+                depth = FastSToI(depthStr);
+            }
+
             if (depth == 0) {
                 if (m_stack.size() > 1) {
                     ReportError("Double root on line: "s + std::to_string(i + 1));
