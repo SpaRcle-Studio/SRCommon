@@ -193,7 +193,7 @@ namespace SR_UTILS_NS {
             return false;
         }
 
-        bool restoreMode = SR_UTILS_NS::Features::Instance().Enabled("SRARestoreMode");
+        bool restoreMode = SR_UTILS_NS::Features::Instance().Enabled("SRARestoreMode", false);
 
         for (int32_t i = 1; i < lines.size(); ++i) {
             std::string_view line = lines[i];
