@@ -2,11 +2,59 @@
 // Created by Monika on 12.07.2025.
 //
 
+#include <Utils/Debug.h>
 #include <Utils/Platform/Platform.h>
 #include <Utils/Common/CLIManager.h>
-#include <Utils/Debug.h>
 
 namespace SR_PLATFORM_NS {
+    bool IsMobilePlatform() {
+        switch (GetType()) {
+        case PlatformType::Android:
+        case PlatformType::Emscripten:
+        case PlatformType::IOS:
+            return true;
+        default:
+            return false;
+        }
+    }
+#ifndef SR_ANDROID
+    Path::Type GetPathType(std::string_view path) {
+        SR_TRACY_ZONE;
+
+    #ifdef SR_WIN32
+        if (path.size() < 2 || path[1] != ':') {
+            return Path::Type::Undefined;
+        }
+    #elif defined(SR_LINUX)
+        if (path.empty() || path[0] != '/') {
+            return Path::Type::Undefined;
+        }
+    #endif
+
+    #if defined(SR_MSVC) || defined (SR_LINUX)
+        struct stat s{};
+        if(stat(path.data(), &s) == 0) {
+            if (s.st_mode & S_IFDIR) {
+                return Path::Type::Folder;
+            } else if (s.st_mode & S_IFREG) {
+                return Path::Type::File;
+            }
+        }
+
+        return Path::Type::Undefined;
+    #elif defined(SR_WIN32)
+        DWORD attrib = GetFileAttributes(path.data());
+
+        if ((attrib & FILE_ATTRIBUTE_DIRECTORY) != 0)
+            return Path::Type::Folder;
+
+        return Path::Type::File;
+    #else
+        SRHalt("Unsupported OS!");
+        return Path::Type::Undefined;
+    #endif
+    }
+
     Path GetApplicationResourcesPath() {
         if (auto&& folderArg = CLIManager::Instance().GetOptionValue(CLIOptions::Resources); folderArg.has_value()) {
             auto&& folder = SR_UTILS_NS::Path(folderArg.value());
@@ -41,4 +89,5 @@ namespace SR_PLATFORM_NS {
 
         return SR_UTILS_NS::Path();
     }
+#endif
 } // namespace SR_PLATFORM_NS

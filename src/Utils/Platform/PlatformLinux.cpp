@@ -241,13 +241,21 @@ namespace SR_PLATFORM_NS {
     }
 
     std::optional<std::string> ReadFile(const Path& path) {
-        std::ifstream ifs(path.c_str());
-
-        if (!ifs.is_open()) {
-            return { };
+        // Открываем файл в бинарном режиме и сразу получаем размер
+        std::ifstream file(path.c_str(), std::ios::binary | std::ios::ate);
+        if (!file) {
+            return std::nullopt;
         }
 
-        return std::string((std::istreambuf_iterator<char>(ifs)), (std::istreambuf_iterator<char>()));
+        const std::streamsize size = file.tellg();
+
+        std::string buffer;
+        buffer.resize(static_cast<size_t>(size));
+        file.seekg(0, std::ios::beg);
+        if (!file.read(buffer.data(), size)) {
+            return std::nullopt;
+        }
+        return buffer;
     }
 
     void WriteConsoleLog(const std::string& msg) {
@@ -645,6 +653,10 @@ namespace SR_PLATFORM_NS {
 
     Path GetApplicationDirectory() {
         return GetApplicationPath().GetFolder();
+    }
+
+    std::optional<Path> GetApplicationCachePath() {
+        return std::nullopt;
     }
 
     Path GetApplicationName() {

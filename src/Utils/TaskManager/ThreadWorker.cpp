@@ -11,6 +11,8 @@
 #include <Utils/Platform/Platform.h>
 #include <Utils/Types/Time.h>
 
+#include <Codegen/ThreadWorker.generated.hpp>
+
 #include <rapidyaml/src/ryml.hpp>
 #include <rapidyaml/src/ryml_std.hpp>
 
@@ -20,17 +22,17 @@ namespace SR_UTILS_NS {
     { }
 
     void ThreadWorkerStateBase::AddStartCondition(StringAtom name, ThreadWorkerState state) {
-        SRAssert2(m_startConditions.count(name) == 0, "ThreadWorkerStateBase::AddStartCondition() : start condition \"{}\" already exists!", name.ToStringRef());
+        SRAssert2(m_startConditions.count(name) == 0, "ThreadWorkerStateBase::AddStartCondition() : start condition \"{}\" already exists!", name);
         m_startConditions[name] = state;
     }
 
     void ThreadWorkerStateBase::AddFinishCondition(StringAtom name, ThreadWorkerState state) {
-        SRAssert2(m_finishConditions.count(name) == 0, "ThreadWorkerStateBase::AddFinishCondition() : finish condition \"{}\" already exists!", name.ToStringRef());
+        SRAssert2(m_finishConditions.count(name) == 0, "ThreadWorkerStateBase::AddFinishCondition() : finish condition \"{}\" already exists!", name);
         m_finishConditions[name] = state;
     }
 
     ThreadWorkerResult ThreadWorkerStateBase::Execute() {
-        SR_TRACY_ZONE_S(GetName().ToStringRef().c_str());
+        SR_TRACY_ZONE_S(GetMeta()->GetFactoryName().c_str());
 
         if (m_state == ThreadWorkerState::Idle) {
             bool isNeedToSkip = !m_skipConditions.empty();
@@ -75,7 +77,7 @@ namespace SR_UTILS_NS {
     }
 
     void ThreadWorkerStateBase::AddSkipCondition(SR_UTILS_NS::StringAtom name, ThreadWorkerState state) {
-        SRAssert2(m_skipConditions.count(name) == 0, "ThreadWorkerStateBase::AddSkipCondition() : skip condition \"{}\" already exists!", name.ToStringRef());
+        SRAssert2(m_skipConditions.count(name) == 0, "ThreadWorkerStateBase::AddSkipCondition() : skip condition \"{}\" already exists!", name);
         m_skipConditions[name] = state;
     }
 
@@ -88,7 +90,7 @@ namespace SR_UTILS_NS {
     }
 
     void ThreadWorkerStateBase::Finalize() {
-        SR_TRACY_ZONE_S(GetName().ToStringRef().c_str());
+        SR_TRACY_ZONE_S(GetMeta()->GetFactoryName().c_str());
         FinalizeImpl();
     }
 
@@ -144,8 +146,8 @@ namespace SR_UTILS_NS {
 
             if (!GetThreadsWorker()->IsAlive()) {
                 for (auto&& pState : m_states) {
-                    if (GetThreadsWorker()->CheckFinalize(pState->GetName())) {
-                        SR_LOG("ThreadWorker::Work() : finalize state \"{}\"", pState->GetName().ToStringRef());
+                    if (GetThreadsWorker()->CheckFinalize(pState->GetMeta()->GetFactoryName())) {
+                        SR_LOG("ThreadWorker::Work() : finalize state \"{}\"", pState->GetMeta()->GetFactoryName());
                         pState->Finalize();
                     }
                 }
@@ -286,7 +288,7 @@ namespace SR_UTILS_NS {
 
                 auto&& stateNameStr = stateName.GetValue();
 
-                ThreadWorkerStateBase::Ptr pState = ThreadWorkerStateRegistration::Instance().AllocateState(stateNameStr);
+                auto&& pState = SR_UTILS_NS::Factory::Instance().Create<ThreadWorkerStateBase>(stateNameStr);
                 if (!pState) {
                     SR_ERROR("ThreadsWorker::Load() : failed to allocate state \"{}\" for thread \"{}\"", stateNameStr, threadNameStr);
                     continue;
@@ -308,11 +310,11 @@ namespace SR_UTILS_NS {
     void ThreadsWorker::AddThread(ThreadWorker::Ptr pThread) {
         pThread->SetThreadsWorker(this);
         for (auto&& pState : pThread->GetStates()) {
-            if (m_states.count(pState->GetName()) == 1) {
-                SR_ERROR("ThreadsWorker::AddThread() : state \"{}\" already exists!", pState->GetName().ToStringRef());
+            if (m_states.count(pState->GetMeta()->GetFactoryName()) == 1) {
+                SR_ERROR("ThreadsWorker::AddThread() : state \"{}\" already exists!", pState->GetMeta()->GetFactoryName());
                 continue;
             }
-            m_states[pState->GetName()] = pState;
+            m_states[pState->GetMeta()->GetFactoryName()] = pState;
         }
         m_threadWorkers.emplace_back(std::move(pThread));
     }
@@ -378,31 +380,6 @@ namespace SR_UTILS_NS {
         }
 
         return false;
-    }
-
-    bool ThreadWorkerStateRegistration::RegisterState(SR_UTILS_NS::StringAtom name, ThreadWorkerStateRegistration::AllocateFn&& allocateFn) {
-        if (m_states.count(name) == 1) {
-            /// уже зарегистрирован. возможно причина в использовании dll. считаем это нормой.
-            return false;
-        }
-
-        if (!allocateFn) {
-            SR_PLATFORM_NS::WriteConsoleError(SR_FORMAT("ThreadWorkerStateRegistration::RegisterState() : allocate function is nullptr!"));
-            return false;
-        }
-
-        m_states[name] = std::move(allocateFn);
-
-        return true;
-    }
-
-    ThreadWorkerStateBase::Ptr ThreadWorkerStateRegistration::AllocateState(SR_UTILS_NS::StringAtom name) {
-        if (m_states.count(name) == 0) {
-            SR_ERROR("ThreadWorkerStateRegistration::AllocateState() : state \"{}\" not found!", name.ToStringRef());
-            return nullptr;
-        }
-
-        return m_states[name]();
     }
 }
 

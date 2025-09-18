@@ -102,44 +102,7 @@ namespace SR_UTILS_NS {
     }
 
     Path::Type Path::GetType() const {
-        auto&& normalized = GetNormalized();
-    #ifdef SR_WIN32
-        if (normalized.size() < 2 || normalized[1] != ':') {
-            return Type::Undefined;
-        }
-    #elif defined(SR_LINUX)
-        if (normalized.empty() || normalized[0] != '/') {
-            return Type::Undefined;
-        }
-    #endif
-
-        SR_TRACY_ZONE;
-
-    #if defined(SR_MSVC) || defined (SR_LINUX)
-        struct stat s{};
-        if(stat(normalized.c_str(), &s) == 0) {
-            if (s.st_mode & S_IFDIR) {
-                return Type::Folder;
-            } else if (s.st_mode & S_IFREG) {
-                return Type::File;
-            }
-        }
-
-        return Type::Undefined;
-    #elif defined(SR_WIN32)
-        DWORD attrib = GetFileAttributes(normalized.c_str());
-
-        if ((attrib & FILE_ATTRIBUTE_DIRECTORY) != 0)
-            return Type::Folder;
-
-        return Type::File;
-    #elif defined(SR_ANDROID)
-        /// TODO: будем считать что мы обращаемся только к файлам. Это заглушка - нужно переделать
-        return Type::File;
-    #else
-        SRHalt("Unsupported OS!");
-        return Type::Undefined;
-    #endif
+        return SR_PLATFORM_NS::GetPathType(GetNormalized());
     }
 
     Path Path::Concat(const std::string_view path) const {

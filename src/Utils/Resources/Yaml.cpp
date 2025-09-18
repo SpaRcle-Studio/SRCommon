@@ -196,15 +196,19 @@ namespace SR_UTILS_NS::Yaml {
         SR_TRACY_ZONE;
         SR_TRACY_TEXT_N("Path", path.ToStringRef());
 
-        auto&& contents = FileSystem::ReadAllText(path.ToStringRef());
+        auto&& contents = SR_PLATFORM_NS::ReadFile(path);
+        if (!contents) {
+            SR_ERROR("Document::Load() : failed to open document!\n\tPath: {}", path);
+            return { };
+        }
         Document yaml = Document::New();
 
-        if (contents.empty()) {
-            SR_ERROR("Document::Load() : failed to read YAML contents! \n\tPath: " + path.ToString());
+        if (contents.value().empty()) {
+            SR_ERROR("Document::Load() : failed to read YAML contents!\n\tPath: {}", path);
             return { };
         }
 
-        ryml::Tree tree = ryml::parse_in_arena(ryml::to_csubstr(contents));
+        ryml::Tree tree = ryml::parse_in_arena(ryml::to_csubstr(contents.value()));
         if (tree.empty()) {
             SR_ERROR("ThreadsWorker::Load() : failed to parse file \"{}\"", path.ToStringRef());
             return Empty();

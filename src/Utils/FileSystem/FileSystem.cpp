@@ -47,21 +47,10 @@ namespace SR_UTILS_NS {
         SR_TRACY_ZONE;
         std::vector<std::string_view> result;
 
-        // Открываем файл в бинарном режиме и сразу получаем размер
-        std::ifstream file(path.c_str(), std::ios::binary | std::ios::ate);
-        if (!file) {
-            return result;
+        if (auto&& data = SR_PLATFORM_NS::ReadFile(path)) {
+            buffer = data.value();
         }
-
-        const std::streamsize size = file.tellg();
-        if (size <= 0) {
-            return result;
-        }
-
-        buffer.resize(static_cast<size_t>(size));
-        file.seekg(0, std::ios::beg);
-        if (!file.read(buffer.data(), size)) {
-            buffer.clear();
+        else {
             return result;
         }
 
@@ -182,7 +171,7 @@ namespace SR_UTILS_NS {
         if (path.back() != '/')
             path.append("/");
 
-    #ifdef SR_LINUX
+    #if defined(SR_LINUX) || defined(SR_ANDROID)
         return SR_PLATFORM_NS::CreateFolder(path);
     #else
         auto pos = path.find('/', offset);

@@ -35,16 +35,36 @@ namespace SR_UTILS_NS {
         auto&& memoryUsage = m_showUseMemory ? SR_FORMAT("<{} KB> ", static_cast<uint32_t>(SR_PLATFORM_NS::GetProcessUsedMemory() / 1024)) : std::string();
 
         {
-            fmt::print(fmt::fg(fmt::color::dark_gray) | fmt::emphasis::faint, fmt::runtime(memoryUsage));
-            fmt::print(GetTextStyleColorByLogType(type), fmt::runtime(prefix));
+            if (SR_PLATFORM_NS::GetType() == PlatformType::Android) {
+                std::lock_guard lock(SR_PLATFORM_NS::g_platformLogMutex);
+                try {
+                    if (IsErrorLogType(type)) {
+                        SR_PLATFORM_NS::WriteConsoleError(fmt::vformat("{} {}",fmt::make_format_args(prefix, msg)));
+                    }
+                    else if (IsWarningLogType(type)) {
+                        SR_PLATFORM_NS::WriteConsoleWarn(fmt::vformat("{} {}",fmt::make_format_args(prefix, msg)));
+                    }
+                    else {
+                        SR_PLATFORM_NS::WriteConsoleLog(fmt::vformat("{} {}",fmt::make_format_args(prefix, msg)));
+                    }
+                }
+                catch (const std::exception& ex) {
+                    std::cout << " Error while printing message: " << ex.what() << "\nMessage: " << msg << std::endl;
+                }
+            }
+            else {
+                fmt::print(fmt::fg(fmt::color::dark_gray) | fmt::emphasis::faint, fmt::runtime(memoryUsage));
+                fmt::print(GetTextStyleColorByLogType(type), fmt::runtime(prefix));
 
-            std::lock_guard lock(SR_PLATFORM_NS::g_platformLogMutex);
-            try {
-                fmt::print(fmt::emphasis::bold, " {}", msg);
+                std::lock_guard lock(SR_PLATFORM_NS::g_platformLogMutex);
+                try {
+                    fmt::print(fmt::emphasis::bold, " {}", msg);
+                }
+                catch (const std::exception& ex) {
+                    std::cout << " Error while printing message: " << ex.what() << "\nMessage: " << msg << std::endl;
+                }
             }
-            catch (const std::exception& ex) {
-                std::cout << " Error while printing message: " << ex.what() << "\nMessage: " << msg << std::endl;
-            }
+
 
             std::cout << std::flush;
 
@@ -207,6 +227,15 @@ namespace SR_UTILS_NS {
 
     Debug::Debug() = default;
     Debug::~Debug() = default;
+
+    bool IsErrorLogType(DebugLogType type) {
+        return type == DebugLogType::Error || type == DebugLogType::ScriptError || type == DebugLogType::Assert
+            || type == DebugLogType::VulkanError;
+    }
+
+    bool IsWarningLogType(DebugLogType type) {
+        return type == DebugLogType::Warn;
+    }
 
     fmt::text_style GetTextStyleColorByLogType(DebugLogType type) {
         static auto errorWarnStyle = fmt::emphasis::blink | fmt::emphasis::bold;

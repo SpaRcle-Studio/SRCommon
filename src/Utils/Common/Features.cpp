@@ -62,6 +62,11 @@ namespace SR_UTILS_NS {
         m_features.clear();
 
         const auto& doc = SR_XML_NS::Document::Load(m_path);
+        if (!doc) {
+            SR_ERROR("Features::Reload() : failed to load document! \n\tPath: {}", m_path.ToString());
+            return false;
+        }
+
         if (const auto& features = doc.Root().GetNode("Features")) {
             for (const auto& group : features.GetNodes()) {
                 for (const auto& feature : group.GetNodes()) {

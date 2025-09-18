@@ -500,6 +500,9 @@ namespace SR_UTILS_NS {
     }
 
     Path ResourceManager::GetCachePath() const {
+        if (auto&& cache = SR_PLATFORM_NS::GetApplicationCachePath()) {
+            return cache->Concat("Cache");
+        }
         return GetResPathRef().Concat("Cache");
     }
 
