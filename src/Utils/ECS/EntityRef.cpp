@@ -48,7 +48,8 @@ namespace SR_UTILS_NS {
             return;
         }
 
-        if (pEntity->GetMeta()->GetFactoryName() != GetTypeName()) SR_UNLIKELY_ATTRIBUTE {
+
+        if (!pEntity->GetMeta()->IsSameOrInherited(GetTypeName())) SR_UNLIKELY_ATTRIBUTE {
             SR_WARN("EntityRefBase::Resolve() : Entity with id {} is not of type {}! Actual type: {}",
                     m_entityId, GetTypeName(), pEntity->GetMeta()->GetFactoryName());
             return;

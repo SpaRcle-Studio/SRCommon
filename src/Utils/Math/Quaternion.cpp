@@ -224,6 +224,10 @@ namespace SR_MATH_NS {
         return Identity();
     }
 
+    Unit Quaternion::Magnitude() const noexcept {
+        return sqrt(SquaredNorm());
+    }
+
     Unit Quaternion::SquaredNorm() const noexcept {
         return w * w + x * x + y * y + z * z;
     }
@@ -335,6 +339,10 @@ namespace SR_MATH_NS {
 
     Quaternion Quaternion::Identity() {
         return Quaternion(0.0, 0.0, 0.0, 1.0);
+    }
+
+    Quaternion Quaternion::Conjurate() const {
+        return Quaternion(-x, -y, -z, w);
     }
 
     Quaternion Quaternion::Inverse() const {
@@ -473,6 +481,11 @@ namespace SR_MATH_NS {
     bool Quaternion::IsFinite() const noexcept {
         /// если будет inf или nan, то вернет false
         return std::isfinite(x) && std::isfinite(y) && std::isfinite(z) && std::isfinite(w);
+    }
+
+    bool Quaternion::IsSane() const noexcept {
+        const float unitTolerance = 1e-2f;
+        return IsFinite() && SR_ABS(Magnitude() - 1) < unitTolerance;
     }
 
     bool Quaternion::IsIdentity() const noexcept {

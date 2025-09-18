@@ -71,6 +71,7 @@
 #include "../src/Utils/Reflection/Property.cpp"
 #include "../src/Utils/Reflection/Value.cpp"
 
+#include "../src/Utils/Game/LockPositionComponent.cpp"
 #include "../src/Utils/Game/LookAtComponent.cpp"
 #include "../src/Utils/Game/DebugLogComponent.cpp"
 #include "../src/Utils/Game/CameraFlyMover.cpp"

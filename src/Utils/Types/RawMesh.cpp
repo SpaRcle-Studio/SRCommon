@@ -20,6 +20,7 @@
 
 namespace SR_HTYPES_NS {
 #ifdef SR_UTILS_ASSIMP
+    /// aiProcess_GenNormals
     SR_INLINE_STATIC int SR_RAW_MESH_ASSIMP_FLAGS = aiProcess_Triangulate | aiProcess_CalcTangentSpace | aiProcess_FlipUVs | aiProcess_MakeLeftHanded | aiProcess_FlipWindingOrder | aiProcess_JoinIdenticalVertices | aiProcess_GenUVCoords | aiProcess_TransformUVCoords | aiProcess_SortByPType | aiProcess_GlobalScale;
     SR_INLINE_STATIC int SR_RAW_MESH_ASSIMP_ANIMATION_FLAGS = aiProcess_MakeLeftHanded | aiProcess_FlipWindingOrder;
 #endif
@@ -133,7 +134,7 @@ namespace SR_HTYPES_NS {
 
             NormalizeWeights();
 
-            if (needFastLoad) {
+            /*if (needFastLoad) {
                 SR_TRACY_ZONE_N("Export to cache");
                 SR_LOG("RawMesh::Load() : export model to cache... \n\tPath: " + binary.ToString());
 
@@ -145,6 +146,9 @@ namespace SR_HTYPES_NS {
 
                 exporter.Export(m_scene, format->id, binary.ToString(), m_params.animation ? SR_RAW_MESH_ASSIMP_ANIMATION_FLAGS : SR_RAW_MESH_ASSIMP_FLAGS);
 
+            }*/
+
+            if (needFastLoad) {
                 SR_UTILS_NS::FileSystem::WriteHashToFile(hashFile, resourceHash);
             }
         }

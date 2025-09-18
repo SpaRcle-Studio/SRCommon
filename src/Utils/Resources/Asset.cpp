@@ -11,7 +11,7 @@ namespace SR_UTILS_NS {
     Asset::Ptr Asset::LoadImpl(const Path& rawPath) {
         SR_TRACY_ZONE;
         SR_TRACY_ZONE_TEXT_C(rawPath.c_str());
-        SR_GLOBAL_LOCK;
+        SR_GLOBAL_RECURSIVE_LOCK;
 
         auto&& resourceManager = ResourceManager::Instance();
         SR_UTILS_NS::Path&& path = rawPath.RemoveSubPath(resourceManager.GetResPath());
