@@ -193,7 +193,6 @@ namespace SR_UTILS_NS::Platform {
     }
 
     SR_MATH_NS::FVector2 GetMousePos() {
-        SRHaltOnce("Not implemented!");
         return SR_MATH_NS::FVector2();
     }
 

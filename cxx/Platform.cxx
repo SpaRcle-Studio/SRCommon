@@ -16,6 +16,7 @@
     #include "../src/Utils/Platform/StacktraceAndroid.cpp"
     #include "../src/Utils/Platform/PlatformAndroid.cpp"
     #include "../src/Utils/Platform/AndroidNativeAppGlue.c"
+    #include "../src/Utils/Platform/AndroidEvent.cpp"
 #endif
 
 #include "../src/Utils/Platform/PlatformSharedVars.cpp"

@@ -258,28 +258,21 @@ namespace SR_UTILS_NS {
         SR_TRACY_ZONE;
         SR_TRACY_ZONE_TEXT(path);
 
-        std::vector<char> buffer;
+        std::optional<std::string> buffer;
+
         {
             SR_TRACY_ZONE_N("Read file");
+            buffer = SR_PLATFORM_NS::ReadFile(path);
+        }
 
-            FILE* f = fopen(path.c_str(), "rb");
-            if (!f) {
-                SR_WARN("FileSystem::GetFileHash() : failed to read file!\n\tPath: " + path);
-                return SR_UINT64_MAX;
-            }
-
-            fseek(f, 0, SEEK_END);
-            size_t size = ftell(f);
-            fseek(f, 0, SEEK_SET);
-
-            buffer.resize(size);
-            fread(buffer.data(), 1, size, f);
-            fclose(f);
+        if (!buffer) {
+            SR_WARN("FileSystem::GetFileHash() : failed to read file!\n\tPath: " + path);
+            return SR_UINT64_MAX;
         }
 
         {
             SR_TRACY_ZONE_N("Hash file");
-            return SR_HASH_STR_VIEW(std::string_view(buffer.data(), buffer.size()));
+            return SR_HASH_STR_VIEW(std::string_view(*buffer));
         }
     }
 
@@ -384,6 +377,10 @@ namespace SR_UTILS_NS {
 
     uint64_t FileSystem::GetExecutableAndModulesHash() {
         SR_TRACY_ZONE;
+
+        if (SR_PLATFORM_NS::IsMobilePlatform()) {
+            return 0;
+        }
 
         static uint64_t hash = SR_UINT64_MAX;
         if (hash != SR_UINT64_MAX) {

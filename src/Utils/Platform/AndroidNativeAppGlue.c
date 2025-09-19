@@ -189,7 +189,7 @@ static void android_app_destroy(struct android_app* android_app) {
 static void process_input(struct android_app* app, struct android_poll_source* source) {
     AInputEvent* event = NULL;
     while (AInputQueue_getEvent(app->inputQueue, &event) >= 0) {
-        LOGV("New input event: type=%d\n", AInputEvent_getType(event));
+        // LOGV("New input event: type=%d\n", AInputEvent_getType(event));
         if (AInputQueue_preDispatchEvent(app->inputQueue, event)) {
             continue;
         }
@@ -421,6 +421,35 @@ static void onInputQueueDestroyed(ANativeActivity* activity, AInputQueue* queue)
     android_app_set_input((struct android_app*)activity->instance, NULL);
 }
 
+static void hideSystemUI(ANativeActivity* activity) {
+    JNIEnv* env = activity->env;
+
+    jclass activityClass = env->GetObjectClass(activity->clazz);
+
+    // activity.getWindow()
+    jmethodID getWindow = env->GetMethodID(activityClass, "getWindow", "()Landroid/view/Window;");
+    jobject window = env->CallObjectMethod(activity->clazz, getWindow);
+
+    // window.getDecorView()
+    jclass windowClass = env->GetObjectClass(window);
+    jmethodID getDecorView = env->GetMethodID(windowClass, "getDecorView", "()Landroid/view/View;");
+    jobject decorView = env->CallObjectMethod(window, getDecorView);
+
+    // View.setSystemUiVisibility(int)
+    jclass viewClass = env->GetObjectClass(decorView);
+    jmethodID setSystemUiVisibility = env->GetMethodID(viewClass, "setSystemUiVisibility", "(I)V");
+
+    // Флаги Immersive Mode
+    int flags =
+            0x00000004 | // SYSTEM_UI_FLAG_FULLSCREEN
+            0x00000002 | // SYSTEM_UI_FLAG_HIDE_NAVIGATION
+            0x00001000 | // SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+            0x00000100 | // SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+            0x00000200;  // SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+
+    env->CallVoidMethod(decorView, setSystemUiVisibility, flags);
+}
+
 JNIEXPORT
 void ANativeActivity_onCreate(ANativeActivity* activity, void* savedState, size_t savedStateSize) {
     LOGV("Creating: %p\n", activity);
@@ -439,4 +468,6 @@ void ANativeActivity_onCreate(ANativeActivity* activity, void* savedState, size_
     activity->callbacks->onInputQueueDestroyed = onInputQueueDestroyed;
 
     activity->instance = android_app_create(activity, savedState, savedStateSize);
+
+    hideSystemUI(activity);
 }

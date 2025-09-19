@@ -106,7 +106,9 @@ namespace SR_HTYPES_NS {
 
         SR_MAYBE_UNUSED const uint64_t resourceHash = path.GetFileHash();
 
-        SR_MAYBE_UNUSED const bool supportFastLoad = SR_UTILS_NS::Features::Instance().Enabled("FastModelsLoad", false);
+        SR_MAYBE_UNUSED bool supportFastLoad = SR_UTILS_NS::Features::Instance().Enabled("FastModelsLoad", false);
+        supportFastLoad &= !SR_PLATFORM_NS::IsMobilePlatform(); /// временно отключено
+
         SR_MAYBE_UNUSED bool needFastLoad = supportFastLoad;
 
     #ifdef SR_UTILS_ASSIMP
@@ -121,7 +123,13 @@ namespace SR_HTYPES_NS {
             }
         }
         else {
-            m_scene = m_importer->ReadFile(path.ToStringRef(), m_params.animation ? SR_RAW_MESH_ASSIMP_ANIMATION_FLAGS : SR_RAW_MESH_ASSIMP_FLAGS);
+            auto&& buffer = SR_PLATFORM_NS::ReadFile(path);
+            if (!buffer) {
+                SR_ERROR("RawMesh::Load() : failed to read file!\n\tPath: {}", path);
+                return false;
+            }
+
+            m_scene = m_importer->ReadFileFromMemory(buffer->data(), buffer->size(), m_params.animation ? SR_RAW_MESH_ASSIMP_ANIMATION_FLAGS : SR_RAW_MESH_ASSIMP_FLAGS);
 
             if (!m_scene) {
                 SR_ERROR("RawMesh::Load() : failed to load file!\n\tPath: " + path.ToStringRef() + "\n\tReason: " + std::string(m_importer->GetErrorString()));
@@ -133,20 +141,6 @@ namespace SR_HTYPES_NS {
             }
 
             NormalizeWeights();
-
-            /*if (needFastLoad) {
-                SR_TRACY_ZONE_N("Export to cache");
-                SR_LOG("RawMesh::Load() : export model to cache... \n\tPath: " + binary.ToString());
-
-                Assimp::Exporter exporter;
-                const aiExportFormatDesc* format = exporter.GetExportFormatDescription(10);
-                if (std::string_view(format->id) != "assbin") {
-                    SRHalt("RawMesh::Load() : assimp exporter has been changed! Update the index! Current format: " + std::string(format->id));
-                }
-
-                exporter.Export(m_scene, format->id, binary.ToString(), m_params.animation ? SR_RAW_MESH_ASSIMP_ANIMATION_FLAGS : SR_RAW_MESH_ASSIMP_FLAGS);
-
-            }*/
 
             if (needFastLoad) {
                 SR_UTILS_NS::FileSystem::WriteHashToFile(hashFile, resourceHash);
