@@ -659,6 +659,10 @@ namespace SR_PLATFORM_NS {
         return std::nullopt;
     }
 
+    std::optional<Path> GetApplicationLogPath() {
+        return std::nullopt;
+    }
+
     Path GetApplicationName() {
         std::string sp;
         std::ifstream("/proc/self/comm") >> sp;

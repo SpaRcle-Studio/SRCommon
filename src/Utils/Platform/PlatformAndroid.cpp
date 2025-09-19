@@ -399,6 +399,11 @@ namespace SR_UTILS_NS::Platform {
         return Path(pAndroidInstance->activity->internalDataPath);
     }
 
+
+    std::optional<Path> GetApplicationLogPath() {
+        return Path(pAndroidInstance->activity->externalDataPath);
+    }
+
     Path GetApplicationName() {
         return "SREngine";
     }

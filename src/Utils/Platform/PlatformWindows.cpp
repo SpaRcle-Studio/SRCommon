@@ -680,6 +680,10 @@ namespace SR_UTILS_NS::Platform {
         return std::nullopt;
     }
 
+    std::optional<Path> GetApplicationLogPath() {
+        return std::nullopt;
+    }
+
     std::list<Path> GetAllInDirectory(const Path& dir) {
         std::list<Path> result;
 
