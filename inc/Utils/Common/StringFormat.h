@@ -17,7 +17,7 @@ namespace SR_UTILS_NS {
     /// Функция для преобразования hex символа в целое число
 
     static SR_INLINE double_t ParseDouble(std::string_view sv) {
-    #if (defined(__GNUC__) && !defined(__clang__)) || defined(SR_ANDROID)
+    #if defined(SR_LINUX) || defined(SR_ANDROID)
         // GCC не умеет from_chars для double
         return std::stod(std::string(sv));
     #else
@@ -32,7 +32,7 @@ namespace SR_UTILS_NS {
     }
 
     static SR_INLINE float_t ParseFloat(std::string_view sv) {
-    #if (defined(__GNUC__) && !defined(__clang__)) || defined(SR_ANDROID)
+    #if defined(SR_LINUX) || defined(SR_ANDROID)
         // GCC не умеет from_chars для float
         return std::stof(std::string(sv));
     #else
