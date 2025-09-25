@@ -272,6 +272,15 @@ namespace SR_UTILS_NS {
             return;
         }
 
+        if (m_isActive != isActivePrev) {
+            if (m_isActive) {
+                OnEnabled();
+            }
+            else {
+                OnDisabled();
+            }
+        }
+
         /// обновляем компоненты
         IComponentable::CheckActivity(force);
 

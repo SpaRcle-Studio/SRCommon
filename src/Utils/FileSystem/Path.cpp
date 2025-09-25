@@ -467,4 +467,54 @@ namespace SR_UTILS_NS {
     uint64_t Path::size() const {
         return GetNormalized().size();
     }
+
+    bool Path::IsValidPath() const {
+        SR_TRACY_ZONE;
+
+        auto&& path = GetNormalized();
+
+        // Пустой путь — сразу невалиден
+        if (path.empty()) {
+            return false;
+        }
+
+        // Разрешённые символы
+        auto isAllowed = [](unsigned char c) -> bool {
+            if (std::isalnum(c)) {
+                return true; // A-Z, a-z, 0-9
+            }
+            switch (c) {
+                case '/': case '\\': case ':': // разделители + диск (Windows)
+                case '.': case '_': case '-':
+                case ' ': case '(': case ')':
+                case '[': case ']': case '{': case '}':
+                case '+': case '=': case '!': case '@':
+                case '#': case '$': case '%': case '&':
+                case '\'': case '~': case '`': case '^':
+                case ',': case ';':
+                    return true;
+                default:
+                    return false;
+            }
+        };
+
+        // Проверка каждого символа
+        for (unsigned char c : path) {
+            if (!isAllowed(c)) {
+                return false;
+            }
+        }
+
+        // Доп. проверка для Windows: "C:\" или "D:/" и т.п.
+        // Если встречается ':', он допустим только сразу после одной буквы
+        auto pos = path.find(':');
+        if (pos != std::string::npos) {
+            if (pos != 1) { return false; }              // только "X:" допустимо
+            if (!std::isalpha((unsigned char)path[0])) { // X должен быть буквой
+                return false;
+            }
+        }
+
+        return true;
+    }
 }

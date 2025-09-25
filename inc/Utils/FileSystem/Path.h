@@ -49,6 +49,8 @@ namespace SR_UTILS_NS {
         bool Create() const;
         bool CreateIfNotExists() const;
 
+        SR_NODISCARD bool IsValidPath() const;
+
         SR_NODISCARD bool Copy(const Path& destination) const;
 
         SR_NODISCARD std::string ToString() const;

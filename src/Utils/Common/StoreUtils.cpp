@@ -49,6 +49,9 @@ namespace SR_UTILS_NS::StoreUtils {
         if (!document.Save(path)) {
             SRHalt("Storage::Save() : failed to save YAML document to file \"{}\"!", path);
         }
+        else {
+            SR_INFO("Storage::Save() : user data saved to \"{}\"!", path);
+        }
     }
 
     void Storage::Load() {

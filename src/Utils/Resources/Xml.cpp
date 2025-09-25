@@ -185,8 +185,14 @@ namespace SR_UTILS_NS {
             path.Create();
         }
 
-        if (!m_document->save_file(path.CStr())) {
-            SR_ERROR("Document::Save() : failed save to file!\n\tPath: " + path.ToString());
+        std::string document = Dump();
+        if (document.empty()) {
+            SR_ERROR("Document::Save() : document is empty!");
+            return false;
+        }
+
+        if (!SR_UTILS_NS::FileSystem::WriteToFile(path.ToStringRef(), document)) {
+            SR_ERROR("Document::Save() : failed to save document! \n\tPath: " + path.ToString());
             return false;
         }
 

@@ -17,8 +17,40 @@ namespace SR_PLATFORM_NS {
             return false;
         }
     }
+
 #ifndef SR_ANDROID
-    Path::Type GetPathType(std::string_view path) {
+    std::optional<std::string> ReadFileOriginal(const Path& path) {
+        SR_TRACY_ZONE;
+
+        // Открываем файл в бинарном режиме и сразу получаем размер
+        std::ifstream file(path.c_str(), std::ios::binary | std::ios::ate);
+        if (!file) {
+            return std::nullopt;
+        }
+
+        const std::streamsize size = file.tellg();
+
+        std::string buffer;
+        buffer.resize(static_cast<size_t>(size));
+        file.seekg(0, std::ios::beg);
+        if (!file.read(buffer.data(), size)) {
+            return std::nullopt;
+        }
+        return buffer;
+    }
+
+    std::optional<std::string> ReadFile(const Path& path) {
+        SR_TRACY_ZONE;
+
+        if (g_platformHooks.readFileHook) {
+            return g_platformHooks.readFileHook(path);
+        }
+        else {
+            return ReadFileOriginal(path);
+        }
+    }
+
+    Path::Type GetPathTypeOriginal(std::string_view path) {
         SR_TRACY_ZONE;
 
     #ifdef SR_WIN32
@@ -55,6 +87,15 @@ namespace SR_PLATFORM_NS {
     #endif
     }
 
+    Path::Type GetPathType(std::string_view path) {
+        if (g_platformHooks.getFileTypeHook) {
+            return g_platformHooks.getFileTypeHook(path);
+        }
+        else {
+            return GetPathTypeOriginal(path);
+        }
+    }
+
     Path GetApplicationResourcesPath() {
         if (auto&& folderArg = CLIManager::Instance().GetOptionValue(CLIOptions::Resources); folderArg.has_value()) {
             auto&& folder = SR_UTILS_NS::Path(folderArg.value());
@@ -88,6 +129,14 @@ namespace SR_PLATFORM_NS {
         SR_LOG("Platform::GetApplicationResourcesPath() : resources folder was not found in any of the potential paths. Please specify the resources folder using --resources option or reinstall the application.");
 
         return SR_UTILS_NS::Path();
+    }
+
+    void InitializeHooks(const std::function<void(PlatformHooks& hooks)>& callback) {
+        PlatformHooks hooks;
+        hooks.originalReadFile = &ReadFileOriginal;
+        hooks.originalGetPathType = &GetPathTypeOriginal;
+        callback(hooks);
+        g_platformHooks = hooks;
     }
 #endif
 } // namespace SR_PLATFORM_NS

@@ -24,7 +24,7 @@ namespace SR_UTILS_NS {
         }
 
         if (!SR_UTILS_NS::ResourceManager::Instance().IsInitialized()) {
-            SR_UTILS_NS::ResourceManager::Instance().Initialize(resourcePath);
+            SR_UTILS_NS::ResourceManager::Instance().Initialize(resourcePath, resourcePath);
         }
 
         SR_LOG_TEST("TestManager::RunAll() : loading TestManagerAsset...");

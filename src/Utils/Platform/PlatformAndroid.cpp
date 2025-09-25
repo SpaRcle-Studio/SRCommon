@@ -344,6 +344,10 @@ namespace SR_UTILS_NS::Platform {
         return ":assets:";
     }
 
+    void InitializeHooks(const std::function<void(PlatformHooks& hooks)>& callback) {
+
+    }
+
     Path::Type GetPathType(std::string_view path) {
         if (RemoveAssetsPrefix(path)) {
             if (path.empty()) {

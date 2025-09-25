@@ -240,24 +240,6 @@ namespace SR_PLATFORM_NS {
         std::system(command.c_str());
     }
 
-    std::optional<std::string> ReadFile(const Path& path) {
-        // Открываем файл в бинарном режиме и сразу получаем размер
-        std::ifstream file(path.c_str(), std::ios::binary | std::ios::ate);
-        if (!file) {
-            return std::nullopt;
-        }
-
-        const std::streamsize size = file.tellg();
-
-        std::string buffer;
-        buffer.resize(static_cast<size_t>(size));
-        file.seekg(0, std::ios::beg);
-        if (!file.read(buffer.data(), size)) {
-            return std::nullopt;
-        }
-        return buffer;
-    }
-
     void WriteConsoleLog(const std::string& msg) {
         std::lock_guard lock(g_platformLogMutex);
         std::cout << msg << std::flush;
@@ -523,30 +505,19 @@ namespace SR_PLATFORM_NS {
 
     bool Copy(const Path &from, const Path &to) {
         if (from.IsFile()) {
-            /*/// TODO: Find another way to copy a file without using system() function WHILE preserving the current permissions.
-            std::string command = "cp " + from.ToStringRef() + " " + to.ToStringRef();
-            system(command.c_str());
-            return true;*/
-
-            int source = open(from.c_str(), O_RDONLY, 0);
-            int dest = open(to.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
-
-            // struct required, rationale: function stat() exists also
-            struct stat stat_source;
-            fstat(source, &stat_source);
-
-            auto&& result = sendfile(dest, source, 0, stat_source.st_size);
-
-            close(source);
-            close(dest);
-
-            if (result == -1) {
-                SR_WARN("Platform::Copy() : failed to copy!\n\tFrom: {}\n\tTo: {}", from.CStr(), to.CStr());
+            auto&& data = SR_PLATFORM_NS::ReadFile(from);
+            if (!data) {
+                SR_WARN("Platform::Copy() : failed to read file!\n\tPath: {}", from.c_str());
+                return false;
             }
-
+            std::ofstream file(to.CStr(), std::ios::binary);
+            if (!file.is_open()) {
+                SR_WARN("Platform::Copy() : failed to open file for writing!\n\tPath: {}", to.c_str());
+                return false;
+            }
+            file.write(data->data(), data->size());
             CopyPermissions(from, to);
-
-            return result != -1;
+            return true;
         }
 
         if (!from.IsDir()) {

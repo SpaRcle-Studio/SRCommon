@@ -51,6 +51,16 @@ namespace SR_UTILS_NS {
                     );
                 }
             }
+            else if (arg.ends_with(".srproject")) {
+                m_projectPath = SR_UTILS_NS::Path(arg);
+                if (!m_projectPath->IsFile()) {
+                    SR_PLATFORM_NS::WriteConsoleWarn(SR_FORMAT("CLIManager::Init() : project path is not a file: '{}'\n", *m_projectPath));
+                    m_projectPath = std::nullopt;
+                }
+                else {
+                    SR_PLATFORM_NS::WriteConsoleLog(SR_FORMAT("CLIManager::Init() : loading project from path: '{}'\n", *m_projectPath));
+                }
+            }
             else if (arg.rfind("-", 0) == 0) {
                 SR_PLATFORM_NS::WriteConsoleWarn(SR_FORMAT("CLIManager::Init() : unknown argument: '{}'\n", arg));
             }

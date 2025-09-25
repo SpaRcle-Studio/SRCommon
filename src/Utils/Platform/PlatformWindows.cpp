@@ -274,24 +274,6 @@ namespace SR_UTILS_NS::Platform {
         return pFunction;
     }
 
-    std::optional<std::string> ReadFile(const Path& path) {
-        // Открываем файл в бинарном режиме и сразу получаем размер
-        std::ifstream file(path.c_str(), std::ios::binary | std::ios::ate);
-        if (!file) {
-            return std::nullopt;
-        }
-
-        const std::streamsize size = file.tellg();
-
-        std::string buffer;
-        buffer.resize(static_cast<size_t>(size));
-        file.seekg(0, std::ios::beg);
-        if (!file.read(buffer.data(), size)) {
-            return std::nullopt;
-        }
-        return buffer;
-    }
-
     void TextToClipboard(const std::string &text) {
         if (text.empty()) {
             SR_WARN("Platform::TextToClipboard() : text is empty!");
@@ -542,23 +524,22 @@ namespace SR_UTILS_NS::Platform {
 #endif
     }
 
-
     bool Copy(const Path &from, const Path &to) {
         SR_TRACY_ZONE;
 
         if (from.IsFile()) {
-            const bool result = CopyFileA(
-                    reinterpret_cast<LPCSTR>(from.ToString().c_str()),
-                    reinterpret_cast<LPCSTR>(to.ToString().c_str()),
-                    false
-            );
-
-            if (!result) {
-                auto&& message = GetLastErrorAsString();
-                SR_WARN("Platform::Copy() : {}\n\tFrom: {}\n\tTo: {}", message.c_str(), from.CStr(), to.CStr());
+            auto&& data = SR_PLATFORM_NS::ReadFile(from);
+            if (!data) {
+                SR_WARN("Platform::Copy() : failed to read file!\n\tPath: {}", from.c_str());
+                return false;
             }
-
-            return result;
+            std::ofstream file(to.CStr(), std::ios::binary);
+            if (!file.is_open()) {
+                SR_WARN("Platform::Copy() : failed to open file for writing!\n\tPath: {}", to.c_str());
+                return false;
+            }
+            file.write(data->data(), data->size());
+            return true;
         }
 
         if (!from.IsDir()) {

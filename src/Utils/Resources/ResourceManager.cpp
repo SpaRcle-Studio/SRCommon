@@ -15,12 +15,12 @@ namespace SR_UTILS_NS {
     /// Seconds
     const uint64_t ResourceManager::ResourceLifeTime = 30 * SR_CLOCKS_PER_SEC;
 
-    bool ResourceManager::Initialize(const SR_UTILS_NS::Path& resourcesFolder) {
-    #ifdef SR_ANDROID
-        SR_INFO("ResourceManager::Initialize() : initializing resource manager...");
-    #else
-        SR_INFO("ResourceManager::Initialize() : initializing resource manager...\n\tResources folder: " + resourcesFolder.ToString());
-    #endif
+    bool ResourceManager::Initialize(const SR_UTILS_NS::Path& resourcesFolder, const SR_UTILS_NS::Path& engineResourceFolder) {
+        SR_INFO("ResourceManager::Initialize() : initializing resource manager..."
+            "\n\tResources folder: {}\n\tEngine resources folder: {}",
+            resourcesFolder, engineResourceFolder
+        );
+
         if (m_isInit) {
             SRHalt("ResourceManager::Initialize() : is already initialized!");
             return false;
@@ -28,6 +28,7 @@ namespace SR_UTILS_NS {
 
         m_defaultReloader = new DefaultResourceReloader();
 
+        m_engineFolder = engineResourceFolder;
         m_folder = resourcesFolder;
 
         m_fileSystemWatcher = FileSystemWatcher::MakeShared();
