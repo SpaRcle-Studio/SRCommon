@@ -45,6 +45,15 @@ namespace SR_UTILS_NS {
         return m_matrix;
     }
 
+    const SR_MATH_NS::AABB& Transform3D::GetAABB() const {
+        SR_TRACY_ZONE;
+        if (m_aabbDirty) SR_UNLIKELY_ATTRIBUTE {
+            m_aabbDirty = false;
+            m_cachedAABB = GetMatrix().TransformAABB(m_aabb);
+        }
+        return m_cachedAABB;
+    }
+
     void Transform3D::Rotate(const SR_MATH_NS::FVector3& eulers) {
         Rotate(eulers.Radians().ToQuat());
     }

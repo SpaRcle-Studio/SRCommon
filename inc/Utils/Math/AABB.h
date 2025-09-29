@@ -18,6 +18,10 @@ namespace SR_MATH_NS {
         SR_NODISCARD bool IsValid() const noexcept;
         SR_NODISCARD bool IsEmpty() const noexcept;
         SR_NODISCARD FVector3 GetCenter() const noexcept;
+        SR_NODISCARD FVector3 GetSize() const noexcept;
+        SR_NODISCARD FVector3 GetExtends() const noexcept;
+
+        SR_NODISCARD static AABB UnitCube(float_t size = 1.f) noexcept;
 
     };
 }

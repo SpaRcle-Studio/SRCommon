@@ -59,8 +59,6 @@ namespace Codegen {
 }
 
 #define SR_CLASS_BASE()                                                                                                 \
-    public:                                                                                                             \
-        static bool RegisterPropertiesCodegen();                                                                        \
     private:                                                                                                            \
         template<typename TSerializeType> friend struct ::Codegen::SRClassMetaTemplate;                                 \
         friend class SR_UTILS_NS::SRClass;                                                                              \

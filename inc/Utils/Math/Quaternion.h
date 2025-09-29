@@ -53,6 +53,7 @@ namespace SR_MATH_NS {
         explicit Quaternion(T x, T y, T z, T w);
 
         static Quaternion FromEuler(const Vector3<Unit>& euler);
+        static Quaternion FromTo(const Vector3<Unit>& from, const Vector3<Unit>& to);
         static Quaternion Identity();
 
         SR_NODISCARD Quaternion Inverse() const;

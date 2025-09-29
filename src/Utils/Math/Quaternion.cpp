@@ -69,6 +69,41 @@ namespace SR_MATH_NS {
         return Vector3<Unit>(q * v.ToGLM());
     }
 
+   Quaternion Quaternion::FromTo(const Vector3<Unit>& from, const Vector3<Unit>& to) {
+       const FVector3 f = from.Normalized();
+       const FVector3 t = to.Normalized();
+
+       const Unit cosTheta = f.Dot(t);
+       FVector3 rotationAxis;
+
+       if (cosTheta >= 1.0f - 1e-6f) {
+           // векторы почти совпадают
+           return Quaternion::Identity();
+       }
+
+       if (cosTheta < -1.0f + 1e-6f) {
+           // векторы противоположны
+           // выбираем любой перпендикулярный вектор
+           rotationAxis = FVector3(1,0,0).Cross(f);
+           if (rotationAxis.Length() < 1e-6f) {
+               rotationAxis = FVector3(0, 1, 0).Cross(f);
+           }
+           rotationAxis = rotationAxis.Normalize();
+           return Quaternion(rotationAxis, SR_PI);
+       }
+
+       rotationAxis = f.Cross(t);
+       const Unit s = sqrt((1 + cosTheta) * 2);
+       const Unit invs = 1.0f / s;
+
+       return Quaternion(
+               s * 0.5f,
+               rotationAxis.x * invs,
+               rotationAxis.y * invs,
+               rotationAxis.z * invs
+       );
+   }
+
    Quaternion Quaternion::FromEuler(const Vector3 <Unit> &euler) {
        return euler.Radians().ToQuat();
    }

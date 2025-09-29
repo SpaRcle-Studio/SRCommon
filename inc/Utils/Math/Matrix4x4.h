@@ -8,6 +8,7 @@
 #include <Utils/Math/Quaternion.h>
 #include <Utils/Math/Vector3.h>
 #include <Utils/Math/Vector4.h>
+#include <Utils/Math/AABB.h>
 
 #include <glm/gtx/matrix_decompose.hpp>
 
@@ -71,6 +72,7 @@ namespace SR_MATH_NS {
         SR_NODISCARD FVector3 GetTranslate() const;
         SR_NODISCARD FVector3 GetScale() const;
         SR_NODISCARD bool IsFinite() const;
+        SR_NODISCARD AABB TransformAABB(const AABB& localBox) const;
 
         bool Decompose(FVector3& translation, Quaternion& quaternion, FVector3& scale) const;
         bool Decompose(FVector3& translation, Quaternion& quaternion) const;

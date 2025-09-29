@@ -9,6 +9,7 @@
 #include <Utils/Common/Measurement.h>
 
 #include <Utils/Math/Mathematics.h>
+#include <Utils/Math/AABB.h>
 #include <Utils/Math/Vector2.h>
 #include <Utils/Math/Vector3.h>
 #include <Utils/Math/Matrix4x4.h>
@@ -88,6 +89,7 @@ namespace SR_UTILS_NS {
         virtual void LookAt(const SR_MATH_NS::FVector3& position, LookAtAxis axis);
 
         SR_NODISCARD virtual const SR_MATH_NS::Matrix4x4& GetMatrix() const;
+        SR_NODISCARD virtual const SR_MATH_NS::AABB& GetAABB() const;
 
         SR_NODISCARD virtual SR_MATH_NS::Quaternion GetQuaternion() const;
 
@@ -117,6 +119,7 @@ namespace SR_UTILS_NS {
 
     protected:
         GameObject* m_gameObject = nullptr;
+        mutable bool m_aabbDirty = true;
 
     private:
         mutable bool m_dirtyMatrix = false;

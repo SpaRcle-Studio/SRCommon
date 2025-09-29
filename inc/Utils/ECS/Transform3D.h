@@ -42,6 +42,7 @@ namespace SR_UTILS_NS {
         void SetSkew(const SR_MATH_NS::FVector3& skew) override;
 
         SR_NODISCARD const SR_MATH_NS::Matrix4x4& GetMatrix() const override;
+        SR_NODISCARD const SR_MATH_NS::AABB& GetAABB() const override;
 
         SR_NODISCARD SR_MATH_NS::Quaternion GetQuaternion() const override { return m_quaternion; }
 
@@ -72,6 +73,8 @@ namespace SR_UTILS_NS {
     protected:
         mutable SR_MATH_NS::Matrix4x4 m_localMatrix = SR_MATH_NS::Matrix4x4::Identity();
         mutable SR_MATH_NS::Matrix4x4 m_matrix = SR_MATH_NS::Matrix4x4::Identity();
+        mutable SR_MATH_NS::AABB m_cachedAABB;
+        SR_MATH_NS::AABB m_aabb = SR_MATH_NS::AABB::UnitCube();
 
         mutable bool m_eulersDirty = true;
 

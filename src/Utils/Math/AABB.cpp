@@ -23,4 +23,16 @@ namespace SR_MATH_NS {
     FVector3 AABB::GetCenter() const noexcept {
         return (min + max) * 0.5f;
     }
+
+    FVector3 AABB::GetSize() const noexcept {
+        return max - min;
+    }
+
+    AABB AABB::UnitCube(const float_t size) noexcept {
+        return AABB(FVector3(-size), FVector3(size));
+    }
+
+    FVector3 AABB::GetExtends() const noexcept {
+        return GetSize() * 0.5f;
+    }
 }

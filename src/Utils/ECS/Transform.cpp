@@ -144,6 +144,11 @@ namespace SR_UTILS_NS {
         return matrix4X4;
     }
 
+    const SR_MATH_NS::AABB& Transform::GetAABB() const {
+        static SR_MATH_NS::AABB aabb;
+        return aabb;
+    }
+
     void Transform::UpdateTree() {
         if (!m_gameObject) SR_UNLIKELY_ATTRIBUTE {
             return;
@@ -157,6 +162,7 @@ namespace SR_UTILS_NS {
             return;
         }
         m_dirtyMatrix = true;
+        m_aabbDirty = true;
 
         m_gameObject->OnMatrixDirty();
 

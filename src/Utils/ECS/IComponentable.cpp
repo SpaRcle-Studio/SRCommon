@@ -55,8 +55,10 @@ namespace SR_UTILS_NS {
     }
 
     Component::Ptr IComponentable::GetComponent(StringAtom name) {
+        SR_TRACY_ZONE;
+
         for (auto&& pComponent : m_components) {
-            if (pComponent->GetMeta()->GetFactoryName() != name) {
+            if (!pComponent->GetMeta()->IsSameOrInherited(name)) {
                 continue;
             }
 
