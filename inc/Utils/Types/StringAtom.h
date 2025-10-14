@@ -50,22 +50,17 @@ namespace SR_UTILS_NS {
         SR_NODISCARD char operator[](size_t index) const noexcept;
 
     public:
-        /// @method
+        SR_NODISCARD const char* begin() const;
+        SR_NODISCARD const char* end() const;
         SR_NODISCARD uint64_t Size() const;
-        /// @method
         SR_NODISCARD uint64_t size() const;
         SR_NODISCARD bool Contains(const char* str) const;
-        /// @method
         SR_NODISCARD bool Empty() const;
-        /// @method
         SR_NODISCARD bool empty() const;
         SR_NODISCARD uint64_t GetHash() const;
         SR_NODISCARD std::string ToString() const;
-        /// @method
         SR_NODISCARD const char* ToCStr() const;
-        /// @method
         SR_NODISCARD const char* c_str() const;
-        /// @method
         SR_NODISCARD const char* data() const;
         SR_NODISCARD const std::string& ToStringRef() const;
         SR_NODISCARD std::string_view ToStringView() const;

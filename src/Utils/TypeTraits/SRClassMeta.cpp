@@ -65,6 +65,15 @@ namespace SR_UTILS_NS {
     	return {};
     }
 
+    SR_UTILS_NS::StringAtom SRClassMeta::GetExtension() const noexcept {
+        for (auto&& pBase : GetBaseMetas()) {
+            if (!pBase->GetExtension().empty()) {
+                return pBase->GetExtension();
+            }
+        }
+        return {};
+    }
+
     uint64_t SRClassMeta::GetVersion() const noexcept {
         if (m_versionCached != SR_UINT64_MAX) {
             return m_versionCached;

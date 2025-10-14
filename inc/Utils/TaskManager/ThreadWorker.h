@@ -5,23 +5,15 @@
 #ifndef SR_ENGINE_UTILS_THREAD_WORKER_H
 #define SR_ENGINE_UTILS_THREAD_WORKER_H
 
-#include <Utils/Common/NonCopyable.h>
-#include <Utils/Common/Singleton.h>
-#include <Utils/Serialization/Serializable.h>
+#include <Utils/TaskManager/ThreadWorkerSettings.h>
 #include <Utils/Types/DataStorage.h>
 #include <Utils/Types/Thread.h>
 #include <Utils/Types/SharedPtr.h>
-#include <Utils/Types/Function.h>
-#include <Utils/Types/StringAtom.h>
 #include <Utils/FileSystem/Path.h>
 
 namespace SR_UTILS_NS {
-    SR_ENUM_NS_CLASS_T(ThreadWorkerState, uint8_t,
-        Idle, Working, Ready
-    );
-
     SR_ENUM_NS_CLASS_T(ThreadWorkerResult, uint8_t,
-        Success, Working, Repeat, Break
+        Success, Working, Repeat, Break, Skip
     );
 
     class ThreadsWorker;
@@ -33,7 +25,6 @@ namespace SR_UTILS_NS {
         SR_CLASS()
     public:
         ThreadWorkerStateBase();
-        virtual ~ThreadWorkerStateBase() = default;
 
         void AddStartCondition(SR_UTILS_NS::StringAtom name, ThreadWorkerState state);
         void AddFinishCondition(SR_UTILS_NS::StringAtom name, ThreadWorkerState state);
@@ -41,6 +32,8 @@ namespace SR_UTILS_NS {
 
         ThreadWorkerResult Execute();
         void Finalize();
+
+        SR_NODISCARD ThreadWorkerResult TryExecute();
 
         void SetThreadWorker(ThreadWorker* pThreadWorker) { m_threadWorker = pThreadWorker; }
 

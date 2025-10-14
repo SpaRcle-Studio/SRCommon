@@ -9,17 +9,19 @@
 #include <Utils/Resources/ResourceManager.h>
 
 namespace SR_UTILS_NS {
+    /// @extension(sras)
     class Asset : public IResource {
         SR_CLASS()
         using Super = IResource;
     public:
-        SR_INLINE static const char* EXTENSION_NAME = "sras";
         using Ptr = SR_HTYPES_NS::SharedPtr<Asset>;
         using OriginType = Asset;
 
     public:
         SR_NODISCARD bool SaveAsset(const Path& path) const;
         SR_NODISCARD bool SaveAsset() const;
+
+        SR_NODISCARD static SR_HTYPES_NS::SharedPtr<Asset> CreateNew(const Path& path, SR_UTILS_NS::StringAtom assetType);
 
         template<class AssetT = Asset> SR_NODISCARD static SR_HTYPES_NS::SharedPtr<AssetT> Load(const Path& path);
         template<class AssetT> SR_NODISCARD static SR_HTYPES_NS::SharedPtr<AssetT> CreateNew(const Path& path);
@@ -76,31 +78,11 @@ namespace SR_UTILS_NS {
     }
 
     template<class AssetT> SR_HTYPES_NS::SharedPtr<AssetT> Asset::CreateNew(const Path& rawPath) {
-        auto&& resourceManager = ResourceManager::Instance();
-        SR_UTILS_NS::Path&& path = rawPath.RemoveSubPath(resourceManager.GetResPath());
-
-        if (resourceManager.GetResPath().Concat(path).Exists()) {
-            SR_ERROR("Asset::CreateNew() : asset already exists at path: {}", path);
-            return nullptr;
-        }
-
         if constexpr (!std::is_base_of_v<Asset, AssetT>) {
             static_assert(AlwaysFalseV<AssetT>, "AssetT must be derived from Asset!");
         }
         else {
-            SR_LOG("Asset::CreateNew() : creating new asset {} at path: {}", AssetT::GetClassStaticName(), path);
-
-            SR_HTYPES_NS::SharedPtr<AssetT> pAsset = AssetT::template MakeShared<AssetT>();
-            pAsset->m_loadState = IResource::LoadState::Loaded;
-
-            if (!pAsset->SaveAsset(resourceManager.GetResPath().Concat(path))) {
-                SR_ERROR("Asset::CreateNew() : failed to save asset to path: {}", path);
-                pAsset->DeleteResource();
-                return nullptr;
-            }
-
-            pAsset->SetId(path.ToStringRef(), true);
-            return pAsset;
+            return CreateNew(rawPath, AssetT::GetClassStaticName()).template StaticCast<AssetT>();
         }
     }
 }

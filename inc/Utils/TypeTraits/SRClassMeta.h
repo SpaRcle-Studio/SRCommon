@@ -34,6 +34,7 @@ namespace SR_UTILS_NS {
         SR_NODISCARD uint64_t GetVersion() const noexcept;
 
         SR_NODISCARD virtual std::span<const SR_UTILS_NS::StringAtom> GetCategory() const noexcept;
+        SR_NODISCARD virtual SR_UTILS_NS::StringAtom GetExtension() const noexcept;
         SR_NODISCARD virtual bool IsAbstract() const noexcept;
         SR_NODISCARD virtual bool IsHidden() const noexcept;
         SR_NODISCARD virtual bool IsEditorOnly() const noexcept;

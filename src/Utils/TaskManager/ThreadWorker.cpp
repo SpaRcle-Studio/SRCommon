@@ -10,6 +10,7 @@
 #include <Utils/Debug.h>
 #include <Utils/Platform/Platform.h>
 #include <Utils/Types/Time.h>
+#include <Utils/Common/Features.h>
 
 #include <Codegen/ThreadWorker.generated.hpp>
 
@@ -31,9 +32,7 @@ namespace SR_UTILS_NS {
         m_finishConditions[name] = state;
     }
 
-    ThreadWorkerResult ThreadWorkerStateBase::Execute() {
-        SR_TRACY_ZONE_S(GetMeta()->GetFactoryName().c_str());
-
+    ThreadWorkerResult ThreadWorkerStateBase::TryExecute() {
         if (m_state == ThreadWorkerState::Idle) {
             bool isNeedToSkip = !m_skipConditions.empty();
 
@@ -45,7 +44,7 @@ namespace SR_UTILS_NS {
             }
 
             if (isNeedToSkip) {
-                return ThreadWorkerResult::Success;
+                return ThreadWorkerResult::Skip;
             }
 
             for (auto&& [name, state] : m_startConditions) {
@@ -56,6 +55,11 @@ namespace SR_UTILS_NS {
 
             m_state = ThreadWorkerState::Working;
         }
+        return ThreadWorkerResult::Success;
+    }
+
+    ThreadWorkerResult ThreadWorkerStateBase::Execute() {
+        SR_TRACY_ZONE_S(GetMeta()->GetFactoryName().c_str());
 
         if (m_state == ThreadWorkerState::Working) {
             auto&& result = ExecuteImpl();
@@ -63,6 +67,9 @@ namespace SR_UTILS_NS {
                 return result;
             }
             m_state = ThreadWorkerState::Ready;
+        }
+        else {
+            SRHalt("ThreadWorkerStateBase::Execute() : state is not working!");
         }
 
         for (auto&& [name, state] : m_finishConditions) {
@@ -135,6 +142,8 @@ namespace SR_UTILS_NS {
     }
 
     void ThreadWorker::Work() {
+        SR_TRACY_THREAD_NAME(m_name.c_str());
+
         while (true) {
             SR_TRACY_ZONE_S(m_name.c_str());
 
@@ -160,21 +169,47 @@ namespace SR_UTILS_NS {
 
     void ThreadWorker::Update() {
         while (m_currentState < m_states.size()) {
-            switch (m_states[m_currentState]->Execute()) {
-                case ThreadWorkerResult::Success:
-                    break;
-                case ThreadWorkerResult::Repeat:
-                    continue;
-                case ThreadWorkerResult::Break:
-                    m_currentState = 0;
-                    return;
-                default:
-                    SRHalt("ThreadWorker::Work() : unknown result!");
-                    continue;
-            }
-
             if (!m_isActive || !GetThreadsWorker()->IsAlive()) {
                 return;
+            }
+
+            bool skip = false;
+            {
+                SR_TRACY_ZONE_N("Wait");
+                SR_TRACY_ZONE_COLOR(0xFF0000);
+
+                std::atomic<bool> wait = true;
+                while (wait) {
+                    switch (m_states[m_currentState]->TryExecute()) {
+                        case ThreadWorkerResult::Success:
+                            wait = false;
+                            break;
+                        case ThreadWorkerResult::Repeat:
+                            break;
+                        case ThreadWorkerResult::Skip:
+                            skip = true;
+                            break;
+                        default:
+                            SRHalt("ThreadWorker::Work() : unknown result!");
+                            break;
+                    }
+                }
+            }
+
+            if (!skip) {
+                switch (m_states[m_currentState]->Execute()) {
+                    case ThreadWorkerResult::Success:
+                    case ThreadWorkerResult::Skip:
+                        break;
+                    case ThreadWorkerResult::Repeat:
+                        continue;
+                    case ThreadWorkerResult::Break:
+                        m_currentState = 0;
+                        return;
+                    default:
+                        SRHalt("ThreadWorker::Work() : unknown result!");
+                        continue;
+                }
             }
 
             ++m_currentState;
@@ -190,113 +225,66 @@ namespace SR_UTILS_NS {
     { }
 
     ThreadsWorker::Ptr ThreadsWorker::Load(const SR_UTILS_NS::Path& path) {
-        auto&& fullPath = SR_UTILS_NS::ResourceManager::Instance().GetResPath().Concat(path);
-        if (!fullPath.Exists(Path::Type::File)) {
-            SR_ERROR("ThreadsWorker::Load() : file \"{}\" not found!", fullPath.ToStringRef());
+        SR_TRACY_ZONE;
+
+        SR_LOG("ThreadsWorker::Load() : loading threads worker from file \"{}\"...", path);
+
+        auto&& pSettings = SR_UTILS_NS::Asset::Load<ThreadWorkerSettings>(path);
+        if (!pSettings) {
+            SR_ERROR("ThreadsWorker::Load() : failed to load settings from file \"{}\"", path);
             return nullptr;
         }
 
-        Yaml::Document document = Yaml::Document::Load(fullPath);
-        if (!document.IsValid()) {
-            SR_ERROR("ThreadsWorker::Load() : failed to load file \"{}\"", fullPath.ToStringRef());
+        std::optional<Details::ThreadWorkerThreadsVariant> settingsVariant;
+        for (auto&& variant : pSettings->variants) {
+            bool isSuitable = std::ranges::all_of(variant.featuresCondition, [](const auto& featureCondition) {
+                return SR_UTILS_NS::Features::Instance().Enabled(featureCondition, false);
+            });
+
+            if (isSuitable) {
+                settingsVariant = variant;
+                break;
+            }
+        }
+
+        if (!settingsVariant) {
+            SR_ERROR("ThreadsWorker::Load() : failed to find suitable variant in file \"{}\"! Check features conditions!", path);
             return nullptr;
         }
 
-        auto&& root = document.GetRoot();
-        auto&& threadsNode = root.GetChild("threads");
-
-        if (!threadsNode.IsValid()) {
-            SR_ERROR("ThreadsWorker::Load() : failed to get \"threads\" node from file \"{}\"", fullPath.ToStringRef());
-            return nullptr;
-        }
+        SR_LOG("ThreadsWorker::Load() : found suitable threads variant, description: \"{}\"", settingsVariant.value().description);
 
         ThreadsWorker::Ptr pThreadsWorker = new ThreadsWorker();
 
-        if (auto&& finalizeNode = root.GetChild("finalize"); finalizeNode.IsValid()) {
-            for (auto&& item : finalizeNode.GetChildren()) {
-                if (!item.IsValid()) {
-                    continue;
-                }
-
-                auto&& name = item.GetChild("name");
-                if (!name.IsValid()) {
-                    continue;
-                }
-
-                auto&& finalizeStateName = name.GetValue();
-
-                auto&& pIt = std::find_if(pThreadsWorker->m_finalize.begin(), pThreadsWorker->m_finalize.end(), [&finalizeStateName](const SR_UTILS_NS::StringAtom& atom) {
-                    return atom.ToStringRef() == finalizeStateName;
-                });
-
-                if (pIt != pThreadsWorker->m_finalize.end()) {
-                    SR_ERROR("ThreadsWorker::Load() : finalize state \"{}\" already exists!", finalizeStateName);
-                    continue;
-                }
-
-                pThreadsWorker->m_finalize.emplace_back(finalizeStateName);
+        for (auto&& finalize : settingsVariant.value().finalizeStates) {
+            if (!SR_UTILS_NS::Factory::Instance().GetType(finalize)) {
+                SR_ERROR("ThreadsWorker::Load() : failed to find finalize state \"{}\" in file \"{}\"!", finalize, path);
+                continue;
             }
+            pThreadsWorker->m_finalize.emplace_back(finalize);
         }
 
-        for (auto&& threadNode : threadsNode.GetChildren()) {
-            auto&& threadName = threadNode.GetChild("name");
-            if (!threadName.IsValid()) {
-                continue;
-            }
+        for (const Details::ThreadWorkerThread& thread : settingsVariant.value().threads) {
+            ThreadWorker::Ptr pThreadWorker = new ThreadWorker(thread.name);
 
-            auto&& states = threadNode.GetChild("states");
-            if (!states.IsValid()) {
-                continue;
-            }
-
-            auto&& threadNameStr = threadName.GetValue();
-            ThreadWorker::Ptr pThreadWorker = new ThreadWorker(threadNameStr);
-
-            static auto processCondition = [](int type, SR_YAML_NS::Node conditionNode, const ThreadWorkerStateBase::Ptr& pState) {
-                if (!conditionNode.IsValid()) {
-                    return;
-                }
-
-                for (auto&& state : SR_UTILS_NS::EnumReflector::GetValues<ThreadWorkerState>()) {
-                    auto&& stateName = SR_UTILS_NS::StringUtils::ToLower(state.name);
-
-                    if (auto&& stateNode = conditionNode.GetChild(stateName.c_str()); stateNode.IsValid()) {
-                        for (auto&& item : stateNode.GetChildren()) {
-                            switch (type) {
-                            case 0:
-                                pState->AddSkipCondition(item.GetValue(), static_cast<ThreadWorkerState>(state.value));
-                                break;
-                            case 1:
-                                pState->AddStartCondition(item.GetValue(), static_cast<ThreadWorkerState>(state.value));
-                                break;
-                            case 2:
-                                pState->AddFinishCondition(item.GetValue(), static_cast<ThreadWorkerState>(state.value));
-                                break;
-                            default:
-                                SRHalt("ThreadsWorker::Load() : unknown condition type!");
-                            }
-                        }
-                    }
-                }
-            };
-
-            for (auto&& state : states.GetChildren()) {
-                auto&& stateName = state.GetChild("name");
-                if (!stateName.IsValid()) {
-                    continue;
-                }
-
-                auto&& stateNameStr = stateName.GetValue();
-
-                auto&& pState = SR_UTILS_NS::Factory::Instance().Create<ThreadWorkerStateBase>(stateNameStr);
+            for (const Details::ThreadWorkerSettingsState& stateName : thread.states) {
+                auto&& pState = SR_UTILS_NS::Factory::Instance().Create<ThreadWorkerStateBase>(stateName.name);
                 if (!pState) {
-                    SR_ERROR("ThreadsWorker::Load() : failed to allocate state \"{}\" for thread \"{}\"", stateNameStr, threadNameStr);
+                    SR_ERROR("ThreadsWorker::Load() : failed to allocate state \"{}\" for thread \"{}\" in file \"{}\"!", stateName.name, thread.name, path);
                     continue;
                 }
 
-                processCondition(0, state.GetChild("start_condition"), pState);
-                processCondition(1, state.GetChild("skip_condition"), pState);
-                processCondition(2, state.GetChild("finish_condition"), pState);
+                for (const auto& condition : stateName.startConditions) {
+                    pState->AddStartCondition(condition.name, condition.state);
+                }
+
+                for (const auto& condition : stateName.skipConditions) {
+                    pState->AddSkipCondition(condition.name, condition.state);
+                }
+
+                for (const auto& condition : stateName.finishConditions) {
+                    pState->AddFinishCondition(condition.name, condition.state);
+                }
 
                 pThreadWorker->AddState(pState);
             }

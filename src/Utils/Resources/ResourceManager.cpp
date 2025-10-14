@@ -469,6 +469,10 @@ namespace SR_UTILS_NS {
     bool ResourceManager::ReviveResource(const IResource::Ptr& pResource) {
         SR_LOCK_GUARD;
 
+        if (!pResource) {
+            return false;
+        }
+
         return pResource->Execute([pResource, this](){
             if (!pResource->IsDestroyed()) {
                 return true;

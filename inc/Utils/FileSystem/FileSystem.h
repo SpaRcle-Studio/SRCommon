@@ -19,6 +19,9 @@ namespace SR_UTILS_NS {
 
         static bool CreatePath(std::string path, uint32_t offset = 0);
 
+        static bool IsAllowedPathSymbol(char c);
+        static bool IsPathSeparator(char c);
+
         static bool WriteToFile(const std::string& path, const std::string_view& text);
         static std::string NormalizePath(const std::string& path);
         static void NormalizePathInPlace(std::string& path);

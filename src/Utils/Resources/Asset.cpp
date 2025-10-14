@@ -94,4 +94,28 @@ namespace SR_UTILS_NS {
     bool Asset::SaveAsset() const {
         return SaveAsset(SR_UTILS_NS::ResourceManager::Instance().GetResPath().Concat(GetResourcePath()));
     }
+
+    SR_HTYPES_NS::SharedPtr<Asset> Asset::CreateNew(const Path& rawPath, StringAtom assetType) {
+        auto&& resourceManager = ResourceManager::Instance();
+        SR_UTILS_NS::Path&& path = rawPath.RemoveSubPath(resourceManager.GetResPath());
+
+        if (resourceManager.GetResPath().Concat(path).Exists()) {
+            SR_ERROR("Asset::CreateNew() : asset already exists at path: {}", path);
+            return nullptr;
+        }
+
+        SR_LOG("Asset::CreateNew() : creating new asset {} at path: {}", assetType, path);
+
+        SR_HTYPES_NS::SharedPtr<Asset> pAsset = Factory::Instance().Create<Asset>(assetType);
+        pAsset->m_loadState = IResource::LoadState::Loaded;
+
+        if (!pAsset->SaveAsset(resourceManager.GetResPath().Concat(path))) {
+            SR_ERROR("Asset::CreateNew() : failed to save asset to path: {}", path);
+            pAsset->DeleteResource();
+            return nullptr;
+        }
+
+        pAsset->SetId(path.ToStringRef(), true);
+        return pAsset;
+    }
 }

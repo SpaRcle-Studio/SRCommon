@@ -478,29 +478,9 @@ namespace SR_UTILS_NS {
             return false;
         }
 
-        // Разрешённые символы
-        auto isAllowed = [](unsigned char c) -> bool {
-            if (std::isalnum(c)) {
-                return true; // A-Z, a-z, 0-9
-            }
-            switch (c) {
-                case '/': case '\\': case ':': // разделители + диск (Windows)
-                case '.': case '_': case '-':
-                case ' ': case '(': case ')':
-                case '[': case ']': case '{': case '}':
-                case '+': case '=': case '!': case '@':
-                case '#': case '$': case '%': case '&':
-                case '\'': case '~': case '`': case '^':
-                case ',': case ';':
-                    return true;
-                default:
-                    return false;
-            }
-        };
-
         // Проверка каждого символа
         for (unsigned char c : path) {
-            if (!isAllowed(c)) {
+            if (!FileSystem::IsAllowedPathSymbol(c)) {
                 return false;
             }
         }
@@ -516,5 +496,15 @@ namespace SR_UTILS_NS {
         }
 
         return true;
+    }
+
+    void Path::Clear() {
+        clear();
+    }
+
+    void Path::clear() {
+        m_path.clear();
+        m_hash = SR_UINT64_MAX;
+        m_isNormalized = false;
     }
 }

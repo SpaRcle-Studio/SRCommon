@@ -7,6 +7,7 @@
 
 #include <Utils/Types/Stack.h>
 #include <Utils/Types/Function.h>
+#include <Utils/Types/FastMemoryArray.h>
 #include <Utils/Common/StringFormat.h>
 
 namespace SR_HTYPES_NS {
@@ -26,11 +27,11 @@ namespace SR_HTYPES_NS {
         }
 
         SR_NODISCARD uint32_t GetAliveCount() const {
-            return m_objects.size() - m_freeIndices.Size();
+            return m_objects.size() - m_freeIndices.size();
         }
 
         SR_NODISCARD uint32_t GetFreeCount() const {
-            return m_freeIndices.Size();
+            return m_freeIndices.size();
         }
 
         SR_NODISCARD uint32_t GetCapacity() const {
@@ -43,12 +44,13 @@ namespace SR_HTYPES_NS {
 
         Index Add(T&& object) {
             Index index;
-            if (m_freeIndices.IsEmpty()) SR_UNLIKELY_ATTRIBUTE {
+            if (m_freeIndices.empty()) SR_UNLIKELY_ATTRIBUTE {
                 index = m_objects.size();
                 m_objects.emplace_back(true, std::move(object));
             }
             else SR_LIKELY_ATTRIBUTE {
-                index = m_freeIndices.Pop();
+                index = m_freeIndices.back();
+                m_freeIndices.pop_back();
                 m_objects[index] = { true, std::move(object) };
             }
             return index;
@@ -56,12 +58,13 @@ namespace SR_HTYPES_NS {
 
         Index Add(const T& object) {
             Index index;
-            if (m_freeIndices.IsEmpty()) SR_UNLIKELY_ATTRIBUTE {
+            if (m_freeIndices.empty()) SR_UNLIKELY_ATTRIBUTE {
                 index = m_objects.size();
                 m_objects.emplace_back(true, object);
             }
             else SR_LIKELY_ATTRIBUTE {
-                index = m_freeIndices.Pop();
+                index = m_freeIndices.back();
+                m_freeIndices.pop_back();
                 m_objects[index] = { true, object };
             }
             return index;
@@ -106,7 +109,7 @@ namespace SR_HTYPES_NS {
 
         void Clear() {
             m_objects.clear();
-            m_freeIndices.Clear();
+            m_freeIndices.clear();
         }
 
         void Reserve(uint64_t size) {
@@ -114,7 +117,7 @@ namespace SR_HTYPES_NS {
         }
 
         void ShrinkToFit() {
-            if (m_freeIndices.Size() == m_objects.size()) SR_UNLIKELY_ATTRIBUTE {
+            if (m_freeIndices.size() == m_objects.size()) SR_UNLIKELY_ATTRIBUTE {
                 Clear();
                 m_objects.shrink_to_fit();
                 return;
@@ -141,7 +144,7 @@ namespace SR_HTYPES_NS {
         }
 
         SR_NODISCARD bool IsEmpty() const {
-            return m_objects.size() == m_freeIndices.Size();
+            return m_objects.size() == m_freeIndices.size();
         }
 
         SR_NODISCARD bool SR_FASTCALL IsAlive(Index index) const {
@@ -164,7 +167,7 @@ namespace SR_HTYPES_NS {
             }
 
             m_objects[index].first = false;
-            m_freeIndices.Push(index);
+            m_freeIndices.emplace_back(index);
 
             return std::move(m_objects[index].second);
         }
@@ -180,7 +183,7 @@ namespace SR_HTYPES_NS {
                     m_objects[i].first = false;
                     SR_MAYBE_UNUSED T temp = std::move(m_objects[i].second);
 
-                    m_freeIndices.Push(i);
+                    m_freeIndices.emplace_back(i);
                     return;
                 }
             }
@@ -195,7 +198,7 @@ namespace SR_HTYPES_NS {
                     if (condition(index, object)) {
                         isAlive = false;
                         deleter(std::move(object));
-                        m_freeIndices.Push(index);
+                        m_freeIndices.emplace_back(index);
                     }
                 }
                 ++index;
@@ -232,7 +235,7 @@ namespace SR_HTYPES_NS {
 
     private:
         std::vector<std::pair<bool, T>> m_objects;
-        Stack<Index> m_freeIndices;
+        SR_HTYPES_NS::FastMemoryArray<Index> m_freeIndices;
 
     };
 }

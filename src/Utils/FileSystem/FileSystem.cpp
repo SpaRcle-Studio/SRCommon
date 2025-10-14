@@ -496,4 +496,27 @@ namespace SR_UTILS_NS {
         }
         path.resize(write);
     }
+
+    bool FileSystem::IsAllowedPathSymbol(char c) {
+        if (std::isalnum(c)) {
+            return true; // A-Z, a-z, 0-9
+        }
+        switch (c) {
+            case '/': case '\\': case ':': // разделители + диск (Windows)
+            case '.': case '_': case '-':
+            case ' ': case '(': case ')':
+            case '[': case ']': case '{': case '}':
+            case '+': case '=': case '!': case '@':
+            case '#': case '$': case '%': case '&':
+            case '\'': case '~': case '`': case '^':
+            case ',': case ';':
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    bool FileSystem::IsPathSeparator(char c) {
+        return c == '/' || c == '\\';
+    }
 }

@@ -73,6 +73,20 @@ namespace SR_UTILS_NS {
         return m_info->data[index];
     }
 
+    const char* StringAtom::begin() const {
+        if (!m_info) {
+            return nullptr;
+        }
+        return m_info->data.c_str();
+    }
+
+    const char* StringAtom::end() const {
+        if (!m_info) {
+            return nullptr;
+        }
+        return m_info->data.c_str() + m_info->size;
+    }
+
     SR_NODISCARD uint64_t StringAtom::Size() const {
         return m_info ? m_info->size : 0;
     };
