@@ -3,6 +3,7 @@
 //
 
 #include <Utils/Web/CSS/CSSColor.h>
+#include <Utils/Common/StringAtomLiterals.h>
 
 namespace SR_UTILS_NS::Web {
     CSSRGBAColor CSSRGBAColor::Parse(std::string_view data) {

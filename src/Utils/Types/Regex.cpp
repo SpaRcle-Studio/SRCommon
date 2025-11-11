@@ -3,6 +3,7 @@
 //
 
 #include <Utils/Types/Regex.h>
+#include <Utils/Debug.h>
 
 namespace SR_HTYPES_NS {
     Regex::Regex(const std::string& regex)

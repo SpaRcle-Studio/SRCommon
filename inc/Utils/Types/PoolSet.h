@@ -6,6 +6,7 @@
 #define SR_ENGINE_UTILS_POOL_SET_H
 
 #include <Utils/Math/Mathematics.h>
+#include <Utils/Common/NonCopyable.h>
 
 namespace SR_HTYPES_NS {
     template<typename T> class PoolSet : SR_UTILS_NS::NonCopyable {

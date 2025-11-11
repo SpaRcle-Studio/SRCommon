@@ -16,6 +16,10 @@ namespace SR_UTILS_NS {
     class GameObject;
 }
 
+namespace SR_HTYPES_NS {
+    class DataStorage;
+}
+
 namespace SR_WORLD_NS {
     class Chunk;
     class Scene;

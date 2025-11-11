@@ -3,6 +3,8 @@
 //
 
 #include <Utils/ECS/Prefab.h>
+#include <Utils/ECS/GameObject.h>
+#include <Utils/World/Scene.h>
 #include <Utils/Resources/ResourceManager.h>
 
 #include <Codegen/Prefab.generated.hpp>

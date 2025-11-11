@@ -6,10 +6,10 @@
 #define SR_ENGINE_I_MIGRATOR_H
 
 #include <Utils/TypeTraits/SRClass.h>
-#include <Utils/Common/Enumerations.h>
+#include <Utils/Types/SharedPtr.h>
 
 namespace SR_UTILS_NS {
-    class IDeserializer;
+    class SerializationNode;
 
     class IMigrator : public SRClass, public SR_HTYPES_NS::SharedPtr<IMigrator> {
         using Super = SR_HTYPES_NS::SharedPtr<IMigrator>;

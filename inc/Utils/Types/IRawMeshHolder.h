@@ -5,6 +5,7 @@
 #ifndef SR_ENGINE_UTILS_I_RAW_MESH_HOLDER_H
 #define SR_ENGINE_UTILS_I_RAW_MESH_HOLDER_H
 
+#include <Utils/Types/SharedPtr.h>
 #include <Utils/TypeTraits/SRClass.h>
 #include <Utils/Common/Vertices.h>
 #include <Utils/Common/SubscriptionHolder.h>

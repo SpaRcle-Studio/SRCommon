@@ -6,15 +6,16 @@
 #define SR_ENGINE_IRESOURCERELOADER_H
 
 #include <Utils/Common/NonCopyable.h>
-#include <Utils/FileSystem/Path.h>
+#include <Utils/Types/SharedPtr.h>
 
 namespace SR_UTILS_NS {
     class ResourceInfo;
+    class Path;
     class IResource;
 
     class SR_COMMON_DLL_API IResourceReloader : public SR_UTILS_NS::NonCopyable {
     public:
-        SR_NODISCARD virtual bool IsResourceSuitableForReload(const IResource::Ptr& pResource) const;
+        SR_NODISCARD virtual bool IsResourceSuitableForReload(const SR_HTYPES_NS::SharedPtr<IResource>& pResource) const;
         SR_NODISCARD virtual bool Reload(const SR_UTILS_NS::Path& path, ResourceInfo* pResourceInfo) = 0;
 
     protected:

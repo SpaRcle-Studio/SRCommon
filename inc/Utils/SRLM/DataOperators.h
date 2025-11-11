@@ -5,6 +5,8 @@
 #ifndef SR_ENGINE_DATAOPERATORS_H
 #define SR_ENGINE_DATAOPERATORS_H
 
+#include <Utils/Common/NonCopyable.h>
+
 namespace SR_SRLM_NS {
     class DataType;
 

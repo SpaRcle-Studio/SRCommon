@@ -6,9 +6,13 @@
 #define SR_ENGINE_MIGRATION_MANAGER_H
 
 #include <Utils/Common/Singleton.h>
+#include <Utils/Common/Enumerations.h>
 #include <Utils/Types/Function.h>
 
 namespace SR_UTILS_NS {
+    class IDeserializer;
+    class Serializable;
+
     class MigrationManager : public Singleton<MigrationManager> {
         SR_REGISTER_SINGLETON(MigrationManager)
         using Version = uint64_t;

@@ -3,6 +3,8 @@
 //
 
 #include <Utils/Web/CSS/CSSParser.h>
+#include <Utils/Resources/ResourceManager.h>
+#include <Utils/FileSystem/FileSystem.h>
 
 #include <cssparser/cssparser/CSSParser.h>
 

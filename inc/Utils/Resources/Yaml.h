@@ -6,6 +6,7 @@
 #define SR_COMMON_YAML_H
 
 #include <Utils/Common/NonCopyable.h>
+#include <Utils/FileSystem/Path.h>
 
 namespace SR_UTILS_NS::Yaml {
     class SR_COMMON_DLL_API Node {

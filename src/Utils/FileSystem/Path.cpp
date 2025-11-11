@@ -8,6 +8,7 @@
 #include <Utils/Profile/TracyContext.h>
 #include <Utils/Serialization/Serializer.h>
 #include <Utils/Serialization/Deserializer.h>
+#include <Utils/Debug.h>
 
 namespace SR_UTILS_NS {
     Path::Path() = default;

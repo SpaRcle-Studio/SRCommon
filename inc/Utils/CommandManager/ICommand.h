@@ -6,6 +6,7 @@
 #define SR_ENGINE_ICOMMAND_H
 
 #include <Utils/Common/NonCopyable.h>
+#include <Utils/TypeTraits/TypeTraits.h>
 
 namespace SR_UTILS_NS {
     class CmdManager;

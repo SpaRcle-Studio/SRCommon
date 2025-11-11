@@ -3,6 +3,7 @@
 //
 
 #include <Utils/Reflection/Value.h>
+#include <Utils/Math/Rect.h>
 
 namespace SR_UTILS_NS::Reflection {
     Value ValueSequenceContainerIterator::operator*() const {

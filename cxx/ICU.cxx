@@ -2,6 +2,8 @@
 #pragma warning(disable: 4805)
 #pragma warning(disable: 4005)
 
+#include <Utils/stdInclude.h>
+
 #ifdef SR_ICU
     #define U_DISABLE_RENAMING 1
     #define U_COMMON_IMPLEMENTATION 0

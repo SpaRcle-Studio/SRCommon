@@ -6,9 +6,15 @@
 #define SR_COMMON_SERIALIZATION_DESERIALIZER_H
 
 #include <Utils/TypeTraits/TypeTraits.h>
-#include <Utils/FileSystem/Path.h>
+
+namespace SR_HTYPES_NS {
+    class UnicodeString;
+}
 
 namespace SR_UTILS_NS {
+    class Path;
+    class StringAtom;
+
     class IDeserializer {
     public:
         using UniquePtr = std::unique_ptr<IDeserializer>;

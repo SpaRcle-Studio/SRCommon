@@ -4,6 +4,7 @@
 
 #include <Utils/SRLM/LogicalNodes.h>
 #include <Utils/SRLM/DataType.h>
+#include <Utils/SRLM/DataTypeManager.h>
 
 #define SR_LM_NODE_OPERATOR_CALCULATION(pOutput, pFirst, pSecond, type, operator)                                       \
     pOutput->SetCustomValue(*pFirst->Get##type() operator *pSecond->Get##type());                                       \

@@ -6,6 +6,7 @@
 #define SR_COMMON_STRING_ATOM_LITERALS_H
 
 #include <Utils/Common/HashManager.h>
+#include <Utils/Common/StringFormat.h>
 
 SR_INLINE SR_UTILS_NS::StringAtom operator"" _atom(const char* str, size_t) {
     return SR_UTILS_NS::StringAtom(str);

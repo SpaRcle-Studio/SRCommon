@@ -33,16 +33,7 @@ namespace SR_UTILS_NS {
         using IdentifierPtr = void*;
         using ContextMap = std::map<IdentifierPtr, TracyContextPtr>;
     public:
-        TracyContextPtr& GetContext(TracyType type, IdentifierPtr pIdentifier) {
-            if (type >= TracyType::TracyTypeMAX - 1) {
-                SR_PLATFORM_NS::WriteConsoleError("TracyContextManager::GetContext() : Invalid TracyType!");
-                SR_UTILS_NS::Breakpoint();
-                static TracyContextPtr pNull = nullptr;
-                return pNull;
-            }
-
-            return m_contexts[type][pIdentifier];
-        }
+        TracyContextPtr& GetContext(TracyType type, IdentifierPtr pIdentifier);
 
         void Destroy(TracyType type);
 

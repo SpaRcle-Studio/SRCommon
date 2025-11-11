@@ -3,6 +3,7 @@
 //
 
 #include <Utils/Common/HashManager.h>
+#include <Utils/Types/Thread.h>
 
 namespace SR_UTILS_NS {
     HashManager& HashManager::Instance() {
