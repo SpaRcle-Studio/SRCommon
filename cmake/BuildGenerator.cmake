@@ -1,13 +1,12 @@
 option(SR_COMMON_UNITY_BUILD "Use unity build instead of incremental." OFF)
-option(SR_COMMON_GENERATOR_SOURCES_OUT "${CMAKE_BINARY_DIR}/BuildGenerator/")
+set(SR_COMMON_GENERATOR_SOURCES_OUT "${CMAKE_BINARY_DIR}/BuildGenerator")
 
-set(SR_COMMON_BUILD_GENERATOR_SCRIPT "${PROJECT_SOURCE_DIR}/py")
-
-function(SR_COMMON_GENERATE_BUILD_SOURCES project_dir out_sources_var)
+function(SR_COMMON_GENERATE_BUILD_SOURCES project_dir)
     execute_process(
-        COMMAND ${SR_PYTHON_EXECUTABLE} ${SR_COMMON_BUILD_GENERATOR_SCRIPT}
-        --project_dir "${project_dir}"
+        COMMAND ${SR_PYTHON_EXECUTABLE} ${SR_COMMON_BUILD_SCRIPT_PATH}
+        --project-path "${project_dir}"
         --out "${SR_COMMON_GENERATOR_SOURCES_OUT}"
+        --unity "${SR_COMMON_UNITY_BUILD}"
         RESULT_VARIABLE result
         OUTPUT_VARIABLE output
         ERROR_VARIABLE error_output
@@ -19,15 +18,18 @@ function(SR_COMMON_GENERATE_BUILD_SOURCES project_dir out_sources_var)
     endif()
 
     message(STATUS "${output}")
-
-    string(STRIP "${output}" generated_dir)
-    message(STATUS "Build sources generated correctly in:\n\t\t${generated_dir}")
-
-    if (NOT EXISTS "${generated_dir}")
-        message(FATAL_ERROR "Generated directory does not exist: ${generated_dir}")
-        return()
-    else()
-        message(STATUS "Generated includes can be found in: ${generated_dir}")
-    endif()
 endfunction()
 
+function(SR_COMMON_GET_SOURCES module_name)
+    set(src_file "${SR_COMMON_GENERATOR_SOURCES_OUT}/${module_name}/main.srinc")
+
+    if(NOT EXISTS "${src_file}")
+        message(FATAL_ERROR "Source include file not found: ${src_file}")
+    endif()
+
+    # Read all lines from the file
+    file(STRINGS "${src_file}" sources)
+
+    # Return the list to the caller
+    set(${module_name}_SOURCES ${sources} PARENT_SCOPE)
+endfunction()

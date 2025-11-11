@@ -3,6 +3,8 @@ project(Utils)
 
 set(CMAKE_CXX_STANDARD 20)
 
+set(SR_COMMON_BUILD_SCRIPT_PATH ${PROJECT_SOURCE_DIR}/py/BuildGenerator.py)
+
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND NOT MSVC AND NOT ANDROID_NDK)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++ -std=c++20")
 endif()
@@ -170,17 +172,23 @@ endif()
 add_subdirectory(libs/rapidyaml)
 add_subdirectory(libs/entt)
 
-list(APPEND SR_UTILS_LINK_LIBRARIES cxx/Allocator.cxx)
-list(APPEND SR_UTILS_LINK_LIBRARIES cxx/ICU.cxx)
-list(APPEND SR_UTILS_LINK_LIBRARIES cxx/Utils.cxx)
-list(APPEND SR_UTILS_LINK_LIBRARIES cxx/ECS.cxx)
-list(APPEND SR_UTILS_LINK_LIBRARIES cxx/World.cxx)
-list(APPEND SR_UTILS_LINK_LIBRARIES cxx/Platform.cxx)
-list(APPEND SR_UTILS_LINK_LIBRARIES cxx/Types.cxx)
-list(APPEND SR_UTILS_LINK_LIBRARIES cxx/Common.cxx)
-list(APPEND SR_UTILS_LINK_LIBRARIES cxx/Network.cxx)
-list(APPEND SR_UTILS_LINK_LIBRARIES cxx/Web.cxx)
-list(APPEND SR_UTILS_LINK_LIBRARIES cxx/CSSParser.cxx)
+include("${PROJECT_SOURCE_DIR}/cmake/BuildGenerator.cmake")
+SR_COMMON_GENERATE_BUILD_SOURCES(${PROJECT_SOURCE_DIR})
+SR_COMMON_GET_SOURCES(Utils)
+
+list(APPEND SR_UTILS_LINK_LIBRARIES ${Utils_SOURCES})
+
+# list(APPEND SR_UTILS_LINK_LIBRARIES cxx/Allocator.cxx)
+# list(APPEND SR_UTILS_LINK_LIBRARIES cxx/ICU.cxx)
+# list(APPEND SR_UTILS_LINK_LIBRARIES cxx/Utils.cxx)
+# list(APPEND SR_UTILS_LINK_LIBRARIES cxx/ECS.cxx)
+# list(APPEND SR_UTILS_LINK_LIBRARIES cxx/World.cxx)
+# list(APPEND SR_UTILS_LINK_LIBRARIES cxx/Platform.cxx)
+# list(APPEND SR_UTILS_LINK_LIBRARIES cxx/Types.cxx)
+# list(APPEND SR_UTILS_LINK_LIBRARIES cxx/Common.cxx)
+# list(APPEND SR_UTILS_LINK_LIBRARIES cxx/Network.cxx)
+# list(APPEND SR_UTILS_LINK_LIBRARIES cxx/Web.cxx)
+# list(APPEND SR_UTILS_LINK_LIBRARIES cxx/CSSParser.cxx)
 
 define_property(GLOBAL PROPERTY SR_UTILS_INCLUDE_DIRECTORIES
     BRIEF_DOCS "Contains linkable libraries"

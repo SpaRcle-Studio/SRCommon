@@ -1,0 +1,8 @@
+{
+    "module_name": "Utils",
+    "ignore_paths": [
+        "src/Utils/Network/Asio/**",
+        "src/Utils/Platform/**",
+        "src/Utils/Profile/TracyContext.cpp"
+    ]
+}
