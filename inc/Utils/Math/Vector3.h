@@ -23,7 +23,6 @@ namespace SR_MATH_NS {
             T coord[3] = { 0 };
         };
     public:
-        /// @constructor
         Vector3();
 
         Vector3(const Vector3<T>& vec) {
@@ -55,14 +54,12 @@ namespace SR_MATH_NS {
             z = (Unit)axis[2];
         }
 
-        /// @constructor
         Vector3(T p_x, T p_y, T p_z) {
             x = p_x;
             y = p_y;
             z = p_z;
         }
 
-        /// @constructor
         Vector3(T p) {
             x = p;
             y = p;
@@ -117,25 +114,16 @@ namespace SR_MATH_NS {
             );
         }
 
-        /// @method
         SR_NODISCARD Vector3<int32_t> CastToInt() const noexcept { return Cast<int32_t>(); }
-        /// @method
         SR_NODISCARD Vector3<float_t> CastToFloat() const noexcept { return Cast<float_t>(); }
-        /// @method
         SR_NODISCARD Vector3<uint32_t> CastToUInt() const noexcept { return Cast<uint32_t>(); }
 
-        /// @method
         SR_NODISCARD T X() const noexcept { return x; }
-        /// @method
         SR_NODISCARD T Y() const noexcept { return y; }
-        /// @method
         SR_NODISCARD T Z() const noexcept { return z; }
 
-        /// @method
         SR_NODISCARD T& X() noexcept { return x; }
-        /// @method
         SR_NODISCARD T& Y() noexcept { return y; }
-        /// @method
         SR_NODISCARD T& Z() noexcept { return z; }
 
         SR_NODISCARD Vector2<T> XY() const { return Vector2<T>(x, y); }
@@ -155,14 +143,10 @@ namespace SR_MATH_NS {
             );
         }
 
-        /// @method
         SR_NODISCARD T Max() const { return x > y && x > z ? x : y > x && y > z ? y : z; }
-        /// @method
         SR_NODISCARD T Min() const { return x < y && x < z ? x : y < x && y < z ? y : z; }
 
-        /// @method
         SR_NODISCARD Vector3<T> Max3() const { return Vector3<T>(Max()); }
-        /// @method
         SR_NODISCARD Vector3<T> Min3() const { return Vector3<T>(Min()); }
 
         SR_NODISCARD bool Empty() const {
@@ -244,7 +228,6 @@ namespace SR_MATH_NS {
 
         SR_NODISCARD T SqrMagnitude() const { return x * x + y * y + z * z; }
 
-        /// @method
         SR_NODISCARD T Angle(const Vector3<T>& to) const {
             if constexpr (std::is_same_v<T, bool>) {
                 return static_cast<T>(0); /// NOT SUPPORTED
@@ -273,7 +256,6 @@ namespace SR_MATH_NS {
             return (Vector3(T(360)) + degrees.Round()) % Vector3(T(360));
         }*/
 
-        /// @method
         SR_NODISCARD Vector3<T> ProjectOnPlane(const Vector3<T>& planeNormal) const {
             if constexpr (std::is_same_v<T, bool>) {
                 return static_cast<T>(0); /// NOT SUPPORTED
@@ -410,7 +392,6 @@ namespace SR_MATH_NS {
             return static_cast<float>(x) == SR_NAN || static_cast<float>(y) == SR_NAN || static_cast<float>(z) == SR_NAN;
         }
 
-        /// @method
         SR_NODISCARD Vector3<T> Inverse() const {
             if constexpr (std::is_same_v<T, bool>) {
                 return static_cast<T>(0); /// NOT SUPPORTED
@@ -487,7 +468,6 @@ namespace SR_MATH_NS {
             return v;
         }
 
-        /// @method
         SR_NODISCARD SR_FORCE_INLINE Vector3<T> SR_FASTCALL Lerp(const Vector3<T>& vector3, float_t t) const noexcept {
             if constexpr (!std::is_same_v<T, float_t>) {
                 return *this;
@@ -512,12 +492,10 @@ namespace SR_MATH_NS {
             }
         }
 
-        /// @method
         SR_NODISCARD Vector3<T> Normalized() const {
             return Normalize();
         }
 
-        /// @method
         SR_NODISCARD Vector3<T> Normalize() const {
             if constexpr (std::is_same_v<T, bool>) {
                 return *this; /// NOT SUPPORTED
@@ -542,12 +520,10 @@ namespace SR_MATH_NS {
             }
         }
 
-        /// @method
         SR_NODISCARD T SquaredNorm() const noexcept {
             return x * x + y * y + z * z;
         }
 
-        /// @method
         SR_NODISCARD Vector3<T> Clamp(const Vector3<T>& lover, const Vector3<T>& upper) const {
             return Vector3<T>(
                 SR_CLAMP(x, lover.x, upper.x),
@@ -566,7 +542,6 @@ namespace SR_MATH_NS {
             return coord[p_axis];
         }
 
-        /// @method
         SR_NODISCARD SR_FORCE_INLINE T Length() const {
             if constexpr (std::is_same_v<T, float_t> || std::is_same_v<T, float>) {
                 return static_cast<T>(sqrtf(x * x + y * y + z * z));
@@ -587,22 +562,18 @@ namespace SR_MATH_NS {
             return x * x + y * y + z * z;
         }
 
-        /// @method
         SR_NODISCARD Vector3<T> Abs() const {
             return Vector3(static_cast<T>(SR_ABS(x)), static_cast<T>(SR_ABS(y)), static_cast<T>(SR_ABS(z)));
         }
 
-        /// @method
         SR_NODISCARD Vector3<T> Sin() const {
             return Vector3(static_cast<T>(sin(x)), static_cast<T>(sin(y)), static_cast<T>(sin(z)));
         }
 
-        /// @method
         SR_NODISCARD Vector3<T> Cos() const {
             return Vector3(static_cast<T>(cos(x)), static_cast<T>(cos(y)), static_cast<T>(cos(z)));
         }
 
-        /// @method
         SR_NODISCARD Vector3<T> Round() const {
             return Vector3(static_cast<T>(std::round(x)), static_cast<T>(std::round(y)), static_cast<T>(std::round(z)));
         }
@@ -611,10 +582,8 @@ namespace SR_MATH_NS {
             return Vector3(FixAxis(x), FixAxis(y), FixAxis(z));
         }
 
-        /// @method
         SR_NODISCARD T Dot(const Vector3<T>& p_b) const { return x * p_b.x + y * p_b.y + z * p_b.z; }
 
-        /// @method
         SR_NODISCARD Vector3<T> Cross(const Vector3<T>& p_b) const {
             Vector3 ret(
                     (y * p_b.z) - (z * p_b.y),
@@ -635,22 +604,16 @@ namespace SR_MATH_NS {
             return *this;
         }
 
-        /// @operator
         SR_FORCE_INLINE Vector3<T>& SR_FASTCALL operator+=(const Vector3<float_t>& p_v) { return TemplateOperatorPlusAssign(p_v); }
-        /// @operator
         SR_FORCE_INLINE Vector3<T>& SR_FASTCALL operator+=(const Vector3<int32_t>& p_v) { return TemplateOperatorPlusAssign(p_v); }
-        /// @operator
         SR_FORCE_INLINE Vector3<T>& SR_FASTCALL operator+=(const Vector3<uint32_t>& p_v) { return TemplateOperatorPlusAssign(p_v); }
 
         template<typename U> SR_FORCE_INLINE Vector3<T> SR_FASTCALL TemplateOperatorPlus(const Vector3<U>& p_v) const noexcept {
             return Vector3<T>(x + static_cast<T>(p_v.x), y + static_cast<T>(p_v.y), z + static_cast<T>(p_v.z));
         }
 
-        /// @operator
         SR_FORCE_INLINE Vector3<T> SR_FASTCALL operator+(const Vector3<float_t>& p_v) const noexcept { return TemplateOperatorPlus(p_v); }
-        /// @operator
         SR_FORCE_INLINE Vector3<T> SR_FASTCALL operator+(const Vector3<int32_t>& p_v) const noexcept { return TemplateOperatorPlus(p_v); }
-        /// @operator
         SR_FORCE_INLINE Vector3<T> SR_FASTCALL operator+(const Vector3<uint32_t>& p_v) const noexcept { return TemplateOperatorPlus(p_v); }
 
         template<typename U> SR_FORCE_INLINE Vector3 operator%(const Vector3<U> &p_v) const {
@@ -723,7 +686,6 @@ namespace SR_MATH_NS {
         template<typename U> SR_FORCE_INLINE bool operator==(U p_scalar) const { return *this == Vector3<U>(p_scalar); }
         template<typename U> SR_FORCE_INLINE bool operator!=(U p_scalar) const { return *this != Vector3<U>(p_scalar); }
 
-        /// @operator
         SR_FORCE_INLINE Vector3<T> operator-() const {
             if constexpr (std::is_same_v<T, bool>) {
                 return *this;
@@ -732,21 +694,14 @@ namespace SR_MATH_NS {
                 return Vector3(-x, -y, -z);
             }
         }
-        /// @operator
         SR_FORCE_INLINE Vector3<T> operator+() const { return *this; }
 
-        /// @operator
         SR_FORCE_INLINE bool operator==(const Vector3<T>& p_v) const { return SR_EQUALS(x, p_v.x) && SR_EQUALS(y, p_v.y) && SR_EQUALS(z, p_v.z); }
-        /// @operator
         SR_FORCE_INLINE bool operator!=(const Vector3<T>& p_v) const { return !SR_EQUALS(x, p_v.x) || !SR_EQUALS(y, p_v.y) || !SR_EQUALS(z, p_v.z); }
 
-        /// @operator
         SR_FORCE_INLINE bool operator<=(const Vector3<T>& p_v) const { return x <= p_v.x && y <= p_v.y && z <= p_v.z; }
-        /// @operator
         SR_FORCE_INLINE bool operator>=(const Vector3<T>& p_v) const { return x >= p_v.x && y >= p_v.y && z >= p_v.z; }
-        /// @operator
         SR_FORCE_INLINE bool operator<(const Vector3<T>& p_v) const { return x < p_v.x && y < p_v.y && z < p_v.z; }
-        /// @operator
         SR_FORCE_INLINE bool operator>(const Vector3<T>& p_v) const { return x > p_v.x && y > p_v.y && z > p_v.z; }
 
     public:

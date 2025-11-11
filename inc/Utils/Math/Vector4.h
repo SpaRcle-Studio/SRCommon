@@ -137,6 +137,8 @@ namespace SR_MATH_NS {
         FColor operator*(const FColor &p_v) const;
         FColor operator+(const FColor& v) const;
 
+        static FColor RGBFromHash(SRHashType hash);
+
         static FColor Red();
         static FColor Green();
         static FColor Blue();
