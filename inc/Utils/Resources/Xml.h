@@ -6,7 +6,6 @@
 #define SR_COMMON_XML_H
 
 #include <Utils/Debug.h>
-
 #include <Utils/FileSystem/Path.h>
 #include <Utils/Math/Vector4.h>
 #include <Utils/Math/Vector3.h>
