@@ -1,11 +1,10 @@
 option(SR_COMMON_UNITY_BUILD "Use unity build instead of incremental." OFF)
-set(SR_COMMON_GENERATOR_SOURCES_OUT "${CMAKE_BINARY_DIR}/BuildGenerator")
 
 function(SR_COMMON_GENERATE_BUILD_SOURCES project_dir)
     execute_process(
         COMMAND ${SR_PYTHON_EXECUTABLE} ${SR_COMMON_BUILD_SCRIPT_PATH}
         --project-path "${project_dir}"
-        --out "${SR_COMMON_GENERATOR_SOURCES_OUT}"
+        --out "${SR_CMAKE_ROOT_BUILD_DIRECTORY}/BuildGenerator"
         --unity "${SR_COMMON_UNITY_BUILD}"
         RESULT_VARIABLE result
         OUTPUT_VARIABLE output
@@ -21,7 +20,7 @@ function(SR_COMMON_GENERATE_BUILD_SOURCES project_dir)
 endfunction()
 
 function(SR_COMMON_GET_SOURCES module_name)
-    set(src_file "${SR_COMMON_GENERATOR_SOURCES_OUT}/${module_name}/main.srinc")
+    set(src_file "${SR_CMAKE_ROOT_BUILD_DIRECTORY}/BuildGenerator/${module_name}/main.srinc")
 
     if(NOT EXISTS "${src_file}")
         message(FATAL_ERROR "Source include file not found: ${src_file}")
