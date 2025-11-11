@@ -224,6 +224,15 @@ namespace SR_MATH_NS {
     FColor FColor::Magenta() { return FColor(255.f, 0.f, 255.f, 255.f); }
     FColor FColor::Alpha() { return FColor(0.f, 0.f, 0.f, 0.f); }
 
+    FColor FColor::RGBFromHash(SRHashType hash) {
+        FColor c;
+        c.r = (hash >>  0) & 0xFF;
+        c.g = (hash >>  8) & 0xFF;
+        c.b = (hash >> 16) & 0xFF;
+        c.a = 255;
+        return c;
+    }
+
     SR_NODISCARD Unit Ray::IntersectPlaneDistance(const SR_MATH_NS::FVector4& plane) const {
         const Unit numer = plane.Dot3(origin) - plane.w;
         const Unit denom = plane.Dot3(direction);
