@@ -6,15 +6,17 @@
 #define SR_ENGINE_UTILS_STRING_FORMAT_H
 
 #include <Utils/Math/Mathematics.h>
-#include <Utils/Types/StringAtom.h>
-#include <Utils/Common/Breakpoint.h>
 #include <Utils/Math/Vector4.h>
-#include <Utils/Platform/Platform.h>
+#include <Utils/Common/Breakpoint.h>
 #include <Utils/Common/StringUtils.h>
 #include <Utils/Profile/TracyContext.h>
 
 namespace SR_UTILS_NS {
     /// Функция для преобразования hex символа в целое число
+
+    namespace Details {
+        void StringFormatError(const std::string& msg, bool breakPoint);
+    }
 
     static SR_INLINE double_t ParseDouble(std::string_view sv) {
     #if defined(SR_LINUX) || defined(SR_ANDROID)
@@ -243,8 +245,7 @@ namespace SR_UTILS_NS {
             }
             else if constexpr (std::is_same<T, SR_MATH_NS::FColor>()) {
                 if (str.empty()) {
-                    SR_PLATFORM_NS::WriteConsoleError("LexicalCast: empty string!\n");
-                    SR_MAKE_BREAKPOINT;
+                    Details::StringFormatError("LexicalCast() : empty string!\n", true);
                     return T();
                 }
 
@@ -282,8 +283,7 @@ namespace SR_UTILS_NS {
                 }
 
                 if (str.size() > 9) {
-                    SR_PLATFORM_NS::WriteConsoleError("LexicalCast: unsupported color format!\n");
-                    SR_MAKE_BREAKPOINT;
+                    Details::StringFormatError("LexicalCast() : unsupported color format!\n", true);
                     return T();
                 }
 
@@ -294,8 +294,7 @@ namespace SR_UTILS_NS {
                     if (pIt != SR_MATH_NS::SR_COLOR_PALETTE.end()) {
                         return pIt->second;
                     }
-                    SR_PLATFORM_NS::WriteConsoleError("LexicalCast: invalid hex string!\n");
-                    SR_MAKE_BREAKPOINT;
+                    Details::StringFormatError("LexicalCast() : invalid hex string!\n", true);
                     return T();
                 }
 
@@ -319,14 +318,12 @@ namespace SR_UTILS_NS {
                 return color / 255.0f;
             }
             else {
-                SR_PLATFORM_NS::WriteConsoleError("LexicalCast: unsupported type!\n");
-                SR_MAKE_BREAKPOINT;
+                Details::StringFormatError("LexicalCast() : unsupported type!\n", true);
                 return T();
             }
         }
         catch (...) {
-            SR_PLATFORM_NS::WriteConsoleError("LexicalCast: failed to cast!\n");
-            SR_MAKE_BREAKPOINT;
+            Details::StringFormatError("LexicalCast() : failed to cast!\n", true);
             return T();
         }
     }
@@ -336,8 +333,7 @@ namespace SR_UTILS_NS {
             return fmt::format(fmt::runtime(format_str), std::forward<Args>(args)...);
         }
         catch (std::exception& exception) {
-            std::cerr << "Format: an exception has occurred! Exception: " << exception.what() << std::endl;
-            SR_MAKE_BREAKPOINT;
+            Details::StringFormatError("Format() : an exception has occurred! Exception: " + std::string(exception.what()) + "\n", true);
             return std::string(); /// NOLINT
         }
     }
@@ -347,8 +343,7 @@ namespace SR_UTILS_NS {
             return fmt::sprintf(format_str, std::forward<Args>(args)...);
         }
         catch (std::exception& exception) {
-            std::cerr << "SPrintFFormat: an exception has occurred! Exception: " << exception.what() << std::endl;
-            SR_MAKE_BREAKPOINT;
+            Details::StringFormatError("SPrintF() : an exception has occurred! Exception: " + std::string(exception.what()) + "\n", true);
             return std::string(); /// NOLINT
         }
     }

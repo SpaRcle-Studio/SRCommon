@@ -4,6 +4,7 @@
 
 #include <Utils/Math/Matrix4x4.h>
 #include <Utils/Math/Matrix4x4Utils.h>
+#include <Utils/Debug.h>
 
 namespace SR_MATH_NS {
     Matrix4x4::Matrix4x4(const FVector3& translate, const Quaternion& rotation, const FVector3& scale) noexcept

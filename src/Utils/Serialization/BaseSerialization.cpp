@@ -4,6 +4,7 @@
 
 #include <Utils/Serialization/BaseSerialization.h>
 #include <Utils/Localization/Encoding.h>
+#include <Utils/Types/UnicodeString.h>
 
 namespace SR_UTILS_NS {
     IBaseSerialization::IBaseSerialization() {
@@ -224,5 +225,11 @@ namespace SR_UTILS_NS {
             ReportError("IBaseDeserializer::EndArray() : invalid node type!");
         }
         GetImpl().m_walker.pop_back();
+    }
+
+    void IBaseDeserializer::ReadString(SR_HTYPES_NS::UnicodeString& value, const SerializationId& name) {
+        std::string temp;
+        ReadStringImpl(temp, name);
+        value = SR_UTILS_NS::Localization::UtfToUtf<char32_t, char>(temp);
     }
 }

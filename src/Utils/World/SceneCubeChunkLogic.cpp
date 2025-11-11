@@ -3,6 +3,10 @@
 //
 
 #include <Utils/World/SceneCubeChunkLogic.h>
+#include <Utils/World/Region.h>
+#include <Utils/World/Chunk.h>
+#include <Utils/World/Scene.h>
+#include <Utils/ECS/GameObject.h>
 #include <Utils/ECS/ComponentManager.h>
 #include <Utils/Platform/Platform.h>
 #include <Utils/DebugDraw.h>

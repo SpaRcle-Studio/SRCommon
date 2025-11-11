@@ -6,6 +6,7 @@
 #define SR_UTILS_TYPES_BINARY_SEARCH_TREE_H
 
 #include <Utils/Types/Node.h>
+#include <Utils/Debug.h>
 
 namespace SR_HTYPES_NS {
     template<typename T> class BinarySearchTree : public SR_UTILS_NS::NonCopyable {

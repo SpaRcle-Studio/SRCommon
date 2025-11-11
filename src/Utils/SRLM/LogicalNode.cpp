@@ -3,6 +3,8 @@
 //
 
 #include <Utils/SRLM/LogicalNode.h>
+#include <Utils/SRLM/DataType.h>
+#include <Utils/SRLM/LogicalNodeManager.h>
 
 namespace SR_SRLM_NS {
     LogicalNode::~LogicalNode() {

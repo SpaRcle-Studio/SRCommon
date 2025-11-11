@@ -45,6 +45,17 @@ namespace SR_UTILS_NS {
         SRHalt("Failed to free tracy context!");
     }
 
+    TracyContextManager::TracyContextPtr& TracyContextManager::GetContext(TracyType type, TracyContextManager::IdentifierPtr pIdentifier) {
+        if (type >= TracyType::TracyTypeMAX - 1) {
+            SR_PLATFORM_NS::WriteConsoleError("TracyContextManager::GetContext() : invalid TracyType!");
+            SR_UTILS_NS::Breakpoint();
+            static TracyContextPtr pNull = nullptr;
+            return pNull;
+        }
+
+        return m_contexts[type][pIdentifier];
+    }
+
 
     void StartupEngineProfiler() {
         tracy::StartupProfiler();

@@ -4,6 +4,9 @@
 
 #include <Utils/World/Region.h>
 #include <Utils/World/Chunk.h>
+#include <Utils/World/Scene.h>
+#include <Utils/World/SceneCubeChunkLogic.h>
+#include <Utils/Types/Thread.h>
 
 namespace SR_WORLD_NS {
     Region::Allocator Region::g_allocator = Region::Allocator();

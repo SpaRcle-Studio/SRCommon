@@ -4,6 +4,7 @@
 
 #include <Utils/Resources/FileSystemWatcher.h>
 #include <Utils/Common/Features.h>
+#include <Utils/Types/Thread.h>
 
 #ifdef SR_EFSW_USE
     #include <efsw/efsw.hpp>

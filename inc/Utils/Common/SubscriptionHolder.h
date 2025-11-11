@@ -9,6 +9,7 @@
 #include <Utils/Types/StringAtom.h>
 #include <Utils/Types/ObjectPool.h>
 #include <Utils/Types/Function.h>
+#include <Utils/Debug.h>
 
 namespace SR_UTILS_NS {
     class SubscriptionHolder;

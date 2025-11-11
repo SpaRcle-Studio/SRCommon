@@ -183,11 +183,7 @@ namespace SR_UTILS_NS {
         void ReadString(SR_UTILS_NS::StringAtom& value, const SerializationId& name) override { return ReadStringImpl(value, name); }
         void ReadString(SR_UTILS_NS::Path& value, const SerializationId& name) override { return ReadStringImpl(value, name); }
 
-        void ReadString(SR_HTYPES_NS::UnicodeString& value, const SerializationId& name) override {
-            std::string temp;
-            ReadStringImpl(temp, name);
-            value = SR_UTILS_NS::Localization::UtfToUtf<char32_t, char>(temp);
-        }
+        void ReadString(SR_HTYPES_NS::UnicodeString& value, const SerializationId& name) override;
 
         void ReadBool(bool& value, const SerializationId& name) override {
             auto&& node = GetImpl().GetWalkNode();

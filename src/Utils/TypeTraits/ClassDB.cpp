@@ -3,6 +3,7 @@
 //
 
 #include <Utils/TypeTraits/ClassDB.h>
+#include <Utils/Types/Thread.h>
 
 namespace SR_UTILS_NS {
     ClassDB& ClassDB::Instance() {

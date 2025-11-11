@@ -3,6 +3,7 @@
 //
 
 #include <Utils/Resources/Xml.h>
+#include <Utils/FileSystem/FileSystem.h>
 
 namespace SR_UTILS_NS {
     std::string Xml::Attribute::ToString() const {

@@ -4,6 +4,7 @@
 
 #include <Utils/Types/StringAtom.h>
 #include <Utils/Common/HashManager.h>
+#include <Utils/Debug.h>
 
 namespace SR_UTILS_NS {
     std::string StringAtom::DEFAULT = std::string();

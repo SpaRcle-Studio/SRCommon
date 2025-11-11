@@ -7,6 +7,10 @@
 
 #include <Utils/Common/Singleton.h>
 
+namespace SR_UTILS_NS {
+    class Path;
+}
+
 namespace SR_NETWORK_NS {
     class FileDownloader : public SR_UTILS_NS::Singleton<FileDownloader> {
         SR_REGISTER_SINGLETON(FileDownloader)

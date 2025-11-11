@@ -5,11 +5,15 @@
 #ifndef SR_COMMON_TYPE_TRAITS_SR_CLASS_META_H
 #define SR_COMMON_TYPE_TRAITS_SR_CLASS_META_H
 
-#include <Utils/Types/StringAtom.h>
-#include <Utils/Serialization/Serializer.h>
-#include <Utils/Serialization/Deserializer.h>
+#include <Utils/Types/Function.h>
+#include <Utils/Math/Mathematics.h>
 
 namespace SR_UTILS_NS {
+    class SRClass;
+    class StringAtom;
+    class ISerializer;
+    class IDeserializer;
+
     namespace Reflection {
         class Property;
     }

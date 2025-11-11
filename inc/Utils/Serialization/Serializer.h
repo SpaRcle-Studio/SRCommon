@@ -8,6 +8,7 @@
 #include <Utils/TypeTraits/TypeTraits.h>
 
 namespace SR_UTILS_NS {
+    class Path;
     class IDeserializer;
 
     class ISerializer {

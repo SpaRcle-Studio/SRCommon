@@ -3,6 +3,11 @@
 //
 
 #include <Utils/Serialization/Deserializer.h>
+#include <Utils/Common/TypeInfo.h>
+#include <Utils/Types/StringAtom.h>
+#include <Utils/Types/UnicodeString.h>
+#include <Utils/FileSystem/Path.h>
+#include <Utils/Debug.h>
 
 namespace SR_UTILS_NS {
     void IDeserializer::ReadAny(std::any& value, const SerializationId& name) {

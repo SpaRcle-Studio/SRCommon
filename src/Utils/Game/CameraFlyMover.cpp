@@ -3,6 +3,8 @@
 //
 
 #include <Utils/Game/CameraFlyMover.h>
+#include <Utils/ECS/Transform3D.h>
+#include <Utils/ECS/IComponentable.h>
 
 #include <Codegen/CameraFlyMover.generated.hpp>
 

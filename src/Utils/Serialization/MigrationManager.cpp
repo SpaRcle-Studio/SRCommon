@@ -6,6 +6,8 @@
 #include <Utils/Serialization/IMigrator.h>
 #include <Utils/Serialization/Serializable.h>
 #include <Utils/TypeTraits/Factory.h>
+#include <Utils/Types/Thread.h>
+#include <Utils/Serialization/BaseSerialization.h>
 
 namespace SR_UTILS_NS {
     MigrationResult MigrationManager::Migrate(IDeserializer& deserializer, SR_UTILS_NS::Serializable& obj, Version from, Version to) {

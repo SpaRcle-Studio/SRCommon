@@ -3,6 +3,7 @@
 //
 
 #include <Utils/ECS/Transform.h>
+#include <Utils/ECS/GameObject.h>
 #include <Utils/Profile/TracyContext.h>
 
 #include <Codegen/Transform.generated.hpp>

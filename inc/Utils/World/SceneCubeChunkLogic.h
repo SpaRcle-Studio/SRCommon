@@ -7,6 +7,7 @@
 
 #include <Utils/World/SceneLogic.h>
 #include <Utils/World/TensorKey.h>
+#include <Utils/World/Observer.h>
 
 #include <Utils/ECS/SceneObject.h>
 

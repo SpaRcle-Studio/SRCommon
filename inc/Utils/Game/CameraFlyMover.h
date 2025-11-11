@@ -5,6 +5,7 @@
 #ifndef SR_ENGINE_UTILS_CAMERA_FLY_MOVER_H
 #define SR_ENGINE_UTILS_CAMERA_FLY_MOVER_H
 
+#include <Utils/Input/InputSystem.h>
 #include <Utils/ECS/Component.h>
 
 namespace SR_UTILS_NS {

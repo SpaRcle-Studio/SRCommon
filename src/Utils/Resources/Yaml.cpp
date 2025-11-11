@@ -4,6 +4,7 @@
 
 #include <Utils/Resources/Yaml.h>
 #include <Utils/FileSystem/Path.h>
+#include <Utils/Debug.h>
 
 #include <rapidyaml/src/ryml.hpp>
 
@@ -274,5 +275,20 @@ namespace SR_UTILS_NS::Yaml {
         }
 
         return Node(static_cast<void*>(root.tree()), root.id());
+    }
+
+    std::string Document::Dump() const {
+        if (!IsValid()) {
+            SRHalt("Document::Dump() : document is not valid!");
+            return {};
+        }
+
+        std::stringstream output;
+
+        for (auto&& node : static_cast<DocumentImpl*>(m_pImpl)->m_tree.m_arena) {
+            output << node;
+        }
+
+        return output.str();
     }
 }

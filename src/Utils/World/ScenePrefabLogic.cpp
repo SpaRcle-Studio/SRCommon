@@ -3,8 +3,10 @@
 //
 
 #include <Utils/World/ScenePrefabLogic.h>
+#include <Utils/World/Scene.h>
 #include <Utils/ECS/Transform3D.h>
 #include <Utils/ECS/LayerManager.h>
+#include <Utils/ECS/GameObject.h>
 
 #include <Codegen/ScenePrefabLogic.generated.hpp>
 

@@ -3,6 +3,7 @@
 //
 
 #include <Utils/ECS/EntityRefOld.h>
+#include <Utils/ECS/GameObject.h>
 
 #include <Codegen/EntityRefOld.generated.hpp>
 

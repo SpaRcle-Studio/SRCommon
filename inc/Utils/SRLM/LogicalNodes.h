@@ -7,6 +7,7 @@
 
 #include <Utils/SRLM/LogicalNode.h>
 #include <Utils/SRLM/LogicalNodeManager.h>
+#include <Utils/SRLM/Utils.h>
 
 namespace SR_SRLM_NS {
     class ConnectorNode : public LogicalNode {

@@ -2,7 +2,10 @@
 // Created by Monika on 16.10.2024.
 //
 
+#include <Utils/Reflection/Property.h>
+#include <Utils/TypeTraits/SRClass.h>
 #include <Utils/TypeTraits/SRClassMeta.h>
+#include <Utils/Types/StringAtom.h>
 
 namespace SR_UTILS_NS {
     SRClassMeta::~SRClassMeta() = default;

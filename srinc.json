@@ -1,0 +1,16 @@
+{
+    "module_name": "Utils",
+    "include": [
+        "src/Utils/"
+    ],
+    "exclude": [
+        "src/Utils/Network/Asio/",
+        "src/Utils/Profile/TracyContext.cpp",
+        "src/Utils/Platform/Android",
+        "src/Utils/Platform/Stacktrace",
+        "src/Utils/Platform/MessageBox",
+        "src/Utils/Platform/PlatformAndroid.cpp",
+        "src/Utils/Platform/PlatformLinux.cpp",
+        "src/Utils/Platform/PlatformWindows.cpp"
+    ]
+}

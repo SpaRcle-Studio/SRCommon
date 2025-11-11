@@ -3,6 +3,8 @@
 //
 
 #include <Utils/Types/IRawMeshHolder.h>
+#include <Utils/Types/RawMesh.h>
+#include <Utils/Resources/ResourceManager.h>
 
 namespace SR_HTYPES_NS {
     IRawMeshHolder::~IRawMeshHolder() {

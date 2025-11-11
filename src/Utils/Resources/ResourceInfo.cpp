@@ -4,6 +4,7 @@
 
 #include <Utils/Resources/ResourceInfo.h>
 #include <Utils/Resources/IResourceReloader.h>
+#include <Utils/Resources/ResourceManager.h>
 
 namespace SR_UTILS_NS {
     ResourceType::~ResourceType() {

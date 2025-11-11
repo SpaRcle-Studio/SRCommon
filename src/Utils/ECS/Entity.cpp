@@ -3,6 +3,8 @@
 //
 
 #include <Utils/ECS/Entity.h>
+#include <Utils/ECS/EntityController.h>
+#include <Utils/ECS/EntityRef.h>
 #include <Utils/Reflection/SRClassUtils.h>
 
 #include <Codegen/Entity.generated.hpp>

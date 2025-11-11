@@ -8,6 +8,8 @@
 #include <Utils/Math/Mathematics.h>
 
 namespace SR_UTILS_NS {
+    class StringAtom;
+
     SR_MAYBE_UNUSED static std::wstring s2ws(const std::string& str)
     {
         if (str.empty())

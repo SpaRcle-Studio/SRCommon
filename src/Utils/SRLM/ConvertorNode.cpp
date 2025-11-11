@@ -3,6 +3,7 @@
 //
 
 #include <Utils/SRLM/ConvertorNode.h>
+#include <Utils/SRLM/DataType.h>
 
 namespace SR_SRLM_NS {
     void ConvertorNode::InitNode() {
