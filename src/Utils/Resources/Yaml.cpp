@@ -7,6 +7,7 @@
 #include <Utils/Debug.h>
 
 #include <rapidyaml/src/ryml.hpp>
+#include <rapidyaml/src/ryml_std.hpp>
 
 namespace SR_UTILS_NS::Yaml {
     std::string Node::Name() const {

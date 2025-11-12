@@ -7,6 +7,18 @@
 
 #include <Utils/Debug.h>
 
+#ifdef KeyCode
+    #undef KeyCode
+#endif
+
+#ifdef KeyState
+    #undef KeyState
+#endif
+
+#ifdef None
+    #undef None
+#endif
+
 namespace SR_UTILS_NS {
     enum class KeyboardLayout : uint8_t {
         EN, RU, UNKNOWN
