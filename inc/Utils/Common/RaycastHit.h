@@ -5,6 +5,7 @@
 #ifndef SR_ENGINE_RAYCASTHIT_H
 #define SR_ENGINE_RAYCASTHIT_H
 
+#include <Utils/Math/Vector3.h>
 
 namespace SR_UTILS_NS {
     struct RaycastHit {
