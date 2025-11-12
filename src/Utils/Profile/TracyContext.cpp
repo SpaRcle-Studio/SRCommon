@@ -3,6 +3,8 @@
 //
 
 #include <Utils/Profile/TracyContext.h>
+#include <Utils/Debug.h>
+#include <Utils/Platform/Platform.h>
 
 #ifdef SR_TRACY_ENABLE
 
