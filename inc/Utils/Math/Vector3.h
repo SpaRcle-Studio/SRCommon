@@ -277,6 +277,30 @@ namespace SR_MATH_NS {
             }
         }
 
+        SR_NODISCARD Vector3<T> ArbitraryPerpendicular() const {
+            if constexpr (std::is_same_v<T, bool>) {
+                return static_cast<T>(0); /// NOT SUPPORTED
+            }
+            else {
+                if (x == static_cast<T>(0) && y == static_cast<T>(0) && z == static_cast<T>(0)) {
+                    return Vector3<T>(static_cast<T>(0));
+                }
+
+                // Выбираем наименьшую компоненту
+                if (SR_ABS(x) < SR_ABS(y)) {
+                    if (SR_ABS(x) < SR_ABS(z)) {
+                        return Vector3<T>(static_cast<T>(0), -z, y).Normalized();
+                    }
+                    return Vector3<T>(-y, x, static_cast<T>(0)).Normalized();
+                }
+
+                if (SR_ABS(y) < SR_ABS(z)) {
+                    return Vector3<T>(-z, static_cast<T>(0), x).Normalized();
+                }
+                return Vector3<T>(-y, x, static_cast<T>(0)).Normalized();
+            }
+        }
+
         SR_NODISCARD T SignedAngle(const Vector3& to, const Vector3& axis) const {
             const T unsignedAngle = Angle(to);
 
@@ -490,6 +514,30 @@ namespace SR_MATH_NS {
                 return static_cast<Vector3>(*this + (vector3 - *this) * t);
             #endif
             }
+        }
+
+        SR_NODISCARD SR_FORCE_INLINE Vector3<T> SR_FASTCALL Slerp(const Vector3<T>& vector3, float_t t) const noexcept {
+            if constexpr (!std::is_same_v<T, float_t>) {
+                return *this;
+            }
+            else {
+                Vector3<T> from = this->Normalized();
+                Vector3<T> to = vector3.Normalized();
+
+                T dot = from.Dot(to);
+
+                // Clamp dot product to avoid numerical errors
+                dot = SR_CLAMP(dot, static_cast<T>(-1), static_cast<T>(1));
+
+                T theta = std::acos(dot) * t;
+                Vector3<T> relativeVec = (to - from * dot).Normalized();
+
+                return ((from * std::cos(theta)) + (relativeVec * std::sin(theta)));
+            }
+        }
+
+        SR_NODISCARD static SR_FORCE_INLINE Vector3<T> SR_FASTCALL Slerp(const Vector3<T>& from, const Vector3<T>& to, float_t t) noexcept {
+            return from.Slerp(to, t);
         }
 
         SR_NODISCARD Vector3<T> Normalized() const {
@@ -712,6 +760,10 @@ namespace SR_MATH_NS {
             return sqrt(SR_SQUARE(vec.x) + SR_SQUARE(vec.y) + SR_SQUARE(vec.z));
         }
 
+        Unit Magnitude() const {
+            return sqrt(SR_SQUARE(x) + SR_SQUARE(y) + SR_SQUARE(z));
+        }
+
         static T Dot(Vector3 lhs, Vector3 rhs) { return lhs.x * rhs.x + lhs.y * rhs.y + lhs.z * rhs.z; }
         static Vector3 Cross(const Vector3 &p_a, const Vector3 &p_b) {
             Vector3 ret(
@@ -786,6 +838,14 @@ namespace SR_MATH_NS {
                 (a.x * b.y) - (a.y * b.x)
         );
     }
+
+    FVector3 ProjectOnPlane(
+        const FVector3& point,
+        const FVector3& planeOrigin,
+        const FVector3& planeTarget,
+        const FVector3& planeNormal,
+        float_t weight
+    );
 }
 
 namespace std {

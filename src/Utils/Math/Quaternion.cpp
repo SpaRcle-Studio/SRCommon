@@ -70,7 +70,7 @@ namespace SR_MATH_NS {
     }
 
    Quaternion Quaternion::FromTo(const Vector3<Unit>& from, const Vector3<Unit>& to) {
-       const FVector3 f = from.Normalized();
+       /*const FVector3 f = from.Normalized();
        const FVector3 t = to.Normalized();
 
        const Unit cosTheta = f.Dot(t);
@@ -101,7 +101,46 @@ namespace SR_MATH_NS {
                rotationAxis.x * invs,
                rotationAxis.y * invs,
                rotationAxis.z * invs
-       );
+       );*/
+
+       // 1. Нормализуем входные векторы
+       const FVector3 f = from.Normalized();
+       const FVector3 t = to.Normalized();
+
+       // 2. Считаем косинус угла
+       const Unit cosTheta = f.Dot(t);
+
+       // 3. Векторы почти совпадают
+       if (cosTheta > 0.999999f) {
+           return Quaternion::Identity();
+       }
+
+       // 4. Векторы почти противоположны
+       if (cosTheta < -0.999999f) {
+           // нужно выбрать любую ортонормальную ось
+           FVector3 ortho = FVector3(1, 0, 0).Cross(f);
+           if (ortho.LengthSqr() < 1e-6f) {
+               ortho = FVector3(0, 1, 0).Cross(f);
+           }
+           ortho = ortho.Normalized();
+           return Quaternion(ortho, SR_PI); // поворот на 180° вокруг оси
+       }
+
+       // 5. Общий случай
+       FVector3 rotationAxis = f.Cross(t);
+       const Unit axisLenSq = rotationAxis.LengthSqr();
+
+       if (axisLenSq < 1e-8f) {
+           // векторы почти коллинеарны → возвращаем Identity
+           return Quaternion::Identity();
+       }
+
+       rotationAxis = rotationAxis / sqrt(axisLenSq); // нормализация
+
+       // угол между векторами
+       const Unit angle = acosf(cosTheta);
+
+       return Quaternion(rotationAxis, angle);
    }
 
    Quaternion Quaternion::FromEuler(const Vector3 <Unit> &euler) {
@@ -145,6 +184,10 @@ namespace SR_MATH_NS {
 
        glm::quat q = glm::rotate(self, static_cast<float_t>(SR_RAD(angle)), glm::vec3(0, 0, 1));
        return Quaternion(q);
+   }
+
+   Quaternion Quaternion::Conjugate() const {
+         return Quaternion(-x, -y, -z, w);
    }
 
     SR_NODISCARD Quaternion::T Quaternion::X() const noexcept { return static_cast<T>(self.x); }
@@ -477,12 +520,24 @@ namespace SR_MATH_NS {
 #endif
     }
 
+    Quaternion Quaternion::Slerp(const Quaternion& a, const Quaternion& b, Unit t) {
+        return a.Slerp(b, t);
+    }
+
     Quaternion Quaternion::Normalized() const {
         return Normalize();
     }
 
     Quaternion Quaternion::Normalize() const {
         return Quaternion(glm::normalize(self));
+    }
+
+    Quaternion Quaternion::NormalizeSafe() const {
+        const Unit mag = Magnitude();
+        if (mag > static_cast<Unit>(0)) {
+            return (*this) / mag;
+        }
+        return Identity();
     }
 
     Unit Quaternion::Roll() const noexcept {

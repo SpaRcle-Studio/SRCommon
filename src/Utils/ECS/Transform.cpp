@@ -101,6 +101,16 @@ namespace SR_UTILS_NS {
         return GetTranslation().XY();
     }
 
+    SR_MATH_NS::FVector3 Transform::GetGlobalTranslation() const {
+        SR_TRACY_ZONE;
+        return GetMatrix().GetTranslate();
+    }
+
+    SR_MATH_NS::Quaternion Transform::GetGlobalRotation() const {
+        SR_TRACY_ZONE;
+        return GetMatrix().GetQuat();
+    }
+
     SR_MATH_NS::FVector3 Transform::GetTranslation() const {
         return SR_MATH_NS::FVector3();
     }

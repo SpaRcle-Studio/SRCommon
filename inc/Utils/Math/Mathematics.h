@@ -30,6 +30,7 @@
 #define CMP_EPSILON (0.00001)
 #define CMP_BIG_EPSILON (0.001)
 
+#define SR_FLOAT_EPSILON (1.192092896e-07F)
 #define SR_EPSILON (0.00001)
 #define SR_BIG_EPSILON (0.001)
 #define SR_LARGE_EPSILON (0.00005)
@@ -66,12 +67,17 @@
 #define SR_EARTH_GRAVITY_CONST (9.81) // Gravitational Constant (m/s^2)
 
 #define SR_SQUARE(value) (value * value)
-#define SR_POW(x, n) std::pow(x, n)
-#define SR_SQRT(x) std::sqrt(x)
-#define SR_SIN(x) std::sin(x)
-#define SR_COS(x) std::cos(x)
-#define SR_ARC_SIN(x) std::asin(x)
-#define SR_ARC_COS(x) std::acos(x)
+#define SR_POW(x, n) (std::pow(x, n))
+#define SR_SQRT(x) (std::sqrt(x))
+#define SR_SIN(x) (std::sin(x))
+#define SR_COS(x) (std::cos(x))
+#define SR_ARC_SIN(x) (std::asin(x))
+#define SR_ARC_COS(x) (std::acos(x))
+#define SR_ACOS(x) (std::acos(x))
+#define SR_ASIN(x) (std::asin(x))
+#define SR_TAN(x) (std::tan(x))
+#define SR_ATAN(x) (std::atan(x))
+#define SR_ATAN2(y, x) (std::atan2(y, x))
 
 #define SR_ABS(x) (SR_MATH_NS::Abs(x))
 #define SR_MAX(a, b) (a > b ? a : b)
@@ -88,9 +94,20 @@
     #include <glm/gtc/quaternion.hpp>
 #endif
 
+#define SR_SQR_EPSILON (SR_EPSILON * SR_EPSILON)
+
 namespace SR_MATH_NS {
+    static SR_FORCE_INLINE float_t Clamp(float_t value, float_t lower, float_t upper) {
+        return SR_CLAMP(value, lower, upper);
+    }
+
     static SR_FORCE_INLINE float Ceiling(float value) {
         return std::ceil(value);
+    }
+
+    static SR_FORCE_INLINE float_t TriangleAngle(float_t aLen, float_t aLen1, float_t aLen2) {
+        float c = std::clamp((aLen1 * aLen1 + aLen2 * aLen2 - aLen * aLen) / (aLen1 * aLen2) / 2.0f, -1.0f, 1.0f);
+        return std::acos(c);
     }
 
     static SR_FORCE_INLINE bool IsNumber(std::string_view str) {

@@ -39,6 +39,8 @@ namespace SR_MATH_NS {
         SR_NODISCARD Quaternion RotateY(Unit angle) const;
         SR_NODISCARD Quaternion RotateZ(Unit angle) const;
 
+        SR_NODISCARD Quaternion Conjugate() const;
+
         SR_NODISCARD T X() const noexcept;
         SR_NODISCARD T Y() const noexcept;
         SR_NODISCARD T Z() const noexcept;
@@ -62,12 +64,14 @@ namespace SR_MATH_NS {
         SR_NODISCARD bool SR_FASTCALL IsEquals(const Quaternion& q, Unit tolerance) const noexcept;
 
         SR_NODISCARD Quaternion Slerp(const Quaternion& q, Unit t) const;
+        SR_NODISCARD static Quaternion Slerp(const Quaternion& a, const Quaternion& b, Unit t);
 
         SR_NODISCARD static Quaternion LookAt(const Vector3<Unit>& direction);
         SR_NODISCARD static Quaternion LookAt(const Vector3<Unit>& direction, const Vector3<Unit>& up);
 
         SR_NODISCARD Quaternion Normalized() const;
         SR_NODISCARD Quaternion Normalize() const;
+        SR_NODISCARD Quaternion NormalizeSafe() const;
 
         SR_NODISCARD Unit Roll() const noexcept;
         SR_NODISCARD Unit Pitch() const noexcept;

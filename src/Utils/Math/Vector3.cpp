@@ -7,3 +7,28 @@
 
 #include <glm/detail/type_quat.hpp>
 #include <glm/gtc/quaternion.hpp>
+
+namespace SR_MATH_NS {
+    SR_MATH_NS::FVector3 ProjectOnPlane(
+        const FVector3& point,
+        const FVector3& planeOrigin,
+        const FVector3& planeTarget,
+        const FVector3& planeNormal,
+        float_t weight
+    ) {
+        // Calculate the plane's normal if not provided
+        SR_MATH_NS::FVector3 normal = planeNormal;
+        if (normal == SR_MATH_NS::FVector3(0, 0, 0)) {
+            normal = (planeTarget - planeOrigin).Normalized();
+        }
+
+        // Calculate the vector from the plane origin to the point
+        SR_MATH_NS::FVector3 toPoint = point - planeOrigin;
+
+        // Project the vector onto the plane
+        SR_MATH_NS::FVector3 projection = toPoint - normal * toPoint.Dot(normal);
+
+        // Interpolate the projection based on the weight
+        return planeOrigin.Lerp(planeOrigin + projection, weight);
+    }
+}
