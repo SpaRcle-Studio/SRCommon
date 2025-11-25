@@ -50,13 +50,16 @@ namespace SR_MATH_NS {
         Quaternion(const Quaternion &p_q);
         Quaternion(const Vector3<Unit> &p_euler);
         Quaternion(const glm::quat &q);
-        Quaternion(const Vector3<Unit>& axis, Unit angle);
+        //Quaternion(const Vector3<Unit>& axis, Unit angle);
         explicit Quaternion(const Matrix4x4& matrix);
         explicit Quaternion(T x, T y, T z, T w);
 
+        static Quaternion AngleAxis(Unit angle, const Vector3<Unit>& axis);
         static Quaternion FromEuler(const Vector3<Unit>& euler);
-        static Quaternion FromTo(const Vector3<Unit>& from, const Vector3<Unit>& to);
+        static Quaternion FromToRotation(const Vector3<Unit>& from, const Vector3<Unit>& to);
         static Quaternion Identity();
+
+        SR_NODISCARD float_t Dot(const Quaternion& q) const noexcept;
 
         SR_NODISCARD Quaternion Inverse() const;
         SR_NODISCARD Quaternion Conjurate() const;

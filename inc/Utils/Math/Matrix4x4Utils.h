@@ -9,30 +9,28 @@
 #include <Utils/Math/Vector3.h>
 
 namespace SR_MATH_NS {
-    SR_INLINE_STATIC void SR_FASTCALL GLMScaleMat4x4(glm::mat4& matrix, const glm::vec3& v) {
-        typename glm::mat4::col_type& DstB0 = *(typename glm::mat4::col_type*)(((char*)&matrix) + sizeof(typename glm::mat4::col_type) * 0);
-        typename glm::mat4::col_type& DstB1 = *(typename glm::mat4::col_type*)(((char*)&matrix) + sizeof(typename glm::mat4::col_type) * 1);
-        typename glm::mat4::col_type& DstB2 = *(typename glm::mat4::col_type*)(((char*)&matrix) + sizeof(typename glm::mat4::col_type) * 2);
-        typename glm::mat4::col_type& DstB3 = *(typename glm::mat4::col_type*)(((char*)&matrix) + sizeof(typename glm::mat4::col_type) * 3);
-
-        DstB0.x = DstB0.x * v.x;
-        DstB0.y = DstB0.y * v.x;
-        DstB0.z = DstB0.z * v.x;
-        DstB0.w = DstB0.w * v.x;
-
-        DstB1.x = DstB1.x * v.y;
-        DstB1.y = DstB1.y * v.y;
-        DstB1.z = DstB1.z * v.y;
-        DstB1.w = DstB1.w * v.y;
-
-        DstB2.x = DstB2.x * v.z;
-        DstB2.y = DstB2.y * v.z;
-        DstB2.z = DstB2.z * v.z;
-        DstB2.w = DstB2.w * v.z;
-    }
-
     SR_INLINE_STATIC void SR_FASTCALL GLMScaleMat4x4(glm::mat4& matrix, const SR_MATH_NS::FVector3& v) {
-        typename glm::mat4::col_type& DstB0 = *(typename glm::mat4::col_type*)(((char*)&matrix) + sizeof(typename glm::mat4::col_type) * 0);
+        // колонка 0
+        matrix[0][0] *= v.x;
+        matrix[0][1] *= v.x;
+        matrix[0][2] *= v.x;
+        matrix[0][3] *= v.x;
+
+        // колонка 1
+        matrix[1][0] *= v.y;
+        matrix[1][1] *= v.y;
+        matrix[1][2] *= v.y;
+        matrix[1][3] *= v.y;
+
+        // колонка 2
+        matrix[2][0] *= v.z;
+        matrix[2][1] *= v.z;
+        matrix[2][2] *= v.z;
+        matrix[2][3] *= v.z;
+
+        // колонка 3 — translation — НЕ скейлим
+
+        /*typename glm::mat4::col_type& DstB0 = *(typename glm::mat4::col_type*)(((char*)&matrix) + sizeof(typename glm::mat4::col_type) * 0);
         typename glm::mat4::col_type& DstB1 = *(typename glm::mat4::col_type*)(((char*)&matrix) + sizeof(typename glm::mat4::col_type) * 1);
         typename glm::mat4::col_type& DstB2 = *(typename glm::mat4::col_type*)(((char*)&matrix) + sizeof(typename glm::mat4::col_type) * 2);
         typename glm::mat4::col_type& DstB3 = *(typename glm::mat4::col_type*)(((char*)&matrix) + sizeof(typename glm::mat4::col_type) * 3);
@@ -50,23 +48,11 @@ namespace SR_MATH_NS {
         DstB2.x = DstB2.x * v.z;
         DstB2.y = DstB2.y * v.z;
         DstB2.z = DstB2.z * v.z;
-        DstB2.w = DstB2.w * v.z;
-    }
-
-    SR_INLINE_STATIC void SR_FASTCALL GLMTranslateMat4x4(glm::mat4& matrix, const glm::vec3& v) {
-        typename glm::mat4::col_type& DstB0 = *(typename glm::mat4::col_type*)(((char*)&matrix) + sizeof(typename glm::mat4::col_type) * 0);
-        typename glm::mat4::col_type& DstB1 = *(typename glm::mat4::col_type*)(((char*)&matrix) + sizeof(typename glm::mat4::col_type) * 1);
-        typename glm::mat4::col_type& DstB2 = *(typename glm::mat4::col_type*)(((char*)&matrix) + sizeof(typename glm::mat4::col_type) * 2);
-        typename glm::mat4::col_type& DstB3 = *(typename glm::mat4::col_type*)(((char*)&matrix) + sizeof(typename glm::mat4::col_type) * 3);
-
-        DstB3.x = DstB0.x * v.x + DstB1.x * v.y + DstB2.x * v.z + DstB3.x;
-        DstB3.y = DstB0.y * v.x + DstB1.y * v.y + DstB2.y * v.z + DstB3.y;
-        DstB3.z = DstB0.z * v.x + DstB1.z * v.y + DstB2.z * v.z + DstB3.z;
-        DstB3.w = DstB0.w * v.x + DstB1.w * v.y + DstB2.w * v.z + DstB3.w;
+        DstB2.w = DstB2.w * v.z;*/
     }
 
     SR_INLINE_STATIC void SR_FASTCALL GLMTranslateMat4x4(glm::mat4& matrix, const SR_MATH_NS::FVector3& v) {
-        typename glm::mat4::col_type& DstB0 = *(typename glm::mat4::col_type*)(((char*)&matrix) + sizeof(typename glm::mat4::col_type) * 0);
+        /*typename glm::mat4::col_type& DstB0 = *(typename glm::mat4::col_type*)(((char*)&matrix) + sizeof(typename glm::mat4::col_type) * 0);
         typename glm::mat4::col_type& DstB1 = *(typename glm::mat4::col_type*)(((char*)&matrix) + sizeof(typename glm::mat4::col_type) * 1);
         typename glm::mat4::col_type& DstB2 = *(typename glm::mat4::col_type*)(((char*)&matrix) + sizeof(typename glm::mat4::col_type) * 2);
         typename glm::mat4::col_type& DstB3 = *(typename glm::mat4::col_type*)(((char*)&matrix) + sizeof(typename glm::mat4::col_type) * 3);
@@ -74,7 +60,17 @@ namespace SR_MATH_NS {
         DstB3.x = DstB0.x * v.x + DstB1.x * v.y + DstB2.x * v.z + DstB3.x;
         DstB3.y = DstB0.y * v.x + DstB1.y * v.y + DstB2.y * v.z + DstB3.y;
         DstB3.z = DstB0.z * v.x + DstB1.z * v.y + DstB2.z * v.z + DstB3.z;
-        DstB3.w = DstB0.w * v.x + DstB1.w * v.y + DstB2.w * v.z + DstB3.w;
+        DstB3.w = DstB0.w * v.x + DstB1.w * v.y + DstB2.w * v.z + DstB3.w;*/
+
+        auto& B0 = matrix[0];
+        auto& B1 = matrix[1];
+        auto& B2 = matrix[2];
+        auto& B3 = matrix[3];
+
+        B3.x += B0.x * v.x + B1.x * v.y + B2.x * v.z;
+        B3.y += B0.y * v.x + B1.y * v.y + B2.y * v.z;
+        B3.z += B0.z * v.x + B1.z * v.y + B2.z * v.z;
+        B3.w += B0.w * v.x + B1.w * v.y + B2.w * v.z;
     }
 
     SR_INLINE_STATIC void SR_FASTCALL GLMMultiplyMat4x4(glm::mat4& result, const glm::mat4& m1, const glm::mat4& m2) noexcept {

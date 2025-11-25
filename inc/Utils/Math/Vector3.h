@@ -545,7 +545,7 @@ namespace SR_MATH_NS {
         }
 
         SR_NODISCARD Vector3<T> Normalize() const {
-            if constexpr (std::is_same_v<T, bool>) {
+            /*if constexpr (std::is_same_v<T, bool>) {
                 return *this; /// NOT SUPPORTED
             }
             else {
@@ -565,6 +565,31 @@ namespace SR_MATH_NS {
                 }
 
                 return *this;
+            }*/
+            return NormalizeSafe();
+        }
+
+        SR_NODISCARD Vector3<T> NormalizeSafe() const {
+            if constexpr (std::is_same_v<T, bool>) {
+                return *this; /// NOT SUPPORTED
+            }
+            else {
+                auto&& value = x * x + y * y + z * z;
+
+                if (value > static_cast<T>(SR_EPSILON)) {
+                    const T len = static_cast<T>(std::sqrt(value));
+                    Vector3 vec3 = *this;
+
+                    if (len != static_cast<T>(0.)) {
+                        vec3.x /= len;
+                        vec3.y /= len;
+                        vec3.z /= len;
+                    }
+
+                    return vec3;
+                }
+
+                return Vector3<T>::UnitZ();
             }
         }
 

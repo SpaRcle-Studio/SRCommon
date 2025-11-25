@@ -59,7 +59,8 @@ namespace SR_UTILS_NS {
     }
 
     void Transform3D::Rotate(const SR_MATH_NS::Quaternion &q) {
-        SetRotation((m_quaternion * q).EulerAngle());
+        SetRotation(m_quaternion * q);
+        //SetRotation((m_quaternion * q).EulerAngle());
     }
 
     void Transform3D::Translate(const SR_MATH_NS::FVector3& translation) {
@@ -256,14 +257,20 @@ namespace SR_UTILS_NS {
 
             matrix = pParent->GetMatrix().Inverse() * matrix;
 
-            SetRotation(matrix.GetEulers());
+            SetRotation(matrix.GetQuat());
+
+            /* Вариант оптимизации:
+                SR_MATH_NS::Quaternion parentGlobalRot = pParent->GetMatrix().GetQuat();
+                SR_MATH_NS::Quaternion localRot = parentGlobalRot.Inverse() * quaternion;
+                SetRotation(localRot);
+            */
         }
         else {
             auto&& matrix = SR_MATH_NS::Matrix4x4::FromScale(SR_MATH_NS::FVector3(1) / m_skew);
             matrix *= SR_MATH_NS::Matrix4x4::FromQuaternion(quaternion);
             matrix *= SR_MATH_NS::Matrix4x4::FromScale(m_scale);
 
-            SetRotation(matrix.GetEulers());
+            SetRotation(matrix.GetQuat());
         }
     }
 

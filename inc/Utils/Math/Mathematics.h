@@ -68,16 +68,16 @@
 
 #define SR_SQUARE(value) (value * value)
 #define SR_POW(x, n) (std::pow(x, n))
-#define SR_SQRT(x) (std::sqrt(x))
-#define SR_SIN(x) (std::sin(x))
-#define SR_COS(x) (std::cos(x))
-#define SR_ARC_SIN(x) (std::asin(x))
-#define SR_ARC_COS(x) (std::acos(x))
-#define SR_ACOS(x) (std::acos(x))
-#define SR_ASIN(x) (std::asin(x))
-#define SR_TAN(x) (std::tan(x))
-#define SR_ATAN(x) (std::atan(x))
-#define SR_ATAN2(y, x) (std::atan2(y, x))
+#define SR_SQRT(x) (SR_MATH_NS::Sqrt(x))
+#define SR_SIN(x) (SR_MATH_NS::Sin(x))
+#define SR_COS(x) (SR_MATH_NS::Cos(x))
+#define SR_ARC_SIN(x) (SR_MATH_NS::Asin(x))
+#define SR_ARC_COS(x) (SR_MATH_NS::Acos(x))
+#define SR_ACOS(x) (SR_MATH_NS::Acos(x))
+#define SR_ASIN(x) (SR_MATH_NS::Asin(x))
+#define SR_TAN(x) (SR_MATH_NS::Tan(x))
+#define SR_ATAN(x) (SR_MATH_NS::Atan(x))
+#define SR_ATAN2(y, x) (SR_MATH_NS::Atan2(y, x))
 
 #define SR_ABS(x) (SR_MATH_NS::Abs(x))
 #define SR_MAX(a, b) (a > b ? a : b)
@@ -107,7 +107,7 @@ namespace SR_MATH_NS {
 
     static SR_FORCE_INLINE float_t TriangleAngle(float_t aLen, float_t aLen1, float_t aLen2) {
         float c = std::clamp((aLen1 * aLen1 + aLen2 * aLen2 - aLen * aLen) / (aLen1 * aLen2) / 2.0f, -1.0f, 1.0f);
-        return std::acos(c);
+        return std::acosf(c);
     }
 
     static SR_FORCE_INLINE bool IsNumber(std::string_view str) {
@@ -158,6 +158,78 @@ namespace SR_MATH_NS {
     constexpr int32_t  Int32MAX  = std::numeric_limits<int32_t>::max();
 
     constexpr Unit UnitMAX = FloatMAX;
+
+    template<typename T> SR_NODISCARD SR_FORCE_INLINE static constexpr T Sin(T value) {
+        if constexpr (std::is_same_v<T, float_t>) {
+            return std::sinf(value);
+        }
+        else {
+            return std::sin(value);
+        }
+    }
+
+    template<typename T> SR_NODISCARD SR_FORCE_INLINE static constexpr T Cos(T value) {
+        if constexpr (std::is_same_v<T, float_t>) {
+            return std::cosf(value);
+        }
+        else {
+            return std::cos(value);
+        }
+    }
+
+    template<typename T> SR_NODISCARD SR_FORCE_INLINE static constexpr T Tan(T value) {
+        if constexpr (std::is_same_v<T, float_t>) {
+            return std::tanf(value);
+        }
+        else {
+            return std::tan(value);
+        }
+    }
+
+    template<typename T> SR_NODISCARD SR_FORCE_INLINE static constexpr T Acos(T value) {
+        if constexpr (std::is_same_v<T, float_t>) {
+            return std::acosf(value);
+        }
+        else {
+            return std::acos(value);
+        }
+    }
+
+    template<typename T> SR_NODISCARD SR_FORCE_INLINE static constexpr T Asin(T value) {
+        if constexpr (std::is_same_v<T, float_t>) {
+            return std::asinf(value);
+        }
+        else {
+            return std::asin(value);
+        }
+    }
+
+    template<typename T> SR_NODISCARD SR_FORCE_INLINE static constexpr T Atan(T value) {
+        if constexpr (std::is_same_v<T, float_t>) {
+            return std::atanf(value);
+        }
+        else {
+            return std::atan(value);
+        }
+    }
+
+    template<typename T> SR_NODISCARD SR_FORCE_INLINE static constexpr T Atan2(T y, T x) {
+        if constexpr (std::is_same_v<T, float_t>) {
+            return std::atan2f(y, x);
+        }
+        else {
+            return std::atan2(y, x);
+        }
+    }
+
+    template<typename T> SR_NODISCARD SR_FORCE_INLINE static constexpr T Sqrt(T value) {
+        if constexpr (std::is_same_v<T, float_t>) {
+            return std::sqrtf(value);
+        }
+        else {
+            return std::sqrt(value);
+        }
+    }
 
     template<typename T> SR_NODISCARD SR_FORCE_INLINE static constexpr T Abs(T value) {
         if constexpr (std::is_same_v<T, bool>) {
