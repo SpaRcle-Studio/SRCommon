@@ -61,6 +61,8 @@ namespace SR_MATH_NS {
         static Matrix4x4 FromScale(const FVector3& scale);
         static Matrix4x4 FromTranslate(const FVector3& translation);
 
+        SR_NODISCARD Matrix4x4 Orthonormalize() const;
+
         SR_NODISCARD Matrix4x4 Inverse() const;
         SR_NODISCARD Matrix4x4 RotateAxis(const FVector3& axis, const double& angle) const;
         SR_NODISCARD Matrix4x4 Rotate(const FVector3& angle) const;

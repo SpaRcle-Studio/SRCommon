@@ -376,6 +376,7 @@ namespace SR_MATH_NS {
         return Matrix4x4(*this * q.ToMat4x4());
     }
 
+    /// потенциально что-то не рабочее
     SR_NODISCARD Matrix4x4 Matrix4x4::OrthogonalNormalize() const {
         Matrix4x4 copy = *this;
         copy.v.right = copy.v.right.Normalize();
@@ -718,5 +719,26 @@ namespace SR_MATH_NS {
         }
 
         return { newMin, newMax };
+    }
+
+    Matrix4x4 Matrix4x4::Orthonormalize() const {
+        SR_TRACY_ZONE;
+
+        Matrix4x4 result = *this;
+
+        FVector3 xAxis = result.Right();
+        FVector3 yAxis = result.Up();
+        FVector3 zAxis;
+
+        // Ортогонализация с помощью метода Грама-Шмидта
+        xAxis = xAxis.Normalize();
+        yAxis = (yAxis - xAxis * xAxis.Dot(yAxis)).Normalize();
+        zAxis = xAxis.Cross(yAxis).Normalize();
+
+        result.v.right = FVector4(xAxis, 0.0f);
+        result.v.up    = FVector4(yAxis, 0.0f);
+        result.v.dir   = FVector4(zAxis, 0.0f);
+
+        return result;
     }
 }

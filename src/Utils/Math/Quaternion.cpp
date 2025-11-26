@@ -70,7 +70,7 @@ namespace SR_MATH_NS {
     }
 
     Quaternion Quaternion::FromToRotation(const Vector3<Unit>& from, const Vector3<Unit>& to) {
-       float theta = from.Normalize().Dot(to.Normalize());
+       /*float theta = from.Normalize().Dot(to.Normalize());
        if (theta >= 1.f) {
            return Quaternion::Identity();
        }
@@ -84,12 +84,31 @@ namespace SR_MATH_NS {
            return Quaternion::AngleAxis(180.f, axis);
        }
 
-       return Quaternion::AngleAxis(SR_ACOS(theta) * SR_RAD_2_DEG, from.Cross(to).Normalize());
+       return Quaternion::AngleAxis(SR_ACOS(theta) * SR_RAD_2_DEG, from.Cross(to).Normalize());*/
 
 
 
 
-       /*const FVector3 f = from.NormalizeSafe();
+        /*FVector3 f = from.NormalizeSafe();
+        FVector3 t = to.NormalizeSafe();
+
+        if (f.SqrMagnitude() < 1e-8f || t.SqrMagnitude() < 1e-8f) {
+            return Quaternion::Identity(); // защита degenerate case
+        }
+
+        float theta = f.Dot(t);
+        theta = SR_CLAMP(theta, -1.f, 1.f);
+
+        if (theta >= 1.f) return Quaternion::Identity();
+        if (theta <= -1.f) {
+            FVector3 axis = f.Cross(FVector3::Right());
+            if (axis.SqrMagnitude() < 1e-8f) axis = f.Cross(FVector3::Up());
+            return Quaternion::AngleAxis(180.f, axis.NormalizeSafe());
+        }
+
+        return Quaternion::AngleAxis(SR_ACOS(theta) * SR_RAD_2_DEG, f.Cross(t).NormalizeSafe());*/
+
+       const FVector3 f = from.NormalizeSafe();
        const FVector3 t = to.NormalizeSafe();
 
        const Unit cosTheta = f.Dot(t);
@@ -106,7 +125,7 @@ namespace SR_MATH_NS {
            FVector3 ortho = FVector3(1,0,0).Cross(f);
            if (ortho.LengthSqr() < kEps) ortho = FVector3(0,1,0).Cross(f);
            ortho = ortho.NormalizeSafe();
-           Quaternion q = Quaternion(ortho, static_cast<Unit>(SR_PI)); // 180°
+           Quaternion q = Quaternion::AngleAxis(SR_DEG(SR_PI), ortho); // 180°
            return q.NormalizeSafe();
        }
 
@@ -120,13 +139,62 @@ namespace SR_MATH_NS {
 
        axis = axis / SR_SQRT(axisLenSq);
        const Unit angle = SR_ACOS(glm::clamp(cosTheta, -1.0f, 1.0f));
-       Quaternion q = Quaternion(axis, angle);
-       return q.NormalizeSafe();*/
+       Quaternion q = Quaternion::AngleAxis(SR_DEG(angle), axis);
+       return q.NormalizeSafe();
 
 
 
 
-      /* // 1. Нормализуем входные векторы
+
+
+      /*// 1. Нормализуем входные векторы безопасно
+        FVector3 f = from.Normalize();
+        FVector3 t = to.Normalize();
+
+        if (f.SqrMagnitude() < 1e-8f || t.SqrMagnitude() < 1e-8f) {
+            // слишком маленький вектор → не вращаем
+            return Quaternion::Identity();
+        }
+
+        // 2. Косинус угла между векторами
+        float cosTheta = f.Dot(t);
+        cosTheta = SR_CLAMP(cosTheta, -1.f, 1.f);
+
+        // 3. Векторы почти совпадают → Identity
+        if (cosTheta > 0.999999f) {
+            return Quaternion::Identity();
+        }
+
+        // 4. Векторы почти противоположны
+        if (cosTheta < -0.999999f) {
+            // эвристика Unity: сначала X, если коллинеарно → Y
+            FVector3 axis = f.Cross(FVector3(1,0,0));
+            if (axis.SqrMagnitude() < 1e-6f) {
+                axis = f.Cross(FVector3(0,1,0));
+            }
+            axis = axis.NormalizeSafe();
+            return Quaternion::AngleAxis(SR_DEG(SR_PI), axis);
+        }
+
+        // 5. Общий случай
+        FVector3 rotationAxis = f.Cross(t);
+        float axisLenSq = rotationAxis.LengthSqr();
+
+        if (axisLenSq < 1e-8f) {
+            // почти коллинеарны → Identity
+            return Quaternion::Identity();
+        }
+
+        rotationAxis = rotationAxis / sqrt(axisLenSq); // нормализация
+        float angle = acosf(cosTheta); // угол
+
+        return Quaternion::AngleAxis(SR_DEG(angle), rotationAxis);*/
+
+
+
+
+       /// нет дрожи но криво вращает
+     /* // 1. Нормализуем входные векторы
        const FVector3 f = from.Normalized();
        const FVector3 t = to.Normalized();
 
@@ -146,7 +214,7 @@ namespace SR_MATH_NS {
                ortho = FVector3(0, 1, 0).Cross(f);
            }
            ortho = ortho.Normalized();
-           return Quaternion(ortho, SR_PI); // поворот на 180° вокруг оси
+           return Quaternion::AngleAxis(SR_PI, ortho); // поворот на 180° вокруг оси
        }
 
        // 5. Общий случай
@@ -163,10 +231,13 @@ namespace SR_MATH_NS {
        // угол между векторами
        const Unit angle = acosf(cosTheta);
 
-       return Quaternion(rotationAxis, angle);*/
+       return Quaternion::AngleAxis(angle, rotationAxis);*/
 
-       /// Кривая реализация
-       /*const FVector3 f = from.Normalized();
+
+
+
+      /* /// Кривая реализация
+       const FVector3 f = from.Normalized();
        const FVector3 t = to.Normalized();
 
        const Unit cosTheta = f.Dot(t);
@@ -185,7 +256,7 @@ namespace SR_MATH_NS {
                rotationAxis = FVector3(0, 1, 0).Cross(f);
            }
            rotationAxis = rotationAxis.Normalize();
-           return Quaternion(rotationAxis, SR_PI);
+           return Quaternion::AngleAxis(SR_DEG(SR_PI), rotationAxis);
        }
 
        rotationAxis = f.Cross(t);
@@ -552,7 +623,7 @@ namespace SR_MATH_NS {
     }
 
     Quaternion Quaternion::Slerp(const Quaternion &q, Unit t) const {
-#if SR_SIMD_SUPPORT && 0
+#if SR_SIMD_SUPPORT
         // Load q1 and q2 into SIMD registers
         __m128 q1_vec = _mm_set_ps(w, z, y, x); // Загрузка в обратном порядке для корректного выравнивания
         __m128 q2_vec = _mm_set_ps(q.w, q.z, q.y, q.x); // Загрузка в обратном порядке для корректного выравнивания
@@ -599,6 +670,60 @@ namespace SR_MATH_NS {
         float result_array[4];
         _mm_store_ps(result_array, interp_vec);
         return Quaternion(result_array[0], result_array[1], result_array[2], result_array[3]);
+
+
+
+
+        /*// Загрузка в SIMD
+        __m128 q1_vec = _mm_set_ps(w, z, y, x); // [x,y,z,w]
+        __m128 q2_vec = _mm_set_ps(q.w, q.z, q.y, q.x);
+
+        // dot product через SSE2
+        __m128 mul = _mm_mul_ps(q1_vec, q2_vec);
+        __m128 shuf1 = _mm_shuffle_ps(mul, mul, _MM_SHUFFLE(2,1,0,3));
+        __m128 sum1 = _mm_add_ps(mul, shuf1);
+        __m128 shuf2 = _mm_movehl_ps(sum1, sum1);
+        __m128 sum2 = _mm_add_ss(sum1, shuf2);
+        float dot_result = _mm_cvtss_f32(sum2);
+
+        // Флип, если dot < 0
+        __m128 q2_copy = q2_vec;
+        if (dot_result < 0.0f) {
+            q2_copy = _mm_mul_ps(q2_vec, _mm_set1_ps(-1.0f));
+            dot_result = -dot_result;
+        }
+
+        // Clamp dot
+        dot_result = std::clamp(dot_result, -1.0f, 1.0f);
+
+        const float DOT_THRESHOLD = 0.9995f;
+        if (dot_result > DOT_THRESHOLD) {
+            // Линейная интерполяция
+            __m128 diff = _mm_sub_ps(q2_copy, q1_vec);
+            __m128 t_vec = _mm_set1_ps(t);
+            __m128 interp = _mm_add_ps(q1_vec, _mm_mul_ps(diff, t_vec));
+
+            float res[4];
+            _mm_store_ps(res, interp);
+            return Quaternion(res[0], res[1], res[2], res[3]).Normalized();
+        }
+
+        // SLERP
+        float theta_0 = std::acos(dot_result);
+        float theta = theta_0 * t;
+        float sin_theta = std::sin(theta);
+        float sin_theta_0 = std::sin(theta_0);
+
+        float s0 = std::cos(theta) - dot_result * sin_theta / sin_theta_0;
+        float s1 = sin_theta / sin_theta_0;
+
+        __m128 s0_vec = _mm_set1_ps(s0);
+        __m128 s1_vec = _mm_set1_ps(s1);
+        __m128 interp_vec = _mm_add_ps(_mm_mul_ps(q1_vec, s0_vec), _mm_mul_ps(q2_copy, s1_vec));
+
+        float res[4];
+        _mm_store_ps(res, interp_vec);
+        return Quaternion(res[0], res[1], res[2], res[3]).Normalized();*/
 #else
         return glm::slerp(self, q.self, static_cast<float_t>(t));
 #endif
@@ -613,7 +738,8 @@ namespace SR_MATH_NS {
     }
 
     Quaternion Quaternion::Normalize() const {
-        return Quaternion(glm::normalize(self));
+        //return Quaternion(glm::normalize(self));
+        return NormalizeSafe();
     }
 
     Quaternion Quaternion::NormalizeSafe() const {
@@ -731,6 +857,7 @@ namespace SR_MATH_NS {
     }
 
     float_t Quaternion::Dot(const Quaternion& q) const noexcept {
-        return glm::dot(self, q.self);
+        float_t dot = x * q.x + y * q.y + z * q.z + w * q.w;
+        return dot;
     }
 }

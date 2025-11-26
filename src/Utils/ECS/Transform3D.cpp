@@ -255,8 +255,10 @@ namespace SR_UTILS_NS {
             matrix *= SR_MATH_NS::Matrix4x4::FromQuaternion(quaternion);
             matrix *= SR_MATH_NS::Matrix4x4::FromScale(m_scale);
 
-            matrix = pParent->GetMatrix().Inverse() * matrix;
+            //matrix = pParent->GetMatrix().Orthonormalize().Inverse() * matrix.Orthonormalize();
+            //SetRotation(matrix.Orthonormalize().GetQuat());
 
+            matrix = pParent->GetMatrix().Inverse() * matrix;
             SetRotation(matrix.GetQuat());
 
             /* Вариант оптимизации:
