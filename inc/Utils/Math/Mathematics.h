@@ -15,32 +15,31 @@
     #define SR_PI M_PI
 #endif
 
-#define SR_RAD(x) (x * (SR_PI / 180.0))
-#define SR_DEG(x) (x * (180.0 / SR_PI))
+#define SR_RAD(x) SR_MATH_NS::ToRad(x)
+#define SR_DEG(x) SR_MATH_NS::ToDeg(x)
 
-#define RAD(x) (x * (SR_PI / 180.0))
-#define DEG(x) (x * (180.0 / SR_PI))
+#define RAD(x) SR_RAD(x)
+#define DEG(x) SR_DEG(x)
 
 #define SR_DEG_2_RAD (SR_PI * 2.f / 360.f)
 #define SR_RAD_2_DEG (1.f / SR_DEG_2_RAD)
 
-#define DegreesToRad(angle) (angle * M_PI / 180)
-#define RadToDegrees(angle) (angle * 180 / M_PI)
-
+/// !!!!!!!!!!!!!!!! Устаревшие макросы, использовать новые которые блоком ниже !!!!!!!!!!!!!!!!
 #define CMP_EPSILON (0.00001)
 #define CMP_BIG_EPSILON (0.001)
-
-#define SR_FLOAT_EPSILON (1.192092896e-07F)
 #define SR_EPSILON (0.00001)
 #define SR_BIG_EPSILON (0.001)
-#define SR_LARGE_EPSILON (0.00005)
 #define SR_EPSILON_NORMAL_SQRT (1e-15)
-
+#define SR_LARGE_EPSILON (0.00005)
+#define SR_FLOAT_EPSILON (1.192092896e-07F)
 #define CMP_EPSILON2 (CMP_EPSILON * CMP_EPSILON)
 #define UNIT_EPSILON (0.00001)
-
 #define CMP_NORMALIZE_TOLERANCE (0.000001)
 #define CMP_POINT_IN_PLANE_EPSILON (0.00001)
+
+#define SR_SCALAR_EPSILON (1e-8f) /// ТОЛЬКО для чистых скалярных сравнений
+#define SR_SMALL_NUMBER_EPSILON (1e-6) /// Скалярное сравнение векторов, нулевой Cross, нулевой вектор
+#define SR_KINDA_SMALL_NUMBER_EPSILON (1e-4) /// Векторное сравнение векторов, проверка противоположности, коллинеарность
 
 #define Math_SQRT12 (0.7071067811865475244008443621048490)
 #define Math_SQRT2 (1.4142135623730950488016887242)
@@ -71,8 +70,6 @@
 #define SR_SQRT(x) (SR_MATH_NS::Sqrt(x))
 #define SR_SIN(x) (SR_MATH_NS::Sin(x))
 #define SR_COS(x) (SR_MATH_NS::Cos(x))
-#define SR_ARC_SIN(x) (SR_MATH_NS::Asin(x))
-#define SR_ARC_COS(x) (SR_MATH_NS::Acos(x))
 #define SR_ACOS(x) (SR_MATH_NS::Acos(x))
 #define SR_ASIN(x) (SR_MATH_NS::Asin(x))
 #define SR_TAN(x) (SR_MATH_NS::Tan(x))
@@ -82,7 +79,7 @@
 #define SR_ABS(x) (SR_MATH_NS::Abs(x))
 #define SR_MAX(a, b) (a > b ? a : b)
 #define SR_MIN(a, b) (a < b ? a : b)
-#define SR_CLAMP(x, lower, upper) (SR_MIN(upper, SR_MAX(x, lower)))
+#define SR_CLAMP(x, lower, upper) SR_MATH_NS::Clamp(x, lower, upper)
 
 #define RAD3(v) glm::vec3(RAD(v.x), RAD(v.y), RAD(v.z))
 #define DEG3(v) glm::vec3(DEG(v.x), DEG(v.y), DEG(v.z))
@@ -94,20 +91,12 @@
     #include <glm/gtc/quaternion.hpp>
 #endif
 
-#define SR_SQR_EPSILON (SR_EPSILON * SR_EPSILON)
-
 namespace SR_MATH_NS {
-    static SR_FORCE_INLINE float_t Clamp(float_t value, float_t lower, float_t upper) {
-        return SR_CLAMP(value, lower, upper);
-    }
+    constexpr float Deg2Rad = 0.01745329f;
+    constexpr float Rad2Deg = 57.29578f;
 
     static SR_FORCE_INLINE float Ceiling(float value) {
         return std::ceil(value);
-    }
-
-    static SR_FORCE_INLINE float_t TriangleAngle(float_t aLen, float_t aLen1, float_t aLen2) {
-        float c = std::clamp((aLen1 * aLen1 + aLen2 * aLen2 - aLen * aLen) / (aLen1 * aLen2) / 2.0f, -1.0f, 1.0f);
-        return std::acosf(c);
     }
 
     static SR_FORCE_INLINE bool IsNumber(std::string_view str) {
@@ -160,75 +149,77 @@ namespace SR_MATH_NS {
     constexpr Unit UnitMAX = FloatMAX;
 
     template<typename T> SR_NODISCARD SR_FORCE_INLINE static constexpr T Sin(T value) {
-        if constexpr (std::is_same_v<T, float_t>) {
-            return std::sinf(value);
-        }
-        else {
-            return std::sin(value);
-        }
+       return static_cast<T>(sin(static_cast<double_t>(value)));
     }
 
     template<typename T> SR_NODISCARD SR_FORCE_INLINE static constexpr T Cos(T value) {
-        if constexpr (std::is_same_v<T, float_t>) {
-            return std::cosf(value);
-        }
-        else {
-            return std::cos(value);
-        }
+        return static_cast<T>(cos(static_cast<double_t>(value)));
     }
 
     template<typename T> SR_NODISCARD SR_FORCE_INLINE static constexpr T Tan(T value) {
-        if constexpr (std::is_same_v<T, float_t>) {
-            return std::tanf(value);
-        }
-        else {
-            return std::tan(value);
-        }
+        return static_cast<T>(tan(static_cast<double_t>(value)));
     }
 
     template<typename T> SR_NODISCARD SR_FORCE_INLINE static constexpr T Acos(T value) {
-        if constexpr (std::is_same_v<T, float_t>) {
-            return std::acosf(value);
-        }
-        else {
-            return std::acos(value);
-        }
+       return static_cast<T>(acos(static_cast<double_t>(value)));
     }
 
     template<typename T> SR_NODISCARD SR_FORCE_INLINE static constexpr T Asin(T value) {
-        if constexpr (std::is_same_v<T, float_t>) {
-            return std::asinf(value);
-        }
-        else {
-            return std::asin(value);
-        }
+        return static_cast<T>(asin(static_cast<double_t>(value)));
     }
 
     template<typename T> SR_NODISCARD SR_FORCE_INLINE static constexpr T Atan(T value) {
-        if constexpr (std::is_same_v<T, float_t>) {
-            return std::atanf(value);
-        }
-        else {
-            return std::atan(value);
-        }
+        return static_cast<T>(atan(static_cast<double_t>(value)));
     }
 
     template<typename T> SR_NODISCARD SR_FORCE_INLINE static constexpr T Atan2(T y, T x) {
-        if constexpr (std::is_same_v<T, float_t>) {
-            return std::atan2f(y, x);
-        }
-        else {
-            return std::atan2(y, x);
-        }
+        return static_cast<T>(atan2(static_cast<double_t>(y), static_cast<double_t>(x)));
     }
 
     template<typename T> SR_NODISCARD SR_FORCE_INLINE static constexpr T Sqrt(T value) {
-        if constexpr (std::is_same_v<T, float_t>) {
-            return std::sqrtf(value);
+        return static_cast<T>(sqrt(static_cast<double_t>(value)));
+    }
+
+    template<typename T> SR_FORCE_INLINE T Clamp(T value, T lower, T upper) {
+        if (std::is_same_v<T, float_t> || std::is_same_v<T, float>) {
+            if (static_cast<double_t>(value) < static_cast<double_t>(lower)) {
+                return lower;
+            }
+            else if (static_cast<double_t>(value) > static_cast<double_t>(upper)) {
+                return upper;
+            }
+            else {
+                return value;
+            }
         }
         else {
-            return std::sqrt(value);
+            if (value < lower) {
+                return lower;
+            }
+            else if (value > upper) {
+                return upper;
+            }
+            else {
+                return value;
+            }
         }
+    }
+
+    template<typename T> SR_FORCE_INLINE T Sign(T value) {
+        return static_cast<T>(static_cast<double_t>(value) > 0.0 ? 1.f : -1.f);
+    }
+
+    template<typename T> SR_FORCE_INLINE T ToRad(T degrees) {
+        return static_cast<T>(static_cast<double_t>(degrees) * static_cast<double_t>(SR_PI / 180.0));
+    }
+
+    template<typename T> SR_FORCE_INLINE T ToDeg(T radians) {
+        return static_cast<T>(static_cast<double_t>(radians) * static_cast<double_t>(180.0 / SR_PI));
+    }
+
+    static SR_FORCE_INLINE float_t TriangleAngle(float_t aLen, float_t aLen1, float_t aLen2) {
+        float_t c = SR_CLAMP((aLen1 * aLen1 + aLen2 * aLen2 - aLen * aLen) / (aLen1 * aLen2) / 2.0f, -1.0f, 1.0f);
+        return SR_ACOS(c);
     }
 
     template<typename T> SR_NODISCARD SR_FORCE_INLINE static constexpr T Abs(T value) {

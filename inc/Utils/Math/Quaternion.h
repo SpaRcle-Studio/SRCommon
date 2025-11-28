@@ -54,13 +54,21 @@ namespace SR_MATH_NS {
         explicit Quaternion(const Matrix4x4& matrix);
         explicit Quaternion(T x, T y, T z, T w);
 
-        static Quaternion AngleAxis(Unit angle, const Vector3<Unit>& axis);
+        static bool IsEqualUsingDot(Unit dot);
+        static Quaternion FromBasis(const Vector3<Unit>& right, const Vector3<Unit>& up, const Vector3<Unit>& forward);
+        static Unit Angle(const Quaternion& a, const Quaternion& b);
+        static Unit Dot(const Quaternion& a, const Quaternion& b);
+        static Quaternion AngleAxis(float_t angle, const Vector3<float_t>& axis);
+        static Quaternion AngleAxis(double_t angle, const Vector3<double_t>& axis);
         static Quaternion FromEuler(const Vector3<Unit>& euler);
+        static bool IsFromToRotationValid(const Vector3<Unit>& from, const Vector3<Unit>& to);
         static Quaternion FromToRotation(const Vector3<Unit>& from, const Vector3<Unit>& to);
         static Quaternion Identity();
+        SR_NODISCARD static Quaternion Inverse(const Quaternion& q);
 
-        SR_NODISCARD float_t Dot(const Quaternion& q) const noexcept;
+        SR_NODISCARD Unit Dot(const Quaternion& q) const noexcept;
 
+        SR_NODISCARD void ToAxisAngle(Vector3<Unit>& axis, float_t& angle) const;
         SR_NODISCARD Quaternion Inverse() const;
         SR_NODISCARD Quaternion Conjurate() const;
 
@@ -71,6 +79,7 @@ namespace SR_MATH_NS {
 
         SR_NODISCARD static Quaternion LookAt(const Vector3<Unit>& direction);
         SR_NODISCARD static Quaternion LookAt(const Vector3<Unit>& direction, const Vector3<Unit>& up);
+        SR_NODISCARD static Quaternion LookRotation(Vector3<Unit> forward, Vector3<Unit> up);
 
         SR_NODISCARD Quaternion Normalized() const;
         SR_NODISCARD Quaternion Normalize() const;

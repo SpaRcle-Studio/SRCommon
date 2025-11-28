@@ -229,7 +229,7 @@ namespace SR_UTILS_NS {
         SR_TRACY_ZONE;
         SR_LOCK_GUARD;
 
-        m_maxHistorySize = SR_CLAMP(size, 1, SR_UINT32_MAX);
+        m_maxHistorySize = SR_CLAMP(size, 1u, SR_UINT32_MAX);
 
         while (m_history.size() > m_maxHistorySize) {
             delete m_history.front();

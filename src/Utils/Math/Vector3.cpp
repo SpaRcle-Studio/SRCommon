@@ -31,4 +31,13 @@ namespace SR_MATH_NS {
         // Interpolate the projection based on the weight
         return planeOrigin.Lerp(planeOrigin + projection, weight);
     }
+
+    FVector3 GetPerpendicularVector(const FVector3& direction) {
+        Vector3 perpendicular = FVector3::Cross(direction, FVector3::Up());
+        if (perpendicular.Magnitude() < 0.0001f)
+            perpendicular = FVector3::Cross(direction, FVector3::Right());
+        if (perpendicular.Magnitude() < 0.0001f)
+            perpendicular = FVector3::Cross(direction, FVector3::Forward());
+        return perpendicular.Normalized();
+    }
 }

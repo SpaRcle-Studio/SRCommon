@@ -105,8 +105,11 @@ namespace SR_UTILS_NS {
         SR_NODISCARD virtual SR_MATH_NS::FVector2 GetTranslation2D() const;
         SR_NODISCARD virtual SR_MATH_NS::FVector2 GetScale2D() const;
 
+        SR_NODISCARD SR_MATH_NS::FVector3 InverseTransformDirection(const SR_MATH_NS::FVector3& direction) const;
+        SR_NODISCARD SR_MATH_NS::FVector3 TransformDirection(const SR_MATH_NS::FVector3& direction) const;
+
         SR_NODISCARD SR_MATH_NS::FVector3 GetGlobalTranslation() const;
-        SR_NODISCARD SR_MATH_NS::Quaternion GetGlobalRotation() const;
+        SR_NODISCARD virtual SR_MATH_NS::Quaternion GetGlobalRotation() const;
 
         SR_NODISCARD Transform* GetParentTransform() const;
         SR_NODISCARD SR_HTYPES_NS::SharedPtr<GameObject> GetGameObject() const;
@@ -123,6 +126,7 @@ namespace SR_UTILS_NS {
     protected:
         GameObject* m_gameObject = nullptr;
         mutable bool m_aabbDirty = true;
+        mutable bool m_dirtyRotation = false;
 
     private:
         mutable bool m_dirtyMatrix = false;

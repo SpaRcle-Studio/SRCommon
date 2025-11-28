@@ -69,7 +69,203 @@ namespace SR_MATH_NS {
         return Vector3<Unit>(q * v.ToGLM());
     }
 
+    bool Quaternion::IsFromToRotationValid(const Vector3<Unit> &from, const Vector3<Unit> &to) {
+        const FVector3 f = from.NormalizeSafe();
+        const FVector3 t = to.NormalizeSafe();
+
+        const Unit cosTheta = f.Dot(t);
+        const Unit kEps = SR_KINDA_SMALL_NUMBER_EPSILON;
+
+        // почти совпадают
+        if (cosTheta > (1.0f - kEps)) {
+            return false;
+        }
+
+        // почти противоположны
+        if (cosTheta < (-1.0f + kEps)) {
+            return false;
+        }
+
+        // общий случай
+        FVector3 axis = f.Cross(t);
+        const Unit axisLenSq = axis.SqrMagnitude();
+        if (axisLenSq < kEps) {
+            return false;
+        }
+
+        return true;
+    }
+
     Quaternion Quaternion::FromToRotation(const Vector3<Unit>& from, const Vector3<Unit>& to) {
+        ///  const Vector3<Unit>& fallbackAxis, const Quaternion* pPrevious
+
+        /**FVector3 f = from.Normalized();
+        FVector3 t = to.Normalized();
+
+        float cosTheta = f.Dot(t);
+
+        if (cosTheta > 0.999999f) {
+            // Векторы почти совпадают → Identity
+            return Quaternion::Identity();
+        }
+
+        if (cosTheta < -0.999999f) {
+            // Векторы почти противоположны → выбираем fallback ось
+            FVector3 axis = f.Cross(FVector3(1,0,0));
+            if (axis.SqrMagnitude() < 1e-6f) {
+                axis = f.Cross(FVector3(0,1,0));
+            }
+            axis = axis.Normalize();
+            return Quaternion::AngleAxis(180.0f, axis);
+        }
+
+        // Основной случай
+        FVector3 cross = f.Cross(t);
+        if (cross.SqrMagnitude() < 1e-6f) {
+            // Векторы почти коллинеарны → оставляем identity
+            return Quaternion::Identity();
+        }
+        cross = cross.Normalize();
+
+        float angleDeg = SR_ACOS(cosTheta) * SR_RAD_2_DEG;
+        return Quaternion::AngleAxis(angleDeg, cross);*/
+
+        const Unit theta = SR_MATH_NS::FVector3::Dot(from.Normalize(), to.Normalize());
+        if (theta >= Unit(1.0)) {
+            return Quaternion::Identity();
+        }
+
+        if (theta <= Unit(-1.0)) {
+            FVector3 axis = from.Cross(FVector3::Right());
+            if (axis.SqrMagnitude() == Unit(0.0)) {
+                axis = from.Cross(FVector3::Up());
+            }
+
+            return Quaternion::AngleAxis(Unit(180.0), axis);
+        }
+
+        return Quaternion::AngleAxis(SR_ACOS(theta) * static_cast<Unit>(SR_MATH_NS::Rad2Deg), SR_MATH_NS::FVector3::Cross(from, to).Normalize());
+
+        /*double_t theta = from.CastToDouble().Normalize().Dot(to.CastToDouble().Normalize());
+        if (theta >= 1.0) {
+            return Quaternion::Identity();
+        }
+
+        if (theta <= -1.0) {
+            DVector3 axis = from.CastToDouble().Cross(DVector3::Right());
+            if (axis.SqrMagnitude() == 0.0) {
+                axis = from.CastToDouble().Cross(DVector3::Up());
+            }
+
+            return Quaternion::AngleAxis(180.f, axis);
+        }
+
+        return Quaternion::AngleAxis(SR_ACOS(theta) * static_cast<double_t>(SR_RAD_2_DEG), from.CastToDouble().Cross(to.CastToDouble()).Normalize());*/
+
+
+        /****const FVector3 f = from.NormalizeSafe();
+        const FVector3 t = to.NormalizeSafe();
+
+        const Unit cosTheta = f.Dot(t);
+        const Unit kEps = SR_KINDA_SMALL_NUMBER_EPSILON;
+
+        // почти совпадают
+        if (cosTheta > (1.0f - kEps)) {
+            return Quaternion::Identity();
+        }
+
+        // почти противоположны
+        if (cosTheta < (-1.0f + kEps)) {
+            FVector3 axis = fallbackAxis;
+
+            if (axis.SqrMagnitude() < kEps) {
+                // стабильная ось через previousBendAxis
+                if (pPrevious) {
+                    axis = FVector3::Right().Rotate(*pPrevious);
+                    if (axis.SqrMagnitude() < kEps) {
+                        axis = FVector3::Up().Rotate(*pPrevious);
+                    }
+                }
+                else {
+                    axis = f.Cross(FVector3(1, 0, 0));
+                    if (axis.SqrMagnitude() < kEps) {
+                        axis = f.Cross(FVector3(0, 1, 0));
+                    }
+                }
+            }
+
+            axis = axis.NormalizeSafe();
+
+            // Срезаем угол чуть меньше 180°, чтобы не было резкого флипа
+            return Quaternion::AngleAxis(179.9f, axis).NormalizeSafe();
+        }
+
+        // общий случай
+        FVector3 axis = f.Cross(t);
+        const Unit axisLenSq = axis.SqrMagnitude();
+        if (axisLenSq < kEps) {
+            return Quaternion::Identity();
+        }
+
+        axis /= SR_SQRT(axisLenSq);
+        const Unit angle = SR_ACOS(glm::clamp(cosTheta, -1.0f, 1.0f));
+        return Quaternion::AngleAxis(SR_DEG(angle), axis).NormalizeSafe();*/
+
+
+
+
+
+
+
+        /*FVector3 f = from.Normalize();
+        FVector3 t = to.Normalize();
+
+        if (f.SqrMagnitude() < SR_KINDA_SMALL_NUMBER_EPSILON || t.SqrMagnitude() < SR_KINDA_SMALL_NUMBER_EPSILON) {
+            // слишком маленький вектор → не вращаем
+            return Quaternion::Identity();
+        }
+
+        // 2. Косинус угла между векторами
+        float cosTheta = f.Dot(t);
+        cosTheta = SR_CLAMP(cosTheta, -1.f, 1.f);
+
+        // 3. Векторы почти совпадают → Identity
+        if (cosTheta > 0.999999f) {
+            return Quaternion::Identity();
+        }
+
+        // 4. Векторы почти противоположны
+        if (cosTheta < -0.999999f) {
+            FVector3 axis = fallbackAxis;
+
+            // если fallbackAxis нулевой — тогда обеспечь ось
+            if (axis.SqrMagnitude() < SR_KINDA_SMALL_NUMBER_EPSILON) {
+                axis = f.Cross(FVector3(1, 0, 0));
+                if (axis.SqrMagnitude() < SR_KINDA_SMALL_NUMBER_EPSILON) {
+                    axis = f.Cross(FVector3(0, 1, 0));
+                }
+            }
+
+            axis = axis.NormalizeSafe();
+            return Quaternion::AngleAxis(180.0f, axis).NormalizeSafe();
+        }
+
+        // 5. Общий случай
+        FVector3 rotationAxis = f.Cross(t);
+        float axisLenSq = rotationAxis.LengthSqr();
+
+        if (axisLenSq < SR_KINDA_SMALL_NUMBER_EPSILON) {
+            // почти коллинеарны → Identity
+            return Quaternion::Identity();
+        }
+
+        rotationAxis = rotationAxis / sqrt(axisLenSq); // нормализация
+        float angle = acosf(cosTheta); // угол
+
+        return Quaternion::AngleAxis(SR_DEG(angle), rotationAxis);*/
+    }
+
+    //Quaternion Quaternion::FromToRotation(const Vector3<Unit>& from, const Vector3<Unit>& to) {
        /*float theta = from.Normalize().Dot(to.Normalize());
        if (theta >= 1.f) {
            return Quaternion::Identity();
@@ -108,7 +304,10 @@ namespace SR_MATH_NS {
 
         return Quaternion::AngleAxis(SR_ACOS(theta) * SR_RAD_2_DEG, f.Cross(t).NormalizeSafe());*/
 
-       const FVector3 f = from.NormalizeSafe();
+       /*
+        БОЛЕЕ МЕНЕЕ РАБОЧИЙ ВАРИАНТ
+
+        const FVector3 f = from.NormalizeSafe();
        const FVector3 t = to.NormalizeSafe();
 
        const Unit cosTheta = f.Dot(t);
@@ -142,7 +341,7 @@ namespace SR_MATH_NS {
        Quaternion q = Quaternion::AngleAxis(SR_DEG(angle), axis);
        return q.NormalizeSafe();
 
-
+*/
 
 
 
@@ -269,9 +468,9 @@ namespace SR_MATH_NS {
                rotationAxis.y * invs,
                rotationAxis.z * invs
        );*/
-    }
+    //}
 
-    Quaternion Quaternion::AngleAxis(Unit angle, const Vector3<Unit>& axis) {
+    Quaternion Quaternion::AngleAxis(float_t angle, const Vector3<float_t>& axis) {
         /*const Unit halfAngle = SR_RAD(angle) * static_cast<Unit>(.5f);
         const Unit s = (Unit)SR_SIN(halfAngle);
 
@@ -285,17 +484,36 @@ namespace SR_MATH_NS {
 
         return q;*/
 
-        const Unit lenSq = axis.LengthSqr();
-        if (lenSq == 0) {
+        const float_t lenSq = axis.SqrMagnitude();
+        if (lenSq == 0.f) {
             return Quaternion::Identity();
         }
 
-        const Unit half = SR_RAD(angle) * Unit(0.5);
-        const Unit s = SR_SIN(half);
+        const float_t half = SR_RAD(angle) * float_t(0.5);
+        const float_t s = SR_SIN(half);
 
         const Vector3<Unit> n = axis / SR_SQRT(lenSq);
 
         return Quaternion(n.x * s, n.y * s, n.z * s, SR_COS(half));
+    }
+
+    Quaternion Quaternion::AngleAxis(double_t angle, const Vector3<double_t>& axis) {
+        const double_t lenSq = axis.SqrMagnitude();
+        if (lenSq == 0.0) {
+            return Quaternion::Identity();
+        }
+
+        const double_t half = SR_RAD(angle) * double_t(0.5);
+        const double_t s = SR_SIN(half);
+
+        const Vector3<double_t> n = axis / SR_SQRT(lenSq);
+
+        return Quaternion(
+            static_cast<Unit>(n.x * s),
+            static_cast<Unit>(n.y * s),
+            static_cast<Unit>(n.z * s),
+            static_cast<Unit>(SR_COS(half))
+        );
     }
 
     Quaternion Quaternion::FromEuler(const Vector3 <Unit> &euler) {
@@ -353,6 +571,31 @@ namespace SR_MATH_NS {
     Quaternion Quaternion::LookAt(const Vector3<Unit>& direction) {
         static Vector3<Unit> up = Vector3<Unit>(0, 1, 0);
         return Quaternion::LookAt(direction, up);
+    }
+
+    Quaternion Quaternion::LookRotation(Vector3<Unit> forward, Vector3<Unit> up) {
+        // forward должен быть нормализован
+        if (forward.SqrMagnitude() < 1e-12f)
+            return Quaternion::Identity();
+
+        forward = forward.Normalize();
+
+        // up не должен быть параллелен forward
+        FVector3 right = up.Cross(forward);
+        if (right.SqrMagnitude() < 1e-12f) {
+            // up слишком параллелен — выбери fallback
+            // любое ортогональное направление
+            up = std::abs(forward.y) < 0.999f ?
+                 FVector3(0,1,0) :
+                 FVector3(1,0,0);
+
+            right = up.Cross(forward);
+        }
+
+        right = right.Normalize();
+        FVector3 newUp = forward.Cross(right);
+
+        return FromBasis(right, newUp, forward);
     }
 
     Quaternion Quaternion::LookAt(const Vector3<Unit>& direction, const Vector3<Unit>& up) {
@@ -744,8 +987,7 @@ namespace SR_MATH_NS {
 
     Quaternion Quaternion::NormalizeSafe() const {
         float dot = Dot(*this);
-        constexpr float_t k_FloatMin = 1e-20f;
-        if (dot > k_FloatMin) {
+        if (dot > SR_KINDA_SMALL_NUMBER_EPSILON) {
             float rSqrt = 1.0f / SR_SQRT(dot);
             return Quaternion(x * rSqrt, y * rSqrt, z * rSqrt, w * rSqrt);
         }
@@ -856,8 +1098,89 @@ namespace SR_MATH_NS {
         return Quaternion(self * rhs.self);
     }
 
-    float_t Quaternion::Dot(const Quaternion& q) const noexcept {
+    Unit Quaternion::Dot(const Quaternion& q) const noexcept {
         float_t dot = x * q.x + y * q.y + z * q.z + w * q.w;
         return dot;
+    }
+
+    void Quaternion::ToAxisAngle(Vector3<Unit>& axis, float_t& angle) const {
+        // нормализуем кватернион на всякий случай
+        SR_MATH_NS::Quaternion nq = NormalizeSafe();
+
+        // угол
+        angle = SR_DEG(2.0f * acosf(nq.w));
+
+        // s = sqrt(1 - w*w), нужна для нормализации оси
+        float s = sqrtf(1.0f - nq.w * nq.w);
+
+        if (s < 1e-6f) {
+            // угол очень маленький, ось может быть любой нормализованной
+            axis = SR_MATH_NS::FVector3(1, 0, 0);
+        } else {
+            axis = SR_MATH_NS::FVector3(nq.x / s, nq.y / s, nq.z / s);
+        }
+    }
+
+    Quaternion Quaternion::FromBasis(const Vector3<Unit> &right, const Vector3<Unit> &up, const Vector3<Unit> &forward) {
+        // Матрица в формате column-major:
+        // | right.x   up.x   forward.x |
+        // | right.y   up.y   forward.y |
+        // | right.z   up.z   forward.z |
+
+        Unit m00 = right.x; Unit m01 = up.x; Unit m02 = forward.x;
+        Unit m10 = right.y; Unit m11 = up.y; Unit m12 = forward.y;
+        Unit m20 = right.z; Unit m21 = up.z; Unit m22 = forward.z;
+
+        Unit trace = m00 + m11 + m22;
+
+        Quaternion q;
+
+        if (trace > 0.0f) {
+            Unit s = SR_SQRT(trace + 1.0f) * 2.0f;
+            q.w = 0.25f * s;
+            q.x = (m21 - m12) / s;
+            q.y = (m02 - m20) / s;
+            q.z = (m10 - m01) / s;
+        }
+        else if (m00 > m11 && m00 > m22) {
+            Unit s = SR_SQRT(1.0f + m00 - m11 - m22) * 2.0f;
+            q.w = (m21 - m12) / s;
+            q.x = 0.25f * s;
+            q.y = (m01 + m10) / s;
+            q.z = (m02 + m20) / s;
+        }
+        else if (m11 > m22) {
+            Unit s = SR_SQRT(1.0f + m11 - m00 - m22) * 2.0f;
+            q.w = (m02 - m20) / s;
+            q.x = (m01 + m10) / s;
+            q.y = 0.25f * s;
+            q.z = (m12 + m21) / s;
+        }
+        else {
+            Unit s = SR_SQRT(1.0f + m22 - m00 - m11) * 2.0f;
+            q.w = (m10 - m01) / s;
+            q.x = (m02 + m20) / s;
+            q.y = (m12 + m21) / s;
+            q.z = 0.25f * s;
+        }
+
+        return q;
+    }
+
+    Unit Quaternion::Angle(const Quaternion &a, const Quaternion &b) {
+        const float_t num = SR_MIN(SR_ABS(Quaternion::Dot(a, b)), 1.f);
+        return Quaternion::IsEqualUsingDot(num) ? 0.0f : (float) ((double)SR_ACOS(num) * 2.0 * 57.2957801818848);
+    }
+
+    Unit Quaternion::Dot(const Quaternion& a, const Quaternion& b) {
+        return a.Dot(b);
+    }
+
+    bool Quaternion::IsEqualUsingDot(Unit dot) {
+        return static_cast<double_t>(dot) > 0.999998986721039;
+    }
+
+    Quaternion Quaternion::Inverse(const Quaternion& q) {
+        return q.Inverse();
     }
 }

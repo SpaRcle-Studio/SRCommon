@@ -64,12 +64,8 @@ namespace SR_UTILS_NS {
     }
 
     void Transform3D::Translate(const SR_MATH_NS::FVector3& translation) {
-        const auto&& direction = TransformDirection(translation);
+        const auto&& direction = m_quaternion * translation;
         SetTranslation(m_translation + direction);
-    }
-
-    SR_MATH_NS::FVector3 Transform3D::TransformDirection(const SR_MATH_NS::FVector3& direction) const {
-        return m_quaternion * direction;
     }
 
     void Transform3D::SetMatrix(
@@ -251,28 +247,12 @@ namespace SR_UTILS_NS {
 
     void Transform3D::SetGlobalRotation(const SR_MATH_NS::Quaternion& quaternion) {
         if (auto&& pParent = GetParentTransform()) {
-            auto&& matrix = SR_MATH_NS::Matrix4x4::FromScale(SR_MATH_NS::FVector3(1) / m_skew);
-            matrix *= SR_MATH_NS::Matrix4x4::FromQuaternion(quaternion);
-            matrix *= SR_MATH_NS::Matrix4x4::FromScale(m_scale);
-
-            //matrix = pParent->GetMatrix().Orthonormalize().Inverse() * matrix.Orthonormalize();
-            //SetRotation(matrix.Orthonormalize().GetQuat());
-
-            matrix = pParent->GetMatrix().Inverse() * matrix;
-            SetRotation(matrix.GetQuat());
-
-            /* Вариант оптимизации:
-                SR_MATH_NS::Quaternion parentGlobalRot = pParent->GetMatrix().GetQuat();
-                SR_MATH_NS::Quaternion localRot = parentGlobalRot.Inverse() * quaternion;
-                SetRotation(localRot);
-            */
+            SR_MATH_NS::Quaternion parentRot = pParent->GetGlobalRotation();
+            SR_MATH_NS::Quaternion localRot = parentRot.Inverse() * quaternion;
+            SetRotation(localRot);
         }
         else {
-            auto&& matrix = SR_MATH_NS::Matrix4x4::FromScale(SR_MATH_NS::FVector3(1) / m_skew);
-            matrix *= SR_MATH_NS::Matrix4x4::FromQuaternion(quaternion);
-            matrix *= SR_MATH_NS::Matrix4x4::FromScale(m_scale);
-
-            SetRotation(matrix.GetQuat());
+            SetRotation(quaternion);
         }
     }
 
@@ -298,6 +278,20 @@ namespace SR_UTILS_NS {
         //auto&& source = GetMatrix().GetTranslate();
 
         //SetRotation(m_quaternion.LookAt(source - position));
+    }
+
+    SR_MATH_NS::Quaternion Transform3D::GetGlobalRotation() const {
+        if (m_dirtyRotation) SR_UNLIKELY_ATTRIBUTE {
+            if (auto&& pParent = GetParentTransform()) SR_LIKELY_ATTRIBUTE {
+                m_globalRotation = pParent->GetGlobalRotation() * m_quaternion;
+            }
+            else {
+                m_globalRotation = m_quaternion;
+            }
+
+            m_dirtyRotation = false;
+        }
+        return m_globalRotation;
     }
 }
 

@@ -24,9 +24,6 @@ namespace SR_UTILS_NS {
         void RotateAround(const SR_MATH_NS::FVector3& point, const SR_MATH_NS::FVector3& eulers) override;
         void RotateAroundParent(const SR_MATH_NS::FVector3& eulers) override;
 
-        /// Transforms direction from local space to world space
-        SR_NODISCARD SR_MATH_NS::FVector3 TransformDirection(const SR_MATH_NS::FVector3& direction) const;
-
         void SetMatrix(const std::optional<SR_MATH_NS::FVector3>& translation,
                        const std::optional<SR_MATH_NS::Quaternion>& rotation,
                        const std::optional<SR_MATH_NS::FVector3>& scale) override;
@@ -45,6 +42,7 @@ namespace SR_UTILS_NS {
         SR_NODISCARD const SR_MATH_NS::AABB& GetAABB() const override;
 
         SR_NODISCARD SR_MATH_NS::Quaternion GetQuaternion() const override { return m_quaternion; }
+        SR_NODISCARD SR_MATH_NS::Quaternion GetGlobalRotation() const override;
 
         SR_NODISCARD SR_MATH_NS::FVector3 GetTranslation() const override { return m_translation; }
         SR_NODISCARD SR_MATH_NS::FVector3 GetRotation() const override {
@@ -73,6 +71,7 @@ namespace SR_UTILS_NS {
     protected:
         mutable SR_MATH_NS::Matrix4x4 m_localMatrix = SR_MATH_NS::Matrix4x4::Identity();
         mutable SR_MATH_NS::Matrix4x4 m_matrix = SR_MATH_NS::Matrix4x4::Identity();
+        mutable SR_MATH_NS::Quaternion m_globalRotation = SR_MATH_NS::Quaternion::Identity();
         mutable SR_MATH_NS::AABB m_cachedAABB;
         SR_MATH_NS::AABB m_aabb = SR_MATH_NS::AABB::UnitCube();
 

@@ -101,6 +101,16 @@ namespace SR_UTILS_NS {
         return GetTranslation().XY();
     }
 
+    SR_MATH_NS::FVector3 Transform::InverseTransformDirection(const SR_MATH_NS::FVector3& direction) const {
+        SR_TRACY_ZONE;
+        return GetGlobalRotation().Inverse() * direction;
+    }
+
+    SR_MATH_NS::FVector3 Transform::TransformDirection(const SR_MATH_NS::FVector3& direction) const {
+        SR_TRACY_ZONE;
+        return GetGlobalRotation() * direction;
+    }
+
     SR_MATH_NS::FVector3 Transform::GetGlobalTranslation() const {
         SR_TRACY_ZONE;
         return GetMatrix().GetTranslate();
@@ -108,7 +118,8 @@ namespace SR_UTILS_NS {
 
     SR_MATH_NS::Quaternion Transform::GetGlobalRotation() const {
         SR_TRACY_ZONE;
-        return GetMatrix().GetQuat();
+        SRHalt("Transform::GetGlobalRotation() is not implemented!");
+        return SR_MATH_NS::Quaternion::Identity();
     }
 
     SR_MATH_NS::FVector3 Transform::GetTranslation() const {
@@ -169,10 +180,11 @@ namespace SR_UTILS_NS {
         /// а дерево грязное и никто не может запросить актуальную матрицу.
         /// Такие баги надо править со стороны КОМПОНЕНТОВ,
         /// чтобы они при своей инициализации могли запросить перестроение дерева!
-        if (m_dirtyMatrix) {
+        if (m_dirtyMatrix && m_dirtyRotation) {
             return;
         }
         m_dirtyMatrix = true;
+        m_dirtyRotation = true;
         m_aabbDirty = true;
 
         m_gameObject->OnMatrixDirty();

@@ -116,6 +116,7 @@ namespace SR_MATH_NS {
 
         SR_NODISCARD Vector3<int32_t> CastToInt() const noexcept { return Cast<int32_t>(); }
         SR_NODISCARD Vector3<float_t> CastToFloat() const noexcept { return Cast<float_t>(); }
+        SR_NODISCARD Vector3<double_t> CastToDouble() const noexcept { return Cast<double_t>(); }
         SR_NODISCARD Vector3<uint32_t> CastToUInt() const noexcept { return Cast<uint32_t>(); }
 
         SR_NODISCARD T X() const noexcept { return x; }
@@ -226,23 +227,57 @@ namespace SR_MATH_NS {
             return Quaternion(axis, angle);
         }
 
-        SR_NODISCARD T SqrMagnitude() const { return x * x + y * y + z * z; }
+        SR_NODISCARD T SqrMagnitude() const {
+            return static_cast<T>(
+                static_cast<double_t>(x) * static_cast<double_t>(x) +
+                static_cast<double_t>(y) * static_cast<double_t>(y) +
+                static_cast<double_t>(z) * static_cast<double_t>(z)
+            );
+        }
 
-        SR_NODISCARD T Angle(const Vector3<T>& to) const {
+        SR_NODISCARD static Vector3<T> Project(const Vector3<T>& vector, const Vector3<T>& onNormal) {
+            const float_t num1 = Vector3<T>::Dot(onNormal, onNormal);
+            if (static_cast<double_t>(num1) < static_cast<double_t>(1.401298E-45f)) {
+                return Vector3<T>();
+            }
+            float num2 = Vector3<T>::Dot(vector, onNormal);
+            return Vector3<T>(onNormal.x * num2 / num1, onNormal.y * num2 / num1, onNormal.z * num2 / num1);
+        }
+
+        SR_NODISCARD Unit Angle(const Vector3<T>& to) const {
             if constexpr (std::is_same_v<T, bool>) {
                 return static_cast<T>(0); /// NOT SUPPORTED
             }
             else {
+                const Unit num = SR_SQRT(static_cast<double_t>(SqrMagnitude()) * static_cast<double_t>(to.SqrMagnitude()));
+                if (static_cast<double_t>(num) < 1.00000000362749E-15) {
+                    return 0.f;
+                }
+                return static_cast<Unit>(SR_ACOS(static_cast<double_t>(SR_CLAMP(Dot(to) / num, -1.f, 1.f))) * 57.29578f);
+
                 /// sqrt(a) * sqrt(b) = sqrt(a * b) -- valid for real numbers
 
-                const T denominator = static_cast<T>(sqrt(SqrMagnitude() * to.SqrMagnitude()));
-                if (denominator < static_cast<T>(SR_EPSILON_NORMAL_SQRT)) {
-                    return static_cast<T>(0);
-                }
+                //const T denominator = static_cast<T>(sqrt(SqrMagnitude() * to.SqrMagnitude()));
+                //if (denominator < static_cast<T>(SR_EPSILON_NORMAL_SQRT)) {
+                //    return static_cast<T>(0);
+                //}
 
-                const T dot = SR_CLAMP(Dot(to) / denominator, static_cast<T>(-1), static_cast<T>(1));
-                return static_cast<T>(std::acos(dot) * SR_RAD_2_DEG);
+                //const T dot = SR_CLAMP(Dot(to) / denominator, static_cast<T>(-1), static_cast<T>(1));
+                //return static_cast<T>(SR_ACOS(dot) * SR_RAD_2_DEG);
             }
+        }
+
+        SR_NODISCARD static Unit Angle(const Vector3<T>& from, const Vector3<T>& to) {
+            return from.Angle(to);
+        }
+
+        SR_NODISCARD static Unit SignedAngle(const Vector3<T>& from, const Vector3<T>& to, const Vector3<T>& axis) {
+            const Unit num1 = Vector3<T>::Angle(from, to);
+            const Unit num2 = (Unit) ((double) from.y * (double) to.z - (double) from.z * (double) to.y);
+            const Unit num3 = (Unit) ((double) from.z * (double) to.x - (double) from.x * (double) to.z);
+            const Unit num4 = (Unit) ((double) from.x * (double) to.y - (double) from.y * (double) to.x);
+            const Unit num5 = SR_MATH_NS::Sign((Unit) ((double) axis.x * (double) num2 + (double) axis.y * (double) num3 + (double) axis.z * (double) num4));
+            return num1 * num5;
         }
 
         /*SR_NODISCARD Vector3<T> Angle(const Vector3<T>& vector3) {
@@ -325,12 +360,20 @@ namespace SR_MATH_NS {
             return "(" + std::to_string(x) + ", " + std::to_string(y) + ", " + std::to_string(z) + ")";
         }
 
-        SR_NODISCARD T SR_FASTCALL Distance(const Vector3& point) const {
-            return sqrt(
-                    pow(point.x - x, 2) +
-                    pow(point.y - y, 2) +
-                    pow(point.z - z, 2)
-            );
+        SR_NODISCARD Unit SR_FASTCALL Distance(const Vector3& point) const {
+            const Unit num1 = x - point.x;
+            const Unit num2 = y - point.y;
+            const Unit num3 = z - point.z;
+
+            return static_cast<T>(SR_SQRT(
+                static_cast<double_t>(num1) * static_cast<double_t>(num1) +
+                static_cast<double_t>(num2) * static_cast<double_t>(num2) +
+                static_cast<double_t>(num3) * static_cast<double_t>(num3)
+            ));
+        }
+
+        SR_NODISCARD static Unit SR_FASTCALL Distance(const Vector3& a, const Vector3& b) {
+            return a.Distance(b);
         }
 
         SR_NODISCARD Vector3 Direction(const Vector3& point) const {
@@ -493,7 +536,8 @@ namespace SR_MATH_NS {
         }
 
         SR_NODISCARD SR_FORCE_INLINE Vector3<T> SR_FASTCALL Lerp(const Vector3<T>& vector3, float_t t) const noexcept {
-            if constexpr (!std::is_same_v<T, float_t>) {
+            if constexpr (!std::is_same_v<T, float_t> && !std::is_same_v<T, float> && !std::is_same_v<T, double_t> && !std::is_same_v<T, double>) {
+                std::cerr << "Lerp is only supported for floating point types." << std::endl;
                 return *this;
             }
             else {
@@ -517,7 +561,8 @@ namespace SR_MATH_NS {
         }
 
         SR_NODISCARD SR_FORCE_INLINE Vector3<T> SR_FASTCALL Slerp(const Vector3<T>& vector3, float_t t) const noexcept {
-            if constexpr (!std::is_same_v<T, float_t>) {
+            if constexpr (!std::is_same_v<T, float_t> && !std::is_same_v<T, float> && !std::is_same_v<T, double_t> && !std::is_same_v<T, double>) {
+                std::cerr << "Slerp is only supported for floating point types." << std::endl;
                 return *this;
             }
             else {
@@ -546,35 +591,31 @@ namespace SR_MATH_NS {
 
         SR_NODISCARD Vector3<T> Normalize() const {
             if constexpr (std::is_same_v<T, bool>) {
+                std::cerr << "Normalize is not supported for boolean type." << std::endl;
                 return *this; /// NOT SUPPORTED
             }
             else {
-                auto&& value = x * x + y * y + z * z;
-                const T len = static_cast<T>(SR_SQRT(value));
-                Vector3 vec3 = *this;
-
-                if (len != static_cast<T>(0.)) {
-                    vec3.x /= len;
-                    vec3.y /= len;
-                    vec3.z /= len;
-                }
-
-                return vec3;
+                const Unit num = Magnitude();
+                return static_cast<double_t>(num) > 9.99999974737875E-06 ? *this / num : Vector3<T>();
             }
         }
 
         SR_NODISCARD Vector3<T> NormalizeSafe() const {
             if constexpr (std::is_same_v<T, bool>) {
+                std::cerr << "NormalizeSafe is not supported for boolean type." << std::endl;
                 return *this; /// NOT SUPPORTED
             }
             else {
-                auto&& value = x * x + y * y + z * z;
+                const double_t num = Magnitude();
+                return static_cast<double_t>(num) > 9.99999974737875E-06 ? *this / num : Vector3<T>();
 
-                if (value > static_cast<T>(1e-8f)) {
-                    const T len = static_cast<T>(SR_SQRT(value));
+                /*const float_t sqrMag = SqrMagnitude();
+
+                if (sqrMag > static_cast<T>(SR_KINDA_SMALL_NUMBER_EPSILON)) {
+                    const T len = static_cast<T>(SR_SQRT(sqrMag));
                     Vector3 vec3 = *this;
 
-                    if (len != static_cast<T>(0.)) {
+                    if (len > static_cast<T>(SR_KINDA_SMALL_NUMBER_EPSILON)) {
                         vec3.x /= len;
                         vec3.y /= len;
                         vec3.z /= len;
@@ -583,7 +624,7 @@ namespace SR_MATH_NS {
                     return vec3;
                 }
 
-                return Vector3<T>::UnitZ();
+                return Vector3<T>::UnitZ();*/
             }
         }
 
@@ -610,12 +651,7 @@ namespace SR_MATH_NS {
         }
 
         SR_NODISCARD SR_FORCE_INLINE T Length() const {
-            if constexpr (std::is_same_v<T, float_t> || std::is_same_v<T, float>) {
-                return static_cast<T>(sqrtf(x * x + y * y + z * z));
-            }
-            else {
-                return static_cast<T>(sqrt(x * x + y * y + z * z));
-            }
+            return Magnitude();
         }
 
         SR_NODISCARD Vector3 Replace(int from, int to) const {
@@ -625,20 +661,16 @@ namespace SR_MATH_NS {
                     z == from ? to : z);
         }
 
-        SR_NODISCARD Unit LengthSqr() const {
-            return x * x + y * y + z * z;
-        }
-
         SR_NODISCARD Vector3<T> Abs() const {
             return Vector3(static_cast<T>(SR_ABS(x)), static_cast<T>(SR_ABS(y)), static_cast<T>(SR_ABS(z)));
         }
 
         SR_NODISCARD Vector3<T> Sin() const {
-            return Vector3(static_cast<T>(sin(x)), static_cast<T>(sin(y)), static_cast<T>(sin(z)));
+            return Vector3(SR_SIN(x), SR_SIN(y), SR_SIN(z));
         }
 
         SR_NODISCARD Vector3<T> Cos() const {
-            return Vector3(static_cast<T>(cos(x)), static_cast<T>(cos(y)), static_cast<T>(cos(z)));
+            return Vector3(SR_COS(x), SR_COS(y), SR_COS(z));
         }
 
         SR_NODISCARD Vector3<T> Round() const {
@@ -649,13 +681,20 @@ namespace SR_MATH_NS {
             return Vector3(FixAxis(x), FixAxis(y), FixAxis(z));
         }
 
-        SR_NODISCARD T Dot(const Vector3<T>& p_b) const { return x * p_b.x + y * p_b.y + z * p_b.z; }
+        SR_NODISCARD T Dot(const Vector3<T>& p_b) const {
+            return static_cast<T>(
+                static_cast<double_t>(x) * static_cast<double_t>(p_b.x) +
+                static_cast<double_t>(y) * static_cast<double_t>(p_b.y) +
+                static_cast<double_t>(z) * static_cast<double_t>(p_b.z)
+            );
+        }
 
         SR_NODISCARD Vector3<T> Cross(const Vector3<T>& p_b) const {
             Vector3 ret(
-                    (y * p_b.z) - (z * p_b.y),
-                    (z * p_b.x) - (x * p_b.z),
-                    (x * p_b.y) - (y * p_b.x));
+                static_cast<T>(static_cast<double_t>(y) * static_cast<double_t>(p_b.z) - (static_cast<double_t>(z) * static_cast<double_t>(p_b.y))),
+                static_cast<T>(static_cast<double_t>(z) * static_cast<double_t>(p_b.x) - (static_cast<double_t>(x) * static_cast<double_t>(p_b.z))),
+                static_cast<T>(static_cast<double_t>(x) * static_cast<double_t>(p_b.y) - (static_cast<double_t>(y) * static_cast<double_t>(p_b.x)))
+            );
 
             return ret;
         }
@@ -775,21 +814,19 @@ namespace SR_MATH_NS {
         SR_NODISCARD glm::vec3 ToGLM() const noexcept {
             return *reinterpret_cast<glm::vec3*>((void*)this);
         }
+
         static Unit Magnitude(Vector3 vec) {
-            return sqrt(SR_SQUARE(vec.x) + SR_SQUARE(vec.y) + SR_SQUARE(vec.z));
+            return vec.Magnitude();
         }
 
         Unit Magnitude() const {
-            return sqrt(SR_SQUARE(x) + SR_SQUARE(y) + SR_SQUARE(z));
+            return SR_SQRT(SqrMagnitude());
         }
 
         static T Dot(Vector3 lhs, Vector3 rhs) { return lhs.x * rhs.x + lhs.y * rhs.y + lhs.z * rhs.z; }
+
         static Vector3 Cross(const Vector3 &p_a, const Vector3 &p_b) {
-            Vector3 ret(
-                    (p_a.y * p_b.z) - (p_a.z * p_b.y),
-                    (p_a.z * p_b.x) - (p_a.x * p_b.z),
-                    (p_a.x * p_b.y) - (p_a.y * p_b.x));
-            return ret;
+            return p_a.Cross(p_b);
         }
 
         static T FixAxis(T axis) {
@@ -805,6 +842,7 @@ namespace SR_MATH_NS {
     };
 
     typedef Vector3<Unit> FVector3;
+    typedef Vector3<double_t> DVector3;
     typedef Vector3<int32_t> IVector3;
     typedef Vector3<uint32_t> UVector3;
     typedef Vector3<bool> BVector3;
@@ -857,6 +895,8 @@ namespace SR_MATH_NS {
                 (a.x * b.y) - (a.y * b.x)
         );
     }
+
+    FVector3 GetPerpendicularVector(const FVector3& direction);
 
     FVector3 ProjectOnPlane(
         const FVector3& point,
