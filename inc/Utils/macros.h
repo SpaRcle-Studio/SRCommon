@@ -334,7 +334,7 @@
     #define SR_DLL_API_EXPORT __declspec(dllexport)
 #endif
 
-#ifdef SR_ENGINE_SCRIPT_API_MODE
+#if defined(SR_ENGINE_SCRIPT_API_MODE) || defined(SR_ENGINE_CODEGEN_DLL_API_DISABLE)
     #define SR_CODEGEN_DLL_API_IMPORT
     #define SR_CODEGEN_DLL_API_EXPORT
 #else
@@ -400,5 +400,8 @@ namespace SR_UTILS_NS {
 #include <cstdlib>
 
 #include <Utils/Memory/Allocator.h>
+
+#define SR_CODEGEN_DLL_API_EXPORT_UTILS_MODULE SR_CODEGEN_DLL_API_EXPORT
+#define SR_CODEGEN_DLL_API_IMPORT_UTILS_MODULE SR_CODEGEN_DLL_API_IMPORT
 
 #endif //SR_COMMON_MACROS_H
