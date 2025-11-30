@@ -5,9 +5,9 @@
 #ifndef SR_ENGINE_COMMON_REFLECTION_SR_CLASS_UTILS_H
 #define SR_ENGINE_COMMON_REFLECTION_SR_CLASS_UTILS_H
 
-#include <Utils/Serialization/Serializable.h>
 #include <Utils/Reflection/Property.h>
 #include <Utils/TypeTraits/SRClass.h>
+#include <Utils/TypeTraits/Factory.h>
 
 namespace SR_UTILS_NS::Reflection {
     /*static void ForEachSRClass(const SR_UTILS_NS::Reflection::Value& value, const SR_HTYPES_NS::Function<void(SRClass&)>& callback) {

@@ -5,10 +5,14 @@
 #ifndef SR_ENGINE_UTILS_REFLECTION_PROPERTY_H
 #define SR_ENGINE_UTILS_REFLECTION_PROPERTY_H
 
-#include <Utils/Reflection/Value.h>
 #include <Utils/Common/StringAtomLiterals.h>
+#include <Utils/TypeTraits/TypeTraits.h>
+#include <Utils/Types/RawPointerHolder.h>
+#include <Utils/Types/SharedPtr.h>
 
 namespace SR_UTILS_NS::Reflection {
+    class Value;
+
     template<typename T>
     constexpr bool ContainsSRClassV = IsSRClassV<InnerTypeT<T>>;
 
@@ -66,7 +70,7 @@ namespace SR_UTILS_NS::Reflection {
     public:
         Property() = default;
 
-        SR_NODISCARD Value Get(SRClass* pOwner) const noexcept { return m_getCallback(pOwner); }
+        SR_NODISCARD Value Get(SRClass* pOwner) const noexcept;
         void Set(SRClass* pOwner, const Value& value) const noexcept { m_setCallback(pOwner, value); }
 
         void OnChanged(SRClass* pOwner) const noexcept {
@@ -77,8 +81,8 @@ namespace SR_UTILS_NS::Reflection {
         SR_NODISCARD StringAtom GetName() const noexcept { return m_name; }
         SR_NODISCARD StringAtom GetSerializeName() const noexcept { return m_serializeName; }
         SR_NODISCARD PropertyPublicity GetPublicity() const noexcept { return m_publicity; }
-        SR_NODISCARD const Value& GetDefaultValue() const noexcept { return m_defaultValue; }
-        SR_NODISCARD const Value& GetResetValue() const noexcept { return m_resetValue; }
+        SR_NODISCARD const Value& GetDefaultValue() const noexcept;
+        SR_NODISCARD const Value& GetResetValue() const noexcept;
         SR_NODISCARD const EditorPropertyParams& GetEditorParams() const noexcept { return m_editorParams; }
         SR_NODISCARD bool HasExplicitSetter() const noexcept { return m_hasExplicitSetter; }
 
@@ -107,9 +111,9 @@ namespace SR_UTILS_NS::Reflection {
         Property& SetPublicity(PropertyPublicity publicity) noexcept { m_publicity = publicity; return *this; }
         Property& SetSetter(SetCallbackFn callback) noexcept { m_setCallback = callback; return *this; }
         Property& SetGetter(GetCallbackFn callback) noexcept { m_getCallback = callback; return *this; }
-        Property& SetDefaultValue(Value&& value) noexcept { m_defaultValue = std::move(value); return *this; }
+        Property& SetDefaultValue(Value&& value) noexcept;
         Property& SetChangeCallback(ChangeCallbackFn callback) noexcept { m_onChangeCallback = callback; return *this; }
-        Property& SetResetValue(Value&& value) noexcept { m_resetValue = std::move(value); return *this; }
+        Property& SetResetValue(Value&& value) noexcept;
         Property& SetEditorParams(const EditorPropertyParams& params) noexcept { m_editorParams = params; return *this; }
         Property& SetPropertyCondition(PropertyActiveCallbackFn callback) noexcept { m_propertyActiveCallback = callback; return *this; }
         Property& SetHasExplicitSetter(bool hasExplicitSetter) noexcept { m_hasExplicitSetter = hasExplicitSetter; return *this; }
@@ -132,8 +136,8 @@ namespace SR_UTILS_NS::Reflection {
 
     private:
         EditorPropertyParams m_editorParams;
-        Reflection::Value m_defaultValue;
-        Reflection::Value m_resetValue;
+        mutable SR_HTYPES_NS::RawPointerHolder<Reflection::Value> m_defaultValue;
+        mutable SR_HTYPES_NS::RawPointerHolder<Reflection::Value> m_resetValue;
         SR_UTILS_NS::StringAtom m_name;
         SR_UTILS_NS::StringAtom m_serializeName;
         PropertyPublicity m_publicity = PropertyPublicity::Public;
