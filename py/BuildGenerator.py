@@ -49,7 +49,7 @@ def generate_unity_build(module_name: str, out_dir: Path, cxx_files: list, cpp_f
             content += f'#include "{file}"\n'
 
         write_if_changed(unity_path, content)
-        result += f"{normalize_path(unity_sources_path.joinpath(f"srinc_{i}.cxx"))}\n"
+        result += str(normalize_path(unity_sources_path.joinpath(f"srinc_{i}.cxx"))) + "\n"
 
     write_if_changed(out_dir / "main.srinc", result)
 
