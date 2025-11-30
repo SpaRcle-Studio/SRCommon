@@ -93,6 +93,7 @@ namespace SR_UTILS_NS {
         SR_NODISCARD static ThreadsWorker::Ptr Load(const SR_UTILS_NS::Path& path);
 
         SR_NODISCARD ThreadWorkerState GetState(SR_UTILS_NS::StringAtom name) const;
+        SR_NODISCARD const ThreadWorkerStateBase::Ptr& GetWorkerState(SR_UTILS_NS::StringAtom name) const;
         SR_NODISCARD bool IsActive() const { return m_isActive; }
         SR_NODISCARD SR_HTYPES_NS::DataStorage& GetContext() { return m_context; }
         SR_NODISCARD bool IsAlive() const;

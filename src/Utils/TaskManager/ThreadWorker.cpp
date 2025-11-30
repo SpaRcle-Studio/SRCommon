@@ -350,6 +350,16 @@ namespace SR_UTILS_NS {
         return pIt->second->GetState();
     }
 
+    const ThreadWorkerStateBase::Ptr& ThreadsWorker::GetWorkerState(SR_UTILS_NS::StringAtom name) const {
+        auto&& pIt = m_states.find(name);
+        static ThreadWorkerStateBase::Ptr nullPtr = nullptr;
+        if (pIt == m_states.end()) {
+            return nullPtr;
+        }
+
+        return pIt->second;
+    }
+
     bool ThreadsWorker::IsAlive() const {
         return m_isAlive;
     }
