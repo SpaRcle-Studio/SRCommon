@@ -6,7 +6,6 @@
 #define SR_ENGINE_STRING_ATOM_H
 
 #include <Utils/stdInclude.h>
-#include <Utils/Common/Hashes.h>
 
 namespace SR_UTILS_NS {
     class StringHashInfo;

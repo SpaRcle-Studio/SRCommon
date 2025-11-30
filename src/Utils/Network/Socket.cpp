@@ -5,6 +5,7 @@
 #include <Utils/Network/Socket.h>
 #include <Utils/Network/Context.h>
 #include <Utils/Network/Acceptor.h>
+#include <Utils/Debug.h>
 
 namespace SR_NETWORK_NS {
     Socket::Socket(SocketType type, Context::Ptr context)

@@ -4,6 +4,7 @@
 
 #include <Utils/Game/LookAtComponent.h>
 #include <Utils/ECS/Transform3D.h>
+#include <Utils/ECS/GameObject.h>
 #include <Utils/ECS/ComponentManager.h>
 
 #include <Codegen/LookAtComponent.generated.hpp>
@@ -11,12 +12,10 @@
 namespace SR_UTILS_NS {
     LookAtComponent::LookAtComponent()
         : Super()
-    {
-        m_target.SetOwner(GetThis());
-    }
+    { }
 
     void LookAtComponent::Update(float_t dt) {
-        auto&& pTarget = m_target.GetGameObject();
+        auto&& pTarget = m_target.Get();
         if (!pTarget) {
             Super::Update(dt);
             return;

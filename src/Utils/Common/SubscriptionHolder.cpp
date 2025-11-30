@@ -3,6 +3,7 @@
 //
 
 #include <Utils/Common/SubscriptionHolder.h>
+#include <Utils/Debug.h>
 
 namespace SR_UTILS_NS {
     void SubscriptionMessage::SetInt(const StringAtom id, const uint64_t value) { m_ints[id] = value; }
@@ -28,6 +29,10 @@ namespace SR_UTILS_NS {
 
     const SR_UTILS_NS::Path& SubscriptionMessage::GetPathRef(const StringAtom id) const {
         return GetValueRef<SR_UTILS_NS::Path>(id, m_paths);
+    }
+
+    void SubscriptionMessage::PrintError(const char* format, const StringAtom id) {
+        SRHalt(SR_UTILS_NS::Format(format, id.c_str()));
     }
 
     SubscriptionMessage::SubscriptionMessage() = default;

@@ -82,26 +82,6 @@ namespace SR_UTILS_NS {
         }
     }
 
-    EntityRefProperty& PropertyContainer::AddEntityRefProperty(SR_UTILS_NS::StringAtom name, const EntityRefUtils::OwnerRef& owner) {
-        if (auto&& pProperty = Find(name)) {
-            SRHalt("Properties::AddEntityRefProperty() : property \"" + name.ToStringRef() + "\" already exists!");
-            return *dynamic_cast<EntityRefProperty*>(pProperty);
-        }
-
-        auto&& pProperty = new EntityRefProperty();
-
-        pProperty->SetName(name);
-        pProperty->GetEntityRef().SetOwner(owner);
-
-        PropertyInfo propertyInfo;
-        propertyInfo.pProperty = pProperty;
-        m_properties.emplace_back(propertyInfo);
-
-        OnPropertyAdded(pProperty);
-
-        return *pProperty;
-    }
-
     void PropertyContainer::LoadProperty(MarshalRef marshal) noexcept {
         if (auto&& pBlock = LoadPropertyBase(marshal)) {
             auto&& count = pBlock->Read<uint16_t>();

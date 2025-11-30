@@ -4,6 +4,7 @@
 
 #include <Utils/Resources/ResourceEmbedder.h>
 #include <Utils/Common/StringAtomLiterals.h>
+#include <Utils/Common/LexicalCast.h>
 #include <Utils/Debug.h>
 
 namespace SR_UTILS_NS {

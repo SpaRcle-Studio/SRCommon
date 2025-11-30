@@ -6,11 +6,6 @@
 #define SR_ENGINE_UTILS_ENTITY_H
 
 #include <Utils/Serialization/Serializable.h>
-#include <Utils/ECS/EntityRefOld.h>
-#include <Utils/Common/Numeric.h>
-#include <Utils/Types/SharedPtr.h>
-#include <Utils/TypeTraits/Properties.h>
-#include <Utils/TypeTraits/SRClass.h>
 
 namespace SR_UTILS_NS {
     class Entity;
@@ -40,7 +35,6 @@ namespace SR_UTILS_NS {
     public:
         SR_NODISCARD bool IsEntityRegistered() const noexcept { return m_pEntityController; }
         SR_NODISCARD EntityId GetEntityId() const { return m_entityId; }
-        SR_NODISCARD EntityRefOld GetRef() const noexcept { return EntityRefOld(GetThis()); }
         SR_NODISCARD Entity::Ptr GetEntity() const noexcept { return GetThis(); }
 
         void SetEntityController(EntityController* pEntityController);

@@ -6,7 +6,6 @@
 #define SR_ENGINE_ENUM_REFLECTOR_H
 
 #include <Utils/Common/Singleton.h>
-#include <Utils/Common/HashManager.h>
 #include <Utils/Types/Map.h>
 #include <Utils/Types/StringAtom.h>
 #include <Utils/Types/Function.h>
@@ -97,6 +96,7 @@ namespace SR_UTILS_NS {
     private:
         static bool IsIdentChar(char c);
         static void ErrorInternal(const std::string& msg);
+        static uint64_t GetAndRegisterHash(const char* name);
 
     private:
         struct Data
@@ -120,7 +120,7 @@ namespace SR_UTILS_NS {
         m_integralTypeSize = sizeof(Integral);
 
         m_data->enumName = name;
-        m_data->hashName = SR_HASH_STR_REGISTER(name);
+        m_data->hashName = EnumReflector::GetAndRegisterHash(name);
         m_data->values.resize(count);
         m_data->names.resize(count);
 

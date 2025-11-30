@@ -10,18 +10,17 @@
 
 #include <Utils/Platform/Stacktrace.h>
 
-#include <Utils/Types/StringAtom.h>
 #include <Utils/Types/SafePtrLockGuard.h>
 #include <Utils/Types/Map.h>
 
 #define SR_REGISTER_SINGLETON(className)                                                                                \
     private:                                                                                                            \
         friend class SR_UTILS_NS::Singleton<className>;                                                                 \
-        static SR_UTILS_NS::StringAtom GetStaticSingletonName() {                                                       \
-            static SR_UTILS_NS::StringAtom staticSingletonName = #className;                                            \
-            return staticSingletonName;                                                                                 \
+        static uint64_t GetStaticSingletonHashName() {                                                                  \
+            static uint64_t staticName = SR_UTILS_NS::SingletonManager::GetOrAddSingletonHashName(#className);          \
+            return staticName;                                                                                          \
         }                                                                                                               \
-        SR_UTILS_NS::StringAtom GetSingletonName() const noexcept final { return GetStaticSingletonName(); };           \
+        uint64_t GetSingletonHashName() const noexcept final { return GetStaticSingletonHashName(); };                  \
 
 #define SR_REGISTER_TEMPLATE_SINGLETON(className, T)                                                                    \
     private:                                                                                                            \
@@ -46,7 +45,7 @@ namespace SR_UTILS_NS {
         SingletonBase();
 
     protected:
-        virtual StringAtom GetSingletonName() const noexcept = 0;
+        virtual uint64_t GetSingletonHashName() const noexcept = 0;
         virtual void OnSingletonDestroy();
         virtual void InitSingleton();
         virtual bool IsSingletonCanBeDestroyed() const;
@@ -58,22 +57,27 @@ namespace SR_UTILS_NS {
 
     class SR_COMMON_DLL_API SingletonManager : public NonCopyable {
     public:
-        void* GetSingleton(StringAtom name) noexcept;
-        std::recursive_mutex& GetCreationMutex(StringAtom name);
+        void* GetSingleton(uint64_t hashName) noexcept;
+        std::recursive_mutex& GetCreationMutex(uint64_t hashName);
         void DestroyAll();
-        void Remove(StringAtom name);
+        void Remove(uint64_t hashName);
 
         template<typename T> void Register(Singleton<T>* pSingleton);
 
+        SR_NODISCARD static uint64_t GetOrAddSingletonHashName(const char* name);
+
+    private:
+        void RegisterInternal(uint64_t hashName, void* pSingleton, SingletonBase* pSingletonBase);
+
     private:
         struct SingletonInfo {
-            StringAtom name;
+            uint64_t hashName = 0;
             void* pSingleton = nullptr;
             SingletonBase* pSingletonBase = nullptr;
         };
-        ska::flat_hash_map<StringAtom, SingletonInfo> m_singletons;
+        ska::flat_hash_map<uint64_t, SingletonInfo> m_singletons;
         mutable std::recursive_mutex m_mutex;
-        std::map<StringAtom, std::recursive_mutex> m_creationMutexes;
+        std::map<uint64_t, std::recursive_mutex> m_creationMutexes;
 
     };
 
@@ -102,7 +106,7 @@ namespace SR_UTILS_NS {
     /// =============================================== Implementation =================================================
 
     template<typename T> Singleton<T> *Singleton<T>::GetSingleton() noexcept {
-        void* p = GetSingletonManager()->GetSingleton(T::GetStaticSingletonName());
+        void* p = GetSingletonManager()->GetSingleton(T::GetStaticSingletonHashName());
         return reinterpret_cast<Singleton<T>*>(p);
     }
 
@@ -129,7 +133,7 @@ namespace SR_UTILS_NS {
         auto&& pSingleton = GetSingleton();
 
         if (!pSingleton) {
-            std::lock_guard lock(GetSingletonManager()->GetCreationMutex(T::GetStaticSingletonName()));
+            std::lock_guard lock(GetSingletonManager()->GetCreationMutex(T::GetStaticSingletonHashName()));
 
             pSingleton = GetSingleton();
 
@@ -151,7 +155,7 @@ namespace SR_UTILS_NS {
             }
 
             pSingleton->OnSingletonDestroy();
-            GetSingletonManager()->Remove(T::GetStaticSingletonName());
+            GetSingletonManager()->Remove(T::GetStaticSingletonHashName());
             delete pSingleton;
         }
     }
@@ -177,11 +181,7 @@ namespace SR_UTILS_NS {
 
     template<typename T> void SingletonManager::Register(Singleton<T> *pSingleton) {
         std::lock_guard lock(m_mutex);
-        auto&& name = pSingleton->GetSingletonName();
-
-        m_singletons[name].pSingleton = (void*)pSingleton;
-        m_singletons[name].pSingletonBase = dynamic_cast<SingletonBase*>(pSingleton);
-        m_singletons[name].name = name;
+        RegisterInternal(pSingleton->GetSingletonHashName(), (void*)pSingleton, dynamic_cast<SingletonBase*>(pSingleton));
     }
 }
 

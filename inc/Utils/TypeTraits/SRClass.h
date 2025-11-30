@@ -6,9 +6,7 @@
 #define SR_ENGINE_UTILS_TYPE_TRAITS_SR_CLASS_H
 
 #include <Utils/Common/Enumerations.h>
-#include <Utils/Types/Marshal.h>
-#include <Utils/TypeTraits/ClassDB.h>
-#include <Utils/TypeTraits/SRClassMeta.h>
+#include <Utils/TypeTraits/SRClassMacro.h>
 
 namespace SR_UTILS_NS {
     class SRClassMeta;

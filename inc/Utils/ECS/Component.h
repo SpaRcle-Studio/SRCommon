@@ -6,17 +6,6 @@
 #define SR_ENGINE_UTILS_COMPONENT_H
 
 #include <Utils/ECS/Entity.h>
-#include <Utils/Math/Vector3.h>
-#include <Utils/Types/SafePointer.h>
-#include <Utils/Types/SharedPtr.h>
-#include <Utils/Common/Singleton.h>
-#include <Utils/Common/Hashes.h>
-#include <Utils/Common/StringUtils.h>
-#include <Utils/Types/Marshal.h>
-#include <Utils/Types/SafeVariable.h>
-#include <Utils/Common/CollisionData.h>
-#include <Utils/Types/SharedPtr.h>
-#include <Utils/TypeTraits/Properties.h>
 
 /**
  * Awake -> OnEnabled -> Start -> Update -> FixedUpdate
@@ -32,7 +21,14 @@ public:                                                                         
     SR_NODISCARD const SR_UTILS_NS::StringAtom& GetComponentName() const override { return name::COMPONENT_NAME; }      \
 private:                                                                                                                \
 
+namespace SR_WORLD_NS {
+    class Scene;
+}
+
 namespace SR_UTILS_NS {
+    struct CollisionData;
+
+    class SceneObject;
     class ComponentManager;
     class Component;
     class IComponentable;
@@ -117,7 +113,7 @@ namespace SR_UTILS_NS {
         SR_NODISCARD bool IsPausedMode() const;
 
         SR_NODISCARD virtual bool ExecuteInEditMode() const;
-        SR_NODISCARD virtual Math::FVector3 GetBarycenter() const;
+        SR_NODISCARD virtual SR_MATH_NS::FVector3 GetBarycenter() const;
         SR_NODISCARD Component* BaseComponent() noexcept;
         SR_NODISCARD IComponentable* GetParent() const;
         SR_NODISCARD IComponentable* TryGetParent() const;
@@ -148,7 +144,7 @@ namespace SR_UTILS_NS {
 
         int32_t m_indexInSceneUpdater = SR_ID_INVALID;
 
-        SceneObjectPtr m_sceneObject = nullptr;
+        SceneObjectPtr m_sceneObject;
         IComponentable* m_parent = nullptr;
         SR_WORLD_NS::Scene* m_scene = nullptr;
 

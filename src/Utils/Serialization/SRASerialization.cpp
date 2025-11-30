@@ -4,6 +4,7 @@
 
 #include <Utils/Common/ToString.h>
 #include <Utils/Common/Features.h>
+#include <Utils/Common/LexicalCast.h>
 #include <Utils/FileSystem/FileSystem.h>
 #include <Utils/Serialization/SRASerialization.h>
 

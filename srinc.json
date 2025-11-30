@@ -11,6 +11,11 @@
         "src/Utils/Platform/MessageBox",
         "src/Utils/Platform/PlatformAndroid.cpp",
         "src/Utils/Platform/PlatformLinux.cpp",
-        "src/Utils/Platform/PlatformWindows.cpp"
+        "src/Utils/Platform/PlatformWindows.cpp",
+
+        "src/Utils/ECS/EntityRefOld.cpp",
+        "src/Utils/World/Observer.cpp",
+        "src/Utils/World/Region.cpp",
+        "src/Utils/World/Chunk.cpp"
     ]
 }

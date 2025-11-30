@@ -4,6 +4,7 @@
 
 #include <Utils/Network/PeerToPeer.h>
 #include <Utils/Network/Utils.h>
+#include <Utils/Debug.h>
 
 namespace SR_NETWORK_NS {
     PeerToPeer::PeerToPeer(SocketType type, Context::Ptr pContext, std::string address, uint16_t port)

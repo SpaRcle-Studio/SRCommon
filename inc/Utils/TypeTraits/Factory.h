@@ -5,10 +5,9 @@
 #ifndef SR_COMMON_TYPE_TRAITS_FACTORY_H
 #define SR_COMMON_TYPE_TRAITS_FACTORY_H
 
-#include <Utils/Common/Singleton.h>
 #include <Utils/Common/StringAtomLiterals.h>
 #include <Utils/Types/SharedPtr.h>
-#include <Utils/TypeTraits/SRClassMeta.h>
+#include <Utils/Profile/TracyContext.h>
 
 namespace SR_UTILS_NS {
     class SRClassMeta;
@@ -18,10 +17,7 @@ namespace SR_UTILS_NS {
         virtual ~BaseFactory() = default;
 
         SR_NODISCARD virtual const SRClassMeta* GetType(SR_UTILS_NS::StringAtom name) const = 0;
-
-        SR_NODISCARD bool IsRegistered(const SRClassMeta* pMeta) const {
-            return pMeta && GetType(pMeta->GetFactoryName()) == pMeta;
-        }
+        SR_NODISCARD bool IsRegistered(const SRClassMeta* pMeta) const;
     };
 
     class SR_COMMON_DLL_API Factory : public BaseFactory {

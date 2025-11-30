@@ -6,6 +6,7 @@
 #include <Utils/Network/Acceptor.h>
 #include <Utils/Network/Socket.h>
 #include <Utils/Network/PeerToPeer.h>
+#include <Utils/Debug.h>
 
 #ifdef SR_COMMON_ASIO
     #include <Utils/Network/Asio/AsioContext.h>

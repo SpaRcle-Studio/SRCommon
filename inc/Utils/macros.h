@@ -211,6 +211,8 @@
 
 #define SR_FAST_CONSTRUCTOR SR_FORCE_INLINE SR_CONSTEXPR
 
+#define SR_MAKE_ASSERT_MSG(msg) (msg).append("\nFile: ").append(__FILE__).append("\nLine: ").append(std::to_string(__LINE__))
+
 #ifdef SR_USE_VULKAN
     #define VK_PROTOTYPES
 #endif

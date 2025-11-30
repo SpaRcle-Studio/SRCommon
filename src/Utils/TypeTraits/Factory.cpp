@@ -3,6 +3,8 @@
 //
 
 #include <Utils/TypeTraits/Factory.h>
+#include <Utils/TypeTraits/SRClassMeta.h>
+#include <Utils/Debug.h>
 
 namespace SR_UTILS_NS {
     Factory& Factory::Instance() noexcept {
@@ -124,5 +126,9 @@ namespace SR_UTILS_NS {
         }
         SR_PLATFORM_NS::WriteConsoleError(std::string(message).append("\n"));
         SR_MAKE_BREAKPOINT;
+    }
+
+    bool BaseFactory::IsRegistered(const SRClassMeta* pMeta) const {
+        return pMeta && GetType(pMeta->GetFactoryName()) == pMeta;
     }
 }

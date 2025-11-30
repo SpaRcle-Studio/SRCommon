@@ -5,10 +5,9 @@
 #ifndef SR_ENGINE_SHARED_PTR_H
 #define SR_ENGINE_SHARED_PTR_H
 
-#include <Utils/Common/StringFormat.h>
+#include <Utils/Common/AssertFwd.h>
 #include <Utils/Types/Function.h>
 #include <Utils/Common/TypeInfo.h>
-#include <Utils/Debug.h>
 #include <Utils/Platform/Platform.h>
 #include <Utils/TypeTraits/SRClass.h>
 #include <Utils/TypeTraits/TypeTraits.h>

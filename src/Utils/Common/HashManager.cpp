@@ -3,7 +3,9 @@
 //
 
 #include <Utils/Common/HashManager.h>
-#include <Utils/Types/Thread.h>
+#include <Utils/Common/Hashes.h>
+#include <Utils/Types/StringAtom.h>
+#include <Utils/Types/LockGuard.h>
 
 namespace SR_UTILS_NS {
     HashManager& HashManager::Instance() {

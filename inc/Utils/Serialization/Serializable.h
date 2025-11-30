@@ -6,7 +6,6 @@
 #define SR_ENGINE_UTILS_SERIALIZABLE_H
 
 #include <Utils/TypeTraits/SRClass.h>
-#include <Utils/TypeTraits/Factory.h>
 
 #include <Utils/Serialization/Serialization.h>
 

@@ -5,16 +5,9 @@
 #ifndef SMARTPOINTER_SAFEPOINTER_H
 #define SMARTPOINTER_SAFEPOINTER_H
 
-#include <Utils/Common/StringFormat.h>
 #include <Utils/Types/Function.h>
 #include <Utils/Profile/TracyContext.h>
-#include <Utils/Types/SharedPtr.h>
-
-#define SR_SAFE_PTR_FORWARD_DECLARATION(className) \
-    namespace SR_HTYPES_NS { \
-        template<class T = className> class SafePtr; \
-    } \
-
+#include <Utils/Common/AssertFwd.h>
 
 namespace SR_HTYPES_NS {
     #define SR_NEW_SAFE_PTR() {                              \

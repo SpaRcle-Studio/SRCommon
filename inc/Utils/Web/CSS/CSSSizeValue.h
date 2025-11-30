@@ -9,6 +9,7 @@
 #include <Utils/Web/CSS/CSSOptional.h>
 #include <Utils/Math/Vector2.h>
 #include <Utils/Common/Enumerations.h>
+#include <Utils/Common/LexicalCast.h>
 #include <Utils/Debug.h>
 
 namespace SR_UTILS_NS::Web {

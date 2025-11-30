@@ -87,7 +87,7 @@ namespace SR_UTILS_NS {
 
         auto&& pSettings = &Singleton<T>::Instance();
 
-        GetSingletonManager()->Remove(T::GetStaticSingletonName());
+        GetSingletonManager()->Remove(T::GetStaticSingletonHashName());
 
         if (!pSettings->IsRegistered()) {
             return;

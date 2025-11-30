@@ -5,11 +5,12 @@
 #ifndef SR_ENGINE_HASH_MANAGER_H
 #define SR_ENGINE_HASH_MANAGER_H
 
-#include <Utils/Common/Hashes.h>
-#include <Utils/Common/Singleton.h>
+#include <Utils/Common/NonCopyable.h>
 #include <Utils/Types/Map.h>
 
 namespace SR_UTILS_NS {
+    class StringAtom;
+
     struct StringHashInfo {
         std::string data;
         std::string_view view;

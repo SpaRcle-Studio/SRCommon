@@ -5,6 +5,7 @@
 #include <Utils/Types/Stream.h>
 #include <Utils/Common/StringUtils.h>
 #include <Utils/Debug.h>
+#include <Utils/Profile/TracyContext.h>
 
 namespace SR_HTYPES_NS {
     Stream::Stream(const char* pData, uint64_t size, bool copy)

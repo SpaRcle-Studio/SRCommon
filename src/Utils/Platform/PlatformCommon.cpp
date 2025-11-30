@@ -5,6 +5,7 @@
 #include <Utils/Debug.h>
 #include <Utils/Platform/Platform.h>
 #include <Utils/Common/CLIManager.h>
+#include <Utils/Profile/TracyContext.h>
 
 namespace SR_PLATFORM_NS {
     bool IsMobilePlatform() {

@@ -5,18 +5,18 @@
 #ifndef SR_COMMON_STRING_ATOM_LITERALS_H
 #define SR_COMMON_STRING_ATOM_LITERALS_H
 
-#include <Utils/Common/HashManager.h>
 #include <Utils/Common/StringFormat.h>
 
-SR_INLINE SR_UTILS_NS::StringAtom operator"" _atom(const char* str, size_t) {
-    return SR_UTILS_NS::StringAtom(str);
+namespace SR_UTILS_NS {
+    class StringAtom;
 }
 
-SR_INLINE uint64_t operator"" _atom_hash(const char* str, size_t) {
-    return SR_HASH_STR_REGISTER(str);
-}
+SR_UTILS_NS::StringAtom operator"" _atom(const char* str, size_t);
+uint64_t operator"" _atom_hash(const char* str, size_t);
 
 namespace SR_UTILS_NS::Details {
+    SR_UTILS_NS::StringAtom CreateStringAtomFromStdString(const std::string& str) noexcept;
+
     class Formatter {
     public:
         explicit Formatter(const char* format) noexcept
@@ -37,7 +37,7 @@ namespace SR_UTILS_NS::Details {
         { }
 
         template <class... Args> SR_NODISCARD SR_UTILS_NS::StringAtom operator()(Args... args) const noexcept {
-            return SR_UTILS_NS::StringAtom(SR_FORMAT(m_format, args...));
+            return CreateStringAtomFromStdString(SR_FORMAT(m_format, args...));
         }
     private:
         const char* m_format = nullptr;

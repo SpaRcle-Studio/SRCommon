@@ -4,6 +4,7 @@
 
 #include <Utils/Resources/Xml.h>
 #include <Utils/FileSystem/FileSystem.h>
+#include <Utils/Profile/TracyContext.h>
 
 namespace SR_UTILS_NS {
     std::string Xml::Attribute::ToString() const {

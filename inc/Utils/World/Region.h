@@ -21,7 +21,7 @@ namespace SR_HTYPES_NS {
 }
 
 namespace SR_WORLD_NS {
-    class Chunk;
+    /*class Chunk;
     class Scene;
     class Region;
     class Observer;
@@ -94,7 +94,7 @@ namespace SR_WORLD_NS {
         Math::IVector3 m_position;
         std::atomic<bool> m_containsObserver;
 
-    };
+    };*/
 }
 
 #endif //SR_ENGINE_REGION_H

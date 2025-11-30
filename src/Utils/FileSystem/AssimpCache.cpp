@@ -4,6 +4,7 @@
 
 #include <Utils/FileSystem/AssimpCache.h>
 #include <Utils/Types/Marshal.h>
+#include <Utils/Profile/TracyContext.h>
 
 #ifdef SR_UTILS_ASSIMP
 #include <assimp/scene.h>

@@ -16,21 +16,10 @@
 #include <Utils/Math/Quaternion.h>
 
 #include <Utils/Types/SharedPtr.h>
-#include <Utils/Types/SafePointer.h>
 #include <Utils/Types/Function.h>
 
 namespace SR_UTILS_NS {
     class GameObject;
-
-    /// Ось, которая будет разворачиваться в сторону цели
-    SR_ENUM_NS_CLASS_T(LookAtAxis, uint8_t,
-        AxisX,
-        AxisY,
-        AxisZ,
-        InvAxisX,
-        InvAxisY,
-        InvAxisZ
-    );
 
     class Transform : public Serializable, public SR_HTYPES_NS::SharedPtr<Transform> {
         SR_CLASS()

@@ -6,7 +6,7 @@
 #define SR_ENGINE_TYPE_TRAITS_PROPERTIES_H
 
 #include <Utils/TypeTraits/StandardProperty.h>
-#include <Utils/ECS/EntityRefOld.h>
+#include <Utils/Profile/TracyContext.h>
 
 namespace SR_UTILS_NS {
     class PropertyContainer : public Property {
@@ -34,7 +34,6 @@ namespace SR_UTILS_NS {
         template<typename T = Property> SR_NODISCARD T* Find(uint64_t hashName) const noexcept;
 
         PropertyContainer& AddContainer(const char* name);
-        EntityRefProperty& AddEntityRefProperty(SR_UTILS_NS::StringAtom name, const EntityRefUtils::OwnerRef& owner);
         ArrayReferenceProperty& AddArrayReferenceProperty(const char* name);
 
         void AddExternalProperty(Property* pProperty);

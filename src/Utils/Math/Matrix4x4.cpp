@@ -5,6 +5,7 @@
 #include <Utils/Math/Matrix4x4.h>
 #include <Utils/Math/Matrix4x4Utils.h>
 #include <Utils/Debug.h>
+#include <Utils/Profile/TracyContext.h>
 
 #include <glm/gtx/matrix_interpolation.hpp>
 

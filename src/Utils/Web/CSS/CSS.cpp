@@ -4,6 +4,7 @@
 
 #include <Utils/Web/CSS/CSS.h>
 #include <Utils/Common/StringAtomLiterals.h>
+#include <Utils/Common/HashManager.h>
 
 namespace SR_UTILS_NS::Web {
     static const std::unordered_map<SRHashType, CSSOptionalSizeValue CSSStyle::*> CSS_CLASS_SIZE_PROPERTIES = {

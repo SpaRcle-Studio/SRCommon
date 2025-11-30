@@ -3,7 +3,8 @@
 //
 
 #include <Utils/Common/EnumReflector.h>
-#include <Utils/Common/Hashes.h>
+#include <Utils/Common/HashManager.h>
+#include <Utils/Common/StringUtils.h>
 #include <Utils/Debug.h>
 
 namespace SR_UTILS_NS {
@@ -138,6 +139,10 @@ namespace SR_UTILS_NS {
         }
 
         return std::nullopt;
+    }
+
+    uint64_t EnumReflector::GetAndRegisterHash(const char* name) {
+        return SR_HASH_STR_REGISTER(name);
     }
 }
 

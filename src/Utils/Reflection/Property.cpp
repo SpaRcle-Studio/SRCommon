@@ -3,6 +3,7 @@
 //
 
 #include <Utils/Reflection/Property.h>
+#include <Utils/Profile/TracyContext.h>
 
 namespace SR_UTILS_NS::Reflection {
     std::string_view MakeSerializePropertyName(std::string_view id) {

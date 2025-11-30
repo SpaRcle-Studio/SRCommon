@@ -3,6 +3,7 @@
 //
 
 #include <Utils/TypeTraits/Property.h>
+#include <Utils/Profile/TracyContext.h>
 
 namespace SR_UTILS_NS {
     bool Property::IsActive() const noexcept {

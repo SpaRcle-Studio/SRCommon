@@ -7,10 +7,8 @@
 
 #ifdef SR_TRACY_ENABLE
 
-#include <Utils/Common/NonCopyable.h>
 #include <Utils/Common/Singleton.h>
 #include <Utils/Common/Enumerations.h>
-#include <Utils/Types/Map.h>
 
 #ifndef SR_ENGINE_CODEGEN_CLANG_PARSE_MODE
     #include <Tracy.hpp>

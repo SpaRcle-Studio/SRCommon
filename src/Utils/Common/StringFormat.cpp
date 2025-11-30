@@ -13,5 +13,8 @@ namespace SR_UTILS_NS {
                 SR_UTILS_NS::Breakpoint();
             }
         }
+        uint64_t StringFormatHashStrView(std::string_view sv) {
+            return SR_HASH_STR_VIEW(sv);
+        }
     }
 }

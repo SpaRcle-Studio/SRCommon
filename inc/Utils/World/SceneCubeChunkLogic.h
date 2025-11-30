@@ -12,7 +12,7 @@
 #include <Utils/ECS/SceneObject.h>
 
 namespace SR_WORLD_NS {
-    class SceneCubeChunkLogic : public SceneLogic {
+    /*class SceneCubeChunkLogic : public SceneLogic {
         using Super = SceneLogic;
     public:
         ~SceneCubeChunkLogic() override;
@@ -85,7 +85,7 @@ namespace SR_WORLD_NS {
         bool m_shiftEnabled = false;
         bool m_scopeEnabled = false;
 
-    };
+    };*/
 }
 
 #endif //SR_ENGINE_SCENECUBECHUNKLOGIC_H

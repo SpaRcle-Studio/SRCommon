@@ -12,7 +12,7 @@
 #include <Utils/DebugDraw.h>
 
 namespace SR_WORLD_NS {
-    SceneCubeChunkLogic::~SceneCubeChunkLogic() {
+    /*SceneCubeChunkLogic::~SceneCubeChunkLogic() {
         SR_SAFE_DELETE_PTR(m_observer);
         SRAssert(!m_isAlive);
     }
@@ -677,5 +677,5 @@ namespace SR_WORLD_NS {
                 m_debugDirty = true;
             }
         }
-    }
+    }*/
 }

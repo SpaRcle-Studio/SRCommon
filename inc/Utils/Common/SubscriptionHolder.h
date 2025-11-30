@@ -9,7 +9,6 @@
 #include <Utils/Types/StringAtom.h>
 #include <Utils/Types/ObjectPool.h>
 #include <Utils/Types/Function.h>
-#include <Utils/Debug.h>
 
 namespace SR_UTILS_NS {
     class SubscriptionHolder;
@@ -31,6 +30,9 @@ namespace SR_UTILS_NS {
         SR_NODISCARD const SR_UTILS_NS::Path& GetPathRef(StringAtom id) const;
 
     private:
+        static void PrintError(const char* format, StringAtom id);
+
+    private:
         template<typename T, typename Container> SR_NODISCARD T GetValue(const StringAtom id, const Container& container, const std::optional<T> def) const {
             if (const auto it = container.find(id); it != container.end()) {
                 return it->second;
@@ -38,7 +40,7 @@ namespace SR_UTILS_NS {
             if (def.has_value()) {
                 return def.value();
             }
-            SRHalt("SubscriptionMessage::GetValue() : id \"{}\" not found!", id);
+            PrintError("SubscriptionMessage::GetValue() : id \"{}\" not found!", id);
             return T();
         }
 
@@ -46,7 +48,7 @@ namespace SR_UTILS_NS {
             if (const auto it = container.find(id); it != container.end()) {
                 return it->second;
             }
-            SRHalt("SubscriptionMessage::GetValueRef() : id \"{}\" not found!", id);
+            PrintError("SubscriptionMessage::GetValueRef() : id \"{}\" not found!", id);
             static T defaultValue;
             return defaultValue;
         }

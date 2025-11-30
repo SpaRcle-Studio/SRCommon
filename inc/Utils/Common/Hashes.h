@@ -8,7 +8,7 @@
 #include <Utils/stdInclude.h>
 
 #ifndef SR_ENGINE_CODEGEN_CLANG_PARSE_MODE
-    #include <Utils/Types/MerkleTree.h>
+    //#include <Utils/Types/MerkleTree.h>
 
     #ifdef SR_COMMON_OPENSSL
         #include <openssl/sha.h>

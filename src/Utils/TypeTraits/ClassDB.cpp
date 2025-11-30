@@ -4,6 +4,7 @@
 
 #include <Utils/TypeTraits/ClassDB.h>
 #include <Utils/Types/Thread.h>
+#include <Utils/Profile/TracyContext.h>
 
 namespace SR_UTILS_NS {
     ClassDB& ClassDB::Instance() {

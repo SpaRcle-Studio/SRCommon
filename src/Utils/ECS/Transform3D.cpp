@@ -4,6 +4,7 @@
 
 #include <Utils/ECS/Transform3D.h>
 #include <Utils/ECS/GameObject.h>
+#include <Utils/Common/LookAtAxis.h>
 
 #include <Codegen/Transform3D.generated.hpp>
 

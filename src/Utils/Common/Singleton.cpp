@@ -3,6 +3,7 @@
 //
 
 #include <Utils/Common/Singleton.h>
+#include <Utils/Common/HashManager.h>
 
 namespace SR_UTILS_NS {
     SingletonManager* GetSingletonManager() noexcept {
@@ -25,10 +26,10 @@ namespace SR_UTILS_NS {
         return pLocalPtr;
     }
 
-    void* SingletonManager::GetSingleton(StringAtom name) noexcept {
+    void* SingletonManager::GetSingleton(uint64_t hashName) noexcept {
         std::lock_guard lock(m_mutex);
 
-        if (auto&& pIt = m_singletons.find(name); pIt != m_singletons.end()) {
+        if (auto&& pIt = m_singletons.find(hashName); pIt != m_singletons.end()) {
             return pIt->second.pSingleton;
         }
 
@@ -52,18 +53,28 @@ namespace SR_UTILS_NS {
         }
     }
 
-    void SingletonManager::Remove(StringAtom name) {
+    void SingletonManager::Remove(uint64_t hashName) {
         std::lock_guard lock(m_mutex);
 
-        if (auto&& pIt = m_singletons.find(name); pIt != m_singletons.end()) {
+        if (auto&& pIt = m_singletons.find(hashName); pIt != m_singletons.end()) {
             m_singletons.erase(pIt);
         }
     }
 
-    std::recursive_mutex& SingletonManager::GetCreationMutex(StringAtom name) {
+    std::recursive_mutex& SingletonManager::GetCreationMutex(uint64_t hashName) {
         std::lock_guard lock(m_mutex);
-        std::recursive_mutex& mutex = m_creationMutexes[name];
+        std::recursive_mutex& mutex = m_creationMutexes[hashName];
         return mutex;
+    }
+
+    void SingletonManager::RegisterInternal(uint64_t hashName, void* pSingleton, SingletonBase* pSingletonBase) {
+        m_singletons[hashName].pSingleton = pSingleton;
+        m_singletons[hashName].pSingletonBase = pSingletonBase;
+        m_singletons[hashName].hashName = hashName;
+    }
+
+    uint64_t SingletonManager::GetOrAddSingletonHashName(const char* name) {
+        return SR_UTILS_NS::HashManager::Instance().AddHash(name);
     }
 
     void SingletonBase::OnSingletonDestroy() {
