@@ -5,6 +5,7 @@
 #include <Utils/Resources/IResource.h>
 #include <Utils/Resources/ResourceManager.h>
 #include <Utils/Resources/FileWatcher.h>
+#include <Utils/Platform/Stacktrace.h>
 
 #include <Codegen/IResource.generated.hpp>
 

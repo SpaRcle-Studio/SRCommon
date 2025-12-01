@@ -6,6 +6,7 @@
 #define SR_ENGINE_COMMON_TYPES_FAST_MEMORY_ARRAY_H
 
 #include <Utils/Common/NonCopyable.h>
+#include <Utils/Common/AssertFwd.h>
 #include <Utils/Profile/TracyContext.h>
 
 namespace SR_HTYPES_NS {
@@ -122,16 +123,14 @@ namespace SR_HTYPES_NS {
 
         T& back() {
             if (m_size == 0) SR_UNLIKELY_ATTRIBUTE {
-                SR_PLATFORM_NS::WriteConsoleError("FastMemoryArray::back() : array is empty!");
-                SR_UTILS_NS::Breakpoint();
+                SRHalt("FastMemoryArray::back() : array is empty!");
             }
             return m_data[m_size - 1];
         }
 
         const T& back() const {
             if (m_size == 0) SR_UNLIKELY_ATTRIBUTE {
-                SR_PLATFORM_NS::WriteConsoleError("FastMemoryArray::back() : array is empty!");
-                SR_UTILS_NS::Breakpoint();
+                SRHalt("FastMemoryArray::back() : array is empty!");
             }
             return m_data[m_size - 1];
         }

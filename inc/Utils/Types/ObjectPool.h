@@ -8,7 +8,6 @@
 #include <Utils/Types/Stack.h>
 #include <Utils/Types/Function.h>
 #include <Utils/Types/FastMemoryArray.h>
-#include <Utils/Common/StringFormat.h>
 
 namespace SR_HTYPES_NS {
     template<typename T, typename Index = uint64_t> class ObjectPool : public SR_UTILS_NS::NonCopyable {
@@ -82,8 +81,7 @@ namespace SR_HTYPES_NS {
         T& At(Index index) {
             auto&& object = m_objects[index];
             if (!object.first) SR_UNLIKELY_ATTRIBUTE {
-                SR_PLATFORM_NS::WriteConsoleError(SR_FORMAT("ObjectPool::At() : object is invalid!\n{}\n", SR_UTILS_NS::GetStacktrace()));
-                SR_PLATFORM_NS::Terminate();
+                SRHaltTerminate("ObjectPool::At() : object is invalid!");
             }
 
             return object.second;
@@ -92,8 +90,7 @@ namespace SR_HTYPES_NS {
         const T& At(Index index) const {
             auto&& object = m_objects[index];
             if (!object.first) SR_UNLIKELY_ATTRIBUTE {
-                SR_PLATFORM_NS::WriteConsoleError(SR_FORMAT("ObjectPool::At() : object is invalid!\n{}\n", SR_UTILS_NS::GetStacktrace()));
-                SR_PLATFORM_NS::Terminate();
+                SRHaltTerminate("ObjectPool::At() : object is invalid!");
             }
 
             return object.second;
@@ -157,13 +154,11 @@ namespace SR_HTYPES_NS {
 
         T RemoveByIndex(Index index) {
             if (index >= m_objects.size()) SR_UNLIKELY_ATTRIBUTE {
-                SR_PLATFORM_NS::WriteConsoleError(SR_FORMAT("ObjectPool::Remove() : index out of bounds!\n{}\n", SR_UTILS_NS::GetStacktrace()));
-                SR_PLATFORM_NS::Terminate();
+                SRHaltTerminate("ObjectPool::Remove() : index out of bounds!");
             }
 
             if (!m_objects[index].first) SR_UNLIKELY_ATTRIBUTE {
-                SR_PLATFORM_NS::WriteConsoleError(SR_FORMAT("ObjectPool::Remove() : object already removed!\n{}\n", SR_UTILS_NS::GetStacktrace()));
-                SR_PLATFORM_NS::Terminate();
+                SRHaltTerminate("ObjectPool::Remove() : object already removed!");
             }
 
             m_objects[index].first = false;
@@ -176,8 +171,7 @@ namespace SR_HTYPES_NS {
             for (uint64_t i = 0; i < m_objects.size(); ++i) {
                 if (m_objects[i].second == object) {
                     if (!m_objects[i].first) SR_UNLIKELY_ATTRIBUTE {
-                        SR_PLATFORM_NS::WriteConsoleError(SR_FORMAT("ObjectPool::Remove() : object already removed!\n{}\n", SR_UTILS_NS::GetStacktrace()));
-                        SR_PLATFORM_NS::Terminate();
+                        SRHaltTerminate("ObjectPool::Remove() : object already removed!");
                     }
 
                     m_objects[i].first = false;

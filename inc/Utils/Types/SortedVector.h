@@ -7,7 +7,6 @@
 
 #include <Utils/Types/Stack.h>
 #include <Utils/Profile/TracyContext.h>
-#include <Utils/Debug.h>
 
 namespace SR_HTYPES_NS {
     template<typename T, typename Predicate = std::less<T>> class SortedVector {

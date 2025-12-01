@@ -3,6 +3,7 @@
 //
 
 #include <Utils/Common/SubscriptionHolder.h>
+#include <Utils/Common/SubscriptionMessage.h>
 #include <Utils/Debug.h>
 
 namespace SR_UTILS_NS {

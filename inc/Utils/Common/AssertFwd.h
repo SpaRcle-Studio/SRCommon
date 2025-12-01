@@ -8,6 +8,7 @@
 #include <Utils/Common/StringFormat.h>
 
 namespace SR_UTILS_NS::LogDetails {
+    SR_NORETURN void AssertTerminateFwd(const std::string& msg);
     bool AssertFwd(const std::string& msg);
     bool AssertOnceCheckFwd(const std::string& msg);
     void LogFwd(const std::string& msg);
@@ -69,6 +70,7 @@ namespace SR_UTILS_NS::LogDetails {
 #endif
 
 #define SRHalt(...) SR_UTILS_NS::LogDetails::AssertFwd(SR_MAKE_ASSERT_MSG(SR_FORMAT(__VA_ARGS__)))
+#define SRHaltTerminate(...) SR_UTILS_NS::LogDetails::AssertTerminateFwd(SR_MAKE_ASSERT_MSG(SR_FORMAT(__VA_ARGS__)))
 #define SRHaltOnce(...) SR_UTILS_NS::LogDetails::AssertOnceCheckFwd(SR_MAKE_ASSERT_MSG(SR_FORMAT(__VA_ARGS__))) || SRHalt(SR_FORMAT(__VA_ARGS__))
 #define SRHalt0() SRHalt("An exception has been occured!")
 #define SRHaltOnce0() SRHaltOnce("An exception has been occured!")

@@ -4,6 +4,7 @@
 
 #include <Utils/Resources/FileWatcher.h>
 #include <Utils/Resources/ResourceManager.h>
+#include <Utils/Common/SubscriptionMessage.h>
 
 namespace SR_UTILS_NS {
     FileWatcher::FileWatcher(SR_UTILS_NS::Path path)

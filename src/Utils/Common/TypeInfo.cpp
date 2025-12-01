@@ -3,6 +3,7 @@
 //
 
 #include <Utils/Common/TypeInfo.h>
+#include <Utils/Common/Breakpoint.h>
 #include <Utils/Platform/Platform.h>
 
 namespace SR_UTILS_NS {

@@ -35,8 +35,7 @@ namespace SR_UTILS_NS {
             return SR_UTILS_NS::EnumReflector::ToStringAtom(value);
         }
         else {
-            std::cerr << "ToStringAtom: unsupported type!" << std::endl;
-            SR_MAKE_BREAKPOINT;
+            SRHalt("ToStringAtom: unsupported type!");
             return std::string(); /// NOLINT
         }
     }

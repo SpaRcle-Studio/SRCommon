@@ -5,8 +5,8 @@
 #ifndef SR_ENGINE_UTILS_STACK_H
 #define SR_ENGINE_UTILS_STACK_H
 
-#include <Utils/Platform/Platform.h>
 #include <Utils/Common/NonCopyable.h>
+#include <Utils/Common/AssertFwd.h>
 
 namespace SR_HTYPES_NS {
     template<typename T> class Stack {
@@ -99,8 +99,7 @@ namespace SR_HTYPES_NS {
 
         T Pop() {
             if (!m_head) {
-                SR_PLATFORM_NS::WriteConsoleError("Stack is empty!");
-                SR_UTILS_NS::Breakpoint();
+                SRHalt("Stack is empty!");
             }
 
             Node* pNext = m_head->pData;
@@ -113,8 +112,7 @@ namespace SR_HTYPES_NS {
 
         SR_NODISCARD T& Top() {
             if (!m_head) {
-                SR_PLATFORM_NS::WriteConsoleError("Stack is empty!");
-                SR_UTILS_NS::Breakpoint();
+                SRHalt("Stack is empty!");
             }
             return m_head->data;
         }

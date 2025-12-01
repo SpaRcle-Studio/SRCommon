@@ -6,7 +6,6 @@
 #define SR_ENGINE_ENUM_REFLECTOR_H
 
 #include <Utils/Common/Singleton.h>
-#include <Utils/Types/Map.h>
 #include <Utils/Types/StringAtom.h>
 #include <Utils/Types/Function.h>
 

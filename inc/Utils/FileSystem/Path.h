@@ -5,10 +5,8 @@
 #ifndef SR_ENGINE_PATH_H
 #define SR_ENGINE_PATH_H
 
-#include <Utils/stdInclude.h>
 #include <Utils/Math/Mathematics.h>
 #include <Utils/Types/StringAtom.h>
-#include <Utils/Common/Breakpoint.h>
 #include <Utils/Serialization/ObjectDataAccessor.h>
 
 namespace SR_UTILS_NS {

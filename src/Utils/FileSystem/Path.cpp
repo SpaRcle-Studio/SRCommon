@@ -427,8 +427,7 @@ namespace SR_UTILS_NS {
 
     char Path::operator[](size_t index) const noexcept {
         if (index >= GetNormalized().size()) {
-            std::cerr << "Path::operator[] : index is out of range!\n";
-            SR_MAKE_BREAKPOINT;
+            SRHalt("Path::operator[] : index is out of range!");
             return char();
         }
         return GetNormalized()[index];

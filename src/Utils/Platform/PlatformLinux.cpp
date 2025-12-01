@@ -5,6 +5,8 @@
 #include <Utils/Platform/Platform.h>
 #include <Utils/Common/StringFormat.h>
 #include <Utils/Debug.h>
+#include <Utils/Platform/Stacktrace.h>
+#include <Utils/Common/Breakpoint.h>
 
 #include <X11/Xlib.h>
 #include <X11/Xlib-xcb.h>

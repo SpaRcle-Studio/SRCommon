@@ -6,6 +6,8 @@
 #include <Utils/Common/StringFormat.h>
 #include <Utils/Debug.h>
 #include <Utils/Profile/TracyContext.h>
+#include <Utils/Platform/Stacktrace.h>
+#include <Utils/Common/Breakpoint.h>
 
 #include <Utils/Platform/AndroidNativeAppGlue.h>
 

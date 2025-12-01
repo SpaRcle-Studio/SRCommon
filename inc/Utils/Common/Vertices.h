@@ -5,11 +5,9 @@
 #ifndef SR_ENGINE_SKYBOXCONSTANTS_H
 #define SR_ENGINE_SKYBOXCONSTANTS_H
 
-#include <Utils/Debug.h>
+#include <Utils/stdInclude.h>
 
 namespace SR_UTILS_NS {
-    /// TODO: use glm?
-
     struct Vec2 {
         float_t x, y;
     };

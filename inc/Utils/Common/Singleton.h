@@ -6,12 +6,8 @@
 #define SR_ENGINE_SINGLETON_H
 
 #include <Utils/Common/NonCopyable.h>
-#include <Utils/Common/Breakpoint.h>
-
-#include <Utils/Platform/Stacktrace.h>
-
+#include <Utils/Common/AssertFwd.h>
 #include <Utils/Types/SafePtrLockGuard.h>
-#include <Utils/Types/Map.h>
 
 #define SR_REGISTER_SINGLETON(className)                                                                                \
     private:                                                                                                            \
@@ -119,9 +115,7 @@ namespace SR_UTILS_NS {
             pSingleton->m_mutex.unlock();
         }
         else {
-            std::cerr << "Singleton isn't initialized!\n";
-            std::cerr << GetStacktrace() << std::endl;
-            SR_MAKE_BREAKPOINT;
+            SRHalt("Singleton isn't initialized!");
         }
     }
 
@@ -173,9 +167,7 @@ namespace SR_UTILS_NS {
         : SingletonBase()
     {
         if (GetSingleton()) {
-            std::cerr << "Singleton already exists!\n";
-            std::cerr << GetStacktrace() << std::endl;
-            SR_MAKE_BREAKPOINT;
+            SRHalt("Singleton already exists!");
         }
     }
 

@@ -7,6 +7,7 @@
 #include <Utils/Resources/ResourceManager.h>
 #include <Utils/Platform/Stacktrace.h>
 #include <Utils/Platform/Platform.h>
+#include <Utils/Common/Breakpoint.h>
 
 #ifdef SR_COMMON_GIT_METADATA
     #include <git.h>

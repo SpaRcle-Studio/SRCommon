@@ -10,6 +10,11 @@ namespace SR_UTILS_NS::LogDetails {
         return SR_UTILS_NS::Debug::Instance().Assert(msg);
     }
 
+    void AssertTerminateFwd(const std::string& msg) {
+        SR_UTILS_NS::Debug::Instance().Assert(msg);
+        SR_PLATFORM_NS::Terminate();
+    }
+
     bool AssertOnceCheckFwd(const std::string& msg) {
         return SR_UTILS_NS::Debug::Instance().AssertOnceCheck(msg);
     }

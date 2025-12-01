@@ -7,6 +7,7 @@
 #include <Utils/Platform/Platform.h>
 #include <Utils/Profile/TracyContext.h>
 #include <Utils/Common/StringAtomLiterals.h>
+#include <Utils/Common/SubscriptionMessage.h>
 #include <Utils/Types/Thread.h>
 
 namespace SR_UTILS_NS {

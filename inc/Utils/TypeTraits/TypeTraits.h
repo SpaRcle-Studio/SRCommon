@@ -8,8 +8,6 @@
 #include <Utils/Common/Hashes.h>
 #include <Utils/Common/EnumReflector.h>
 
-#include <Utils/Math/Vector2.h>
-#include <Utils/Math/Vector3.h>
 #include <Utils/Math/Vector4.h>
 #include <Utils/Math/Vector6.h>
 

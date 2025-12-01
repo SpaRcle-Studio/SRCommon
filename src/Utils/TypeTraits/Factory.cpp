@@ -5,6 +5,7 @@
 #include <Utils/TypeTraits/Factory.h>
 #include <Utils/TypeTraits/SRClassMeta.h>
 #include <Utils/Debug.h>
+#include <Utils/Common/Breakpoint.h>
 
 namespace SR_UTILS_NS {
     Factory& Factory::Instance() noexcept {
