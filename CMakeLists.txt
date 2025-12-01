@@ -225,7 +225,7 @@ if (SR_USE_PCH)
     target_precompile_headers(Utils PRIVATE ${SR_COMMON_PCH_HEADER_PATH})
 endif()
 
-if (UNIX) 
+if (UNIX AND NOT APPLE AND NOT SR_EMSCRIPTEN AND NOT ANDROID_NDK)
     find_package(TBB REQUIRED)
     target_link_libraries(Utils TBB::tbb)
 endif()
