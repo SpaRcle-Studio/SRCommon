@@ -3,7 +3,6 @@
 //
 
 #include <Utils/TypeTraits/SRClass.h>
-#include <Utils/Serialization/Serializable.h>
 
 #include <Codegen/SRClass.generated.hpp>
 
