@@ -806,6 +806,7 @@ namespace SR_UTILS_NS::Platform {
         }
 
         if (resolutions.empty()) {
+            SR_LOG("Platform::GetScreenResolutions() : failed to get screen resolutions, returning default 400x400");
             resolutions.emplace_back(SR_MATH_NS::UVector2(400, 400));
         }
 

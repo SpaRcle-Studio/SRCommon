@@ -68,6 +68,10 @@ namespace SR_UTILS_NS {
                 SR_PLATFORM_NS::WriteConsoleWarn(SR_FORMAT("CLIManager::Init() : unexpected argument: '{}'\n", arg));
             }
         }
+
+        if (IsHeadlessMode()) {
+            SR_PLATFORM_NS::WriteConsoleLog("CLIManager::Init() : running in headless mode.\n");
+        }
     }
 
     std::optional<std::string> CLIManager::GetOptionValue(CLIOptions option) {
@@ -77,5 +81,13 @@ namespace SR_UTILS_NS {
         }
 
         return std::nullopt;
+    }
+
+    bool CLIManager::IsFlagPresent(CLIFlags flag) const {
+        return SR_MATH_NS::IsMaskIncludedSubMask(m_flags, flag);
+    }
+
+    bool CLIManager::IsHeadlessMode() const {
+        return IsFlagPresent(CLIFlags::Headless);
     }
 }

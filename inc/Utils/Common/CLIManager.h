@@ -15,7 +15,8 @@ namespace SR_UTILS_NS {
         None = 0,
         UnitTests          = 1 << 0,
         ContinueAfterTests = 1 << 1,
-        DeleteOldApp       = 1 << 2
+        DeleteOldApp       = 1 << 2,
+        Headless           = 1 << 3
     );
 
     SR_ENUM_NS_STRUCT_T(CLIOptions, uint32_t,
@@ -29,7 +30,9 @@ namespace SR_UTILS_NS {
         void Init(int argc, char** argv);
 
         std::optional<std::string> GetOptionValue(CLIOptions option);
-        bool IsFlagPresent(CLIFlags flag) const { return SR_MATH_NS::IsMaskIncludedSubMask(m_flags, flag); }
+        bool IsFlagPresent(CLIFlags flag) const;
+
+        bool IsHeadlessMode() const;
 
         SR_NODISCARD const std::map<CLIOptions, std::optional<std::string>>& GetOptions() const { return m_options; }
         SR_NODISCARD CLIFlags GetFlags() const { return m_flags; }
