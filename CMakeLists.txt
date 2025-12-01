@@ -222,7 +222,7 @@ endif()
 
 if (SR_USE_PCH)
     target_compile_definitions(Utils PUBLIC SR_USE_PCH)
-    target_precompile_headers(Utils PRIVATE ${SR_COMMON_PCH_HEADER_PATH})
+    target_precompile_headers(Utils PUBLIC ${SR_COMMON_PCH_HEADER_PATH})
 endif()
 
 if (UNIX AND NOT APPLE AND NOT SR_EMSCRIPTEN AND NOT ANDROID_NDK)
