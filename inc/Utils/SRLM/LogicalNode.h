@@ -11,8 +11,6 @@
 #include <Utils/Common/ToString.h>
 #include <Utils/Resources/Xml.h>
 
-#include <Enum/LogicalNodeStatus.hpp>
-
 namespace SR_SRLM_NS {
     class DataType;
     class LogicalMachine;
@@ -86,9 +84,7 @@ namespace SR_SRLM_NS {
         virtual void InitValues() { }
         virtual void InitNode() { }
 
-        virtual void Execute(float_t dt) {
-            m_status |= LogicalNodeStatus::Success;
-        }
+        virtual void Execute(float_t dt);
 
         SR_NODISCARD virtual bool IsNeedRepeat() const { return false; }
         SR_NODISCARD virtual bool IsNeedPostRepeat() const { return false; }

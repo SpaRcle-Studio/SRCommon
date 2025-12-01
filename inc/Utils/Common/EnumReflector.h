@@ -9,8 +9,6 @@
 #include <Utils/Types/StringAtom.h>
 #include <Utils/Types/Function.h>
 
-#include <Codegen/EnumsFwd.generated.hpp>
-
 template <typename EnumType> struct EnumSelector {};
 
 template<typename T> constexpr SR_UTILS_NS::EnumVariant GetEnumVariant(T) noexcept;

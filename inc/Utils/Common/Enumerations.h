@@ -56,6 +56,8 @@
                   enumName, #enumName, type, __VA_ARGS__ )                                                              \
       }                                                                                                                 \
       class CodegenEnumIncludedChecked_##enumName {};                                                                   \
+      //SR_CODEGEN_ENUM_OPERATORS(inline, , SR_MACRO_CONCAT(enumName, EnumWrappper)::enumName)                            \
+
       //template<> struct CodegenEnumIncludedChecked_##enumName<enumName> : std::true_type {};                            \
 
       //inline enumName operator(int lhs) { return static_cast<enumName>(lhs); }                                          \

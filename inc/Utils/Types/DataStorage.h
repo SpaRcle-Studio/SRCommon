@@ -6,6 +6,7 @@
 #define SR_ENGINE_DATASTORAGE_H
 
 #include <Utils/Common/HashManager.h>
+#include <Utils/Common/Hashes.h>
 #include <Utils/Profile/TracyContext.h>
 
 namespace SR_HTYPES_NS {

@@ -8,7 +8,7 @@
 #include <Utils/Math/Vector3.h>
 
 namespace SR_MATH_NS {
-    struct SR_RENDERER_DLL_API AABB {
+    struct SR_COMMON_DLL_API AABB {
         FVector3 min = FVector3(0.f, 0.f, 0.f);
         FVector3 max = FVector3(0.f, 0.f, 0.f);
 

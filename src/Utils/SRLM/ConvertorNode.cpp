@@ -5,6 +5,8 @@
 #include <Utils/SRLM/ConvertorNode.h>
 #include <Utils/SRLM/DataType.h>
 
+#include <Enum/LogicalNodeStatus.hpp>
+
 namespace SR_SRLM_NS {
     void ConvertorNode::InitNode() {
       // AddInputData(DataTypeAllocator::Instance().Allocate(m_initInputTypeHashName));

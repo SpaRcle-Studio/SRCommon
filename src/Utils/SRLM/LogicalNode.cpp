@@ -6,6 +6,8 @@
 #include <Utils/SRLM/DataType.h>
 #include <Utils/SRLM/LogicalNodeManager.h>
 
+#include <Enum/LogicalNodeStatus.hpp>
+
 namespace SR_SRLM_NS {
     LogicalNode::~LogicalNode() {
         ClearLogicalNode();
@@ -267,6 +269,10 @@ namespace SR_SRLM_NS {
 
     void LogicalNode::ResetStatus() {
         m_status = LogicalNodeStatus::None;
+    }
+
+    void LogicalNode::Execute(float_t dt) {
+        m_status |= LogicalNodeStatus::Success;
     }
 
     /// ----------------------------------------------------------------------------------------------------------------
