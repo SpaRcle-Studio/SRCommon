@@ -7,6 +7,7 @@
 
 #include <Utils/FileSystem/Path.h>
 #include <Utils/Types/StringAtom.h>
+#include <Utils/Common/NonCopyable.h>
 
 namespace SR_UTILS_NS {
     class SR_COMMON_DLL_API SubscriptionMessage final : SR_UTILS_NS::NonCopyable {

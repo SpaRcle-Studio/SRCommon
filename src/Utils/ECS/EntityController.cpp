@@ -5,7 +5,9 @@
 #include <Utils/ECS/EntityController.h>
 #include <Utils/Common/StringUtils.h>
 #include <Utils/Common/VectorUtils.h>
+#include <Utils/Common/StringAtomLiterals.h>
 #include <Utils/Common/Numeric.h>
+#include <Utils/Profile/TracyContext.h>
 #include <Utils/TypeTraits/SRClassMeta.h>
 
 namespace SR_UTILS_NS {

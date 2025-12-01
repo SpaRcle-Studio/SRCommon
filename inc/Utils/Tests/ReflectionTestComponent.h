@@ -6,6 +6,8 @@
 #define SR_ENGINE_UTILS_REFLECTION_TEST_COMPONENT_H
 
 #include <Utils/ECS/Component.h>
+#include <Utils/FileSystem/Path.h>
+#include <Utils/Platform/PlatformType.h>
 
 namespace SR_UTILS_NS::Tests {
     struct ReflectionTestComponentAssociative : public SR_UTILS_NS::Serializable {

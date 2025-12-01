@@ -18,8 +18,7 @@ namespace SR_WORLD_NS {
 
     SceneAllocator::ScenePtr SceneAllocator::Allocate() const {
         if (!m_allocator) {
-            SRHalt("SceneAllocator::Allocate() : allocator isn't initialized!");
-            Platform::Terminate();
+            SRHaltTerminate("SceneAllocator::Allocate() : allocator isn't initialized!");
         }
 
         return m_allocator();

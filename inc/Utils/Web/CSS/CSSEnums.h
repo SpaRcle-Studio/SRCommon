@@ -7,6 +7,7 @@
 
 #include <Utils/Math/Vector2.h>
 #include <Utils/Common/NonCopyable.h>
+#include <Utils/Common/Hashes.h>
 #include <Utils/Common/Enumerations.h>
 #include <Utils/Common/StringAtomLiterals.h>
 

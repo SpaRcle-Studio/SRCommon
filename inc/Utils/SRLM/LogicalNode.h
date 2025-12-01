@@ -11,7 +11,7 @@
 #include <Utils/Common/ToString.h>
 #include <Utils/Resources/Xml.h>
 
-#include <Codegen/Enums.generated.hpp>
+#include <Enum/LogicalNodeStatus.hpp>
 
 namespace SR_SRLM_NS {
     class DataType;

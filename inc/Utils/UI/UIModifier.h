@@ -7,7 +7,6 @@
 
 #include <Utils/ECS/Component.h>
 #include <Utils/Math/Rect.h>
-#include <Utils/Math/Size.h>
 
 namespace SR_UTILS_NS::UI {
     /// растяжение по ширине родительского элемента

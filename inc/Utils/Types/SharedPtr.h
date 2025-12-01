@@ -6,10 +6,7 @@
 #define SR_ENGINE_SHARED_PTR_H
 
 #include <Utils/Common/AssertFwd.h>
-#include <Utils/Types/Function.h>
 #include <Utils/Common/TypeInfo.h>
-#include <Utils/Platform/Platform.h>
-#include <Utils/TypeTraits/SRClass.h>
 #include <Utils/TypeTraits/TypeTraits.h>
 
 namespace SR_UTILS_NS {
@@ -19,6 +16,10 @@ namespace SR_UTILS_NS {
 }
 
 /// #define SR_SHARED_PTR_TRACE
+
+namespace SR_UTILS_NS {
+    class SRClass;
+}
 
 namespace SR_HTYPES_NS {
     class SharedPtrDynamicData;

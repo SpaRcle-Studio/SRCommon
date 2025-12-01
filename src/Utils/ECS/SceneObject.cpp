@@ -10,6 +10,8 @@
 #include <Utils/Reflection/SRClassUtils.h>
 #include <Utils/World/SceneUpdater.h>
 #include <Utils/World/Scene.h>
+#include <Utils/FileSystem/PathDataAccessor.h>
+#include <Utils/Serialization/SRASerialization.h>
 
 #include <Codegen/SceneObject.generated.hpp>
 

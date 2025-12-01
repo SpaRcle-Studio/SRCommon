@@ -4,6 +4,7 @@
 
 #include <Utils/Common/StringFormat.h>
 #include <Utils/Common/Breakpoint.h>
+#include <Utils/Common/Hashes.h>
 #include <Utils/Platform/Platform.h>
 
 namespace SR_UTILS_NS {

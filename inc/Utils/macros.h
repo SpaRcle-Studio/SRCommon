@@ -251,6 +251,21 @@
 #define SR_PROTECT(...) __VA_ARGS__
 #define SR_EXPAND(x) x
 
+#define SR_INF std::numeric_limits<double_t>::infinity()
+#define SR_NAN NAN
+#define SR_INT16_MAX std::numeric_limits<int16_t>::max()
+#define SR_UINT16_MAX std::numeric_limits<uint16_t>::max()
+#define SR_UINT8_MAX std::numeric_limits<uint8_t>::max()
+#define SR_INT8_MAX std::numeric_limits<int8_t>::max()
+#define SR_INT32_MAX std::numeric_limits<int32_t>::max()
+#define SR_INT32_MIN std::numeric_limits<int32_t>::min()
+#define SR_UINT32_MAX std::numeric_limits<uint32_t>::max()
+#define SR_INT64_MAX std::numeric_limits<int64_t>::max()
+#define SR_UINT64_MAX std::numeric_limits<uint64_t>::max()
+#define SR_UINTPTR_MAX std::numeric_limits<uintptr_t>::max()
+#define SR_DOUBLE_MAX std::numeric_limits<double_t>::max()
+#define SR_FLOAT_MAX std::numeric_limits<float_t>::max()
+
 #define SR_LINE __LINE__
 
 #define SR_AF_INET 2 /// internetwork: UDP, TCP, etc.

@@ -6,6 +6,7 @@
 #include <Utils/ECS/GameObject.h>
 #include <Utils/World/Scene.h>
 #include <Utils/Resources/ResourceManager.h>
+#include <Utils/Serialization/SRASerialization.h>
 
 #include <Codegen/Prefab.generated.hpp>
 

@@ -12,13 +12,11 @@
 #include <Utils/World/SceneDefaultLogic.h>
 #include <Utils/World/SceneUpdater.h>
 #include <Utils/World/ScenePrefabLogic.h>
-
 #include <Utils/Types/RawMesh.h>
-
 #include <Utils/ECS/Component.h>
 #include <Utils/ECS/GameObject.h>
-
 #include <Utils/Platform/Platform.h>
+#include <Utils/Serialization/SRASerialization.h>
 
 #include <Enum/SceneLogicType.hpp>
 
@@ -578,5 +576,9 @@ namespace SR_WORLD_NS {
 
     const SR_HTYPES_NS::DataStorage &Scene::GetDataStorage() const {
         return m_dataStorage;
+    }
+
+    const SR_HTYPES_NS::SharedPtr<SR_UTILS_NS::EntityController>& Scene::GetEntityController() const {
+        return m_pEntityController;
     }
 }

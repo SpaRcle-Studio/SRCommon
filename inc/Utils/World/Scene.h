@@ -7,20 +7,18 @@
 
 #include <Utils/ECS/IComponentable.h>
 
-#include <Utils/Types/SafePointer.h>
-#include <Utils/Types/SharedPtr.h>
 #include <Utils/Types/StringAtom.h>
-#include <Utils/Types/Marshal.h>
 #include <Utils/Types/DataStorage.h>
 
-#include <Utils/World/TensorKey.h>
-#include <Utils/World/Observer.h>
 #include <Utils/World/SceneLogicType.h>
 #include <Utils/World/CameraData.h>
 
 namespace SR_UTILS_NS {
     class SceneObject;
     class Prefab;
+    class EntityController;
+    class Component;
+    class GameObject;
 }
 
 namespace SR_HTYPES_NS {
@@ -75,7 +73,7 @@ namespace SR_WORLD_NS {
         SR_NODISCARD const SR_HTYPES_NS::DataStorage& GetDataStorage() const;
         SR_NODISCARD SR_INLINE SceneUpdater* GetSceneUpdater() const { return m_sceneUpdater; }
         SR_NODISCARD SceneLogicPtr GetLogicBase() const;
-        SR_NODISCARD const SR_UTILS_NS::EntityController::Ptr& GetEntityController() const { return m_pEntityController; }
+        SR_NODISCARD const SR_HTYPES_NS::SharedPtr<SR_UTILS_NS::EntityController>& GetEntityController() const;
 
         /// Запущена ли сцена
         SR_NODISCARD virtual bool IsPlayingMode() const { return false; }
@@ -102,7 +100,7 @@ namespace SR_WORLD_NS {
 
     public:
         bool Remove(const SceneObjectPtr& gameObject);
-        void Remove(const Component::Ptr& pComponent);
+        void Remove(const SR_HTYPES_NS::SharedPtr<Component>& pComponent);
 
         void OnChanged();
 
@@ -132,14 +130,14 @@ namespace SR_WORLD_NS {
         std::list<SceneObjectPtr> m_newQueue;
         std::list<SceneObjectPtr> m_deleteQueue;
 
-        std::list<Component::Ptr> m_destroyedComponents;
+        std::list<SR_HTYPES_NS::SharedPtr<Component>> m_destroyedComponents;
 
         Path m_path;
         Path m_absPath;
 
         SceneObjects m_sceneObjects;
 
-        SR_UTILS_NS::EntityController::Ptr m_pEntityController;
+        SR_HTYPES_NS::SharedPtr<SR_UTILS_NS::EntityController> m_pEntityController;
 
     private:
         /// @property

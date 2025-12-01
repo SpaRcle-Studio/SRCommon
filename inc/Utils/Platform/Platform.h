@@ -8,12 +8,7 @@
 #include <Utils/Math/Vector2.h>
 #include <Utils/Common/ThreadUtils.h>
 #include <Utils/FileSystem/Path.h>
-
-namespace SR_UTILS_NS {
-    SR_ENUM_NS_CLASS_T(PlatformType, uint8_t,
-        Unknown, Windows, Linux, Android, MacOS, Emscripten, IOS
-    );
-}
+#include <Utils/Platform/PlatformType.h>
 
 namespace SR_UTILS_NS::Platform {
     static bool IsCompiledUnderMSVC() {

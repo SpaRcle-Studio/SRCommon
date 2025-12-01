@@ -2,13 +2,13 @@
 // Created by Monika on 09.03.2025.
 //
 
+#ifndef SR_ENGINE_BASE_SERIALIZATION_H
+#define SR_ENGINE_BASE_SERIALIZATION_H
+
 #include <Utils/Serialization/Serializer.h>
 #include <Utils/Serialization/Deserializer.h>
 #include <Utils/Localization/Encoding.h>
 #include <Utils/Types/FastMemoryArray.h>
-
-#ifndef SR_ENGINE_BASE_SERIALIZATION_H
-#define SR_ENGINE_BASE_SERIALIZATION_H
 
 namespace SR_UTILS_NS {
     union SerializationTrivialDataType {

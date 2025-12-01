@@ -8,6 +8,7 @@
 #include <Utils/Types/SharedPtr.h>
 #include <Utils/Serialization/Serializable.h>
 #include <Utils/World/SceneLogicType.h>
+#include <Utils/FileSystem/Path.h>
 
 namespace SR_UTILS_NS {
     class SceneObject;

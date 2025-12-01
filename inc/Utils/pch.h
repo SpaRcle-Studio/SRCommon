@@ -322,19 +322,6 @@ namespace SR_UTILS_NS {
     };
 }
 
-namespace Codegen {
-    template <typename EnumType> struct EnumSelector {};
-
-    template<typename T>
-    constexpr SR_UTILS_NS::EnumVariant GetEnumVariant(T) noexcept {
-        return SR_UTILS_NS::EnumVariant::Undefined;
-    }
-
-    template<typename T> constexpr size_t GetEnumItemsCount(T) noexcept {
-        return 0;
-    }
-}
-
 #define SR_EXCHANGE(x, y) SR_UTILS_NS::Exchange(x, y)
 
 #endif //SR_ENGINE_UTILS_PCH_H

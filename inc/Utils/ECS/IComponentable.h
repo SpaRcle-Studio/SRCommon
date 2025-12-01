@@ -5,17 +5,15 @@
 #ifndef SR_ENGINE_I_COMPONENTABLE_H
 #define SR_ENGINE_I_COMPONENTABLE_H
 
-#include <Utils/Types/Marshal.h>
-#include <Utils/Types/Vector.h>
 #include <Utils/ECS/Entity.h>
-#include <Utils/ECS/Component.h>
-#include <Utils/ECS/ComponentManager.h>
 
 namespace SR_WORLD_NS {
     class Scene;
 }
 
 namespace SR_UTILS_NS {
+    class Component;
+
     class IComponentable : public Entity {
         using Super = Entity;
         SR_CLASS()
@@ -23,6 +21,7 @@ namespace SR_UTILS_NS {
         using Ptr = SR_HTYPES_NS::SharedPtr<IComponentable>;
         using ScenePtr = SR_WORLD_NS::Scene*;
         using OriginType = IComponentable;
+        using ComponentPtr = SR_HTYPES_NS::SharedPtr<Component>;
 
     public:
         IComponentable() = default;
@@ -45,21 +44,21 @@ namespace SR_UTILS_NS {
 
         virtual bool SetDirty(bool dirty);
 
-        virtual Component::Ptr GetOrCreateComponent(const std::string& name);
-        virtual Component::Ptr GetOrCreateComponent(StringAtom name);
-        virtual Component::Ptr GetComponent(const std::string& name);
-        virtual Component::Ptr GetComponent(StringAtom name);
-        virtual bool MoveComponent(const Component::Ptr& pComponent, int32_t offset);
+        virtual ComponentPtr GetOrCreateComponent(const std::string& name);
+        virtual ComponentPtr GetOrCreateComponent(StringAtom name);
+        virtual ComponentPtr GetComponent(const std::string& name);
+        virtual ComponentPtr GetComponent(StringAtom name);
+        virtual bool MoveComponent(const ComponentPtr& pComponent, int32_t offset);
 
-        SR_NODISCARD bool HasComponent(const Component::Ptr& pComponent) const;
-        SR_NODISCARD int32_t GetComponentIndex(const Component::Ptr& pComponent) const;
-        SR_NODISCARD uint32_t GetComponentsCount() const noexcept { return static_cast<uint32_t>(m_components.size()); }
-        SR_NODISCARD const std::vector<Component::Ptr>& GetComponents() const noexcept { return m_components; }
+        SR_NODISCARD bool HasComponent(const ComponentPtr& pComponent) const;
+        SR_NODISCARD int32_t GetComponentIndex(const ComponentPtr& pComponent) const;
+        SR_NODISCARD uint32_t GetComponentsCount() const noexcept;
+        SR_NODISCARD const std::vector<ComponentPtr>& GetComponents() const noexcept;
 
-        virtual bool AddComponent(const Component::Ptr& pComponent);
+        virtual bool AddComponent(const ComponentPtr& pComponent);
 
         template<typename T> SR_HTYPES_NS::SharedPtr<T> AddComponent() {
-            Component::Ptr pComponent = SR_UTILS_NS::Factory::Instance().Create<Component>(T::GetClassStaticName());
+            ComponentPtr pComponent = CreateComponentByName(T::GetClassStaticName());
             if (!pComponent) {
                 SR_ERROR("IComponentable::AddComponent() : failed to create component of type: {}", T::GetClassStaticName());
                 return nullptr;
@@ -68,15 +67,15 @@ namespace SR_UTILS_NS {
                 SR_ERROR("IComponentable::AddComponent() : failed to add component of type: {}", T::GetClassStaticName());
                 return nullptr;
             }
-            return pComponent->template DynamicCast<T>();
+            return pComponent.DynamicCast<T>();
         }
 
         void RemoveComponents();
-        virtual bool RemoveComponent(const Component::Ptr& pComponent);
+        virtual bool RemoveComponent(const ComponentPtr& pComponent);
         virtual bool ContainsComponent(const std::string& name);
 
-        virtual void ForEachComponent(const std::function<bool(const Component::Ptr&)>& fun) const;
-        virtual void ForEachComponent(const std::function<bool(Component::Ptr&)>& fun);
+        virtual void ForEachComponent(const std::function<bool(const ComponentPtr&)>& fun) const;
+        virtual void ForEachComponent(const std::function<bool(ComponentPtr&)>& fun);
 
         template<typename T> SR_HTYPES_NS::SharedPtr<T> GetComponent() {
             return GetComponent(T::GetClassStaticName()).template DynamicCast<T>();
@@ -91,13 +90,16 @@ namespace SR_UTILS_NS {
 
         void OnPostLoad() override;
 
+    private:
+        static ComponentPtr CreateComponentByName(SR_UTILS_NS::StringAtom name);
+
     protected:
-        void DestroyComponent(const Component::Ptr& pComponent);
+        void DestroyComponent(const ComponentPtr& pComponent);
 
     protected:
         /// @property @hidden @dontSaveTags(Inspector)
         /// @propertyCondition(!This.IsPrefab())
-        std::vector<Component::Ptr> m_components;
+        std::vector<ComponentPtr> m_components;
 
     private:
         bool m_hasNotAttachedComponents = false;

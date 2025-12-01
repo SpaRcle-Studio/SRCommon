@@ -7,6 +7,7 @@
 
 #include <Utils/Common/StringAtomLiterals.h>
 #include <Utils/TypeTraits/TypeTraits.h>
+#include <Utils/TypeTraits/SRClass.h>
 #include <Utils/Types/RawPointerHolder.h>
 #include <Utils/Types/SharedPtr.h>
 

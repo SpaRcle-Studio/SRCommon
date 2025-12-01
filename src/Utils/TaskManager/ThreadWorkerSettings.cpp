@@ -4,4 +4,6 @@
 
 #include <Utils/TaskManager/ThreadWorkerSettings.h>
 
+#include <Enum/ThreadWorkerState.hpp>
+
 #include <Codegen/ThreadWorkerSettings.generated.hpp>

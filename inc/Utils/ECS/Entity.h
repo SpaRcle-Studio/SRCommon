@@ -6,6 +6,7 @@
 #define SR_ENGINE_UTILS_ENTITY_H
 
 #include <Utils/Serialization/Serializable.h>
+#include <Utils/Types/SharedPtr.h>
 
 namespace SR_UTILS_NS {
     class Entity;
@@ -35,7 +36,7 @@ namespace SR_UTILS_NS {
     public:
         SR_NODISCARD bool IsEntityRegistered() const noexcept { return m_pEntityController; }
         SR_NODISCARD EntityId GetEntityId() const { return m_entityId; }
-        SR_NODISCARD Entity::Ptr GetEntity() const noexcept { return GetThis(); }
+        SR_NODISCARD Entity::Ptr GetEntity() const noexcept;
 
         void SetEntityController(EntityController* pEntityController);
         void SetEntityId(EntityId id);
@@ -45,12 +46,10 @@ namespace SR_UTILS_NS {
 
         void OnPostLoad() override;
 
-        void AddEditorFlags(EditorFlags flags) noexcept { m_editorFlags |= flags; }
-        void RemoveEditorFlags(EditorFlags flags) noexcept { m_editorFlags &= ~flags; }
+        void AddEditorFlags(EditorFlags flags) noexcept;
+        void RemoveEditorFlags(EditorFlags flags) noexcept;
 
-        SR_NODISCARD bool HasEditorFlags(EditorFlags flags) const noexcept {
-            return SR_MATH_NS::IsMaskIncludedSubMask(m_editorFlags, flags);
-        }
+        SR_NODISCARD bool HasEditorFlags(EditorFlags flags) const noexcept;
 
         SR_NODISCARD virtual bool IsPrefabLoadingState() const noexcept { return false; }
 

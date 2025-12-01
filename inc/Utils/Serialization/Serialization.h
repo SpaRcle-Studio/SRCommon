@@ -12,12 +12,13 @@
 #include <Utils/TypeTraits/SRClassMeta.h>
 #include <Utils/Types/UnicodeString.h>
 #include <Utils/Types/SharedPtr.h>
-#include <Utils/Math/Size.h>
 #include <Utils/Math/Rect.h>
 #include <Utils/Common/StringAtomLiterals.h>
 #include <Utils/Common/AssertFwd.h>
 
-#include <Codegen/Enums.generated.hpp>
+#include <Enum/SizeMetric.hpp>
+
+/// #include <Codegen/Enums.generated.hpp>
 
 namespace SR_UTILS_NS {
 	class Serializable;

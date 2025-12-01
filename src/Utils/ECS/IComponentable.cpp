@@ -77,6 +77,14 @@ namespace SR_UTILS_NS {
         return false;
     }
 
+    uint32_t IComponentable::GetComponentsCount() const noexcept {
+        return static_cast<uint32_t>(m_components.size());
+    }
+
+    const std::vector<IComponentable::ComponentPtr>& IComponentable::GetComponents() const noexcept {
+        return m_components;
+    }
+
     int32_t IComponentable::GetComponentIndex(const Component::Ptr& pComponent) const {
         auto&& pIt = std::find(m_components.begin(), m_components.end(), pComponent);
         if (pIt == m_components.end()) {
@@ -372,5 +380,9 @@ namespace SR_UTILS_NS {
 
             pComponent->OnMatrixDirty();
         }
+    }
+
+    IComponentable::ComponentPtr IComponentable::CreateComponentByName(StringAtom name) {
+        return Factory::Instance().Create<Component>(name);
     }
 }

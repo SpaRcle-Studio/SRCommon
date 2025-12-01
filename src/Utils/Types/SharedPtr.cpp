@@ -3,6 +3,7 @@
 //
 
 #include <Utils/Types/SharedPtr.h>
+#include <Utils/Platform/Platform.h>
 
 namespace SR_HTYPES_NS {
     bool SharedPtrDynamicDataCounter::CheckMemoryLeaks() {

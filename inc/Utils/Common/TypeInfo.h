@@ -8,8 +8,6 @@
 #include <Utils/Common/Enumerations.h>
 #include <Utils/Common/AnyVisitor.h>
 #include <Utils/Math/Size.h>
-#include <Utils/Math/Vector2.h>
-#include <Utils/Math/Vector3.h>
 #include <Utils/Math/Vector4.h>
 #include <Utils/Math/Vector6.h>
 #include <Utils/Types/UnicodeString.h>

@@ -8,6 +8,8 @@
 #include <Utils/ECS/Component.h>
 #include <Utils/ECS/GameObject.h>
 
+#include <Enum/Action.hpp>
+
 #include <Codegen/EntityRefUtils.generated.hpp>
 
 namespace SR_UTILS_NS::EntityRefUtils {

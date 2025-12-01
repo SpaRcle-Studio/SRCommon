@@ -5,13 +5,13 @@
 #ifndef SR_ENGINE_PATH_H
 #define SR_ENGINE_PATH_H
 
-#include <Utils/Math/Mathematics.h>
-#include <Utils/Types/StringAtom.h>
-#include <Utils/Serialization/ObjectDataAccessor.h>
+#include <Utils/stdInclude.h>
 
 namespace SR_UTILS_NS {
+    class StringAtom;
     class IDeserializer;
     class ISerializer;
+    struct SerializationId;
 
     class SR_COMMON_DLL_API Path {
     public:
@@ -120,20 +120,6 @@ namespace SR_UTILS_NS {
         mutable uint64_t m_hash = SR_UINT64_MAX;
         mutable bool m_isNormalized = false;
 
-    };
-
-    template <> struct SupportsNullptrComparison<SR_UTILS_NS::Path> : std::false_type {};
-}
-
-namespace SR_UTILS_NS {
-    template<> struct ObjectDataAccessor<SR_UTILS_NS::Path> {
-        static void Save(ISerializer& serializer, const SR_UTILS_NS::Path& value, const SerializationId& id) {
-            value.Save(serializer, id);
-        }
-
-        static void Load(IDeserializer& deserializer, SR_UTILS_NS::Path& value, const SerializationId& id) {
-            value.Load(deserializer, id);
-        }
     };
 }
 

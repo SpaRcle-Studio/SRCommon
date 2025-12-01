@@ -4,6 +4,7 @@
 
 #include <Utils/Resources/Asset.h>
 #include <Utils/Serialization/SRASerialization.h>
+#include <Utils/Serialization/Serializable.h>
 
 #include <Codegen/Asset.generated.hpp>
 

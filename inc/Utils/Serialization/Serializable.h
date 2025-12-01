@@ -7,15 +7,22 @@
 
 #include <Utils/TypeTraits/SRClass.h>
 
-#include <Utils/Serialization/Serialization.h>
-
 namespace SR_UTILS_NS {
+    class ISerializer;
+    class IDeserializer;
+
+    namespace SerializationFlagsEnumWrappper { enum SerializationFlags : uint64_t; }
+    using SerializationFlags = SerializationFlagsEnumWrappper::SerializationFlags;
+
     class Serializable : public SRClass {
+        using Super = SRClass;
         SR_CLASS()
     public:
         using OriginType = Serializable;
 
     public:
+        Serializable();
+
         virtual void Save(ISerializer& serializer) const;
         virtual bool Load(IDeserializer& deserializer);
 
@@ -27,31 +34,14 @@ namespace SR_UTILS_NS {
         virtual void OnPreLoad() { }
         virtual void OnPostLoad() { }
 
-        void AddSerializationFlags(SerializationFlags flags) noexcept { m_flags |= flags; }
-        void RemoveSerializationFlags(SerializationFlags flags) noexcept { m_flags &= ~flags; }
+        void AddSerializationFlags(SerializationFlags flags) noexcept;
+        void RemoveSerializationFlags(SerializationFlags flags) noexcept;
 
         SR_NODISCARD bool HasSerializationFlags(SerializationFlags flags) const noexcept;
 
     private:
-        SerializationFlags m_flags = SerializationFlags::None;
+        SerializationFlags m_flags;
 
-    };
-
-    template<typename T>
-    struct ObjectDataAccessor<T, typename std::enable_if<SerializationTraits<T>::IsSerializable>::type> {
-        static void Save(ISerializer& serializer, const T& value, const SerializationId& id) {
-            serializer.BeginObject(id);
-            static_cast<const Serializable&>(value).Save(serializer);
-            serializer.EndObject();
-        }
-
-        static void Load(IDeserializer& deserializer, T& value, const SerializationId& id) {
-            if (!deserializer.BeginObject(id)) {
-                return;
-            }
-            static_cast<Serializable&>(value).Load(deserializer);
-            deserializer.EndObject();
-        }
     };
 }
 

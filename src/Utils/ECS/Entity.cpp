@@ -7,6 +7,8 @@
 #include <Utils/ECS/EntityRef.h>
 #include <Utils/Reflection/SRClassUtils.h>
 
+#include <Enum/EditorFlags.hpp>
+
 #include <Codegen/Entity.generated.hpp>
 
 namespace SR_UTILS_NS {
@@ -136,6 +138,22 @@ namespace SR_UTILS_NS {
                 static_cast<EntityRefBase&>(srClass).OnEntityIdReplaced(replaceMap);
             }
         });
+    }
+
+    bool Entity::HasEditorFlags(EditorFlags flags) const noexcept {
+        return SR_MATH_NS::IsMaskIncludedSubMask(m_editorFlags, flags);
+    }
+
+    void Entity::AddEditorFlags(EditorFlags flags) noexcept {
+        m_editorFlags |= flags;
+    }
+
+    void Entity::RemoveEditorFlags(EditorFlags flags) noexcept {
+        m_editorFlags &= ~flags;
+    }
+
+    Entity::Ptr Entity::GetEntity() const noexcept {
+        return GetThis();
     }
 
     //void Entity::SetEntityPath(const EntityPath &path) {

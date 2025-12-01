@@ -3,10 +3,18 @@
 //
 
 #include <Utils/Serialization/Serializable.h>
+#include <Utils/Serialization/SerializationFlags.h>
+
+#include <Enum/SerializationFlags.hpp>
 
 #include <Codegen/Serializable.generated.hpp>
 
 namespace SR_UTILS_NS {
+    Serializable::Serializable()
+        : Super()
+        , m_flags(SerializationFlags::None)
+    { }
+
     void Serializable::Save(ISerializer& serializer) const {
         const_cast<Serializable&>(static_cast<const Serializable&>(*this)).OnPreSave();
         GetMeta()->Save(serializer, *this);
@@ -20,6 +28,14 @@ namespace SR_UTILS_NS {
         }
         const_cast<Serializable&>(static_cast<const Serializable&>(*this)).OnPostLoad();
         return true;
+    }
+
+    void Serializable::AddSerializationFlags(SerializationFlags flags) noexcept {
+        m_flags |= flags;
+    }
+
+    void Serializable::RemoveSerializationFlags(SerializationFlags flags) noexcept {
+        m_flags &= ~flags;
     }
 
     bool Serializable::HasSerializationFlags(const SerializationFlags flags) const noexcept {

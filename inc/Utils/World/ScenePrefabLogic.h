@@ -26,13 +26,13 @@ namespace SR_WORLD_NS {
 
         static bool SaveSOAsPrefab(ISerializer& serializer, const SR_HTYPES_NS::SharedPtr<SceneObject>& pSO);
 
-        void SetCustomSOData(IDeserializer::UniquePtr pCustomData);
+        void SetCustomSOData(std::unique_ptr<IDeserializer> pCustomData);
 
     private:
         bool LoadSOData(IDeserializer& deserializer);
 
     private:
-        IDeserializer::UniquePtr m_pSOCustomData;
+        std::unique_ptr<IDeserializer> m_pSOCustomData;
 
     };
 }
