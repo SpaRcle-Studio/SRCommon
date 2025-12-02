@@ -5,7 +5,7 @@
 #ifndef SR_ENGINE_UTILS_SR_CLASS_MACRO_H
 #define SR_ENGINE_UTILS_SR_CLASS_MACRO_H
 
-#include <Utils/macros.h>
+#include <Utils/stdInclude.h>
 
 namespace SR_UTILS_NS {
     class SRClassMeta;

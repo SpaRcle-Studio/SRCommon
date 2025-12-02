@@ -6,9 +6,8 @@
 #define SR_ENGINE_UTILS_I_RAW_MESH_HOLDER_H
 
 #include <Utils/Types/SharedPtr.h>
-#include <Utils/TypeTraits/SRClass.h>
 #include <Utils/Common/Vertices.h>
-#include <Utils/Common/SubscriptionHolder.h>
+#include <Utils/Common/Subscription.h>
 
 namespace SR_HTYPES_NS {
     class RawMesh;
@@ -33,12 +32,12 @@ namespace SR_HTYPES_NS {
         virtual void OnRawMeshChanged() { }
 
         void SetRawMesh(const SR_UTILS_NS::Path& path);
-        void SetRawMesh(RawMeshPtr pRawMesh);
+        void SetRawMesh(const RawMeshPtr& pRawMesh);
         void SetMeshId(MeshIndex meshIndex, bool forceReload = false);
 
     private:
         SR_UTILS_NS::Subscription m_reloadSubscription;
-        RawMeshPtr m_rawMesh = nullptr;
+        RawMeshPtr m_rawMesh;
         /// определяет порядок меша в файле, если их там несколько
         /// TODO: переделать в int16_t, но нужно написать миграторы.
         MeshIndex m_meshId = SR_ID_INVALID;

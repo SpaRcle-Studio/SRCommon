@@ -7,10 +7,13 @@
 #include <Utils/Resources/ResourceManager.h>
 #include <Utils/Resources/Yaml.h>
 
-#include <Utils/Debug.h>
 #include <Utils/Platform/Platform.h>
 #include <Utils/Types/Time.h>
+#include <Utils/Types/Thread.h>
+#include <Utils/Types/DataStorage.h>
 #include <Utils/Common/Features.h>
+#include <Utils/TypeTraits/Factory.h>
+#include <Utils/TaskManager/ThreadWorkerSettings.h>
 
 #include <Codegen/ThreadWorker.generated.hpp>
 
@@ -20,6 +23,7 @@
 namespace SR_UTILS_NS {
     ThreadWorkerStateBase::ThreadWorkerStateBase()
         : Super(this, SR_UTILS_NS::SharedPtrPolicy::Automatic)
+        , m_state(ThreadWorkerState::Idle)
     { }
 
     void ThreadWorkerStateBase::AddStartCondition(StringAtom name, ThreadWorkerState state) {
@@ -105,6 +109,8 @@ namespace SR_UTILS_NS {
         : Super(this, SR_UTILS_NS::SharedPtrPolicy::Automatic)
         , m_name(std::move(name))
     { }
+
+    ThreadWorker::~ThreadWorker() = default;
 
     void ThreadWorker::AddState(ThreadWorkerStateBase::Ptr pState) {
         if (GetThreadsWorker()) {
@@ -378,6 +384,13 @@ namespace SR_UTILS_NS {
         }
 
         return false;
+    }
+
+    SR_HTYPES_NS::DataStorage& ThreadsWorker::GetContext() {
+        if (!m_context) {
+            m_context = new SR_HTYPES_NS::DataStorage();
+        }
+        return *m_context;
     }
 }
 

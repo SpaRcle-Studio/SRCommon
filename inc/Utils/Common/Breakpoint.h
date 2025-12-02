@@ -5,7 +5,7 @@
 #ifndef SR_ENGINE_BREAKPOINT_H
 #define SR_ENGINE_BREAKPOINT_H
 
-#include <Utils/macros.h>
+#include <Utils/stdInclude.h>
 
 namespace SR_UTILS_NS {
     SR_INLINE_STATIC void Breakpoint() {

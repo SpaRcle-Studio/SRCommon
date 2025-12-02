@@ -16,10 +16,6 @@
 #include <Utils/Common/StringAtomLiterals.h>
 #include <Utils/Common/AssertFwd.h>
 
-#include <Enum/SizeMetric.hpp>
-
-/// #include <Codegen/Enums.generated.hpp>
-
 namespace SR_UTILS_NS {
 	class Serializable;
 

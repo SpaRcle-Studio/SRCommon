@@ -5,7 +5,7 @@
 #ifndef SR_ENGINE_UTILS_RAW_POINTER_HOLDER_H
 #define SR_ENGINE_UTILS_RAW_POINTER_HOLDER_H
 
-#include <Utils/macros.h>
+#include <Utils/stdInclude.h>
 
 namespace SR_HTYPES_NS {
     template<typename T> class RawPointerHolder {

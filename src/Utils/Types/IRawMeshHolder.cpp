@@ -11,7 +11,7 @@ namespace SR_HTYPES_NS {
         SetRawMesh(RawMeshPtr());
     }
 
-    void IRawMeshHolder::SetRawMesh(IRawMeshHolder::RawMeshPtr pRawMesh) {
+    void IRawMeshHolder::SetRawMesh(const RawMeshPtr& pRawMesh) {
         if (m_rawMesh == pRawMesh) {
             return;
         }

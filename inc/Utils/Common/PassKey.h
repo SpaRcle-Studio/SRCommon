@@ -23,6 +23,7 @@ namespace SR_UTILS_NS {
     protected:
         PassKey() noexcept = default;
         explicit PassKey(const T *) noexcept { }
+        explicit PassKey(T *) noexcept { }
 
     private:
         friend T;

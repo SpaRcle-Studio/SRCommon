@@ -5,16 +5,10 @@
 #ifndef SR_ENGINE_IRESOURCE_H
 #define SR_ENGINE_IRESOURCE_H
 
-#include <Utils/Debug.h>
 #include <Utils/FileSystem/Path.h>
-#include <Utils/Common/NonCopyable.h>
-#include <Utils/Common/Hashes.h>
 #include <Utils/Common/SubscriptionHolder.h>
-#include <Utils/Types/Function.h>
-#include <Utils/Types/SharedPtr.h>
 #include <Utils/Serialization/Serializable.h>
 #include <Utils/Resources/ResourceContainer.h>
-#include <Utils/Resources/FileWatcher.h>
 
 namespace SR_UTILS_NS {
     class ResourceManager;

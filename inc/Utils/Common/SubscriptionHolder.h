@@ -8,6 +8,7 @@
 #include <Utils/Types/StringAtom.h>
 #include <Utils/Types/ObjectPool.h>
 #include <Utils/Types/Function.h>
+#include <Utils/Common/Subscription.h>
 
 namespace SR_UTILS_NS {
     class SubscriptionHolder;
@@ -21,23 +22,6 @@ namespace SR_UTILS_NS {
         SR_HTYPES_NS::Function<void(const SubscriptionMessage&)> callback;
         SubscriptionHolder* pHolder = nullptr;
         StringAtom id;
-    };
-
-    class SR_COMMON_DLL_API Subscription final : SR_UTILS_NS::NonCopyable {
-    public:
-        Subscription();
-        ~Subscription() override;
-        explicit Subscription(SubscriptionInternalInfo* pInternalInfo);
-        Subscription(Subscription&& other) noexcept;
-        Subscription& operator=(Subscription&& other) noexcept;
-
-        SR_NODISCARD bool IsValid() const noexcept { return m_internalInfo != nullptr; }
-
-        void Reset();
-
-    private:
-        SubscriptionInternalInfo* m_internalInfo = nullptr;
-
     };
 
     class SR_COMMON_DLL_API SubscriptionHolder {

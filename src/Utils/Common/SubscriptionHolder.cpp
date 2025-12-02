@@ -4,7 +4,6 @@
 
 #include <Utils/Common/SubscriptionHolder.h>
 #include <Utils/Common/SubscriptionMessage.h>
-#include <Utils/Debug.h>
 
 namespace SR_UTILS_NS {
     void SubscriptionMessage::SetInt(const StringAtom id, const uint64_t value) { m_ints[id] = value; }
@@ -39,35 +38,6 @@ namespace SR_UTILS_NS {
     SubscriptionMessage::SubscriptionMessage() = default;
 
     SubscriptionMessage::~SubscriptionMessage() = default;
-
-    Subscription::~Subscription() {
-        Reset();
-    }
-
-    void Subscription::Reset() {
-        if (m_internalInfo) {
-            if (m_internalInfo->pHolder) {
-                m_internalInfo->pHolder->Unsubscribe(m_internalInfo);
-            }
-            m_internalInfo = nullptr;
-        }
-    }
-
-    Subscription::Subscription(SubscriptionInternalInfo* pInternalInfo)
-        : m_internalInfo(pInternalInfo)
-    { }
-
-    Subscription::Subscription(Subscription&& other) noexcept
-        : m_internalInfo(SR_EXCHANGE(other.m_internalInfo, nullptr))
-    { }
-
-    Subscription &Subscription::operator=(Subscription &&other) noexcept {
-        Reset();
-        m_internalInfo = SR_EXCHANGE(other.m_internalInfo, nullptr);
-        return *this;
-    }
-
-    Subscription::Subscription() = default;
 
     SubscriptionHolder::~SubscriptionHolder() {
         SRAssert2(m_count == 0, "Not all subscriptions were unsubscribed!");

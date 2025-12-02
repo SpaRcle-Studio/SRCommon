@@ -5,7 +5,6 @@
 #ifndef SR_ENGINE_THREAD_H
 #define SR_ENGINE_THREAD_H
 
-#include <Utils/Debug.h>
 #include <Utils/Common/ThreadUtils.h>
 #include <Utils/Common/Singleton.h>
 #include <Utils/Types/Function.h>
