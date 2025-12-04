@@ -22,8 +22,7 @@ namespace SR_UTILS_NS {
      *
      * \arg Id: maybe SR_ID_INVALID
      */
-    class DebugDraw : public Singleton<DebugDraw> {
-        SR_REGISTER_SINGLETON(DebugDraw)
+    class IDebugDraw {
     public:
         using RemoveCallback = SR_HTYPES_NS::Function<void(uint64_t id)>;
         using DrawLineCallback = SR_HTYPES_NS::Function<uint64_t(uint64_t id, const SR_MATH_NS::FVector3& start, const SR_MATH_NS::FVector3& end, const SR_MATH_NS::FColor& color, float_t time)>;
@@ -57,6 +56,7 @@ namespace SR_UTILS_NS {
         void RemoveCallbacks(void* pUserIdentifier);
         void SwitchCallbacks(void* pUserIdentifier);
         void Remove(uint64_t id);
+        void TryRemove(uint64_t* id);
 
     public:
         uint64_t DrawMesh(SR_HTYPES_NS::RawMesh* pRawMesh, int32_t meshId, uint64_t id, const SR_MATH_NS::FVector3& pos, const SR_MATH_NS::Quaternion& rot, const SR_MATH_NS::FVector3& scale, const SR_MATH_NS::FColor& color, float_t time);
@@ -168,10 +168,19 @@ namespace SR_UTILS_NS {
         void DrawQuaternion(const SR_MATH_NS::FVector3& pos, const SR_MATH_NS::Quaternion& q, const SR_MATH_NS::FColor& color, float_t time);
 
     private:
+        std::recursive_mutex m_mutex;
         void* m_currentSwitcher = nullptr;
         Callbacks* m_currentCallbacks = nullptr;
         std::map<void*, Callbacks> m_callbacks;
 
+    };
+
+    class DebugDraw : public IDebugDraw, public Singleton<DebugDraw> {
+        SR_REGISTER_SINGLETON(DebugDraw)
+    };
+
+    class DebugOverlayDraw : public IDebugDraw, public Singleton<DebugOverlayDraw> {
+        SR_REGISTER_SINGLETON(DebugOverlayDraw)
     };
 }
 

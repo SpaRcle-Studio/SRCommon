@@ -10,14 +10,14 @@
 namespace SR_UTILS_NS {
     /// ---------------------------------------------- CALLBACKS INITIALIZATIONS ---------------------------------------
 
-    void DebugDraw::SetCallbacks(void* pUserIdentifier, Callbacks callbacks)
+    void IDebugDraw::SetCallbacks(void* pUserIdentifier, Callbacks callbacks)
     {
         SR_LOCK_GUARD;
 
         m_callbacks[pUserIdentifier] = std::move(callbacks);
     }
 
-    void DebugDraw::RemoveCallbacks(void* pUserIdentifier) {
+    void IDebugDraw::RemoveCallbacks(void* pUserIdentifier) {
         SR_LOCK_GUARD;
 
         if (auto&& pIt = m_callbacks.find(pUserIdentifier); pIt != m_callbacks.end()) {
@@ -32,7 +32,7 @@ namespace SR_UTILS_NS {
         }
     }
 
-    void DebugDraw::SwitchCallbacks(void* pUserIdentifier) {
+    void IDebugDraw::SwitchCallbacks(void* pUserIdentifier) {
         SR_TRACY_ZONE;
         SR_LOCK_GUARD;
 
@@ -49,7 +49,7 @@ namespace SR_UTILS_NS {
         }
     }
 
-    void DebugDraw::Remove(uint64_t id) {
+    void IDebugDraw::Remove(uint64_t id) {
         SR_LOCK_GUARD;
 
         if (m_currentCallbacks && m_currentCallbacks->removeCallback) {
@@ -59,7 +59,7 @@ namespace SR_UTILS_NS {
 
     /// ---------------------------------------------------- LINE DRAWING ----------------------------------------------
 
-    uint64_t DebugDraw::DrawLine(uint64_t id, const SR_MATH_NS::FVector3& start, const SR_MATH_NS::FVector3& end, const SR_MATH_NS::FColor& color, float_t time) {
+    uint64_t IDebugDraw::DrawLine(uint64_t id, const SR_MATH_NS::FVector3& start, const SR_MATH_NS::FVector3& end, const SR_MATH_NS::FColor& color, float_t time) {
         SR_LOCK_GUARD;
 
         if (m_currentCallbacks && m_currentCallbacks->drawLineCallback) {
@@ -69,45 +69,45 @@ namespace SR_UTILS_NS {
         return SR_ID_INVALID;
     }
 
-    uint64_t DebugDraw::DrawLine(uint64_t id, const SR_MATH_NS::FVector3 &start, const SR_MATH_NS::FVector3 &end, const SR_MATH_NS::FColor &color) {
+    uint64_t IDebugDraw::DrawLine(uint64_t id, const SR_MATH_NS::FVector3 &start, const SR_MATH_NS::FVector3 &end, const SR_MATH_NS::FColor &color) {
         return DrawLine(id, start, end, color, DEFAULT_DURATION);
     }
 
-    uint64_t DebugDraw::DrawLine(const SR_MATH_NS::FVector3& start, const SR_MATH_NS::FVector3& end, const SR_MATH_NS::FColor& color, float_t time) {
+    uint64_t IDebugDraw::DrawLine(const SR_MATH_NS::FVector3& start, const SR_MATH_NS::FVector3& end, const SR_MATH_NS::FColor& color, float_t time) {
         return DrawLine(SR_ID_INVALID, start, end, color, time);
     }
 
-    uint64_t DebugDraw::DrawLine(const SR_MATH_NS::FVector3& start, const SR_MATH_NS::FVector3& end, const SR_MATH_NS::FColor& color) {
+    uint64_t IDebugDraw::DrawLine(const SR_MATH_NS::FVector3& start, const SR_MATH_NS::FVector3& end, const SR_MATH_NS::FColor& color) {
         return DrawLine(SR_ID_INVALID, start, end, color, DEFAULT_DURATION);
     }
 
-    uint64_t DebugDraw::DrawLine(const SR_MATH_NS::FVector3& start, const SR_MATH_NS::FVector3& end, float_t time) {
+    uint64_t IDebugDraw::DrawLine(const SR_MATH_NS::FVector3& start, const SR_MATH_NS::FVector3& end, float_t time) {
         return DrawLine(SR_ID_INVALID, start, end, time);
     }
 
-    uint64_t DebugDraw::DrawLine(const SR_MATH_NS::FVector3& start, const SR_MATH_NS::FVector3& end) {
+    uint64_t IDebugDraw::DrawLine(const SR_MATH_NS::FVector3& start, const SR_MATH_NS::FVector3& end) {
         return DrawLine(SR_ID_INVALID, start, end, DEFAULT_COLOR, DEFAULT_DURATION);
     }
 
-    uint64_t DebugDraw::DrawLine(uint64_t id, const SR_MATH_NS::FVector3& start, const SR_MATH_NS::FVector3& end) {
+    uint64_t IDebugDraw::DrawLine(uint64_t id, const SR_MATH_NS::FVector3& start, const SR_MATH_NS::FVector3& end) {
         return DrawLine(id, start, end, DEFAULT_COLOR, DEFAULT_DURATION);
     }
 
-    uint64_t DebugDraw::DrawLine(uint64_t id, const SR_MATH_NS::FVector3& start, const SR_MATH_NS::FVector3& end, float_t time) {
+    uint64_t IDebugDraw::DrawLine(uint64_t id, const SR_MATH_NS::FVector3& start, const SR_MATH_NS::FVector3& end, float_t time) {
         return DrawLine(id, start, end, DEFAULT_COLOR, time);
     }
 
-    uint64_t DebugDraw::DrawLine(uint64_t id) {
+    uint64_t IDebugDraw::DrawLine(uint64_t id) {
         return DrawLine(id, DEFAULT_POSITION, DEFAULT_POSITION, DEFAULT_COLOR, 0.f);
     }
 
-    uint64_t DebugDraw::DrawLine() {
+    uint64_t IDebugDraw::DrawLine() {
         return DrawLine(SR_ID_INVALID, DEFAULT_POSITION, DEFAULT_POSITION, DEFAULT_COLOR, DEFAULT_DURATION);
     } /// не расстраивай гориллу, вызови DrawLine(DEFAULT_POSITION, DEFAULT_POSITION, DEFAULT_COLOR, DEFAULT_DURATION)
 
     /// ---------------------------------------------------- CUBE DRAWING ----------------------------------------------
 
-    uint64_t DebugDraw::DrawCube(uint64_t id, const SR_MATH_NS::FVector3& pos, const SR_MATH_NS::Quaternion& rot, const SR_MATH_NS::FVector3& scale, const SR_MATH_NS::FColor& color, float_t time) {
+    uint64_t IDebugDraw::DrawCube(uint64_t id, const SR_MATH_NS::FVector3& pos, const SR_MATH_NS::Quaternion& rot, const SR_MATH_NS::FVector3& scale, const SR_MATH_NS::FColor& color, float_t time) {
         SR_LOCK_GUARD;
 
         if (m_currentCallbacks && m_currentCallbacks->drawCubeCallback) {
@@ -117,77 +117,77 @@ namespace SR_UTILS_NS {
         return SR_ID_INVALID;
     }
 
-    uint64_t DebugDraw::DrawCube(uint64_t id, const SR_MATH_NS::FVector3 &pos, const SR_MATH_NS::Quaternion &rot, const SR_MATH_NS::FVector3 &scale, const SR_MATH_NS::FColor &color) {
+    uint64_t IDebugDraw::DrawCube(uint64_t id, const SR_MATH_NS::FVector3 &pos, const SR_MATH_NS::Quaternion &rot, const SR_MATH_NS::FVector3 &scale, const SR_MATH_NS::FColor &color) {
         return DrawCube(id, pos, rot, scale, color, DEFAULT_DURATION);
     }
 
-    uint64_t DebugDraw::DrawCube(uint64_t id, const SR_MATH_NS::FVector3 &pos, const SR_MATH_NS::Quaternion &rot, const SR_MATH_NS::FVector3 &scale) {
+    uint64_t IDebugDraw::DrawCube(uint64_t id, const SR_MATH_NS::FVector3 &pos, const SR_MATH_NS::Quaternion &rot, const SR_MATH_NS::FVector3 &scale) {
         return DrawCube(id, pos, rot, scale, DEFAULT_COLOR, DEFAULT_DURATION);
     }
 
-    uint64_t DebugDraw::DrawCube(uint64_t id, const SR_MATH_NS::FVector3 &pos, const SR_MATH_NS::Quaternion &rot) {
+    uint64_t IDebugDraw::DrawCube(uint64_t id, const SR_MATH_NS::FVector3 &pos, const SR_MATH_NS::Quaternion &rot) {
         return DrawCube(id, pos, rot, DEFAULT_SCALE, DEFAULT_COLOR, DEFAULT_DURATION);
     }
 
-    uint64_t DebugDraw::DrawCube(uint64_t id, const SR_MATH_NS::FVector3 &pos) {
+    uint64_t IDebugDraw::DrawCube(uint64_t id, const SR_MATH_NS::FVector3 &pos) {
         return DrawCube(id, pos, DEFAULT_QUATERNION, DEFAULT_SCALE, DEFAULT_COLOR, DEFAULT_DURATION);
     }
 
-    uint64_t DebugDraw::DrawCube(uint64_t id, const SR_MATH_NS::FVector3 &pos, const SR_MATH_NS::FColor &color, float_t time) {
+    uint64_t IDebugDraw::DrawCube(uint64_t id, const SR_MATH_NS::FVector3 &pos, const SR_MATH_NS::FColor &color, float_t time) {
         return DrawCube(id, pos, DEFAULT_QUATERNION, DEFAULT_SCALE, color, time);
     }
 
-    uint64_t DebugDraw::DrawCube(const SR_MATH_NS::FVector3 &pos, const SR_MATH_NS::Quaternion &rot, const SR_MATH_NS::FVector3 &scale, const SR_MATH_NS::FColor &color) {
+    uint64_t IDebugDraw::DrawCube(const SR_MATH_NS::FVector3 &pos, const SR_MATH_NS::Quaternion &rot, const SR_MATH_NS::FVector3 &scale, const SR_MATH_NS::FColor &color) {
         return DrawCube(SR_ID_INVALID, pos, rot, scale, color, DEFAULT_DURATION);
     }
 
-    uint64_t DebugDraw::DrawCube(const SR_MATH_NS::FVector3 &pos, const SR_MATH_NS::Quaternion &rot, const SR_MATH_NS::FVector3 &scale) {
+    uint64_t IDebugDraw::DrawCube(const SR_MATH_NS::FVector3 &pos, const SR_MATH_NS::Quaternion &rot, const SR_MATH_NS::FVector3 &scale) {
         return DrawCube(SR_ID_INVALID, pos, rot, scale, DEFAULT_COLOR, DEFAULT_DURATION);
     }
 
-    uint64_t DebugDraw::DrawCube(const SR_MATH_NS::FVector3 &pos, const SR_MATH_NS::Quaternion &rot) {
+    uint64_t IDebugDraw::DrawCube(const SR_MATH_NS::FVector3 &pos, const SR_MATH_NS::Quaternion &rot) {
         return DrawCube(SR_ID_INVALID, pos, rot, DEFAULT_SCALE, DEFAULT_COLOR, DEFAULT_DURATION);
     }
 
-    uint64_t DebugDraw::DrawCube(const SR_MATH_NS::FVector3 &pos) {
+    uint64_t IDebugDraw::DrawCube(const SR_MATH_NS::FVector3 &pos) {
         return DrawCube(SR_ID_INVALID, pos, DEFAULT_QUATERNION, DEFAULT_SCALE, DEFAULT_COLOR, DEFAULT_DURATION);
     }
 
-    uint64_t DebugDraw::DrawCube(uint64_t id, const SR_MATH_NS::FVector3 &pos, const SR_MATH_NS::FColor &color) {
+    uint64_t IDebugDraw::DrawCube(uint64_t id, const SR_MATH_NS::FVector3 &pos, const SR_MATH_NS::FColor &color) {
         return DrawCube(id, pos, DEFAULT_QUATERNION, DEFAULT_SCALE, color, DEFAULT_DURATION);
     }
 
-    uint64_t DebugDraw::DrawCube(uint64_t id, const SR_MATH_NS::FVector3 &pos, float_t time) {
+    uint64_t IDebugDraw::DrawCube(uint64_t id, const SR_MATH_NS::FVector3 &pos, float_t time) {
         return DrawCube(id, pos, DEFAULT_QUATERNION, DEFAULT_SCALE, DEFAULT_COLOR, time);
     }
 
-    uint64_t DebugDraw::DrawCube(const SR_MATH_NS::FVector3 &pos, const SR_MATH_NS::Quaternion &rot, const SR_MATH_NS::FVector3 &scale, const SR_MATH_NS::FColor &color, float_t time) {
+    uint64_t IDebugDraw::DrawCube(const SR_MATH_NS::FVector3 &pos, const SR_MATH_NS::Quaternion &rot, const SR_MATH_NS::FVector3 &scale, const SR_MATH_NS::FColor &color, float_t time) {
         return DrawCube(SR_ID_INVALID, pos, rot, scale, color, time);
     }
 
-    uint64_t DebugDraw::DrawCube(const SR_MATH_NS::FVector3& pos, const SR_MATH_NS::FColor& color, float_t time) {
+    uint64_t IDebugDraw::DrawCube(const SR_MATH_NS::FVector3& pos, const SR_MATH_NS::FColor& color, float_t time) {
         return DrawCube(SR_ID_INVALID, pos, DEFAULT_QUATERNION, DEFAULT_SCALE, color, time);
     }
 
-    uint64_t DebugDraw::DrawCube(const SR_MATH_NS::FVector3& pos, const SR_MATH_NS::FColor& color) {
+    uint64_t IDebugDraw::DrawCube(const SR_MATH_NS::FVector3& pos, const SR_MATH_NS::FColor& color) {
         return DrawCube(SR_ID_INVALID, pos, DEFAULT_QUATERNION, DEFAULT_SCALE, color, DEFAULT_DURATION);
     }
 
-    uint64_t DebugDraw::DrawCube(const SR_MATH_NS::FVector3& pos, float_t time) {
+    uint64_t IDebugDraw::DrawCube(const SR_MATH_NS::FVector3& pos, float_t time) {
         return DrawCube(SR_ID_INVALID, pos, DEFAULT_QUATERNION, DEFAULT_SCALE, DEFAULT_COLOR, time);
     }
 
-    uint64_t DebugDraw::DrawCube(uint64_t id) {
+    uint64_t IDebugDraw::DrawCube(uint64_t id) {
         return DrawCube(id, DEFAULT_POSITION, DEFAULT_QUATERNION, DEFAULT_SCALE, DEFAULT_COLOR, 0.f);
     }
 
-    uint64_t DebugDraw::DrawCube() {
+    uint64_t IDebugDraw::DrawCube() {
         return DrawCube(SR_ID_INVALID, DEFAULT_POSITION, DEFAULT_QUATERNION, DEFAULT_SCALE, DEFAULT_COLOR, DEFAULT_DURATION);
     }
 
     /// ---------------------------------------------------- PLANE DRAWING ----------------------------------------------
 
-    uint64_t DebugDraw::DrawPlane(uint64_t id, const SR_MATH_NS::FVector3& pos, const SR_MATH_NS::Quaternion& rot, const SR_MATH_NS::FVector3& scale, const SR_MATH_NS::FColor& color, float_t time) {
+    uint64_t IDebugDraw::DrawPlane(uint64_t id, const SR_MATH_NS::FVector3& pos, const SR_MATH_NS::Quaternion& rot, const SR_MATH_NS::FVector3& scale, const SR_MATH_NS::FColor& color, float_t time) {
         SR_LOCK_GUARD;
 
         if (m_currentCallbacks && m_currentCallbacks->drawPlaneCallback) {
@@ -197,77 +197,77 @@ namespace SR_UTILS_NS {
         return SR_ID_INVALID;
     }
 
-    uint64_t DebugDraw::DrawPlane(uint64_t id, const SR_MATH_NS::FVector3 &pos, const SR_MATH_NS::Quaternion &rot, const SR_MATH_NS::FVector3 &scale, const SR_MATH_NS::FColor &color) {
+    uint64_t IDebugDraw::DrawPlane(uint64_t id, const SR_MATH_NS::FVector3 &pos, const SR_MATH_NS::Quaternion &rot, const SR_MATH_NS::FVector3 &scale, const SR_MATH_NS::FColor &color) {
         return DrawPlane(id, pos, rot, scale, color, DEFAULT_DURATION);
     }
 
-    uint64_t DebugDraw::DrawPlane(uint64_t id, const SR_MATH_NS::FVector3 &pos, const SR_MATH_NS::Quaternion &rot, const SR_MATH_NS::FVector3 &scale) {
+    uint64_t IDebugDraw::DrawPlane(uint64_t id, const SR_MATH_NS::FVector3 &pos, const SR_MATH_NS::Quaternion &rot, const SR_MATH_NS::FVector3 &scale) {
         return DrawPlane(id, pos, rot, scale, DEFAULT_COLOR, DEFAULT_DURATION);
     }
 
-    uint64_t DebugDraw::DrawPlane(uint64_t id, const SR_MATH_NS::FVector3 &pos, const SR_MATH_NS::Quaternion &rot) {
+    uint64_t IDebugDraw::DrawPlane(uint64_t id, const SR_MATH_NS::FVector3 &pos, const SR_MATH_NS::Quaternion &rot) {
         return DrawPlane(id, pos, rot, DEFAULT_SCALE, DEFAULT_COLOR, DEFAULT_DURATION);
     }
 
-    uint64_t DebugDraw::DrawPlane(uint64_t id, const SR_MATH_NS::FVector3 &pos) {
+    uint64_t IDebugDraw::DrawPlane(uint64_t id, const SR_MATH_NS::FVector3 &pos) {
         return DrawPlane(id, pos, DEFAULT_QUATERNION, DEFAULT_SCALE, DEFAULT_COLOR, DEFAULT_DURATION);
     }
 
-    uint64_t DebugDraw::DrawPlane(uint64_t id, const SR_MATH_NS::FVector3 &pos, const SR_MATH_NS::FColor &color, float_t time) {
+    uint64_t IDebugDraw::DrawPlane(uint64_t id, const SR_MATH_NS::FVector3 &pos, const SR_MATH_NS::FColor &color, float_t time) {
         return DrawPlane(id, pos, DEFAULT_QUATERNION, DEFAULT_SCALE, color, time);
     }
 
-    uint64_t DebugDraw::DrawPlane(const SR_MATH_NS::FVector3 &pos, const SR_MATH_NS::Quaternion &rot, const SR_MATH_NS::FVector3 &scale, const SR_MATH_NS::FColor &color) {
+    uint64_t IDebugDraw::DrawPlane(const SR_MATH_NS::FVector3 &pos, const SR_MATH_NS::Quaternion &rot, const SR_MATH_NS::FVector3 &scale, const SR_MATH_NS::FColor &color) {
         return DrawPlane(SR_ID_INVALID, pos, rot, scale, color, DEFAULT_DURATION);
     }
 
-    uint64_t DebugDraw::DrawPlane(const SR_MATH_NS::FVector3 &pos, const SR_MATH_NS::Quaternion &rot, const SR_MATH_NS::FVector3 &scale) {
+    uint64_t IDebugDraw::DrawPlane(const SR_MATH_NS::FVector3 &pos, const SR_MATH_NS::Quaternion &rot, const SR_MATH_NS::FVector3 &scale) {
         return DrawPlane(SR_ID_INVALID, pos, rot, scale, DEFAULT_COLOR, DEFAULT_DURATION);
     }
 
-    uint64_t DebugDraw::DrawPlane(const SR_MATH_NS::FVector3 &pos, const SR_MATH_NS::Quaternion &rot) {
+    uint64_t IDebugDraw::DrawPlane(const SR_MATH_NS::FVector3 &pos, const SR_MATH_NS::Quaternion &rot) {
         return DrawPlane(SR_ID_INVALID, pos, rot, DEFAULT_SCALE, DEFAULT_COLOR, DEFAULT_DURATION);
     }
 
-    uint64_t DebugDraw::DrawPlane(const SR_MATH_NS::FVector3 &pos) {
+    uint64_t IDebugDraw::DrawPlane(const SR_MATH_NS::FVector3 &pos) {
         return DrawPlane(SR_ID_INVALID, pos, DEFAULT_QUATERNION, DEFAULT_SCALE, DEFAULT_COLOR, DEFAULT_DURATION);
     }
 
-    uint64_t DebugDraw::DrawPlane(uint64_t id, const SR_MATH_NS::FVector3 &pos, const SR_MATH_NS::FColor &color) {
+    uint64_t IDebugDraw::DrawPlane(uint64_t id, const SR_MATH_NS::FVector3 &pos, const SR_MATH_NS::FColor &color) {
         return DrawPlane(id, pos, DEFAULT_QUATERNION, DEFAULT_SCALE, color, DEFAULT_DURATION);
     }
 
-    uint64_t DebugDraw::DrawPlane(uint64_t id, const SR_MATH_NS::FVector3 &pos, float_t time) {
+    uint64_t IDebugDraw::DrawPlane(uint64_t id, const SR_MATH_NS::FVector3 &pos, float_t time) {
         return DrawPlane(id, pos, DEFAULT_QUATERNION, DEFAULT_SCALE, DEFAULT_COLOR, time);
     }
 
-    uint64_t DebugDraw::DrawPlane(const SR_MATH_NS::FVector3 &pos, const SR_MATH_NS::Quaternion &rot, const SR_MATH_NS::FVector3 &scale, const SR_MATH_NS::FColor &color, float_t time) {
+    uint64_t IDebugDraw::DrawPlane(const SR_MATH_NS::FVector3 &pos, const SR_MATH_NS::Quaternion &rot, const SR_MATH_NS::FVector3 &scale, const SR_MATH_NS::FColor &color, float_t time) {
         return DrawPlane(SR_ID_INVALID, pos, rot, scale, color, time);
     }
 
-    uint64_t DebugDraw::DrawPlane(const SR_MATH_NS::FVector3& pos, const SR_MATH_NS::FColor& color, float_t time) {
+    uint64_t IDebugDraw::DrawPlane(const SR_MATH_NS::FVector3& pos, const SR_MATH_NS::FColor& color, float_t time) {
         return DrawPlane(SR_ID_INVALID, pos, DEFAULT_QUATERNION, DEFAULT_SCALE, color, time);
     }
 
-    uint64_t DebugDraw::DrawPlane(const SR_MATH_NS::FVector3& pos, const SR_MATH_NS::FColor& color) {
+    uint64_t IDebugDraw::DrawPlane(const SR_MATH_NS::FVector3& pos, const SR_MATH_NS::FColor& color) {
         return DrawPlane(SR_ID_INVALID, pos, DEFAULT_QUATERNION, DEFAULT_SCALE, color, DEFAULT_DURATION);
     }
 
-    uint64_t DebugDraw::DrawPlane(const SR_MATH_NS::FVector3& pos, float_t time) {
+    uint64_t IDebugDraw::DrawPlane(const SR_MATH_NS::FVector3& pos, float_t time) {
         return DrawPlane(SR_ID_INVALID, pos, DEFAULT_QUATERNION, DEFAULT_SCALE, DEFAULT_COLOR, time);
     }
 
-    uint64_t DebugDraw::DrawPlane(uint64_t id) {
+    uint64_t IDebugDraw::DrawPlane(uint64_t id) {
         return DrawPlane(id, DEFAULT_POSITION, DEFAULT_QUATERNION, DEFAULT_SCALE, DEFAULT_COLOR, 0.f);
     }
 
-    uint64_t DebugDraw::DrawPlane() {
+    uint64_t IDebugDraw::DrawPlane() {
         return DrawPlane(SR_ID_INVALID, DEFAULT_POSITION, DEFAULT_QUATERNION, DEFAULT_SCALE, DEFAULT_COLOR, DEFAULT_DURATION);
     }
 
     /// ---------------------------------------------------- SPHERE DRAWING ----------------------------------------------
 
-    uint64_t DebugDraw::DrawSphere(uint64_t id, const SR_MATH_NS::FVector3& pos, const SR_MATH_NS::Quaternion& rot, const SR_MATH_NS::FVector3& scale, const SR_MATH_NS::FColor& color, float_t time) {
+    uint64_t IDebugDraw::DrawSphere(uint64_t id, const SR_MATH_NS::FVector3& pos, const SR_MATH_NS::Quaternion& rot, const SR_MATH_NS::FVector3& scale, const SR_MATH_NS::FColor& color, float_t time) {
         SR_LOCK_GUARD;
 
         if (m_currentCallbacks && m_currentCallbacks->drawSphereCallback) {
@@ -277,77 +277,77 @@ namespace SR_UTILS_NS {
         return SR_ID_INVALID;
     }
 
-    uint64_t DebugDraw::DrawSphere(uint64_t id, const SR_MATH_NS::FVector3 &pos, const SR_MATH_NS::Quaternion &rot, const SR_MATH_NS::FVector3 &scale, const SR_MATH_NS::FColor &color) {
+    uint64_t IDebugDraw::DrawSphere(uint64_t id, const SR_MATH_NS::FVector3 &pos, const SR_MATH_NS::Quaternion &rot, const SR_MATH_NS::FVector3 &scale, const SR_MATH_NS::FColor &color) {
         return DrawSphere(id, pos, rot, scale, color, DEFAULT_DURATION);
     }
 
-    uint64_t DebugDraw::DrawSphere(uint64_t id, const SR_MATH_NS::FVector3 &pos, const SR_MATH_NS::Quaternion &rot, const SR_MATH_NS::FVector3 &scale) {
+    uint64_t IDebugDraw::DrawSphere(uint64_t id, const SR_MATH_NS::FVector3 &pos, const SR_MATH_NS::Quaternion &rot, const SR_MATH_NS::FVector3 &scale) {
         return DrawSphere(id, pos, rot, scale, DEFAULT_COLOR, DEFAULT_DURATION);
     }
 
-    uint64_t DebugDraw::DrawSphere(uint64_t id, const SR_MATH_NS::FVector3 &pos, const SR_MATH_NS::Quaternion &rot) {
+    uint64_t IDebugDraw::DrawSphere(uint64_t id, const SR_MATH_NS::FVector3 &pos, const SR_MATH_NS::Quaternion &rot) {
         return DrawSphere(id, pos, rot, DEFAULT_SCALE, DEFAULT_COLOR, DEFAULT_DURATION);
     }
 
-    uint64_t DebugDraw::DrawSphere(uint64_t id, const SR_MATH_NS::FVector3 &pos) {
+    uint64_t IDebugDraw::DrawSphere(uint64_t id, const SR_MATH_NS::FVector3 &pos) {
         return DrawSphere(id, pos, DEFAULT_QUATERNION, DEFAULT_SCALE, DEFAULT_COLOR, DEFAULT_DURATION);
     }
 
-    uint64_t DebugDraw::DrawSphere(uint64_t id, const SR_MATH_NS::FVector3 &pos, const SR_MATH_NS::FColor &color, float_t time) {
+    uint64_t IDebugDraw::DrawSphere(uint64_t id, const SR_MATH_NS::FVector3 &pos, const SR_MATH_NS::FColor &color, float_t time) {
         return DrawSphere(id, pos, DEFAULT_QUATERNION, DEFAULT_SCALE, color, time);
     }
 
-    uint64_t DebugDraw::DrawSphere(const SR_MATH_NS::FVector3 &pos, const SR_MATH_NS::Quaternion &rot, const SR_MATH_NS::FVector3 &scale, const SR_MATH_NS::FColor &color) {
+    uint64_t IDebugDraw::DrawSphere(const SR_MATH_NS::FVector3 &pos, const SR_MATH_NS::Quaternion &rot, const SR_MATH_NS::FVector3 &scale, const SR_MATH_NS::FColor &color) {
         return DrawSphere(SR_ID_INVALID, pos, rot, scale, color, DEFAULT_DURATION);
     }
 
-    uint64_t DebugDraw::DrawSphere(const SR_MATH_NS::FVector3 &pos, const SR_MATH_NS::Quaternion &rot, const SR_MATH_NS::FVector3 &scale) {
+    uint64_t IDebugDraw::DrawSphere(const SR_MATH_NS::FVector3 &pos, const SR_MATH_NS::Quaternion &rot, const SR_MATH_NS::FVector3 &scale) {
         return DrawSphere(SR_ID_INVALID, pos, rot, scale, DEFAULT_COLOR, DEFAULT_DURATION);
     }
 
-    uint64_t DebugDraw::DrawSphere(const SR_MATH_NS::FVector3 &pos, const SR_MATH_NS::Quaternion &rot) {
+    uint64_t IDebugDraw::DrawSphere(const SR_MATH_NS::FVector3 &pos, const SR_MATH_NS::Quaternion &rot) {
         return DrawSphere(SR_ID_INVALID, pos, rot, DEFAULT_SCALE, DEFAULT_COLOR, DEFAULT_DURATION);
     }
 
-    uint64_t DebugDraw::DrawSphere(const SR_MATH_NS::FVector3 &pos) {
+    uint64_t IDebugDraw::DrawSphere(const SR_MATH_NS::FVector3 &pos) {
         return DrawSphere(SR_ID_INVALID, pos, DEFAULT_QUATERNION, DEFAULT_SCALE, DEFAULT_COLOR, DEFAULT_DURATION);
     }
 
-    uint64_t DebugDraw::DrawSphere(uint64_t id, const SR_MATH_NS::FVector3 &pos, const SR_MATH_NS::FColor &color) {
+    uint64_t IDebugDraw::DrawSphere(uint64_t id, const SR_MATH_NS::FVector3 &pos, const SR_MATH_NS::FColor &color) {
         return DrawSphere(id, pos, DEFAULT_QUATERNION, DEFAULT_SCALE, color, DEFAULT_DURATION);
     }
 
-    uint64_t DebugDraw::DrawSphere(uint64_t id, const SR_MATH_NS::FVector3 &pos, float_t time) {
+    uint64_t IDebugDraw::DrawSphere(uint64_t id, const SR_MATH_NS::FVector3 &pos, float_t time) {
         return DrawSphere(id, pos, DEFAULT_QUATERNION, DEFAULT_SCALE, DEFAULT_COLOR, time);
     }
 
-    uint64_t DebugDraw::DrawSphere(const SR_MATH_NS::FVector3 &pos, const SR_MATH_NS::Quaternion &rot, const SR_MATH_NS::FVector3 &scale, const SR_MATH_NS::FColor &color, float_t time) {
+    uint64_t IDebugDraw::DrawSphere(const SR_MATH_NS::FVector3 &pos, const SR_MATH_NS::Quaternion &rot, const SR_MATH_NS::FVector3 &scale, const SR_MATH_NS::FColor &color, float_t time) {
         return DrawSphere(SR_ID_INVALID, pos, rot, scale, color, time);
     }
 
-    uint64_t DebugDraw::DrawSphere(const SR_MATH_NS::FVector3& pos, const SR_MATH_NS::FColor& color, float_t time) {
+    uint64_t IDebugDraw::DrawSphere(const SR_MATH_NS::FVector3& pos, const SR_MATH_NS::FColor& color, float_t time) {
         return DrawSphere(SR_ID_INVALID, pos, DEFAULT_QUATERNION, DEFAULT_SCALE, color, time);
     }
 
-    uint64_t DebugDraw::DrawSphere(const SR_MATH_NS::FVector3& pos, const SR_MATH_NS::FColor& color) {
+    uint64_t IDebugDraw::DrawSphere(const SR_MATH_NS::FVector3& pos, const SR_MATH_NS::FColor& color) {
         return DrawSphere(SR_ID_INVALID, pos, DEFAULT_QUATERNION, DEFAULT_SCALE, color, DEFAULT_DURATION);
     }
 
-    uint64_t DebugDraw::DrawSphere(const SR_MATH_NS::FVector3& pos, float_t time) {
+    uint64_t IDebugDraw::DrawSphere(const SR_MATH_NS::FVector3& pos, float_t time) {
         return DrawSphere(SR_ID_INVALID, pos, DEFAULT_QUATERNION, DEFAULT_SCALE, DEFAULT_COLOR, time);
     }
 
-    uint64_t DebugDraw::DrawSphere(uint64_t id) {
+    uint64_t IDebugDraw::DrawSphere(uint64_t id) {
         return DrawSphere(id, DEFAULT_POSITION, DEFAULT_QUATERNION, DEFAULT_SCALE, DEFAULT_COLOR, 0.f);
     }
 
-    uint64_t DebugDraw::DrawSphere() {
+    uint64_t IDebugDraw::DrawSphere() {
         return DrawSphere(SR_ID_INVALID, DEFAULT_POSITION, DEFAULT_QUATERNION, DEFAULT_SCALE, DEFAULT_COLOR, DEFAULT_DURATION);
     }
 
     /// ---------------------------------------------------- CAPSULE DRAWING ----------------------------------------------
 
-    uint64_t DebugDraw::DrawCapsule(uint64_t id, const SR_MATH_NS::FVector3& pos, const SR_MATH_NS::Quaternion& rot, const SR_MATH_NS::FVector3& scale, const SR_MATH_NS::FColor& color, float_t time) {
+    uint64_t IDebugDraw::DrawCapsule(uint64_t id, const SR_MATH_NS::FVector3& pos, const SR_MATH_NS::Quaternion& rot, const SR_MATH_NS::FVector3& scale, const SR_MATH_NS::FColor& color, float_t time) {
         SR_LOCK_GUARD;
 
         if (m_currentCallbacks && m_currentCallbacks->drawCapsuleCallback) {
@@ -357,77 +357,77 @@ namespace SR_UTILS_NS {
         return SR_ID_INVALID;
     }
 
-    uint64_t DebugDraw::DrawCapsule(uint64_t id, const SR_MATH_NS::FVector3 &pos, const SR_MATH_NS::Quaternion &rot, const SR_MATH_NS::FVector3 &scale, const SR_MATH_NS::FColor &color) {
+    uint64_t IDebugDraw::DrawCapsule(uint64_t id, const SR_MATH_NS::FVector3 &pos, const SR_MATH_NS::Quaternion &rot, const SR_MATH_NS::FVector3 &scale, const SR_MATH_NS::FColor &color) {
         return DrawCapsule(id, pos, rot, scale, color, DEFAULT_DURATION);
     }
 
-    uint64_t DebugDraw::DrawCapsule(uint64_t id, const SR_MATH_NS::FVector3 &pos, const SR_MATH_NS::Quaternion &rot, const SR_MATH_NS::FVector3 &scale) {
+    uint64_t IDebugDraw::DrawCapsule(uint64_t id, const SR_MATH_NS::FVector3 &pos, const SR_MATH_NS::Quaternion &rot, const SR_MATH_NS::FVector3 &scale) {
         return DrawCapsule(id, pos, rot, scale, DEFAULT_COLOR, DEFAULT_DURATION);
     }
 
-    uint64_t DebugDraw::DrawCapsule(uint64_t id, const SR_MATH_NS::FVector3 &pos, const SR_MATH_NS::Quaternion &rot) {
+    uint64_t IDebugDraw::DrawCapsule(uint64_t id, const SR_MATH_NS::FVector3 &pos, const SR_MATH_NS::Quaternion &rot) {
         return DrawCapsule(id, pos, rot, DEFAULT_SCALE, DEFAULT_COLOR, DEFAULT_DURATION);
     }
 
-    uint64_t DebugDraw::DrawCapsule(uint64_t id, const SR_MATH_NS::FVector3 &pos) {
+    uint64_t IDebugDraw::DrawCapsule(uint64_t id, const SR_MATH_NS::FVector3 &pos) {
         return DrawCapsule(id, pos, DEFAULT_QUATERNION, DEFAULT_SCALE, DEFAULT_COLOR, DEFAULT_DURATION);
     }
 
-    uint64_t DebugDraw::DrawCapsule(uint64_t id, const SR_MATH_NS::FVector3 &pos, const SR_MATH_NS::FColor &color, float_t time) {
+    uint64_t IDebugDraw::DrawCapsule(uint64_t id, const SR_MATH_NS::FVector3 &pos, const SR_MATH_NS::FColor &color, float_t time) {
         return DrawCapsule(id, pos, DEFAULT_QUATERNION, DEFAULT_SCALE, color, time);
     }
 
-    uint64_t DebugDraw::DrawCapsule(const SR_MATH_NS::FVector3 &pos, const SR_MATH_NS::Quaternion &rot, const SR_MATH_NS::FVector3 &scale, const SR_MATH_NS::FColor &color) {
+    uint64_t IDebugDraw::DrawCapsule(const SR_MATH_NS::FVector3 &pos, const SR_MATH_NS::Quaternion &rot, const SR_MATH_NS::FVector3 &scale, const SR_MATH_NS::FColor &color) {
         return DrawCapsule(SR_ID_INVALID, pos, rot, scale, color, DEFAULT_DURATION);
     }
 
-    uint64_t DebugDraw::DrawCapsule(const SR_MATH_NS::FVector3 &pos, const SR_MATH_NS::Quaternion &rot, const SR_MATH_NS::FVector3 &scale) {
+    uint64_t IDebugDraw::DrawCapsule(const SR_MATH_NS::FVector3 &pos, const SR_MATH_NS::Quaternion &rot, const SR_MATH_NS::FVector3 &scale) {
         return DrawCapsule(SR_ID_INVALID, pos, rot, scale, DEFAULT_COLOR, DEFAULT_DURATION);
     }
 
-    uint64_t DebugDraw::DrawCapsule(const SR_MATH_NS::FVector3 &pos, const SR_MATH_NS::Quaternion &rot) {
+    uint64_t IDebugDraw::DrawCapsule(const SR_MATH_NS::FVector3 &pos, const SR_MATH_NS::Quaternion &rot) {
         return DrawCapsule(SR_ID_INVALID, pos, rot, DEFAULT_SCALE, DEFAULT_COLOR, DEFAULT_DURATION);
     }
 
-    uint64_t DebugDraw::DrawCapsule(const SR_MATH_NS::FVector3 &pos) {
+    uint64_t IDebugDraw::DrawCapsule(const SR_MATH_NS::FVector3 &pos) {
         return DrawCapsule(SR_ID_INVALID, pos, DEFAULT_QUATERNION, DEFAULT_SCALE, DEFAULT_COLOR, DEFAULT_DURATION);
     }
 
-    uint64_t DebugDraw::DrawCapsule(uint64_t id, const SR_MATH_NS::FVector3 &pos, const SR_MATH_NS::FColor &color) {
+    uint64_t IDebugDraw::DrawCapsule(uint64_t id, const SR_MATH_NS::FVector3 &pos, const SR_MATH_NS::FColor &color) {
         return DrawCapsule(id, pos, DEFAULT_QUATERNION, DEFAULT_SCALE, color, DEFAULT_DURATION);
     }
 
-    uint64_t DebugDraw::DrawCapsule(uint64_t id, const SR_MATH_NS::FVector3 &pos, float_t time) {
+    uint64_t IDebugDraw::DrawCapsule(uint64_t id, const SR_MATH_NS::FVector3 &pos, float_t time) {
         return DrawCapsule(id, pos, DEFAULT_QUATERNION, DEFAULT_SCALE, DEFAULT_COLOR, time);
     }
 
-    uint64_t DebugDraw::DrawCapsule(const SR_MATH_NS::FVector3 &pos, const SR_MATH_NS::Quaternion &rot, const SR_MATH_NS::FVector3 &scale, const SR_MATH_NS::FColor &color, float_t time) {
+    uint64_t IDebugDraw::DrawCapsule(const SR_MATH_NS::FVector3 &pos, const SR_MATH_NS::Quaternion &rot, const SR_MATH_NS::FVector3 &scale, const SR_MATH_NS::FColor &color, float_t time) {
         return DrawCapsule(SR_ID_INVALID, pos, rot, scale, color, time);
     }
 
-    uint64_t DebugDraw::DrawCapsule(const SR_MATH_NS::FVector3& pos, const SR_MATH_NS::FColor& color, float_t time) {
+    uint64_t IDebugDraw::DrawCapsule(const SR_MATH_NS::FVector3& pos, const SR_MATH_NS::FColor& color, float_t time) {
         return DrawCapsule(SR_ID_INVALID, pos, DEFAULT_QUATERNION, DEFAULT_SCALE, color, time);
     }
 
-    uint64_t DebugDraw::DrawCapsule(const SR_MATH_NS::FVector3& pos, const SR_MATH_NS::FColor& color) {
+    uint64_t IDebugDraw::DrawCapsule(const SR_MATH_NS::FVector3& pos, const SR_MATH_NS::FColor& color) {
         return DrawCapsule(SR_ID_INVALID, pos, DEFAULT_QUATERNION, DEFAULT_SCALE, color, DEFAULT_DURATION);
     }
 
-    uint64_t DebugDraw::DrawCapsule(const SR_MATH_NS::FVector3& pos, float_t time) {
+    uint64_t IDebugDraw::DrawCapsule(const SR_MATH_NS::FVector3& pos, float_t time) {
         return DrawCapsule(SR_ID_INVALID, pos, DEFAULT_QUATERNION, DEFAULT_SCALE, DEFAULT_COLOR, time);
     }
 
-    uint64_t DebugDraw::DrawCapsule(uint64_t id) {
+    uint64_t IDebugDraw::DrawCapsule(uint64_t id) {
         return DrawCapsule(id, DEFAULT_POSITION, DEFAULT_QUATERNION, DEFAULT_SCALE, DEFAULT_COLOR, 0.f);
     }
 
-    uint64_t DebugDraw::DrawCapsule() {
+    uint64_t IDebugDraw::DrawCapsule() {
         return DrawCapsule(SR_ID_INVALID, DEFAULT_POSITION, DEFAULT_QUATERNION, DEFAULT_SCALE, DEFAULT_COLOR, DEFAULT_DURATION);
     }
 
     /// ---------------------------------------------------- CAPSULE DRAWING ----------------------------------------------
 
-    uint64_t DebugDraw::DrawMesh(SR_HTYPES_NS::RawMesh* pRawMesh, int32_t meshId, uint64_t id, const SR_MATH_NS::FVector3& pos, const SR_MATH_NS::Quaternion& rot, const SR_MATH_NS::FVector3& scale, const SR_MATH_NS::FColor& color, float_t time) {
+    uint64_t IDebugDraw::DrawMesh(SR_HTYPES_NS::RawMesh* pRawMesh, int32_t meshId, uint64_t id, const SR_MATH_NS::FVector3& pos, const SR_MATH_NS::Quaternion& rot, const SR_MATH_NS::FVector3& scale, const SR_MATH_NS::FColor& color, float_t time) {
         SR_LOCK_GUARD;
 
         if (!pRawMesh) {
@@ -441,77 +441,77 @@ namespace SR_UTILS_NS {
         return SR_ID_INVALID;
     }
 
-    uint64_t DebugDraw::DrawMesh(SR_HTYPES_NS::RawMesh* pRawMesh, int32_t meshId, uint64_t id, const SR_MATH_NS::FVector3 &pos, const SR_MATH_NS::Quaternion &rot, const SR_MATH_NS::FVector3 &scale, const SR_MATH_NS::FColor &color) {
+    uint64_t IDebugDraw::DrawMesh(SR_HTYPES_NS::RawMesh* pRawMesh, int32_t meshId, uint64_t id, const SR_MATH_NS::FVector3 &pos, const SR_MATH_NS::Quaternion &rot, const SR_MATH_NS::FVector3 &scale, const SR_MATH_NS::FColor &color) {
         return DrawMesh(pRawMesh, meshId, id, pos, rot, scale, color, DEFAULT_DURATION);
     }
 
-    uint64_t DebugDraw::DrawMesh(SR_HTYPES_NS::RawMesh* pRawMesh, int32_t meshId, uint64_t id, const SR_MATH_NS::FVector3 &pos, const SR_MATH_NS::Quaternion &rot, const SR_MATH_NS::FVector3 &scale) {
+    uint64_t IDebugDraw::DrawMesh(SR_HTYPES_NS::RawMesh* pRawMesh, int32_t meshId, uint64_t id, const SR_MATH_NS::FVector3 &pos, const SR_MATH_NS::Quaternion &rot, const SR_MATH_NS::FVector3 &scale) {
         return DrawMesh(pRawMesh, meshId, id, pos, rot, scale, DEFAULT_COLOR, DEFAULT_DURATION);
     }
 
-    uint64_t DebugDraw::DrawMesh(SR_HTYPES_NS::RawMesh* pRawMesh, int32_t meshId, uint64_t id, const SR_MATH_NS::FVector3 &pos, const SR_MATH_NS::Quaternion &rot) {
+    uint64_t IDebugDraw::DrawMesh(SR_HTYPES_NS::RawMesh* pRawMesh, int32_t meshId, uint64_t id, const SR_MATH_NS::FVector3 &pos, const SR_MATH_NS::Quaternion &rot) {
         return DrawMesh(pRawMesh, meshId, id, pos, rot, DEFAULT_SCALE, DEFAULT_COLOR, DEFAULT_DURATION);
     }
 
-    uint64_t DebugDraw::DrawMesh(SR_HTYPES_NS::RawMesh* pRawMesh, int32_t meshId, uint64_t id, const SR_MATH_NS::FVector3 &pos) {
+    uint64_t IDebugDraw::DrawMesh(SR_HTYPES_NS::RawMesh* pRawMesh, int32_t meshId, uint64_t id, const SR_MATH_NS::FVector3 &pos) {
         return DrawMesh(pRawMesh, meshId, id, pos, DEFAULT_QUATERNION, DEFAULT_SCALE, DEFAULT_COLOR, DEFAULT_DURATION);
     }
 
-    uint64_t DebugDraw::DrawMesh(SR_HTYPES_NS::RawMesh* pRawMesh, int32_t meshId, uint64_t id, const SR_MATH_NS::FVector3 &pos, const SR_MATH_NS::FColor &color, float_t time) {
+    uint64_t IDebugDraw::DrawMesh(SR_HTYPES_NS::RawMesh* pRawMesh, int32_t meshId, uint64_t id, const SR_MATH_NS::FVector3 &pos, const SR_MATH_NS::FColor &color, float_t time) {
         return DrawMesh(pRawMesh, meshId, id, pos, DEFAULT_QUATERNION, DEFAULT_SCALE, color, time);
     }
 
-    uint64_t DebugDraw::DrawMesh(SR_HTYPES_NS::RawMesh* pRawMesh, int32_t meshId, const SR_MATH_NS::FVector3 &pos, const SR_MATH_NS::Quaternion &rot, const SR_MATH_NS::FVector3 &scale, const SR_MATH_NS::FColor &color) {
+    uint64_t IDebugDraw::DrawMesh(SR_HTYPES_NS::RawMesh* pRawMesh, int32_t meshId, const SR_MATH_NS::FVector3 &pos, const SR_MATH_NS::Quaternion &rot, const SR_MATH_NS::FVector3 &scale, const SR_MATH_NS::FColor &color) {
         return DrawMesh(pRawMesh, meshId, SR_ID_INVALID, pos, rot, scale, color, DEFAULT_DURATION);
     }
 
-    uint64_t DebugDraw::DrawMesh(SR_HTYPES_NS::RawMesh* pRawMesh, int32_t meshId, const SR_MATH_NS::FVector3 &pos, const SR_MATH_NS::Quaternion &rot, const SR_MATH_NS::FVector3 &scale) {
+    uint64_t IDebugDraw::DrawMesh(SR_HTYPES_NS::RawMesh* pRawMesh, int32_t meshId, const SR_MATH_NS::FVector3 &pos, const SR_MATH_NS::Quaternion &rot, const SR_MATH_NS::FVector3 &scale) {
         return DrawMesh(pRawMesh, meshId, SR_ID_INVALID, pos, rot, scale, DEFAULT_COLOR, DEFAULT_DURATION);
     }
 
-    uint64_t DebugDraw::DrawMesh(SR_HTYPES_NS::RawMesh* pRawMesh, int32_t meshId, const SR_MATH_NS::FVector3 &pos, const SR_MATH_NS::Quaternion &rot) {
+    uint64_t IDebugDraw::DrawMesh(SR_HTYPES_NS::RawMesh* pRawMesh, int32_t meshId, const SR_MATH_NS::FVector3 &pos, const SR_MATH_NS::Quaternion &rot) {
         return DrawMesh(pRawMesh, meshId, SR_ID_INVALID, pos, rot, DEFAULT_SCALE, DEFAULT_COLOR, DEFAULT_DURATION);
     }
 
-    uint64_t DebugDraw::DrawMesh(SR_HTYPES_NS::RawMesh* pRawMesh, int32_t meshId, const SR_MATH_NS::FVector3 &pos) {
+    uint64_t IDebugDraw::DrawMesh(SR_HTYPES_NS::RawMesh* pRawMesh, int32_t meshId, const SR_MATH_NS::FVector3 &pos) {
         return DrawMesh(pRawMesh, meshId, SR_ID_INVALID, pos, DEFAULT_QUATERNION, DEFAULT_SCALE, DEFAULT_COLOR, DEFAULT_DURATION);
     }
 
-    uint64_t DebugDraw::DrawMesh(SR_HTYPES_NS::RawMesh* pRawMesh, int32_t meshId, uint64_t id, const SR_MATH_NS::FVector3 &pos, const SR_MATH_NS::FColor &color) {
+    uint64_t IDebugDraw::DrawMesh(SR_HTYPES_NS::RawMesh* pRawMesh, int32_t meshId, uint64_t id, const SR_MATH_NS::FVector3 &pos, const SR_MATH_NS::FColor &color) {
         return DrawMesh(pRawMesh, meshId, id, pos, DEFAULT_QUATERNION, DEFAULT_SCALE, color, DEFAULT_DURATION);
     }
 
-    uint64_t DebugDraw::DrawMesh(SR_HTYPES_NS::RawMesh* pRawMesh, int32_t meshId, uint64_t id, const SR_MATH_NS::FVector3 &pos, float_t time) {
+    uint64_t IDebugDraw::DrawMesh(SR_HTYPES_NS::RawMesh* pRawMesh, int32_t meshId, uint64_t id, const SR_MATH_NS::FVector3 &pos, float_t time) {
         return DrawMesh(pRawMesh, meshId, id, pos, DEFAULT_QUATERNION, DEFAULT_SCALE, DEFAULT_COLOR, time);
     }
 
-    uint64_t DebugDraw::DrawMesh(SR_HTYPES_NS::RawMesh* pRawMesh, int32_t meshId, const SR_MATH_NS::FVector3 &pos, const SR_MATH_NS::Quaternion &rot, const SR_MATH_NS::FVector3 &scale, const SR_MATH_NS::FColor &color, float_t time) {
+    uint64_t IDebugDraw::DrawMesh(SR_HTYPES_NS::RawMesh* pRawMesh, int32_t meshId, const SR_MATH_NS::FVector3 &pos, const SR_MATH_NS::Quaternion &rot, const SR_MATH_NS::FVector3 &scale, const SR_MATH_NS::FColor &color, float_t time) {
         return DrawMesh(pRawMesh, meshId, SR_ID_INVALID, pos, rot, scale, color, time);
     }
 
-    uint64_t DebugDraw::DrawMesh(SR_HTYPES_NS::RawMesh* pRawMesh, int32_t meshId, const SR_MATH_NS::FVector3& pos, const SR_MATH_NS::FColor& color, float_t time) {
+    uint64_t IDebugDraw::DrawMesh(SR_HTYPES_NS::RawMesh* pRawMesh, int32_t meshId, const SR_MATH_NS::FVector3& pos, const SR_MATH_NS::FColor& color, float_t time) {
         return DrawMesh(pRawMesh, meshId, SR_ID_INVALID, pos, DEFAULT_QUATERNION, DEFAULT_SCALE, color, time);
     }
 
-    uint64_t DebugDraw::DrawMesh(SR_HTYPES_NS::RawMesh* pRawMesh, int32_t meshId, const SR_MATH_NS::FVector3& pos, const SR_MATH_NS::FColor& color) {
+    uint64_t IDebugDraw::DrawMesh(SR_HTYPES_NS::RawMesh* pRawMesh, int32_t meshId, const SR_MATH_NS::FVector3& pos, const SR_MATH_NS::FColor& color) {
         return DrawMesh(pRawMesh, meshId, SR_ID_INVALID, pos, DEFAULT_QUATERNION, DEFAULT_SCALE, color, DEFAULT_DURATION);
     }
 
-    uint64_t DebugDraw::DrawMesh(SR_HTYPES_NS::RawMesh* pRawMesh, int32_t meshId, const SR_MATH_NS::FVector3& pos, float_t time) {
+    uint64_t IDebugDraw::DrawMesh(SR_HTYPES_NS::RawMesh* pRawMesh, int32_t meshId, const SR_MATH_NS::FVector3& pos, float_t time) {
         return DrawMesh(pRawMesh, meshId, SR_ID_INVALID, pos, DEFAULT_QUATERNION, DEFAULT_SCALE, DEFAULT_COLOR, time);
     }
 
-    uint64_t DebugDraw::DrawMesh(SR_HTYPES_NS::RawMesh* pRawMesh, int32_t meshId, uint64_t id) {
+    uint64_t IDebugDraw::DrawMesh(SR_HTYPES_NS::RawMesh* pRawMesh, int32_t meshId, uint64_t id) {
         return DrawMesh(pRawMesh, meshId, id, DEFAULT_POSITION, DEFAULT_QUATERNION, DEFAULT_SCALE, DEFAULT_COLOR, 0.f);
     }
 
-    uint64_t DebugDraw::DrawMesh(SR_HTYPES_NS::RawMesh* pRawMesh, int32_t meshId) {
+    uint64_t IDebugDraw::DrawMesh(SR_HTYPES_NS::RawMesh* pRawMesh, int32_t meshId) {
         return DrawMesh(pRawMesh, meshId, SR_ID_INVALID, DEFAULT_POSITION, DEFAULT_QUATERNION, DEFAULT_SCALE, DEFAULT_COLOR, DEFAULT_DURATION);
     }
 
     /// ---------------------------------------------------- MESH DRAWING ----------------------------------------------
 
-    void DebugDraw::DrawQuaternion(const SR_MATH_NS::FVector3& pos, const SR_MATH_NS::Quaternion& q, const SR_MATH_NS::FColor& color, float_t time) {
+    void IDebugDraw::DrawQuaternion(const SR_MATH_NS::FVector3& pos, const SR_MATH_NS::Quaternion& q, const SR_MATH_NS::FColor& color, float_t time) {
         auto&& axis = q.Vector().XYZ().Normalize();
 
         const SR_MATH_NS::FVector3 axisEndPoint(
@@ -540,5 +540,12 @@ namespace SR_UTILS_NS {
                                                 pos.z + lineDirection.z * std::sin(angle / 2));
 
         DrawLine(axisEndPoint, lineEndPoint, color / 2.f, time);
+    }
+
+    void IDebugDraw::TryRemove(uint64_t* id) {
+        if (id && *id != SR_ID_INVALID) {
+            Remove(*id);
+            *id = SR_ID_INVALID;
+        }
     }
 }

@@ -27,6 +27,11 @@ namespace SR_HTYPES_NS {
             );
         }
 
+        void SetDeltaTime(float_t dt) {
+            m_deltaTime = dt;
+        }
+
+        SR_NODISCARD float_t DeltaTime() const noexcept { return m_deltaTime; }
         SR_NODISCARD TimePointType Now() const noexcept { return m_timeInfo.load().m_point; }
         SR_NODISCARD uint64_t Count() const noexcept { return m_timeInfo.load().m_point.time_since_epoch().count(); }
         SR_NODISCARD float_t FClock() const noexcept { return static_cast<float_t>(Count()) / SR_CLOCKS_PER_SEC / SR_CLOCKS_PER_SEC; }
@@ -38,6 +43,8 @@ namespace SR_HTYPES_NS {
 #endif
 
     private:
+        float_t m_deltaTime = 0.f;
+
         struct TimeInfo {
             TimeInfo() = default;
 
