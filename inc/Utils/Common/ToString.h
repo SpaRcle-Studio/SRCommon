@@ -17,7 +17,7 @@ namespace SR_UTILS_NS {
 
     static SR_INLINE std::string SerializeFloat(float value) {
         char buffer[64];
-        std::snprintf(buffer, sizeof(buffer), "%.9g", value);
+        std::snprintf(buffer, sizeof(buffer), "%.7g", value);
         return std::string(buffer);
     }
 
