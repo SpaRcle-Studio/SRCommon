@@ -581,6 +581,10 @@ namespace SR_MATH_NS {
             }
         }
 
+        SR_NODISCARD static SR_FORCE_INLINE Vector3<T> SR_FASTCALL Lerp(const Vector3<T>& a, const Vector3<T>& b, float_t t) noexcept {
+            return a.Lerp(b, t);
+        }
+
         SR_NODISCARD static SR_FORCE_INLINE Vector3<T> SR_FASTCALL Slerp(const Vector3<T>& from, const Vector3<T>& to, float_t t) noexcept {
             return from.Slerp(to, t);
         }

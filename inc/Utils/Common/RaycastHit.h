@@ -13,6 +13,10 @@ namespace SR_UTILS_NS {
         SR_MATH_NS::FVector3 position;
         SR_MATH_NS::FVector3 normal;
         float_t distance;
+
+        SR_NODISCARD SR_MATH_NS::FVector3 GetRayEndPoint() const {
+            return position + normal * distance;
+        }
     };
 }
 

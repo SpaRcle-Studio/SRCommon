@@ -211,6 +211,7 @@ namespace SR_UTILS_NS::Reflection {
         SR_NODISCARD bool IsClass() const;
         SR_NODISCARD bool IsTemplate() const;
         SR_NODISCARD bool IsIntegral() const;
+        SR_NODISCARD bool IsEntityRef() const;
         SR_NODISCARD bool IsSigned() const;
         SR_NODISCARD bool IsEnum() const;
         SR_NODISCARD std::string_view GetTypeName() const;

@@ -149,7 +149,7 @@ namespace SR_UTILS_NS {
         else {
     #endif
             m_eulersDirty = true;
-            m_quaternion = quaternion;
+            m_quaternion = quaternion.Normalized();
     #ifdef SR_DEBUG
         }
     #endif

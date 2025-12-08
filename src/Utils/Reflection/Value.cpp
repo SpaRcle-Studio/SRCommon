@@ -3,6 +3,7 @@
 //
 
 #include <Utils/Reflection/Value.h>
+#include <Utils/ECS/EntityRef.h>
 #include <Utils/Math/Rect.h>
 #include <Utils/Debug.h>
 
@@ -389,6 +390,17 @@ namespace SR_UTILS_NS::Reflection {
 
         static auto meta = entt::meta_any(std::optional<uint64_t>());
         static const std::string_view compare = meta.base().type().name().substr(0, meta.base().type().name().find('<'));
+
+        return GetTypeName().starts_with(compare);
+    }
+
+    bool Value::IsEntityRef() const {
+        if (!IsClass() || !IsTemplate()) {
+            return false;
+        }
+
+        static const auto meta = entt::meta_any(SR_UTILS_NS::EntityRef<void>());
+        static const std::string_view compare = meta.base().type().name().substr(0, meta.base().type().name().find('<') - 1);
 
         return GetTypeName().starts_with(compare);
     }
