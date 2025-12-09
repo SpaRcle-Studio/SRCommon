@@ -4,8 +4,13 @@
 
 #include <Utils/ECS/TagManager.h>
 #include <Utils/Common/Hashes.h>
+#include <Utils/Common/StringAtomLiterals.h>
 
 namespace SR_UTILS_NS {
+    static uint64_t MixTag(uint64_t x, uint64_t mult, uint64_t shift) {
+        return (x * mult) >> shift;
+    }
+
     void TagManager::RegisterTag(StringAtom tag) {
         SR_LOCK_GUARD;
 
@@ -24,6 +29,7 @@ namespace SR_UTILS_NS {
 
         m_tags.clear();
         m_indices.clear();
+        m_tagMap = {};
 
         Super::ClearSettings();
     }
@@ -41,6 +47,7 @@ namespace SR_UTILS_NS {
                 RegisterTag(tagNode.Name());
             }
         }
+        BuildTagMap();
 
         return Super::LoadSettings(node);
     }
@@ -48,7 +55,7 @@ namespace SR_UTILS_NS {
     uint16_t TagManager::GetTagIndex(StringAtom tag) const {
         SR_LOCK_GUARD;
 
-        if (tag == StringAtom()) {
+        if (tag.empty()) {
             return 0;
         }
 
@@ -79,5 +86,67 @@ namespace SR_UTILS_NS {
             return "Default";
         }
         return m_tags[0];
+    }
+
+    uint64_t TagManager::TagToMask(StringAtom tag) const {
+        if (tag.empty()) {
+            tag = UNTAGGED;
+        }
+
+        const uint64_t hash = tag.GetHash();
+        uint64_t pos = MixTag(hash, m_tagMap.mult, m_tagMap.shift) & m_tagMap.mask;
+
+        if (m_tagMap.table[pos] == hash)
+            return 1ull << m_tagMap.indexOf[pos];
+
+        SRHalt("TagManager::TagToMask() : unknown tag \"{}\"!", tag);
+        return 0;
+    }
+
+    bool TagManager::BuildTagMap() {
+        m_tagMap = {};
+
+        SR_LOG("TagManager::BuildTagMap() : building perfect hash for {} tags...", m_tags.size());
+
+        m_tagMap.size = (uint8_t)m_tags.size();
+
+        // Выбираем размер таблицы — ближайшая степень двойки
+        uint8_t M = 1;
+        while (M < m_tagMap.size) M <<= 1;
+        m_tagMap.mask = M - 1;
+
+        // Пытаемся найти perfect hash
+        for (uint64_t mult = 1; mult < (1ull << 32); mult += 2) {
+            for (uint8_t shift = 0; shift < 16; ++shift) {
+                bool ok = true;
+                std::fill(std::begin(m_tagMap.table), std::begin(m_tagMap.table) + M, TagMap::EMPTY);
+
+                for (uint8_t i = 0; i < m_tagMap.size; ++i) {
+                    uint64_t h = MixTag(m_tags[i], mult, shift) & m_tagMap.mask;
+
+                    if (m_tagMap.table[h] != TagMap::EMPTY) {
+                        ok = false;
+                        break;
+                    }
+
+                    m_tagMap.table[h] = m_tags[i];
+                    m_tagMap.indexOf[h] = i;
+                }
+
+                if (ok) {
+                    m_tagMap.mult = mult;
+                    m_tagMap.shift = shift;
+                    return true;
+                }
+            }
+        }
+
+        std::string tagsList;
+        for (uint64_t i = 0; i < m_tags.size(); ++i) {
+            tagsList += "\t[{}] {}\n"_format(i, m_tags[i]);
+        }
+        SRHalt("TagManager::BuildTagMap() : failed to build perfect hash for tags! It's extremely unlikely case. Try to change your tags list:\n{}", tagsList);
+
+        return false;
     }
 }

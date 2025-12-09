@@ -8,6 +8,17 @@
 #include <Utils/Math/Vector3.h>
 
 namespace SR_UTILS_NS {
+    struct LayerMask {
+        LayerMask() = default;
+
+        uint64_t mask = 0xFFFFFFFFFFFFFFFF;
+
+        static LayerMask Any() {
+            static LayerMask allMask = LayerMask();
+            return allMask;
+        }
+    };
+
     struct RaycastHit {
         void* pHandler = nullptr;
         SR_MATH_NS::FVector3 position;
