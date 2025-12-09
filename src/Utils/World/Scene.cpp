@@ -415,6 +415,8 @@ namespace SR_WORLD_NS {
         RegisterSceneObjectImpl(pSO);
         pSO->SetScene(this);
 
+        pSO->OnRootRegistered();
+
         EntityController& entityController = *GetEntityController();
 
         for (const auto& entities : m_registerEntityCache | std::views::values) {

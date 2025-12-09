@@ -18,6 +18,7 @@
 namespace SR_UTILS_NS {
     SceneObject::SceneObject() {
         SetLayer(SR_UTILS_NS::LayerManager::GetDefaultLayer());
+        SetTag(SR_UTILS_NS::TagManager::GetDefaultTag());
     }
 
     SceneObject::~SceneObject() {
@@ -321,6 +322,26 @@ namespace SR_UTILS_NS {
         }
     }
 
+    void SceneObject::OnParentTagChanged() { /// NOLINT (recursion)
+        if (m_tag != TagManager::Instance().GetDefaultTag()) {
+            return;
+        }
+
+        if (!m_parent) {
+            return; /// находимся в состоянии загрузки объекта
+        }
+
+        if (m_cachedTag == m_parent->m_cachedTag) {
+            return;
+        }
+
+        m_cachedTag = m_parent->m_cachedTag;
+
+        for (auto&& pChild : m_children) {
+            pChild->OnParentTagChanged();
+        }
+    }
+
     void SceneObject::OnParentLayerChanged() { /// NOLINT (recursion)
         if (m_layer != LayerManager::GetDefaultLayer()) {
             return;
@@ -418,11 +439,21 @@ namespace SR_UTILS_NS {
     }
 
     void SceneObject::SetTag(SR_UTILS_NS::StringAtom tag) {
-        m_tag = tag;
-    }
+        SRAssert(!tag.Empty());
 
-    StringAtom SceneObject::GetTag() const {
-        return m_tag;
+        if (TagManager::GetDefaultTag() == tag && m_parent) {
+            tag = m_parent->GetTag();
+        }
+
+        if (tag == m_tag && m_cachedTag == m_tag) {
+            return;
+        }
+
+        m_cachedTag = m_tag = tag;
+
+        for (auto&& pChild : m_children) {
+            pChild->OnParentTagChanged();
+        }
     }
 
     SR_UTILS_NS::EntityIdList SceneObject::GetEntityIdList() const {
@@ -483,6 +514,7 @@ namespace SR_UTILS_NS {
         m_children.emplace_back(pChild);
 
         pChild->OnParentLayerChanged();
+        pChild->OnParentTagChanged();
         pChild->OnAttachedToParent();
 
         if (m_scene) {
@@ -639,5 +671,17 @@ namespace SR_UTILS_NS {
             }
         }
         return SR_ID_INVALID;
+    }
+
+    void SceneObject::OnRootRegistered() {
+        SR_TRACY_ZONE;
+
+        for (auto&& pChild : m_children) {
+            pChild->OnParentLayerChanged();
+        }
+
+        for (auto&& pChild : m_children) {
+            pChild->OnParentTagChanged();
+        }
     }
 }

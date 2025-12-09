@@ -3,7 +3,6 @@
 //
 
 #include <Utils/ECS/TagManager.h>
-#include <Utils/Common/Hashes.h>
 #include <Utils/Common/StringAtomLiterals.h>
 
 namespace SR_UTILS_NS {
@@ -81,16 +80,19 @@ namespace SR_UTILS_NS {
         return m_tags.at(index);
     }
 
-    StringAtom TagManager::GetDefaultTag() const {
-        if (m_tags.empty()) {
+    StringAtom TagManager::GetDefaultTag() {
+        auto&& instance = TagManager::Instance();
+
+        if (instance.m_tags.empty()) {
             return "Default";
         }
-        return m_tags[0];
+
+        return instance.m_tags[0];
     }
 
     uint64_t TagManager::TagToMask(StringAtom tag) const {
         if (tag.empty()) {
-            tag = UNTAGGED;
+            tag = GetDefaultTag();
         }
 
         const uint64_t hash = tag.GetHash();

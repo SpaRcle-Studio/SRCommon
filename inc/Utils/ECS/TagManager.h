@@ -6,7 +6,6 @@
 #define SR_ENGINE_TAG_MANAGER_H
 
 #include <Utils/Settings.h>
-#include <Utils/Types/Map.h>
 
 namespace SR_UTILS_NS {
     class TagManager : public GlobalSettings<TagManager> {
@@ -32,7 +31,7 @@ namespace SR_UTILS_NS {
     public:
         SR_NODISCARD uint64_t TagToMask(StringAtom tag) const;
         SR_NODISCARD StringAtom GetTagByIndex(uint16_t index) const;
-        SR_NODISCARD StringAtom GetDefaultTag() const;
+        SR_NODISCARD static StringAtom GetDefaultTag();
         SR_NODISCARD uint16_t GetTagIndex(StringAtom tag) const;
         SR_NODISCARD const std::vector<StringAtom>& GetTags() const { return m_tags; }
 

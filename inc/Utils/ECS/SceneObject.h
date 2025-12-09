@@ -7,6 +7,7 @@
 
 #include <Utils/ECS/EntityController.h>
 #include <Utils/ECS/LayerManager.h>
+#include <Utils/ECS/TagManager.h>
 #include <Utils/ECS/IComponentable.h>
 
 namespace SR_UTILS_NS::World {
@@ -44,9 +45,12 @@ namespace SR_UTILS_NS {
         SR_NODISCARD SR_FORCE_INLINE uint64_t GetIdInScene() const noexcept { return m_idInScene; }
 
         SR_NODISCARD SR_FORCE_INLINE ScenePtr GetScene() const override { return m_scene; }
-        /// @method
+
         SR_NODISCARD SR_FORCE_INLINE StringAtom GetLayer() const noexcept { return m_cachedLayer; }
         SR_NODISCARD SR_FORCE_INLINE StringAtom GetLocalLayer() const noexcept { return m_layer; }
+
+        SR_NODISCARD SR_FORCE_INLINE SR_UTILS_NS::StringAtom GetTag() const noexcept { return m_cachedTag; }
+        SR_NODISCARD SR_FORCE_INLINE SR_UTILS_NS::StringAtom GetLocalTag() const noexcept { return m_tag; }
 
         SR_NODISCARD SR_FORCE_INLINE const SR_HTYPES_NS::SharedPtr<Prefab>& GetPrefab() const noexcept { return m_prefabInfo.pPrefab; }
         SR_NODISCARD SR_FORCE_INLINE bool IsPrefabOwner() const noexcept { return m_prefabInfo.isOwner; }
@@ -67,8 +71,6 @@ namespace SR_UTILS_NS {
         SR_NODISCARD SceneObject::Ptr Find(StringAtom name) const noexcept;
 
         SR_NODISCARD Path GetPrefabPath() const;
-        /// @method
-        SR_NODISCARD StringAtom GetTag() const;
         SR_NODISCARD SR_UTILS_NS::EntityIdList GetEntityIdList() const;
         SR_NODISCARD bool IsPrefabLoadingState() const noexcept final { return m_isPrefabLoadingState; }
         SR_NODISCARD int32_t GetChildIndex(const SceneObject& child) const;
@@ -120,14 +122,17 @@ namespace SR_UTILS_NS {
         void DestroyImpl();
 
         void OnPostLoad() override;
+        void OnRootRegistered();
 
     protected:
         virtual void OnHierarchyChanged() { }
         void UpdateRoot();
 
     private:
-        virtual void OnAttachedToParent() { }
         void OnParentLayerChanged();
+        void OnParentTagChanged();
+
+        virtual void OnAttachedToParent() { }
 
     private:
         struct PrefabInfo {
@@ -143,6 +148,7 @@ namespace SR_UTILS_NS {
         bool m_isPrefabLoadingState = false;
 
         StringAtom m_cachedLayer;
+        StringAtom m_cachedTag;
 
         ScenePtr m_scene = nullptr;
         SRHashType m_idInScene = SR_ID_INVALID;
@@ -150,10 +156,10 @@ namespace SR_UTILS_NS {
     private:
         /// @property @setter(SetTag) @hidden @dontSaveTags(Inspector)
         /// @loadCondition(!This.IsPrefabLoadingState())
-        SR_UTILS_NS::StringAtom m_tag;
+        StringAtom m_tag = TagManager::GetDefaultTag();
         /// @loadCondition(!This.IsPrefabLoadingState())
         /// @property @setter(SetName) @hidden @dontSaveTags(Inspector)
-        SR_UTILS_NS::StringAtom m_name;
+        StringAtom m_name;
         /// @property @propertyCondition(!This.IsPrefab()) @hidden @dontSaveTags(Inspector)
         /// @loadCondition(!This.IsPrefab())
         std::vector<SceneObject::Ptr> m_children;
