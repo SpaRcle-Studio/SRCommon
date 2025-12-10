@@ -169,6 +169,7 @@ namespace SR_HTYPES_NS {
 
         /// сначала дожидаемся предыдущей работы. Операция атомарная.
         while (m_function) {
+            SR_TRACY_ZONE_N("Thread::Execute - wait previous");
             SR_NOOP;
         }
 
@@ -180,6 +181,7 @@ namespace SR_HTYPES_NS {
 
         /// синхронно ждем выволнения работы. Операция атомарная.
         while (m_function) {
+            SR_TRACY_ZONE_N("Thread::Execute - wait");
             SR_NOOP;
         }
 

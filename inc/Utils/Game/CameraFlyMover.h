@@ -45,7 +45,7 @@ namespace SR_UTILS_NS {
         /// @property @drag(0.1f)
         float_t m_wheelSpeed = 0.4f;
         /// @property @drag(0.1f)
-        float_t m_rotateSpeed = 0.15f;
+        SR_MATH_NS::FVector2 m_rotateSpeed = 0.15f;
         /// @property @drag(0.1f)
         float_t m_moveSpeed = 0.2f;
         /// @property

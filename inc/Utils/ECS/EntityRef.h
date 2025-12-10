@@ -40,21 +40,19 @@ namespace SR_UTILS_NS {
         using Super = EntityRefBase;
     public:
         SR_NODISCARD StringAtom GetTypeName() const noexcept override {
-            if constexpr (SR_UTILS_NS::IsCompleteTypeV<T>) {
+            if constexpr (!std::is_same_v<T, void>) {
                 return T::GetClassStaticName();
             }
             else {
-                SRHalt("EntityRef<T>::GetTypeName() : type T is not complete!");
-                return SR_UTILS_NS::StringAtom();
+                return "void";
             }
         }
 
         SR_NODISCARD SR_HTYPES_NS::SharedPtr<T> Get() const noexcept {
-            if constexpr (SR_UTILS_NS::IsCompleteTypeV<T>) {
+            if constexpr (!std::is_same_v<T, void>) {
                 return GetEntity().template StaticCast<T>();
             }
             else {
-                SRHalt("EntityRef<T>::Get() : type T is not complete!");
                 return SR_HTYPES_NS::SharedPtr<T>();
             }
         }

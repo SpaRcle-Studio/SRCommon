@@ -84,7 +84,7 @@ namespace SR_UTILS_NS {
         }
 
         if (!m_rightMouseButtonToRotate || SR_UTILS_NS::Input::Instance().GetKey(SR_UTILS_NS::KeyCode::MouseRight)) {
-            GetTransform()->GlobalRotate(dir.y * m_rotateSpeed, dir.x * m_rotateSpeed, 0.0);
+            GetTransform()->GlobalRotate(dir.y * m_rotateSpeed.y, dir.x * m_rotateSpeed.x, 0.0);
         }
 
         if (SR_UTILS_NS::Input::Instance().GetKey(SR_UTILS_NS::KeyCode::MouseMiddle)) {
