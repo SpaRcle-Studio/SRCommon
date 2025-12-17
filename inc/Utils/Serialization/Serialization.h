@@ -10,103 +10,24 @@
 #include <Utils/Serialization/ObjectDataAccessor.h>
 #include <Utils/TypeTraits/Factory.h>
 #include <Utils/TypeTraits/SRClassMeta.h>
-#include <Utils/Types/UnicodeString.h>
 #include <Utils/Types/SharedPtr.h>
 #include <Utils/Math/Rect.h>
 #include <Utils/Common/StringAtomLiterals.h>
 #include <Utils/Common/AssertFwd.h>
 
+namespace SR_HTYPES_NS {
+    class UnicodeString;
+}
+
+#include <Utils/Serialization/SerializationTraits.h>
+#include <Utils/Serialization/SerializationSaveUtils.h>
+#include <Utils/Serialization/SerializationLoadUtils.h>
+
 namespace SR_UTILS_NS {
-	class Serializable;
-
-	template<class T>
-	using HasMethodEmptyT = decltype(std::declval<const T&>().empty());
-
-	template<typename T>
-	struct SerializationTraits
-	{
-		static constexpr bool HasEmpty = IsDetectedV<HasMethodEmptyT, T>;
-		static constexpr bool IsSerializable = std::is_base_of_v<SR_UTILS_NS::Serializable, T>;
-	};
-
-	template<typename T, typename Enable = void> struct DefaultChecker {
-		using IsAlwaysFalse = std::true_type;
-
-		static bool IsDefault(const T&) { return false; }
-	};
-
-	namespace Details {
-		template<typename T>
-		using IsDefaultCheckerAlwaysFalseT = typename DefaultChecker<T>::IsAlwaysFalse;
-
-		template<typename T>
-		using ReserveMethodT = decltype(std::declval<T>().reserve(size_t()));
-	}
-
-	template<typename T> SR_INLINE bool IsDefault(const T& value) {
-		return DefaultChecker<T>::IsDefault(value);
-	}
-
-	template<typename T>
-	SR_INLINE constexpr bool IsDefaultCheckerAlwaysFalse = DetectedOrT<std::false_type, Details::IsDefaultCheckerAlwaysFalseT, T>::value;
-
-	/// Default object makers for serialization
-
-	#include <Utils/Serialization/DefaultObjectMakers.inl.h>
-
-	#include <Utils/Serialization/SaveCheckers.inl.h>
-
-	namespace Serialization {
-		template<typename T> bool IsValidValue(const T& value) {
-			if constexpr (CheckOperatorUsableV<CheckerEqualityComparable, T, std::nullptr_t>) {
-				return value != nullptr;
-			}
-			else {
-				SR_IGNORE_UNUSED(value);
-				return true;
-			}
-		}
-
-		template<typename T> bool CanBeSaved(const T& value) {
-			return SR_UTILS_NS::SaveChecker<T>::CanBeSaved(value);
-		}
-
-		template<typename T> void Save(ISerializer& serializer, const T& value, const SerializationId& key) {
-			if (!CanBeSaved(value)) {
-				return;
-			}
-			SR_UTILS_NS::ObjectDataAccessor<T>::Save(serializer, value, key);
-		}
-
-		template<typename T> void SaveCheckDefault(ISerializer& serializer, const T& value, const SerializationId& key) {
-			if (!serializer.IsWriteDefaults() && IsDefault(value)) {
-				return;
-			}
-			Save(serializer, value, key);
-		}
-
-		template<typename T> bool Load(IDeserializer& deserializer, T& value, const SerializationId& key) {
-			if (!deserializer.IsDefault(key)) {
-				ObjectDataAccessor<T>::Load(deserializer, value, key);
-				return true;
-			}
-
-			if constexpr (DefaultObjectMaker<T>::value) {
-				if (deserializer.ShouldSetDefaults(key)) {
-					DefaultObjectMaker<T>::MakeDefault(value);
-				}
-			}
-			return false;
-		}
-	}
-
-	/// Default checkers for serialization
-
-	#include <Utils/Serialization/DefaultCheckers.inl.h>
-
 	/// Data accessors for objects serialization
 
 	#include <Utils/Serialization/ObjectDataAccessors.inl.h>
+	#include <Utils/Serialization/ObjectContainerDataAccessors.inl.h>
 }
 
 #endif //SR_COMMON_TYPE_TRAITS_SERIALIZATION_H

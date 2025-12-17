@@ -6,7 +6,6 @@
 #define SR_ENGINE_UTILS_SERIALIZABLE_DATA_ACCESSOR_H
 
 #include <Utils/Serialization/Serializable.h>
-#include <Utils/Serialization/SerializationFlags.h>
 #include <Utils/Serialization/Serialization.h>
 
 namespace SR_UTILS_NS {

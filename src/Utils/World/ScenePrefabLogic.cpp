@@ -7,6 +7,7 @@
 #include <Utils/ECS/Transform3D.h>
 #include <Utils/ECS/LayerManager.h>
 #include <Utils/ECS/GameObject.h>
+#include <Utils/Serialization/SerializationFlags.h>
 
 #include <Codegen/ScenePrefabLogic.generated.hpp>
 

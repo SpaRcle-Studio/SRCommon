@@ -9,11 +9,12 @@ struct SaveChecker {
     }
 };
 
+SR_COMMON_DLL_API extern bool SerializableCanBeSavedImpl(const Serializable& value);
 
 template<typename T>
 struct SaveChecker<T, typename std::enable_if<SerializationTraits<T>::IsSerializable>::type> {
     static bool CanBeSaved(const T& value) {
-        return !value.HasSerializationFlags(SR_UTILS_NS::SerializationFlags::DontSave);
+        return SerializableCanBeSavedImpl(static_cast<const Serializable&>(value));
     }
 };
 
