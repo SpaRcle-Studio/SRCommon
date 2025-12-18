@@ -143,29 +143,70 @@ namespace SR_UTILS_NS {
         const SR_MATH_NS::FVector2 anchorSize = anchorMaxPos - anchorMinPos;
 
         /*==============================================================
-            2. Финальный размер (stretch + sizeDelta)
+            2. Определение режима якорей и расчет layoutRect
+            В Unity каждая ось обрабатывается независимо:
+            - Если anchorMin.x == anchorMax.x → Position X + Width
+            - Если anchorMin.y == anchorMax.y → Position Y + Height
+            - Если anchorMin.x != anchorMax.x → Left + Right offsets
+            - Если anchorMin.y != anchorMax.y → Top + Bottom offsets
         ==============================================================*/
 
-        const SR_MATH_NS::FVector2 finalSize = anchorSize + m_size;
+        const bool anchorsTogetherX = AreAnchorsTogetherX();
+        const bool anchorsTogetherY = AreAnchorsTogetherY();
+
+        float_t left, right, bottom, top;
+
+        float_t width, height;
+        SR_MATH_NS::FVector2 pivotPos;
+
+        // Обработка по оси X
+        if (anchorsTogetherX) {
+            // Якоря вместе по X: используем Position X и Width
+            const float_t anchorX = anchorMinPos.x; // min.x == max.x
+            width = m_size.x; // sizeDelta.x
+            pivotPos.x = anchorX + m_translation.x; // anchorPos + anchoredPosition
+            left = pivotPos.x - width * m_pivot.x;
+            right = left + width;
+        }
+        else {
+            // Якоря врозь по X: используем Left и Right offsets
+            left = anchorMinPos.x + m_offsetMin.x;
+            right = anchorMaxPos.x + m_offsetMax.x;
+            width = right - left;
+            pivotPos.x = left + width * m_pivot.x;
+        }
+
+        // Обработка по оси Y
+        if (anchorsTogetherY) {
+            // Якоря вместе по Y: используем Position Y и Height
+            const float_t anchorY = anchorMinPos.y; // min.y == max.y
+            height = m_size.y; // sizeDelta.y
+            pivotPos.y = anchorY + m_translation.y; // anchorPos + anchoredPosition
+            bottom = pivotPos.y - height * m_pivot.y;
+            top = bottom + height;
+        }
+        else {
+            // Якоря врозь по Y: используем Bottom и Top offsets
+            bottom = anchorMinPos.y + m_offsetMin.y;
+            top = anchorMaxPos.y + m_offsetMax.y;
+            height = top - bottom;
+            pivotPos.y = bottom + height * m_pivot.y;
+        }
+
+        const SR_MATH_NS::FVector2 finalSize = SR_MATH_NS::FVector2(width, height);
 
         /*==============================================================
             3. localRect (АНАЛОГ RectTransform.rect)
-            ❗ БЕЗ позиции
+            ❗ БЕЗ позиции, относительно pivot
         ==============================================================*/
-
-        //const SR_MATH_NS::FVector2 finalSize = m_size;
 
         m_localRect.SetMin(-finalSize.x * m_pivot.x, -finalSize.y * m_pivot.y);
         m_localRect.SetMax(m_localRect.Min().x + finalSize.x, m_localRect.Min().y + finalSize.y);
 
         /*==============================================================
             4. layoutRect (АНАЛОГ GetLocalCorners)
-            ❗ с учётом anchoredPosition
+            ❗ с учётом позиции pivot в мировых координатах
         ==============================================================*/
-
-        //const SR_MATH_NS::FVector2 pivotPos = anchorMinPos + m_translation.XY();
-        //const SR_MATH_NS::FVector2 pivotPos = anchorMinPos + anchorSize * m_pivot + m_translation.XY();
-        const SR_MATH_NS::FVector2 pivotPos = anchorMinPos + anchorSize * m_pivot + m_translation.XY();
 
         m_layoutRect.SetMin(
             pivotPos.x + m_localRect.Min().x,
@@ -180,10 +221,6 @@ namespace SR_UTILS_NS {
         /*==============================================================
             5. Render matrix (ПОСЛЕ layout)
         ==============================================================*/
-
-        //const SR_MATH_NS::FVector2 pivotWorldPos =
-        //        m_layoutRect.Min() +
-        //        m_layoutRect.Size() * m_pivot;
 
         m_localMatrix =
             SR_MATH_NS::Matrix4x4::FromTranslate({ pivotPos.x, pivotPos.y, 0.f }) *
@@ -313,8 +350,47 @@ namespace SR_UTILS_NS {
     }
 
     void TransformRect::SetAnchors(const RectAnchors& anchors) {
-        m_anchors = anchors;
+        RectAnchors clampedAnchors;
+        clampedAnchors.min = anchors.min.Clamp(SR_MATH_NS::FVector2::Zero(), SR_MATH_NS::FVector2::One());
+        clampedAnchors.max = anchors.max.Clamp(SR_MATH_NS::FVector2::Zero(), SR_MATH_NS::FVector2::One());
+
+        if (clampedAnchors == m_anchors) {
+            return;
+        }
+        m_anchors = clampedAnchors;
         UpdateTree();
+    }
+
+    void TransformRect::SetOffsetMin(const SR_MATH_NS::FVector2& offset) {
+        if (offset == m_offsetMin) {
+            return;
+        }
+        m_offsetMin = offset;
+        UpdateTree();
+    }
+
+    void TransformRect::SetOffsetMax(const SR_MATH_NS::FVector2& offset) {
+        if (offset == m_offsetMax) {
+            return;
+        }
+        m_offsetMax = offset;
+        UpdateTree();
+    }
+
+    bool TransformRect::AreAnchorsTogetherX() const {
+        return m_anchors.min.x == m_anchors.max.x;
+    }
+
+    bool TransformRect::AreAnchorsTogetherY() const {
+        return m_anchors.min.y == m_anchors.max.y;
+    }
+
+    SR_MATH_NS::FVector2 TransformRect::GetAnchoredPosition() const {
+        return m_translation.XY();
+    }
+
+    SR_MATH_NS::FVector2 TransformRect::GetSizeDelta() const {
+        return m_size;
     }
 
     SR_MATH_NS::Quaternion TransformRect::GetGlobalRotation() const {

@@ -29,6 +29,7 @@ namespace SR_UTILS_NS {
 
     };
 
+    /// @inspector(TransformRectPropertyDrawer)
     class SR_COMMON_DLL_API TransformRect : public Transform {
         SR_CLASS()
         friend class GameObject;
@@ -47,6 +48,8 @@ namespace SR_UTILS_NS {
         void SetPivot(const SR_MATH_NS::FVector2& pivot);
         void SetAnchors(const RectAnchors& anchors);
         void SetCanvasSize(const SR_MATH_NS::FVector2& size);
+        void SetOffsetMin(const SR_MATH_NS::FVector2& offset);
+        void SetOffsetMax(const SR_MATH_NS::FVector2& offset);
 
         void Translate(const SR_MATH_NS::FVector3& translation) override;
         void Rotate(const SR_MATH_NS::Quaternion& quaternion) override;
@@ -67,6 +70,12 @@ namespace SR_UTILS_NS {
         SR_NODISCARD SR_MATH_NS::FVector2 GetSize() const { return m_size; }
         SR_NODISCARD SR_MATH_NS::FVector2 GetPivot() const { return m_pivot; }
         SR_NODISCARD const RectAnchors& GetAnchors() const { return m_anchors; }
+        SR_NODISCARD SR_MATH_NS::FVector2 GetOffsetMin() const { return m_offsetMin; }
+        SR_NODISCARD SR_MATH_NS::FVector2 GetOffsetMax() const { return m_offsetMax; }
+        SR_NODISCARD SR_MATH_NS::FVector2 GetAnchoredPosition() const;
+        SR_NODISCARD SR_MATH_NS::FVector2 GetSizeDelta() const;
+        SR_NODISCARD bool AreAnchorsTogetherX() const;
+        SR_NODISCARD bool AreAnchorsTogetherY() const;
 
         SR_NODISCARD Measurement GetMeasurement() const override { return Measurement::Space2D; }
 
@@ -111,9 +120,9 @@ namespace SR_UTILS_NS {
         /// @property @setter(SetSize) @resetValue(SR_MATH_NS::FVector2(100.0f, 100.0f))
         SR_MATH_NS::FVector2 m_size = SR_MATH_NS::FVector2(100.0f, 100.0f);
 
-        /// @property @onChanged(UpdateTree)
+        /// @property @setter(SetOffsetMin) @onChanged(UpdateTree)
         SR_MATH_NS::FVector2 m_offsetMin; // Left, Bottom
-        /// @property @onChanged(UpdateTree)
+        /// @property @setter(SetOffsetMax) @onChanged(UpdateTree)
         SR_MATH_NS::FVector2 m_offsetMax; // Right, Top
 
         /// @property @onChanged(UpdateTree) @setter(SetAnchors)
