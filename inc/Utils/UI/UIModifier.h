@@ -52,7 +52,7 @@ namespace SR_UTILS_NS::UI {
         SR_MATH_NS::FVector2 childSize;
     };
 
-    /// @hidden @category(UI)
+    /*/// @hidden @category(UI)
     class UIModifierComponent : public SR_UTILS_NS::Component {
         using Super = SR_UTILS_NS::Component;
         SR_CLASS()
@@ -79,7 +79,7 @@ namespace SR_UTILS_NS::UI {
     private:
         bool m_connected = false;
 
-    };
+    };*/
 }
 
 #endif //SR_UTILS_UI_MODIFIER_H

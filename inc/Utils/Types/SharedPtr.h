@@ -9,13 +9,17 @@
 #include <Utils/Common/TypeInfo.h>
 #include <Utils/TypeTraits/TypeTraits.h>
 
+//#define SR_SHARED_PTR_TRACE
+
+#ifdef SR_SHARED_PTR_TRACE
+    #include <Utils/Platform/Stacktrace.h>
+#endif
+
 namespace SR_UTILS_NS {
     enum class SharedPtrPolicy : uint8_t {
         Automatic, Manually
     };
 }
-
-/// #define SR_SHARED_PTR_TRACE
 
 namespace SR_UTILS_NS {
     class SRClass;
@@ -382,6 +386,10 @@ namespace SR_HTYPES_NS {
 
     template<class T> SharedPtr<T>::~SharedPtr() {
         if (!m_data || m_basicManually) {
+            if (m_data && m_data->strongCount == 0 && m_data->weakCount == 0) {
+                delete m_data;
+                m_data = nullptr;
+            }
             return;
         }
 

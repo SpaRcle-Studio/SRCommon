@@ -86,6 +86,28 @@ namespace SR_MATH_NS {
             return Distance(Vector2<T>());
         }
 
+        SR_NODISCARD static Vector2 Lerp(const Vector2& from, const Vector2& to, Unit t) {
+            return Vector2(
+                static_cast<T>(from.x + (to.x - from.x) * t),
+                static_cast<T>(from.y + (to.y - from.y) * t)
+            );
+        }
+
+        SR_NODISCARD static Vector2 Lerp(const Vector2& from, const Vector2& to, const Vector2& t) {
+            return Vector2(
+                static_cast<T>(from.x + (to.x - from.x) * static_cast<Unit>(t.x)),
+                static_cast<T>(from.y + (to.y - from.y) * static_cast<Unit>(t.y))
+            );
+        }
+
+        SR_NODISCARD Vector2 Lerp(const Vector2& to, Unit t) const {
+            return Lerp(*this, to, t);
+        }
+
+        SR_NODISCARD Vector2 Lerp(const Vector2& to, const Vector2& t) const {
+            return Lerp(*this, to, t);
+        }
+
         SR_NODISCARD Vector2 Abs() const {
             return Vector2(static_cast<T>(abs(x)), static_cast<T>(abs(y)));
         }

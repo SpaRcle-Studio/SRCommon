@@ -9,6 +9,67 @@ struct DefaultObjectMaker {
     static void MakeDefault(T&) { }
 };
 
+template<> struct DefaultObjectMaker<float> {
+    static constexpr bool value = true;
+    static void MakeDefault(float& v) { v = 0.f; }
+};
+
+template<> struct DefaultObjectMaker<double> {
+    static constexpr bool value = true;
+    static void MakeDefault(double& v) { v = 0.0; }
+};
+
+template<> struct DefaultObjectMaker<int32_t> {
+    static constexpr bool value = true;
+    static void MakeDefault(int32_t& v) { v = 0; }
+};
+
+template<> struct DefaultObjectMaker<uint32_t> {
+    static constexpr bool value = true;
+    static void MakeDefault(uint32_t& v) { v = 0; }
+};
+
+template<> struct DefaultObjectMaker<int64_t> {
+    static constexpr bool value = true;
+    static void MakeDefault(int64_t& v) { v = 0; }
+};
+
+template<> struct DefaultObjectMaker<uint64_t> {
+    static constexpr bool value = true;
+    static void MakeDefault(uint64_t& v) { v = 0; }
+};
+
+template<> struct DefaultObjectMaker<bool> {
+    static constexpr bool value = true;
+    static void MakeDefault(bool& v) { v = false; }
+};
+
+template<> struct DefaultObjectMaker<char> {
+    static constexpr bool value = true;
+    static void MakeDefault(char& v) { v = '\0'; }
+};
+
+template<> struct DefaultObjectMaker<int16_t> {
+    static constexpr bool value = true;
+    static void MakeDefault(int16_t& v) { v = 0; }
+};
+
+template<> struct DefaultObjectMaker<uint16_t> {
+    static constexpr bool value = true;
+    static void MakeDefault(uint16_t& v) { v = 0; }
+};
+
+template<> struct DefaultObjectMaker<int8_t> {
+    static constexpr bool value = true;
+    static void MakeDefault(int8_t& v) { v = 0; }
+};
+
+template<> struct DefaultObjectMaker<uint8_t> {
+    static constexpr bool value = true;
+    static void MakeDefault(uint8_t& v) { v = 0; }
+};
+
+
 template<class T>
 struct DefaultObjectMaker<std::optional<T>>
 {

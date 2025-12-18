@@ -30,9 +30,9 @@ namespace SR_WORLD_NS {
     { }
 
     Scene::~Scene() {
-        SRAssert(m_isDestroyed);
+        SRAssert(m_isDestroyed || !m_isInitialized);
 
-        if (Debug::Instance().GetLevel() >= Debug::Level::Low) {
+        if (m_isInitialized && Debug::Instance().GetLevel() >= Debug::Level::Low) {
             SR_LOG("Scene::~Scene() : free \"" + GetName() + "\" scene pointer...");
         }
 

@@ -32,7 +32,6 @@ namespace SR_UTILS_NS {
     class ComponentManager;
     class Component;
     class IComponentable;
-    class Transform2D;
     class Transform3D;
     class Transform;
     class GameObject;

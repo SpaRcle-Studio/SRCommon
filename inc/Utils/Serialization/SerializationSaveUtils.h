@@ -9,7 +9,7 @@ namespace SR_UTILS_NS {
     template<typename T, typename Enable = void> struct DefaultChecker {
 		using IsAlwaysFalse = std::true_type;
 
-		static bool IsDefault(const T&) { return false; }
+		static bool IsDefault(const T&, const T*) { return false; }
 	};
 
 	namespace Details {
@@ -20,8 +20,8 @@ namespace SR_UTILS_NS {
 		using ReserveMethodT = decltype(std::declval<T>().reserve(size_t()));
 	}
 
-	template<typename T> SR_INLINE bool IsDefault(const T& value) {
-		return DefaultChecker<T>::IsDefault(value);
+	template<typename T> SR_INLINE bool IsDefault(const T& value, const T* defaultValue = nullptr) {
+		return DefaultChecker<T>::IsDefault(value, defaultValue);
 	}
 
 	template<typename T>

@@ -50,7 +50,11 @@ namespace SR_UTILS_NS {
         SR_NODISCARD SR_HTYPES_NS::DataStorage& GetContext();
 
     protected:
-        virtual ThreadWorkerResult ExecuteImpl() = 0;
+        virtual ThreadWorkerResult ExecuteImpl() {
+            SRHalt("Abstract method called!");
+            return ThreadWorkerResult::ThreadWorkerResultMAX;
+        }
+
         virtual void FinalizeImpl() { }
 
     private:

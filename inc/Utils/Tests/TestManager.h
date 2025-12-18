@@ -19,6 +19,7 @@ namespace SR_UTILS_NS {
         Count
     );
 
+    /// @abstract
     class ITestController : public SR_UTILS_NS::Serializable, public SR_HTYPES_NS::SharedPtr<ITestController> {
         SR_CLASS()
     public:
@@ -29,7 +30,11 @@ namespace SR_UTILS_NS {
         ITestController();
 
     public:
-        virtual TestExecutionResult Run() = 0;
+        virtual TestExecutionResult Run() {
+            SRHalt("Abstract method called!");
+            return TestExecutionResult::TestExecutionResultMAX;
+        }
+
         SR_NODISCARD virtual uint32_t GetTotalTestsCount() const { return 1; }
 
     };

@@ -11,6 +11,7 @@
 namespace SR_UTILS_NS {
     class SerializationNode;
 
+    /// @abstract
     class IMigrator : public SRClass, public SR_HTYPES_NS::SharedPtr<IMigrator> {
         using Super = SR_HTYPES_NS::SharedPtr<IMigrator>;
         SR_CLASS()
@@ -20,7 +21,10 @@ namespace SR_UTILS_NS {
         { }
 
     public:
-        SR_NODISCARD virtual MigrationResult Migrate(SR_UTILS_NS::SerializationNode& node) = 0;
+        SR_NODISCARD virtual MigrationResult Migrate(SR_UTILS_NS::SerializationNode& node) {
+            SRHalt("Abstract method called!");
+            return MigrationResult::MigrationResultMAX;
+        }
 
     };
 

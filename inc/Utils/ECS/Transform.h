@@ -23,6 +23,7 @@ namespace SR_UTILS_NS {
 
     enum class LookAtAxis : uint8_t;
 
+    /// @abstract
     class Transform : public Serializable, public SR_HTYPES_NS::SharedPtr<Transform> {
         SR_CLASS()
         friend class GameObject;
@@ -105,7 +106,7 @@ namespace SR_UTILS_NS {
         SR_NODISCARD Transform* GetParentTransform() const;
         SR_NODISCARD SR_HTYPES_NS::SharedPtr<GameObject> GetGameObject() const;
 
-        SR_NODISCARD virtual Measurement GetMeasurement() const = 0;
+        SR_NODISCARD virtual Measurement GetMeasurement() const;
         SR_NODISCARD SR_FORCE_INLINE bool IsDirty() const noexcept { return m_dirtyMatrix; }
 
         void UpdateTree();

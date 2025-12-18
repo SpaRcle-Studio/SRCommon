@@ -229,4 +229,9 @@ namespace SR_UTILS_NS {
     void Transform::SetGlobalRotation(const SR_MATH_NS::FVector3& eulers) {
         SetGlobalRotation(eulers.Radians().ToQuat());
     }
+
+    Measurement Transform::GetMeasurement() const {
+        SRHalt("Abstract method called!");
+        return Measurement::MeasurementMAX;
+    }
 }

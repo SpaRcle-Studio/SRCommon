@@ -45,21 +45,22 @@ namespace SR_MATH_NS {
 
         static void SR_FASTCALL Multiply(Matrix4x4& result, const Matrix4x4& left, const Matrix4x4& right);
 
-        static Matrix4x4 CreateViewMat(Unit pitch = 0, Unit yaw = 0, Unit roll = 0);
-        static Matrix4x4 Identity();
-        static Matrix4x4 RotationYawPitchRoll(const FVector3& angles);
-        static Matrix4x4 Perspective(float_t FOV, float_t aspect, float_t nearValue, float_t farValue);
-        static Matrix4x4 FromEulers(const FVector3& eulers);
-        static Matrix4x4 CreateOrthographicOffCenter(Unit left, Unit right, Unit bottom, Unit top, Unit zNear, Unit zFar);
-        static Matrix4x4 Ortho(Unit left, Unit right, Unit bottom, Unit top, Unit zNear, Unit zFar);
-        static Matrix4x4 CreateTRS(const SR_MATH_NS::FVector3& translation, const SR_MATH_NS::Quaternion& rotation, const SR_MATH_NS::FVector3& scale);
-        static Matrix4x4 LookAt(const SR_MATH_NS::FVector3& eye, const SR_MATH_NS::FVector3& center, const SR_MATH_NS::FVector3& up);
-        SR_DEPRECATED_EX("FromQuaternion") static Matrix4x4 FromEulers(const Quaternion& quaternion);
-        static Matrix4x4 FromQuaternion(const Quaternion& quaternion);
-        static Matrix4x4 RotationAxis(const SR_MATH_NS::FVector4& axis, Unit angle);
-        static Matrix4x4 RotationAxis(const SR_MATH_NS::FVector3& axis, Unit angle);
-        static Matrix4x4 FromScale(const FVector3& scale);
-        static Matrix4x4 FromTranslate(const FVector3& translation);
+        SR_NODISCARD static Matrix4x4 CreateViewMat(Unit pitch = 0, Unit yaw = 0, Unit roll = 0);
+        SR_NODISCARD static Matrix4x4 Identity();
+        SR_NODISCARD static Matrix4x4 RotationYawPitchRoll(const FVector3& angles);
+        SR_NODISCARD static Matrix4x4 Perspective(float_t FOV, float_t aspect, float_t nearValue, float_t farValue);
+        SR_NODISCARD static Matrix4x4 FromEulers(const FVector3& eulers);
+        SR_NODISCARD static Matrix4x4 CreateOrthographicOffCenter(Unit left, Unit right, Unit bottom, Unit top, Unit zNear, Unit zFar);
+        SR_NODISCARD static Matrix4x4 Ortho(Unit left, Unit right, Unit bottom, Unit top, Unit zNear, Unit zFar);
+        SR_NODISCARD static Matrix4x4 CreateTRS(const SR_MATH_NS::FVector3& translation, const SR_MATH_NS::Quaternion& rotation, const SR_MATH_NS::FVector3& scale);
+        SR_NODISCARD static Matrix4x4 LookAt(const SR_MATH_NS::FVector3& eye, const SR_MATH_NS::FVector3& center, const SR_MATH_NS::FVector3& up);
+        SR_NODISCARD SR_DEPRECATED_EX("FromQuaternion") static Matrix4x4 FromEulers(const Quaternion& quaternion);
+        SR_NODISCARD static Matrix4x4 FromQuaternion(const Quaternion& quaternion);
+        SR_NODISCARD static Matrix4x4 RotationAxis(const SR_MATH_NS::FVector4& axis, Unit angle);
+        SR_NODISCARD static Matrix4x4 RotationAxis(const SR_MATH_NS::FVector3& axis, Unit angle);
+        SR_NODISCARD static Matrix4x4 FromScale(const FVector3& scale);
+        SR_NODISCARD static Matrix4x4 FromSkew(const FVector3& skew);
+        SR_NODISCARD static Matrix4x4 FromTranslate(const FVector3& translation);
 
         SR_NODISCARD Matrix4x4 Orthonormalize() const;
 

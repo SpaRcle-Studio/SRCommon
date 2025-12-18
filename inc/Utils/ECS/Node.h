@@ -27,8 +27,18 @@ namespace SR_UTILS_NS {
 
     public:
         SR_NODISCARD SR_UTILS_NS::SceneObjectType GetSceneObjectType() const noexcept override;
-        SR_NODISCARD virtual ECSNodeType GetNodeType() const noexcept = 0;
-        SR_NODISCARD virtual const SR_MATH_NS::Matrix4x4& GetMatrix() const noexcept = 0;
+
+        SR_NODISCARD virtual ECSNodeType GetNodeType() const noexcept {
+            SRHalt("Abstract method called!");
+            return ECSNodeType::ECSNodeTypeMAX;
+        }
+
+        SR_NODISCARD virtual const SR_MATH_NS::Matrix4x4& GetMatrix() const noexcept {
+            SRHalt("Abstract method called!");
+            static const SR_MATH_NS::Matrix4x4 identity = SR_MATH_NS::Matrix4x4::Identity();
+            return identity;
+        }
+
         SR_NODISCARD virtual uint64_t GetNodePriority() const noexcept { return 0; }
 
     protected:

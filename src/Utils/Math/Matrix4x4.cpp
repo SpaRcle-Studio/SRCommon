@@ -742,4 +742,14 @@ namespace SR_MATH_NS {
 
         return result;
     }
+
+    Matrix4x4 Matrix4x4::FromSkew(const FVector3& skew) {
+        Matrix4x4 result = Matrix4x4::Identity();
+
+        result.m[0][1] = skew.x; // Skew XY
+        result.m[0][2] = skew.y; // Skew XZ
+        result.m[1][2] = skew.z; // Skew YZ
+
+        return result;
+    }
 }

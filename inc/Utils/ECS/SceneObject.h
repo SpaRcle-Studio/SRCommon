@@ -23,6 +23,7 @@ namespace SR_UTILS_NS {
         Node
     )
 
+    /// @abstract
     class SceneObject : public IComponentable {
         SR_CLASS()
         using Super = IComponentable;
@@ -78,7 +79,10 @@ namespace SR_UTILS_NS {
         SR_NODISCARD SceneObject::Ptr CloneSceneObject() const;
         SR_NODISCARD bool IsPrefab() const noexcept override { return m_prefabInfo.pPrefab; }
 
-        SR_NODISCARD virtual SceneObjectType GetSceneObjectType() const noexcept = 0;
+        SR_NODISCARD virtual SceneObjectType GetSceneObjectType() const noexcept {
+            SRHalt("Abstract method called!");
+            return SceneObjectType::SceneObjectTypeMAX;
+        }
 
         bool Load(IDeserializer& deserializer) override;
 

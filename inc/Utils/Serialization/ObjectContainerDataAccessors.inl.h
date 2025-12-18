@@ -42,13 +42,17 @@ public:
 	}
 
 	static void Load(IDeserializer& deserializer, T& value, const SerializationId& id) {
+        if (!deserializer.IsPreserveMode()) {
+            value.clear();
+        }
+
 		const uint64_t size = deserializer.BeginArray(id);
 		if (size == 0) {
 			return;
 		}
 
 		if (!deserializer.IsPreserveMode()) {
-			value.clear();
+			/// already cleared
 		}
 		else if (deserializer.ShouldSetDefaults()) {
 			auto it = value.end();

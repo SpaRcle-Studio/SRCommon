@@ -2,21 +2,39 @@
 // Created by Monika on 01.08.2022.
 //
 
-#ifndef SR_ENGINE_TRANSFORM2D_H
-#define SR_ENGINE_TRANSFORM2D_H
+#ifndef SR_ENGINE_UTILS_TRANSFORM_RECT_H
+#define SR_ENGINE_UTILS_TRANSFORM_RECT_H
 
 #include <Utils/ECS/Transform.h>
-#include <Utils/UI/UIModifier.h>
 #include <Utils/Math/Rect.h>
 
 namespace SR_UTILS_NS {
     class GameObject;
 
-    class SR_COMMON_DLL_API Transform2D : public Transform {
+    struct SR_COMMON_DLL_API RectAnchors : public SR_UTILS_NS::Serializable {
+        SR_STRUCT()
+    public:
+        /// @property @resetValue(SR_MATH_NS::FVector2(0.5f, 0.5f))
+        SR_MATH_NS::FVector2 min = SR_MATH_NS::FVector2(0.5f, 0.5f);
+        /// @property @resetValue(SR_MATH_NS::FVector2(0.5f, 0.5f))
+        SR_MATH_NS::FVector2 max = SR_MATH_NS::FVector2(0.5f, 0.5f);
+
+        bool operator==(const RectAnchors& other) const {
+            return min == other.min && max == other.max;
+        }
+
+        bool operator!=(const RectAnchors& other) const {
+            return !(*this == other);
+        }
+
+    };
+
+    class SR_COMMON_DLL_API TransformRect : public Transform {
         SR_CLASS()
         friend class GameObject;
+        using Super = Transform;
     public:
-        Transform2D();
+        TransformRect();
 
     public:
         void SetTranslation(const SR_MATH_NS::FVector3& translation) override;
@@ -25,6 +43,10 @@ namespace SR_UTILS_NS {
         void SetRotation(const SR_MATH_NS::Quaternion& quaternion) override;
         void SetScale(const SR_MATH_NS::FVector3& scale) override;
         void SetSkew(const SR_MATH_NS::FVector3& skew) override;
+        void SetSize(const SR_MATH_NS::FVector2& size);
+        void SetPivot(const SR_MATH_NS::FVector2& pivot);
+        void SetAnchors(const RectAnchors& anchors);
+        void SetCanvasSize(const SR_MATH_NS::FVector2& size);
 
         void Translate(const SR_MATH_NS::FVector3& translation) override;
         void Rotate(const SR_MATH_NS::Quaternion& quaternion) override;
@@ -36,14 +58,21 @@ namespace SR_UTILS_NS {
         void SetLocalPriority(int32_t priority);
         void SetRelativePriority(bool relative);
 
+        SR_NODISCARD SR_MATH_NS::Quaternion GetGlobalRotation() const override;
+        SR_NODISCARD SR_MATH_NS::Quaternion GetQuaternion() const override { return m_quaternion; }
         SR_NODISCARD SR_MATH_NS::FVector3 GetTranslation() const override { return m_translation; }
         SR_NODISCARD SR_MATH_NS::FVector3 GetRotation() const override { return m_rotation; }
         SR_NODISCARD SR_MATH_NS::FVector3 GetScale() const override { return m_scale; }
         SR_NODISCARD SR_MATH_NS::FVector3 GetSkew() const override { return m_skew; }
+        SR_NODISCARD SR_MATH_NS::FVector2 GetSize() const { return m_size; }
+        SR_NODISCARD SR_MATH_NS::FVector2 GetPivot() const { return m_pivot; }
+        SR_NODISCARD const RectAnchors& GetAnchors() const { return m_anchors; }
 
         SR_NODISCARD Measurement GetMeasurement() const override { return Measurement::Space2D; }
 
         SR_NODISCARD const SR_MATH_NS::Matrix4x4& GetMatrix() const override;
+
+        SR_NODISCARD const SR_MATH_NS::FRect& GetLayoutRect() const;
 
         SR_NODISCARD int32_t GetPriority();
         SR_NODISCARD int32_t GetLocalPriority() const noexcept { return m_localPriority; }
@@ -52,16 +81,8 @@ namespace SR_UTILS_NS {
 
         void OnHierarchyChanged() override;
 
-        void AddModifier(UI::UIModifierComponent* pModifier) { m_modifiers.emplace_back(pModifier); }
-        void RemoveModifier(UI::UIModifierComponent* pModifier);
-
-        void OnUITreeChanged();
-
     protected:
         void UpdateMatrix() const override;
-        void BuildUITree();
-
-        SR_NODISCARD SR_MATH_NS::FVector2 GetSize() const;
 
     public:
         SR_INLINE static constexpr SR_MATH_NS::FVector2 RIGHT = Math::FVector2(1, 0);
@@ -71,24 +92,43 @@ namespace SR_UTILS_NS {
         void UpdatePriorityTree();
 
     protected:
-        mutable SR_MATH_NS::FSize2 m_contentSize;
         mutable SR_MATH_NS::Matrix4x4 m_localMatrix = SR_MATH_NS::Matrix4x4::Identity();
         mutable SR_MATH_NS::Matrix4x4 m_matrix = SR_MATH_NS::Matrix4x4::Identity();
+        mutable SR_MATH_NS::Quaternion m_globalRotation = SR_MATH_NS::Quaternion::Identity();
 
-        std::vector<UI::UIModifierComponent*> m_modifiers;
+        SR_MATH_NS::FVector2 m_canvasSize;
+
+        /// @property @readOnly @dontSave
+        mutable SR_MATH_NS::FRect m_layoutRect;
+        /// @property @readOnly @dontSave
+        mutable SR_MATH_NS::FRect m_localRect;
 
         bool m_isDirtyPriority = true;
         int32_t m_priority = 0;
 
         /// @property @setter(SetTranslation)
         SR_MATH_NS::FVector3 m_translation = SR_MATH_NS::FVector3::Zero();
+        /// @property @setter(SetSize) @resetValue(SR_MATH_NS::FVector2(100.0f, 100.0f))
+        SR_MATH_NS::FVector2 m_size = SR_MATH_NS::FVector2(100.0f, 100.0f);
+
+        /// @property @onChanged(UpdateTree)
+        SR_MATH_NS::FVector2 m_offsetMin; // Left, Bottom
+        /// @property @onChanged(UpdateTree)
+        SR_MATH_NS::FVector2 m_offsetMax; // Right, Top
+
+        /// @property @onChanged(UpdateTree) @setter(SetAnchors)
+        RectAnchors m_anchors;
+        /// @property @resetValue(SR_MATH_NS::FVector2(0.5f, 0.5f)) @setter(SetPivot)
+        SR_MATH_NS::FVector2 m_pivot = SR_MATH_NS::FVector2(0.5f, 0.5f);
+
         /// @property @setter(SetRotation) @dontSave
         SR_MATH_NS::FVector3 m_rotation = SR_MATH_NS::FVector3::Zero();
         /// @property @setter(SetRotation) @hidden
         SR_MATH_NS::Quaternion m_quaternion = SR_MATH_NS::Quaternion::Identity();
-        /// @property @setter(SetScale)
+
+        /// @property @setter(SetScale) @resetValue(SR_MATH_NS::FVector3::One())
         SR_MATH_NS::FVector3 m_scale = SR_MATH_NS::FVector3::One();
-        /// @property @setter(SetSkew)
+        /// @property @setter(SetSkew) @resetValue(SR_MATH_NS::FVector3::One()) @hidden
         SR_MATH_NS::FVector3 m_skew = SR_MATH_NS::FVector3::One();
 
         /// @property @setter(SetLocalPriority)
@@ -99,4 +139,4 @@ namespace SR_UTILS_NS {
     };
 }
 
-#endif //SR_ENGINE_TRANSFORM2D_H
+#endif //SR_ENGINE_UTILS_TRANSFORM_RECT_H

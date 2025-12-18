@@ -17,6 +17,7 @@ namespace SR_UTILS_NS {
 namespace SR_WORLD_NS {
     class Scene;
 
+    /// @abstract
     class SceneLogic : public SR_UTILS_NS::Serializable, public SR_HTYPES_NS::SharedPtr<SceneLogic> {
         SR_CLASS()
         using Super = SR_HTYPES_NS::SharedPtr<SceneLogic>;
@@ -32,8 +33,17 @@ namespace SR_WORLD_NS {
 
     public:
         SR_NODISCARD virtual bool IsAllowedRootSave() const noexcept { return true; }
-        SR_NODISCARD virtual SceneLogicType GetType() const noexcept = 0;
-        SR_NODISCARD virtual StringAtom GetSceneExtension() const noexcept = 0;
+
+        SR_NODISCARD virtual SceneLogicType GetType() const noexcept {
+            SRHalt("Abstract method called!");
+            return SceneLogicType::SceneLogicTypeMAX;
+        }
+
+        SR_NODISCARD virtual StringAtom GetSceneExtension() const noexcept {
+            SRHalt("Abstract method called!");
+            return StringAtom();
+        }
+
         SR_NODISCARD const ScenePtr& GetScene() const noexcept { return m_scene; }
         SR_NODISCARD virtual SR_UTILS_NS::Path GetSceneDataPath(const SR_UTILS_NS::Path& path) const { return path; }
 

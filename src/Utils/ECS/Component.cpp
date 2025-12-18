@@ -4,7 +4,6 @@
 
 #include <Utils/ECS/Component.h>
 #include <Utils/ECS/GameObject.h>
-#include <Utils/ECS/Transform2D.h>
 #include <Utils/ECS/ComponentManager.h>
 #include <Utils/Types/Thread.h>
 #include <Utils/World/Scene.h>

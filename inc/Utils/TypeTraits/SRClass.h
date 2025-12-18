@@ -33,7 +33,10 @@ namespace SR_UTILS_NS {
             return {};
         }
 
-        SR_NODISCARD virtual const SR_UTILS_NS::SRClassMeta* GetMeta() const noexcept = 0;
+        SR_NODISCARD virtual const SR_UTILS_NS::SRClassMeta* GetMeta() const noexcept {
+            SRHalt("Abstract method called!");
+            return nullptr;
+        }
 
         //virtual void InitializeClass() noexcept { }
 
