@@ -154,9 +154,9 @@ namespace SR_UTILS_NS {
         const bool anchorsTogetherX = AreAnchorsTogetherX();
         const bool anchorsTogetherY = AreAnchorsTogetherY();
 
-        float_t left, right, bottom, top;
+        float_t left = 0.f, right = 0.f, bottom = 0.f, top = 0.f;
 
-        float_t width, height;
+        float_t width = 0.f, height = 0.f;
         SR_MATH_NS::FVector2 pivotPos;
 
         // Обработка по оси X
@@ -165,13 +165,11 @@ namespace SR_UTILS_NS {
             const float_t anchorX = anchorMinPos.x; // min.x == max.x
             width = m_size.x; // sizeDelta.x
             pivotPos.x = anchorX + m_translation.x; // anchorPos + anchoredPosition
-            left = pivotPos.x - width * m_pivot.x;
-            right = left + width;
         }
         else {
             // Якоря врозь по X: используем Left и Right offsets
             left = anchorMinPos.x + m_offsetMin.x;
-            right = anchorMaxPos.x + m_offsetMax.x;
+            right = anchorMaxPos.x - m_offsetMax.x;
             width = right - left;
             pivotPos.x = left + width * m_pivot.x;
         }
@@ -182,13 +180,11 @@ namespace SR_UTILS_NS {
             const float_t anchorY = anchorMinPos.y; // min.y == max.y
             height = m_size.y; // sizeDelta.y
             pivotPos.y = anchorY + m_translation.y; // anchorPos + anchoredPosition
-            bottom = pivotPos.y - height * m_pivot.y;
-            top = bottom + height;
         }
         else {
             // Якоря врозь по Y: используем Bottom и Top offsets
             bottom = anchorMinPos.y + m_offsetMin.y;
-            top = anchorMaxPos.y + m_offsetMax.y;
+            top = anchorMaxPos.y - m_offsetMax.y;
             height = top - bottom;
             pivotPos.y = bottom + height * m_pivot.y;
         }

@@ -301,4 +301,11 @@ namespace SR_MATH_NS {
     typedef Rect<uint32_t> URect;
 }
 
+template<typename T> struct fmt::formatter<SR_MATH_NS::Rect<T>> {
+    constexpr auto parse(format_parse_context& ctx) { return ctx.begin(); }
+    auto format(const SR_MATH_NS::Rect<T>& val, format_context& ctx) const {
+        return fmt::format_to(ctx.out(), "Rect(x: {}, y: {}, w: {}, h: {})", val.x, val.y, val.w, val.h);
+    }
+};
+
 #endif //SR_ENGINE_RECT_H
