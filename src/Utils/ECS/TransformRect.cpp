@@ -140,8 +140,6 @@ namespace SR_UTILS_NS {
         const SR_MATH_NS::FVector2 anchorMaxPos =
             SR_MATH_NS::FVector2::Lerp(parentMin, parentMax, m_anchors.max);
 
-        const SR_MATH_NS::FVector2 anchorSize = anchorMaxPos - anchorMinPos;
-
         /*==============================================================
             2. Определение режима якорей и расчет layoutRect
             В Unity каждая ось обрабатывается независимо:
@@ -268,7 +266,9 @@ namespace SR_UTILS_NS {
         }
     }
 
-    int32_t TransformRect::GetPriority() { /// NOLINT
+    int32_t TransformRect::GetPriority() const { /// NOLINT
+        SR_TRACY_ZONE;
+
         if (!m_isDirtyPriority) {
             return m_priority;
         }

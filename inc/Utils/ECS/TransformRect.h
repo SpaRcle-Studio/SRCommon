@@ -83,7 +83,7 @@ namespace SR_UTILS_NS {
 
         SR_NODISCARD const SR_MATH_NS::FRect& GetLayoutRect() const;
 
-        SR_NODISCARD int32_t GetPriority();
+        SR_NODISCARD int32_t GetPriority() const;
         SR_NODISCARD int32_t GetLocalPriority() const noexcept { return m_localPriority; }
 
         SR_NODISCARD bool IsRelativePriority() const noexcept { return m_relativePriority; }
@@ -112,8 +112,8 @@ namespace SR_UTILS_NS {
         /// @property @readOnly @dontSave
         mutable SR_MATH_NS::FRect m_localRect;
 
-        bool m_isDirtyPriority = true;
-        int32_t m_priority = 0;
+        mutable bool m_isDirtyPriority = true;
+        mutable int32_t m_priority = 0;
 
         /// @property @setter(SetTranslation)
         SR_MATH_NS::FVector3 m_translation = SR_MATH_NS::FVector3::Zero();
