@@ -892,6 +892,22 @@ namespace SR_MATH_NS {
         return a.x * b.x + a.y * b.y + a.z * b.z;
     }
 
+    template<typename T> SR_NODISCARD Vector3<T> Min(const Vector3<T>& a, const Vector3<T>& b) {
+        return Vector3<T>(
+                SR_MIN(a.x, b.x),
+                SR_MIN(a.y, b.y),
+                SR_MIN(a.z, b.z)
+        );
+    }
+
+    template<typename T> SR_NODISCARD Vector3<T> Max(const Vector3<T>& a, const Vector3<T>& b) {
+        return Vector3<T>(
+                SR_MAX(a.x, b.x),
+                SR_MAX(a.y, b.y),
+                SR_MAX(a.z, b.z)
+        );
+    }
+
     template<typename T> SR_NODISCARD Vector3<T> Cross(const Vector3<T>& a, const Vector3<T>& b) {
         return Vector3<T>(
                 (a.y * b.z) - (a.z * b.y),
