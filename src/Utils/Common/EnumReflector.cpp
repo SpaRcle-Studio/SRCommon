@@ -133,7 +133,7 @@ namespace SR_UTILS_NS {
         const std::string lower = SR_UTILS_NS::StringUtils::ToLower(value);
 
         for (auto&& enumerator : m_data->values) {
-            if (SR_UTILS_NS::StringUtils::ToLower(enumerator.name) == lower) {
+            if (SR_UTILS_NS::StringUtils::ToLower(enumerator.name.ToStringRef()) == lower) {
                 return enumerator.value;
             }
         }

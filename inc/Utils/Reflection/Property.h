@@ -26,11 +26,13 @@ namespace SR_UTILS_NS::Reflection {
         EditorPropertyParams& SetDisplayName(const StringAtom& displayName) noexcept { m_displayName = displayName; return *this; }
         EditorPropertyParams& SetTooltip(const StringAtom& tooltip) noexcept { m_tooltip = tooltip; return *this; }
         EditorPropertyParams& SetInspector(const StringAtom& inspector) noexcept { m_inspector = inspector; return *this; }
+        EditorPropertyParams& SetGroup(const StringAtom& group) noexcept { m_group = group; return *this; }
         EditorPropertyParams& SetDragSpeed(float_t speed) noexcept { m_dragSpeed = speed; return *this; }
         EditorPropertyParams& SetCustomArg(const StringAtom& name, std::string_view value) noexcept { m_customArgs[name] = value; return *this; }
 
         SR_NODISCARD StringAtom GetDisplayName() const noexcept { return m_displayName; }
         SR_NODISCARD StringAtom GetTooltip() const noexcept { return m_tooltip; }
+        SR_NODISCARD StringAtom GetGroup() const noexcept { return m_group; }
         SR_NODISCARD float_t GetDragSpeed() const noexcept { return m_dragSpeed; }
         SR_NODISCARD float_t GetEditorWidth() const noexcept { return m_editorWidth; }
         SR_NODISCARD StringAtom GetInspector() const noexcept { return m_inspector; }
@@ -48,6 +50,7 @@ namespace SR_UTILS_NS::Reflection {
         SR_UTILS_NS::StringAtom m_displayName;
         SR_UTILS_NS::StringAtom m_tooltip;
         SR_UTILS_NS::StringAtom m_inspector;
+        SR_UTILS_NS::StringAtom m_group;
         float_t m_editorWidth = 0.f;
         float_t m_dragSpeed = 1.f;
         bool m_noHeader = false;

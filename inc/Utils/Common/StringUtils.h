@@ -378,6 +378,10 @@ namespace SR_UTILS_NS {
             return str;
         }
 
+        SR_NODISCARD SR_INLINE_STATIC std::string ToLower(std::string_view str) noexcept {
+            return ToLower(std::string(str));
+        }
+
         SR_INLINE_STATIC void ToLowerRef(std::string_view str) noexcept {
             for (auto t = const_cast<char*>(str.data()); *t != '\0'; t++) {
                 *t = static_cast<char>(tolower(static_cast<char>(*t)));
