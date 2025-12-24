@@ -39,6 +39,18 @@ namespace SR_MATH_NS {
         GLMRotateMat4x4(self, rotation.ToGLM());
     }
 
+    Matrix4x4::Matrix4x4(const FVector3& translate) noexcept
+        : Matrix4x4()
+    {
+        GLMTranslateMat4x4(self, translate);
+    }
+
+    Matrix4x4::Matrix4x4(const Quaternion& rotation) noexcept
+        : Matrix4x4()
+    {
+        GLMRotateMat4x4(self, rotation.ToGLM());
+    }
+
     Matrix4x4::Matrix4x4(const FVector3& translate, const FVector3& scale) noexcept
         : Matrix4x4()
     {
@@ -126,11 +138,11 @@ namespace SR_MATH_NS {
     }
 
     Matrix4x4 Matrix4x4::FromEulers(const Quaternion& quaternion) {
-        return Matrix4x4(0.f, quaternion, 1.f);
+        return Matrix4x4(quaternion, 1.f);
     }
 
     Matrix4x4 Matrix4x4::FromQuaternion(const Quaternion& quaternion) {
-        return Matrix4x4(0.f, quaternion, 1.f);
+        return Matrix4x4(quaternion);
     }
 
     Matrix4x4 Matrix4x4::RotationAxis(const SR_MATH_NS::FVector4& axis, Unit angle) {
@@ -358,7 +370,7 @@ namespace SR_MATH_NS {
     }
 
     Matrix4x4 Matrix4x4::FromTranslate(const FVector3& translation) {
-        return Matrix4x4(translation, FVector3::Zero(), FVector3::One());
+        return Matrix4x4(translation);
     }
 
     SR_NODISCARD Matrix4x4 Matrix4x4::Inverse() const {
