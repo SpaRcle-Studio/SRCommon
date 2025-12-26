@@ -48,12 +48,12 @@ namespace SR_MATH_NS {
 
         if (K <= 66.0f) {
             r = 1.0f;
-            g = SR_MATH_NS::Clamp(0.3900815788f * log(K) - 0.6318414438f, 0.0f, 1.0f);
-            b = (K <= 19.0f) ? 0.0f : SR_MATH_NS::Clamp(0.5432067891f * log(K - 10.0f) - 1.1962540891f, 0.0f, 1.0f);
+            g = SR_MATH_NS::Clamp(0.3900815788f * static_cast<float>(log(K)) - 0.6318414438f, 0.0f, 1.0f);
+            b = (K <= 19.0f) ? 0.0f : SR_MATH_NS::Clamp(0.5432067891f * static_cast<float>(log(K - 10.0f)) - 1.1962540891f, 0.0f, 1.0f);
         }
         else {
-            r = SR_MATH_NS::Clamp(1.2929361861f * pow(K - 60.0f, -0.1332047592f), 0.0f, 1.0f);
-            g = SR_MATH_NS::Clamp(1.1298908616f * pow(K - 60.0f, -0.0755148492f), 0.0f, 1.0f);
+            r = SR_MATH_NS::Clamp(1.2929361861f * static_cast<float>(pow(K - 60.0f, -0.1332047592f)), 0.0f, 1.0f);
+            g = SR_MATH_NS::Clamp(1.1298908616f * static_cast<float>(pow(K - 60.0f, -0.0755148492f)), 0.0f, 1.0f);
             b = 1.0f;
         }
 
