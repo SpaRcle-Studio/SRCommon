@@ -925,6 +925,9 @@ namespace SR_MATH_NS {
         const FVector3& planeNormal,
         float_t weight
     );
+
+    FVector3 KelvinToRGB(float_t K);
+    FVector3 Mix(const FVector3& a, const FVector3& b, float_t t);
 }
 
 namespace std {

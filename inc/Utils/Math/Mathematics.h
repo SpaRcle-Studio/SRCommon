@@ -227,6 +227,14 @@ namespace SR_MATH_NS {
         return a + (b + -a) * t;
     }
 
+    static SR_FORCE_INLINE double_t Mix(double_t a, double_t b, double_t t) {
+        return a + (b - a) * t;
+    }
+
+    static SR_FORCE_INLINE float_t Mix(float_t a, float_t b, float_t t) {
+        return static_cast<float_t>(Mix(static_cast<double_t>(a), static_cast<double_t>(b), static_cast<double_t>(t)));
+    }
+
     template<typename MaskLeft, typename MakeRight> static SR_FORCE_INLINE bool IsMaskIncludedSubMask(MaskLeft mask, MakeRight subMask) {
         return (subMask & mask) == subMask;
     }

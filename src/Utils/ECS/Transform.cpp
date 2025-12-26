@@ -203,15 +203,15 @@ namespace SR_UTILS_NS {
     }
 
     SR_MATH_NS::FVector3 Transform::Right() const {
-        return GetMatrix().GetQuat() * SR_MATH_NS::FVector3::Right();
+        return GetGlobalRotation() * SR_MATH_NS::FVector3::Right();
     }
 
     SR_MATH_NS::FVector3 Transform::Up() const {
-        return GetMatrix().GetQuat() * SR_MATH_NS::FVector3::Up();
+        return GetGlobalRotation() * SR_MATH_NS::FVector3::Up();
     }
 
     SR_MATH_NS::FVector3 Transform::Forward() const {
-        return GetMatrix().GetQuat() * SR_MATH_NS::FVector3::Forward();
+        return GetGlobalRotation() * SR_MATH_NS::FVector3::Forward();
     }
 
     void Transform::GlobalRotate(const SR_MATH_NS::Quaternion& quaternion) {
