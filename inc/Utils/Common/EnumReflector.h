@@ -93,8 +93,8 @@ namespace SR_UTILS_NS {
         SR_MAYBE_UNUSED SR_NODISCARD uint64_t GetIntegralTypeSizeInternal() const;
         SR_MAYBE_UNUSED SR_NODISCARD uint64_t GetHashNameInternal() const;
         SR_MAYBE_UNUSED SR_NODISCARD int64_t ReadEnumValueFromPointerInternal(const void* pEnum) const;
-        SR_MAYBE_UNUSED SR_NODISCARD void WriteEnumValueToPointerInternal(void* pEnum, int64_t value) const;
         SR_MAYBE_UNUSED SR_NODISCARD EnumVariant GetEnumVariantInternal() const;
+        SR_MAYBE_UNUSED void WriteEnumValueToPointerInternal(void* pEnum, int64_t value) const;
 
     private:
         static bool IsIdentChar(char c);

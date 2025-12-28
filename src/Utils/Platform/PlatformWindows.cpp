@@ -327,7 +327,11 @@ namespace SR_UTILS_NS::Platform {
         TCHAR* dstStart = (TCHAR*)&df[1];
         for (auto &&path:paths)
         {
-            _tcscpy(dstStart, path.ToString().c_str());
+            // deprecated
+            //_tcscpy(dstStart, path.ToString().c_str());
+
+            _tcscpy_s(dstStart, path.ToString().length() + 1, path.ToString().c_str());
+
             dstStart = &dstStart[_tcslen(path.c_str()) + 1]; // + 1 => get beyond '\0'
         }
         GlobalUnlock(hdrop);

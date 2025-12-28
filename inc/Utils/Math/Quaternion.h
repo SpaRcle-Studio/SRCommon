@@ -68,7 +68,7 @@ namespace SR_MATH_NS {
 
         SR_NODISCARD Unit Dot(const Quaternion& q) const noexcept;
 
-        SR_NODISCARD void ToAxisAngle(Vector3<Unit>& axis, float_t& angle) const;
+        void ToAxisAngle(Vector3<Unit>& axis, float_t& angle) const;
         SR_NODISCARD Quaternion Inverse() const;
         SR_NODISCARD Quaternion Conjurate() const;
 

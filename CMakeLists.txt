@@ -24,12 +24,8 @@ if (MSVC)
     endif()
 endif()
 
-if (NOT SR_COMMON_USE_CLANG_EMULATION)
-    option(SR_COMMON_ASSIMP "" ON)
-else()
-    option(SR_COMMON_ASSIMP "" OFF)
-    message(STATUS "Assimp is disabled because Clang emulation is used")
-endif()
+
+option(SR_COMMON_ASSIMP "" ON)
 
 option(SR_COMMON_ZLIB "" ON)
 option(SR_COMMON_OPENSSL "" OFF)
@@ -82,11 +78,16 @@ endif()
 
 SRUseAssimpIfPossible(SRCommon)
 
-if (SR_COMMON_ASSIMP AND NOT SR_COMMON_USE_CLANG_EMULATION)
+if (SR_COMMON_ASSIMP)
     include(cmake/AssimpConfigure.cmake)
     add_subdirectory(libs/assimp)
 
     target_compile_definitions(assimp PUBLIC ${SR_ASSIMP_DISABLED_IMPORTERS})
+
+    if (SR_COMMON_USE_CLANG_EMULATION)
+        target_compile_options(assimp PRIVATE -Wno-deprecated-copy)
+        target_compile_options(assimp PRIVATE -Wno-unused-function)
+    endif()
 endif()
 
 if (NOT ANDROID_NDK AND NOT SR_EMSCRIPTEN)
@@ -218,6 +219,11 @@ else()
 
     SR_COPY_SHARED_MODULE_TO_EXECUTABLE_FOLDER(Utils)
     SR_COPY_STATIC_LIBRARY_TO_LIBRARY_FOLDER(Utils)
+endif()
+
+if (SR_COMMON_USE_CLANG_EMULATION)
+    target_compile_options(Utils PUBLIC "-Wno-microsoft-include")
+    target_compile_options(Utils PUBLIC "-Wno-deprecated-declarations")
 endif()
 
 if (SR_USE_PCH)

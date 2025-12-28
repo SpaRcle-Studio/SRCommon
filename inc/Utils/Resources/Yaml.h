@@ -34,7 +34,7 @@ namespace SR_UTILS_NS::Yaml {
         SR_NODISCARD std::string Name() const;
         SR_NODISCARD std::string_view NameView() const;
 
-        SR_NODISCARD void SetValue(const std::string_view& value);
+        void SetValue(const std::string_view& value);
         SR_NODISCARD std::string GetValue() const;
         SR_NODISCARD std::string_view GetValueView() const;
         SR_NODISCARD std::string GetKey() const;

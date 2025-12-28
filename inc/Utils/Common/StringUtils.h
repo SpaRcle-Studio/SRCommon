@@ -427,14 +427,14 @@ namespace SR_UTILS_NS {
             return str;
         }
 
-#ifdef WIN32
+/*#ifdef WIN32
         inline static const wchar_t* CharsToWchar(const char* str) noexcept {
             const size_t cSize = strlen(str) + 1;
             auto wc = new wchar_t[cSize];
             mbstowcs(wc, str, cSize);
             return wc;
         }
-#endif
+#endif*/
     };
 }
 

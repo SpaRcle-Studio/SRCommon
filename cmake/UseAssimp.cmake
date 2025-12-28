@@ -1,5 +1,5 @@
 function(SRUseAssimpIfPossible target)
-    if (SR_COMMON_ASSIMP AND NOT SR_COMMON_USE_CLANG_EMULATION)
+    if (SR_COMMON_ASSIMP)
         message(STATUS "SpaRcle: ${target} will be using Assimp")
 
         add_definitions(-DSR_UTILS_ASSIMP=1)

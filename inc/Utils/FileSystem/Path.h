@@ -43,7 +43,7 @@ namespace SR_UTILS_NS {
         void Save(ISerializer& serializer, const SerializationId& id) const;
         void Load(IDeserializer& deserializer, const SerializationId& id);
 
-        SR_DEPRECATED bool Make(Type type = Type::Undefined) const;
+        bool Make(Type type = Type::Undefined) const;
         bool Create() const;
         bool CreateIfNotExists() const;
 
