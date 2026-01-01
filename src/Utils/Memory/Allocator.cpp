@@ -3,9 +3,16 @@
 //
 
 #include <Utils/stdInclude.h>
+#include <Utils/Profile/TracyContext.h>
+
+bool g_TracyAllocatorInitialized = false;
 
 void* SRMalloc(SR_UTILS_NS::SizeType size) {
-    return std::malloc(size);
+    void* pMemory = std::malloc(size);
+    if (g_TracyAllocatorInitialized) {
+        TracyAlloc(pMemory, size);
+    }
+    return pMemory;
 }
 
 void* SRReAlloc(void* pMemory, SR_UTILS_NS::SizeType size) {
@@ -13,6 +20,9 @@ void* SRReAlloc(void* pMemory, SR_UTILS_NS::SizeType size) {
 }
 
 void SRFree(void* pMemory) {
+    if (g_TracyAllocatorInitialized) {
+        TracyFree(pMemory);
+    }
     return std::free(pMemory);
 }
 

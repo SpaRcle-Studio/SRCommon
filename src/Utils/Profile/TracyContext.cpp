@@ -61,9 +61,13 @@ namespace SR_UTILS_NS {
 
     void StartupEngineProfiler() {
         tracy::StartupProfiler();
+
+        g_TracyAllocatorInitialized = true;
     }
 
     void ShutdownEngineProfiler() {
+        g_TracyAllocatorInitialized = false;
+
         tracy::ShutdownProfiler();
     }
 }

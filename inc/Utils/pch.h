@@ -14,6 +14,7 @@
 #include <cstdint>
 #include <set>
 #include <optional>
+#include <cstdlib>
 
 #ifndef SR_ENGINE_CODEGEN_CLANG_PARSE_MODE
     #include <cfloat>

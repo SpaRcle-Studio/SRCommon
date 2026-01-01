@@ -152,6 +152,7 @@ namespace SR_UTILS_NS {
 
         while (true) {
             SR_TRACY_ZONE_S(m_name.c_str());
+            SR_TRACY_FRAME_MARK_N(m_name.c_str());
 
             m_thread->Synchronize();
 

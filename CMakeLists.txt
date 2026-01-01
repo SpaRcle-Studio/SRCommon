@@ -224,6 +224,7 @@ endif()
 if (SR_COMMON_USE_CLANG_EMULATION)
     target_compile_options(Utils PUBLIC "-Wno-microsoft-include")
     target_compile_options(Utils PUBLIC "-Wno-deprecated-declarations")
+    target_compile_options(Utils PUBLIC "-Wno-delete-incomplete")
 endif()
 
 if (SR_USE_PCH)

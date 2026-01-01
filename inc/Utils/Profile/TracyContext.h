@@ -58,6 +58,11 @@ namespace SR_UTILS_NS {
     #define SR_TRACY_ZONE_TEXT_C(value) ZoneText(value, strlen(value))
     #define SR_TRACY_ZONE_N(name) ZoneScopedN(name)
     #define SR_TRACY_ZONE_S(name) ZoneTransientN(TracyConcat(__tracy_source_location, TracyLine), name, true)
+    #define SR_TRACY_FRAME_MARK FrameMark()
+    #define SR_TRACY_FRAME_MARK_N(name) FrameMarkNamed(name)
+    #define SR_TRACY_FRAME_IMAGE(ptr, width, height, channels, size) FrameImage(ptr, width, height, channels, size)
+    #define SR_TRACY_FRAME_START(name) FrameMarkStart(name)
+    #define SR_TRACY_FRAME_END(name) FrameMarkEnd(name)
     #define SR_TRACY_PLOT(name, val) TracyPlot(name, val)
     #define SR_TRACY_ZONE_COLOR(color) ZoneColor(color)
 
@@ -75,6 +80,11 @@ namespace SR_UTILS_NS {
     #define SR_TRACY_ZONE_TEXT_C(value) SR_NOOP
     #define SR_TRACY_ZONE_N(name) SR_NOOP
     #define SR_TRACY_ZONE_S(name) SR_NOOP
+    #define SR_TRACY_FRAME_MARK SR_NOOP
+    #define SR_TRACY_FRAME_MARK_N(name) SR_NOOP
+    #define SR_TRACY_FRAME_IMAGE(ptr, width, height, channels, size) SR_NOOP
+    #define SR_TRACY_FRAME_START(name) SR_NOOP
+    #define SR_TRACY_FRAME_END(name) SR_NOOP
     #define SR_TRACY_PLOT(name, val) SR_NOOP
     #define SR_TRACY_ZONE_COLOR(color)
 
