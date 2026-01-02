@@ -2,6 +2,9 @@
 // Created by Monika on 17.10.2024.
 //
 
+#ifndef SR_ENGINE_OBJECT_DATA_ACCESSORS_INL_H
+#define SR_ENGINE_OBJECT_DATA_ACCESSORS_INL_H
+
 template<> struct ObjectDataAccessor<std::string> {
 	static void Save(ISerializer& serializer, const std::string& value, const SerializationId& id);
 	static void Load(IDeserializer& deserializer, std::string& value, const SerializationId& id);
@@ -156,3 +159,5 @@ template<> struct ObjectDataAccessor<SR_MATH_NS::UVector6> {
     static void Save(ISerializer& serializer, const SR_MATH_NS::UVector6& value, const SerializationId& id);
     static void Load(IDeserializer& deserializer, SR_MATH_NS::UVector6& value, const SerializationId& id);
 };
+
+#endif /// SR_ENGINE_OBJECT_DATA_ACCESSORS_INL_H

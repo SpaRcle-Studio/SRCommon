@@ -2,6 +2,9 @@
 // Created by Monika on 01.03.2025.
 //
 
+#ifndef SR_ENGINE_UTILS_SERIALIZATION_SAVE_CHECKERS_INL_H
+#define SR_ENGINE_UTILS_SERIALIZATION_SAVE_CHECKERS_INL_H
+
 template<typename T, typename Enable = void>
 struct SaveChecker {
     static bool CanBeSaved(const T& value) {
@@ -24,3 +27,5 @@ struct SaveChecker<SR_HTYPES_NS::SharedPtr<T>, std::enable_if_t<SerializationTra
         return !value || SaveChecker<T>().CanBeSaved(*value);
     }
 };
+
+#endif //SR_ENGINE_UTILS_SERIALIZATION_SAVE_CHECKERS_INL_H

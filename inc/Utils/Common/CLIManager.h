@@ -11,12 +11,13 @@
 #include <Utils/Math/Mathematics.h>
 
 namespace SR_UTILS_NS {
-    SR_ENUM_NS_STRUCT_T(CLIFlags, uint32_t,
+    SR_ENUM_NS_STRUCT_T(CLIFlags, uint64_t,
         None = 0,
         UnitTests          = 1 << 0,
         ContinueAfterTests = 1 << 1,
         DeleteOldApp       = 1 << 2,
-        Headless           = 1 << 3
+        Headless           = 1 << 3,
+        Validation         = 1 << 4
     );
 
     SR_ENUM_NS_STRUCT_T(CLIOptions, uint32_t,
