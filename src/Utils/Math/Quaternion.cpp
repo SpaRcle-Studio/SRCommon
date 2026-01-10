@@ -1183,4 +1183,54 @@ namespace SR_MATH_NS {
     Quaternion Quaternion::Inverse(const Quaternion& q) {
         return q.Inverse();
     }
+
+    Quaternion Quaternion::Nlerp(const Quaternion &q, Unit t) const {
+    #ifdef SR_SIMD_SUPPORT
+        // Загружаем кватернионы (x,y,z,w)
+        __m128 q1 = _mm_setr_ps(x, y, z, w);
+        __m128 q2 = _mm_setr_ps(q.x, q.y, q.z, q.w);
+
+        // dot(q1, q2)
+        __m128 dot = _mm_dp_ps(q1, q2, 0xF1); // результат в x
+        __m128 zero = _mm_setzero_ps();
+
+        // если dot < 0 -> флип без ветвления
+        __m128 signMask = _mm_cmplt_ps(dot, zero);
+        __m128 flip = _mm_and_ps(signMask, _mm_set1_ps(-0.0f));
+        q2 = _mm_xor_ps(q2, flip);
+
+        // lerp: q1 + (q2 - q1) * t
+        __m128 tVec = _mm_set1_ps(t);
+        __m128 interp = _mm_add_ps(q1, _mm_mul_ps(_mm_sub_ps(q2, q1), tVec));
+
+        // normalize через rsqrt
+        __m128 len2 = _mm_dp_ps(interp, interp, 0xF1);
+        __m128 invLen = _mm_rsqrt_ps(len2);
+        __m128 norm = _mm_mul_ps(interp, invLen);
+
+        alignas(16) float out[4];
+        _mm_store_ps(out, norm);
+        return Quaternion(out[0], out[1], out[2], out[3]);
+    #else
+        Quaternion q2 = q;
+
+        // Вычисляем dot product
+        Unit dot = Dot(q2);
+
+        // Если dot отрицателен, инвертируем один кватернион
+        if (dot < 0.0f) {
+            q2 = Quaternion(-q2.x, -q2.y, -q2.z, -q2.w);
+        }
+
+        // Линейная интерполяция
+        Quaternion result = (*this) + (q2 - (*this)) * t;
+
+        // Нормализация результата
+        return result.NormalizeSafe();
+    #endif
+    }
+
+    Quaternion Quaternion::Nlerp(const Quaternion& a, const Quaternion& b, Unit t) {
+        return a.Nlerp(b, t);
+    }
 }

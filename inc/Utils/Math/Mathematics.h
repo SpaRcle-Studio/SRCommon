@@ -77,6 +77,8 @@
 #endif
 
 namespace SR_MATH_NS {
+    SR_COMMON_DLL_API extern bool HasSSE41();
+
     constexpr float Deg2Rad = 0.01745329f;
     constexpr float Rad2Deg = 57.29578f;
 

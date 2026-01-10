@@ -70,9 +70,9 @@ namespace SR_UTILS_NS {
     }
 
     void Transform3D::SetMatrix(
-        const std::optional<SR_MATH_NS::FVector3>& translation,
-        const std::optional<SR_MATH_NS::Quaternion>& rotation,
-        const std::optional<SR_MATH_NS::FVector3>& scale
+        const SR_HTYPES_NS::Optional<SR_MATH_NS::FVector3>& translation,
+        const SR_HTYPES_NS::Optional<SR_MATH_NS::Quaternion>& rotation,
+        const SR_HTYPES_NS::Optional<SR_MATH_NS::FVector3>& scale
     ) {
         bool changed = false;
 

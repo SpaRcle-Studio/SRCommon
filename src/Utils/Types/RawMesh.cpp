@@ -760,6 +760,23 @@ namespace SR_HTYPES_NS {
         return true;
     }
 
+    std::string_view RawMesh::GetRootBoneName() const {
+    #ifdef SR_UTILS_ASSIMP
+        if (!m_scene) {
+            SRHalt("Invalid scene!");
+            return {};
+        }
+
+        if (!m_scene->mRootNode) {
+            SRHalt("Invalid root node!");
+            return {};
+        }
+
+        return std::string_view(m_scene->mRootNode->mName.C_Str(), m_scene->mRootNode->mName.length);
+    #endif
+        return {};
+    }
+
     bool RawMeshParams::operator==(const RawMeshParams &rhs) const {
         return animation == rhs.animation && convexHull == rhs.convexHull;
     }

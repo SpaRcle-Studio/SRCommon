@@ -232,7 +232,7 @@ namespace SR_UTILS_NS {
         m_resourceHash = hash;
     }
 
-    SR_UTILS_NS::Path IResource::GetResourcePath() const {
+    const SR_UTILS_NS::Path& IResource::GetResourcePath() const {
         return m_resourcePath;
     }
 

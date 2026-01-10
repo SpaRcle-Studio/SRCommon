@@ -388,6 +388,14 @@
 
 #define SR_OFFSETOF(s,m) ((::size_t)&reinterpret_cast<char const volatile&>((((s*)0)->m)))
 
+#if defined(_MSC_VER)
+    #define SR_THREAD_LOCAL __declspec(thread)
+#elif defined(__GNUC__) || defined(__clang__)
+    #define SR_THREAD_LOCAL __thread
+#else
+    #define SR_THREAD_LOCAL thread_local // fallback C++11
+#endif
+
 namespace SR_UTILS_NS {
 #if defined(SR_ANDROID) || defined(SR_EMSCRIPTEN)
     using SizeType = unsigned long;

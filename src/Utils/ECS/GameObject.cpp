@@ -37,7 +37,7 @@ namespace SR_UTILS_NS {
     }
 
     const Transform::Ptr& GameObject::GetTransform() const noexcept {
-        if (!m_transform) {
+        if (!m_transform) SR_UNLIKELY_ATTRIBUTE {
             const_cast<GameObject&>(*this).SetTransform(Transform3D::MakeShared<Transform3D, Transform>());
             SRAssert(m_transform);
         }

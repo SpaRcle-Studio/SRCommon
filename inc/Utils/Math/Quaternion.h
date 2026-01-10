@@ -77,6 +77,9 @@ namespace SR_MATH_NS {
         SR_NODISCARD Quaternion Slerp(const Quaternion& q, Unit t) const;
         SR_NODISCARD static Quaternion Slerp(const Quaternion& a, const Quaternion& b, Unit t);
 
+        SR_NODISCARD Quaternion Nlerp(const Quaternion& q, Unit t) const;
+        SR_NODISCARD static Quaternion Nlerp(const Quaternion& a, const Quaternion& b, Unit t);
+
         SR_NODISCARD static Quaternion LookAt(const Vector3<Unit>& direction);
         SR_NODISCARD static Quaternion LookAt(const Vector3<Unit>& direction, const Vector3<Unit>& up);
         SR_NODISCARD static Quaternion LookRotation(Vector3<Unit> forward, Vector3<Unit> up);

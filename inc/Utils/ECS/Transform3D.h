@@ -24,9 +24,9 @@ namespace SR_UTILS_NS {
         void RotateAround(const SR_MATH_NS::FVector3& point, const SR_MATH_NS::FVector3& eulers) override;
         void RotateAroundParent(const SR_MATH_NS::FVector3& eulers) override;
 
-        void SetMatrix(const std::optional<SR_MATH_NS::FVector3>& translation,
-                       const std::optional<SR_MATH_NS::Quaternion>& rotation,
-                       const std::optional<SR_MATH_NS::FVector3>& scale) override;
+        void SetMatrix(const SR_HTYPES_NS::Optional<SR_MATH_NS::FVector3>& translation,
+                       const SR_HTYPES_NS::Optional<SR_MATH_NS::Quaternion>& rotation,
+                       const SR_HTYPES_NS::Optional<SR_MATH_NS::FVector3>& scale) override;
 
         void SetGlobalTranslation(const SR_MATH_NS::FVector3& translation) override;
         void SetGlobalRotation(const SR_MATH_NS::Quaternion& quaternion) override;

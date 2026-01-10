@@ -29,11 +29,7 @@ namespace SR_UTILS_NS {
         return stream.str();
     }
 
-    SR_INLINE SR_UTILS_NS::StringAtom GetThisThreadId() {
-        std::stringstream stream;
-        stream << std::this_thread::get_id();
-        return stream.str();
-    }
+    SR_COMMON_DLL_API extern SR_UTILS_NS::StringAtom GetThisThreadId();
 }
 
 #endif //SR_ENGINE_THREADUTILS_H

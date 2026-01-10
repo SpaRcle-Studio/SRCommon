@@ -40,6 +40,15 @@ namespace SR_UTILS_NS::Reflection {
         return ValueSequenceContainerIterator(m_storage.insert(it.m_iterator, value.m_storage));
     }
 
+    ValueSequenceContainerIterator ValueSequenceContainer::Back() {
+        if (Empty()) {
+            return end();
+        }
+        auto it = end();
+        --it;
+        return it;
+    }
+
     /// ----------------------------------------------------------------------------------------------------------------
 
     Value ValueAssociativeContainerIterator::First() const {

@@ -124,6 +124,8 @@ namespace SR_HTYPES_NS {
         virtual void DecrementPointer() = 0;
         virtual void SetPointerFromBase(SharedPtrBase* pBase) = 0;
 
+        SR_NODISCARD uint64_t GetStrongCount() const { return m_data ? m_data->strongCount.load() : 0; }
+
     protected:
         SharedPtrDynamicData* m_data = nullptr;
         bool m_basicManually = false;

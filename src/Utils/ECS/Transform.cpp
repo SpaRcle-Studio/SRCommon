@@ -143,9 +143,9 @@ namespace SR_UTILS_NS {
         return GetScale().XY();
     }
 
-    void Transform::SetMatrix(const std::optional<SR_MATH_NS::FVector3>& translation,
-                   const std::optional<SR_MATH_NS::Quaternion>& rotation,
-                   const std::optional<SR_MATH_NS::FVector3>& scale) { }
+    void Transform::SetMatrix(const SR_HTYPES_NS::Optional<SR_MATH_NS::FVector3>& translation,
+                   const SR_HTYPES_NS::Optional<SR_MATH_NS::Quaternion>& rotation,
+                   const SR_HTYPES_NS::Optional<SR_MATH_NS::FVector3>& scale) { }
 
     void Transform::SetGlobalTranslation(const SR_MATH_NS::FVector3& translation) { }
 

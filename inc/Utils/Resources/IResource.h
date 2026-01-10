@@ -66,7 +66,7 @@ namespace SR_UTILS_NS {
         SR_NODISCARD ResourceInfoWeakPtr GetResourceInfo() const noexcept { return m_resourceInfo; }
         SR_NODISCARD bool IsResourceFromMemory() const noexcept { return m_isFromMemory; }
 
-        SR_NODISCARD SR_UTILS_NS::Path GetResourcePath() const;
+        SR_NODISCARD const SR_UTILS_NS::Path& GetResourcePath() const;
         SR_NODISCARD uint16_t GetCountUses() const noexcept;
 
         /** Add one point to count uses current resource */

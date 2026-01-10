@@ -134,6 +134,8 @@ namespace SR_UTILS_NS::Reflection {
         void Resize(uint64_t size);
         void Reserve(uint64_t size);
 
+        SR_NODISCARD ValueSequenceContainerIterator Back();
+
         ValueSequenceContainerIterator Erase(ValueSequenceContainerIterator it) {
             return ValueSequenceContainerIterator(m_storage.erase(it.m_iterator));
         }

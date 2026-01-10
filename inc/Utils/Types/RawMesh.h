@@ -65,6 +65,7 @@ namespace SR_HTYPES_NS {
         SR_NODISCARD const SR_MATH_NS::Matrix4x4& GetBoneTransform(SR_UTILS_NS::StringAtom name) const;
         SR_NODISCARD uint32_t GetBoneIndex(SR_UTILS_NS::StringAtom name) const;
         SR_NODISCARD const std::vector<SR_MATH_NS::Matrix4x4>& GetBoneOffsets() const;
+        SR_NODISCARD std::string_view GetRootBoneName() const;
 
         SR_NODISCARD uint32_t GetVerticesCount(uint32_t id) const;
         SR_NODISCARD uint32_t GetIndicesCount(uint32_t id) const;

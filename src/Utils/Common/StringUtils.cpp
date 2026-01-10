@@ -487,6 +487,11 @@ namespace SR_UTILS_NS {
     std::pair<std::string, std::string> StringUtils::SplitTwo(std::string source, const std::string &delimiter) {
         std::pair<std::string, std::string> result = {};
         auto pos = source.find(delimiter);
+        if (pos == std::string::npos) {
+            result.first = source;
+            result.second = "";
+            return result;
+        }
 
         result.first = source.substr(0, pos);
         source.erase(0, pos + delimiter.length());
