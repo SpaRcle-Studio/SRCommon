@@ -109,6 +109,7 @@ namespace SR_UTILS_NS {
 
         SR_NODISCARD virtual Measurement GetMeasurement() const;
         SR_NODISCARD SR_FORCE_INLINE bool IsDirty() const noexcept { return m_dirtyMatrix; }
+        SR_NODISCARD bool IsDirtyRotation() const noexcept { return m_dirtyRotation; }
 
         void UpdateTree();
         virtual void OnHierarchyChanged();

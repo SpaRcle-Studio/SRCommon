@@ -61,6 +61,7 @@ namespace SR_MATH_NS {
         static Quaternion AngleAxis(float_t angle, const Vector3<float_t>& axis);
         static Quaternion AngleAxis(double_t angle, const Vector3<double_t>& axis);
         static Quaternion FromEuler(const Vector3<Unit>& euler);
+        static Quaternion FromEulerAngles(const Vector3<Unit>& euler);
         static bool IsFromToRotationValid(const Vector3<Unit>& from, const Vector3<Unit>& to);
         static Quaternion FromToRotation(const Vector3<Unit>& from, const Vector3<Unit>& to);
         static Quaternion Identity();

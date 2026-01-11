@@ -516,8 +516,12 @@ namespace SR_MATH_NS {
         );
     }
 
-    Quaternion Quaternion::FromEuler(const Vector3 <Unit> &euler) {
-       return euler.Radians().ToQuat();
+    Quaternion Quaternion::FromEuler(const Vector3<Unit>& euler) {
+        return euler.Radians().ToQuat();
+    }
+
+    Quaternion Quaternion::FromEulerAngles(const Vector3<Unit>& euler) {
+        return FromEuler(euler);
     }
 
     Unit Quaternion::Pitch() const noexcept {
@@ -1186,25 +1190,23 @@ namespace SR_MATH_NS {
 
     Quaternion Quaternion::Nlerp(const Quaternion &q, Unit t) const {
     #ifdef SR_SIMD_SUPPORT
-        // Загружаем кватернионы (x,y,z,w)
         __m128 q1 = _mm_setr_ps(x, y, z, w);
         __m128 q2 = _mm_setr_ps(q.x, q.y, q.z, q.w);
 
-        // dot(q1, q2)
-        __m128 dot = _mm_dp_ps(q1, q2, 0xF1); // результат в x
-        __m128 zero = _mm_setzero_ps();
+        // dot(q1, q2) broadcast
+        __m128 dot = _mm_dp_ps(q1, q2, 0xFF);
 
-        // если dot < 0 -> флип без ветвления
-        __m128 signMask = _mm_cmplt_ps(dot, zero);
+        // if dot < 0 -> flip
+        __m128 signMask = _mm_cmplt_ps(dot, _mm_setzero_ps());
         __m128 flip = _mm_and_ps(signMask, _mm_set1_ps(-0.0f));
         q2 = _mm_xor_ps(q2, flip);
 
-        // lerp: q1 + (q2 - q1) * t
+        // lerp
         __m128 tVec = _mm_set1_ps(t);
         __m128 interp = _mm_add_ps(q1, _mm_mul_ps(_mm_sub_ps(q2, q1), tVec));
 
-        // normalize через rsqrt
-        __m128 len2 = _mm_dp_ps(interp, interp, 0xF1);
+        // normalize
+        __m128 len2 = _mm_dp_ps(interp, interp, 0xFF);
         __m128 invLen = _mm_rsqrt_ps(len2);
         __m128 norm = _mm_mul_ps(interp, invLen);
 

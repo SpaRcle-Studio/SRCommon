@@ -77,6 +77,9 @@
 #endif
 
 namespace SR_MATH_NS {
+    template<typename T> SR_NODISCARD constexpr std::enable_if_t<std::is_arithmetic_v<T>, T> Min(T a, T b) noexcept { return a < b ? a : b; }
+    template<typename T> SR_NODISCARD constexpr std::enable_if_t<std::is_arithmetic_v<T>, T> Max(T a, T b) noexcept { return a > b ? a : b; }
+
     SR_COMMON_DLL_API extern bool HasSSE41();
 
     constexpr float Deg2Rad = 0.01745329f;

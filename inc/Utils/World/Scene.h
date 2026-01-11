@@ -98,6 +98,9 @@ namespace SR_WORLD_NS {
 
         IComponentable::ScenePtr GetScene() const override { return const_cast<ScenePtr>(this); }
 
+        SR_NODISCARD float_t GetSpeed() const { return m_speed; }
+        void SetSpeed(float_t speed) { m_speed = speed; }
+
     public:
         bool Remove(const SceneObjectPtr& gameObject);
         void Remove(const SR_HTYPES_NS::SharedPtr<Component>& pComponent);
@@ -117,6 +120,8 @@ namespace SR_WORLD_NS {
         mutable ska::flat_hash_map<const void*, std::vector<Entity*>> m_registerEntityCache;
 
         SceneUpdater* m_sceneUpdater = nullptr;
+
+        float_t m_speed = 1.f;
 
         bool m_isInitialized = false;
         bool m_isPreDestroyed = false;

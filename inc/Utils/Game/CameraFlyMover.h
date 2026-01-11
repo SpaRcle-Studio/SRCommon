@@ -14,7 +14,7 @@ namespace SR_UTILS_NS {
         SR_CLASS()
         using Super = Component;
     public:
-        void FixedUpdate() override;
+        void Update(float_t dt) override;
         void OnDisable() override;
 
         void SetVelocityFactor(const float_t factor) { m_velocityFactor = factor; }
@@ -29,6 +29,8 @@ namespace SR_UTILS_NS {
 
     private:
         /// @property
+        bool m_gameSpeedCorrection = true;
+        /// @property
         bool m_active = true;
         /// @property
         bool m_lockCursor = false;
@@ -37,17 +39,17 @@ namespace SR_UTILS_NS {
         /// @property @setter(SetExecuteInEditMode)
         bool m_executeInEditorMode = false;
         /// @property @drag(0.1f)
-        float_t m_velocityDegree = 0.8f;
+        float_t m_velocityDegree = 1.0f;
         /// @property @drag(0.1f)
         float_t m_velocityFactor = 1.0f;
+        /// @property @drag(1.0f)
+        float_t m_seekSpeed = 1.0f;
         /// @property @drag(0.1f)
-        float_t m_seekSpeed = 0.01f;
+        float_t m_wheelSpeed = 1.0f;
         /// @property @drag(0.1f)
-        float_t m_wheelSpeed = 0.4f;
+        SR_MATH_NS::FVector2 m_rotateSpeed = 1.0f;
         /// @property @drag(0.1f)
-        SR_MATH_NS::FVector2 m_rotateSpeed = 0.15f;
-        /// @property @drag(0.1f)
-        float_t m_moveSpeed = 0.2f;
+        float_t m_moveSpeed = 1.0f;
         /// @property
         SR_MATH_NS::FVector3 m_maxVelocity = SR_MATH_NS::FVector3(0.5f, 0.5f, 2.f);
         /// @property @dontSave @readonly

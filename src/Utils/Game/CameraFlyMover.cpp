@@ -5,6 +5,7 @@
 #include <Utils/Game/CameraFlyMover.h>
 #include <Utils/ECS/Transform3D.h>
 #include <Utils/ECS/IComponentable.h>
+#include <Utils/World/Scene.h>
 
 #include <Codegen/CameraFlyMover.generated.hpp>
 
@@ -13,7 +14,9 @@ namespace SR_UTILS_NS {
         m_lock.reset();
     }
 
-    void CameraFlyMover::FixedUpdate() {
+    void CameraFlyMover::Update(float_t dt) {
+        SR_TRACY_ZONE;
+
         if (m_lockCursor) {
             if (!m_lock) {
                 const auto lockMode = m_executeInEditorMode ? SR_UTILS_NS::CursorLockMode::Editor : SR_UTILS_NS::CursorLockMode::PlayMode;
@@ -28,14 +31,24 @@ namespace SR_UTILS_NS {
             GetTransform()->Translate(m_velocity);
         }
 
+        if (m_gameSpeedCorrection) {
+            const float_t gameSpeed = GetScene()->GetSpeed();
+            dt /= SR_MAX(gameSpeed, 0.0001f);
+        }
+
+        const float_t damping = std::exp(-m_velocityDegree * 10.f * dt);
+        const float_t velocitySpeed = m_moveSpeed * m_velocityFactor * 0.25f * dt;
+        const float_t seekSpeed = m_seekSpeed * 0.5f * dt;
+        const float_t wheelSpeed = m_wheelSpeed * 0.1f;
+        const SR_MATH_NS::FVector2 rotateSpeed = m_rotateSpeed * 3.5f * dt;
+
         if (!m_active) {
-            m_velocity *= m_velocityDegree;
+            m_velocity *= damping;
             return;
         }
 
-        const float_t velocitySpeed = m_moveSpeed * m_velocityFactor;
         auto&& dir = SR_UTILS_NS::Input::Instance().GetMouseDrag();
-        auto&& wheel = SR_UTILS_NS::Input::Instance().GetMouseWheel() * m_wheelSpeed;
+        auto&& wheel = SR_UTILS_NS::Input::Instance().GetMouseWheel() * wheelSpeed;
 
         if (!SR_UTILS_NS::Input::Instance().GetKey(SR_UTILS_NS::KeyCode::Ctrl)) {
             bool accelerateX = false;
@@ -66,15 +79,15 @@ namespace SR_UTILS_NS {
             }
 
             if (!accelerateX) {
-                m_velocity.x *= m_velocityDegree;
+                m_velocity.x *= damping;
             }
 
             if (!accelerateZ) {
-                m_velocity.z *= m_velocityDegree;
+                m_velocity.z *= damping;
             }
         }
         else {
-            m_velocity *= m_velocityDegree;
+            m_velocity *= damping;
         }
 
         m_velocity = m_velocity.Clamp(-m_maxVelocity, m_maxVelocity);
@@ -84,12 +97,12 @@ namespace SR_UTILS_NS {
         }
 
         if (!m_rightMouseButtonToRotate || SR_UTILS_NS::Input::Instance().GetKey(SR_UTILS_NS::KeyCode::MouseRight)) {
-            GetTransform()->GlobalRotate(dir.y * m_rotateSpeed.y, dir.x * m_rotateSpeed.x, 0.0);
+            GetTransform()->GlobalRotate(dir.y * rotateSpeed.y, dir.x * rotateSpeed.x, 0.0);
         }
 
         if (SR_UTILS_NS::Input::Instance().GetKey(SR_UTILS_NS::KeyCode::MouseMiddle)) {
-            auto right = SR_UTILS_NS::Transform3D::RIGHT * m_seekSpeed;
-            auto up = SR_UTILS_NS::Transform3D::UP * m_seekSpeed;
+            auto right = SR_UTILS_NS::Transform3D::RIGHT * seekSpeed;
+            auto up = SR_UTILS_NS::Transform3D::UP * seekSpeed;
 
             GetTransform()->Translate((up * dir.y) + (right * -dir.x));
         }

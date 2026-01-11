@@ -325,7 +325,6 @@ namespace SR_UTILS_NS {
 
 #define SR_EXCHANGE(x, y) SR_UTILS_NS::Exchange(x, y)
 
-using std::literals::string_view_literals::operator""sv;
-using std::literals::string_literals::operator""s;
+using namespace std::literals::string_view_literals;
 
 #endif //SR_ENGINE_UTILS_PCH_H

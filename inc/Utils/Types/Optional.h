@@ -64,6 +64,19 @@ namespace SR_HTYPES_NS {
         SR_NODISCARD T* operator->() { return &m_value; }
         SR_NODISCARD const T* operator->() const { return &m_value; }
 
+        void reset() noexcept {
+            m_hasValue = false;
+            m_value = T();
+        }
+
+        void Reset() noexcept {
+            reset();
+        }
+
+        void FastReset() noexcept {
+            m_hasValue = false;
+        }
+
     private:
         bool m_hasValue = false;
         T m_value;

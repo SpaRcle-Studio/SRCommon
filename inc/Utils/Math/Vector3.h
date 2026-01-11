@@ -658,6 +658,10 @@ namespace SR_MATH_NS {
             return Magnitude();
         }
 
+        SR_NODISCARD SR_FORCE_INLINE T LengthSq() const {
+            return SqrMagnitude();
+        }
+
         SR_NODISCARD Vector3 Replace(int from, int to) const {
             return Vector3(
                     x == from ? to : x,
@@ -892,20 +896,20 @@ namespace SR_MATH_NS {
         return a.x * b.x + a.y * b.y + a.z * b.z;
     }
 
-    template<typename T> SR_NODISCARD Vector3<T> Min(const Vector3<T>& a, const Vector3<T>& b) {
-        return Vector3<T>(
-                SR_MIN(a.x, b.x),
-                SR_MIN(a.y, b.y),
-                SR_MIN(a.z, b.z)
-        );
+    template<typename T> SR_NODISCARD constexpr Vector3<T> Min(const Vector3<T>& a, const Vector3<T>& b) noexcept {
+        return {
+            Min(a.x, b.x),
+            Min(a.y, b.y),
+            Min(a.z, b.z)
+        };
     }
 
-    template<typename T> SR_NODISCARD Vector3<T> Max(const Vector3<T>& a, const Vector3<T>& b) {
-        return Vector3<T>(
-                SR_MAX(a.x, b.x),
-                SR_MAX(a.y, b.y),
-                SR_MAX(a.z, b.z)
-        );
+    template<typename T> SR_NODISCARD constexpr Vector3<T> Max(const Vector3<T>& a, const Vector3<T>& b) noexcept {
+        return {
+            Max(a.x, b.x),
+            Max(a.y, b.y),
+            Max(a.z, b.z)
+        };
     }
 
     template<typename T> SR_NODISCARD Vector3<T> Cross(const Vector3<T>& a, const Vector3<T>& b) {
