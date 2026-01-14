@@ -94,8 +94,125 @@ namespace SR_UTILS_NS {
     }
 
     const SR_MATH_NS::Matrix4x4& TransformRect::GetMatrix() const {
+        SR_TRACY_ZONE;
+
         if (IsDirty()) {
-            UpdateMatrix();
+            /*==============================================================
+                0. Parent layout rect (или Canvas root)
+            ==============================================================*/
+
+            const TransformRect* pParent =
+                (GetParentTransform() && GetParentTransform()->GetMeasurement() == Measurement::Space2D)
+                ? static_cast<const TransformRect*>(GetParentTransform())
+                : nullptr;
+
+            const SR_MATH_NS::FRect parentRect = pParent
+                ? pParent->GetLayoutRect()
+                : SR_MATH_NS::FRect(
+                    { 0.f, 0.f },
+                    { m_canvasSize.x, m_canvasSize.y } // ЯВНО: корень = Canvas
+                );
+
+            const SR_MATH_NS::FVector2 parentMin = parentRect.Min();
+            const SR_MATH_NS::FVector2 parentMax = parentRect.Max();
+
+            /*==============================================================
+                1. Anchor rect (в координатах родителя)
+            ==============================================================*/
+
+            const SR_MATH_NS::FVector2 anchorMinPos =
+                SR_MATH_NS::FVector2::Lerp(parentMin, parentMax, m_anchors.min);
+
+            const SR_MATH_NS::FVector2 anchorMaxPos =
+                SR_MATH_NS::FVector2::Lerp(parentMin, parentMax, m_anchors.max);
+
+            /*==============================================================
+                2. Определение режима якорей и расчет layoutRect
+                В Unity каждая ось обрабатывается независимо:
+                - Если anchorMin.x == anchorMax.x → Position X + Width
+                - Если anchorMin.y == anchorMax.y → Position Y + Height
+                - Если anchorMin.x != anchorMax.x → Left + Right offsets
+                - Если anchorMin.y != anchorMax.y → Top + Bottom offsets
+            ==============================================================*/
+
+            const bool anchorsTogetherX = AreAnchorsTogetherX();
+            const bool anchorsTogetherY = AreAnchorsTogetherY();
+
+            float_t left = 0.f, right = 0.f, bottom = 0.f, top = 0.f;
+
+            float_t width = 0.f, height = 0.f;
+            SR_MATH_NS::FVector2 pivotPos;
+
+            // Обработка по оси X
+            if (anchorsTogetherX) {
+                // Якоря вместе по X: используем Position X и Width
+                const float_t anchorX = anchorMinPos.x; // min.x == max.x
+                width = m_size.x; // sizeDelta.x
+                pivotPos.x = anchorX + m_translation.x; // anchorPos + anchoredPosition
+            }
+            else {
+                // Якоря врозь по X: используем Left и Right offsets
+                left = anchorMinPos.x + m_offsetMin.x;
+                right = anchorMaxPos.x - m_offsetMax.x;
+                width = right - left;
+                pivotPos.x = left + width * m_pivot.x;
+            }
+
+            // Обработка по оси Y
+            if (anchorsTogetherY) {
+                // Якоря вместе по Y: используем Position Y и Height
+                const float_t anchorY = anchorMinPos.y; // min.y == max.y
+                height = m_size.y; // sizeDelta.y
+                pivotPos.y = anchorY + m_translation.y; // anchorPos + anchoredPosition
+            }
+            else {
+                // Якоря врозь по Y: используем Bottom и Top offsets
+                bottom = anchorMinPos.y + m_offsetMin.y;
+                top = anchorMaxPos.y - m_offsetMax.y;
+                height = top - bottom;
+                pivotPos.y = bottom + height * m_pivot.y;
+            }
+
+            const SR_MATH_NS::FVector2 finalSize = SR_MATH_NS::FVector2(width, height);
+
+            /*==============================================================
+                3. localRect (АНАЛОГ RectTransform.rect)
+                ❗ БЕЗ позиции, относительно pivot
+            ==============================================================*/
+
+            m_localRect.SetMin(-finalSize.x * m_pivot.x, -finalSize.y * m_pivot.y);
+            m_localRect.SetMax(m_localRect.Min().x + finalSize.x, m_localRect.Min().y + finalSize.y);
+
+            /*==============================================================
+                4. layoutRect (АНАЛОГ GetLocalCorners)
+                ❗ с учётом позиции pivot в мировых координатах
+            ==============================================================*/
+
+            m_layoutRect.SetMin(
+                pivotPos.x + m_localRect.Min().x,
+                pivotPos.y + m_localRect.Min().y
+            );
+
+            m_layoutRect.SetMax(
+                pivotPos.x + m_localRect.Max().x,
+                pivotPos.y + m_localRect.Max().y
+            );
+
+            /*==============================================================
+                5. Render matrix (ПОСЛЕ layout)
+            ==============================================================*/
+
+            m_localMatrix =
+                SR_MATH_NS::Matrix4x4::FromTranslate({ pivotPos.x, pivotPos.y, 0.f }) *
+                SR_MATH_NS::Matrix4x4::FromQuaternion(GetQuaternion()) *
+                SR_MATH_NS::Matrix4x4::FromScale(GetScale()) *
+                SR_MATH_NS::Matrix4x4::FromTranslate({
+                   -pivotPos.x,
+                   -pivotPos.y,
+                   0.f
+                });
+
+            m_dirtyMatrix = false;
 
             if (auto&& pTransform = m_gameObject->GetParentTransform()) {
                 m_matrix = pTransform->GetMatrix() * m_localMatrix;
@@ -106,127 +223,6 @@ namespace SR_UTILS_NS {
         }
 
         return m_matrix;
-    }
-
-    void TransformRect::UpdateMatrix() const {
-        SR_TRACY_ZONE;
-
-        /*==============================================================
-            0. Parent layout rect (или Canvas root)
-        ==============================================================*/
-
-        const TransformRect* pParent =
-            (GetParentTransform() && GetParentTransform()->GetMeasurement() == Measurement::Space2D)
-            ? static_cast<const TransformRect*>(GetParentTransform())
-            : nullptr;
-
-        const SR_MATH_NS::FRect parentRect = pParent
-            ? pParent->GetLayoutRect()
-            : SR_MATH_NS::FRect(
-                { 0.f, 0.f },
-                { m_canvasSize.x, m_canvasSize.y } // ЯВНО: корень = Canvas
-            );
-
-        const SR_MATH_NS::FVector2 parentMin = parentRect.Min();
-        const SR_MATH_NS::FVector2 parentMax = parentRect.Max();
-
-        /*==============================================================
-            1. Anchor rect (в координатах родителя)
-        ==============================================================*/
-
-        const SR_MATH_NS::FVector2 anchorMinPos =
-            SR_MATH_NS::FVector2::Lerp(parentMin, parentMax, m_anchors.min);
-
-        const SR_MATH_NS::FVector2 anchorMaxPos =
-            SR_MATH_NS::FVector2::Lerp(parentMin, parentMax, m_anchors.max);
-
-        /*==============================================================
-            2. Определение режима якорей и расчет layoutRect
-            В Unity каждая ось обрабатывается независимо:
-            - Если anchorMin.x == anchorMax.x → Position X + Width
-            - Если anchorMin.y == anchorMax.y → Position Y + Height
-            - Если anchorMin.x != anchorMax.x → Left + Right offsets
-            - Если anchorMin.y != anchorMax.y → Top + Bottom offsets
-        ==============================================================*/
-
-        const bool anchorsTogetherX = AreAnchorsTogetherX();
-        const bool anchorsTogetherY = AreAnchorsTogetherY();
-
-        float_t left = 0.f, right = 0.f, bottom = 0.f, top = 0.f;
-
-        float_t width = 0.f, height = 0.f;
-        SR_MATH_NS::FVector2 pivotPos;
-
-        // Обработка по оси X
-        if (anchorsTogetherX) {
-            // Якоря вместе по X: используем Position X и Width
-            const float_t anchorX = anchorMinPos.x; // min.x == max.x
-            width = m_size.x; // sizeDelta.x
-            pivotPos.x = anchorX + m_translation.x; // anchorPos + anchoredPosition
-        }
-        else {
-            // Якоря врозь по X: используем Left и Right offsets
-            left = anchorMinPos.x + m_offsetMin.x;
-            right = anchorMaxPos.x - m_offsetMax.x;
-            width = right - left;
-            pivotPos.x = left + width * m_pivot.x;
-        }
-
-        // Обработка по оси Y
-        if (anchorsTogetherY) {
-            // Якоря вместе по Y: используем Position Y и Height
-            const float_t anchorY = anchorMinPos.y; // min.y == max.y
-            height = m_size.y; // sizeDelta.y
-            pivotPos.y = anchorY + m_translation.y; // anchorPos + anchoredPosition
-        }
-        else {
-            // Якоря врозь по Y: используем Bottom и Top offsets
-            bottom = anchorMinPos.y + m_offsetMin.y;
-            top = anchorMaxPos.y - m_offsetMax.y;
-            height = top - bottom;
-            pivotPos.y = bottom + height * m_pivot.y;
-        }
-
-        const SR_MATH_NS::FVector2 finalSize = SR_MATH_NS::FVector2(width, height);
-
-        /*==============================================================
-            3. localRect (АНАЛОГ RectTransform.rect)
-            ❗ БЕЗ позиции, относительно pivot
-        ==============================================================*/
-
-        m_localRect.SetMin(-finalSize.x * m_pivot.x, -finalSize.y * m_pivot.y);
-        m_localRect.SetMax(m_localRect.Min().x + finalSize.x, m_localRect.Min().y + finalSize.y);
-
-        /*==============================================================
-            4. layoutRect (АНАЛОГ GetLocalCorners)
-            ❗ с учётом позиции pivot в мировых координатах
-        ==============================================================*/
-
-        m_layoutRect.SetMin(
-            pivotPos.x + m_localRect.Min().x,
-            pivotPos.y + m_localRect.Min().y
-        );
-
-        m_layoutRect.SetMax(
-            pivotPos.x + m_localRect.Max().x,
-            pivotPos.y + m_localRect.Max().y
-        );
-
-        /*==============================================================
-            5. Render matrix (ПОСЛЕ layout)
-        ==============================================================*/
-
-        m_localMatrix =
-            SR_MATH_NS::Matrix4x4::FromTranslate({ pivotPos.x, pivotPos.y, 0.f }) *
-            SR_MATH_NS::Matrix4x4::FromQuaternion(GetQuaternion()) *
-            SR_MATH_NS::Matrix4x4::FromScale(GetScale()) *
-            SR_MATH_NS::Matrix4x4::FromTranslate({
-               -pivotPos.x,
-               -pivotPos.y,
-               0.f
-            });
-
-        Super::UpdateMatrix();
     }
 
     void TransformRect::SetGlobalTranslation(const SR_MATH_NS::FVector3& translation) {

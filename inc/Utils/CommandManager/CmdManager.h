@@ -29,7 +29,7 @@ namespace SR_UTILS_NS {
         ~CmdManager() override;
 
     public:
-        SR_NODISCARD std::string GetLastCmdName() const;
+        SR_NODISCARD const std::string& GetLastCmdName() const;
         SR_NODISCARD uint32_t GetHistorySize() const;
         SR_NODISCARD uint32_t GetMaxHistorySize() const;
         SR_NODISCARD uint32_t GetHistoryPC() const;

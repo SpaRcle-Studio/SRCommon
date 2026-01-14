@@ -219,6 +219,8 @@ namespace SR_WORLD_NS {
     }
 
     Scene::SceneObjects& Scene::GetRootSceneObjects() {
+        SR_TRACY_ZONE;
+
         if (!m_isHierarchyChanged) {
             return m_root;
         }

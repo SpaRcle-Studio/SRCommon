@@ -65,6 +65,7 @@ namespace SR_UTILS_NS {
     #ifdef SR_EFSW_USE
         m_pImpl = new efsw::FileWatcher();
     #endif
+        m_messageCache = new SR_UTILS_NS::SubscriptionMessage();
     }
 
     FileSystemWatcher::~FileSystemWatcher() {
@@ -96,25 +97,25 @@ namespace SR_UTILS_NS {
         SR_TRACY_ZONE;
         SR_LOCK_GUARD;
 
-        SubscriptionMessage message;
+        m_messageCache->Reset();
 
         for (const Event& event : m_events) {
-            message.SetPath(DIR_MSG_ID, event.dir);
-            message.SetPath(FILE_MSG_ID, event.dir + event.filename);
-            message.SetPath(OLD_FILE_MSG_ID, event.dir + event.oldFilename);
+            m_messageCache->SetPath(DIR_MSG_ID, event.dir);
+            m_messageCache->SetPath(FILE_MSG_ID, event.dir + event.filename);
+            m_messageCache->SetPath(OLD_FILE_MSG_ID, event.dir + event.oldFilename);
 
             switch (event.type) {
                 case EventType::Add:
-                    Broadcast(ADDED_EVENT_ID, message);
+                    Broadcast(ADDED_EVENT_ID, *m_messageCache);
                     break;
                 case EventType::Delete:
-                    Broadcast(DELETED_EVENT_ID, message);
+                    Broadcast(DELETED_EVENT_ID, *m_messageCache);
                     break;
                 case EventType::Move:
-                    Broadcast(MOVED_EVENT_ID, message);
+                    Broadcast(MOVED_EVENT_ID, *m_messageCache);
                     break;
                 case EventType::Modified:
-                    Broadcast(MODIFIED_EVENT_ID, message);
+                    Broadcast(MODIFIED_EVENT_ID, *m_messageCache);
                     break;
                 default:
                     SRHalt("FileSystemWatcher::WatchPull() : unknown event type!");

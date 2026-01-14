@@ -8,8 +8,8 @@
 #include <Utils/Resources/Xml.h>
 
 namespace SR_UTILS_NS::StoreUtils {
-    void Storage::Save()
-    {
+    void Storage::Save() {
+        SR_TRACY_ZONE;
         SR_UTILS_NS::Path path = SR_UTILS_NS::ResourceManager::Instance().GetCachePath().Concat("UserData.xml");
 
         if (!path.CreateIfNotExists()) {
@@ -55,6 +55,7 @@ namespace SR_UTILS_NS::StoreUtils {
     }
 
     void Storage::Load() {
+        SR_TRACY_ZONE;
         SR_UTILS_NS::Path path = SR_UTILS_NS::ResourceManager::Instance().GetCachePath().Concat("UserData.xml");
 
         if (!path.Exists(SR_UTILS_NS::Path::Type::File)) {
@@ -90,6 +91,7 @@ namespace SR_UTILS_NS::StoreUtils {
 
     bool Storage::Has(const StorageType storageTepe, ValueType valueType, const StringAtom key)
     {
+        SR_TRACY_ZONE;
         if (auto&& pStorageIt = m_storage.find(storageTepe); pStorageIt != m_storage.end()) {
             if (auto&& pValueIt = pStorageIt->second.find(key); pValueIt != pStorageIt->second.end()) {
                 return true;
@@ -100,6 +102,7 @@ namespace SR_UTILS_NS::StoreUtils {
 
     bool Storage::Drop(const StorageType storageTepe, const StringAtom key)
     {
+        SR_TRACY_ZONE;
         if (auto&& pStorageIt = m_storage.find(storageTepe); pStorageIt != m_storage.end()) {
             if (auto&& pValueIt = pStorageIt->second.find(key); pValueIt != pStorageIt->second.end()) {
                 pStorageIt->second.erase(pValueIt);
@@ -111,6 +114,8 @@ namespace SR_UTILS_NS::StoreUtils {
 
     Storage::Value Storage::GetImpl(StorageType storageTepe, ValueType valueType, StringAtom key, const std::optional<Value>& def)
     {
+        SR_TRACY_ZONE;
+
         if (auto&& pStorageIt = m_storage.find(storageTepe); pStorageIt != m_storage.end()) {
             if (auto&& pValueIt = pStorageIt->second.find(key); pValueIt != pStorageIt->second.end()) {
                 if (pValueIt->second.type != valueType) {
@@ -132,6 +137,8 @@ namespace SR_UTILS_NS::StoreUtils {
 
     void Storage::SetImpl(StorageType storageTepe, ValueType valueType, StringAtom key, Value value)
     {
+        SR_TRACY_ZONE;
+
         if (auto&& pIt = m_storage.find(storageTepe); pIt != m_storage.end()) {
             pIt->second[key] = { value, valueType };
         }

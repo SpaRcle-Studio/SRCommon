@@ -104,6 +104,28 @@ namespace SR_MATH_NS {
             }
         }
 
+        SR_NODISCARD bool IsZero() const {
+        #if defined(SR_SIMD_SUPPORT) && 0
+            __m128 vec = _mm_loadu_ps(&x);
+            __m128 zero = _mm_setzero_ps();
+            __m128 cmp = _mm_cmpeq_ps(vec, zero);
+            return (_mm_movemask_ps(cmp) & 0b0111) == 0b0111;
+        #else
+            return x == static_cast<T>(0) && y == static_cast<T>(0) && z == static_cast<T>(0);
+        #endif
+        }
+
+        SR_NODISCARD bool IsOne() const {
+        #if defined(SR_SIMD_SUPPORT) && 0
+            __m128 vec = _mm_loadu_ps(&x);
+            __m128 one = _mm_set1_ps(1.0f);
+            __m128 cmp = _mm_cmpeq_ps(vec, one);
+            return (_mm_movemask_ps(cmp) & 0b0111) == 0b0111;
+        #else
+            return x == static_cast<T>(1) && y == static_cast<T>(1) && z == static_cast<T>(1);
+        #endif
+        }
+
         template<typename U> static Vector3<T> XY(const Vector2<U>& v) { return XY(v, 0); }
         template<typename U> static Vector3<T> XZ(const Vector2<U>& v) { return XZ(v, 0); }
         template<typename U> static Vector3<T> YZ(const Vector2<U>& v) { return YZ(v, 0); }

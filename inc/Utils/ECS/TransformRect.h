@@ -90,9 +90,6 @@ namespace SR_UTILS_NS {
 
         void OnHierarchyChanged() override;
 
-    protected:
-        void UpdateMatrix() const override;
-
     public:
         SR_INLINE static constexpr SR_MATH_NS::FVector2 RIGHT = Math::FVector2(1, 0);
         SR_INLINE static constexpr SR_MATH_NS::FVector2 UP    = Math::FVector2(0, 1);

@@ -24,17 +24,7 @@ namespace SR_UTILS_NS {
     }
 
     Transform* Transform::GetParentTransform() const {
-        if (!m_gameObject) {
-            return nullptr;
-        }
-
-        if (auto&& pParent = m_gameObject->GetParent()) {
-            if (auto&& pGameObject = pParent.DynamicCast<GameObject>()) {
-                return const_cast<Transform*>(pGameObject->GetTransform().Get());
-            }
-        }
-
-        return nullptr;
+        return m_parentTransform;
     }
 
     SR_NODISCARD GameObject::Ptr Transform::GetGameObject() const {
@@ -199,6 +189,16 @@ namespace SR_UTILS_NS {
     }
 
     void Transform::OnHierarchyChanged() {
+        m_parentTransform = nullptr;
+
+        if (m_gameObject) {
+            if (auto &&pParent = m_gameObject->GetParent()) {
+                if (auto &&pGameObject = pParent.DynamicCast<GameObject>()) {
+                    m_parentTransform = const_cast<Transform*>(pGameObject->GetTransform().Get());
+                }
+            }
+        }
+
         UpdateTree();
     }
 
@@ -216,10 +216,6 @@ namespace SR_UTILS_NS {
 
     void Transform::GlobalRotate(const SR_MATH_NS::Quaternion& quaternion) {
         SetRotation(GetQuaternion() * quaternion);
-    }
-
-    void Transform::UpdateMatrix() const {
-        m_dirtyMatrix = false;
     }
 
     SR_MATH_NS::Quaternion Transform::GetQuaternion() const {

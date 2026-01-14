@@ -9,34 +9,28 @@
 #include <Codegen/Transform3D.generated.hpp>
 
 namespace SR_UTILS_NS {
-    void Transform3D::UpdateMatrix() const {
-        static const auto oneVector = SR_MATH_NS::FVector3::One();
-
-        if (m_skew.IsEqualsLikely(oneVector, SR_EPSILON)) SR_LIKELY_ATTRIBUTE {
-            m_localMatrix = SR_MATH_NS::Matrix4x4(
-                m_translation,
-                m_quaternion,
-                m_scale
-            );
-        }
-        else {
-            m_localMatrix = SR_MATH_NS::Matrix4x4(
-                m_translation,
-                m_quaternion,
-                m_scale,
-                m_skew
-            );
-        }
-
-        Super::UpdateMatrix();
-    }
-
     const SR_MATH_NS::Matrix4x4& Transform3D::GetMatrix() const {
         if (IsDirty()) SR_UNLIKELY_ATTRIBUTE {
-            UpdateMatrix();
+            if (m_skewEnabled) SR_LIKELY_ATTRIBUTE {
+                m_localMatrix = SR_MATH_NS::Matrix4x4(
+                    m_translation,
+                    m_quaternion,
+                    m_scale,
+                    m_skew
+                );
+            }
+            else {
+                m_localMatrix = SR_MATH_NS::Matrix4x4(
+                    m_translation,
+                    m_quaternion,
+                    m_scale
+                );
+            }
 
-            if (auto&& pTransform = m_gameObject->GetParentTransform()) SR_LIKELY_ATTRIBUTE {
-                SR_MATH_NS::Matrix4x4::Multiply(m_matrix, pTransform->GetMatrix(), m_localMatrix);
+            m_dirtyMatrix = false;
+
+            if (m_parentTransform) SR_LIKELY_ATTRIBUTE {
+                SR_MATH_NS::Matrix4x4::Multiply(m_matrix, m_parentTransform->GetMatrix(), m_localMatrix);
             }
             else {
                 m_matrix = m_localMatrix;

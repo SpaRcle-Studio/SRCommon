@@ -6,6 +6,7 @@
 #define SR_ENGINE_UTILS_DIRECTORY_WATCHER_H
 
 #include <Utils/Types/SharedPtr.h>
+#include <Utils/Types/RawPointerHolder.h>
 #include <Utils/Common/SubscriptionHolder.h>
 
 namespace SR_UTILS_NS {
@@ -44,6 +45,7 @@ namespace SR_UTILS_NS {
         void OnEvent(Event&& event);
 
     private:
+        SR_HTYPES_NS::RawPointerHolder<SubscriptionMessage> m_messageCache;
         void* m_pImpl = nullptr;
         std::map<uint64_t, void*> m_listeners;
         bool m_isAsyncWatchingActive = false;

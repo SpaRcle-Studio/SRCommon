@@ -141,6 +141,7 @@ namespace SR_UTILS_NS {
     }
 
     bool Entity::HasEditorFlags(EditorFlags flags) const noexcept {
+        SR_TRACY_ZONE;
         return SR_MATH_NS::IsMaskIncludedSubMask(m_editorFlags, flags);
     }
 

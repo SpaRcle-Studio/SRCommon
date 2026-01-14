@@ -20,6 +20,8 @@ namespace SR_UTILS_NS {
         void SetString(StringAtom id, const std::string& value);
         void SetPath(StringAtom id, const SR_UTILS_NS::Path& value);
 
+        void Reset();
+
         SR_NODISCARD uint64_t GetInt(StringAtom id, const std::optional<uint64_t>& def = std::nullopt) const;
         SR_NODISCARD bool GetBool(StringAtom id, const std::optional<bool>& def = std::nullopt) const;
         SR_NODISCARD std::string GetString(StringAtom id, const std::optional<std::string>& def = std::nullopt) const;

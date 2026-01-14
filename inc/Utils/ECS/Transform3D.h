@@ -60,9 +60,6 @@ namespace SR_UTILS_NS {
 
         SR_NODISCARD Measurement GetMeasurement() const override { return Measurement::Space3D; }
 
-    private:
-        void UpdateMatrix() const override;
-
     public:
         SR_INLINE static SR_MATH_NS::FVector3 RIGHT   = SR_MATH_NS::FVector3(1, 0, 0);
         SR_INLINE static SR_MATH_NS::FVector3 UP      = SR_MATH_NS::FVector3(0, 1, 0);
@@ -87,6 +84,8 @@ namespace SR_UTILS_NS {
         SR_MATH_NS::FVector3 m_scale = SR_MATH_NS::FVector3::One();
         /// @property @setter(SetSkew) @defaultValue(SR_MATH_NS::FVector3::One()) @drag(0.01f) @resetValue(SR_MATH_NS::FVector3::One()) @hidden
         SR_MATH_NS::FVector3 m_skew = SR_MATH_NS::FVector3::One();
+
+        bool m_skewEnabled = false;
 
     };
 }

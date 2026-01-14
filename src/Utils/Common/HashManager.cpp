@@ -6,6 +6,7 @@
 #include <Utils/Common/Hashes.h>
 #include <Utils/Types/StringAtom.h>
 #include <Utils/Types/LockGuard.h>
+#include <Utils/Profile/TracyContext.h>
 
 namespace SR_UTILS_NS {
     HashManager& HashManager::Instance() {
@@ -35,6 +36,7 @@ namespace SR_UTILS_NS {
     }
 
     const std::string_view& HashManager::HashToString(HashManager::Hash hash) const {
+        SR_TRACY_ZONE;
         SR_LOCK_GUARD;
 
         static std::string_view gDefault;
@@ -50,6 +52,7 @@ namespace SR_UTILS_NS {
     }
 
     StringAtom HashManager::HashToStringAtom(HashManager::Hash hash) const {
+        SR_TRACY_ZONE;
         SR_LOCK_GUARD;
         static StringAtom gDefault;
         if (auto&& pIt = m_strings.find(hash); pIt != m_strings.end()) {
@@ -59,6 +62,7 @@ namespace SR_UTILS_NS {
     }
 
     bool HashManager::Exists(HashManager::Hash hash) const {
+        SR_TRACY_ZONE;
         SR_LOCK_GUARD;
         return m_strings.find(hash) != m_strings.end();
     }
@@ -78,29 +82,31 @@ namespace SR_UTILS_NS {
     }
 
     StringHashInfo* HashManager::GetOrAddInfo(const std::string& str) {
-        SR_LOCK_GUARD;
-        auto&& hash = SR_HASH_STR(str);
-        if (auto&& pIt = m_strings.find(hash); pIt != m_strings.end()) {
-            return pIt->second;
-        }
-        return Register(str, hash);
+        return GetOrAddInfo(std::string_view(str));
     }
 
     StringHashInfo* HashManager::GetOrAddInfo(const std::string_view& str) {
-        SR_LOCK_GUARD;
-        auto&& hash = SR_HASH_STR_VIEW(str);
-        if (auto&& pIt = m_strings.find(hash); pIt != m_strings.end()) {
-            return pIt->second;
+        if (g_TracyAllocatorInitialized) {
+            SR_TRACY_ZONE;
+            SR_LOCK_GUARD;
+            auto&& hash = SR_HASH_STR_VIEW(str);
+            if (auto&& pIt = m_strings.find(hash); pIt != m_strings.end()) {
+                return pIt->second;
+            }
+            SR_TRACY_ZONE_COLOR(0xff0000);
+            return Register(std::string(str.data(), str.size()), hash);
         }
-        return Register(std::string(str.data(), str.size()), hash);
+        else {
+            SR_LOCK_GUARD;
+            auto&& hash = SR_HASH_STR_VIEW(str);
+            if (auto&& pIt = m_strings.find(hash); pIt != m_strings.end()) {
+                return pIt->second;
+            }
+            return Register(std::string(str.data(), str.size()), hash);
+        }
     }
 
     StringHashInfo* HashManager::GetOrAddInfo(const char* str) {
-        SR_LOCK_GUARD;
-        auto&& hash = SR_HASH_STR(str ? str : "");
-        if (auto&& pIt = m_strings.find(hash); pIt != m_strings.end()) {
-            return pIt->second;
-        }
-        return Register(str, hash);
+        return GetOrAddInfo(std::string_view(str ? str : ""));
     }
 }

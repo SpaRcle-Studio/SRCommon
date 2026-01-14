@@ -5,9 +5,9 @@
 #ifndef SR_ENGINE_UTILS_STORE_UTILS_H
 #define SR_ENGINE_UTILS_STORE_UTILS_H
 
-#include <Utils/Common/Singleton.h>
 #include <Utils/Types/Map.h>
 #include <Utils/TypeTraits/TypeTraits.h>
+#include <Utils/Profile/TracyContext.h>
 
 namespace SR_UTILS_NS::StoreUtils {
     class Storage : public Singleton<Storage> {
@@ -87,6 +87,8 @@ namespace SR_UTILS_NS::StoreUtils {
     };
 
     template <typename T> T Storage::Get(const StorageType storageTepe, const ValueType valueType, const StringAtom key, const std::optional<T>& def) {
+        SR_TRACY_ZONE;
+
         if (!def) {
             Value result = GetImpl(storageTepe, valueType, key, std::nullopt);
             return VisitValue<T>(result);
@@ -100,6 +102,7 @@ namespace SR_UTILS_NS::StoreUtils {
     }
 
     template <typename T> void Storage::Set(const StorageType storageTepe, const ValueType valueType, const StringAtom key, T value) {
+        SR_TRACY_ZONE;
         Value val{};
         VisitValue<T>(val) = value;
         SetImpl(storageTepe, valueType, key, val);

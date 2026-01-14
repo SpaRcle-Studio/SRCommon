@@ -648,6 +648,7 @@ namespace SR_UTILS_NS {
     }
 
     void SceneObject::ForEachChild(const std::function<void(SceneObject::Ptr&)>& fn) {
+        SR_TRACY_ZONE;
         for (auto&& child : m_children) {
             if (child.Valid()) {
                 fn(child);

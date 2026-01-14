@@ -66,7 +66,7 @@ namespace SR_WORLD_NS {
 
     public:
         SR_NODISCARD std::string GetName() const;
-        SR_NODISCARD Path GetPath() const { return m_path; }
+        SR_NODISCARD const Path& GetPath() const { return m_path; }
         SR_NODISCARD Path GetAbsPath() const;
         SR_NODISCARD bool IsPrefab() const noexcept override;
         SR_NODISCARD SR_HTYPES_NS::DataStorage& GetDataStorage();

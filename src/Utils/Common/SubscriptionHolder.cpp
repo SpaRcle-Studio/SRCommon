@@ -35,6 +35,13 @@ namespace SR_UTILS_NS {
         SRHalt(SR_UTILS_NS::Format(format, id.c_str()));
     }
 
+    void SubscriptionMessage::Reset() {
+        m_ints.clear();
+        m_paths.clear();
+        m_bools.clear();
+        m_strings.clear();
+    }
+
     SubscriptionMessage::SubscriptionMessage() = default;
 
     SubscriptionMessage::~SubscriptionMessage() = default;

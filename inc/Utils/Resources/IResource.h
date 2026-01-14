@@ -40,7 +40,7 @@ namespace SR_UTILS_NS {
         ~IResource() override;
 
     public:
-        bool Execute(const SR_HTYPES_NS::Function<bool()>& fun) const;
+        bool Execute(const std::function<bool()>& fun) const;
 
         /// является ли ресурс файловым
         SR_NODISCARD virtual bool IsFileResource() const noexcept { return true; }

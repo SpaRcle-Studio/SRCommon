@@ -1044,11 +1044,14 @@ namespace SR_MATH_NS {
     }
 
     bool Quaternion::IsIdentity() const noexcept {
-        return
-            SR_EQUALS(x, 1.f) &&
-            SR_EQUALS(y, 1.f) &&
-            SR_EQUALS(z, 1.f) &&
-            SR_EQUALS(w, 1.f);
+    #if defined(SR_SIMD_SUPPORT) && 0
+        const __m128 v = _mm_loadu_ps(&x);
+        const __m128 id = _mm_set_ps(1.f, 0.f, 0.f, 0.f); // w z y x
+        const __m128 cmp = _mm_cmpeq_ps(v, id);
+        return _mm_movemask_ps(cmp) == 0b1111;
+    #else
+        return x == 0.f && y == 0.f && z == 0.f && w == 1.f;
+    #endif
     }
 
     void Quaternion::operator+=(const Quaternion &p_q) {
