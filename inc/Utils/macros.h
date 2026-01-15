@@ -178,6 +178,10 @@
     #define SR_NODISCARD [[nodiscard]]
 #endif
 
+#define SR_RTTI_ENABLED 1
+
+#define SR_NOEXCEPT noexcept
+
 #define SR_FALLTHROUGH [[fallthrough]]
 
 #ifndef SR_ANDROID

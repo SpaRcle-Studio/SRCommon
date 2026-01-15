@@ -16,6 +16,10 @@
 #include <optional>
 #include <cstdlib>
 
+#ifdef __cpp_lib_concepts
+    #define SR_COMPILER_CPP17_ENABLED
+#endif
+
 #ifndef SR_ENGINE_CODEGEN_CLANG_PARSE_MODE
     #include <cfloat>
     #include <span>
@@ -155,6 +159,18 @@ constexpr uint32_t SR_INVALID_DESCRIPTOR_SET = SR_ID_INVALID;
 constexpr uint32_t SR_INVALID_FBO = SR_ID_INVALID;
 
 namespace SR_UTILS_NS {
+    template <typename T> constexpr bool IsNullCallable(const T&) noexcept {
+        return false;
+    }
+
+    template <typename R, typename... Args> constexpr bool IsNullCallable(R(*func)(Args...)) noexcept {
+        return func == nullptr;
+    }
+
+    template <typename T> constexpr bool IsNullCallable(T* ptr) noexcept {
+        return ptr == nullptr;
+    }
+
     template<typename T, size_t N> struct SmallStack {
     public:
         void push(T v) {

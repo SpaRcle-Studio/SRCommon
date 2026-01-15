@@ -38,9 +38,9 @@ namespace SR_UTILS_NS {
 
         const float_t damping = std::exp(-m_velocityDegree * 10.f * dt);
         const float_t velocitySpeed = m_moveSpeed * m_velocityFactor * 0.25f * dt;
-        const float_t seekSpeed = m_seekSpeed * 0.5f * dt;
-        const float_t wheelSpeed = m_wheelSpeed * 0.1f;
-        const SR_MATH_NS::FVector2 rotateSpeed = m_rotateSpeed * 3.5f * dt;
+        const float_t seekSpeed = m_seekSpeed * 0.01f;
+        const float_t wheelSpeed = m_wheelSpeed * 0.5f;
+        const SR_MATH_NS::FVector2 rotateSpeed = m_rotateSpeed * 0.1f;
 
         if (!m_active) {
             m_velocity *= damping;
