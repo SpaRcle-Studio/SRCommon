@@ -8,6 +8,7 @@
 #include <Utils/Types/SharedPtr.h>
 #include <Utils/Common/Vertices.h>
 #include <Utils/Common/Subscription.h>
+#include <Utils/Serialization/Serializable.h>
 
 namespace SR_HTYPES_NS {
     class RawMesh;
@@ -18,7 +19,13 @@ namespace SR_HTYPES_NS {
         using RawMeshPtr = SR_HTYPES_NS::SharedPtr<SR_HTYPES_NS::RawMesh>;
         using MeshIndex = int32_t;
 
+        IRawMeshHolder() = default;
         virtual ~IRawMeshHolder();
+
+        IRawMeshHolder(const IRawMeshHolder& other);
+        IRawMeshHolder& operator=(const IRawMeshHolder& other);
+        IRawMeshHolder(IRawMeshHolder&& other) noexcept;
+        IRawMeshHolder& operator=(IRawMeshHolder&& other) noexcept;
 
     public:
         SR_NODISCARD MeshIndex GetMeshId() const noexcept { return m_meshId; }
@@ -41,6 +48,19 @@ namespace SR_HTYPES_NS {
         /// определяет порядок меша в файле, если их там несколько
         /// TODO: переделать в int16_t, но нужно написать миграторы.
         MeshIndex m_meshId = SR_ID_INVALID;
+
+    };
+
+    class RawMeshHolder : public SR_UTILS_NS::Serializable, public IRawMeshHolder {
+        SR_CLASS()
+        using Super = SR_UTILS_NS::Serializable;
+    public:
+        /// @virtualProperty(meshPath) @getter(GetMeshPath) @setter(SetRawMesh)
+        /// @customArgs(pick: enabled, filter name: Meshes, relative: resources)
+        /// @customArg(filter value: fbx,blend,obj,pmx,stl,dae)
+        SR_VIRTUAL_PROPERTY
+        /// @virtualProperty(meshId) @getter(GetMeshId) @setter(SetMeshId)
+        SR_VIRTUAL_PROPERTY
 
     };
 }

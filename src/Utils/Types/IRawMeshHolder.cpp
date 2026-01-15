@@ -5,10 +5,42 @@
 #include <Utils/Types/IRawMeshHolder.h>
 #include <Utils/Types/RawMesh.h>
 #include <Utils/Resources/ResourceManager.h>
+#include <Utils/FileSystem/PathDataAccessor.h>
+
+#include <Codegen/IRawMeshHolder.generated.hpp>
 
 namespace SR_HTYPES_NS {
     IRawMeshHolder::~IRawMeshHolder() {
         SetRawMesh(RawMeshPtr());
+    }
+
+    IRawMeshHolder::IRawMeshHolder(const IRawMeshHolder& other)
+        : m_meshId(other.m_meshId)
+    {
+        SetRawMesh(other.m_rawMesh);
+    }
+
+    IRawMeshHolder& IRawMeshHolder::operator=(const IRawMeshHolder& other) {
+        if (this != &other) {
+            m_meshId = other.m_meshId;
+            SetRawMesh(other.m_rawMesh);
+        }
+        return *this;
+    }
+
+    IRawMeshHolder::IRawMeshHolder(IRawMeshHolder&& other) noexcept {
+        m_meshId = other.m_meshId;
+        SetRawMesh(other.m_rawMesh);
+        other.SetRawMesh(RawMeshPtr());
+    }
+
+    IRawMeshHolder& IRawMeshHolder::operator=(IRawMeshHolder&& other) noexcept {
+        if (this != &other) {
+            m_meshId = other.m_meshId;
+            SetRawMesh(other.m_rawMesh);
+            other.SetRawMesh(RawMeshPtr());
+        }
+        return *this;
     }
 
     void IRawMeshHolder::SetRawMesh(const RawMeshPtr& pRawMesh) {

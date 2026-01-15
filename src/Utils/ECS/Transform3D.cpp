@@ -29,8 +29,8 @@ namespace SR_UTILS_NS {
 
             m_dirtyMatrix = false;
 
-            if (m_parentTransform) SR_LIKELY_ATTRIBUTE {
-                SR_MATH_NS::Matrix4x4::Multiply(m_matrix, m_parentTransform->GetMatrix(), m_localMatrix);
+            if (auto&& pParent = GetParentTransform()) SR_LIKELY_ATTRIBUTE {
+                SR_MATH_NS::Matrix4x4::Multiply(m_matrix, pParent->GetMatrix(), m_localMatrix);
             }
             else {
                 m_matrix = m_localMatrix;

@@ -24,7 +24,14 @@ namespace SR_UTILS_NS {
     }
 
     Transform* Transform::GetParentTransform() const {
-        return m_parentTransform;
+        if (m_gameObject) {
+            if (auto&& pParent = m_gameObject->GetParent()) {
+                if (pParent->GetSceneObjectType() == SceneObjectType::GameObject) {
+                    return const_cast<Transform*>(static_cast<const GameObject*>(pParent.Get())->GetTransform().Get());
+                }
+            }
+        }
+        return nullptr;
     }
 
     SR_NODISCARD GameObject::Ptr Transform::GetGameObject() const {
@@ -189,16 +196,6 @@ namespace SR_UTILS_NS {
     }
 
     void Transform::OnHierarchyChanged() {
-        m_parentTransform = nullptr;
-
-        if (m_gameObject) {
-            if (auto &&pParent = m_gameObject->GetParent()) {
-                if (auto &&pGameObject = pParent.DynamicCast<GameObject>()) {
-                    m_parentTransform = const_cast<Transform*>(pGameObject->GetTransform().Get());
-                }
-            }
-        }
-
         UpdateTree();
     }
 

@@ -115,7 +115,6 @@ namespace SR_UTILS_NS {
         virtual void OnHierarchyChanged();
 
     protected:
-        Transform* m_parentTransform = nullptr;
         GameObject* m_gameObject = nullptr;
         mutable bool m_aabbDirty = true;
         mutable bool m_dirtyRotation = false;
