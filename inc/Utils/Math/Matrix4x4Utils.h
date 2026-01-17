@@ -74,7 +74,7 @@ namespace SR_MATH_NS {
     }
 
     SR_INLINE_STATIC void SR_FASTCALL GLMMultiplyMat4x4(glm::mat4& result, const glm::mat4& m1, const glm::mat4& m2) noexcept {
-    #if defined(SR_SIMD_SUPPORT) && 0
+    #if SR_SIMD_SUPPORT && 0
         const __m128 a0 = _mm_loadu_ps(&m1[0][0]);
         const __m128 a1 = _mm_loadu_ps(&m1[1][0]);
         const __m128 a2 = _mm_loadu_ps(&m1[2][0]);

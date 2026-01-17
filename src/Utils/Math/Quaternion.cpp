@@ -870,7 +870,7 @@ namespace SR_MATH_NS {
     }
 
     Quaternion Quaternion::Slerp(const Quaternion &q, Unit t) const {
-#if SR_SIMD_SUPPORT
+#if SR_SIMD_SSE41_SUPPORT
         // Load q1 and q2 into SIMD registers
         __m128 q1_vec = _mm_set_ps(w, z, y, x); // Загрузка в обратном порядке для корректного выравнивания
         __m128 q2_vec = _mm_set_ps(q.w, q.z, q.y, q.x); // Загрузка в обратном порядке для корректного выравнивания
@@ -917,60 +917,6 @@ namespace SR_MATH_NS {
         float result_array[4];
         _mm_store_ps(result_array, interp_vec);
         return Quaternion(result_array[0], result_array[1], result_array[2], result_array[3]);
-
-
-
-
-        /*// Загрузка в SIMD
-        __m128 q1_vec = _mm_set_ps(w, z, y, x); // [x,y,z,w]
-        __m128 q2_vec = _mm_set_ps(q.w, q.z, q.y, q.x);
-
-        // dot product через SSE2
-        __m128 mul = _mm_mul_ps(q1_vec, q2_vec);
-        __m128 shuf1 = _mm_shuffle_ps(mul, mul, _MM_SHUFFLE(2,1,0,3));
-        __m128 sum1 = _mm_add_ps(mul, shuf1);
-        __m128 shuf2 = _mm_movehl_ps(sum1, sum1);
-        __m128 sum2 = _mm_add_ss(sum1, shuf2);
-        float dot_result = _mm_cvtss_f32(sum2);
-
-        // Флип, если dot < 0
-        __m128 q2_copy = q2_vec;
-        if (dot_result < 0.0f) {
-            q2_copy = _mm_mul_ps(q2_vec, _mm_set1_ps(-1.0f));
-            dot_result = -dot_result;
-        }
-
-        // Clamp dot
-        dot_result = std::clamp(dot_result, -1.0f, 1.0f);
-
-        const float DOT_THRESHOLD = 0.9995f;
-        if (dot_result > DOT_THRESHOLD) {
-            // Линейная интерполяция
-            __m128 diff = _mm_sub_ps(q2_copy, q1_vec);
-            __m128 t_vec = _mm_set1_ps(t);
-            __m128 interp = _mm_add_ps(q1_vec, _mm_mul_ps(diff, t_vec));
-
-            float res[4];
-            _mm_store_ps(res, interp);
-            return Quaternion(res[0], res[1], res[2], res[3]).Normalized();
-        }
-
-        // SLERP
-        float theta_0 = std::acos(dot_result);
-        float theta = theta_0 * t;
-        float sin_theta = std::sin(theta);
-        float sin_theta_0 = std::sin(theta_0);
-
-        float s0 = std::cos(theta) - dot_result * sin_theta / sin_theta_0;
-        float s1 = sin_theta / sin_theta_0;
-
-        __m128 s0_vec = _mm_set1_ps(s0);
-        __m128 s1_vec = _mm_set1_ps(s1);
-        __m128 interp_vec = _mm_add_ps(_mm_mul_ps(q1_vec, s0_vec), _mm_mul_ps(q2_copy, s1_vec));
-
-        float res[4];
-        _mm_store_ps(res, interp_vec);
-        return Quaternion(res[0], res[1], res[2], res[3]).Normalized();*/
 #else
         return glm::slerp(self, q.self, static_cast<float_t>(t));
 #endif
@@ -1044,7 +990,7 @@ namespace SR_MATH_NS {
     }
 
     bool Quaternion::IsIdentity() const noexcept {
-    #if defined(SR_SIMD_SUPPORT) && 0
+    #if SR_SIMD_SUPPORT && 0
         const __m128 v = _mm_loadu_ps(&x);
         const __m128 id = _mm_set_ps(1.f, 0.f, 0.f, 0.f); // w z y x
         const __m128 cmp = _mm_cmpeq_ps(v, id);
@@ -1192,7 +1138,7 @@ namespace SR_MATH_NS {
     }
 
     Quaternion Quaternion::Nlerp(const Quaternion &q, Unit t) const {
-    #ifdef SR_SIMD_SUPPORT
+    #if SR_SIMD_SSE41_SUPPORT
         __m128 q1 = _mm_setr_ps(x, y, z, w);
         __m128 q2 = _mm_setr_ps(q.x, q.y, q.z, q.w);
 

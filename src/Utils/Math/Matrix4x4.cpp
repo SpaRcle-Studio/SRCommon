@@ -153,10 +153,6 @@ namespace SR_MATH_NS {
         return Matrix4x4(glm::lookAtRH(eye.ToGLM(), center.ToGLM(), up.ToGLM()));
     }
 
-    Matrix4x4 Matrix4x4::FromEulers(const Quaternion& quaternion) {
-        return Matrix4x4(quaternion, 1.f);
-    }
-
     Matrix4x4 Matrix4x4::FromQuaternion(const Quaternion& quaternion) {
         return Matrix4x4(quaternion);
     }

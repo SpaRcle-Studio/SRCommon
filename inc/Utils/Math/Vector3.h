@@ -105,7 +105,7 @@ namespace SR_MATH_NS {
         }
 
         SR_NODISCARD bool IsZero() const {
-        #if defined(SR_SIMD_SUPPORT) && 0
+        #if SR_SIMD_SUPPORT && 0
             __m128 vec = _mm_loadu_ps(&x);
             __m128 zero = _mm_setzero_ps();
             __m128 cmp = _mm_cmpeq_ps(vec, zero);
@@ -116,7 +116,7 @@ namespace SR_MATH_NS {
         }
 
         SR_NODISCARD bool IsOne() const {
-        #if defined(SR_SIMD_SUPPORT) && 0
+        #if SR_SIMD_SUPPORT && 0
             __m128 vec = _mm_loadu_ps(&x);
             __m128 one = _mm_set1_ps(1.0f);
             __m128 cmp = _mm_cmpeq_ps(vec, one);

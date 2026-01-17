@@ -57,7 +57,6 @@ namespace SR_MATH_NS {
         SR_NODISCARD static Matrix4x4 Ortho(Unit left, Unit right, Unit bottom, Unit top, Unit zNear, Unit zFar);
         SR_NODISCARD static Matrix4x4 CreateTRS(const SR_MATH_NS::FVector3& translation, const SR_MATH_NS::Quaternion& rotation, const SR_MATH_NS::FVector3& scale);
         SR_NODISCARD static Matrix4x4 LookAt(const SR_MATH_NS::FVector3& eye, const SR_MATH_NS::FVector3& center, const SR_MATH_NS::FVector3& up);
-        SR_NODISCARD SR_DEPRECATED_EX("FromQuaternion") static Matrix4x4 FromEulers(const Quaternion& quaternion);
         SR_NODISCARD static Matrix4x4 FromQuaternion(const Quaternion& quaternion);
         SR_NODISCARD static Matrix4x4 RotationAxis(const SR_MATH_NS::FVector4& axis, Unit angle);
         SR_NODISCARD static Matrix4x4 RotationAxis(const SR_MATH_NS::FVector3& axis, Unit angle);

@@ -248,6 +248,12 @@
     #define SR_SIMD_SUPPORT 0
 #endif
 
+#if SR_SIMD_SUPPORT
+    #define SR_SIMD_SSE41_SUPPORT 1
+#else
+    #define SR_SIMD_SSE41_SUPPORT 0
+#endif
+
 #define SR_MACRO_CONCAT_UTIL(a, b) a ## b
 #define SR_MACRO_CONCAT(a, b) SR_MACRO_CONCAT_UTIL(a, b)
 #define SR_STRINGIFY(x) #x
@@ -392,7 +398,9 @@
 
 #define SR_OFFSETOF(s,m) ((::size_t)&reinterpret_cast<char const volatile&>((((s*)0)->m)))
 
-#if defined(_MSC_VER)
+#if defined(SR_ANDROID) || defined(SR_EMSCRIPTEN)
+    #define SR_THREAD_LOCAL thread_local
+#elif defined(_MSC_VER)
     #define SR_THREAD_LOCAL __declspec(thread)
 #elif defined(__GNUC__) || defined(__clang__)
     #define SR_THREAD_LOCAL __thread

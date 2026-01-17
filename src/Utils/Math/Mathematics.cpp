@@ -6,8 +6,12 @@
 
 namespace SR_MATH_NS {
     bool HasSSE41() {
+#if defined(__GNUC__) || defined(__clang__)
+        return __builtin_cpu_supports("sse4.1");
+#else
         int cpuInfo[4];
         __cpuid(cpuInfo, 1);
         return (cpuInfo[2] & (1 << 19)) != 0;
+#endif
     }
 }
