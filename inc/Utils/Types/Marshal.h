@@ -48,6 +48,7 @@ namespace SR_HTYPES_NS {
 
         void WriteBlock(void* pData, uint64_t size);
         void ReadBlock(void* pDestination);
+        void* ReadMapBlock();
 
         template<typename T> void Write(const T& value);
         template<typename T> void Write(const T& value, const T& def);
@@ -55,6 +56,9 @@ namespace SR_HTYPES_NS {
         template<typename T> T TryRead();
         template<typename T> T Read();
         template<typename T> T Read(const T& def);
+
+        uint16_t ReadShortStringLength();
+        void ReadChars(char* pBuffer, uint64_t size);
     };
 
     template<typename T> void Marshal::Write(const T& value, const T& def) {

@@ -17,13 +17,13 @@ namespace SR_HTYPES_NS {
             : Super()
             , size(size)
         {
-            this->pData = malloc(size);
+            this->pData = SRMalloc(size);
             memcpy(this->pData, pData, size);
         }
 
         ~Node() override {
             if (pData != nullptr) {
-                free(pData);
+                SRFree(pData);
                 pData = nullptr;
             }
         }

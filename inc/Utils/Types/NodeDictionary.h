@@ -17,21 +17,21 @@ namespace SR_HTYPES_NS {
             , m_keySize(keySize)
             , m_valueSize(valueSize)
         {
-            m_key = (T*)malloc(keySize);
+            m_key = (T*)SRMalloc(keySize);
             memcpy(m_key, pKey, keySize);
 
-            m_value = (T*)malloc(valueSize);
+            m_value = (T*)SRMalloc(valueSize);
             memcpy(m_value, pValue, valueSize);
         }
 
         ~DictionaryEntry() override {
             if (m_key != nullptr) {
-                free(m_key);
+                SRFree(m_key);
                 m_key = nullptr;
             }
 
             if (m_value != nullptr) {
-                free(m_value);
+                SRFree(m_value);
                 m_value = nullptr;
             }
         }

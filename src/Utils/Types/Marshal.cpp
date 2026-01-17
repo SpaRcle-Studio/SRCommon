@@ -173,6 +173,24 @@ namespace SR_HTYPES_NS {
         read(pDestination, size);
     }
 
+    void* Marshal::ReadMapBlock() {
+        const auto size = Read<uint64_t>();
+
+        if (size == 0) {
+            return nullptr;
+        }
+
+        return readMap(size);
+    }
+
+    uint16_t Marshal::ReadShortStringLength() {
+        return Read<uint16_t>();
+    }
+
+    void Marshal::ReadChars(char *pBuffer, uint64_t size) {
+        read(pBuffer, size);
+    }
+
     Marshal::Marshal() = default;
     Marshal::~Marshal() = default;
 }

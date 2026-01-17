@@ -113,6 +113,7 @@ namespace SR_HTYPES_NS {
         RawMeshParams m_params;
 
         bool m_fromCache = false;
+        std::pair<char*, uint64_t> m_cacheHeap;
 
     #ifdef SR_UTILS_ASSIMP
         ska::flat_hash_map<Hash, aiAnimation*> m_animations;

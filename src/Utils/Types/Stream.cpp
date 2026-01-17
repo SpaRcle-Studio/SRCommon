@@ -170,12 +170,12 @@ namespace SR_HTYPES_NS {
     }
 
     char* Stream::Allocate(uint64_t size) {
-        char* pBlock = (char*)malloc(size);
+        char* pBlock = (char*)SRMalloc(size);
         return pBlock;
     }
 
     void Stream::Free(char* pData) {
-        free(pData);
+        SRFree(pData);
     }
 
     std::string Stream::ToString() const noexcept {
@@ -235,5 +235,31 @@ namespace SR_HTYPES_NS {
         return Read(pDst, count);
     }
 
+    void* Stream::readMap(uint64_t count) noexcept {
+        return ReadMap(count);
+    }
+
+    void* Stream::ReadMap(uint64_t count) noexcept {
+        if (m_pos + count > m_size) {
+            SRHalt("Stream::ReadMap() : out of bounds!");
+            return nullptr;
+        }
+
+        void* pData = m_data + m_pos;
+        m_pos += count;
+        return pData;
+    }
+
+    std::pair<char*, uint64_t> Stream::Detach() noexcept {
+        char* pData = m_data;
+        uint64_t size = m_size;
+        m_data = nullptr;
+        m_size = 0;
+        m_capacity = 0;
+        m_pos = 0;
+        return { pData, size };
+    }
+
     Stream::Stream() = default;
 }
+

@@ -15,13 +15,17 @@ namespace SR_HTYPES_NS {
         using ValueType = T;
 
     public:
+        using Iterator = T*;
+        using ConstIterator = const T*;
+        using SizeType = size_t;
+
         FastMemoryArray() = default;
 
         FastMemoryArray(const FastMemoryArray& other) {
-            SR_TRACY_ZONE;
             m_size = other.m_size;
             m_capacity = other.m_capacity;
             if (m_capacity > 0) {
+                SR_TRACY_ZONE;
                 m_data = new T[m_capacity];
                 CopyData(m_data, other.m_data);
             }
@@ -29,15 +33,14 @@ namespace SR_HTYPES_NS {
 
         FastMemoryArray(FastMemoryArray&& other) noexcept
             : m_size(other.m_size), m_capacity(other.m_capacity), m_data(other.m_data) {
-            SR_TRACY_ZONE;
             other.m_size = 0;
             other.m_capacity = 0;
             other.m_data = nullptr;
         }
 
         FastMemoryArray& operator=(const FastMemoryArray& other) {
-            SR_TRACY_ZONE;
             if (this != &other) {
+                SR_TRACY_ZONE;
                 if (m_data) {
                     delete[] m_data;
                 }
@@ -66,8 +69,8 @@ namespace SR_HTYPES_NS {
         }
 
         FastMemoryArray& operator=(FastMemoryArray&& other) noexcept {
-            SR_TRACY_ZONE;
             if (this != &other) {
+                SR_TRACY_ZONE;
                 if (m_data) {
                     delete[] m_data;
                 }
@@ -95,6 +98,40 @@ namespace SR_HTYPES_NS {
             }
             m_size = 0;
             m_capacity = 0;
+        }
+
+        SR_NODISCARD Iterator begin() noexcept { return m_data; }
+        SR_NODISCARD Iterator end() noexcept { return m_data + m_size; }
+        SR_NODISCARD ConstIterator begin() const noexcept { return m_data; }
+        SR_NODISCARD ConstIterator end() const noexcept { return m_data + m_size; }
+
+        Iterator erase_verify(Iterator pos) noexcept {
+            if (pos < begin() || pos >= end()) SR_UNLIKELY_ATTRIBUTE {
+                SRHalt("FastMemoryArray::erase() : iterator out of range!");
+                return end();
+            }
+            return EraseNoVerify(pos);
+        }
+
+        Iterator erase(Iterator pos) noexcept {
+            const SizeType index = static_cast<SizeType>(pos - begin());
+            if (index != m_size - 1) {
+                if constexpr (FastMode) {
+                    std::memmove(&m_data[index], &m_data[index + 1], (m_size - index - 1) * sizeof(T));
+                }
+                else {
+                    for (SizeType i = index; i < m_size - 1; ++i) {
+                        m_data[i] = std::move(m_data[i + 1]);
+                    }
+                }
+            }
+
+            if constexpr (!FastMode) {
+                m_data[m_size - 1].~T();
+            }
+
+            --m_size;
+            return begin() + index;
         }
 
         SR_NODISCARD SizeType size() const noexcept { return m_size; }

@@ -66,7 +66,7 @@ namespace SR_NETWORK_NS {
             m_size = size;
 
             if (copy) {
-                m_data = malloc(size);
+                m_data = SRMalloc(size);
                 memcpy(m_data, pData, size);
             }
             else {
@@ -76,13 +76,13 @@ namespace SR_NETWORK_NS {
 
         virtual ~DataPackage() {
             if (m_data) {
-                free(m_data);
+                SRFree(m_data);
                 m_data = nullptr;
             }
         }
 
         static SR_HTYPES_NS::SharedPtr<DataPackage> Allocate(uint64_t size) {
-            auto&& pData = malloc(size);
+            auto&& pData = SRMalloc(size);
             return DataPackage::MakeShared(pData, size, false);
         }
 

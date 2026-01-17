@@ -671,7 +671,7 @@ namespace SR_UTILS_NS {
 			return *this;
 		}
 
-		template <typename Functor, typename = EASTL_INTERNAL_FUNCTION_VALID_FUNCTION_ARGS(Functor, R, Args..., Super, Function)>
+		template <typename Functor, typename = SR_INTERNAL_FUNCTION_VALID_FUNCTION_ARGS(Functor, R, Args..., Super, Function)>
         Function& operator=(Functor&& functor) {
             Super::operator=(std::forward<Functor>(functor));
 			return *this;

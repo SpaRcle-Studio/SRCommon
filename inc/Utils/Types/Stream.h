@@ -33,6 +33,8 @@ namespace SR_HTYPES_NS {
     public:
         SR_NODISCARD bool Valid() const noexcept;
 
+        std::pair<char*, uint64_t> SR_FASTCALL Detach() noexcept;
+
         SR_NODISCARD std::string ToString() const noexcept;
         SR_NODISCARD std::string_view ToStringView() const noexcept;
         SR_NODISCARD std::string ToBase64() const noexcept;
@@ -45,10 +47,12 @@ namespace SR_HTYPES_NS {
 
         Stream& SR_FASTCALL Write(const void* pSrc, uint64_t count) noexcept;
         Stream& SR_FASTCALL Read(void* pDst, uint64_t count) noexcept;
+        void* SR_FASTCALL ReadMap(uint64_t count) noexcept;
         Stream& SR_FASTCALL TryRead(void* pDst, uint64_t count) noexcept;
 
         Stream& SR_FASTCALL write(const void* pSrc, uint64_t count) noexcept;
         Stream& SR_FASTCALL read(void* pDst, uint64_t count) noexcept;
+        void* SR_FASTCALL readMap(uint64_t count) noexcept;
 
         void SetData(const char* pData, uint64_t size);
         void SetPosition(uint64_t position);
