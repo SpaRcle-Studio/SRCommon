@@ -22,7 +22,8 @@ namespace SR_UTILS_NS {
 
     SR_ENUM_NS_STRUCT_T(CLIOptions, uint32_t,
         Resources,
-        LogDir
+        LogDir,
+        RunScene
     );
 
     class CLIManager : public SR_UTILS_NS::Singleton<CLIManager> {
