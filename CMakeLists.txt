@@ -29,7 +29,7 @@ option(SR_COMMON_ASSIMP "" ON)
 
 option(SR_COMMON_ZLIB "" ON)
 option(SR_COMMON_OPENSSL "" OFF)
-option(SR_COMMON_SDL "" OFF)
+option(SR_COMMON_SDL "" ON)
 option(SR_COMMON_CURL "" OFF)
 option(SR_COMMON_JSON "" OFF)
 option(SR_COMMON_MYHTML "" OFF)
@@ -100,7 +100,17 @@ else()
 endif()
 
 if (SR_COMMON_SDL)
+    set(SDL_SHARED OFF)
+    set(SDL_STATIC ON)
+    set(SDL_TEST OFF)
+    set(SDL_EXAMPLES OFF)
+    set(DSDL_WAYLAND ON)
+
     add_subdirectory(libs/SDL)
+
+    if (UNIX) 
+        target_compile_options(SDL3-static PRIVATE -fPIC)
+    endif()
 endif()
 
 if (SR_COMMON_JSON)
@@ -268,6 +278,14 @@ if (SR_COMMON_MYHTML)
     add_subdirectory(libs/myhtml)
     SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_SOURCE_DIR}/libs/myhtml/include)
     target_link_libraries(Utils myhtml_static)
+endif()
+
+if (SR_COMMON_SDL)
+    target_link_libraries(Utils SDL3::SDL3-static)
+
+    if (UNIX)
+        target_link_libraries(Utils wayland-client wayland-cursor wayland-egl xkbcommon dl pthread)
+    endif()
 endif()
 
 if (SR_COMMON_LITEHTML)
