@@ -685,4 +685,10 @@ namespace SR_UTILS_NS {
             pChild->OnParentTagChanged();
         }
     }
+
+    void SceneObject::OnMaskDirty() {
+        for (auto&& pComponent : m_components) {
+            pComponent->OnMaskDirty();
+        }
+    }
 }

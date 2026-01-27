@@ -6,6 +6,7 @@
 #define SR_ENGINE_UTILS_COMPONENT_H
 
 #include <Utils/ECS/Entity.h>
+#include <Utils/ECS/TransformUtils.h>
 
 /**
  * Awake -> OnEnabled -> Start -> Update -> FixedUpdate
@@ -53,6 +54,7 @@ namespace SR_UTILS_NS {
 
     public:
         virtual void OnMatrixDirty();
+        virtual void OnMaskDirty();
         virtual void OnPriorityChanged();
 
         /// Вызывается при загрузке компонента на игровой объект
@@ -127,6 +129,18 @@ namespace SR_UTILS_NS {
         SR_NODISCARD bool HasParent() const;
 
         SR_NODISCARD Component::Ptr CloneComponent() const;
+
+        template<typename T> SR_NODISCARD T* GetTransformAs() const {
+            auto&& pTransform = GetTransform();
+            if (!pTransform) {
+                return nullptr;
+            }
+
+            if (T::GetClassStaticName() == GetTransformTypeName(pTransform)) {
+                return static_cast<T*>(pTransform);
+            }
+            return nullptr;
+        }
 
     protected:
         void SetParent(IComponentable* pParent);

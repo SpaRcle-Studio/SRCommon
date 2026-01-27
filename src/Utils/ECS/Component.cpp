@@ -190,6 +190,7 @@ namespace SR_UTILS_NS {
     }
 
     void Component::OnMatrixDirty() { }
+    void Component::OnMaskDirty() { }
     void Component::OnPriorityChanged() { }
 
     void Component::OnLoaded() { m_isComponentLoaded = true; }

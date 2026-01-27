@@ -507,5 +507,78 @@ namespace SR_UTILS_NS {
         }
         heap.second = 0;
     }
+
+    void AssimpCache::SaveMaterials(SR_HTYPES_NS::Marshal& marshal, const aiScene* pScene) const {
+        if (!pScene->mMaterials) {
+            return;
+        }
+        marshal.WriteBlock((void*)pScene->mMaterials, pScene->mNumMaterials * sizeof(aiMaterial*));
+        for (uint64_t materialId = 0; materialId < pScene->mNumMaterials; ++materialId) {
+            auto&& pMaterial = pScene->mMaterials[materialId];
+            marshal.WriteBlock((void*)pMaterial, sizeof(aiMaterial));
+
+            if (pMaterial->mProperties) {
+                marshal.WriteBlock((void*)pMaterial->mProperties, pMaterial->mNumProperties * sizeof(aiMaterialProperty*));
+                for (uint64_t propertyId = 0; propertyId < pMaterial->mNumProperties; ++propertyId) {
+                    auto&& pProperty = pMaterial->mProperties[propertyId];
+                    marshal.WriteBlock((void*)pProperty, sizeof(aiMaterialProperty));
+                    if (pProperty->mData) {
+                        marshal.WriteBlock((void *) pProperty->mData, pProperty->mDataLength * sizeof(char));
+                    }
+                }
+            }
+        }
+    }
+
+    void AssimpCache::LoadMaterials(SR_HTYPES_NS::Marshal& marshal, aiScene* pScene) const {
+        if (!pScene->mMaterials) {
+            return;
+        }
+        pScene->mMaterials = static_cast<aiMaterial**>(marshal.ReadMapBlock());
+        for (uint64_t materialId = 0; materialId < pScene->mNumMaterials; ++materialId) {
+            auto&& pMaterial = pScene->mMaterials[materialId];
+            pMaterial = static_cast<aiMaterial*>(marshal.ReadMapBlock());
+
+            if (pMaterial->mProperties) {
+                pMaterial->mProperties = static_cast<aiMaterialProperty**>(marshal.ReadMapBlock());
+                for (uint64_t propertyId = 0; propertyId < pMaterial->mNumProperties; ++propertyId) {
+                    auto&& pProperty = pMaterial->mProperties[propertyId];
+                    pProperty = static_cast<aiMaterialProperty*>(marshal.ReadMapBlock());
+                    if (pProperty->mData) {
+                        pProperty->mData = static_cast<char*>(marshal.ReadMapBlock());
+                    }
+                }
+            }
+        }
+    }
+
+    void AssimpCache::SaveTextures(SR_HTYPES_NS::Marshal& marshal, const aiScene* pScene) const {
+        if (!pScene->mTextures) {
+            return;
+        }
+        marshal.WriteBlock((void*)pScene->mTextures, pScene->mNumTextures * sizeof(aiTexture*));
+        for (uint64_t textureId = 0; textureId < pScene->mNumTextures; ++textureId) {
+            auto&& pTexture = pScene->mTextures[textureId];
+            marshal.WriteBlock((void*)pTexture, sizeof(aiTexture));
+            if (pTexture->pcData) {
+                marshal.WriteBlock((void*)pTexture->pcData, pTexture->mWidth * pTexture->mHeight * sizeof(aiTexel));
+            }
+        }
+    }
+
+    void AssimpCache::LoadTextures(SR_HTYPES_NS::Marshal& marshal, aiScene* pScene) const {
+        if (!pScene->mTextures) {
+            return;
+        }
+        pScene->mTextures = static_cast<aiTexture**>(marshal.ReadMapBlock());
+        for (uint64_t textureId = 0; textureId < pScene->mNumTextures; ++textureId) {
+            auto&& pTexture = pScene->mTextures[textureId];
+            pTexture = static_cast<aiTexture*>(marshal.ReadMapBlock());
+            if (pTexture->pcData) {
+                pTexture->pcData = static_cast<aiTexel*>(marshal.ReadMapBlock());
+            }
+        }
+    }
 }
+
 #endif

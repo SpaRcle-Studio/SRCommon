@@ -128,6 +128,8 @@ namespace SR_UTILS_NS {
         void OnPostLoad() override;
         void OnRootRegistered();
 
+        void OnMaskDirty();
+
     protected:
         virtual void OnHierarchyChanged() { }
         void UpdateRoot();

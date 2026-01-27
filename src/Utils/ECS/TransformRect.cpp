@@ -4,6 +4,7 @@
 
 #include <Utils/ECS/TransformRect.h>
 #include <Utils/ECS/GameObject.h>
+#include <Utils/ECS/TransformUtils.h>
 
 #include <Codegen/TransformRect.generated.hpp>
 
@@ -43,6 +44,9 @@ namespace SR_UTILS_NS {
     }
 
     void TransformRect::SetSize(const SR_MATH_NS::FVector2& size) {
+        if (size == m_size) {
+            return;
+        }
         m_size = size;
         UpdateTree();
     }
@@ -100,10 +104,10 @@ namespace SR_UTILS_NS {
             /*==============================================================
                 0. Parent layout rect (или Canvas root)
             ==============================================================*/
-
+            const Transform* pParentTransform = GetParentTransform();
             const TransformRect* pParent =
-                (GetParentTransform() && GetParentTransform()->GetMeasurement() == Measurement::Space2D)
-                ? static_cast<const TransformRect*>(GetParentTransform())
+                (pParentTransform && pParentTransform->GetMeasurement() == Measurement::Space2D)
+                ? static_cast<const TransformRect*>(pParentTransform)
                 : nullptr;
 
             const SR_MATH_NS::FRect parentRect = pParent
@@ -312,10 +316,8 @@ namespace SR_UTILS_NS {
         m_gameObject->OnPriorityChanged();
 
         for (auto&& pChild : m_gameObject->GetChildrenRef()) {
-            if (auto&& pGameObject = pChild.DynamicCast<GameObject>()) {
-                if (auto&& pTransformRect = const_cast<TransformRect*>(dynamic_cast<const TransformRect*>(pGameObject->GetTransform().Get()))) {
-                    pTransformRect->UpdatePriorityTree();
-                }
+            if (auto&& pTransformRect = ExtractTransformAs<TransformRect>(pChild.Get())) {
+                pTransformRect->UpdatePriorityTree();
             }
         }
     }
@@ -397,5 +399,48 @@ namespace SR_UTILS_NS {
             m_dirtyRotation = false;
         }
         return m_globalRotation;
+    }
+
+    void TransformRect::SetMaskInfo(const UI::MaskInfo& maskInfo) {
+        if (maskInfo == m_localMaskInfo) {
+            return;
+        }
+        m_localMaskInfo = maskInfo;
+        UpdateMaskInfoTree();
+    }
+
+    void TransformRect::UpdateMaskInfoTree() {
+        if (!m_gameObject || m_maskInfoDirty) {
+            return;
+        }
+        m_maskInfoDirty = true;
+        m_gameObject->OnMaskDirty();
+
+        for (auto&& pChild : m_gameObject->GetChildrenRef()) {
+            if (auto&& pChildTransform = ExtractTransformAs<TransformRect>(pChild.Get())) {
+                pChildTransform->UpdateMaskInfoTree();
+            }
+        }
+    }
+
+    const UI::MaskInfo& TransformRect::GetMaskInfo() const {
+        if (m_maskInfoDirty) SR_UNLIKELY_ATTRIBUTE {
+            const Transform* pParentTransform = GetParentTransform();
+            const TransformRect* pParent =
+                (pParentTransform && pParentTransform->GetMeasurement() == Measurement::Space2D)
+                ? static_cast<const TransformRect*>(pParentTransform)
+                : nullptr;
+
+            if (pParent) SR_LIKELY_ATTRIBUTE {
+                const auto& parentMaskInfo = pParent->GetMaskInfo();
+                m_globalMaskInfo = UI::MaskInfo::Combine(parentMaskInfo, m_localMaskInfo);
+            }
+            else {
+                m_globalMaskInfo = m_localMaskInfo;
+            }
+
+            m_maskInfoDirty = false;
+        }
+        return m_globalMaskInfo;
     }
 }

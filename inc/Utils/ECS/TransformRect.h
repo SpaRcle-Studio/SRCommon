@@ -6,7 +6,7 @@
 #define SR_ENGINE_UTILS_TRANSFORM_RECT_H
 
 #include <Utils/ECS/Transform.h>
-#include <Utils/Math/Rect.h>
+#include <Utils/UI/MaskInfo.h>
 
 namespace SR_UTILS_NS {
     class GameObject;
@@ -14,6 +14,12 @@ namespace SR_UTILS_NS {
     struct SR_COMMON_DLL_API RectAnchors : public SR_UTILS_NS::Serializable {
         SR_STRUCT()
     public:
+        RectAnchors() = default;
+        RectAnchors(const SR_MATH_NS::FVector2& min, const SR_MATH_NS::FVector2& max)
+            : min(min)
+            , max(max)
+        { }
+
         /// @property @resetValue(SR_MATH_NS::FVector2(0.5f, 0.5f))
         SR_MATH_NS::FVector2 min = SR_MATH_NS::FVector2(0.5f, 0.5f);
         /// @property @resetValue(SR_MATH_NS::FVector2(0.5f, 0.5f))
@@ -90,17 +96,26 @@ namespace SR_UTILS_NS {
 
         void OnHierarchyChanged() override;
 
+        void SetMaskInfo(const UI::MaskInfo& maskInfo);
+
+        SR_NODISCARD const UI::MaskInfo& GetMaskInfo() const;
+
     public:
         SR_INLINE static constexpr SR_MATH_NS::FVector2 RIGHT = Math::FVector2(1, 0);
         SR_INLINE static constexpr SR_MATH_NS::FVector2 UP    = Math::FVector2(0, 1);
 
     private:
         void UpdatePriorityTree();
+        void UpdateMaskInfoTree();
 
     protected:
         mutable SR_MATH_NS::Matrix4x4 m_localMatrix = SR_MATH_NS::Matrix4x4::Identity();
         mutable SR_MATH_NS::Matrix4x4 m_matrix = SR_MATH_NS::Matrix4x4::Identity();
         mutable SR_MATH_NS::Quaternion m_globalRotation = SR_MATH_NS::Quaternion::Identity();
+
+        UI::MaskInfo m_localMaskInfo;
+        mutable UI::MaskInfo m_globalMaskInfo;
+        mutable bool m_maskInfoDirty = true;
 
         SR_MATH_NS::FVector2 m_canvasSize;
 

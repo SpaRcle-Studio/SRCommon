@@ -92,6 +92,8 @@ namespace SR_MATH_NS {
         void operator*=(const SR_MATH_NS::Rect<T>& other) noexcept;
         void operator/=(const SR_MATH_NS::Rect<T>& other) noexcept;
 
+        SR_NODISCARD Rect<int32_t> ToInt() const noexcept;
+
     public:
         SR_NODISCARD static Rect<Unit> FromTranslationAndScale(const SR_MATH_NS::FVector2& translation, const SR_MATH_NS::FVector2& scale);
 
@@ -102,6 +104,32 @@ namespace SR_MATH_NS {
         void SetBottom(const T& value);
         void SetRight(const T& value);
         void SetTop(const T& value);
+
+        SR_NODISCARD Rect IntersectInclusive(const Rect& other) const { // >=, границы считаются
+            T newLeft = std::max(Left(), other.Left());
+            T newBottom = std::max(Bottom(), other.Bottom());
+            T newRight = std::min(Right(), other.Right());
+            T newTop = std::min(Top(), other.Top());
+
+            if (newLeft <= newRight && newBottom <= newTop) {
+                return Rect(newLeft, newBottom, newRight - newLeft, newTop - newBottom);
+            }
+
+            return Rect(); // Пустой прямоугольник
+        }
+
+        SR_NODISCARD Rect IntersectExclusive(const Rect& other) const { // >
+            T newLeft = std::max(Left(), other.Left());
+            T newBottom = std::max(Bottom(), other.Bottom());
+            T newRight = std::min(Right(), other.Right());
+            T newTop = std::min(Top(), other.Top());
+
+            if (newLeft < newRight && newBottom < newTop) {
+                return Rect(newLeft, newBottom, newRight - newLeft, newTop - newBottom);
+            }
+
+            return Rect(); // Пустой прямоугольник
+        }
 
         void SetMin(const SR_MATH_NS::Vector2<T>& min) {
             SetLeft(min.x);
@@ -126,6 +154,15 @@ namespace SR_MATH_NS {
     };
 
     /// ============================================== Rect<T> =========================================================
+
+    template<typename T> Rect<int32_t> Rect<T>::ToInt() const noexcept {
+        return Rect<int32_t>(
+            static_cast<int32_t>(x),
+            static_cast<int32_t>(y),
+            static_cast<int32_t>(w),
+            static_cast<int32_t>(h)
+        );
+    }
 
     template<typename T> SR_MATH_NS::Vector2<T> Rect<T>::Min() const noexcept {
         return SR_MATH_NS::Vector2<T>(Left(), Bottom());

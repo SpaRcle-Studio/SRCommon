@@ -29,7 +29,7 @@ namespace SR_UTILS_NS {
 
     class AssimpCache final : public Singleton<AssimpCache> {
         SR_REGISTER_SINGLETON(AssimpCache);
-        SR_MAYBE_UNUSED SR_INLINE_STATIC const uint64_t VERSION = 1012;
+        SR_MAYBE_UNUSED SR_INLINE_STATIC const uint64_t VERSION = 1013;
         using NodeIndex = uint64_t;
         using MeshIndex = uint64_t;
         using NodeMap = std::pair<std::vector<aiNode*>, std::unordered_map<aiNode*, NodeIndex>>;
@@ -54,6 +54,12 @@ namespace SR_UTILS_NS {
 
         void SaveMeshes(SR_HTYPES_NS::Marshal& marshal, const aiScene* pScene) const;
         void LoadMeshes(SR_HTYPES_NS::Marshal& marshal, aiScene* pScene) const;
+
+        void SaveMaterials(SR_HTYPES_NS::Marshal& marshal, const aiScene* pScene) const;
+        void LoadMaterials(SR_HTYPES_NS::Marshal& marshal, aiScene* pScene) const;
+
+        void SaveTextures(SR_HTYPES_NS::Marshal& marshal, const aiScene* pScene) const;
+        void LoadTextures(SR_HTYPES_NS::Marshal& marshal, aiScene* pScene) const;
 
     };
 }
