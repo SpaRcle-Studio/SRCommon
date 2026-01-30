@@ -93,6 +93,8 @@ namespace SR_UTILS_NS {
 
         SaveMeshes(marshal, pScene);
         SaveSkeletons(marshal, pScene);
+        SaveMaterials(marshal, pScene);
+        SaveTextures(marshal, pScene);
         SaveAnimations(marshal, pScene);
 
         return marshal.Save(path);
@@ -122,6 +124,8 @@ namespace SR_UTILS_NS {
 
         LoadMeshes(marshal, pScene);
         LoadSkeletons(marshal, pScene);
+        LoadMaterials(marshal, pScene);
+        LoadTextures(marshal, pScene);
         LoadAnimations(marshal, pScene);
 
         heap = marshal.Detach();

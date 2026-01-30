@@ -96,6 +96,16 @@ namespace SR_HTYPES_NS {
             --strongCount;
         }
 
+        void IncrementWeak() {
+            SRAssert2(weakCount != SR_UINT64_MAX, "Weak count overflow!");
+            ++weakCount;
+        }
+
+        void DecrementWeak() {
+            SRAssert2(weakCount != 0, "Weak count underflow!");
+            --weakCount;
+        }
+
         std::atomic<uint64_t> strongCount = 0;
         std::atomic<uint64_t> weakCount = 0;
         bool valid = false;
@@ -132,8 +142,11 @@ namespace SR_HTYPES_NS {
 
     };
 
+    template<typename T> class WeakPtr;
+
     /// SR_COMMON_DLL_API
     template<class T> class SharedPtr : public SharedPtrBase {
+        friend class WeakPtr<T>;
     public:
         using Ptr = SharedPtr<T>;
         using SharedPointerType = T;
@@ -315,6 +328,104 @@ namespace SR_HTYPES_NS {
 
     private:
         T* m_ptr = nullptr;
+
+    };
+
+    template<class T> class WeakPtr {
+    public:
+        WeakPtr() = default;
+        WeakPtr(const SharedPtr<T>& ptr) {
+            if ((m_data = ptr.m_data)) {
+                m_data->IncrementWeak();
+            }
+            m_ptr = ptr.m_ptr;
+        }
+
+        WeakPtr(const WeakPtr<T>& ptr) {
+            if ((m_data = ptr.m_data)) {
+                m_data->IncrementWeak();
+            }
+            m_ptr = ptr.m_ptr;
+        }
+
+        WeakPtr(WeakPtr<T>&& ptr) noexcept
+            : m_ptr(SR_UTILS_NS::Exchange(ptr.m_ptr, nullptr))
+            , m_data(SR_UTILS_NS::Exchange(ptr.m_data, nullptr))
+        { }
+
+        WeakPtr<T>& operator=(WeakPtr<T>&& ptr) noexcept {
+            if (this == &ptr){
+                return *this;
+            }
+
+            if (m_data) {
+                SR_SAFE_PTR_ASSERT(m_data->weakCount != 0, "WeakPtr is corrupted!");
+                m_data->DecrementWeak();
+                if (m_data->strongCount == 0 && m_data->weakCount == 0) {
+                    delete m_data;
+                }
+            }
+
+            m_ptr = SR_UTILS_NS::Exchange(ptr.m_ptr, nullptr);
+            m_data = SR_UTILS_NS::Exchange(ptr.m_data, nullptr);
+
+            return *this;
+        }
+
+        ~WeakPtr() {
+            if (m_data) {
+                SR_SAFE_PTR_ASSERT(m_data->weakCount != 0, "WeakPtr is corrupted!");
+                m_data->DecrementWeak();
+                if (m_data->strongCount == 0 && m_data->weakCount == 0) {
+                    delete m_data;
+                }
+            }
+        }
+
+        WeakPtr<T>& operator=(const WeakPtr<T>& ptr) {
+            if (this == &ptr){
+                return *this;
+            }
+
+            if (m_data) {
+                SR_SAFE_PTR_ASSERT(m_data->weakCount != 0, "WeakPtr is corrupted!");
+                m_data->DecrementWeak();
+                if (m_data->strongCount == 0 && m_data->weakCount == 0) {
+                    delete m_data;
+                }
+            }
+
+            m_ptr = ptr.m_ptr;
+
+            if ((m_data = ptr.m_data)) {
+                m_data->IncrementWeak();
+            }
+
+            return *this;
+        }
+
+        SR_NODISCARD bool IsExpired() const {
+            return !m_data || m_data->strongCount == 0 || !m_data->valid;
+        }
+
+        SR_NODISCARD SharedPtr<T> Lock() const {
+            if (m_data && m_data->valid) {
+                SharedPtr<T> sharedPtr;
+                sharedPtr.m_ptr = m_ptr;
+                sharedPtr.m_data = m_data;
+                sharedPtr.m_data->IncrementStrong();
+                return sharedPtr;
+            }
+            return SharedPtr<T>();
+        }
+
+        SR_NODISCARD T* GetUnchecked() const {
+            return m_ptr;
+        }
+
+    private:
+        T* m_ptr = nullptr;
+        SharedPtrDynamicData* m_data = nullptr;
 
     };
 

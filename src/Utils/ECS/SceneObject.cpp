@@ -34,6 +34,10 @@ namespace SR_UTILS_NS {
     }
 
     SceneObject::Ptr SceneObject::CloneSceneObject() const {
+        SR_TRACY_ZONE;
+
+        /// TODO: тут делается сериализация и десериализация, нужно сделать нормальный метод клонирования
+
         SR_UTILS_NS::SRASerializer serializer;
         Save(serializer);
 
@@ -397,6 +401,11 @@ namespace SR_UTILS_NS {
         if (m_scene) {
             m_scene->Remove(GetThis().DynamicCast<SceneObject>());
             while (!m_children.empty()) {
+                if (const auto pParent = (*m_children.begin())->GetParent().Get(); pParent != this) {
+                    SRHalt("SceneObject::Destroy() : child has different parent!");
+                    m_children.erase(m_children.begin());
+                    continue;
+                }
                 (*m_children.begin())->Destroy();
             }
         }

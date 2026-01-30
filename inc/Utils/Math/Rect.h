@@ -92,7 +92,7 @@ namespace SR_MATH_NS {
         void operator*=(const SR_MATH_NS::Rect<T>& other) noexcept;
         void operator/=(const SR_MATH_NS::Rect<T>& other) noexcept;
 
-        SR_NODISCARD Rect<int32_t> ToInt() const noexcept;
+        SR_NODISCARD Rect<int32_t> CastToInt() const noexcept;
 
     public:
         SR_NODISCARD static Rect<Unit> FromTranslationAndScale(const SR_MATH_NS::FVector2& translation, const SR_MATH_NS::FVector2& scale);
@@ -155,7 +155,7 @@ namespace SR_MATH_NS {
 
     /// ============================================== Rect<T> =========================================================
 
-    template<typename T> Rect<int32_t> Rect<T>::ToInt() const noexcept {
+    template<typename T> Rect<int32_t> Rect<T>::CastToInt() const noexcept {
         return Rect<int32_t>(
             static_cast<int32_t>(x),
             static_cast<int32_t>(y),
