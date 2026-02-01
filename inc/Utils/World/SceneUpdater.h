@@ -42,7 +42,7 @@ namespace SR_WORLD_NS {
 
         uint32_t m_componentsPoolSize = 0;
         std::vector<SR_UTILS_NS::Component*> m_updatableComponents;
-        std::list<uint32_t> m_freeComponentIds;
+        std::vector<uint32_t> m_freeComponentIds;
 
     };
 }

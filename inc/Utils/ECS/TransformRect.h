@@ -41,6 +41,9 @@ namespace SR_UTILS_NS {
         friend class GameObject;
         using Super = Transform;
     public:
+        using Ptr = SR_HTYPES_NS::SharedPtr<TransformRect>;
+
+    public:
         TransformRect();
 
     public:

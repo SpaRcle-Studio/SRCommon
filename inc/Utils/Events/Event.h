@@ -14,15 +14,15 @@ namespace SR_UTILS_NS {
         virtual ~IEvent();
 
     public:
-        SR_NODISCARD virtual const std::string& GetEventName() const = 0;
+        SR_NODISCARD virtual SR_UTILS_NS::StringAtom GetEventName() const = 0;
 
     };
 
     template <typename ..._args> class SR_COMMON_DLL_API Event : public IEvent {
         using CallBack = std::function<void(_args...)>;
     public:
-        explicit Event(std::string name)
-            : m_name(std::move(name))
+        explicit Event(SR_UTILS_NS::StringAtom name)
+            : m_name(name)
         { }
 
         ~Event() override = default;
@@ -31,15 +31,15 @@ namespace SR_UTILS_NS {
         virtual void Trigger(_args... a) { }
 
     private:
-        SR_NODISCARD const std::string& GetEventName() const override;
+        SR_NODISCARD SR_UTILS_NS::StringAtom GetEventName() const override;
 
     private:
-        std::string m_name;
+        SR_UTILS_NS::StringAtom m_name;
 
     };
 
 #ifdef SR_COMMON_DLL_EXPORTS
-    template<typename... _args> const std::string &Event<_args...>::GetEventName() const {
+    template<typename... _args> SR_UTILS_NS::StringAtom Event<_args...>::GetEventName() const {
         return m_name;
     }
 #endif

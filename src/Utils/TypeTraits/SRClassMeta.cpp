@@ -3,6 +3,7 @@
 //
 
 #include <Utils/Reflection/Property.h>
+#include <Utils/Reflection/Method.h>
 #include <Utils/TypeTraits/SRClass.h>
 #include <Utils/TypeTraits/SRClassMeta.h>
 #include <Utils/Types/StringAtom.h>
@@ -120,6 +121,11 @@ namespace SR_UTILS_NS {
         return std::span<const SR_UTILS_NS::Reflection::Property>();
     }
 
+
+    std::span<const SR_UTILS_NS::Reflection::Method> SRClassMeta::GetMethods() const noexcept {
+        return std::span<const SR_UTILS_NS::Reflection::Method>();
+    }
+
     SR_UTILS_NS::StringAtom SRClassMeta::GetFactoryName() const noexcept {
         return SR_UTILS_NS::StringAtom();
     }
@@ -188,5 +194,19 @@ namespace SR_UTILS_NS {
                     break;
             }
         }*/
+    }
+
+    const SR_UTILS_NS::Reflection::Method* SRClassMeta::FindMethod(StringAtom name) const noexcept {
+        for (auto&& method : GetMethods()) {
+            if (method.GetName() == name) {
+                return &method;
+            }
+        }
+        for (auto&& pBase : GetBaseMetas()) {
+            if (auto&& pMethod = pBase->FindMethod(name)) {
+                return pMethod;
+            }
+        }
+        return nullptr;
     }
 }

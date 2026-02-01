@@ -93,6 +93,7 @@ namespace SR_MATH_NS {
         static Vector3<T> Right() { return UnitX(); }
         static Vector3<T> Up() { return UnitY(); }
         static Vector3<T> Forward() { return UnitZ(); }
+        static Vector3<T> Back() { return UnitZ() * static_cast<T>(-1); }
 
         static Vector3<T> AxisByIndex(uint8_t axis) {
             switch (axis) {

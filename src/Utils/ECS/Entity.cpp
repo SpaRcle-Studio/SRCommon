@@ -133,9 +133,18 @@ namespace SR_UTILS_NS {
             return;
         }
 
+        SR_TRACY_ZONE;
+
         GetMeta()->ForEachSRClass(*this, [&replaceMap](SR_UTILS_NS::SRClass& srClass) {
             if (srClass.GetMeta()->GetFactoryName() == EntityRefBase::GetClassStaticName()) {
                 static_cast<EntityRefBase&>(srClass).OnEntityIdReplaced(replaceMap);
+            }
+            else {
+                srClass.GetMeta()->ForEachSRClass(srClass, [&replaceMap](SR_UTILS_NS::SRClass& innerSRClass) {
+                    if (innerSRClass.GetMeta()->GetFactoryName() == EntityRefBase::GetClassStaticName()) {
+                        static_cast<EntityRefBase&>(innerSRClass).OnEntityIdReplaced(replaceMap);
+                    }
+                });
             }
         });
     }

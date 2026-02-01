@@ -266,6 +266,16 @@ namespace SR_HTYPES_NS {
             return *this;
         }
 
+        template<class Y = T> SR_NODISCARD WeakPtr<Y> GetWeakThis() const {
+            WeakPtr<Y> weakPtr;
+            if (m_data) {
+                weakPtr.SetPtrData(m_data);
+                weakPtr.GetPtrData()->IncrementWeak();
+            }
+            weakPtr.SetPtr(static_cast<Y*>(const_cast<T*>(m_ptr)));
+            return weakPtr;
+        }
+
         void IncrementPointer() override {
             if (m_data) {
                 m_data->IncrementStrong();
@@ -417,6 +427,18 @@ namespace SR_HTYPES_NS {
                 return sharedPtr;
             }
             return SharedPtr<T>();
+        }
+
+        SR_NODISCARD SharedPtrDynamicData* GetPtrData() const {
+            return m_data;
+        }
+
+        void SetPtrData(SharedPtrDynamicData* data) {
+            m_data = data;
+        }
+
+        void SetPtr(T* ptr) {
+            m_ptr = ptr;
         }
 
         SR_NODISCARD T* GetUnchecked() const {

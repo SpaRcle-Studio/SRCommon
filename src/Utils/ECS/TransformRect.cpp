@@ -384,7 +384,7 @@ namespace SR_UTILS_NS {
     }
 
     SR_MATH_NS::FVector2 TransformRect::GetSizeDelta() const {
-        return m_size;
+        return m_offsetMax - m_offsetMin;
     }
 
     SR_MATH_NS::Quaternion TransformRect::GetGlobalRotation() const {

@@ -122,8 +122,8 @@ namespace SR_WORLD_NS {
             m_updatableComponents.emplace_back(pComponent);
         }
         else {
-            const auto index = static_cast<int32_t>(m_freeComponentIds.front());
-            m_freeComponentIds.pop_front();
+            const auto index = static_cast<int32_t>(m_freeComponentIds.back());
+            m_freeComponentIds.pop_back();
             pComponent->SetIndexIdSceneUpdater(index);
             m_updatableComponents[index] = pComponent;
         }

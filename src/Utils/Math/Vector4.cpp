@@ -274,6 +274,10 @@ namespace SR_MATH_NS {
     SR_NODISCARD SR_MATH_NS::FVector3 Ray::Origin3D() const { return origin; }
     SR_NODISCARD SR_MATH_NS::FVector3 Ray::Direction3D() const { return direction; }
 
+    SR_MATH_NS::FVector3 Ray::GetPoint(Unit distance) const noexcept {
+        return origin + direction * distance;
+    }
+
     Ray::Ray() = default;
     Ray::~Ray() = default;
 

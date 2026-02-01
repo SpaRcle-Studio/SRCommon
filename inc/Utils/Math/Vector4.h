@@ -163,6 +163,13 @@ namespace SR_MATH_NS {
         Ray();
         ~Ray();
 
+        Ray(const SR_MATH_NS::FVector3& origin, const SR_MATH_NS::FVector3& direction)
+            : origin(origin)
+            , direction(direction)
+        { }
+
+        SR_NODISCARD SR_MATH_NS::FVector3 GetPoint(Unit distance) const noexcept;
+
         SR_NODISCARD Unit IntersectPlaneDistance(const SR_MATH_NS::FVector4& plane) const;
         SR_NODISCARD SR_MATH_NS::FVector3 RotationVector(const SR_MATH_NS::FVector4& plan, const SR_MATH_NS::FVector3& position) const noexcept;
         SR_NODISCARD Unit ComputeAngleOnPlan(const SR_MATH_NS::FVector4& plan, const SR_MATH_NS::FVector3& position, const SR_MATH_NS::FVector3& sourceRotationVector) const noexcept;
@@ -181,6 +188,34 @@ namespace SR_MATH_NS {
     uint32_t BGRToHEX(const IVector3& color);
     IVector3 HEXToRGB(uint32_t hex);
     IVector3 HEXToBGR(uint32_t hex);
+
+    struct Plane {
+        FVector3 normal;
+        Unit distance = 0.f;
+
+        Plane() = default;
+
+        Plane(const FVector3& normal, Unit d)
+            : normal(normal)
+            , distance(d)
+        { }
+
+        Plane(FVector3 inNormal, FVector3 inPoint) {
+            normal = inNormal.Normalize();
+            distance = -FVector3::Dot(normal, inPoint);
+        }
+
+        bool Raycast(Ray ray, float& enter) {
+            float_t a = FVector3::Dot(ray.direction, normal);
+            float_t num = -FVector3::Dot(ray.origin, normal) - distance;
+            if (SR_MATH_NS::Approximately(a, 0.0f)) {
+                enter = 0.0f;
+                return false;
+            }
+            enter = num / a;
+            return static_cast<double_t>(enter) > 0.0;
+        }
+    };
 
     /// =========================================== IMPLEMENTATION =====================================================
 

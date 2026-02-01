@@ -112,6 +112,10 @@ namespace SR_MATH_NS {
             return Vector2(static_cast<T>(abs(x)), static_cast<T>(abs(y)));
         }
 
+        SR_NODISCARD Vector2 InverseX() const { return Vector2(static_cast<T>(-x), y); }
+        SR_NODISCARD Vector2 InverseY() const { return Vector2(x, static_cast<T>(-y)); }
+        SR_NODISCARD Vector2 Inverse() const { return Vector2(static_cast<T>(-x), static_cast<T>(-y)); }
+
         SR_NODISCARD Vector2 Round() const {
             if constexpr (std::is_same_v<T, float> || std::is_same_v<T, float_t>) {
                 return Vector2(static_cast<T>(std::roundf(x)), static_cast<T>(std::roundf(y)));

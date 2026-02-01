@@ -15,6 +15,7 @@ namespace SR_UTILS_NS {
 
     namespace Reflection {
         class Property;
+        class Method;
     }
 
     class Serializable;
@@ -36,6 +37,8 @@ namespace SR_UTILS_NS {
 
         SR_NODISCARD uint64_t GetVersion() const noexcept;
 
+        SR_NODISCARD const SR_UTILS_NS::Reflection::Method* FindMethod(SR_UTILS_NS::StringAtom name) const noexcept;
+
         SR_NODISCARD virtual std::span<const SR_UTILS_NS::StringAtom> GetCategory() const noexcept;
         SR_NODISCARD virtual SR_UTILS_NS::StringAtom GetExtension() const noexcept;
         SR_NODISCARD virtual bool IsAbstract() const noexcept;
@@ -43,6 +46,7 @@ namespace SR_UTILS_NS {
         SR_NODISCARD virtual bool IsEditorOnly() const noexcept;
         SR_NODISCARD virtual std::span<const SRClassMeta*> GetBaseMetas() const noexcept;
         SR_NODISCARD virtual std::span<const SR_UTILS_NS::Reflection::Property> GetProperties() const noexcept;
+        SR_NODISCARD virtual std::span<const SR_UTILS_NS::Reflection::Method> GetMethods() const noexcept;
         SR_NODISCARD virtual SR_UTILS_NS::StringAtom GetFactoryName() const noexcept;
         SR_NODISCARD virtual SR_UTILS_NS::StringAtom GetDisplayName() const noexcept;
         SR_NODISCARD virtual SRClass* Allocate() const noexcept;

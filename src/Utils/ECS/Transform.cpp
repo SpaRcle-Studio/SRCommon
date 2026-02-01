@@ -98,6 +98,10 @@ namespace SR_UTILS_NS {
         return GetTranslation().XY();
     }
 
+    SR_MATH_NS::FVector3 Transform::InverseTransformPoint(const SR_MATH_NS::FVector3& point) const {
+        return GetMatrix().Inverse().TransformPoint(point).XYZ();
+    }
+
     SR_MATH_NS::FVector3 Transform::InverseTransformDirection(const SR_MATH_NS::FVector3& direction) const {
         SR_TRACY_ZONE;
         return GetGlobalRotation().Inverse() * direction;

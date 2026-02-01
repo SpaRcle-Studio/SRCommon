@@ -98,6 +98,7 @@ namespace SR_UTILS_NS {
         SR_NODISCARD virtual SR_MATH_NS::FVector2 GetTranslation2D() const;
         SR_NODISCARD virtual SR_MATH_NS::FVector2 GetScale2D() const;
 
+        SR_NODISCARD SR_MATH_NS::FVector3 InverseTransformPoint(const SR_MATH_NS::FVector3& point) const;
         SR_NODISCARD SR_MATH_NS::FVector3 InverseTransformDirection(const SR_MATH_NS::FVector3& direction) const;
         SR_NODISCARD SR_MATH_NS::FVector3 TransformDirection(const SR_MATH_NS::FVector3& direction) const;
 

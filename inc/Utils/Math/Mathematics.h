@@ -65,6 +65,7 @@
 #define SR_MAX(a, b) (a > b ? a : b)
 #define SR_MIN(a, b) (a < b ? a : b)
 #define SR_CLAMP(x, lower, upper) SR_MATH_NS::Clamp(x, lower, upper)
+#define SR_CLAMP01(x) SR_MATH_NS::Clamp(x, static_cast<decltype(x)>(0), static_cast<decltype(x)>(1))
 
 #define RAD3(v) glm::vec3(RAD(v.x), RAD(v.y), RAD(v.z))
 #define DEG3(v) glm::vec3(DEG(v.x), DEG(v.y), DEG(v.z))
@@ -168,6 +169,10 @@ namespace SR_MATH_NS {
 
     template<typename T> SR_NODISCARD SR_FORCE_INLINE static constexpr T Sqrt(T value) {
         return static_cast<T>(sqrt(static_cast<double_t>(value)));
+    }
+
+    template<typename T> SR_NODISCARD SR_FORCE_INLINE static constexpr T Round(T value) {
+        return static_cast<T>(std::round(static_cast<double_t>(value)));
     }
 
     template<typename T> SR_FORCE_INLINE T Clamp(T value, T lower, T upper) {
@@ -329,6 +334,10 @@ namespace SR_MATH_NS {
 
     template<typename T> constexpr bool IsNumber() {
         return IsInt<T>() || IsFloat<T>() || IsBool<T>();
+    }
+
+    template<typename T> constexpr bool Approximately(T a, T b) {
+        return Abs(b - a) < Max(1E-06f * Max(Abs(a), Abs(b)), 1.401298E-45f * 8.f);
     }
 }
 

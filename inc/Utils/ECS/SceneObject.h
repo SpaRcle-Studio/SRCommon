@@ -39,9 +39,7 @@ namespace SR_UTILS_NS {
         ~SceneObject() override;
 
     public:
-        /// @method
         SR_NODISCARD SR_FORCE_INLINE StringAtom GetName() const { return m_name; }
-        /// @method
         SR_NODISCARD SR_FORCE_INLINE bool IsEnabled() const noexcept { return m_isEnabled; }
         SR_NODISCARD SR_FORCE_INLINE uint64_t GetIdInScene() const noexcept { return m_idInScene; }
 

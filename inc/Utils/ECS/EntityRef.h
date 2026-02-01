@@ -56,6 +56,13 @@ namespace SR_UTILS_NS {
                 return SR_HTYPES_NS::SharedPtr<T>();
             }
         }
+
+        SR_NODISCARD T* GetRaw() const noexcept {
+            if constexpr (!std::is_same_v<T, void>) {
+                return const_cast<T*>(static_cast<const T*>(GetEntity().Get()));
+            }
+            return nullptr;
+        }
     };
 }
 
