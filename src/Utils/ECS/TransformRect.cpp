@@ -13,6 +13,10 @@ namespace SR_UTILS_NS {
         : Transform()
     { }
 
+    void TransformRect::SetAnchoredPosition(const SR_MATH_NS::FVector2& position) {
+        SetTranslation(SR_MATH_NS::FVector3(position.x, position.y, m_translation.z));
+    }
+
     void TransformRect::SetTranslation(const SR_MATH_NS::FVector3& translation) {
         if (translation == m_translation) {
             return;

@@ -47,6 +47,7 @@ namespace SR_UTILS_NS {
         TransformRect();
 
     public:
+        void SetAnchoredPosition(const SR_MATH_NS::FVector2& position);
         void SetTranslation(const SR_MATH_NS::FVector3& translation) override;
         void SetTranslationAndRotation(const SR_MATH_NS::FVector3& translation, const SR_MATH_NS::FVector3& euler) override;
         void SetRotation(const SR_MATH_NS::FVector3& euler) override;
