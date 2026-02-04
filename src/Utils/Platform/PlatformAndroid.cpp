@@ -39,6 +39,10 @@ namespace SR_UTILS_NS::Platform {
 
     }
 
+    WindowProtocolType GetWindowProtocolType() {
+        return WindowProtocolType::Mobile;
+    }
+
     bool GetSystemKeyboardState(uint8_t* pKeyCodes) {
         return false;
     }

@@ -82,6 +82,19 @@ namespace SR_PLATFORM_NS {
         std::set_terminate(StdHandler);
     }
 
+    WindowProtocolType GetWindowProtocolType() {
+        if (std::getenv("WAYLAND_DISPLAY")) {
+            return WindowProtocolType::Wayland;
+        }
+        if (std::getenv("DISPLAY")) {
+            return WindowProtocolType::X11;
+        }
+        if (std::getenv("MIR_SOCKET")) {
+            return WindowProtocolType::MirSocket;
+        }
+        return WindowProtocolType::Unknown;
+    }
+
     bool IsRunningUnderDebugger() {
         std::ifstream sf("/proc/self/status");
         std::string s;

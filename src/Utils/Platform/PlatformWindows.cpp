@@ -153,6 +153,10 @@ namespace SR_UTILS_NS::Platform {
         std::set_terminate(StdHandler);
     }
 
+    WindowProtocolType GetWindowProtocolType() {
+        return WindowProtocolType::WinAPI;
+    }
+
     LONG WINAPI SRCustomExceptionHandler(EXCEPTION_POINTERS* ExceptionInfo) {
         char buffer[256];
         std::snprintf(buffer, sizeof(buffer), "SRCustomExceptionHandler() : SEH exception: code = 0x%08lX", ExceptionInfo->ExceptionRecord->ExceptionCode);

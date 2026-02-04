@@ -11,6 +11,15 @@
 #include <Utils/Platform/PlatformType.h>
 
 namespace SR_UTILS_NS::Platform {
+    SR_ENUM_NS_CLASS_T(WindowProtocolType, uint8_t,
+        Unknown,
+        Mobile,
+        WinAPI,
+        X11,
+        Wayland,
+        MirSocket
+    );
+
     static bool IsCompiledUnderMSVC() {
     #ifdef SR_MSVC
         return true;
@@ -42,6 +51,7 @@ namespace SR_UTILS_NS::Platform {
     SR_COMMON_DLL_API extern void SetInstance(void* pInstance);
     SR_COMMON_DLL_API extern void* GetInstance();
     SR_COMMON_DLL_API extern PlatformType GetType();
+    SR_COMMON_DLL_API extern WindowProtocolType GetWindowProtocolType();
     SR_COMMON_DLL_API extern bool IsMobilePlatform();
 
     SR_COMMON_DLL_API extern std::string ExecuteCommand(const std::string& command, const std::vector<std::string>& env = {});
