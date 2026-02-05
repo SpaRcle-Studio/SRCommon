@@ -33,6 +33,8 @@ namespace SR_UTILS_NS {
     public:
         SR_NODISCARD static Factory& Instance() noexcept;
 
+        void SetLogRegistration(const bool log) { m_logRegistration = log; }
+
         SR_NODISCARD SR_UTILS_NS::StringAtom GetName(const SRClassMeta* pMeta, bool isMustExists = true) const;
 
         template<class T> bool Register(SR_UTILS_NS::StringAtom moduleName);
@@ -85,6 +87,7 @@ namespace SR_UTILS_NS {
 
     private:
         std::unordered_map<SR_UTILS_NS::StringAtom, TypeInfo> m_types;
+        bool m_logRegistration = false;
 
     };
 
@@ -103,7 +106,9 @@ namespace SR_UTILS_NS {
                 return false;
             }
 
-            WriteLog("Factory::Register() : registering type \"{}\""_format(name));
+            if (m_logRegistration) {
+                WriteLog("Factory::Register() : registering type \"{}\""_format(name));
+            }
 
             TypeInfo& info = m_types[name];
 
@@ -135,7 +140,9 @@ namespace SR_UTILS_NS {
                 return false;
             }
 
-            WriteLog("Factory::Unregister() : unregistering type \"{}\""_format(name));
+            if (m_logRegistration) {
+                WriteLog("Factory::Unregister() : unregistering type \"{}\""_format(name));
+            }
 
             m_types.erase(pIt);
             return true;
