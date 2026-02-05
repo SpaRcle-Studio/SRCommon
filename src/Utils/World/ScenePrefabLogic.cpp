@@ -63,7 +63,7 @@ namespace SR_WORLD_NS {
             deserializer.EndObject();
         }
         else {
-            pSO.AutoFree([](auto&& pData) {
+            pSO.AutoFree([](auto&& pData, auto&& pControl) {
                 pData->Destroy();
             });
             SRHalt("ScenePrefabLogic::LoadLogic() : failed to load data object!");

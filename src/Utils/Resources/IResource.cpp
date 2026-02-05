@@ -70,11 +70,8 @@ namespace SR_UTILS_NS {
     void IResource::DeleteResource() {
         Unload();
         StopWatch();
-
-        GetThis().AutoFree([this](auto&& pData) {
-            m_deleteVerifyFlag = true;
-            delete pData;
-        });
+        m_deleteVerifyFlag = true;
+        GetThis().AutoFree();
     }
 
     void IResource::SetId(SR_UTILS_NS::StringAtom id, const SR_UTILS_NS::Path& path, bool autoRegister) {

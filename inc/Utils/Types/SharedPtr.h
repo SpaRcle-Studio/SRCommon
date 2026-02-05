@@ -9,7 +9,7 @@
 #include <Utils/Common/TypeInfo.h>
 #include <Utils/TypeTraits/TypeTraits.h>
 
-//#define SR_SHARED_PTR_TRACE
+/// #define SR_SHARED_PTR_TRACE
 
 #ifdef SR_SHARED_PTR_TRACE
     #include <Utils/Platform/Stacktrace.h>
@@ -111,6 +111,7 @@ namespace SR_HTYPES_NS {
         bool valid = false;
         bool deallocated = false;
         SR_UTILS_NS::SharedPtrPolicy policy = SR_UTILS_NS::SharedPtrPolicy::Automatic;
+        SR_HTYPES_NS::Function<void(void*)> deleter;
 
     #ifdef SR_SHARED_PTR_TRACE
         SR_UTILS_NS::StringAtom debugTrace;
@@ -300,7 +301,7 @@ namespace SR_HTYPES_NS {
                     T* pPtr = m_ptr;
                     m_ptr = nullptr;
                     m_data = nullptr;
-                    delete pPtr;
+                    pData->deleter(pPtr);
                 }
 
                 if (pData->weakCount == 0) {
@@ -324,7 +325,7 @@ namespace SR_HTYPES_NS {
             return nullptr;
         }
 
-        bool AutoFree(const SR_HTYPES_NS::Function<void(T *ptr)>& freeFun);
+        bool AutoFree(const SR_HTYPES_NS::Function<void(T* pPtr, SharedPtrDynamicData* pControl)>& freeFun);
         bool AutoFree();
 
         void Reset() override;
@@ -334,7 +335,7 @@ namespace SR_HTYPES_NS {
         void Unlock() const noexcept { /** nothing */  }
 
     private:
-        bool FreeImpl(const SR_HTYPES_NS::Function<void(T *ptr)>& freeFun);
+        bool FreeImpl(const SR_HTYPES_NS::Function<void(T* pPtr, SharedPtrDynamicData* pControl)>& freeFun);
 
     private:
         T* m_ptr = nullptr;
@@ -482,6 +483,7 @@ namespace SR_HTYPES_NS {
                     true, /// valid
                     SR_UTILS_NS::SharedPtrPolicy::Automatic /// policy
                 );
+                m_data->deleter = [](void* p) { delete static_cast<T*>(p); };
             }
         }
         else {
@@ -491,6 +493,7 @@ namespace SR_HTYPES_NS {
                 true, /// valid
                 SR_UTILS_NS::SharedPtrPolicy::Automatic /// policy
             );
+            m_data->deleter = [](void* p) { delete static_cast<T*>(p); };
         }
     }
 
@@ -510,6 +513,7 @@ namespace SR_HTYPES_NS {
             true, /// valid
             policy /// policy
         );
+        m_data->deleter = [](void* p) { delete static_cast<T*>(p); };
     }
 
     template<class T> SharedPtr<T>::SharedPtr(const SharedPtr &ptr) {
@@ -583,6 +587,7 @@ namespace SR_HTYPES_NS {
                     true, /// valid
                     SR_UTILS_NS::SharedPtrPolicy::Automatic /// policy
                 );
+                m_data->deleter = [](void* p) { delete static_cast<T*>(p); };
             }
         }
         else {
@@ -592,20 +597,21 @@ namespace SR_HTYPES_NS {
                 true, /// valid
                 SR_UTILS_NS::SharedPtrPolicy::Automatic /// policy
             );
+            m_data->deleter = [](void* p) { delete static_cast<T*>(p); };
         }
 
         return *this;
     }
 
-    template<typename T> bool SharedPtr<T>::AutoFree(const SR_HTYPES_NS::Function<void(T *ptr)> &freeFun) {
+    template<typename T> bool SharedPtr<T>::AutoFree(const SR_HTYPES_NS::Function<void(T* pPtr, SharedPtrDynamicData* pControl)> &freeFun) {
         return Valid() && FreeImpl(freeFun);
     }
 
     template<typename T> bool SharedPtr<T>::AutoFree() {
-        return Valid() && FreeImpl([](auto&& pData) { delete pData; });
+        return Valid() && FreeImpl([](auto&& pPtr, SharedPtrDynamicData* pControl) { pControl->deleter(static_cast<void*>(pPtr)); });
     }
 
-    template<typename T> bool SharedPtr<T>::FreeImpl(const SR_HTYPES_NS::Function<void(T* ptr)> &freeFun) {
+    template<typename T> bool SharedPtr<T>::FreeImpl(const SR_HTYPES_NS::Function<void(T* pPtr, SharedPtrDynamicData* pControl)> &freeFun) {
         if (m_data) {
             const bool valid = m_data->valid;
             const auto pPtr = m_ptr;
@@ -616,7 +622,7 @@ namespace SR_HTYPES_NS {
 
             if (valid) {
                 pData->deallocated = true;
-                freeFun(pPtr);
+                freeFun(pPtr, pData);
                 pData->valid = false;
                 return true;
             }
@@ -662,7 +668,7 @@ namespace SR_HTYPES_NS {
             }
             else if (pData->policy == SR_UTILS_NS::SharedPtrPolicy::Automatic && pData->valid) {
                 pData->valid = false;
-                delete pPtr;
+                pData->deleter(static_cast<void*>(pPtr));
             }
 
             if (pData->weakCount == 0) {

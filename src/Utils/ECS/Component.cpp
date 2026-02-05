@@ -198,10 +198,7 @@ namespace SR_UTILS_NS {
 
     void Component::OnDestroy() {
         SetParent(nullptr);
-
-        GetThis().AutoFree([](auto&& pData) {
-            delete pData;
-        });
+        GetThis().AutoFree();
     }
 
     void Component::Awake() { m_isAwake = true; }
