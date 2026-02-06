@@ -75,18 +75,10 @@ namespace SR_UTILS_NS {
             return;
         }
 
-        if (!m_keysArray) {
-            m_keysArray = new uint8_t[256];
-            memset(m_keysArray, 0, 256);
-        }
+        const SR_PLATFORM_NS::KeyboardState keyboardState = SR_PLATFORM_NS::GetSystemKeyboardState();
 
-        if (!SR_PLATFORM_NS::GetSystemKeyboardState(m_keysArray)) {
-            return;
-        }
-
-    #if defined(SR_WIN32)
         for (uint16_t i = 5; i < 256; ++i) {
-            if (m_keysArray[i] >> 7 != 0) {
+            if (keyboardState.keyStates[i]) {
                 switch (m_keys[i]) {
                     case State::UnPressed:
                     case State::Up:
@@ -95,15 +87,12 @@ namespace SR_UTILS_NS {
                     case State::Down:
                         SetState(i, State::Pressed);
                         break;
-                    case State::Pressed:
-                        /// skip
-                        break;
+                    case State::Pressed: break;
                 }
             }
             else {
                 switch (m_keys[i]) {
                     case State::UnPressed:
-                        /// skip
                         break;
                     case State::Down:
                     case State::Pressed:
@@ -115,20 +104,6 @@ namespace SR_UTILS_NS {
                 }
             }
         }
-    #elif defined(SR_LINUX)
-        for (uint16_t i = 5; i < 256; ++i) {
-            if (m_keysArray[i] == 0 && (m_keys[i] == State::Down || m_keys[i] == State::Pressed)) {
-                /// If a key was already Pressed or Down and now is not pressed, then it's Up
-                SetState(i, State::Up);
-            }
-            else {
-                /// Otherwise, set the key state to the current state
-                SetState(i, static_cast<State>(m_keysArray[i]));
-            }
-        }
-
-        memset(m_keysArray, 0, 256);
-    #endif
     }
 
     void Input::Update() {

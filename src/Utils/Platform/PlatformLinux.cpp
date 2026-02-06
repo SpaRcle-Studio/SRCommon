@@ -348,34 +348,23 @@ namespace SR_PLATFORM_NS {
 
     SR_MATH_NS::FVector2 GetMousePos() {
         return GetMouseState().position;
-
-        /*if (!gLinuxPlatformDisplayPtr) {
-            gLinuxPlatformDisplayPtr = XOpenDisplay(nullptr);
-        }
-
-        if (!gLinuxPlatformDisplayPtr) {
-            SR_ERROR("Platform::GetMousePos() : failed to open display.");
-            return { };
-        }
-
-        Window root = DefaultRootWindow(gLinuxPlatformDisplayPtr);
-        Window child;
-        int root_x, root_y, win_x, win_y;
-        unsigned int mask;
-        XQueryPointer(gLinuxPlatformDisplayPtr, root, &root, &child, &root_x, &root_y, &win_x, &win_y, &mask);
-
-        return { static_cast<float>(root_x), static_cast<float>(root_y) };*/
     }
 
-    bool GetSystemKeyboardState(uint8_t* pKeyCodes) {
+    KeyboardState GetSystemKeyboardState() {
+        if (auto&& state = GetOverriddenKeyboardState()) {
+            return state.value();
+        }
+
         if (!gLinuxPlatformDisplayPtr) {
             gLinuxPlatformDisplayPtr = XOpenDisplay(nullptr);
         }
 
         if (!gLinuxPlatformDisplayPtr) {
             SR_ERROR("Platform::GetMousePos() : failed to open display.");
-            return false;
+            return KeyboardState();
         }
+
+        KeyboardState keyboardState;
 
         char keys_return[32];
         XQueryKeymap(gLinuxPlatformDisplayPtr, keys_return);
@@ -388,18 +377,18 @@ namespace SR_PLATFORM_NS {
 
                     auto it = keysymToIndex.find(keysym);
                     if (it != keysymToIndex.end()) {
-                        if (pKeyCodes[it->second] == 0) { // Is State::Dowm?
-                            pKeyCodes[it->second] = 1; // Then set State::Pressed
+                        if (keyboardState.keyStates[it->second] == 0) { // Is State::Dowm?
+                            keyboardState.keyStates[it->second] = 1; // Then set State::Pressed
                         }
-                        else if (pKeyCodes[it->second] == 1) { // Is State::UnPressed?
-                            pKeyCodes[it->second] = 2; // Then set State::Down
+                        else if (keyboardState.keyStates[it->second] == 1) { // Is State::UnPressed?
+                            keyboardState.keyStates[it->second] = 2; // Then set State::Down
                         }
                     }
                 }
             }
         }
 
-        return true;
+        return keyboardState;
     }
 
     void Sleep(uint64_t milliseconds) {

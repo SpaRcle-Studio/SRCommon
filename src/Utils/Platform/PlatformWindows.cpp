@@ -378,9 +378,18 @@ namespace SR_UTILS_NS::Platform {
         }
     }
 
-    bool GetSystemKeyboardState(uint8_t* pKeyCodes) {
+    KeyboardState GetSystemKeyboardState() {
         GetKeyState(0);
-        return ::GetKeyboardState(pKeyCodes);
+        uint8_t keycodes[256];
+        if (::GetKeyboardState(&keycodes[0])) {
+            KeyboardState keyboardState;
+            for (size_t i = 0; i < 256; ++i) {
+                keyboardState.keyStates[i] = keycodes[i] >> 7 != 0;
+            }
+            return keyboardState;
+        }
+        SR_ERROR("Platform::GetSystemKeyboardState() : failed to get keyboard state!");
+        return KeyboardState();
     }
 
     std::string GetClipboardText() {

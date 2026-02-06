@@ -2,10 +2,13 @@
 // Created by Monika on 12.07.2025.
 //
 
-#include <Utils/Debug.h>
 #include <Utils/Platform/Platform.h>
+#include <Utils/Input/KeyCodes.h>
+#include <Utils/Debug.h>
 #include <Utils/Common/CLIManager.h>
 #include <Utils/Profile/TracyContext.h>
+
+#include <Enum/KeyCode.hpp>
 
 namespace SR_PLATFORM_NS {
     bool IsMobilePlatform() {
@@ -19,12 +22,32 @@ namespace SR_PLATFORM_NS {
         }
     }
 
+    void KeyboardState::Set(KeyCode key, const bool isPressed) {
+        const bool current = keyStates[static_cast<uint8_t>(key)];
+        if (current == isPressed) {
+            return;
+        }
+        keyStates[static_cast<uint8_t>(key)] = isPressed;
+    }
+
+    bool KeyboardState::Get(KeyCode key) const {
+        return keyStates[static_cast<uint8_t>(key)];
+    }
+
     void SetOverriddenMouseState(const std::optional<MouseState>& mouseState) {
         g_overriddenMouseState.store(mouseState);
     }
 
     std::optional<MouseState> GetOverriddenMouseState() {
         return g_overriddenMouseState.load();
+    }
+
+    void SetOverriddenKeyboardState(const std::optional<KeyboardState>& keyboardState) {
+        g_overriddenKeyboardState.store(keyboardState);
+    }
+
+    std::optional<KeyboardState> GetOverriddenKeyboardState() {
+        return g_overriddenKeyboardState.load();
     }
 
 #ifndef SR_ANDROID

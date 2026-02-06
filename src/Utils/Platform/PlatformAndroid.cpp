@@ -43,8 +43,8 @@ namespace SR_UTILS_NS::Platform {
         return WindowProtocolType::Mobile;
     }
 
-    bool GetSystemKeyboardState(uint8_t* pKeyCodes) {
-        return false;
+    KeyboardState GetSystemKeyboardState() {
+        return KeyboardState();
     }
 
     bool IsConsoleFocused() {

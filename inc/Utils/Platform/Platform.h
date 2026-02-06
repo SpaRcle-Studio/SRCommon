@@ -10,6 +10,10 @@
 #include <Utils/FileSystem/Path.h>
 #include <Utils/Platform/PlatformType.h>
 
+namespace SR_UTILS_NS {
+    enum class KeyCode : uint8_t;
+}
+
 namespace SR_UTILS_NS::Platform {
     SR_ENUM_NS_CLASS_T(WindowProtocolType, uint8_t,
         Unknown,
@@ -32,6 +36,12 @@ namespace SR_UTILS_NS::Platform {
         uint64_t lastWriteTime = SR_UINT64_MAX;
     };
 
+    struct KeyboardState {
+        bool keyStates[256] { false };
+        void Set(KeyCode key, bool isPressed);
+        bool Get(KeyCode key) const;
+    };
+
     struct MouseState {
         SR_MATH_NS::FVector2 position;
         /**
@@ -40,12 +50,23 @@ namespace SR_UTILS_NS::Platform {
            4 - X2
         */
         bool buttonStates[5] { false, false, false, false, false };
+        bool GetButton(size_t index) const {
+            if (index >= COUNT) {
+                SRHalt("MouseState::GetButton() : index out of range!");
+                return false;
+            }
+            return buttonStates[index];
+        }
+
+        static constexpr uint32_t COUNT = 5;
     };
 
     extern std::mutex g_platformLogMutex;
 
     SR_COMMON_DLL_API extern void SetOverriddenMouseState(const std::optional<MouseState>& mouseState);
     SR_COMMON_DLL_API extern std::optional<MouseState> GetOverriddenMouseState();
+    SR_COMMON_DLL_API extern void SetOverriddenKeyboardState(const std::optional<KeyboardState>& keyboardState);
+    SR_COMMON_DLL_API extern std::optional<KeyboardState> GetOverriddenKeyboardState();
 
     SR_NORETURN SR_COMMON_DLL_API extern void Terminate(bool isError = true);
 
@@ -87,7 +108,7 @@ namespace SR_UTILS_NS::Platform {
     SR_COMMON_DLL_API extern uint16_t GetCurrentProcessId();
     SR_COMMON_DLL_API extern SR_MATH_NS::FVector2 GetMousePos();
     SR_COMMON_DLL_API extern MouseState GetMouseState();
-    SR_COMMON_DLL_API extern bool GetSystemKeyboardState(uint8_t* pKeyCodes);
+    SR_COMMON_DLL_API extern KeyboardState GetSystemKeyboardState();
     SR_COMMON_DLL_API extern std::string GetClipboardText();
     SR_COMMON_DLL_API extern Path GetApplicationResourcesPath();
     SR_COMMON_DLL_API extern Path GetApplicationPath();
@@ -126,6 +147,7 @@ namespace SR_UTILS_NS::Platform {
 
     extern PlatformHooks g_platformHooks;
     extern std::atomic<std::optional<MouseState>> g_overriddenMouseState;
+    extern std::atomic<std::optional<KeyboardState>> g_overriddenKeyboardState;
 
     SR_COMMON_DLL_API extern void InitializeHooks(const std::function<void(PlatformHooks& hooks)>& callback);
 }

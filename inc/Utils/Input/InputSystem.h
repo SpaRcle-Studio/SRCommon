@@ -84,7 +84,6 @@ namespace SR_UTILS_NS {
         std::atomic<bool> m_isPlayMode = false;
 
         State m_keys[256] = { };
-        uint8_t* m_keysArray = nullptr;
 
     };
 
