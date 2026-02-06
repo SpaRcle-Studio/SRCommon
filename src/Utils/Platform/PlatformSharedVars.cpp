@@ -7,4 +7,5 @@
 namespace SR_UTILS_NS::Platform {
     std::mutex g_platformLogMutex = std::mutex();
     PlatformHooks g_platformHooks = PlatformHooks();
+    std::atomic<std::optional<MouseState>> g_overriddenMouseState = std::atomic<std::optional<MouseState>>();
 }

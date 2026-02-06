@@ -314,6 +314,10 @@ namespace SR_PLATFORM_NS {
     }
 
     MouseState GetMouseState() {
+        if (auto&& overridden = GetOverriddenMouseState()) {
+            return overridden.value();
+        }
+
         if (!gLinuxPlatformDisplayPtr) {
             gLinuxPlatformDisplayPtr = XOpenDisplay(nullptr);
         }
@@ -343,7 +347,9 @@ namespace SR_PLATFORM_NS {
     }
 
     SR_MATH_NS::FVector2 GetMousePos() {
-        if (!gLinuxPlatformDisplayPtr) {
+        return GetMouseState().position;
+
+        /*if (!gLinuxPlatformDisplayPtr) {
             gLinuxPlatformDisplayPtr = XOpenDisplay(nullptr);
         }
 
@@ -358,7 +364,7 @@ namespace SR_PLATFORM_NS {
         unsigned int mask;
         XQueryPointer(gLinuxPlatformDisplayPtr, root, &root, &child, &root_x, &root_y, &win_x, &win_y, &mask);
 
-        return { static_cast<float>(root_x), static_cast<float>(root_y) };
+        return { static_cast<float>(root_x), static_cast<float>(root_y) };*/
     }
 
     bool GetSystemKeyboardState(uint8_t* pKeyCodes) {

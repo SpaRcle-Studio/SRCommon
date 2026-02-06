@@ -19,6 +19,14 @@ namespace SR_PLATFORM_NS {
         }
     }
 
+    void SetOverriddenMouseState(const std::optional<MouseState>& mouseState) {
+        g_overriddenMouseState.store(mouseState);
+    }
+
+    std::optional<MouseState> GetOverriddenMouseState() {
+        return g_overriddenMouseState.load();
+    }
+
 #ifndef SR_ANDROID
     std::optional<std::string> ReadFileOriginal(const Path& path) {
         SR_TRACY_ZONE;

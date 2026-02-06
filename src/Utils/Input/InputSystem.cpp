@@ -264,6 +264,10 @@ namespace SR_UTILS_NS {
     }
 
     const CursorLockInfo* Input::GetActiveLock() const {
+    #if defined(SR_LINUX)
+        return nullptr;
+    #endif
+
         if (!m_cursorLocks[static_cast<uint32_t>(CursorLockMode::Everywhere)].empty()) {
             return &m_cursorLocks[static_cast<uint32_t>(CursorLockMode::Everywhere)].back();
         }

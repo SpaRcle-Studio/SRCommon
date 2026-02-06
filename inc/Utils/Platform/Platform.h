@@ -44,6 +44,9 @@ namespace SR_UTILS_NS::Platform {
 
     extern std::mutex g_platformLogMutex;
 
+    SR_COMMON_DLL_API extern void SetOverriddenMouseState(const std::optional<MouseState>& mouseState);
+    SR_COMMON_DLL_API extern std::optional<MouseState> GetOverriddenMouseState();
+
     SR_NORETURN SR_COMMON_DLL_API extern void Terminate(bool isError = true);
 
     SR_COMMON_DLL_API extern void InitializePlatform();
@@ -122,6 +125,7 @@ namespace SR_UTILS_NS::Platform {
     };
 
     extern PlatformHooks g_platformHooks;
+    extern std::atomic<std::optional<MouseState>> g_overriddenMouseState;
 
     SR_COMMON_DLL_API extern void InitializeHooks(const std::function<void(PlatformHooks& hooks)>& callback);
 }

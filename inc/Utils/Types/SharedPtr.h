@@ -111,7 +111,20 @@ namespace SR_HTYPES_NS {
         bool valid = false;
         bool deallocated = false;
         SR_UTILS_NS::SharedPtrPolicy policy = SR_UTILS_NS::SharedPtrPolicy::Automatic;
-        SR_HTYPES_NS::Function<void(void*)> deleter;
+        void (*deleter)(void*) = nullptr;
+        SRClass* (*classGetter)(void*) = nullptr;
+
+        template<typename T> void InitBasic() {
+            deleter = [](void* p) {
+                delete static_cast<T*>(p);
+            };
+            if constexpr (std::is_base_of_v<SRClass, T>) {
+                classGetter = [](void* p) -> SRClass* {
+                    return static_cast<SRClass*>(p);
+                };
+            }
+        }
+
 
     #ifdef SR_SHARED_PTR_TRACE
         SR_UTILS_NS::StringAtom debugTrace;
@@ -316,13 +329,7 @@ namespace SR_HTYPES_NS {
         SR_NODISCARD bool Valid() const final { return m_data && m_data->valid; }
 
         SR_NODISCARD SRClass* GetSRClass() const override {
-            if constexpr (SR_UTILS_NS::IsCompleteTypeV<T>) {
-                if constexpr (std::is_base_of_v<SRClass, T>) {
-                    return dynamic_cast<SRClass*>(m_ptr);
-                }
-            }
-            SR_SAFE_PTR_ASSERT(false, "Incomplete or invalid type!");
-            return nullptr;
+            return (m_data && m_data->classGetter) ? m_data->classGetter(m_ptr) : nullptr;
         }
 
         bool AutoFree(const SR_HTYPES_NS::Function<void(T* pPtr, SharedPtrDynamicData* pControl)>& freeFun);
@@ -483,7 +490,7 @@ namespace SR_HTYPES_NS {
                     true, /// valid
                     SR_UTILS_NS::SharedPtrPolicy::Automatic /// policy
                 );
-                m_data->deleter = [](void* p) { delete static_cast<T*>(p); };
+                m_data->InitBasic<T>();
             }
         }
         else {
@@ -493,7 +500,7 @@ namespace SR_HTYPES_NS {
                 true, /// valid
                 SR_UTILS_NS::SharedPtrPolicy::Automatic /// policy
             );
-            m_data->deleter = [](void* p) { delete static_cast<T*>(p); };
+            m_data->InitBasic<T>();
         }
     }
 
@@ -513,7 +520,7 @@ namespace SR_HTYPES_NS {
             true, /// valid
             policy /// policy
         );
-        m_data->deleter = [](void* p) { delete static_cast<T*>(p); };
+        m_data->InitBasic<T>();
     }
 
     template<class T> SharedPtr<T>::SharedPtr(const SharedPtr &ptr) {
@@ -587,7 +594,7 @@ namespace SR_HTYPES_NS {
                     true, /// valid
                     SR_UTILS_NS::SharedPtrPolicy::Automatic /// policy
                 );
-                m_data->deleter = [](void* p) { delete static_cast<T*>(p); };
+                m_data->InitBasic<T>();
             }
         }
         else {
@@ -597,7 +604,7 @@ namespace SR_HTYPES_NS {
                 true, /// valid
                 SR_UTILS_NS::SharedPtrPolicy::Automatic /// policy
             );
-            m_data->deleter = [](void* p) { delete static_cast<T*>(p); };
+            m_data->InitBasic<T>();
         }
 
         return *this;
