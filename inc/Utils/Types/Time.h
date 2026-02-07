@@ -18,14 +18,7 @@ namespace SR_HTYPES_NS {
     public:
         ~Time() override = default;
 
-        void Update() {
-            SR_TRACY_ZONE;
-
-            m_timeInfo = TimeInfo(
-                ClockT::now(),
-                static_cast<uint64_t>(clock())
-            );
-        }
+        void Update();
 
         void SetDeltaTime(float_t dt) {
             m_deltaTime = dt;

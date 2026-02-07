@@ -172,7 +172,8 @@ add_subdirectory(libs/fmt)
 if (SR_TRACY_ENABLE)
     add_definitions(-DTRACY_DELAYED_INIT)
     add_definitions(-DTRACY_MANUAL_LIFETIME)
-    add_subdirectory(libs/tracy)
+    #add_subdirectory(libs/tracy)
+    list(APPEND SR_UTILS_LINK_LIBRARIES libs/tracy/public/TracyClient.cpp)
 endif()
 
 add_subdirectory(libs/rapidyaml)
@@ -235,7 +236,7 @@ if (SR_USE_PCH)
 endif()
 
 if (SR_TRACY_ENABLE)
-    target_link_libraries(Utils TracyClient)
+    #target_link_libraries(Utils TracyClient)
     SR_UTILS_INCLUDE_DIRECTORIES_APPEND(libs/tracy/public)
 endif()
 
