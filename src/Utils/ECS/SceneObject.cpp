@@ -667,9 +667,8 @@ namespace SR_UTILS_NS {
 
     void SceneObject::ForEachChild(const std::function<void(const SceneObject::Ptr&)>& fn) const {
         for (auto&& child : m_children) {
-            if (child.RecursiveLockIfValid()) {
+            if (child) {
                 fn(child);
-                child.Unlock();
             }
         }
     }

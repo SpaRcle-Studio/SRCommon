@@ -6,18 +6,6 @@
 #include <Utils/Platform/Platform.h>
 
 namespace SR_HTYPES_NS {
-    bool SharedPtrDynamicDataCounter::CheckMemoryLeaks() {
-        auto&& pointersCount = SR_HTYPES_NS::SharedPtrDynamicDataCounter::Instance().GetCount();
-        if (pointersCount != 0) {
-            SR_PLATFORM_NS::WriteConsoleError(SR_FORMAT("Memory leaks detected! Count: {}\n", pointersCount));
-            for (auto&& pData : SR_HTYPES_NS::SharedPtrDynamicDataCounter::Instance().GetData()) {
-                SR_PLATFORM_NS::WriteConsoleError(SR_FORMAT("Pointer with strong {} trace: {}\n", pData->GetStrongCount(), pData->GetDebugTrace().ToCStr()));
-            }
-            return false;
-        }
-        return true;
-    }
-
     SharedPtrBase::SharedPtrBase() = default;
 
     SharedPtrBase::SharedPtrBase(SharedPtrDynamicData* data)
@@ -32,5 +20,9 @@ namespace SR_HTYPES_NS {
 
     const SharedPtrDynamicData *SharedPtrBase::GetPtrData() const {
         return m_data;
+    }
+
+    uint64_t SharedPtrBase::GetStrongCount() const {
+        return m_data ? m_data->strongCount.load() : 0;
     }
 }

@@ -1,0 +1,89 @@
+//
+// Created by Monika on 07.02.2026.
+//
+
+#ifndef SR_ENGINE_SHARED_PTR_DYNAMIC_DATA_H
+#define SR_ENGINE_SHARED_PTR_DYNAMIC_DATA_H
+
+#include <Utils/Common/AssertFwd.h>
+#include <Utils/Common/TypeInfo.h>
+#include <Utils/TypeTraits/TypeTraits.h>
+
+/// #define SR_SHARED_PTR_TRACE
+
+#ifdef SR_SHARED_PTR_TRACE
+    #include <Utils/Platform/Stacktrace.h>
+#endif
+
+namespace SR_UTILS_NS {
+    enum class SharedPtrPolicy : uint8_t {
+        Automatic, Manually
+    };
+}
+
+namespace SR_UTILS_NS {
+    class SRClass;
+}
+
+namespace SR_HTYPES_NS {
+    class SharedPtrDynamicData;
+
+    class SharedPtrDynamicDataCounter : public Singleton<SharedPtrDynamicDataCounter> {
+        SR_REGISTER_SINGLETON(SharedPtrDynamicDataCounter);
+    public:
+        SR_NODISCARD uint64_t GetCount() const;
+
+        void Increment(SharedPtrDynamicData* pData);
+        void Decrement(SharedPtrDynamicData* pData);
+
+        SR_MAYBE_UNUSED static bool CheckMemoryLeaks();
+
+    public:
+        SR_NODISCARD bool IsSingletonCanBeDestroyed() const override;
+        SR_NODISCARD const std::unordered_set<SharedPtrDynamicData*>& GetData() const;
+
+    private:
+        uint64_t m_count = 0;
+        std::unordered_set<SharedPtrDynamicData*> m_data;
+
+    };
+
+    struct SharedPtrDynamicData {
+        SharedPtrDynamicData(uint64_t strongCount, uint64_t weakCount, bool valid, SR_UTILS_NS::SharedPtrPolicy policy);
+        ~SharedPtrDynamicData();
+
+        SR_NODISCARD SR_UTILS_NS::StringAtom GetDebugTrace() const;
+        SR_NODISCARD uint64_t GetStrongCount() const;
+
+        void IncrementStrong();
+        void DecrementStrong();
+        void IncrementWeak();
+        void DecrementWeak();
+
+        std::atomic<uint64_t> strongCount = 0;
+        std::atomic<uint64_t> weakCount = 0;
+        bool valid = false;
+        bool deallocated = false;
+        SR_UTILS_NS::SharedPtrPolicy policy = SR_UTILS_NS::SharedPtrPolicy::Automatic;
+        void (*deleter)(void*) = nullptr;
+        SRClass* (*classGetter)(void*) = nullptr;
+
+        template<typename T> void InitBasic() {
+            deleter = [](void* p) {
+                delete static_cast<T*>(p);
+            };
+            if constexpr (std::is_base_of_v<SRClass, T>) {
+                classGetter = [](void* p) -> SRClass* {
+                    return static_cast<SRClass*>(p);
+                };
+            }
+        }
+
+    #ifdef SR_SHARED_PTR_TRACE
+        SR_UTILS_NS::StringAtom debugTrace;
+    #endif
+
+    };
+}
+
+#endif //SR_ENGINE_SHARED_PTR_DYNAMIC_DATA_H
