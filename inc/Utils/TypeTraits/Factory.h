@@ -87,7 +87,7 @@ namespace SR_UTILS_NS {
 
     private:
         std::unordered_map<SR_UTILS_NS::StringAtom, TypeInfo> m_types;
-        bool m_logRegistration = false;
+        bool m_logRegistration = true;
 
     };
 

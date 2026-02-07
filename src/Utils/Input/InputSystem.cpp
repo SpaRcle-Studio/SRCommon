@@ -11,6 +11,20 @@
 #include <Utils/Types/Thread.h>
 
 namespace SR_UTILS_NS {
+    std::string_view InputTextEvent::GetText() const {
+        return std::string_view(text, length);
+    }
+
+    void InputTextEvent::SetText(std::string_view text) {
+        if (text.size() > sizeof(this->text) - 1) {
+            SRHalt("InputTextEvent::SetText() : text size exceeds maximum length!");
+            return;
+        }
+        std::memcpy(this->text, text.data(), text.size());
+        this->text[text.size()] = '\0'; // null-terminate the string
+        length = static_cast<uint8_t>(text.size());
+    }
+
     Input::~Input() = default;
 
     void Input::UpdateMouse() {
@@ -114,6 +128,13 @@ namespace SR_UTILS_NS {
             Reset();
             m_init = true;
         }
+
+        for (auto& event : m_textEvents) {
+            SubscriptionMessage msg;
+            msg.SetAny(INPUT_TEXT_EVENT_DATA_ID, event);
+            Broadcast(INPUT_TEXT_EVENT_ID, msg);
+        }
+        m_textEvents.clear();
 
         UpdateMouse();
         UpdateKeyboard();
@@ -228,6 +249,15 @@ namespace SR_UTILS_NS {
 
     void Input::SetPlayMode(bool isPlayMode) {
         m_isPlayMode = isPlayMode;
+    }
+
+    void Input::AddTextEvent(InputTextEvent&& event) {
+        SR_TRACY_ZONE;
+        constexpr size_t maxTextEvents = 16;
+        if (m_textEvents.size() >= maxTextEvents) {
+            m_textEvents.erase(m_textEvents.begin());
+        }
+        m_textEvents.emplace_back(std::move(event));
     }
 
     bool Input::IsPlayMode() const {

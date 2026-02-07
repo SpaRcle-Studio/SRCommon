@@ -11,6 +11,14 @@ namespace SR_UTILS_NS {
     void SubscriptionMessage::SetString(const StringAtom id, const std::string& value) { m_strings[id] = value; }
     void SubscriptionMessage::SetPath(const StringAtom id, const SR_UTILS_NS::Path& value) { m_paths[id] = value; }
 
+    void SubscriptionMessage::SetAny(StringAtom id, const std::any& value) {
+        m_anys[id] = value;
+    }
+
+    void SubscriptionMessage::SetAny(StringAtom id, std::any&& value) {
+        m_anys[id] = std::move(value);
+    }
+
     uint64_t SubscriptionMessage::GetInt(const StringAtom id, const std::optional<uint64_t>& def) const {
         return GetValue<uint64_t>(id, m_ints, def);
     }
@@ -29,6 +37,10 @@ namespace SR_UTILS_NS {
 
     const SR_UTILS_NS::Path& SubscriptionMessage::GetPathRef(const StringAtom id) const {
         return GetValueRef<SR_UTILS_NS::Path>(id, m_paths);
+    }
+
+    const std::any& SubscriptionMessage::GetAny(StringAtom id) const {
+        return GetValueRef<std::any>(id, m_anys);
     }
 
     void SubscriptionMessage::PrintError(const char* format, const StringAtom id) {

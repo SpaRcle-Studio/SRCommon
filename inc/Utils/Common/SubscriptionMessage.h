@@ -19,6 +19,8 @@ namespace SR_UTILS_NS {
         void SetBool(StringAtom id, bool value);
         void SetString(StringAtom id, const std::string& value);
         void SetPath(StringAtom id, const SR_UTILS_NS::Path& value);
+        void SetAny(StringAtom id, const std::any& value);
+        void SetAny(StringAtom id, std::any&& value);
 
         void Reset();
 
@@ -27,6 +29,7 @@ namespace SR_UTILS_NS {
         SR_NODISCARD std::string GetString(StringAtom id, const std::optional<std::string>& def = std::nullopt) const;
         SR_NODISCARD SR_UTILS_NS::Path GetPath(StringAtom id, const std::optional<SR_UTILS_NS::Path>& def = std::nullopt) const;
         SR_NODISCARD const SR_UTILS_NS::Path& GetPathRef(StringAtom id) const;
+        SR_NODISCARD const std::any& GetAny(StringAtom id) const;
 
     private:
         static void PrintError(const char* format, StringAtom id);
@@ -57,6 +60,7 @@ namespace SR_UTILS_NS {
         std::map<StringAtom, bool> m_bools;
         std::map<StringAtom, std::string> m_strings;
         std::map<StringAtom, SR_UTILS_NS::Path> m_paths;
+        std::map<StringAtom, std::any> m_anys;
 
     };
 }

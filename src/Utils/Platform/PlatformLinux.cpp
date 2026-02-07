@@ -811,4 +811,12 @@ namespace SR_PLATFORM_NS {
 
         return pFunction;
     }
+
+    bool IsLibraryModuleLoaded(const Path& path) {
+        if (void* h = dlopen(path.c_str(), RTLD_NOW | RTLD_NOLOAD)) {
+            dlclose(h); // уменьшает refcount для NOLOAD
+            return true;
+        }
+        return false;
+    }
 }

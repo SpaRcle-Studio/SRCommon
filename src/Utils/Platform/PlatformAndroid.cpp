@@ -498,6 +498,11 @@ namespace SR_UTILS_NS::Platform {
         return nullptr;
     }
 
+    bool IsLibraryModuleLoaded(const Path& path) {
+        SRHaltOnce("Not implemented!");
+        return false;
+    }
+
     std::vector<SR_MATH_NS::UVector2> GetScreenResolutions() {
         if (!pAndroidInstance) {
             SR_ERROR("PlatformAndroid::GetScreenResolutions() : pAndroidInstance is nullptr!");

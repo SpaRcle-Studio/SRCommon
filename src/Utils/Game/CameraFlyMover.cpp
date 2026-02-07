@@ -50,7 +50,7 @@ namespace SR_UTILS_NS {
         auto&& dir = SR_UTILS_NS::Input::Instance().GetMouseDrag();
         auto&& wheel = SR_UTILS_NS::Input::Instance().GetMouseWheel() * wheelSpeed;
 
-        if (!SR_UTILS_NS::Input::Instance().GetKey(SR_UTILS_NS::KeyCode::Ctrl)) {
+        if (!SR_UTILS_NS::Input::Instance().GetKey(SR_UTILS_NS::KeyCode::LCtrl)) {
             bool accelerateX = false;
             bool accelerateZ = false;
 

@@ -23,6 +23,18 @@ namespace SR_UTILS_NS {
         uint64_t id = 0;
     };
 
+    struct InputTextEvent {
+        char text[256];
+        uint8_t length = 0;
+        void* pSource = nullptr;
+
+        SR_NODISCARD std::string_view GetText() const;
+        void SetText(std::string_view text);
+    };
+
+    static const StringAtom INPUT_TEXT_EVENT_DATA_ID = "InputTextEventData";
+    static const StringAtom INPUT_TEXT_EVENT_ID = "InputTextEvent";
+
     class Input : public Singleton<Input>, public SubscriptionHolder {
         SR_REGISTER_SINGLETON(Input)
         enum class State {
@@ -57,6 +69,7 @@ namespace SR_UTILS_NS {
         void UnlockCursor(const CursorLockInfo& info);
 
         void SetPlayMode(bool isPlayMode);
+        void AddTextEvent(InputTextEvent&& event);
 
     private:
         void SetCursorVisible(bool isVisible);
@@ -69,6 +82,7 @@ namespace SR_UTILS_NS {
 
     private:
         std::array<std::vector<CursorLockInfo>, 3> m_cursorLocks;
+        std::vector<InputTextEvent> m_textEvents;
 
         SR_MATH_NS::FVector2 m_mouseDrag;
         SR_MATH_NS::FVector2 m_mouse;

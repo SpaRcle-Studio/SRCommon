@@ -24,6 +24,7 @@ namespace SR_HTYPES_NS {
         template<typename T> void SetPointer(const std::string& name, T* pointer);
         template<typename T> void SetPointer(T* pointer);
 
+        template<typename T> void SetValue(SR_UTILS_NS::StringAtom name, const T& value);
         template<typename T> void SetValue(const std::string& name, const T& value);
         template<typename T> void SetValue(const T& value);
 
@@ -34,10 +35,11 @@ namespace SR_HTYPES_NS {
         template<typename T> T* GetPointerDef(T* def) const;
 
         template<typename T> T GetValue(const char* name) const;
-
+        template<typename T> T GetValue(SR_UTILS_NS::StringAtom name) const;
         template<typename T> T GetValue(const std::string& name) const;
         template<typename T> T GetValue() const;
 
+        template<typename T> T GetValueDef(SR_UTILS_NS::StringAtom name, const T& def) const;
         template<typename T> T GetValueDef(const std::string& name, const T& def) const;
         template<typename T> T GetValueDef(const T& def) const;
 
@@ -92,6 +94,11 @@ namespace SR_HTYPES_NS {
         return GetPointer<T>(SR_HASH_TYPE_NAME_STR_REGISTER(T));
     }
 
+    template<typename T> void DataStorage::SetValue(SR_UTILS_NS::StringAtom name, const T &value) {
+        SR_TRACY_ZONE;
+        SetValue(name.GetHash(), value);
+    }
+
     template<typename T> void DataStorage::SetValue(const std::string &name, const T &value) {
         SR_TRACY_ZONE;
         SetValue(SR_HASH_STR_REGISTER(name), value);
@@ -100,6 +107,11 @@ namespace SR_HTYPES_NS {
     template<typename T> void DataStorage::SetValue(const T &value) {
         SR_TRACY_ZONE;
         SetValue(SR_HASH_TYPE_NAME_STR_REGISTER(T), value);
+    }
+
+    template<typename T> T DataStorage::GetValue(SR_UTILS_NS::StringAtom name) const {
+        SR_TRACY_ZONE;
+        return GetValue<T>(name.GetHash());
     }
 
     template<typename T> T DataStorage::GetValue(const char* name) const {
@@ -115,6 +127,11 @@ namespace SR_HTYPES_NS {
     template<typename T> T DataStorage::GetValue() const {
         SR_TRACY_ZONE;
         return GetValue<T>(SR_HASH_TYPE_NAME_STR_REGISTER(T));
+    }
+
+    template<typename T> T DataStorage::GetValueDef(SR_UTILS_NS::StringAtom name, const T& def) const {
+        SR_TRACY_ZONE;
+        return GetValueDef<T>(name.GetHash(), def);
     }
 
     template<typename T> T DataStorage::GetValueDef(const std::string& name, const T& def) const {

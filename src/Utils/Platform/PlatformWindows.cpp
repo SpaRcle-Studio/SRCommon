@@ -280,6 +280,11 @@ namespace SR_UTILS_NS::Platform {
         return pFunction;
     }
 
+    bool IsLibraryModuleLoaded(const SR_UTILS_NS::Path& path) {
+      	SRHalt("PlatformWindows::IsLibraryModuleLoaded() : not suitable for Windows platform!");
+        return false;
+    }
+
     void TextToClipboard(const std::string &text) {
         if (text.empty()) {
             SR_WARN("Platform::TextToClipboard() : text is empty!");

@@ -48,6 +48,10 @@ namespace SR_UTILS_NS {
             return;
         }
 
+        if (!pEntity->GetMeta()) SR_LIKELY_ATTRIBUTE {
+            SRHalt("EntityRefBase::Resolve() : Entity with id {} has no meta!", m_entityId);
+            return;
+        }
 
         if (!pEntity->GetMeta()->IsSameOrInherited(GetTypeName())) SR_UNLIKELY_ATTRIBUTE {
             SR_WARN("EntityRefBase::Resolve() : Entity with id {} is not of type {}! Actual type: {}",

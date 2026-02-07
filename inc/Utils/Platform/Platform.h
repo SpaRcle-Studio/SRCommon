@@ -102,6 +102,7 @@ namespace SR_UTILS_NS::Platform {
     SR_COMMON_DLL_API extern void* LoadLibraryModule(const Path& path);
     SR_COMMON_DLL_API extern bool UnloadLibraryModule(void* pLibrary);
     SR_COMMON_DLL_API extern void* GetLibraryFunctionAddress(void* pLibrary, const char* pFunctionName);
+    SR_COMMON_DLL_API extern bool IsLibraryModuleLoaded(const Path& path);
 
     SR_COMMON_DLL_API extern Path::Type GetPathType(std::string_view path);
     SR_COMMON_DLL_API extern uint64_t GetProcessUsedMemory();

@@ -274,6 +274,8 @@ namespace SR_HTYPES_NS {
     }
 
     Thread::Ptr Thread::Factory::TryGetThisThread() {
+        SR_TRACY_ZONE;
+
         auto&& threadId = SR_UTILS_NS::GetThisThreadId();
 
         if (auto&& pIt = m_threads.find(threadId); pIt != m_threads.end()) {
