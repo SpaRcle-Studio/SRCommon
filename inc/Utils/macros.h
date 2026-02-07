@@ -352,12 +352,15 @@
 #if defined(SR_ANDROID) || defined(SR_EMSCRIPTEN)
     #define SR_DLL_API_IMPORT
     #define SR_DLL_API_EXPORT
+    #define SR_DLL_CDECL
 #elif defined(SR_LINUX)
     #define SR_DLL_API_IMPORT __attribute__((visibility("default")))
     #define SR_DLL_API_EXPORT __attribute__((visibility("default")))
+    #define SR_DLL_CDECL
 #else
     #define SR_DLL_API_IMPORT __declspec(dllimport)
     #define SR_DLL_API_EXPORT __declspec(dllexport)
+    #define SR_DLL_CDECL __cdecl
 #endif
 
 #if defined(SR_ENGINE_SCRIPT_API_MODE) || defined(SR_ENGINE_CODEGEN_DLL_API_DISABLE)
