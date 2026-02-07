@@ -122,9 +122,11 @@ namespace SR_UTILS_NS::StoreUtils {
 
         SR_NODISCARD static bool HasFloat(SR_UTILS_NS::StringAtom key) { return Has(key, Storage::ValueType::Float); }
         SR_NODISCARD static float_t GetFloat(SR_UTILS_NS::StringAtom key, const std::optional<float_t>& def = std::nullopt) {
+            SR_TRACY_ZONE;
             return Storage::Instance().Get<float_t>(storeType, Storage::ValueType::Float, key, def);
         }
         static void SetFloat(SR_UTILS_NS::StringAtom key, float_t value) {
+            SR_TRACY_ZONE;
             Storage::Instance().Set(storeType, Storage::ValueType::Float, key, value);
         }
 
@@ -132,6 +134,7 @@ namespace SR_UTILS_NS::StoreUtils {
 
         SR_NODISCARD static bool HasBool(SR_UTILS_NS::StringAtom key) { return Has(key, Storage::ValueType::Bool); }
         SR_NODISCARD static bool GetBool(SR_UTILS_NS::StringAtom key, const std::optional<bool>& def = std::nullopt) {
+            SR_TRACY_ZONE;
             return Storage::Instance().Get<bool>(storeType, Storage::ValueType::Bool, key, def);
         }
         static void SetBool(SR_UTILS_NS::StringAtom key, bool value) {
