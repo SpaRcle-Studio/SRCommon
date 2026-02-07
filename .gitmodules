@@ -52,3 +52,6 @@
 [submodule "libs/tree-sitter-cpp"]
 	path = libs/tree-sitter-cpp
 	url = https://github.com/SpaRcle-Studio/tree-sitter-cpp
+[submodule "libs/tracy"]
+	path = libs/tracy
+	url = https://github.com/SpaRcle-Studio/tracy.git

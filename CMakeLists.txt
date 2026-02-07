@@ -170,7 +170,9 @@ endif()
 add_subdirectory(libs/fmt)
 
 if (SR_TRACY_ENABLE)
-    list(APPEND SR_UTILS_LINK_LIBRARIES libs/tracy/TracyClient.cpp)
+    add_definitions(-DTRACY_DELAYED_INIT)
+    add_definitions(-DTRACY_MANUAL_LIFETIME)
+    add_subdirectory(libs/tracy)
 endif()
 
 add_subdirectory(libs/rapidyaml)
@@ -230,6 +232,11 @@ endif()
 if (SR_USE_PCH)
     target_compile_definitions(Utils PUBLIC SR_USE_PCH)
     target_precompile_headers(Utils PUBLIC ${SR_COMMON_PCH_HEADER_PATH})
+endif()
+
+if (SR_TRACY_ENABLE)
+    target_link_libraries(Utils TracyClient)
+    SR_UTILS_INCLUDE_DIRECTORIES_APPEND(libs/tracy/public)
 endif()
 
 if (UNIX AND NOT APPLE AND NOT SR_EMSCRIPTEN AND NOT ANDROID_NDK)

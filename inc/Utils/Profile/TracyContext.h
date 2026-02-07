@@ -11,7 +11,7 @@
 #include <Utils/Common/Enumerations.h>
 
 #ifndef SR_ENGINE_CODEGEN_CLANG_PARSE_MODE
-    #include <Tracy.hpp>
+    #include <tracy/Tracy.hpp>
 #endif
 
 namespace SR_UTILS_NS {
