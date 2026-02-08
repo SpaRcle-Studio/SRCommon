@@ -74,7 +74,14 @@ namespace SR_HTYPES_NS {
             };
             if constexpr (std::is_base_of_v<SRClass, T>) {
                 classGetter = [](void* p) -> SRClass* {
-                    return static_cast<SRClass*>(p);
+                    T* ptr = static_cast<T*>(p);
+                    return static_cast<SRClass*>(ptr);
+                };
+            }
+            else if constexpr (std::is_polymorphic_v<T> && SR_UTILS_NS::IsCompleteTypeV<SRClass>) {
+                classGetter = [](void* p) -> SRClass* {
+                    T* ptr = static_cast<T*>(p);
+                    return dynamic_cast<SRClass*>(ptr);
                 };
             }
         }
