@@ -9,6 +9,7 @@
 #include <Utils/Common/Hashes.h>
 #include <Utils/Profile/TracyContext.h>
 #include <Utils/Types/StringAtom.h>
+#include <Utils/Common/AssertFwd.h>
 
 namespace SR_HTYPES_NS {
     class SR_COMMON_DLL_API DataStorage : public NonCopyable {
