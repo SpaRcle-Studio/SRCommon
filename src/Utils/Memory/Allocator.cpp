@@ -10,6 +10,7 @@ bool g_TracyAllocatorInitialized = false;
 void* SRMalloc(SR_UTILS_NS::SizeType size) {
     if (g_TracyAllocatorInitialized) {
         SR_TRACY_ZONE;
+        SR_TRACY_ZONE_COLOR(0xFF00FF00);
         void* pMemory = std::malloc(size);
         TracyAlloc(pMemory, size);
         return pMemory;
@@ -28,6 +29,7 @@ void* SRReAlloc(void* pMemory, SR_UTILS_NS::SizeType size) {
 void SRFree(void* pMemory) {
     if (g_TracyAllocatorInitialized) {
         SR_TRACY_ZONE;
+        SR_TRACY_ZONE_COLOR(0xFFFF0000);
         TracyFree(pMemory);
         return std::free(pMemory);
     }

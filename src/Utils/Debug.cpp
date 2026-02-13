@@ -25,6 +25,19 @@ namespace SR_UTILS_NS {
             return;
         }
 
+        switch (type) {
+            case DebugLogType::Warn:
+                ++m_countWarnings;
+                break;
+            case DebugLogType::Error:
+            case DebugLogType::Assert:
+            case DebugLogType::VulkanError:
+                ++m_countErrors;
+                break;
+            default:
+                break;
+        }
+
         if (type == DebugLogType::Assert) {
             msg.append("\nStack trace:\n").append(GetStacktrace());
         }
@@ -135,10 +148,10 @@ namespace SR_UTILS_NS {
     void Debug::Shader(const std::string& msg) { Print(msg, DebugLogType::Shader); }
     void Debug::Script(const std::string& msg) { Print(msg, DebugLogType::Script); }
     void Debug::System(const std::string& msg) { Print(msg, DebugLogType::System); }
-    void Debug::Warn(const std::string& msg) { Print(msg, DebugLogType::Warn); m_countWarnings++; }
-    void Debug::Error(const std::string& msg) { Print(msg, DebugLogType::Error); m_countErrors++; }
-    void Debug::VulkanError(const std::string& msg) { Print(msg, DebugLogType::VulkanError); m_countErrors++; }
-    bool Debug::Assert(const std::string& msg) { Print(msg, DebugLogType::Assert); m_countErrors++; return false; }
+    void Debug::Warn(const std::string& msg) { Print(msg, DebugLogType::Warn);}
+    void Debug::Error(const std::string& msg) { Print(msg, DebugLogType::Error); }
+    void Debug::VulkanError(const std::string& msg) { Print(msg, DebugLogType::VulkanError); }
+    bool Debug::Assert(const std::string& msg) { Print(msg, DebugLogType::Assert); return false; }
 
     void Debug::ScriptLog(const std::string& msg) { Print(msg, DebugLogType::ScriptLog); }
     void Debug::ScriptError(const std::string& msg) { Print(msg, DebugLogType::ScriptError); }
@@ -151,7 +164,7 @@ namespace SR_UTILS_NS {
             return;
         }
 
-        if (!m_countErrors && !m_countWarnings) {
+        if (m_countErrors == 0 && m_countWarnings == 0) {
             std::string msg = "Debugger has been stopped.";
             Print(msg, DebugLogType::Debug);
         }

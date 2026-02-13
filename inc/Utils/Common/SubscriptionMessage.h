@@ -7,6 +7,7 @@
 
 #include <Utils/FileSystem/Path.h>
 #include <Utils/Types/StringAtom.h>
+#include <Utils/Types/ArrayVector.h>
 #include <Utils/Common/NonCopyable.h>
 
 namespace SR_UTILS_NS {
@@ -35,32 +36,90 @@ namespace SR_UTILS_NS {
         static void PrintError(const char* format, StringAtom id);
 
     private:
-        template<typename T, typename Container> SR_NODISCARD T GetValue(const StringAtom id, const Container& container, const std::optional<T> def) const {
-            if (const auto it = container.find(id); it != container.end()) {
-                return it->second;
+        template<typename T> SR_NODISCARD T& GetValueRef(const StringAtom id, const std::optional<T>& def) {
+            auto&& pIt = std::find_if(m_data.begin(), m_data.end(), [&id](const auto& item) { return item.id == id; });
+            if (pIt != m_data.end()) {
+                return pIt->template GetValueRef<T>();
             }
             if (def.has_value()) {
-                return def.value();
-            }
-            PrintError("SubscriptionMessage::GetValue() : id \"{}\" not found!", id);
-            return T();
-        }
-
-        template<typename T, typename Container> SR_NODISCARD const T& GetValueRef(const StringAtom id, const Container& container) const {
-            if (const auto it = container.find(id); it != container.end()) {
-                return it->second;
+                return const_cast<T&>(*def);
             }
             PrintError("SubscriptionMessage::GetValueRef() : id \"{}\" not found!", id);
             static T defaultValue;
             return defaultValue;
         }
 
+        template<typename T> SR_NODISCARD const T& GetValueRef(const StringAtom id, const std::optional<T>& def) const {
+            return const_cast<SubscriptionMessage*>(this)->GetValueRef<T>(id, def);
+        }
+
+        template<typename T> void SetValue(const StringAtom id, const T& value) {
+            auto&& pIt = std::find_if(m_data.begin(), m_data.end(), [&id](const auto& item) { return item.id == id; });
+            if (pIt != m_data.end()) {
+                pIt->template GetValueRef<T>() = value;
+            }
+            else {
+                auto&& data = *m_data.emplace_back(Data());
+                data.id = id;
+                data.template GetValueRef<T>() = value;
+            }
+        }
+
+        template<typename T> void SetValue(const StringAtom id, T&& value) {
+            auto&& pIt = std::find_if(m_data.begin(), m_data.end(), [&id](const auto& item) { return item.id == id; });
+            if (pIt != m_data.end()) {
+                pIt->template GetValueRef<T>() = std::forward<T>(value);
+            }
+            else {
+                auto&& data = *m_data.emplace_back(Data());
+                data.id = id;
+                data.template GetValueRef<T>() = std::forward<T>(value);
+            }
+        }
+
     private:
-        std::map<StringAtom, uint64_t> m_ints;
-        std::map<StringAtom, bool> m_bools;
-        std::map<StringAtom, std::string> m_strings;
-        std::map<StringAtom, SR_UTILS_NS::Path> m_paths;
-        std::map<StringAtom, std::any> m_anys;
+        struct Data {
+            StringAtom id;
+
+            bool boolValue = false;
+            uint64_t intValue = 0;
+            std::optional<SR_UTILS_NS::Path> pathValue;
+            std::optional<std::any> anyValue;
+            std::optional<std::string> strValue;
+
+            template<typename T> SR_NODISCARD T& GetValueRef() {
+                if constexpr (std::is_same_v<T, bool>) {
+                    return boolValue;
+                }
+                else if constexpr (std::is_same_v<T, uint64_t>) {
+                    return intValue;
+                }
+                else if constexpr (std::is_same_v<T, std::string>) {
+                    if (!strValue.has_value()) {
+                        strValue.emplace();
+                    }
+                    return *strValue;
+                }
+                else if constexpr (std::is_same_v<T, SR_UTILS_NS::Path>) {
+                    if (!pathValue.has_value()) {
+                        pathValue.emplace();
+                    }
+                    return *pathValue;
+                }
+                else if constexpr (std::is_same_v<T, std::any>) {
+                    if (!anyValue.has_value()) {
+                        anyValue.emplace();
+                    }
+                    return *anyValue;
+                }
+                else {
+                    SRHalt("Unsupported type!");
+                    return T();
+                }
+            }
+        };
+
+        SR_HTYPES_NS::ArrayVector<Data, 16> m_data;
 
     };
 }

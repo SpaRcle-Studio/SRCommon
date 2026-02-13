@@ -24,7 +24,7 @@ namespace SR_UTILS_NS {
             Dispatch(typeid(T).name(), a...);
         }
 
-        template <typename ..._args> void Dispatch(const std::string& eventName, _args...a) {
+        template <typename ..._args> void Dispatch(SR_UTILS_NS::StringAtom eventName, _args...a) {
             auto&& eventList = m_events.find(eventName);
 
             if (eventList == m_events.end())
@@ -40,7 +40,7 @@ namespace SR_UTILS_NS {
         }
 
     private:
-        std::unordered_map<std::string, std::unordered_set<IEvent*>> m_events;
+        std::unordered_map<SR_UTILS_NS::StringAtom, std::unordered_set<IEvent*>> m_events;
 
     };
 }

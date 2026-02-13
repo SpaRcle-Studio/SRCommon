@@ -6,52 +6,26 @@
 #include <Utils/Common/SubscriptionMessage.h>
 
 namespace SR_UTILS_NS {
-    void SubscriptionMessage::SetInt(const StringAtom id, const uint64_t value) { m_ints[id] = value; }
-    void SubscriptionMessage::SetBool(const StringAtom id, const bool value) { m_bools[id] = value; }
-    void SubscriptionMessage::SetString(const StringAtom id, const std::string& value) { m_strings[id] = value; }
-    void SubscriptionMessage::SetPath(const StringAtom id, const SR_UTILS_NS::Path& value) { m_paths[id] = value; }
+    void SubscriptionMessage::SetInt(const StringAtom id, const uint64_t value) { SetValue(id, value); }
+    void SubscriptionMessage::SetBool(const StringAtom id, const bool value) { SetValue(id, value); }
+    void SubscriptionMessage::SetString(const StringAtom id, const std::string& value) { SetValue(id, value); }
+    void SubscriptionMessage::SetPath(const StringAtom id, const SR_UTILS_NS::Path& value) { SetValue(id, value); }
+    void SubscriptionMessage::SetAny(StringAtom id, const std::any& value) { SetValue(id, value); }
+    void SubscriptionMessage::SetAny(StringAtom id, std::any&& value) { SetValue(id, std::move(value)); }
 
-    void SubscriptionMessage::SetAny(StringAtom id, const std::any& value) {
-        m_anys[id] = value;
-    }
-
-    void SubscriptionMessage::SetAny(StringAtom id, std::any&& value) {
-        m_anys[id] = std::move(value);
-    }
-
-    uint64_t SubscriptionMessage::GetInt(const StringAtom id, const std::optional<uint64_t>& def) const {
-        return GetValue<uint64_t>(id, m_ints, def);
-    }
-
-    bool SubscriptionMessage::GetBool(const StringAtom id, const std::optional<bool>& def) const {
-        return GetValue<bool>(id, m_bools, def);
-    }
-
-    std::string SubscriptionMessage::GetString(const StringAtom id, const std::optional<std::string>& def) const {
-        return GetValue<std::string>(id, m_strings, def);
-    }
-
-    SR_UTILS_NS::Path SubscriptionMessage::GetPath(const StringAtom id, const std::optional<SR_UTILS_NS::Path>& def) const {
-        return GetValue<SR_UTILS_NS::Path>(id, m_paths, def);
-    }
-
-    const SR_UTILS_NS::Path& SubscriptionMessage::GetPathRef(const StringAtom id) const {
-        return GetValueRef<SR_UTILS_NS::Path>(id, m_paths);
-    }
-
-    const std::any& SubscriptionMessage::GetAny(StringAtom id) const {
-        return GetValueRef<std::any>(id, m_anys);
-    }
+    uint64_t SubscriptionMessage::GetInt(const StringAtom id, const std::optional<uint64_t>& def) const { return GetValueRef(id, def); }
+    bool SubscriptionMessage::GetBool(const StringAtom id, const std::optional<bool>& def) const { return GetValueRef(id, def); }
+    std::string SubscriptionMessage::GetString(const StringAtom id, const std::optional<std::string>& def) const { return GetValueRef(id, def); }
+    SR_UTILS_NS::Path SubscriptionMessage::GetPath(const StringAtom id, const std::optional<SR_UTILS_NS::Path>& def) const { return GetValueRef(id, def); }
+    const SR_UTILS_NS::Path& SubscriptionMessage::GetPathRef(const StringAtom id) const { return GetValueRef(id, std::optional<SR_UTILS_NS::Path>()); }
+    const std::any& SubscriptionMessage::GetAny(StringAtom id) const { return GetValueRef(id, std::optional<std::any>()); }
 
     void SubscriptionMessage::PrintError(const char* format, const StringAtom id) {
         SRHalt(SR_UTILS_NS::Format(format, id.c_str()));
     }
 
     void SubscriptionMessage::Reset() {
-        m_ints.clear();
-        m_paths.clear();
-        m_bools.clear();
-        m_strings.clear();
+        m_data.clear();
     }
 
     SubscriptionMessage::SubscriptionMessage() = default;

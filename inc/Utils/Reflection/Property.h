@@ -10,6 +10,7 @@
 #include <Utils/TypeTraits/SRClass.h>
 #include <Utils/Types/RawPointerHolder.h>
 #include <Utils/Types/SharedPtr.h>
+#include <Utils/Types/ArrayVector.h>
 
 namespace SR_UTILS_NS::Reflection {
     class Value;
@@ -28,7 +29,16 @@ namespace SR_UTILS_NS::Reflection {
         EditorPropertyParams& SetInspector(const StringAtom& inspector) noexcept { m_inspector = inspector; return *this; }
         EditorPropertyParams& SetGroup(const StringAtom& group) noexcept { m_group = group; return *this; }
         EditorPropertyParams& SetDragSpeed(float_t speed) noexcept { m_dragSpeed = speed; return *this; }
-        EditorPropertyParams& SetCustomArg(const StringAtom& name, std::string_view value) noexcept { m_customArgs[name] = value; return *this; }
+        EditorPropertyParams& SetCustomArg(const StringAtom& name, std::string_view value) noexcept {
+            for (auto&& arg : m_customArgs) {
+                if (arg.name == name) {
+                    arg.value = value;
+                    return *this;
+                }
+            }
+            m_customArgs.emplace_back({ name, value });
+            return *this;
+        }
 
         SR_NODISCARD StringAtom GetDisplayName() const noexcept { return m_displayName; }
         SR_NODISCARD StringAtom GetTooltip() const noexcept { return m_tooltip; }
@@ -40,13 +50,20 @@ namespace SR_UTILS_NS::Reflection {
         SR_NODISCARD bool IsNotNull() const noexcept { return m_notNull; }
 
         SR_NODISCARD std::string_view GetCustomArg(const StringAtom& name) const noexcept {
-            if (auto&& pIt = m_customArgs.find(name); pIt != m_customArgs.end()) {
-                return pIt->second;
+            for (auto&& arg : m_customArgs) {
+                if (arg.name == name) {
+                    return arg.value;
+                }
             }
             return {};
         }
 
     private:
+        struct CustomArg {
+            StringAtom name;
+            std::string_view value;
+        };
+
         SR_UTILS_NS::StringAtom m_displayName;
         SR_UTILS_NS::StringAtom m_tooltip;
         SR_UTILS_NS::StringAtom m_inspector;
@@ -55,7 +72,7 @@ namespace SR_UTILS_NS::Reflection {
         float_t m_dragSpeed = 1.f;
         bool m_noHeader = false;
         bool m_notNull = false;
-        std::map<SR_UTILS_NS::StringAtom, std::string_view> m_customArgs;
+        SR_HTYPES_NS::ArrayVector<CustomArg, 16> m_customArgs;
 
     };
 

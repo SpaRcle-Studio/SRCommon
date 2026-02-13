@@ -42,6 +42,7 @@ namespace SR_HTYPES_NS {
         }
 
         Index Add(T&& object) {
+            SR_TRACY_ZONE;
             Index index;
             if (m_freeIndices.empty()) SR_UNLIKELY_ATTRIBUTE {
                 index = m_objects.size();
@@ -56,6 +57,7 @@ namespace SR_HTYPES_NS {
         }
 
         Index Add(const T& object) {
+            SR_TRACY_ZONE;
             Index index;
             if (m_freeIndices.empty()) SR_UNLIKELY_ATTRIBUTE {
                 index = m_objects.size();

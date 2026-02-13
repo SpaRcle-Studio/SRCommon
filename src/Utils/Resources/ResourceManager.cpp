@@ -26,6 +26,8 @@ namespace SR_UTILS_NS {
             return false;
         }
 
+        m_dirtyResources.reserve(256);
+
         m_defaultReloader = new DefaultResourceReloader();
 
         m_engineFolder = engineResourceFolder;

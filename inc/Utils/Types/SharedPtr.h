@@ -72,6 +72,7 @@ namespace SR_HTYPES_NS {
         template<typename U> SharedPtr<U> PolymorphicCast() const;
         template<typename U> SharedPtr<U> DynamicCast() const;
         template<typename U> SharedPtr<U> StaticCast() const;
+        template<typename U> SharedPtr<U> ConstCast() const;
         template<typename U> U ReinterpretCast();
 
         void SetPointerFromBase(SharedPtrBase* pBase) override;
@@ -339,6 +340,18 @@ namespace SR_HTYPES_NS {
 
         if (m_data && m_data->valid) {
             return SharedPtr<U>(static_cast<U*>(m_ptr));
+        }
+
+        return SharedPtr<U>();
+    }
+
+    template<class T> template<typename U> SharedPtr<U> SharedPtr<T>::ConstCast() const {
+        if constexpr (std::is_same_v<T, void>) {
+            return SharedPtr<U>();
+        }
+
+        if (m_data && m_data->valid) {
+            return SharedPtr<U>(const_cast<U*>(m_ptr));
         }
 
         return SharedPtr<U>();

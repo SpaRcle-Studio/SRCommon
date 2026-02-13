@@ -96,6 +96,7 @@ namespace SR_HTYPES_NS {
         SR_NODISCARD SR_CONSTEXPR ConstIterator end() const { return m_data.end(); }
 
         void Add(const T& value) {
+            SR_TRACY_ZONE;
             if (m_data.empty()) {
                 m_data.push_back(value);
                 return;
@@ -106,6 +107,7 @@ namespace SR_HTYPES_NS {
         }
 
         void Add(T&& value) {
+            SR_TRACY_ZONE;
             if (m_data.empty()) {
                 m_data.push_back(std::move(value));
                 return;
