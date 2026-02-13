@@ -5,28 +5,27 @@
 #ifndef SR_ENGINE_UTILS_TRACY_CONTEXT_H
 #define SR_ENGINE_UTILS_TRACY_CONTEXT_H
 
-#include <Utils/stdInclude.h>
+#include <Utils/Common/Enumerations.h>
+#include <Utils/Common/Singleton.h>
+
+namespace SR_UTILS_NS {
+    SR_ENUM_NS_STRUCT_T(TracyType, uint8_t,
+        Common,
+        Vulkan,
+        All
+    );
+
+    extern SR_COMMON_DLL_API void StartupEngineProfiler();
+    extern SR_COMMON_DLL_API void ShutdownEngineProfiler();
+}
 
 #ifdef SR_TRACY_ENABLE
-
-#include <Utils/Common/Singleton.h>
-#include <Utils/Common/Enumerations.h>
 
 #ifndef SR_ENGINE_CODEGEN_CLANG_PARSE_MODE
     #include <tracy/Tracy.hpp>
 #endif
 
 namespace SR_UTILS_NS {
-    SR_ENUM_NS_STRUCT_T(TracyType, uint8_t,
-        Common,
-        Vulkan,
-
-        All
-    );
-
-    extern SR_COMMON_DLL_API void StartupEngineProfiler();
-    extern SR_COMMON_DLL_API void ShutdownEngineProfiler();
-
     class TracyContextManager : public SR_UTILS_NS::Singleton<TracyContextManager> {
         SR_REGISTER_SINGLETON(TracyContextManager)
         using TracyContextPtr = void*;

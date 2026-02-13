@@ -72,4 +72,11 @@ namespace SR_UTILS_NS {
     }
 }
 
+#else
+
+namespace SR_UTILS_NS {
+    void StartupEngineProfiler() { }
+    void ShutdownEngineProfiler() { }
+}
+
 #endif
