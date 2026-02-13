@@ -6,6 +6,7 @@
 #define SR_ENGINE_COMMON_TRANSFORM_UTILS_H
 
 #include <Utils/TypeTraits/SRClassMeta.h>
+#include <Utils/Types/StringAtom.h>
 
 namespace SR_UTILS_NS {
     class SceneObject;
