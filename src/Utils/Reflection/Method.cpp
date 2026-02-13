@@ -95,7 +95,7 @@ namespace SR_UTILS_NS::Reflection {
         }
     }
 
-    void InvokeMethodVoid(Method::Owner& owner,StringAtom name, const Method::Params& params) {
+    void InvokeMethodVoid(Method::Owner& owner, StringAtom name, const Method::Params& params) {
         SR_TRACY_ZONE;
         if (auto&& pMethod = owner.GetMeta()->FindMethod(name)) {
             pMethod->InvokeVoid(owner, params);
@@ -126,5 +126,4 @@ namespace SR_UTILS_NS::Reflection {
             return {};
         }
     }
-
 }

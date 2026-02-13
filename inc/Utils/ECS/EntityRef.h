@@ -6,6 +6,7 @@
 #define SR_ENGINE_UTILS_ENTITY_REF_H
 
 #include <Utils/Serialization/Serializable.h>
+#include <Utils/TypeTraits/Factory.h>
 #include <Utils/ECS/EntityController.h>
 
 namespace SR_UTILS_NS {
@@ -41,11 +42,15 @@ namespace SR_UTILS_NS {
     public:
         SR_NODISCARD StringAtom GetTypeName() const noexcept override {
             if constexpr (!std::is_same_v<T, void>) {
-                return T::GetClassStaticName();
+                if constexpr (SR_UTILS_NS::IsCompleteTypeV<T>) {
+                    return T::GetClassStaticName();
+                }
+                else {
+                    return Factory::Instance().GetNameByTypeId<T>();
+                }
             }
-            else {
-                return "void";
-            }
+            static const StringAtom voidTypeName("void");
+            return voidTypeName;
         }
 
         SR_NODISCARD SR_HTYPES_NS::SharedPtr<T> Get() const noexcept {

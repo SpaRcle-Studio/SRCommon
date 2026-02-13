@@ -51,6 +51,15 @@ namespace SR_UTILS_NS {
             return GetName(Y::GetMetaStatic(), true);
         }
 
+        template<class Y> SR_NODISCARD SR_UTILS_NS::StringAtom GetNameByTypeId() const {
+            std::string_view typeName = typeid(Y*).name();
+            if (auto pIt = m_nameTypeId.find(typeName); pIt != m_nameTypeId.end()) {
+                return pIt->second;
+            }
+            SRHalt("Factory::GetNameIncomplete() : type \"{}\" is not registered!"_format(typeName));
+            return {};
+        }
+
         template<typename T> SR_NODISCARD SR_HTYPES_NS::SharedPtr<T> Create(SR_UTILS_NS::StringAtom name) const noexcept {
             SR_TRACY_ZONE;
 
@@ -86,6 +95,7 @@ namespace SR_UTILS_NS {
         void WriteError(const std::string& message) const noexcept;
 
     private:
+        ska::flat_hash_map<std::string_view, SR_UTILS_NS::StringAtom> m_nameTypeId;
         std::unordered_map<SR_UTILS_NS::StringAtom, TypeInfo> m_types;
         bool m_logRegistration = true;
 
@@ -124,6 +134,9 @@ namespace SR_UTILS_NS {
             info.moduleName = moduleName;
             info.metaGetter = T::GetMetaStatic;
             info.version = pMeta->GetVersion();
+
+            m_nameTypeId[std::string_view(typeid(T*).name())] = name;
+
             return true;
         }
 
