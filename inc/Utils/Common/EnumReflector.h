@@ -2,7 +2,7 @@
 // Created by Monika on 09.09.2022.
 //
 
-#ifndef SR_ENGINE_ENUM_REFLECTOR_H
+#if !defined(SR_ENGINE_ENUM_REFLECTOR_H) && defined(SR_ENGINE_COMMON_PCH_FOR_BASE_CODE)
 #define SR_ENGINE_ENUM_REFLECTOR_H
 
 #include <Utils/Common/Singleton.h>

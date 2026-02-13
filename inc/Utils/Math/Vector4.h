@@ -2,7 +2,7 @@
 // Created by Monika on 26.01.2022.
 //
 
-#ifndef SR_ENGINE_VECTOR4_H
+#if !defined(SR_ENGINE_VECTOR4_H) && defined(SR_ENGINE_COMMON_PCH_FOR_BASE_CODE)
 #define SR_ENGINE_VECTOR4_H
 
 #include <Utils/Math/Mathematics.h>

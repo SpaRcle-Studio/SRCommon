@@ -5,7 +5,7 @@
 #ifndef SR_ENGINE_COMMON_TYPES_ARRAY_VECTOR_H
 #define SR_ENGINE_COMMON_TYPES_ARRAY_VECTOR_H
 
-#include <Utils/Debug.h>
+#include <Utils/Common/AssertFwd.h>
 
 namespace SR_HTYPES_NS {
     template<typename T, size_t N> class ArrayVector {

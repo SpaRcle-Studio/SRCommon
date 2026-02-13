@@ -2,7 +2,7 @@
 // Created by Nikita on 02.03.2021.
 //
 
-#ifndef SR_ENGINE_MATH_MATRIX4X4_H
+#if !defined(SR_ENGINE_MATH_MATRIX4X4_H) && defined(SR_ENGINE_COMMON_PCH_FOR_BASE_CODE)
 #define SR_ENGINE_MATH_MATRIX4X4_H
 
 #include <Utils/Math/Quaternion.h>

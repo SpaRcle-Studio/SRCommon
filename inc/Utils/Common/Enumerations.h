@@ -2,7 +2,7 @@
 // Created by Monika on 01.10.2021.
 //
 
-#ifndef SR_ENGINE_ENUMERATIONS_H
+#if !defined(SR_ENGINE_ENUMERATIONS_H) && defined(SR_ENGINE_COMMON_PCH_FOR_BASE_CODE)
 #define SR_ENGINE_ENUMERATIONS_H
 
 #include <Utils/Common/EnumReflector.h>
@@ -13,19 +13,16 @@
 #define SR_ENUM_T(enumName, type, ...)                                                                                  \
       SR_ENUM_DETAIL_MAKE(SR_UTILS_NS::EnumVariant::List, enum, class, enumName, #enumName, type, __VA_ARGS__ )         \
       class CodegenEnumIncludedChecked_##enumName {};                                                                   \
-      //template<> struct CodegenEnumIncludedChecked_##enumName<enumName> : std::true_type {};                            \
 
 /// Declare an enumeration inside a class
 #define SR_ENUM_CLASS_T(enumName, type, ...)                                                                            \
       SR_ENUM_DETAIL_MAKE(SR_UTILS_NS::EnumVariant::List, enum class, class, enumName, #enumName, type, __VA_ARGS__ )   \
       class CodegenEnumIncludedChecked_##enumName {};                                                                   \
-      //template<> struct CodegenEnumIncludedChecked_##enumName<enumName> : std::true_type {};                            \
 
 /// Declare an enumeration inside a namespace
 #define SR_ENUM_NS_T(enumName, type, ...)                                                                               \
       SR_ENUM_DETAIL_MAKE(SR_UTILS_NS::EnumVariant::List, enum, namespace, enumName, #enumName, type, __VA_ARGS__ )     \
       class CodegenEnumIncludedChecked_##enumName {};                                                                   \
-      //template<> struct CodegenEnumIncludedChecked_##enumName<enumName> : std::true_type {};                            \
 
 /// Declare an enumeration inside a namespace
 #define SR_ENUM_NS_CLASS_T(enumName, type, ...)                                                                         \
@@ -33,17 +30,6 @@
             namespace, enumName, #enumName, type, __VA_ARGS__ )                                                         \
       typedef type SR_MACRO_CONCAT(enumName, Flag);                                                                     \
       class CodegenEnumIncludedChecked_##enumName {};                                                                   \
-      //template<> struct CodegenEnumIncludedChecked_##enumName<enumName> : std::true_type {};                            \
-
-/// Declare an enumeration inside a namespace
-//#define SR_ENUM_NS_STRUCT_T_OLD(enumName, type, ...)                                                                  \
-//      struct enumName : public SR_UTILS_NS::IEnumStructBase {                                                         \
-//            SR_ENUM_DETAIL_MAKE(SR_UTILS_NS::EnumVariant::Flags, enum, class,                                         \
-//                  SR_MACRO_CONCAT(enumName, T), #enumName, type, __VA_ARGS__ )                                        \
-//            using TypeT = SR_MACRO_CONCAT(enumName, T);                                                               \
-//            operator type() const noexcept { return TypeT(); }                                                        \
-//      };                                                                                                              \
-//      typedef type SR_MACRO_CONCAT(enumName, Flag);                                                                   \
 
 /// Declare an enumeration inside a namespace
 #define SR_ENUM_NS_STRUCT_T(enumName, type, ...)                                                                        \
@@ -56,12 +42,6 @@
                   enumName, #enumName, type, __VA_ARGS__ )                                                              \
       }                                                                                                                 \
       class CodegenEnumIncludedChecked_##enumName {};                                                                   \
-      //SR_CODEGEN_ENUM_OPERATORS(inline, , SR_MACRO_CONCAT(enumName, EnumWrappper)::enumName)                            \
-
-      //template<> struct CodegenEnumIncludedChecked_##enumName<enumName> : std::true_type {};                            \
-
-      //inline enumName operator(int lhs) { return static_cast<enumName>(lhs); }                                          \
-      //inline enumName operator(long lhs) { return static_cast<enumName>(lhs); }                                         \
 
 /// ---------------------------------------[Для объявления внутри классов]----------------------------------------------
 

@@ -2,7 +2,7 @@
 // Created by Nikita on 01.03.2021.
 //
 
-#ifndef SR_ENGINE_MATRIX3X3_H
+#if !defined(SR_ENGINE_MATRIX3X3_H) && defined(SR_ENGINE_COMMON_PCH_FOR_BASE_CODE)
 #define SR_ENGINE_MATRIX3X3_H
 
 #include <Utils/Math/Quaternion.h>
@@ -12,9 +12,9 @@ namespace SR_MATH_NS {
     class SR_COMMON_DLL_API Matrix3x3 {
     public:
         FVector3 elements[3] = {
-                FVector3(1, 0, 0),
-                FVector3(0, 1, 0),
-                FVector3(0, 0, 1)
+            FVector3(1, 0, 0),
+            FVector3(0, 1, 0),
+            FVector3(0, 0, 1)
         };
 
         SR_FORCE_INLINE const FVector3 &operator[](int axis) const {
@@ -36,34 +36,7 @@ namespace SR_MATH_NS {
             elements[2][2] = zz;
         }
 
-        FVector3 GetEulerXYZ() const {
-            FVector3 euler;
-            double sy = elements[0][2];
-            if (sy < (1.0 - CMP_EPSILON)) {
-                if (sy > -(1.0 - CMP_EPSILON)) {
-                    // is this a pure Y rotation?
-                    if (elements[1][0] == 0.0 && elements[0][1] == 0.0 && elements[1][2] == 0 && elements[2][1] == 0 && elements[1][1] == 1) {
-                        // return the simplest form (human friendlier in editor and scripts)
-                        euler.x = 0;
-                        euler.y = atan2(elements[0][2], elements[0][0]);
-                        euler.z = 0;
-                    } else {
-                        euler.x = atan2(-elements[1][2], elements[2][2]);
-                        euler.y = asin(sy);
-                        euler.z = atan2(-elements[0][1], elements[0][0]);
-                    }
-                } else {
-                    euler.x = atan2(elements[2][1], elements[1][1]);
-                    euler.y = -SR_PI / 2.0;
-                    euler.z = 0.0;
-                }
-            } else {
-                euler.x = atan2(elements[2][1], elements[1][1]);
-                euler.y = SR_PI / 2.0;
-                euler.z = 0.0;
-            }
-            return euler;
-        }
+        FVector3 GetEulerXYZ() const;
     };
 }
 

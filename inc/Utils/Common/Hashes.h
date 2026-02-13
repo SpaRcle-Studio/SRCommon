@@ -2,7 +2,7 @@
 // Created by Monika on 03.05.2022.
 //
 
-#ifndef SR_ENGINE_UTILS_HASHES_H
+#if !defined(SR_ENGINE_UTILS_HASHES_H) && defined(SR_ENGINE_COMMON_PCH_FOR_BASE_CODE)
 #define SR_ENGINE_UTILS_HASHES_H
 
 #include <Utils/stdInclude.h>

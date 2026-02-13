@@ -2,7 +2,7 @@
 // Created by Monika on 22.09.2021.
 //
 
-#ifndef SR_ENGINE_UTILS_STRING_FORMAT_H
+#if !defined(SR_ENGINE_UTILS_STRING_FORMAT_H) && defined(SR_ENGINE_COMMON_PCH_FOR_BASE_CODE)
 #define SR_ENGINE_UTILS_STRING_FORMAT_H
 
 #include <Utils/stdInclude.h>

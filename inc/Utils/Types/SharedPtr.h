@@ -2,7 +2,7 @@
 // Created by Monika on 23.08.2022.
 //
 
-#ifndef SR_ENGINE_SHARED_PTR_H
+#if !defined(SR_ENGINE_SHARED_PTR_H) && defined(SR_ENGINE_COMMON_PCH_FOR_BASE_CODE)
 #define SR_ENGINE_SHARED_PTR_H
 
 #include <Utils/Types/SharedPtrDynamicData.h>

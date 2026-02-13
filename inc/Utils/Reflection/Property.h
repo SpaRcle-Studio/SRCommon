@@ -2,7 +2,7 @@
 // Created by Monika on 21.01.2025.
 //
 
-#ifndef SR_ENGINE_UTILS_REFLECTION_PROPERTY_H
+#if !defined(SR_ENGINE_UTILS_REFLECTION_PROPERTY_H) && defined(SR_ENGINE_COMMON_PCH_FOR_BASE_CODE)
 #define SR_ENGINE_UTILS_REFLECTION_PROPERTY_H
 
 #include <Utils/Common/StringAtomLiterals.h>

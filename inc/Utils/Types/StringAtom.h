@@ -2,7 +2,7 @@
 // Created by Monika on 29.09.2021.
 //
 
-#ifndef SR_ENGINE_STRING_ATOM_H
+#if !defined(SR_ENGINE_STRING_ATOM_H) && defined(SR_ENGINE_COMMON_PCH_FOR_BASE_CODE)
 #define SR_ENGINE_STRING_ATOM_H
 
 #include <Utils/stdInclude.h>

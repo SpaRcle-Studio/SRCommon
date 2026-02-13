@@ -2,7 +2,7 @@
 // Created by Nikita on 01.03.2021.
 //
 
-#ifndef SR_ENGINE_VECTOR3_H
+#if !defined(SR_ENGINE_VECTOR3_H) && defined(SR_ENGINE_COMMON_PCH_FOR_BASE_CODE)
 #define SR_ENGINE_VECTOR3_H
 
 #include <Utils/Math/Vector2.h>

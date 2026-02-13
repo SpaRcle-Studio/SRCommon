@@ -2,7 +2,7 @@
 // Created by Monika on 28.09.2021.
 //
 
-#ifndef SR_ENGINE_SINGLETON_H
+#if !defined(SR_ENGINE_SINGLETON_H) && defined(SR_ENGINE_COMMON_PCH_FOR_BASE_CODE)
 #define SR_ENGINE_SINGLETON_H
 
 #include <Utils/Common/NonCopyable.h>

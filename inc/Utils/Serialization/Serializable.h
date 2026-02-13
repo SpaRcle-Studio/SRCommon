@@ -2,7 +2,7 @@
 // Created by Monika on 21.09.2021.
 //
 
-#ifndef SR_ENGINE_UTILS_SERIALIZABLE_H
+#if !defined(SR_ENGINE_UTILS_SERIALIZABLE_H) && defined(SR_ENGINE_COMMON_PCH_FOR_BASE_CODE)
 #define SR_ENGINE_UTILS_SERIALIZABLE_H
 
 #include <Utils/TypeTraits/SRClass.h>

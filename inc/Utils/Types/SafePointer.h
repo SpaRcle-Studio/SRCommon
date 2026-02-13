@@ -2,7 +2,7 @@
 // Created by Monika on 04.08.2021.
 //
 
-#ifndef SMARTPOINTER_SAFEPOINTER_H
+#if !defined(SMARTPOINTER_SAFEPOINTER_H) && defined(SR_ENGINE_COMMON_PCH_FOR_BASE_CODE)
 #define SMARTPOINTER_SAFEPOINTER_H
 
 #include <Utils/Types/Function.h>

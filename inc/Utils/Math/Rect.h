@@ -2,7 +2,7 @@
 // Created by Monika on 18.11.2022.
 //
 
-#ifndef SR_ENGINE_RECT_H
+#if !defined(SR_ENGINE_RECT_H) && defined(SR_ENGINE_COMMON_PCH_FOR_BASE_CODE)
 #define SR_ENGINE_RECT_H
 
 #include <Utils/Math/Vector2.h>

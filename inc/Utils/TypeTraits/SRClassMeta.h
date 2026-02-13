@@ -2,7 +2,7 @@
 // Created by Monika on 16.10.2024.
 //
 
-#ifndef SR_COMMON_TYPE_TRAITS_SR_CLASS_META_H
+#if !defined(SR_COMMON_TYPE_TRAITS_SR_CLASS_META_H) && defined(SR_ENGINE_COMMON_PCH_FOR_BASE_CODE)
 #define SR_COMMON_TYPE_TRAITS_SR_CLASS_META_H
 
 #include <Utils/Types/Function.h>
