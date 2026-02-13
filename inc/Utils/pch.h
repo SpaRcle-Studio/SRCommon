@@ -31,6 +31,6 @@
 #include <Utils/Serialization/Serializable.h>
 #include <Utils/TypeTraits/SRClassMeta.h>
 
-#undef
+#undef SR_ENGINE_COMMON_PCH_FOR_BASE_CODE
 
 #endif //SR_ENGINE_UTILS_PCH_H
