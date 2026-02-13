@@ -41,8 +41,6 @@
     #endif
 #endif
 
-#ifdef SR_TRACY_ENABLE
-    #include "../src/Utils/Profile/TracyContext.cpp"
-#endif
+#include "../src/Utils/Profile/TracyContext.cpp"
 
 #include "../libs/xxHash/xxhash.c"
