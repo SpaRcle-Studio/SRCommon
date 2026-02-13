@@ -8,6 +8,7 @@
 #include <Utils/Common/HashManager.h>
 #include <Utils/Common/Hashes.h>
 #include <Utils/Profile/TracyContext.h>
+#include <Utils/Types/StringAtom.h>
 
 namespace SR_HTYPES_NS {
     class SR_COMMON_DLL_API DataStorage : public NonCopyable {
