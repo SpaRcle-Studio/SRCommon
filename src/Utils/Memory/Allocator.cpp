@@ -2,7 +2,6 @@
 // Created by Monika on 27.04.2025.
 //
 
-#include <Utils/stdInclude.h>
 #include <Utils/Profile/TracyContext.h>
 
 bool g_TracyAllocatorInitialized = false;
@@ -12,7 +11,7 @@ void* SRMalloc(SR_UTILS_NS::SizeType size) {
         SR_TRACY_ZONE;
         SR_TRACY_ZONE_COLOR(0xFF00FF00);
         void* pMemory = std::malloc(size);
-        TracyAlloc(pMemory, size);
+        SR_TRACY_ALLOC(pMemory, size);
         return pMemory;
     }
     return std::malloc(size);
@@ -30,7 +29,7 @@ void SRFree(void* pMemory) {
     if (g_TracyAllocatorInitialized) {
         SR_TRACY_ZONE;
         SR_TRACY_ZONE_COLOR(0xFFFF0000);
-        TracyFree(pMemory);
+        SR_TRACY_FREE(pMemory);
         return std::free(pMemory);
     }
     std::free(pMemory);

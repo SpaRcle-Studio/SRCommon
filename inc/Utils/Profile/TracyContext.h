@@ -5,6 +5,8 @@
 #ifndef SR_ENGINE_UTILS_TRACY_CONTEXT_H
 #define SR_ENGINE_UTILS_TRACY_CONTEXT_H
 
+#include <Utils/stdInclude.h>
+
 #ifdef SR_TRACY_ENABLE
 
 #include <Utils/Common/Singleton.h>
@@ -50,6 +52,8 @@ namespace SR_UTILS_NS {
 #endif
 
 #ifdef SR_TRACY_ENABLE
+    #define SR_TRACY_ALLOC(pMemory, size) TracyAlloc(pMemory, size)
+    #define SR_TRACY_FREE(pMemory) TracyFree(pMemory)
     #define SR_TRACY_IS_PROFILER_CONNECTED (tracy::GetProfiler().IsConnected())
     #define SR_TRACY_TEXT_N(name, text) ZoneText(text.c_str(), text.size())
     #define SR_TRACY_ZONE ZoneScoped /** NOLINT */
@@ -72,6 +76,8 @@ namespace SR_UTILS_NS {
     #define SR_TRACY_DESTROY(tracyType) SR_UTILS_NS::TracyContextManager::Instance().Destroy(tracyType);
     #define SR_TRACY_THREAD_NAME(name) tracy::SetThreadName(name)
 #else
+    #define SR_TRACY_ALLOC(pMemory, size)
+    #define SR_TRACY_FREE(pMemory)
     #define SR_TRACY_IS_PROFILER_CONNECTED (false)
     #define SR_TRACY_TEXT_N(name, text)
     #define SR_TRACY_ZONE SR_NOOP
