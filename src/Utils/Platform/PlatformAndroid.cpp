@@ -52,6 +52,7 @@ namespace SR_UTILS_NS::Platform {
     }
 
     void SetInstance(void* pInstance) {
+        WriteConsoleLog("Platform::SetInstance() : setting Android instance...");
         pAndroidInstance = reinterpret_cast<android_app*>(pInstance);
     }
 
@@ -104,6 +105,7 @@ namespace SR_UTILS_NS::Platform {
     }
 
     void* GetInstance() {
+        SRAssert(pAndroidInstance);
         return (void*)pAndroidInstance;
     }
 
