@@ -349,3 +349,8 @@ endif()
 if (SR_COMMON_EMBED_RESOURCES)
     add_dependencies(${PROJECT_NAME} CopyUtilsFiles EmbedResourcesTarget)
 endif()
+
+set_target_properties(Utils PROPERTIES
+    BUILD_RPATH "\$ORIGIN"
+    INSTALL_RPATH "\$ORIGIN"
+)
