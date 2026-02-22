@@ -36,7 +36,6 @@ namespace SR_UTILS_NS {
 
     public:
         bool Destroy() final;
-        bool Reload() final;
 
         void Do(const SR_HTYPES_NS::Function<void(Settings*)>& fun);
         SR_NODISCARD const SR_XML_NS::Document& GetDocument() const;

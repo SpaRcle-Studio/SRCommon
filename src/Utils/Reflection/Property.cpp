@@ -8,6 +8,7 @@
 
 namespace SR_UTILS_NS::Reflection {
     std::string_view MakeSerializePropertyName(std::string_view id) {
+        SR_TRACY_ZONE;
         if (id.rfind("m_", 0) == 0) {
             id = id.substr(2);
         }
@@ -26,12 +27,23 @@ namespace SR_UTILS_NS::Reflection {
             return pIt->second;
         }
 
-        std::string serializeId = std::string(MakeSerializePropertyName(id));
+        static const std::regex underscoreRegex("_+");
+        static const std::regex camelCaseRegex("([a-z])([A-Z])");
 
-        serializeId = std::regex_replace(serializeId, std::regex("_+"), " ");
-        serializeId = std::regex_replace(serializeId, std::regex("([a-z])([A-Z])"), "$1 $2");
+        static const std::string replacement = " ";
+        static const std::string camelCaseReplacement = "$1 $2";
 
-        std::string result;
+        static std::string serializeId;
+        static std::string result;
+
+        serializeId.clear();
+        serializeId.reserve(128);
+
+        serializeId = MakeSerializePropertyName(id);
+        serializeId = std::regex_replace(serializeId, underscoreRegex, replacement);
+        serializeId = std::regex_replace(serializeId, camelCaseRegex, camelCaseReplacement);
+
+        result.clear();
         result.reserve(serializeId.size());
 
         bool capitalize = true;

@@ -34,6 +34,7 @@ namespace SR_UTILS_NS {
         SR_NODISCARD Path GetCachePath() const;
         SR_NODISCARD FileSystemWatcher::Ptr GetFileSystemWatcher() const { return m_fileSystemWatcher; }
         SR_NODISCARD IResourceReloader* GetDefaultReloader() const { return m_defaultReloader.Get(); }
+        SR_NODISCARD bool HasDirtyResources() const { return m_hasDirtyResources; }
 
         SR_NODISCARD IResource::Ptr Find(StringAtom id, StringAtom typeName, const IResourceVariant* pVariant) const;
         SR_NODISCARD IResource::Ptr FindAnyType(StringAtom id, const IResourceVariant* pVariant) const;

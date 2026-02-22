@@ -31,15 +31,6 @@ namespace SR_UTILS_NS {
             return false;
         }
 
-        auto&& loadState = resource.GetResourceLoadState();
-
-        using LS = IResource::LoadState;
-        if (loadState == LS::Reloading || loadState == LS::Loading || loadState == LS::Unloading) {
-            return false;
-        }
-
-        SR_NOOP;
-
         return true;
     }
 }

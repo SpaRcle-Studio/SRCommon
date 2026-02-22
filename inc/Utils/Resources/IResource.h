@@ -36,7 +36,7 @@ namespace SR_UTILS_NS {
         SR_INLINE_STATIC const StringAtom RELOAD_DONE_EVENT = "ReloadDone";
 
         enum class LoadState : uint8_t {
-            Unknown, Loaded, Reloading, Loading, Unloading, Unloaded, Error
+            Unknown, Loaded, Unloaded, Error
         };
 
         enum class RemoveUPResult : uint8_t {
@@ -55,7 +55,6 @@ namespace SR_UTILS_NS {
         SR_NODISCARD virtual Path GetAssociatedPath() const;
         SR_NODISCARD virtual const IResourceVariant* GetVariant() const { return nullptr; }
 
-        SR_NODISCARD bool IsResourceWillBeDeleted() const;
         SR_NODISCARD bool IsRegistered() const noexcept { return m_isRegistered; }
         SR_NODISCARD bool IsLoaded() const noexcept;
         SR_NODISCARD bool IsDestroyed() const noexcept;
@@ -96,7 +95,8 @@ namespace SR_UTILS_NS {
         virtual void StartWatch();
         virtual void StopWatch();
 
-        virtual bool Reload();
+        bool Reload();
+
         virtual bool Unload();
         virtual bool Load();
 

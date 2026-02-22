@@ -13,6 +13,7 @@
 namespace SR_UTILS_NS {
     class SR_COMMON_DLL_API Task : public NonCopyable {
     public:
+        using Ptr = std::shared_ptr<Task>;
         enum class State {
             Unknown, Waiting, Launched, Stopped, Completed, Failed
         };
@@ -22,9 +23,6 @@ namespace SR_UTILS_NS {
 
     public:
         explicit Task(TaskFn fn, bool createThread);
-        Task(Task&& task) noexcept;
-        Task& operator=(Task&& task) noexcept;
-
         ~Task() override;
 
     public:
@@ -56,10 +54,11 @@ namespace SR_UTILS_NS {
         ~TaskManager() override;
 
     public:
-        TaskId Execute(Task&& task);
-        TaskId Execute(const TaskFn& function, bool createThread = false);
+        TaskId ExecuteAsync(const SR_HTYPES_NS::Function<void()>& function);
+        TaskId ExecuteParallel(const SR_HTYPES_NS::Function<void()>& function);
 
         Task::State GetResult(TaskId taskId) const;
+        bool IsActive(TaskId taskId) const;
 
     private:
         SR_NODISCARD uint64_t GetUniqueId() const;
@@ -67,9 +66,9 @@ namespace SR_UTILS_NS {
         void InitSingleton() override;
 
     private:
-        Types::Thread::Ptr m_thread;
+        SR_HTYPES_NS::Thread::Ptr m_thread = nullptr;
         std::atomic<bool> m_isRun;
-        std::list<Task> m_tasks;
+        std::vector<Task::Ptr> m_tasks;
 
         /// Предполагается, что задач не будет слишком много,
         /// и не будет надобности в unordered set/map

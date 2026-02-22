@@ -36,21 +36,6 @@ namespace SR_UTILS_NS {
         return IResource::Unload();
     }
 
-    bool Settings::Reload() {
-        SR_LOG("Settings::Reload() : reloading \"" + std::string(GetResourceId()) + "\" settings...");
-
-        m_loadState = LoadState::Reloading;
-
-        bool hasErrors = false;
-
-        hasErrors |= !Unload();
-        hasErrors |= !Load();
-
-        UpdateResources();
-
-        return !hasErrors;
-    }
-
     Path Settings::GetAssociatedPath() const {
         return ResourceManager::Instance().GetResPath();
     }

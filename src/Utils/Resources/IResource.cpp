@@ -31,8 +31,6 @@ namespace SR_UTILS_NS {
             SR_LOG("IResource::Reload() : reloading {} \"{}\" resource...", GetResourceType(), GetResourceId());
         }
 
-        m_loadState = LoadState::Reloading;
-
         Broadcast(RELOAD_BEGIN_EVENT);
 
         Unload();
@@ -238,11 +236,7 @@ namespace SR_UTILS_NS {
     }
 
     bool IResource::Unload() {
-        if (m_loadState == LoadState::Unknown ||
-            m_loadState == LoadState::Loaded ||
-            m_loadState == LoadState::Unloading ||
-            m_loadState == LoadState::Reloading
-        ) {
+        if (m_loadState == LoadState::Unknown || m_loadState == LoadState::Loaded) {
             m_loadState = LoadState::Unloaded;
             return true;
         }
@@ -255,11 +249,7 @@ namespace SR_UTILS_NS {
     }
 
     bool IResource::Load() {
-        if (m_loadState == LoadState::Unknown ||
-            m_loadState == LoadState::Unloaded ||
-            m_loadState == LoadState::Reloading ||
-            m_loadState == LoadState::Loading
-        ) {
+        if (m_loadState == LoadState::Unknown || m_loadState == LoadState::Unloaded) {
             m_loadState = LoadState::Loaded;
             return true;
         }
@@ -320,10 +310,6 @@ namespace SR_UTILS_NS {
         }
 
         ResourceManager::Instance().ReloadResource(this);
-    }
-
-    bool IResource::IsResourceWillBeDeleted() const {
-        return GetCountUses() == 1 && !IsDestroyed() && !IsRegistered();
     }
 
     bool IResource::IsLoaded() const noexcept {

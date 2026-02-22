@@ -1,4 +1,9 @@
+//
+// Created by Monika on 22.02.2026
+//
+
 #include <Utils/TaskManager/TaskManager.h>
+#include <Utils/Platform/Platform.h>
 
 namespace SR_UTILS_NS {
     Task::Task(TaskFn fn, bool createThread)
@@ -9,23 +14,6 @@ namespace SR_UTILS_NS {
         , m_thread(nullptr)
     {
         m_state->store(State::Waiting);
-    }
-
-    Task::Task(Task &&task) noexcept {
-        m_thread = std::exchange(task.m_thread, { });
-        m_function = task.m_function;
-        m_id = std::exchange(task.m_id, { });
-        m_state = std::exchange(task.m_state, { });
-        m_createThread = std::exchange(task.m_createThread, { });
-    }
-
-    Task &Task::operator=(Task &&task) noexcept {
-        m_thread = std::exchange(task.m_thread, { });
-        m_function = task.m_function;
-        m_id = std::exchange(task.m_id, { });
-        m_state = std::exchange(task.m_state, { });
-        m_createThread = std::exchange(task.m_createThread, { });
-        return *this;
     }
 
     Task::~Task() {
@@ -73,7 +61,7 @@ namespace SR_UTILS_NS {
 
         if (m_createThread) {
             SR_HTYPES_NS::Thread::Factory::Instance().Create(m_thread, m_function, m_state);
-            m_thread->SetName("Task manager");
+            m_thread->SetName("Task");
         }
         else {
             m_function(m_state);
@@ -103,12 +91,12 @@ namespace SR_UTILS_NS {
         m_id = id;
     }
 
-    SR_UTILS_NS::TaskManager::~TaskManager() {
+    TaskManager::~TaskManager() {
         if (!m_tasks.empty() || !m_ids.empty()) {
             SRAssert(false);
 
-            for (Task& task : m_tasks) {
-                task.Stop();
+            for (const Task::Ptr& pTask : m_tasks) {
+                pTask->Stop();
             }
         }
 
@@ -118,8 +106,9 @@ namespace SR_UTILS_NS {
         SRAssert(!m_thread);
     }
 
-    uint64_t SR_UTILS_NS::TaskManager::GetUniqueId() const {
-        return 0;
+    uint64_t TaskManager::GetUniqueId() const {
+        static std::atomic<uint64_t> idCounter = 0;
+        return ++idCounter;
     }
 
     void TaskManager::InitSingleton() {
@@ -132,28 +121,49 @@ namespace SR_UTILS_NS {
 
         SR_INFO("TaskManager::InitSingleton() : run task manager thread...");
 
-        m_thread = SR_HTYPES_NS::Thread::Factory::Instance().Create([this]() {
+        SR_HTYPES_NS::Thread::Factory::Instance().Create(m_thread, [this]() {
+            std::vector<Task::Ptr> toRun;
+            std::vector<uint64_t> completedIds;
+
             while (m_isRun.load()) {
-                m_thread->Sleep(10);
+                SR_TRACY_ZONE_N("TaskManager");
 
-                SR_SCOPED_LOCK;
+                SR_PLATFORM_NS::Sleep(5);
+                completedIds.clear();
+                toRun.clear();
 
-                for (auto pIt = m_tasks.begin(); pIt != m_tasks.end(); ) {
-                    if (pIt->IsWaiting()) {
-                        pIt->Run();
+                /// копируем задачи, которые нужно запустить, чтобы не держать блокировку на весь цикл
+                {
+                    SR_SCOPED_LOCK;
+                    for (auto&& pTask : m_tasks) {
+                        if (pTask->IsWaiting()) {
+                            toRun.emplace_back(pTask);
+                        }
                     }
+                }
 
-                    if (pIt->IsCompleted()) {
-                        m_results.insert(std::make_pair(pIt->GetId(), pIt->GetResult()));
-                        m_ids.erase(pIt->GetId());
-                        pIt = m_tasks.erase(pIt);
-                    }
-                    else {
-                        ++pIt;
+                for (auto&& pTask : toRun) {
+                    pTask->Run();
+                }
+
+                /// проверяем, какие задачи завершились, и сохраняем их результаты
+                {
+                    SR_SCOPED_LOCK;
+                    for (auto pIt = m_tasks.begin(); pIt != m_tasks.end(); ) {
+                        if (Task::Ptr pTask = *pIt; pTask->IsCompleted()) {
+                            m_results.insert(std::make_pair(pTask->GetId(), pTask->GetResult()));
+                            m_ids.erase(pTask->GetId());
+                            pIt = m_tasks.erase(pIt);
+                        }
+                        else {
+                            ++pIt;
+                        }
                     }
                 }
             }
         });
+
+        m_thread->SetName("Task manager");
 
         if (!m_thread->Joinable()) {
             SR_ERROR("TaskManager::InitSingleton() : failed to run a thread!");
@@ -162,24 +172,36 @@ namespace SR_UTILS_NS {
         Singleton::InitSingleton();
     }
 
-    TaskManager::TaskId TaskManager::Execute(Task &&task) {
-        SR_SCOPED_LOCK;
+    TaskManager::TaskId TaskManager::ExecuteAsync(const SR_HTYPES_NS::Function<void()>& function) {
+        SR_LOCK_GUARD;
+
+        auto&& pTask = new Task([function](std::atomic<Task::State>* pState) {
+            function();
+            pState->store(Task::State::Completed);
+        }, false);
 
         const uint64_t uniqueId = GetUniqueId();
-
-        task.SetId(uniqueId);
+        pTask->SetId(uniqueId);
         m_ids.insert(uniqueId);
-        m_tasks.emplace_back(std::move(task));
+        m_tasks.emplace_back(pTask);
 
         return uniqueId;
     }
 
-    TaskManager::TaskId TaskManager::Execute(const TaskFn& function, bool createThread) {
-        SR_SCOPED_LOCK;
+    TaskManager::TaskId TaskManager::ExecuteParallel(const Function<void()> &function) {
+        SR_LOCK_GUARD;
 
-        Task task(function, createThread);
+        auto&& pTask = new Task([function](std::atomic<Task::State>* pState) {
+            function();
+            pState->store(Task::State::Completed);
+        }, true);
 
-        return Execute(std::move(task));
+        const uint64_t uniqueId = GetUniqueId();
+        pTask->SetId(uniqueId);
+        m_ids.insert(uniqueId);
+        m_tasks.emplace_back(pTask);
+
+        return uniqueId;
     }
 
     Task::State SR_UTILS_NS::TaskManager::GetResult(uint64_t taskId) const {
@@ -200,5 +222,11 @@ namespace SR_UTILS_NS {
         }
 
         Singleton::OnSingletonDestroy();
+    }
+
+    bool TaskManager::IsActive(TaskManager::TaskId taskId) const {
+        SR_TRACY_ZONE;
+        SR_SCOPED_LOCK;
+        return m_ids.count(taskId) == 1;
     }
 }
