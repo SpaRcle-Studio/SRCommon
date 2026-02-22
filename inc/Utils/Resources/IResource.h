@@ -35,8 +35,6 @@ namespace SR_UTILS_NS {
         SR_INLINE_STATIC const StringAtom RELOAD_BEGIN_EVENT = "ReloadBegin";
         SR_INLINE_STATIC const StringAtom RELOAD_DONE_EVENT = "ReloadDone";
 
-        using Ptr = SR_HTYPES_NS::SharedPtr<IResource>;
-
         enum class LoadState : uint8_t {
             Unknown, Loaded, Reloading, Loading, Unloading, Unloaded, Error
         };
