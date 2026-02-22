@@ -333,8 +333,8 @@ namespace SR_WORLD_NS {
     }
 
     SceneObject::Ptr Scene::InstanceFromFile(const SR_UTILS_NS::Path& path) {
-        if (path.GetExtensionView() == Prefab::EXTENSION) {
-            if (auto&& pPrefab = Prefab::Load(path)) {
+        if (path.GetExtensionView() == Prefab::GetMetaStatic()->GetExtension()) {
+            if (auto&& pPrefab = CoreResLoader::Load<Prefab>(path)) {
                 auto&& pInstanced = pPrefab->Instance(this);
                 pPrefab->CheckResourceUsage();
                 return pInstanced;
@@ -343,7 +343,7 @@ namespace SR_WORLD_NS {
             return SceneObject::Ptr();
         }
 
-        if (auto&& raw = SR_HTYPES_NS::RawMesh::Load(path)) {
+        if (auto&& raw = CoreResLoader::Load<SR_HTYPES_NS::RawMesh>(path)) {
             SceneObject::Ptr root = Instance(raw.Get());
 
             if (raw->GetCountUses() == 0) {

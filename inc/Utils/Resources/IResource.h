@@ -17,10 +17,20 @@ namespace SR_UTILS_NS {
 
     struct ResourceInfo;
 
+    struct IResourceVariant {
+        virtual ~IResourceVariant() = default;
+        SR_NODISCARD virtual SRHashType GetHash() const = 0;
+    };
+
+    /// @abstract
     class SR_COMMON_DLL_API IResource : public ResourceContainer, public SubscriptionHolder, public Serializable {
         SR_CLASS()
         friend class ResourceType;
         using ResourceInfoWeakPtr = std::weak_ptr<ResourceInfo>;
+    public:
+        using Ptr = SR_HTYPES_NS::SharedPtr<IResource>;
+        using WeakPtr = SR_HTYPES_NS::WeakPtr<IResource>;
+
     public:
         SR_INLINE_STATIC const StringAtom RELOAD_BEGIN_EVENT = "ReloadBegin";
         SR_INLINE_STATIC const StringAtom RELOAD_DONE_EVENT = "ReloadDone";
@@ -42,14 +52,10 @@ namespace SR_UTILS_NS {
     public:
         bool Execute(const std::function<bool()>& fun) const;
 
-        /// является ли ресурс файловым
-        SR_NODISCARD virtual bool IsFileResource() const noexcept { return true; }
-
-        SR_NODISCARD virtual bool IsAllowedMultiInstance() const { return false; }
-
         SR_NODISCARD virtual uint64_t GetFileHash() const;
         SR_NODISCARD virtual bool IsAllowedToRevive() const { return false; }
         SR_NODISCARD virtual Path GetAssociatedPath() const;
+        SR_NODISCARD virtual const IResourceVariant* GetVariant() const { return nullptr; }
 
         SR_NODISCARD bool IsResourceWillBeDeleted() const;
         SR_NODISCARD bool IsRegistered() const noexcept { return m_isRegistered; }
@@ -60,7 +66,7 @@ namespace SR_UTILS_NS {
         SR_NODISCARD uint16_t GetReloadCount() const noexcept;
         SR_NODISCARD uint64_t GetLifetime() const noexcept { return m_lifetime; }
         SR_NODISCARD SR_UTILS_NS::StringAtom GetResourceId() const noexcept;
-        SR_NODISCARD virtual SR_UTILS_NS::StringAtom GetResourceType() const noexcept;
+        SR_NODISCARD SR_UTILS_NS::StringAtom GetResourceType() const noexcept;
         SR_NODISCARD LoadState GetResourceLoadState() const { return m_loadState; }
         SR_NODISCARD uint64_t GetResourceHash() const noexcept { return m_resourceHash; }
         SR_NODISCARD ResourceInfoWeakPtr GetResourceInfo() const noexcept { return m_resourceInfo; }
@@ -108,6 +114,7 @@ namespace SR_UTILS_NS {
 
         void SetId(SR_UTILS_NS::StringAtom id, bool autoRegister = true);
         void SetId(SR_UTILS_NS::StringAtom id, const SR_UTILS_NS::Path& path, bool autoRegister = true);
+        virtual void SetVariant(const IResourceVariant& variant) { }
 
         virtual void ReviveResource();
 

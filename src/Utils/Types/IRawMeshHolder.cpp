@@ -136,7 +136,7 @@ namespace SR_HTYPES_NS {
         }
 
         SR_UTILS_NS::ResourceManager::Instance().Execute([&]() {
-            SetRawMesh(SR_HTYPES_NS::RawMesh::Load(path));
+            SetRawMesh(CoreResLoader::Load<RawMesh>(path));
         });
     }
 

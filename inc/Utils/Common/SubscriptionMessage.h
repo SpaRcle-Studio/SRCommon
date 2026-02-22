@@ -19,6 +19,7 @@ namespace SR_UTILS_NS {
         void SetInt(StringAtom id, uint64_t value);
         void SetBool(StringAtom id, bool value);
         void SetString(StringAtom id, const std::string& value);
+        void SetStringAtom(StringAtom id, StringAtom value);
         void SetPath(StringAtom id, const SR_UTILS_NS::Path& value);
         void SetAny(StringAtom id, const std::any& value);
         void SetAny(StringAtom id, std::any&& value);
@@ -28,6 +29,7 @@ namespace SR_UTILS_NS {
         SR_NODISCARD uint64_t GetInt(StringAtom id, const std::optional<uint64_t>& def = std::nullopt) const;
         SR_NODISCARD bool GetBool(StringAtom id, const std::optional<bool>& def = std::nullopt) const;
         SR_NODISCARD std::string GetString(StringAtom id, const std::optional<std::string>& def = std::nullopt) const;
+        SR_NODISCARD StringAtom GetStringAtom(StringAtom id, const std::optional<StringAtom>& def = std::nullopt) const;
         SR_NODISCARD SR_UTILS_NS::Path GetPath(StringAtom id, const std::optional<SR_UTILS_NS::Path>& def = std::nullopt) const;
         SR_NODISCARD const SR_UTILS_NS::Path& GetPathRef(StringAtom id) const;
         SR_NODISCARD const std::any& GetAny(StringAtom id) const;
@@ -83,6 +85,7 @@ namespace SR_UTILS_NS {
 
             bool boolValue = false;
             uint64_t intValue = 0;
+            StringAtom atomValue;
             std::optional<SR_UTILS_NS::Path> pathValue;
             std::optional<std::any> anyValue;
             std::optional<std::string> strValue;
@@ -93,6 +96,9 @@ namespace SR_UTILS_NS {
                 }
                 else if constexpr (std::is_same_v<T, uint64_t>) {
                     return intValue;
+                }
+                else if constexpr (std::is_same_v<T, StringAtom>) {
+                    return atomValue;
                 }
                 else if constexpr (std::is_same_v<T, std::string>) {
                     if (!strValue.has_value()) {

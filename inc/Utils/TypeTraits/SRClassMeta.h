@@ -36,11 +36,15 @@ namespace SR_UTILS_NS {
         SR_NODISCARD virtual SR_UTILS_NS::StringAtom GetInspectorName() const noexcept;
 
         SR_NODISCARD uint64_t GetVersion() const noexcept;
+        SR_NODISCARD SR_UTILS_NS::StringAtom GetExtension() const noexcept;
+        SR_NODISCARD bool HasExtension(SR_UTILS_NS::StringAtom extension) const noexcept;
+        SR_NODISCARD bool HasExtension(std::string_view extension) const noexcept;
+        SR_NODISCARD bool HasExtension(const std::string& extension) const noexcept;
 
         SR_NODISCARD const SR_UTILS_NS::Reflection::Method* FindMethod(SR_UTILS_NS::StringAtom name) const noexcept;
 
         SR_NODISCARD virtual std::span<const SR_UTILS_NS::StringAtom> GetCategory() const noexcept;
-        SR_NODISCARD virtual SR_UTILS_NS::StringAtom GetExtension() const noexcept;
+        SR_NODISCARD virtual std::span<const SR_UTILS_NS::StringAtom> GetExtensions() const noexcept;
         SR_NODISCARD virtual bool IsAbstract() const noexcept;
         SR_NODISCARD virtual bool IsHidden() const noexcept;
         SR_NODISCARD virtual bool IsEditorOnly() const noexcept;

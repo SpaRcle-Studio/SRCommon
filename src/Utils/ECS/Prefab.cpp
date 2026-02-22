@@ -21,11 +21,6 @@ namespace SR_UTILS_NS {
         SR_SAFE_DELETE_PTR(m_pDeserializer);
     }
 
-    Prefab::Ptr Prefab::Load(const Path& rawPath) {
-        SR_TRACY_ZONE;
-        return ResourceManager::Instance().GetOrLoadResource<Prefab>(rawPath);
-    }
-
     bool Prefab::LoadToSO(const SceneObjectPtr& pSO) {
         SR_TRACY_ZONE;
 

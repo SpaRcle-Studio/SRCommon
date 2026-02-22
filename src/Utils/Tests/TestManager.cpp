@@ -4,6 +4,7 @@
 
 #include <Utils/Tests/TestManager.h>
 #include <Utils/Platform/Platform.h>
+#include <Utils/Debug.h>
 
 #include <Codegen/TestManager.generated.hpp>
 

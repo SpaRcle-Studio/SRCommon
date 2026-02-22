@@ -27,13 +27,17 @@ namespace SR_WORLD_NS {
 }
 
 namespace SR_HTYPES_NS {
-    struct RawMeshParams {
+    struct RawMeshParams : public SR_UTILS_NS::IResourceVariant {
         bool animation = false;
         bool convexHull = false;
 
         bool operator==(const RawMeshParams& rhs) const;
+
+        SR_NODISCARD SRHashType GetHash() const override;
+
     };
 
+    /// @extension(fbx, obj, gltf, gltf2, dae, 3ds, blend, mmd)
     class SR_COMMON_DLL_API RawMesh : public IResource {
         SR_CLASS()
         using Super = IResource;
@@ -47,11 +51,9 @@ namespace SR_HTYPES_NS {
         ~RawMesh() override;
 
     public:
-        static RawMesh::Ptr Load(const SR_UTILS_NS::Path &path, RawMeshParams params);
-        static RawMesh::Ptr Load(const SR_UTILS_NS::Path &path);
-
-    public:
         void ComputeConvexHull();
+
+        void SetVariant(const SR_UTILS_NS::IResourceVariant& variant) override;
 
         SR_NODISCARD uint32_t GetMeshesCount() const;
         SR_NODISCARD std::string_view GetGeometryName(uint32_t id) const;

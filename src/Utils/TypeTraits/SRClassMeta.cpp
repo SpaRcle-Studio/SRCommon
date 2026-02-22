@@ -69,13 +69,33 @@ namespace SR_UTILS_NS {
     	return {};
     }
 
+    std::span<const SR_UTILS_NS::StringAtom> SRClassMeta::GetExtensions() const noexcept {
+    	for (auto&& pBase : GetBaseMetas()) {
+			if (!pBase->GetExtensions().empty()) {
+				return pBase->GetExtensions();
+			}
+		}
+    	return {};
+    }
+
+    bool SRClassMeta::HasExtension(SR_UTILS_NS::StringAtom extension) const noexcept {
+        auto&& extensions = GetExtensions();
+        return std::ranges::any_of(extensions, [extension](auto&& ext) { return ext == extension; });
+    }
+
+    bool SRClassMeta::HasExtension(std::string_view extension) const noexcept {
+        auto&& extensions = GetExtensions();
+        return std::ranges::any_of(extensions, [extension](auto&& ext) { return ext == extension; });
+    }
+
+    bool SRClassMeta::HasExtension(const std::string& extension) const noexcept {
+        return HasExtension(std::string_view(extension));
+    }
+
     SR_UTILS_NS::StringAtom SRClassMeta::GetExtension() const noexcept {
-        for (auto&& pBase : GetBaseMetas()) {
-            if (!pBase->GetExtension().empty()) {
-                return pBase->GetExtension();
-            }
-        }
-        return {};
+        static const SR_UTILS_NS::StringAtom empty = {};
+        auto&& extensions = GetExtensions();
+        return extensions.empty() ? empty : extensions.front();
     }
 
     uint64_t SRClassMeta::GetVersion() const noexcept {

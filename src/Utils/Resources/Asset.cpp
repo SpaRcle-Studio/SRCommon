@@ -17,7 +17,7 @@ namespace SR_UTILS_NS {
         auto&& resourceManager = ResourceManager::Instance();
         SR_UTILS_NS::Path&& path = rawPath.RemoveSubPath(resourceManager.GetResPath());
 
-        Asset::Ptr pAsset = resourceManager.FindAnyType(path.ToStringRef()).DynamicCast<Asset>();
+        Asset::Ptr pAsset = resourceManager.FindAnyType(path.ToStringRef(), nullptr).DynamicCast<Asset>();
         if (pAsset) {
             return pAsset;
         }

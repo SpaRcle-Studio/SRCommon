@@ -4,30 +4,34 @@
 
 #include <Utils/Resources/IResourceReloader.h>
 #include <Utils/Resources/ResourceInfo.h>
+#include <Utils/Events/Broadcaster.h>
+#include <Utils/Common/SubscriptionMessage.h>
 
 namespace SR_UTILS_NS {
-    bool DefaultResourceReloader::Reload(const SR_UTILS_NS::Path& /** path */, ResourceInfo* pResourceInfo) {
+    bool DefaultResourceReloader::Reload(const SR_UTILS_NS::Path& /** path */, ResourcesStorage* pStorage) {
         SR_TRACY_ZONE;
 
-        for (auto&& pResource : pResourceInfo->m_loaded) {
-            if (!IsResourceSuitableForReload(pResource)) {
-                continue;
+        pStorage->ForEach([this](IResource& resource) {
+            if (IsResourceSuitableForReload(resource)) {
+                resource.Reload();
             }
+        });
 
-            pResource->Reload();
-        }
+        SR_UTILS_NS::SubscriptionMessage msg;
+        msg.SetString("Id", pStorage->id);
+        SR_UTILS_NS::Broadcaster::Instance().Broadcast(Events::EVENT_ON_RESOURCE_RELOADED_ID, msg);
 
         return true;
     }
 
-    bool IResourceReloader::IsResourceSuitableForReload(const IResource::Ptr& pResource) const {
+    bool IResourceReloader::IsResourceSuitableForReload(const IResource& resource) const {
         SR_TRACY_ZONE;
 
-        if (pResource->IsDestroyed()) {
+        if (resource.IsDestroyed()) {
             return false;
         }
 
-        auto&& loadState = pResource->GetResourceLoadState();
+        auto&& loadState = resource.GetResourceLoadState();
 
         using LS = IResource::LoadState;
         if (loadState == LS::Reloading || loadState == LS::Loading || loadState == LS::Unloading) {

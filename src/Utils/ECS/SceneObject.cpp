@@ -70,7 +70,7 @@ namespace SR_UTILS_NS {
         deserializer.ReadString(prefabPath, prefabId);
 
         if (!prefabPath.empty()) {
-            if (auto&& pPrefab = SR_UTILS_NS::Prefab::Load(prefabPath)) {
+            if (auto&& pPrefab = CoreResLoader::Load<Prefab>(SR_UTILS_NS::Path(prefabPath))) {
                 if (GetComponentsCount() > 0) {
                     SR_ERROR("SceneObject::Load() : prefab not loaded, but components are present! Path: {}", prefabPath);
                     RemoveComponents();

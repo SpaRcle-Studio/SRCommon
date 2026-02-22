@@ -5,17 +5,23 @@
 #include <Utils/Resources/ResourceManager.h>
 
 #include <Utils/Resources/IResourceReloader.h>
+#include <Utils/Resources/ResourceInfo.h>
 #include <Utils/Resources/FileWatcher.h>
+#include <Utils/Resources/Asset.h>
+#include <Utils/Resources/Asset.h>
 #include <Utils/Common/Features.h>
 #include <Utils/Common/StringFormat.h>
 #include <Utils/Common/Hashes.h>
 #include <Utils/Common/StringUtils.h>
+#include <Utils/TypeTraits/Factory.h>
 
 namespace SR_UTILS_NS {
     /// Seconds
     const uint64_t ResourceManager::ResourceLifeTime = 30 * SR_CLOCKS_PER_SEC;
 
     bool ResourceManager::Initialize(const SR_UTILS_NS::Path& resourcesFolder, const SR_UTILS_NS::Path& engineResourceFolder) {
+        SR_TRACY_ZONE;
+
         SR_INFO("ResourceManager::Initialize() : initializing resource manager..."
             "\n\tResources folder: {}\n\tEngine resources folder: {}",
             resourcesFolder, engineResourceFolder
@@ -26,8 +32,11 @@ namespace SR_UTILS_NS {
             return false;
         }
 
-        m_dirtyResources.reserve(256);
+        m_resourceLoaders[Asset::GetClassStaticName()] = [](const StringAtom& id) -> IResource::Ptr {
+            return Asset::Load(Path(id)).StaticCast<IResource>();
+        };
 
+        m_destroyQueue.reserve(256);
         m_defaultReloader = new DefaultResourceReloader();
 
         m_engineFolder = engineResourceFolder;
@@ -88,8 +97,6 @@ namespace SR_UTILS_NS {
 
         PrintMemoryDump();
 
-        SR_SAFE_DELETE_PTR(m_defaultReloader);
-
         for (auto&& [hashTypeName, pResourceType] : m_resources) {
             delete pResourceType;
         }
@@ -107,14 +114,14 @@ namespace SR_UTILS_NS {
 
         SR_SCOPED_LOCK;
 
-        for (auto&& pDestroyedResource : m_destroyed) {
+        for (auto&& pDestroyedResource : m_destroyQueue) {
             if (pResource == pDestroyedResource) {
                 SRHalt("ResourceManager::Destroy() : resource is already destroyed!");
                 return false;
             }
         }
 
-        m_destroyed.emplace_back(pResource);
+        m_destroyQueue.emplace_back(pResource);
 
         return true;
     }
@@ -136,17 +143,16 @@ namespace SR_UTILS_NS {
 
     bool ResourceManager::IsLastResource(const IResource::Ptr& pResource) {
         if (auto&& pIt = m_resources.find(pResource->GetResourceType()); pIt != m_resources.end()) {
-            return pIt->second->IsLast(pResource->GetResourceId());
+            return pIt->second->IsLast(pResource->GetResourceId(), pResource->GetVariant());
         }
-        SRHalt("ResourceManager::IsLastResource() : resource type not found!\n\tType: {}, Id: {}",
+        SRHalt("ResourceManager::IsLastResource() : resource type not found!\n\tType: {}\n\tId: {}",
                pResource->GetResourceType(),
                pResource->GetResourceId());
         return false;
     }
 
     const Path& ResourceManager::GetResPathRef() const {
-        SRAssert2(m_isInit, "Resource manager isn't initialized : " + m_folder.ToString());
-
+        SRAssert2(m_isInit, "Resource manager isn't initialized : {}", m_folder);
         return m_folder;
     }
 
@@ -179,14 +185,15 @@ namespace SR_UTILS_NS {
 
     void ResourceManager::GC() {
         SR_TRACY_ZONE;
-        SR_LOCK_GUARD;
 
         /// Не можем работать, пока какие-то ресурсы не перезагружены
-        if (!m_dirtyResources.empty()) {
+        if (m_hasDirtyResources) {
             return;
         }
 
-        if (m_destroyed.empty()) {
+        SR_LOCK_GUARD;
+
+        if (m_destroyQueue.empty()) {
             return;
         }
 
@@ -196,14 +203,14 @@ namespace SR_UTILS_NS {
             }
         }
 
-        auto resourceIt = m_destroyed.begin();
-        for (; resourceIt != m_destroyed.end(); ) {
+        auto resourceIt = m_destroyQueue.begin();
+        for (; resourceIt != m_destroyQueue.end(); ) {
             auto pResource = *resourceIt;
 
             /// ресурс был оживлен
             if (!pResource->IsDestroyed()) {
-                m_destroyed.erase(resourceIt);
-                resourceIt = m_destroyed.begin();
+                m_destroyQueue.erase(resourceIt);
+                resourceIt = m_destroyQueue.begin();
                 continue;
             }
 
@@ -238,18 +245,20 @@ namespace SR_UTILS_NS {
                 /// то он добавит в m_resourcesToDestroy новый элемент (в этом же потоке), соответственно любой итератор
                 /// инвалидируется, и здесь может потенциально случиться краш, поэтому этот порядок нужно строго союлюдать
 
-                m_destroyed.erase(resourceIt);
+                m_destroyQueue.erase(resourceIt);
                 pResource->DeleteResource();
-                resourceIt = m_destroyed.begin();
+                resourceIt = m_destroyQueue.begin();
             }
         }
 
-        if (Debug::Instance().GetLevel() >= Debug::Level::High && m_destroyed.empty()) {
+        if (Debug::Instance().GetLevel() >= Debug::Level::High && m_destroyQueue.empty()) {
             SR_LOG("ResourceManager::GC() : complete garbage collection.");
         }
     }
 
     void ResourceManager::RegisterResource(const IResource::Ptr& pResource) {
+        SR_TRACY_ZONE;
+
         SRAssert(!pResource->IsRegistered());
 
         if (Debug::Instance().GetLevel() >= Debug::Level::Full) {
@@ -270,23 +279,23 @@ namespace SR_UTILS_NS {
 
         std::string dump = "\n================================ MEMORY DUMP ================================";
 
-        for (const auto& [hashName, type] : m_resources) {
-            dump += "\n\t\"" + std::string(type->GetName()) + "\": " + std::to_string(type->GetCopiesRef().size());
+        for (const auto& [hashName, pResourceType] : m_resources) {
+            dump += "\n\t\"{}\": {}"_format(pResourceType->GetName(), pResourceType->GetCount());
 
             uint32_t id = 0;
-            for (auto& pRes : type->m_resources) {
-                dump += SR_UTILS_NS::Format("\n\t\t{}: {} = {}", id++, pRes->GetResourceId().data(), pRes->GetCountUses());
+            pResourceType->ForEach([&](const IResource& resource) {
+                dump += SR_UTILS_NS::Format("\n\t\t{}: {} = {}", id++, resource.GetResourceId().data(), resource.GetCountUses());
                 ++count;
-            }
+            });
         }
 
         std::string wait;
-        for (auto&& pResource : m_destroyed) {
+        for (auto&& pResource : m_destroyQueue) {
             wait += "\n\t\t" + pResource->GetResourceId().ToStringRef() + "; uses = " +std::to_string(pResource->GetCountUses());
             ++count;
         }
 
-        dump += "\n\tWait destroy: " + std::to_string(m_destroyed.size()) + wait;
+        dump += "\n\tWait destroy: " + std::to_string(m_destroyQueue.size()) + wait;
 
         dump += "\n=============================================================================";
 
@@ -298,9 +307,51 @@ namespace SR_UTILS_NS {
         }
     }
 
-    IResource::Ptr ResourceManager::Find(SR_UTILS_NS::StringAtom id, SR_UTILS_NS::StringAtom typeName) const {
+
+    IResource::Ptr ResourceManager::LoadResource(const Path& rawPath, SR_UTILS_NS::StringAtom typeName, const IResourceVariant* pVariant) {
         SR_TRACY_ZONE;
         SR_SCOPED_LOCK;
+        const SR_UTILS_NS::Path path = rawPath.RemoveSubPath(GetResPathRef());
+        return LoadResource(StringAtom(path.ToStringRef()), typeName, pVariant);
+    }
+
+    IResource::Ptr ResourceManager::LoadResource(SR_UTILS_NS::StringAtom id, SR_UTILS_NS::StringAtom typeName, const IResourceVariant* pVariant) {
+        SR_TRACY_ZONE;
+        SR_SCOPED_LOCK;
+
+        if (auto&& pFound = Find(id, typeName, pVariant)) {
+            return pFound;
+        }
+
+        if (auto&& pIt = m_resourceLoaders.find(typeName); pIt != m_resourceLoaders.end()) {
+            return pIt->second(id);
+        }
+
+        auto&& pResource = Factory::Instance().Create<IResource>(typeName);
+        if (pVariant) {
+            pResource->SetVariant(*pVariant);
+        }
+        pResource->SetId(id.ToStringRef(), false /** auto register */);
+
+        if (!pResource->Reload()) {
+            SR_ERROR("ResourceManager::LoadResource() : failed to load {}! \n\tPath: {}", typeName, id);
+            pResource->DeleteResource();
+            return nullptr;
+        }
+
+        /// отложенная ручная регистрация
+        RegisterResource(pResource);
+
+        return pResource;
+    }
+
+    IResource::Ptr ResourceManager::Find(SR_UTILS_NS::StringAtom id, SR_UTILS_NS::StringAtom typeName, const IResourceVariant* pVariant) const {
+        SR_TRACY_ZONE;
+        SR_SCOPED_LOCK;
+
+        if (typeName == Asset::GetClassStaticName()) {
+            return FindAnyType(id, pVariant);
+        }
 
         auto&& pIt = m_resources.find(typeName);
         if (pIt == m_resources.end()) {
@@ -309,7 +360,7 @@ namespace SR_UTILS_NS {
 
         auto&& [name, resourcesGroup] = *pIt;
 
-        if (auto&& pResource = resourcesGroup->Find(id)) {
+        if (auto&& pResource = resourcesGroup->Find(id, pVariant)) {
             /// раз ресурс ищем, значит он все еще может быть нужен.
             pResource->UpdateResourceLifeTime();
             return pResource;
@@ -318,12 +369,12 @@ namespace SR_UTILS_NS {
         return nullptr;
     }
 
-    IResource::Ptr ResourceManager::FindAnyType(SR_UTILS_NS::StringAtom id) const {
+    IResource::Ptr ResourceManager::FindAnyType(SR_UTILS_NS::StringAtom id, const IResourceVariant* pVariant) const {
         SR_TRACY_ZONE;
         SR_SCOPED_LOCK;
 
         for (auto&& [typeName, resourcesGroup] : m_resources) {
-            if (auto&& pResource = resourcesGroup->Find(id)) {
+            if (auto&& pResource = resourcesGroup->Find(id, pVariant)) {
                 /// раз ресурс ищем, значит он все еще может быть нужен.
                 pResource->UpdateResourceLifeTime();
                 return pResource;
@@ -349,7 +400,7 @@ namespace SR_UTILS_NS {
             {
                 {
                     SR_SCOPED_LOCK;
-                    if (m_destroyed.empty()) {
+                    if (m_destroyQueue.empty()) {
                         break;
                     }
                 }
@@ -379,52 +430,16 @@ namespace SR_UTILS_NS {
         callback(m_resources);
     }
 
-    bool ResourceManager::RegisterReloader(IResourceReloader* pReloader, SR_UTILS_NS::StringAtom typeName) {
-        SR_LOCK_GUARD;
-        GetOrCreateResourceType(typeName)->SetReloader(pReloader);
-        return true;
-    }
-
     void ResourceManager::ReloadResources(float_t dt) {
         SR_TRACY_ZONE;
 
-        /// не блокируем поток, иначе не будет смысла от разделения.
-        /// если прочитаем некорректные данные из empty, будем считать, что не повезло.
-        if (m_dirtyResources.empty()) {
-            return;
-        }
-
-        SR_LOCK_GUARD;
-
-        while (!m_dirtyResources.empty()) {
-            ResourceInfo::WeakPtr pResourceInfo = m_dirtyResources.back();
-            m_dirtyResources.pop_back();
-
-            /// ресурс мог быть освобожден в GC
-            auto&& pHardPtr = pResourceInfo.lock();
-            if (!pHardPtr) {
-                continue;
+        if (m_hasDirtyResources) {
+            SR_LOCK_GUARD;
+            SR_LOG("ResourceManager::ReloadResources() : reloading dirty resources...");
+            for (auto&& [typeName, pResourceType] : m_resources) {
+                pResourceType->ReloadDirtyResources();
             }
-
-            IResourceReloader* pResourceReloader = nullptr;
-
-            if (auto&& pGroupReloader = pHardPtr->GetReloader()) {
-                pResourceReloader = pGroupReloader;
-            }
-            else {
-                pResourceReloader = m_defaultReloader;
-            }
-
-            if (pHardPtr->m_path.empty()) {
-                SR_ERROR("ResourceManager::ReloadResources() : resource have empty path!\n\tResource name: " +
-                    pHardPtr->m_resourceType->GetName() + "\n\tHash state: " + std::to_string(pHardPtr->m_resourceHash)
-                );
-                continue;
-            }
-
-            if (pResourceReloader && !pResourceReloader->Reload(pHardPtr->m_path, pHardPtr.get())) {
-                SR_ERROR("ResourceManager::ReloadResources() : failed to reload resource!\n\tPath: " + pHardPtr->m_path.ToStringRef());
-            }
+            m_hasDirtyResources = false;
         }
     }
 
@@ -436,26 +451,22 @@ namespace SR_UTILS_NS {
     void ResourceManager::ReloadAll(SR_UTILS_NS::StringAtom typeName) {
         SR_LOCK_GUARD;
         SR_TRACY_ZONE;
-
-        auto&& pIt = m_resources.find(typeName);
-        if (pIt == m_resources.end()) {
-            return;
+        if (auto&& pIt = m_resources.find(typeName); pIt != m_resources.end()) {
+            pIt->second->ReloadAll();
         }
-
-        for (auto&& pResource : pIt->second->GetResources()) {
-            ReloadResource(pResource);
-        }
+        m_hasDirtyResources = true;
     }
 
     void ResourceManager::ReloadResource(const IResource::Ptr& pResource) {
         SR_TRACY_ZONE;
         SR_LOCK_GUARD;
-        for (auto&& pDirtyResource : m_dirtyResources) {
-            if (pDirtyResource.lock() == pResource->GetResourceInfo().lock()) {
-                return;
-            }
+        if (auto&& pIt = m_resources.find(pResource->GetResourceType()); pIt != m_resources.end()) {
+            pIt->second->Reload(pResource);
         }
-        m_dirtyResources.emplace_back(pResource->GetResourceInfo());
+        else {
+            SRHalt("ResourceManager::ReloadResource() : resource type not found!\n\tType: {}", pResource->GetResourceType());
+        }
+        m_hasDirtyResources = true;
     }
 
     void ResourceManager::EnableStackTraceProfiling() {
@@ -481,13 +492,13 @@ namespace SR_UTILS_NS {
             }
 
             if (pResource->IsAllowedToRevive()) {
-                auto&& pIt = std::find(m_destroyed.begin(), m_destroyed.end(), pResource);
-                if (pIt == m_destroyed.end()) {
+                if (auto&& pIt = std::ranges::find(m_destroyQueue, pResource); pIt != m_destroyQueue.end()) {
+                    m_destroyQueue.erase(pIt);
+                }
+                else {
                     SRHalt("ResourceManager::ReviveResource() : resource not found!");
                     return false;
                 }
-
-                m_destroyed.erase(pIt);
 
                 if (SR_UTILS_NS::Debug::Instance().GetLevel() >= SR_UTILS_NS::Debug::Level::Medium) {
                     SR_LOG("ResourceManager::ReviveResource() : revive resource \"" + pResource->GetResourceId().ToStringRef() + "\"");

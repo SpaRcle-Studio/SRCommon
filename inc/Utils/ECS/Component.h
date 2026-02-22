@@ -16,12 +16,6 @@ namespace SR_HTYPES_NS {
     class DataStorage;
 }
 
-#define SR_INITIALIZE_COMPONENT(name)                                                                                   \
-public:                                                                                                                 \
-    SR_INLINE static const SR_UTILS_NS::StringAtom COMPONENT_NAME = #name; /** NOLINT */                                \
-    SR_NODISCARD const SR_UTILS_NS::StringAtom& GetComponentName() const override { return name::COMPONENT_NAME; }      \
-private:                                                                                                                \
-
 namespace SR_WORLD_NS {
     class Scene;
 }

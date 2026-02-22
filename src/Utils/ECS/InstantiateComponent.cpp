@@ -34,7 +34,7 @@ namespace SR_UTILS_NS {
             }
             else if (m_instanceMode == InstantiateComponentInstanceMode::Prefab) {
                 if (!pPrefab) {
-                    pPrefab = SR_UTILS_NS::Prefab::Load(m_prefabId);
+                    pPrefab = CoreResLoader::Load<Prefab>(m_prefabId);
                     pPrefab->AddUsePoint();
                 }
 

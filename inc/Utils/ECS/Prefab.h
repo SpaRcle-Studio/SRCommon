@@ -19,6 +19,7 @@ namespace SR_WORLD_NS {
 namespace SR_UTILS_NS {
     class SceneObject;
 
+    /// @extension(prefab)
     class SR_COMMON_DLL_API Prefab : public IResource {
         SR_CLASS()
     public:
@@ -28,15 +29,11 @@ namespace SR_UTILS_NS {
         using SceneObjectPtr = SR_HTYPES_NS::SharedPtr<SceneObject>;
         using ScenePtr = SR_WORLD_NS::Scene*;
 
-        static constexpr const char* EXTENSION = "prefab";
-
     public:
         Prefab();
         ~Prefab() override;
 
     public:
-        static Prefab::Ptr Load(const SR_UTILS_NS::Path& rawPath);
-
         SR_NODISCARD bool LoadToSO(const SceneObjectPtr& pSO);
         SR_NODISCARD SceneObjectPtr Instance(const ScenePtr& scene) const;
         SR_NODISCARD const SceneObjectPtr& GetData() const noexcept { return m_data; }

@@ -129,6 +129,15 @@ namespace SR_UTILS_NS {
         SR_MAKE_BREAKPOINT;
     }
 
+    bool Factory::HasBaseClass(StringAtom name, StringAtom baseClass) const noexcept {
+        if (auto&& pIt = m_types.find(name); pIt != m_types.end()) {
+            if (auto&& pMeta = pIt->second.metaGetter()) {
+                return pMeta->IsInherited(baseClass);
+            }
+        }
+        return false;
+    }
+
     bool BaseFactory::IsRegistered(const SRClassMeta* pMeta) const {
         return pMeta && GetType(pMeta->GetFactoryName()) == pMeta;
     }

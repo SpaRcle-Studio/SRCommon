@@ -44,17 +44,6 @@ namespace SR_HTYPES_NS {
     #endif
     }
 
-    RawMesh::Ptr RawMesh::Load(const SR_UTILS_NS::Path &rawPath) {
-        return Load(rawPath, RawMeshParams());
-    }
-
-    RawMesh::Ptr RawMesh::Load(const SR_UTILS_NS::Path &rawPath, RawMeshParams params) {
-        return ResourceManager::Instance().GetOrLoadResource<RawMesh>(rawPath,
-            [&params](RawMesh& mesh) { mesh.m_params = params; },
-            [&params]() { return SR_UTILS_NS::ToString(SR_HASH(params)); }
-        );
-    }
-
     bool RawMesh::Unload() {
         bool hasErrors = !IResource::Unload();
 
@@ -716,8 +705,6 @@ namespace SR_HTYPES_NS {
             return;
         }
 
-        //std::vector<>
-
         for (uint16_t i = 0; i <= static_cast<uint16_t>(GetMeshesCount()); ++i) {
             auto&& computedVertices = SR_UTILS_NS::ComputeConvexHull(GetVertices(i));
             SR_NOOP;
@@ -777,7 +764,15 @@ namespace SR_HTYPES_NS {
         return {};
     }
 
+    void RawMesh::SetVariant(const SR_UTILS_NS::IResourceVariant& variant) {
+        m_params = static_cast<const RawMeshParams&>(variant);
+    }
+
     bool RawMeshParams::operator==(const RawMeshParams &rhs) const {
         return animation == rhs.animation && convexHull == rhs.convexHull;
+    }
+
+    SRHashType RawMeshParams::GetHash() const {
+        return SR_HASH(*this);
     }
 }

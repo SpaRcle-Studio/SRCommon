@@ -9,24 +9,21 @@
 #include <Utils/Types/SharedPtr.h>
 
 namespace SR_UTILS_NS {
-    class ResourceInfo;
+    struct ResourcesStorage;
     class Path;
     class IResource;
 
     class SR_COMMON_DLL_API IResourceReloader : public SR_UTILS_NS::NonCopyable {
     public:
-        SR_NODISCARD virtual bool IsResourceSuitableForReload(const SR_HTYPES_NS::SharedPtr<IResource>& pResource) const;
-        SR_NODISCARD virtual bool Reload(const SR_UTILS_NS::Path& path, ResourceInfo* pResourceInfo) = 0;
-
-    protected:
-        std::recursive_mutex m_mutex;
+        SR_NODISCARD virtual bool IsResourceSuitableForReload(const IResource& resource) const;
+        SR_NODISCARD virtual bool Reload(const SR_UTILS_NS::Path& path, ResourcesStorage* pStorage) = 0;
 
     };
 
     /** Обычная перезагрузка, перебором каждого ресурса и вызова ему Reload */
     class SR_COMMON_DLL_API DefaultResourceReloader final : public IResourceReloader {
     public:
-        SR_NODISCARD bool Reload(const SR_UTILS_NS::Path& path, ResourceInfo* pResourceInfo) override;
+        SR_NODISCARD bool Reload(const SR_UTILS_NS::Path& path, ResourcesStorage* pStorage) override;
 
     };
 }

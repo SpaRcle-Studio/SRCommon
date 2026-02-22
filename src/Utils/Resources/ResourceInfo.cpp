@@ -7,186 +7,214 @@
 #include <Utils/Resources/ResourceManager.h>
 
 namespace SR_UTILS_NS {
-    ResourceType::~ResourceType() {
-        SetReloader(nullptr);
-    }
-
-    IResource::Ptr ResourceType::Find(const ResourceType::ResourceId &id)  {
-        auto&& pIt = m_copies.find(id);
-        if (pIt == m_copies.end()) {
-            return nullptr;
-        }
-
-        if (pIt->second.empty()) {
-            return nullptr;
-        }
-
-        for (auto&& pResource : pIt->second) {
-            if (!SR_UTILS_NS::ResourceManager::Instance().ReviveResource(pResource)) {
-                continue;
-            }
-
-            return pResource;
+    IResource::Ptr ResourceType::Find(ResourceId id, const IResourceVariant* pVariant) const {
+        if (auto&& pIt = m_storage.find(id); pIt != m_storage.end()) {
+            return pIt->second->Find(pVariant);
         }
 
         return nullptr;
     }
 
-    bool ResourceType::IsLast(const ResourceType::ResourceId &id) {
-        if (auto&& pIt = m_copies.find(id); pIt == m_copies.end()) {
+    bool ResourceType::IsLast(ResourceId id, const IResourceVariant* pVariant) {
+        if (auto&& pIt = m_storage.find(id); pIt == m_storage.end()) {
             return true;
         }
-        else
-            return pIt->second.size() == 1;
+        else {
+            return pIt->second->IsLast();
+        }
     }
 
     void ResourceType::Remove(const IResource::Ptr& pResource) {
-        const auto id = pResource->GetResourceId();
-        auto&& path = pResource->GetResourcePath();
-
-        /// -------------------------------------------------------------
-
-        if (auto &&group = m_copies.find(id); group != m_copies.end()) {
-            group->second.erase(pResource);
+        if (auto&& pIt = m_storage.find(pResource->GetResourceId()); pIt != m_storage.end()) {
+            pIt->second->Remove(pResource);
+            if (m_count > 0) {
+                m_count--;
+            }
+            else {
+                SRHalt("ResourceType::Remove() : resource count is already zero!");
+            }
         }
         else {
-            SRHalt("Resource not found!");
-            return;
+            SRHalt("ResourceType::Remove() : resource id not found in storage!\n\tType: {}\n\tId: {}",
+                   pResource->GetResourceType(), pResource->GetResourceId());
         }
-
-        if (m_copies.at(id).empty()) {
-            m_copies.erase(id);
-        }
-
-        /// -------------------------------------------------------------
-
-        auto&& pInfo = m_info.at(SR_UTILS_NS::StringAtom(path.ToStringRef()));
-
-        pInfo->m_loaded.erase(pResource);
-
-        if (pInfo->m_loaded.empty()) {
-            m_info.erase(SR_UTILS_NS::StringAtom(path.ToStringRef()));
-        }
-
-        /// -------------------------------------------------------------
-
-        m_resources.erase(pResource);
     }
 
     void ResourceType::Add(const IResource::Ptr& pResource) {
-        if (pResource->GetResourcePath().empty() && pResource->IsFileResource()) {
-            SRHalt("ResourceType::Add() : resource empty path!");
+        if (pResource->GetResourcePath().empty()) {
+            SRHalt("ResourceType::Add() : resource has empty path!");
             return;
         }
 
-        m_copies[pResource->GetResourceId()].insert(pResource);
-        m_resources.insert(pResource);
+        auto&& pStorageRef = m_storage[pResource->GetResourceId()];
+        if (!pStorageRef) {
+            pStorageRef = new ResourcesStorage();
+            pStorageRef->path = StringAtom(pResource->GetResourcePath().ToStringView());
+            pStorageRef->id = pResource->GetResourceId();
+        }
+        else if (pStorageRef->path != pResource->GetResourcePath()) {
+            SRHalt("ResourceType::Add() : resource path mismatch!\n\tExpected: {}\n\tActual: {}", pStorageRef->path, pResource->GetResourcePath());
+            return;
+        }
 
+        pStorageRef->Add(pResource);
         pResource->OnResourceRegistered();
 
-        auto&& path = pResource->GetResourcePath();
-        auto&& pIt = m_info.find(SR_UTILS_NS::StringAtom(path.ToStringRef()));
-
-    retry:
-        if (pIt != m_info.end()) {
-            auto&& [_, pInfo] = *pIt;
-            if (pInfo->m_loaded.count(pResource) > 0) {
-                SRHalt("Resource already registered in ResourceInfo!");
-                return;
-            }
-
-            if (!pResource->IsAllowedMultiInstance() && !pResource->IsAllowedToRevive()) {
-                bool hasNotDestroyed = false;
-
-                for (auto&& pLoadedResource: pInfo->m_loaded) {
-                    if (!pLoadedResource->IsDestroyed()) {
-                        hasNotDestroyed = true;
-                        break;
-                    }
-                }
-
-                if (hasNotDestroyed) {
-                    SRHalt("Resource already registered in ResourceInfo, but it is not allowed to have multiple instances!");
-                }
-            }
-
-            pInfo->m_loaded.insert(pResource);
-            pResource->m_resourceInfo = pInfo;
-        }
-        else {
-            auto&& pInfo = std::make_shared<ResourceInfo>(pResource->GetResourceHash(), SR_UTILS_NS::StringAtom(path.ToStringRef()), this);
-            pIt = m_info.insert(std::make_pair(path, pInfo)).first;
-            goto retry;
-        }
-    }
-
-    const ResourceType::CopiesMap& ResourceType::GetCopiesRef() const {
-        return m_copies;
-    }
-
-    ResourceType::CopiesMap& ResourceType::GetCopiesRef() {
-        return m_copies;
-    }
-
-    ResourceType::Info& ResourceType::GetInfo() {
-        return m_info;
+        m_count++;
     }
 
     void ResourceType::CollectUnused() {
-        for (auto&& pResource : m_resources) {
-            pResource->Execute([pResource]() -> bool {
-                if (pResource->GetCountUses() > 0) {
-                    return false;
-                }
-
-                if (pResource->IsDestroyed()) {
-                    return false;
-                }
-
-                pResource->Destroy();
-
-                return true;
-            });
+        SR_TRACY_ZONE;
+        for (auto&& [resourceId, pStorage] : m_storage) {
+            pStorage->CollectUnused();
         }
     }
 
-    std::pair<ResourceType::ResourcePath, ResourceInfo::HardPtr> ResourceType::GetInfoByIndex(uint64_t index) {
-        if (index >= m_info.size()) {
-            return std::make_pair(ResourcePath(), nullptr);
-        }
-
-        auto&& [hash, info] = *std::next(m_info.begin(), index);
-
-        return std::make_pair(hash, info);
-    }
-
-    void ResourceType::SetReloader(IResourceReloader *pReloader) {
-        if (m_reloader) {
-            delete m_reloader;
-            m_reloader = nullptr;
-        }
+    void ResourceType::SetReloader(IResourceReloader* pReloader) {
         m_reloader = pReloader;
     }
 
-    IResource::Ptr ResourceInfo::GetResource() const {
-        if (m_loaded.size() != 1) {
-            SRHalt("Incorrect function usage!");
-            return nullptr;
+    void ResourceType::ReloadAll() {
+        SR_TRACY_ZONE;
+        for (auto&& [resourceId, pStorage] : m_storage) {
+            m_dirtyResources.insert(resourceId);
         }
-
-        return *m_loaded.begin();
     }
 
-    IResource::Ptr ResourceInfo::GetFirstResource() const {
-        if (m_loaded.size() == 0) {
-            SRHalt("Incorrect function usage!");
-            return nullptr;
+    void ResourceType::Reload(const IResource::Ptr& pResource) {
+        SR_TRACY_ZONE;
+        if (m_dirtyResources.contains(pResource->GetResourceId())) {
+            return;
         }
-
-        return *m_loaded.begin();
+        SR_LOG("ResourceType::Reload() : resource \"{}\" marked as dirty!", pResource->GetResourceId());
+        m_dirtyResources.insert(pResource->GetResourceId());
     }
 
-    IResourceReloader* ResourceInfo::GetReloader() const {
-        return m_resourceType->GetReloader();
+    void ResourceType::ReloadDirtyResources() {
+        SR_TRACY_ZONE;
+        IResourceReloader* pReloader = m_reloader.Get() ? m_reloader.Get() : ResourceManager::Instance().GetDefaultReloader();
+        if (!pReloader) {
+            SRHalt("ResourceType::ReloadDirtyResources() : no reloader set for resource type \"{}\"!", GetName());
+            return;
+        }
+        for (auto&& resourceId : m_dirtyResources) {
+            if (auto&& pIt = m_storage.find(resourceId); pIt != m_storage.end()) {
+                if (!pReloader->Reload(pIt->second->path, pIt->second)) {
+                    SR_ERROR("ResourceType::ReloadDirtyResources() : failed to reload resource!\n\tPath: {}", pIt->second->path);
+                }
+            }
+        }
+        m_dirtyResources.clear();
+    }
+
+    void ResourceType::ForEach(const SR_HTYPES_NS::Function<void(const IResource&)>& fun) const {
+        for (auto&& [resourceId, pStorage] : m_storage) {
+            pStorage->ForEach(fun);
+        }
+    }
+
+    void ResourceType::ForEach(const SR_HTYPES_NS::Function<void(IResource&)>& fun) {
+        for (auto&& [resourceId, pStorage] : m_storage) {
+            pStorage->ForEach(fun);
+        }
+    }
+
+    void ResourcesStorage::ForEach(const SR_HTYPES_NS::Function<void(IResource&)> &fun) {
+        SR_TRACY_ZONE;
+
+        for (auto&& [hash, container] : variants) {
+            for (auto&& pResource : container) {
+                if (!pResource) {
+                    continue;
+                }
+                fun(*pResource);
+            }
+        }
+    }
+
+    void ResourcesStorage::Add(const IResource::Ptr& pResource) {
+        SR_TRACY_ZONE;
+
+        const IResourceVariant* pVariant = pResource->GetVariant();
+        uint64_t variantHash = pVariant ? pVariant->GetHash() : 0;
+
+        auto&& pIt = variants.find(variantHash);
+        if (pIt != variants.end()) {
+            pIt->second.emplace_back(pResource);
+        }
+        else {
+            variants[variantHash] = { pResource };
+        }
+    }
+
+    void ResourcesStorage::Remove(const IResource::Ptr& pResource) {
+        SR_TRACY_ZONE;
+
+        const IResourceVariant* pVariant = pResource->GetVariant();
+        uint64_t variantHash = pVariant ? pVariant->GetHash() : 0;
+
+        if (auto&& pVariantIt = variants.find(variantHash); pVariantIt != variants.end()) {
+            auto&& container = pVariantIt->second;
+            if (auto&& pResIt = std::ranges::find(container, pResource); pResIt != container.end()) {
+                container.erase(pResIt);
+                if (container.empty()) {
+                    variants.erase(pVariantIt);
+                }
+            }
+            else {
+                SRHalt("Resource not found in storage!");
+            }
+        }
+        else {
+            SRHalt("Resource not found in storage!");
+        }
+    }
+
+    void ResourcesStorage::CollectUnused() {
+        SR_TRACY_ZONE;
+
+        for (auto&& [variantId, container] : variants) {
+            for (auto&& pResource : container) {
+                pResource->Execute([pResource]() -> bool {
+                    if (pResource->GetCountUses() > 0) {
+                        return false;
+                    }
+
+                    if (pResource->IsDestroyed()) {
+                        return false;
+                    }
+
+                    pResource->Destroy();
+
+                    return true;
+                });
+            }
+        }
+    }
+
+    bool ResourcesStorage::IsLast() const {
+        bool hasOne = false;
+        for (auto&& [variantId, container] : variants) {
+            if (!container.empty()) {
+                if (hasOne) {
+                    return false;
+                }
+                hasOne = true;
+            }
+        }
+        return true;
+    }
+
+    IResource::Ptr ResourcesStorage::Find(const IResourceVariant* pVariant) const {
+        uint64_t variantHash = pVariant ? pVariant->GetHash() : 0;
+        if (auto&& pVariantIt = variants.find(variantHash); pVariantIt != variants.end()) {
+            auto&& container = pVariantIt->second;
+            for (auto&& pResource : container) {
+                if (SR_UTILS_NS::ResourceManager::Instance().ReviveResource(pResource)) {
+                    return pResource;
+                }
+            }
+        }
+        return nullptr;
     }
 }

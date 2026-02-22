@@ -20,6 +20,9 @@ namespace SR_HTYPES_NS {
         SR_NODISCARD ConstIterator begin() const { return m_vector.begin(); }
         SR_NODISCARD ConstIterator end() const { return m_vector.end(); }
         SR_NODISCARD size_t size() const { return m_vector.size(); }
+        SR_NODISCARD bool empty() const { return m_vector.empty(); }
+        SR_NODISCARD T& back() { return m_vector.back(); }
+        SR_NODISCARD const T& back() const { return m_vector.back(); }
 
         Iterator insert(const T& value) {
             auto it = std::lower_bound(m_vector.begin(), m_vector.end(), value);
@@ -40,6 +43,10 @@ namespace SR_HTYPES_NS {
         SR_NODISCARD bool contains(const T& value) const {
             auto it = std::lower_bound(m_vector.begin(), m_vector.end(), value);
             return it != m_vector.end() && *it == value; // проверяем, найден ли элемент
+        }
+
+        void pop_back() {
+            m_vector.pop_back();
         }
 
         void clear() {

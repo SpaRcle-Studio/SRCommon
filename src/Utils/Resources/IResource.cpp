@@ -28,7 +28,7 @@ namespace SR_UTILS_NS {
         SR_TRACY_TEXT_N("Path", GetResourceId());
 
         if (SR_UTILS_NS::Debug::Instance().GetLevel() >= SR_UTILS_NS::Debug::Level::Low) {
-            SR_LOG("IResource::Reload() : reloading \"" + std::string(GetResourceId()) + "\" resource...");
+            SR_LOG("IResource::Reload() : reloading {} \"{}\" resource...", GetResourceType(), GetResourceId());
         }
 
         m_loadState = LoadState::Reloading;
@@ -293,7 +293,7 @@ namespace SR_UTILS_NS {
     }
 
     void IResource::StartWatch() {
-        if (IsResourceFromMemory() || !IsFileResource()) {
+        if (IsResourceFromMemory()) {
             return;
         }
 
@@ -313,6 +313,8 @@ namespace SR_UTILS_NS {
     }
 
     void IResource::SignalWatch() {
+        SR_TRACY_ZONE;
+
         if (IsDestroyed() || IsForceDestroyed()) {
             return;
         }
