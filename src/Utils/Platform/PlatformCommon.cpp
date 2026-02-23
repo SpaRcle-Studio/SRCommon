@@ -51,34 +51,33 @@ namespace SR_PLATFORM_NS {
     }
 
 #ifndef SR_ANDROID
-    std::optional<std::string> ReadFileOriginal(const Path& path) {
+    bool ReadFileOriginal(const Path& path, std::string& buffer) {
         SR_TRACY_ZONE;
 
         // Открываем файл в бинарном режиме и сразу получаем размер
         std::ifstream file(path.c_str(), std::ios::binary | std::ios::ate);
         if (!file) {
-            return std::nullopt;
+            return false;
         }
 
         const std::streamsize size = file.tellg();
 
-        std::string buffer;
         buffer.resize(static_cast<size_t>(size));
         file.seekg(0, std::ios::beg);
         if (!file.read(buffer.data(), size)) {
-            return std::nullopt;
+            return false;
         }
-        return buffer;
+        return true;
     }
 
-    std::optional<std::string> ReadFile(const Path& path) {
+    bool ReadFile(const Path& path, std::string& buffer) {
         SR_TRACY_ZONE;
 
         if (g_platformHooks.readFileHook) {
-            return g_platformHooks.readFileHook(path);
+            return g_platformHooks.readFileHook(path, buffer);
         }
         else {
-            return ReadFileOriginal(path);
+            return ReadFileOriginal(path, buffer);
         }
     }
 

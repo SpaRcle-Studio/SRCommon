@@ -12,6 +12,8 @@
 
 namespace SR_UTILS_NS {
     void CLIManager::Init(int argc, char** argv) {
+        SR_TRACY_ZONE;
+
         auto&& rawOptions = SR_UTILS_NS::EnumReflector::GetNames<CLIOptions>();
         auto&& rawFlags = SR_UTILS_NS::EnumReflector::GetNames<CLIFlags>();
 

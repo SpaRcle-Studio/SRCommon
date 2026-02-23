@@ -112,6 +112,7 @@ namespace SR_HTYPES_NS {
     }
 
     std::vector<SR_UTILS_NS::Vertex> IRawMeshHolder::GetVertices() const noexcept {
+        SR_TRACY_ZONE;
         static std::vector<SR_UTILS_NS::Vertex> defaultVertices;
 
         if (!IsValidMeshId()) {

@@ -80,7 +80,7 @@ namespace SR_UTILS_NS::Platform {
 
     SR_COMMON_DLL_API extern std::string ExecuteCommand(const std::string& command, const std::vector<std::string>& env = {});
     SR_COMMON_DLL_API extern void SetEnvironmentVar(const std::string_view& name, const std::string_view& value);
-    SR_COMMON_DLL_API extern std::optional<std::string> ReadFile(const Path& path);
+    SR_COMMON_DLL_API extern bool ReadFile(const Path& path, std::string& buffer);
     SR_COMMON_DLL_API extern void TextToClipboard(const std::string& text);
     SR_COMMON_DLL_API extern void CopyFilesToClipboard(std::list<SR_UTILS_NS::Path> paths);
     SR_COMMON_DLL_API extern void SetCurrentProcessDirectory(const SR_UTILS_NS::Path& directory);
@@ -140,7 +140,7 @@ namespace SR_UTILS_NS::Platform {
         decltype(&ReadFile) originalReadFile = nullptr;
         decltype(&GetPathType) originalGetPathType = nullptr;
 
-        std::function<std::optional<std::string>(const Path&)> readFileHook;
+        std::function<bool(const Path&, std::string& buffer)> readFileHook;
         std::function<Path::Type(const std::string_view&)> getFileTypeHook;
 
         std::function<std::string_view(std::string_view)> pathResolver;

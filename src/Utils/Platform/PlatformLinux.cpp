@@ -515,8 +515,8 @@ namespace SR_PLATFORM_NS {
 
     bool Copy(const Path &from, const Path &to) {
         if (from.IsFile()) {
-            auto&& data = SR_PLATFORM_NS::ReadFile(from);
-            if (!data) {
+            std::string buffer;
+            if (!SR_PLATFORM_NS::ReadFile(from, buffer)) {
                 SR_WARN("Platform::Copy() : failed to read file!\n\tPath: {}", from.c_str());
                 return false;
             }
@@ -525,7 +525,7 @@ namespace SR_PLATFORM_NS {
                 SR_WARN("Platform::Copy() : failed to open file for writing!\n\tPath: {}", to.c_str());
                 return false;
             }
-            file.write(data->data(), data->size());
+            file.write(buffer.data(), buffer.size());
             CopyPermissions(from, to);
             return true;
         }

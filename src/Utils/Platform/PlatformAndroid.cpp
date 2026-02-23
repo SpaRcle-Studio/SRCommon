@@ -109,25 +109,24 @@ namespace SR_UTILS_NS::Platform {
         return (void*)pAndroidInstance;
     }
 
-    std::optional<std::string> ReadFile(const Path& path) {
+    bool ReadFile(const Path& path, std::string& buffer) {
         std::string_view pathView = path.ToStringView();
         if (!RemoveAssetsPrefix(pathView)) {
             // Открываем файл в бинарном режиме и сразу получаем размер
             std::ifstream file(path.c_str(), std::ios::binary | std::ios::ate);
             if (!file) {
-                return std::nullopt;
+                return false;
             }
 
             const std::streamsize size = file.tellg();
 
-            std::string buffer;
             buffer.resize(static_cast<size_t>(size));
             file.seekg(0, std::ios::beg);
             if (!file.read(buffer.data(), size)) {
-                return std::nullopt;
+                return false;
             }
 
-            return buffer;
+            return true;
         }
 
         AAsset* pAsset = AAssetManager_open(
@@ -248,8 +247,8 @@ namespace SR_UTILS_NS::Platform {
         }
 
         if (from.IsFile()) {
-            auto content = SR_PLATFORM_NS::ReadFile(from);
-            if (!content.has_value()) {
+            std::string buffer;
+            if (!SR_PLATFORM_NS::ReadFile(from, buffer)) {
                 SR_WARN("Platform::Copy() : failed to read file {}", from.CStr());
                 return false;
             }
@@ -260,7 +259,7 @@ namespace SR_UTILS_NS::Platform {
                 return false;
             }
 
-            out.write(content->data(), static_cast<std::streamsize>(content->size()));
+            out.write(buffer.data(), static_cast<std::streamsize>(buffer.size()));
             return out.good();
         }
 

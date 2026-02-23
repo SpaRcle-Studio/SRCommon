@@ -98,7 +98,7 @@ namespace SR_UTILS_NS {
     private:
         ska::flat_hash_map<std::string_view, SR_UTILS_NS::StringAtom> m_nameTypeId;
         std::unordered_map<SR_UTILS_NS::StringAtom, TypeInfo> m_types;
-        bool m_logRegistration = true;
+        bool m_logRegistration = false;
 
     };
 

@@ -112,13 +112,13 @@ namespace SR_HTYPES_NS {
             }
         }
         else {
-            auto&& buffer = SR_PLATFORM_NS::ReadFile(path);
-            if (!buffer) {
+            std::string buffer;
+            if (!SR_PLATFORM_NS::ReadFile(path, buffer)) {
                 SR_ERROR("RawMesh::Load() : failed to read file!\n\tPath: {}", path);
                 return false;
             }
 
-            m_scene = m_importer->ReadFileFromMemory(buffer->data(), buffer->size(), m_params.animation ? SR_RAW_MESH_ASSIMP_ANIMATION_FLAGS : SR_RAW_MESH_ASSIMP_FLAGS);
+            m_scene = m_importer->ReadFileFromMemory(buffer.data(), buffer.size(), m_params.animation ? SR_RAW_MESH_ASSIMP_ANIMATION_FLAGS : SR_RAW_MESH_ASSIMP_FLAGS);
 
             if (!m_scene) {
                 SR_ERROR("RawMesh::Load() : failed to load file!\n\tPath: " + path.ToStringRef() + "\n\tReason: " + std::string(m_importer->GetErrorString()));
@@ -187,6 +187,8 @@ namespace SR_HTYPES_NS {
     }
 
     std::vector<SR_UTILS_NS::Vertex> RawMesh::GetVertices(uint32_t id) const {
+        SR_TRACY_ZONE;
+
         if (GetResourceLoadState() == IResource::LoadState::Error) {
             return {};
         }
@@ -237,6 +239,7 @@ namespace SR_HTYPES_NS {
             bool hasWarn = false;
 
             for (uint32_t i = 0; i < mesh->mNumBones; i++) {
+                auto&& boneIndex = bones.at(SR_UTILS_NS::StringAtom(mesh->mBones[i]->mName.C_Str()));
                 for (uint32_t j = 0; j < mesh->mBones[i]->mNumWeights; j++) {
                     auto&& vertex = vertices[mesh->mBones[i]->mWeights[j].mVertexId];
 
@@ -250,8 +253,6 @@ namespace SR_HTYPES_NS {
                         }
                         continue;
                     }
-
-                    auto&& boneIndex = bones.at(SR_UTILS_NS::StringAtom(mesh->mBones[i]->mName.C_Str()));
 
                     vertex.weights[vertex.weightsNum - 1].boneId = boneIndex;
                     vertex.weights[vertex.weightsNum - 1].weight = mesh->mBones[i]->mWeights[j].mWeight;
@@ -484,7 +485,10 @@ namespace SR_HTYPES_NS {
                     SR_WARN("RawMesh::CalculateBones() : bone already exists! \n\tName: " + name.ToString());
                     continue;
                 }
-                m_bones[meshId].insert(std::make_pair(name, static_cast<uint32_t>(m_bones[meshId].size())));
+
+                const auto size = static_cast<uint32_t>(m_bones[meshId].size());
+
+                m_bones[meshId].insert(std::make_pair(name, size));
             }
         }
     #endif

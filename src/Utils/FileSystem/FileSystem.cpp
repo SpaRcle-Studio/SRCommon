@@ -47,10 +47,7 @@ namespace SR_UTILS_NS {
         SR_TRACY_ZONE;
         std::vector<std::string_view> result;
 
-        if (auto&& data = SR_PLATFORM_NS::ReadFile(path)) {
-            buffer = data.value();
-        }
-        else {
+        if (!SR_PLATFORM_NS::ReadFile(path, buffer)) {
             return result;
         }
 
@@ -258,21 +255,19 @@ namespace SR_UTILS_NS {
         SR_TRACY_ZONE;
         SR_TRACY_ZONE_TEXT(path);
 
-        std::optional<std::string> buffer;
+        static SR_THREAD_LOCAL std::string buffer;
 
         {
             SR_TRACY_ZONE_N("Read file");
-            buffer = SR_PLATFORM_NS::ReadFile(path);
-        }
-
-        if (!buffer) {
-            SR_WARN("FileSystem::GetFileHash() : failed to read file!\n\tPath: " + path);
-            return SR_UINT64_MAX;
+            if (!SR_PLATFORM_NS::ReadFile(path, buffer)) {
+                SR_WARN("FileSystem::GetFileHash() : failed to read file!\n\tPath: " + path);
+                return SR_UINT64_MAX;
+            }
         }
 
         {
             SR_TRACY_ZONE_N("Hash file");
-            return SR_HASH_STR_VIEW(std::string_view(*buffer));
+            return SR_HASH_STR_VIEW(std::string_view(buffer));
         }
     }
 

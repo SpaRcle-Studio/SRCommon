@@ -165,6 +165,7 @@ namespace SR_UTILS_NS::Platform {
     }
 
     void InitializePlatform() {
+        SR_TRACY_ZONE;
         SR_PLATFORM_NS::WriteConsoleLog("Platform::InitializePlatform() : initializing Windows platform...\n");
         HKEY hKey;
         LPCTSTR lpSubKey = TEXT("Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\ComDlg32\\LastVisitedPidlMRU");
@@ -552,8 +553,8 @@ namespace SR_UTILS_NS::Platform {
         SR_TRACY_ZONE;
 
         if (from.IsFile()) {
-            auto&& data = SR_PLATFORM_NS::ReadFile(from);
-            if (!data) {
+            std::string buffer;
+            if (!SR_PLATFORM_NS::ReadFile(from, buffer)) {
                 SR_WARN("Platform::Copy() : failed to read file!\n\tPath: {}", from.c_str());
                 return false;
             }
@@ -562,7 +563,7 @@ namespace SR_UTILS_NS::Platform {
                 SR_WARN("Platform::Copy() : failed to open file for writing!\n\tPath: {}", to.c_str());
                 return false;
             }
-            file.write(data->data(), data->size());
+            file.write(buffer.data(), buffer.size());
             return true;
         }
 
@@ -690,6 +691,7 @@ namespace SR_UTILS_NS::Platform {
     }
 
     std::list<Path> GetAllInDirectory(const Path& dir) {
+        SR_TRACY_ZONE;
         std::list<Path> result;
 
         if (!IsExists(dir)) {

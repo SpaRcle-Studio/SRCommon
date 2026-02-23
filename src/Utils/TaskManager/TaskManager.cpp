@@ -144,19 +144,16 @@ namespace SR_UTILS_NS {
 
                 for (auto&& pTask : toRun) {
                     pTask->Run();
-                }
-
-                /// проверяем, какие задачи завершились, и сохраняем их результаты
-                {
-                    SR_SCOPED_LOCK;
-                    for (auto pIt = m_tasks.begin(); pIt != m_tasks.end(); ) {
-                        if (Task::Ptr pTask = *pIt; pTask->IsCompleted()) {
-                            m_results.insert(std::make_pair(pTask->GetId(), pTask->GetResult()));
-                            m_ids.erase(pTask->GetId());
-                            pIt = m_tasks.erase(pIt);
+                    if (pTask->IsCompleted()) {
+                        SR_SCOPED_LOCK;
+                        m_results.insert(std::make_pair(pTask->GetId(), pTask->GetResult()));
+                        m_ids.erase(pTask->GetId());
+                        auto&& pIt = std::ranges::find(m_tasks, pTask); /// удаляем задачу из списка задач, так как она уже завершилась
+                        if (pIt != m_tasks.end()) {
+                            m_tasks.erase(pIt);
                         }
                         else {
-                            ++pIt;
+                            SRHalt("TaskManager::InitSingleton() : task is completed, but not found in the list of tasks!");
                         }
                     }
                 }

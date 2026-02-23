@@ -131,15 +131,15 @@ namespace SR_UTILS_NS {
         SR_TRACY_ZONE;
         SR_TRACY_TEXT_N("Path", path.ToStringRef());
 
-        auto&& fileData = SR_PLATFORM_NS::ReadFile(path);
         auto xml = Document::New();
 
-        if (!fileData) {
+        std::string fileData;
+        if (!SR_PLATFORM_NS::ReadFile(path, fileData)) {
             SR_ERROR("Document::Load() : file not exists! \n\tPath: " + path.ToString());
             return Document(); /// NOLINT
         }
 
-        if (pugi::xml_parse_result result = xml.m_document->load_string(fileData->c_str())) {
+        if (pugi::xml_parse_result result = xml.m_document->load_string(fileData.c_str())) {
             xml.m_valid = true;
             xml.m_path = std::move(path.ToString());
         }

@@ -379,6 +379,7 @@ namespace SR_UTILS_NS {
         }
 
         SR_NODISCARD SR_INLINE_STATIC std::string ToLower(std::string_view str) noexcept {
+            SR_TRACY_ZONE;
             return ToLower(std::string(str));
         }
 
@@ -420,6 +421,7 @@ namespace SR_UTILS_NS {
 
         // Cut string (file name) to output it
         SR_NODISCARD static std::string CutName(std::string str, unsigned int frompos){
+            SR_TRACY_ZONE;
             if (str.size() > frompos){
                 str = str.substr(0,frompos);
                 str.append("..."); //должно быть "…", но utf-16 символы не поддерживаются в ImGui, вероятно можно выбрать набор с нужными глифами

@@ -76,10 +76,12 @@ namespace SR_UTILS_NS {
     }
 
     std::list<Path> Path::GetAll() const {
+        SR_TRACY_ZONE;
         return SR_PLATFORM_NS::GetAllInDirectory(*this);
     }
 
     std::list<Path> Path::GetFolders() const {
+        SR_TRACY_ZONE;
         return SR_PLATFORM_NS::GetInDirectory(*this, Path::Type::Folder);
     }
 
@@ -92,6 +94,7 @@ namespace SR_UTILS_NS {
     }
 
     std::string Path::GetBaseName() const {
+        SR_TRACY_ZONE;
         return std::string(GetBaseNameView());
     }
 
@@ -362,6 +365,7 @@ namespace SR_UTILS_NS {
     }
 
      std::string Path::GetBaseNameAndExt() const {
+         SR_TRACY_ZONE;
         return std::string(GetBaseNameAndExtView());
     }
 

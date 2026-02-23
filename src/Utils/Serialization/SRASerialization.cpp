@@ -201,7 +201,7 @@ namespace SR_UTILS_NS {
             std::string_view line = lines[i];
 
             if (i == 1 && line.find("use tabs:") != std::string::npos) {
-                const auto useTabs = line.substr(line.find_first_of(':') + 1);
+                const std::string_view useTabs = line.substr(line.find_first_of(':') + 1);
                 restoreMode &= (useTabs == " true" || useTabs == "true");
                 continue;
             }
