@@ -23,7 +23,7 @@ namespace SR_HTYPES_NS {
     public:
         using Ptr = Thread*;
         using ThreadId = SR_UTILS_NS::StringAtom;
-        using ThreadsMap = std::unordered_map<ThreadId, Thread::Ptr>;
+        using ThreadsMap = std::map<ThreadId, Thread::Ptr>;
 
         SR_NODISCARD static ThreadId EmptyThreadId();
 

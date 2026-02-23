@@ -28,6 +28,8 @@ namespace SR_UTILS_NS {
     Input::~Input() = default;
 
     void Input::UpdateMouse() {
+        SR_TRACY_ZONE;
+
         auto&& mouseState = SR_PLATFORM_NS::GetMouseState();
 
         m_mouseScroll = m_mouseScrollCurrent;
@@ -85,40 +87,74 @@ namespace SR_UTILS_NS {
     }
 
     void Input::UpdateKeyboard() {
+        SR_TRACY_ZONE;
+
         if (!IsAppFocused()) {
             return;
         }
 
+        static constexpr State kDownTransition[4] = {
+            State::Down,    // UnPressed -> Down
+            State::Pressed, // Down -> Pressed
+            State::Pressed, // Pressed -> Pressed
+            State::Down,    // Up -> Down
+        };
+
+        static constexpr State kUpTransition[4] = {
+            State::UnPressed, // UnPressed -> UnPressed
+            State::Up,        // Down -> Up
+            State::Up,        // Pressed -> Up
+            State::UnPressed, // Up -> UnPressed
+        };
+
         const SR_PLATFORM_NS::KeyboardState keyboardState = SR_PLATFORM_NS::GetSystemKeyboardState();
 
         for (uint16_t i = 5; i < 256; ++i) {
-            if (keyboardState.keyStates[i]) {
-                switch (m_keys[i]) {
-                    case State::UnPressed:
-                    case State::Up:
-                        SetState(i, State::Down);
-                        break;
-                    case State::Down:
-                        SetState(i, State::Pressed);
-                        break;
-                    case State::Pressed: break;
-                }
-            }
-            else {
-                switch (m_keys[i]) {
-                    case State::UnPressed:
-                        break;
-                    case State::Down:
-                    case State::Pressed:
-                        SetState(i, State::Up);
-                        break;
-                    case State::Up:
-                        SetState(i, State::UnPressed);
-                        break;
-                }
+            const State* table = keyboardState.keyStates[i] ? kDownTransition : kUpTransition;
+            const State next = table[static_cast<int>(m_keys[i])];
+            if (next != m_keys[i]) {
+                SetState(i, next);
             }
         }
     }
+
+    // void Input::UpdateKeyboard() {
+    //     SR_TRACY_ZONE;
+    //
+    //     if (!IsAppFocused()) {
+    //         return;
+    //     }
+    //
+    //     const SR_PLATFORM_NS::KeyboardState keyboardState = SR_PLATFORM_NS::GetSystemKeyboardState();
+    //
+    //     for (uint16_t i = 5; i < 256; ++i) {
+    //         if (keyboardState.keyStates[i]) {
+    //             switch (m_keys[i]) {
+    //                 case State::UnPressed:
+    //                 case State::Up:
+    //                     SetState(i, State::Down);
+    //                     break;
+    //                 case State::Down:
+    //                     SetState(i, State::Pressed);
+    //                     break;
+    //                 case State::Pressed: break;
+    //             }
+    //         }
+    //         else {
+    //             switch (m_keys[i]) {
+    //                 case State::UnPressed:
+    //                     break;
+    //                 case State::Down:
+    //                 case State::Pressed:
+    //                     SetState(i, State::Up);
+    //                     break;
+    //                 case State::Up:
+    //                     SetState(i, State::UnPressed);
+    //                     break;
+    //             }
+    //         }
+    //     }
+    // }
 
     void Input::Update() {
         SR_TRACY_ZONE;
