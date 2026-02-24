@@ -137,15 +137,15 @@ namespace SR_UTILS_NS::Platform {
 
         if (!pAsset) {
             SR_WARN("Platform::ReadFile() : asset not found!\n\tPath: {}", pathView);
-            return std::nullopt;
+            return false;
         }
 
         const size_t len = AAsset_getLength(pAsset);
-        std::string content(len, '\0');
-        AAsset_read(pAsset, content.data(), len);
+        buffer.resize(len);
+        AAsset_read(pAsset, buffer.data(), len);
         AAsset_close(pAsset);
 
-        return content;
+        return true;
     }
 
     void WriteMessage(int log, const std::string& msg) {
