@@ -141,6 +141,8 @@ namespace SR_UTILS_NS::Reflection {
         }
 
         ValueSequenceContainerIterator Insert(ValueSequenceContainerIterator it, Value value);
+        ValueSequenceContainerIterator PushBack(Value value);
+        ValueSequenceContainerIterator PushFront(Value value);
 
         SR_NODISCARD uint64_t Size() const { return m_storage.size(); }
         SR_NODISCARD bool Empty() const { return Size() == 0; }

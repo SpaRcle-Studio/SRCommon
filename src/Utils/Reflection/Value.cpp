@@ -50,6 +50,15 @@ namespace SR_UTILS_NS::Reflection {
         return it;
     }
 
+    ValueSequenceContainerIterator ValueSequenceContainer::PushBack(Value value) {
+        return ValueSequenceContainerIterator(m_storage.insert(m_storage.end(), value.m_storage));
+    }
+
+    ValueSequenceContainerIterator ValueSequenceContainer::PushFront(Value value) {
+        return ValueSequenceContainerIterator(m_storage.insert(m_storage.begin(), value.m_storage));
+    }
+
+
     /// ----------------------------------------------------------------------------------------------------------------
 
     Value ValueAssociativeContainerIterator::First() const {

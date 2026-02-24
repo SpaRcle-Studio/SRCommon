@@ -30,7 +30,7 @@ namespace SR_UTILS_NS {
         SR_NODISCARD StringAtom GetId() const noexcept { return m_id; }
         SR_NODISCARD virtual StringAtom GetResourceType() const noexcept { return {}; }
         SR_NODISCARD StringAtom GetExtension() const noexcept;
-        SR_NODISCARD IResource::Ptr GetResource() const noexcept { return m_resource; }
+        SR_NODISCARD const IResource::Ptr& GetResourceBase() const noexcept { return m_resource; }
 
     protected:
         /// @property @hidden
@@ -48,6 +48,14 @@ namespace SR_UTILS_NS {
         ResourceRef(const Path& path); /// NOLINT(google-explicit-constructor)
 
         SR_NODISCARD StringAtom GetResourceType() const noexcept override;
+
+        SR_NODISCARD SR_HTYPES_NS::SharedPtr<T> GetResource() const noexcept {
+            if (auto&& pBase = GetResourceBase()) {
+                return pBase.template StaticCast<T>();
+            }
+            return nullptr;
+        }
+
     };
 
     template<class T> StringAtom ResourceRef<T>::GetResourceType() const noexcept {
