@@ -2,33 +2,31 @@
 // Created by Monika on 26.11.2023.
 //
 
-#include <Utils/Game/CameraFlyMover.h>
-#include <Utils/ECS/Transform3D.h>
 #include <Utils/ECS/IComponentable.h>
+#include <Utils/ECS/Transform3D.h>
+#include <Utils/Game/CameraFlyMover.h>
 #include <Utils/World/Scene.h>
 
 #include <Codegen/CameraFlyMover.generated.hpp>
 
 namespace SR_UTILS_NS {
-    void CameraFlyMover::OnDisable() {
-        m_lock.reset();
-    }
+    void CameraFlyMover::OnDisable() { m_lock.reset(); }
 
     void CameraFlyMover::Update(float_t dt) {
         SR_TRACY_ZONE;
 
         if (m_lockCursor) {
             if (!m_lock) {
-                const auto lockMode = m_executeInEditorMode ? SR_UTILS_NS::CursorLockMode::Editor : SR_UTILS_NS::CursorLockMode::PlayMode;
+                const auto lockMode =
+                    m_executeInEditorMode ? SR_UTILS_NS::CursorLockMode::Editor : SR_UTILS_NS::CursorLockMode::PlayMode;
                 m_lock = SR_UTILS_NS::CursorLock(lockMode);
             }
-        }
-        else {
+        } else {
             m_lock.reset();
         }
 
         if (!m_velocity.Empty()) {
-            GetTransform()->Translate(m_velocity);
+            GetTransform()->Translate(m_velocity * dt * 100);
         }
 
         if (m_gameSpeedCorrection) {
@@ -85,8 +83,7 @@ namespace SR_UTILS_NS {
             if (!accelerateZ) {
                 m_velocity.z *= damping;
             }
-        }
-        else {
+        } else {
             m_velocity *= damping;
         }
 
@@ -114,4 +111,4 @@ namespace SR_UTILS_NS {
             pParent->SetDirty(true);
         }
     }
-}
+} // namespace SR_UTILS_NS
