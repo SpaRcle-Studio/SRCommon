@@ -232,12 +232,13 @@ namespace SR_HTYPES_NS {
     }
 
     template<typename T> T DataStorage::GetValueDef(uint64_t hashCode, const T &def) const {
-        if (m_values.count(hashCode) == 0) {
+        auto&& pIt = m_values.find(hashCode);
+        if (pIt == m_values.end()) {
             return def;
         }
 
         try {
-            return std::any_cast<T>(m_values.at(hashCode));
+            return std::any_cast<T>(pIt->second);
         }
         catch (const std::bad_any_cast& e) {
             SRHalt("DataStorage::GetValueDef() : bad cast!");

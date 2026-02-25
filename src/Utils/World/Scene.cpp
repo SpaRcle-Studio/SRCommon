@@ -585,4 +585,9 @@ namespace SR_WORLD_NS {
     const SR_HTYPES_NS::SharedPtr<SR_UTILS_NS::EntityController>& Scene::GetEntityController() const {
         return m_pEntityController;
     }
+
+    bool Scene::IsEditorMode() const {
+        static const StringAtom editorModeKey = "EditorMode";
+        return GetDataStorage().GetValueDef<bool>(editorModeKey, false);
+    }
 }

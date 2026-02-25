@@ -79,6 +79,7 @@ namespace SR_WORLD_NS {
         SR_NODISCARD virtual bool IsPlayingMode() const { return false; }
         /// На паузе ли сцена (если запущена)
         SR_NODISCARD virtual bool IsPausedMode() const { return false; }
+        SR_NODISCARD bool IsEditorMode() const;
 
         SceneObjects& GetRootSceneObjects();
 
