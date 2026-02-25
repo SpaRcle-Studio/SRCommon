@@ -27,7 +27,7 @@ namespace SR_UTILS_NS {
     bool IResourceReloader::IsResourceSuitableForReload(const IResource& resource) const {
         SR_TRACY_ZONE;
 
-        if (resource.IsDestroyed()) {
+        if (resource.IsDestroyed() || resource.IsResourceFromMemory()) {
             return false;
         }
 
