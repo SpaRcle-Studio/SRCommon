@@ -56,6 +56,7 @@ namespace SR_UTILS_NS {
         SR_NODISCARD bool IsPlayMode() const;
         SR_NODISCARD bool IsAppFocused() const;
         SR_NODISCARD int32_t GetMouseWheel() const;
+        SR_NODISCARD SR_MATH_NS::FVector2 GetMouseScroll() const { return m_mouseScroll; }
 
         bool GetMouseDown(MouseCode code);
         bool GetMouseUp(MouseCode code);

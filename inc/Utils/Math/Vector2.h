@@ -237,6 +237,10 @@ namespace SR_MATH_NS {
             return x == 0 && y == 0;
         }
 
+        SR_NODISCARD SR_FORCE_INLINE bool IsNotEmpty() const {
+            return !Empty();
+        }
+
         SR_NODISCARD bool HasZero() const {
             return (x == 0 || y == 0);
         }
