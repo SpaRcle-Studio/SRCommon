@@ -11,6 +11,7 @@
 #include <Utils/Common/Vertices.h>
 #include <Utils/Math/Matrix4x4.h>
 #include <Utils/Types/FastMemoryArray.h>
+#include <Utils/Types/FlatHashMap.h>
 
 #ifdef SR_UTILS_ASSIMP
 namespace Assimp {
@@ -60,8 +61,8 @@ namespace SR_HTYPES_NS {
 
         SR_NODISCARD std::vector<SR_UTILS_NS::Vertex> GetVertices(uint32_t id) const;
         SR_NODISCARD const SR_HTYPES_NS::FastMemoryArray<uint32_t>& GetIndices(uint32_t id) const;
-        SR_NODISCARD const ska::flat_hash_map<SR_UTILS_NS::StringAtom, uint32_t>& GetBones(uint32_t id) const;
-        SR_NODISCARD const ska::flat_hash_map<SR_UTILS_NS::StringAtom, uint16_t>& GetOptimizedBones() const;
+        SR_NODISCARD const SR_HTYPES_NS::FlatHashMap<SR_UTILS_NS::StringAtom, uint32_t>& GetBones(uint32_t id) const;
+        SR_NODISCARD const SR_HTYPES_NS::FlatHashMap<SR_UTILS_NS::StringAtom, uint16_t>& GetOptimizedBones() const;
         SR_NODISCARD const SR_MATH_NS::Matrix4x4& GetBoneOffset(SR_UTILS_NS::StringAtom name) const;
         SR_NODISCARD const SR_MATH_NS::Matrix4x4& GetBoneTransform(uint32_t index) const;
         SR_NODISCARD const SR_MATH_NS::Matrix4x4& GetBoneTransform(SR_UTILS_NS::StringAtom name) const;
@@ -101,11 +102,11 @@ namespace SR_HTYPES_NS {
     #endif
 
     private:
-        std::vector<ska::flat_hash_map<SR_UTILS_NS::StringAtom, uint32_t>> m_bones;
-        ska::flat_hash_map<SR_UTILS_NS::StringAtom, uint16_t> m_optimizedBones;
+        std::vector<SR_HTYPES_NS::FlatHashMap<SR_UTILS_NS::StringAtom, uint32_t>> m_bones;
+        SR_HTYPES_NS::FlatHashMap<SR_UTILS_NS::StringAtom, uint16_t> m_optimizedBones;
 
-        ska::flat_hash_map<SR_UTILS_NS::StringAtom, SR_MATH_NS::Matrix4x4> m_boneOffsetsMap;
-        ska::flat_hash_map<SR_UTILS_NS::StringAtom, SR_MATH_NS::Matrix4x4> m_boneTransformsMap;
+        SR_HTYPES_NS::FlatHashMap<SR_UTILS_NS::StringAtom, SR_MATH_NS::Matrix4x4> m_boneOffsetsMap;
+        SR_HTYPES_NS::FlatHashMap<SR_UTILS_NS::StringAtom, SR_MATH_NS::Matrix4x4> m_boneTransformsMap;
 
         std::vector<SR_MATH_NS::Matrix4x4> m_boneOffsets;
         std::vector<SR_MATH_NS::Matrix4x4> m_boneTransforms;
@@ -118,7 +119,7 @@ namespace SR_HTYPES_NS {
         std::pair<char*, uint64_t> m_cacheHeap;
 
     #ifdef SR_UTILS_ASSIMP
-        ska::flat_hash_map<Hash, aiAnimation*> m_animations;
+        SR_HTYPES_NS::FlatHashMap<Hash, aiAnimation*> m_animations;
         const aiScene* m_scene = nullptr;
         Assimp::Importer* m_importer = nullptr;
     #endif

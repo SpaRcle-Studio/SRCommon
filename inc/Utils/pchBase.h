@@ -122,8 +122,9 @@
 #endif
 
 #ifndef SR_ENGINE_CODEGEN_CLANG_PARSE_MODE
-    //#include <sparsehash/dense_hash_map.h>
-    #include <flat_hash_map/flat_hash_map.hpp>
+    #ifndef SR_EMSCRIPTEN
+        #include <flat_hash_map/flat_hash_map.hpp>
+    #endif
 #endif
 
 #ifdef SR_ANDROID
@@ -160,6 +161,39 @@ constexpr uint32_t SR_INVALID_DESCRIPTOR_SET = SR_ID_INVALID;
 constexpr uint32_t SR_INVALID_FBO = SR_ID_INVALID;
 
 namespace SR_UTILS_NS {
+    enum class ExecutionPolicy {
+        ParUnSeq,
+        Seq
+    };
+
+    template <ExecutionPolicy policy, class FwdIt, class Fn>
+    void ForEach(FwdIt first, FwdIt last, Fn func) noexcept {
+    #if SR_EMSCRIPTEN
+        std::for_each(first, last, func);
+    #else
+        if constexpr (policy == ExecutionPolicy::Seq) {
+            std::for_each(std::execution::seq, first, last, func);
+        }
+        else {
+            std::for_each(std::execution::par_unseq, first, last, func);
+        }
+    #endif
+    }
+
+    template <ExecutionPolicy policy, class FwdIt, class T, class BinaryOp, class UnaryOp>
+    T TransformReduce(const FwdIt first, const FwdIt last, T val, BinaryOp binaryOp, UnaryOp unaryOp) noexcept {
+    #if SR_EMSCRIPTEN
+        return std::transform_reduce(first, last, val, binaryOp, unaryOp);
+    #else
+        if constexpr (policy == ExecutionPolicy::Seq) {
+            return std::transform_reduce(std::execution::seq, first, last, val, binaryOp, unaryOp);
+        }
+        else {
+            return std::transform_reduce(std::execution::par_unseq, first, last, val, binaryOp, unaryOp);
+        }
+    #endif
+    }
+
     template <typename T> constexpr bool IsNullCallable(const T&) noexcept {
         return false;
     }

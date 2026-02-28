@@ -20,7 +20,7 @@ namespace SR_UTILS_NS {
 
     class EnumReflectorManager : public SR_UTILS_NS::Singleton<EnumReflectorManager> {
         SR_REGISTER_SINGLETON(EnumReflectorManager);
-        using Reflectors = ska::flat_hash_map<uint64_t, EnumReflector*>;
+        using Reflectors = SR_HTYPES_NS::FlatHashMap<uint64_t, EnumReflector*>;
     public:
         SR_NODISCARD bool IsSingletonCanBeDestroyed() const override {
             return false;

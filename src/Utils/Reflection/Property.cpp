@@ -22,7 +22,7 @@ namespace SR_UTILS_NS::Reflection {
         SR_TRACY_ZONE;
         SR_GLOBAL_LOCK;
 
-        static ska::flat_hash_map<SR_UTILS_NS::StringAtom, SR_UTILS_NS::StringAtom> cache;
+        static SR_HTYPES_NS::FlatHashMap<SR_UTILS_NS::StringAtom, SR_UTILS_NS::StringAtom> cache;
         if (auto&& pIt = cache.find(id); pIt != cache.end()) {
             return pIt->second;
         }

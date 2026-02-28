@@ -21,7 +21,8 @@ namespace SR_UTILS_NS::Platform {
         WinAPI,
         X11,
         Wayland,
-        MirSocket
+        MirSocket,
+        Web
     );
 
     static bool IsCompiledUnderMSVC() {

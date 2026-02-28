@@ -28,10 +28,14 @@ namespace SR_UTILS_NS {
 namespace SR_UTILS_NS {
     class TracyContextManager : public SR_UTILS_NS::Singleton<TracyContextManager> {
         SR_REGISTER_SINGLETON(TracyContextManager)
+        using Super = SR_UTILS_NS::Singleton<TracyContextManager>;
         using TracyContextPtr = void*;
         using IdentifierPtr = void*;
         using ContextMap = std::map<IdentifierPtr, TracyContextPtr>;
     public:
+        TracyContextManager();
+
+        void InitSingleton() override;
         TracyContextPtr& GetContext(TracyType type, IdentifierPtr pIdentifier);
 
         void Destroy(TracyType type);

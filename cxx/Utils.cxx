@@ -21,6 +21,11 @@
     #include "../src/Utils/Platform/StacktraceLinux.cpp"
 #endif
 
+#ifdef SR_EMSCRIPTEN
+    #include "../src/Utils/Platform/PlatformEmscripten.cpp"
+    #include "../src/Utils/Platform/StacktraceEmscripten.cpp"
+#endif
+
 #ifdef SR_WIN32
     #include "../src/Utils/Platform/PlatformWindows.cpp"
     #include "../src/Utils/Platform/StacktraceWindows.cpp"

@@ -9,6 +9,10 @@
 #ifdef SR_TRACY_ENABLE
 
 namespace SR_UTILS_NS {
+    TracyContextManager::TracyContextManager()
+        : Super()
+    { }
+
     void TracyContextManager::Destroy(TracyType type) {
         if (type == TracyType::All) {
             for (auto&& contextMap : m_contexts) {
@@ -20,7 +24,8 @@ namespace SR_UTILS_NS {
             return;
         }
 
-        for (auto&& [pIdentifier, pContext] : m_contexts[type]) {
+        ContextMap& contextMap = m_contexts[type];
+        for (auto&& [pIdentifier, pContext] : contextMap) {
             Destroy(pContext, type);
         }
         m_contexts[type].clear();
@@ -58,6 +63,9 @@ namespace SR_UTILS_NS {
         return m_contexts[type][pIdentifier];
     }
 
+    void TracyContextManager::InitSingleton() {
+        Super::InitSingleton();
+    }
 
     void StartupEngineProfiler() {
         tracy::StartupProfiler();

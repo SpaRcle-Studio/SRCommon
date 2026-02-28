@@ -118,7 +118,7 @@ namespace SR_WORLD_NS {
 
     private:
         mutable EntityReplaceMap m_registerEntityIdReplaceCache;
-        mutable ska::flat_hash_map<const void*, std::vector<Entity*>> m_registerEntityCache;
+        mutable SR_HTYPES_NS::FlatHashMap<const void*, std::vector<Entity*>> m_registerEntityCache;
 
         SceneUpdater* m_sceneUpdater = nullptr;
 

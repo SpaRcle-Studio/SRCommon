@@ -23,6 +23,10 @@
     #pragma warning(disable: 4828)
 #endif
 
+#if defined(__EMSCRIPTEN__) && !defined(SR_EMSCRIPTEN)
+    #define SR_EMSCRIPTEN
+#endif
+
 #ifdef ANDROID
     #pragma clang diagnostic ignored "-Wunused-private-field"
     #pragma clang diagnostic ignored "-Wdeprecated-volatile"

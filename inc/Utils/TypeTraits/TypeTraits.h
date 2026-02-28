@@ -37,7 +37,7 @@ namespace SR_UTILS_NS {
 
 		static SerializationId CreateFromString(const std::string_view text) noexcept {
 			SerializationId id;
-			SR_STRNCPY(id.name, text.data(), std::min(text.size(), MaxNameLength - 1));
+			SR_STRNCPY(id.name, text.data(), SR_MIN(text.size(), MaxNameLength - 1));
 			id.name[MaxNameLength - 1] = '\0';
 			id.hash = ComputeHash(text);
 			return id;

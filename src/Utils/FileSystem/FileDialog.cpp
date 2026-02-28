@@ -4,20 +4,20 @@
 
 #include <Utils/FileSystem/FileDialog.h>
 
-#ifndef SR_ANDROID
+#if !defined(SR_ANDROID) && !defined(SR_EMSCRIPTEN)
     #include <nfd.h>
 #endif
 
 namespace SR_UTILS_NS {
     void FileDialog::InitSingleton() {
         Singleton::InitSingleton();
-    #ifndef SR_ANDROID
+    #if !defined(SR_ANDROID) && !defined(SR_EMSCRIPTEN)
         NFD_Init();
     #endif
     }
 
     void FileDialog::OnSingletonDestroy() {
-    #ifndef SR_ANDROID
+    #if !defined(SR_ANDROID) && !defined(SR_EMSCRIPTEN)
         NFD_Quit();
     #endif
         Singleton::OnSingletonDestroy();
@@ -26,7 +26,7 @@ namespace SR_UTILS_NS {
     Path SR_UTILS_NS::FileDialog::PickFolder(const Path& defaultPath) const {
         std::string path;
 
-    #ifndef SR_ANDROID
+    #if !defined(SR_ANDROID) && !defined(SR_EMSCRIPTEN)
         nfdchar_t *outPath;
 
         nfdresult_t result = NFD_PickFolder(&outPath, defaultPath.ToString().c_str());
@@ -52,7 +52,7 @@ namespace SR_UTILS_NS {
     Path FileDialog::SaveDialog(const Path &defaultPath, const Filter& filter) const {
         std::string path;
 
-    #ifndef SR_ANDROID
+    #if !defined(SR_ANDROID) && !defined(SR_EMSCRIPTEN)
         nfdchar_t *outPath;
 
         nfdfilteritem_t* pFilterItem = filter.size() > 0 ? new nfdfilteritem_t[filter.size()] : nullptr;
@@ -84,7 +84,7 @@ namespace SR_UTILS_NS {
     Path FileDialog::OpenDialog(const Path& defaultPath, const Filter& filter) const {
         std::string path;
 
-    #ifndef SR_ANDROID
+    #if !defined(SR_ANDROID) && !defined(SR_EMSCRIPTEN)
         nfdchar_t *outPath;
 
         nfdfilteritem_t* pFilterItem = filter.size() > 0 ? new nfdfilteritem_t[filter.size()] : nullptr;

@@ -8,6 +8,7 @@
 #include <Utils/stdInclude.h>
 #include <Utils/FileSystem/Path.h>
 #include <Utils/Types/Map.h>
+#include <Utils/Types/FlatHashMap.h>
 
 namespace SR_UTILS_NS {
     class ResourceEmbedder {
@@ -40,7 +41,7 @@ namespace SR_UTILS_NS {
         SR_NODISCARD static std::string Decompress(const Resource& resource);
 
     private:
-        ska::flat_hash_map<std::string_view, Resource> m_resources;
+        SR_HTYPES_NS::FlatHashMap<std::string_view, Resource> m_resources;
     };
 }
 

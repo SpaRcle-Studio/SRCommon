@@ -104,7 +104,7 @@ namespace SR_UTILS_NS {
         uint64_t m_count = 0;
         SR_HTYPES_NS::SetVector<StringAtom> m_dirtyResources;
         SR_HTYPES_NS::RawPointerHolder<IResourceReloader> m_reloader;
-        ska::flat_hash_map<StringAtom, ResourcesStorage*> m_storage;
+        SR_HTYPES_NS::FlatHashMap<StringAtom, ResourcesStorage*> m_storage;
         //ResourcesSet m_resources;
         //CopiesMap m_copies;
         //Info m_info;

@@ -38,8 +38,14 @@ namespace SR_UTILS_NS {
         SR_NODISCARD bool IsIdUsed(const EntityId& id) const;
 
     private:
-        ska::flat_hash_map<EntityId, Entity::Ptr> m_entities;
+        SR_HTYPES_NS::FlatHashMap<EntityId, Entity::Ptr> m_entities;
+
+    #ifdef SR_EMSCRIPTEN
+        std::unordered_set<EntityId> m_reserved;
+    #else
         ska::flat_hash_set<EntityId> m_reserved;
+    #endif
+
         EntityId m_nextId = SR_ID_INVALID;
 
     };

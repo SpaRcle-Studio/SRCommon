@@ -21,7 +21,7 @@ namespace SR_UTILS_NS {
         SR_NODISCARD Property* Allocate(const StringAtom& name) const noexcept;
 
     private:
-        ska::flat_hash_map<StringAtom, ConstructorFn> m_constructors;
+        SR_HTYPES_NS::FlatHashMap<StringAtom, ConstructorFn> m_constructors;
 
     };
 }

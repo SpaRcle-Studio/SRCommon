@@ -428,8 +428,8 @@ namespace SR_HTYPES_NS {
         return {};
     }
 
-    const ska::flat_hash_map<SR_UTILS_NS::StringAtom, uint32_t>& RawMesh::GetBones(uint32_t id) const {
-        static const auto&& def = ska::flat_hash_map<SR_UTILS_NS::StringAtom, uint32_t>();
+    const SR_HTYPES_NS::FlatHashMap<SR_UTILS_NS::StringAtom, uint32_t>& RawMesh::GetBones(uint32_t id) const {
+        static const auto&& def = SR_HTYPES_NS::FlatHashMap<SR_UTILS_NS::StringAtom, uint32_t>();
 
         if (id >= m_bones.size()) {
             return def;
@@ -737,7 +737,7 @@ namespace SR_HTYPES_NS {
         return m_boneOffsets;
     }
 
-    const ska::flat_hash_map<SR_UTILS_NS::StringAtom, uint16_t> &RawMesh::GetOptimizedBones() const {
+    const SR_HTYPES_NS::FlatHashMap<SR_UTILS_NS::StringAtom, uint16_t> &RawMesh::GetOptimizedBones() const {
         return m_optimizedBones;
     }
 

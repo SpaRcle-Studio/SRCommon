@@ -13,7 +13,7 @@ namespace SR_UTILS_NS {
     class EntityController;
 
     typedef uint64_t EntityId;
-    typedef ska::flat_hash_map<EntityId, EntityId> EntityReplaceMap;
+    typedef SR_HTYPES_NS::FlatHashMap<EntityId, EntityId> EntityReplaceMap;
 
     SR_ENUM_NS_STRUCT_T(EditorFlags, uint64_t,
         None       = 1 << 0,

@@ -8,6 +8,7 @@
 #include <Utils/Common/NonCopyable.h>
 #include <Utils/Common/AssertFwd.h>
 #include <Utils/Types/SafePtrLockGuard.h>
+#include <Utils/Types/FlatHashMap.h>
 
 #define SR_REGISTER_SINGLETON(className)                                                                                \
     private:                                                                                                            \
@@ -71,7 +72,7 @@ namespace SR_UTILS_NS {
             void* pSingleton = nullptr;
             SingletonBase* pSingletonBase = nullptr;
         };
-        ska::flat_hash_map<uint64_t, SingletonInfo> m_singletons;
+        SR_HTYPES_NS::FlatHashMap<uint64_t, SingletonInfo> m_singletons;
         mutable std::recursive_mutex m_mutex;
         std::map<uint64_t, std::recursive_mutex> m_creationMutexes;
 
