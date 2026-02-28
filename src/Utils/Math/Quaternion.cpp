@@ -9,20 +9,9 @@
 
 namespace SR_MATH_NS {
     Vector3<Unit> Quaternion::EulerAngle() const {
-        return Vector3<Unit>(glm::eulerAngles(glm::normalize(self))).Degrees();
+        glm::vec3 euler = glm::eulerAngles(glm::normalize(self));
+        return Vector3<Unit>(euler.x, euler.y, euler.z).Degrees();
     }
-
-    /*Quaternion::Quaternion(const Vector3<Unit>& axis, Unit angle) {
-        const Unit halfAngle = angle * static_cast<Unit>(.5f);
-        const Unit s = (Unit)SR_SIN(halfAngle);
-
-        auto&& normalized = axis.Normalized();
-
-        x = normalized.x * s;
-        y = normalized.y * s;
-        z = normalized.z * s;
-        w = (Unit)SR_COS(halfAngle);
-    }*/
 
     Quaternion::Quaternion(const Vector3<Unit>& eulerAngle) {
         Vector3<T> c = (eulerAngle * T(0.5)).Cos();
@@ -32,8 +21,6 @@ namespace SR_MATH_NS {
         this->x = s.x * c.y * c.z - c.x * s.y * s.z;
         this->y = c.x * s.y * c.z + s.x * c.y * s.z;
         this->z = c.x * c.y * s.z - s.x * s.y * c.z;
-
-        ///self = p_euler.ToGLM();
     }
 
     Vector3<Unit> Quaternion::operator*(const Vector3<Unit> &v) const noexcept {
@@ -57,16 +44,16 @@ namespace SR_MATH_NS {
     }
 
     Vector3<Unit> Quaternion::operator/(const Vector3<Unit> &v) const {
-        glm::vec3 rot = EulerAngle().ToGLM();
+        FVector3 rot = EulerAngle();
 
         /// TODO: здесь должна быть инвертирована ось z?
-        glm::fquat q = glm::vec3(1) / glm::vec3(
+        Quaternion q = Quaternion(glm::vec3(1) / glm::vec3(
                 rot.x,
                 rot.y,
                 -rot.z
-        );
+        ));
 
-        return Vector3<Unit>(q * v.ToGLM());
+        return Vector3<Unit>(q * v);
     }
 
     bool Quaternion::IsFromToRotationValid(const Vector3<Unit> &from, const Vector3<Unit> &to) {
@@ -97,39 +84,6 @@ namespace SR_MATH_NS {
     }
 
     Quaternion Quaternion::FromToRotation(const Vector3<Unit>& from, const Vector3<Unit>& to) {
-        ///  const Vector3<Unit>& fallbackAxis, const Quaternion* pPrevious
-
-        /**FVector3 f = from.Normalized();
-        FVector3 t = to.Normalized();
-
-        float cosTheta = f.Dot(t);
-
-        if (cosTheta > 0.999999f) {
-            // Векторы почти совпадают → Identity
-            return Quaternion::Identity();
-        }
-
-        if (cosTheta < -0.999999f) {
-            // Векторы почти противоположны → выбираем fallback ось
-            FVector3 axis = f.Cross(FVector3(1,0,0));
-            if (axis.SqrMagnitude() < 1e-6f) {
-                axis = f.Cross(FVector3(0,1,0));
-            }
-            axis = axis.Normalize();
-            return Quaternion::AngleAxis(180.0f, axis);
-        }
-
-        // Основной случай
-        FVector3 cross = f.Cross(t);
-        if (cross.SqrMagnitude() < 1e-6f) {
-            // Векторы почти коллинеарны → оставляем identity
-            return Quaternion::Identity();
-        }
-        cross = cross.Normalize();
-
-        float angleDeg = SR_ACOS(cosTheta) * SR_RAD_2_DEG;
-        return Quaternion::AngleAxis(angleDeg, cross);*/
-
         const Unit theta = SR_MATH_NS::FVector3::Dot(from.Normalize(), to.Normalize());
         if (theta >= Unit(1.0)) {
             return Quaternion::Identity();
@@ -145,345 +99,9 @@ namespace SR_MATH_NS {
         }
 
         return Quaternion::AngleAxis(SR_ACOS(theta) * static_cast<Unit>(SR_MATH_NS::Rad2Deg), SR_MATH_NS::FVector3::Cross(from, to).Normalize());
-
-        /*double_t theta = from.CastToDouble().Normalize().Dot(to.CastToDouble().Normalize());
-        if (theta >= 1.0) {
-            return Quaternion::Identity();
-        }
-
-        if (theta <= -1.0) {
-            DVector3 axis = from.CastToDouble().Cross(DVector3::Right());
-            if (axis.SqrMagnitude() == 0.0) {
-                axis = from.CastToDouble().Cross(DVector3::Up());
-            }
-
-            return Quaternion::AngleAxis(180.f, axis);
-        }
-
-        return Quaternion::AngleAxis(SR_ACOS(theta) * static_cast<double_t>(SR_RAD_2_DEG), from.CastToDouble().Cross(to.CastToDouble()).Normalize());*/
-
-
-        /****const FVector3 f = from.NormalizeSafe();
-        const FVector3 t = to.NormalizeSafe();
-
-        const Unit cosTheta = f.Dot(t);
-        const Unit kEps = SR_KINDA_SMALL_NUMBER_EPSILON;
-
-        // почти совпадают
-        if (cosTheta > (1.0f - kEps)) {
-            return Quaternion::Identity();
-        }
-
-        // почти противоположны
-        if (cosTheta < (-1.0f + kEps)) {
-            FVector3 axis = fallbackAxis;
-
-            if (axis.SqrMagnitude() < kEps) {
-                // стабильная ось через previousBendAxis
-                if (pPrevious) {
-                    axis = FVector3::Right().Rotate(*pPrevious);
-                    if (axis.SqrMagnitude() < kEps) {
-                        axis = FVector3::Up().Rotate(*pPrevious);
-                    }
-                }
-                else {
-                    axis = f.Cross(FVector3(1, 0, 0));
-                    if (axis.SqrMagnitude() < kEps) {
-                        axis = f.Cross(FVector3(0, 1, 0));
-                    }
-                }
-            }
-
-            axis = axis.NormalizeSafe();
-
-            // Срезаем угол чуть меньше 180°, чтобы не было резкого флипа
-            return Quaternion::AngleAxis(179.9f, axis).NormalizeSafe();
-        }
-
-        // общий случай
-        FVector3 axis = f.Cross(t);
-        const Unit axisLenSq = axis.SqrMagnitude();
-        if (axisLenSq < kEps) {
-            return Quaternion::Identity();
-        }
-
-        axis /= SR_SQRT(axisLenSq);
-        const Unit angle = SR_ACOS(glm::clamp(cosTheta, -1.0f, 1.0f));
-        return Quaternion::AngleAxis(SR_DEG(angle), axis).NormalizeSafe();*/
-
-
-
-
-
-
-
-        /*FVector3 f = from.Normalize();
-        FVector3 t = to.Normalize();
-
-        if (f.SqrMagnitude() < SR_KINDA_SMALL_NUMBER_EPSILON || t.SqrMagnitude() < SR_KINDA_SMALL_NUMBER_EPSILON) {
-            // слишком маленький вектор → не вращаем
-            return Quaternion::Identity();
-        }
-
-        // 2. Косинус угла между векторами
-        float cosTheta = f.Dot(t);
-        cosTheta = SR_CLAMP(cosTheta, -1.f, 1.f);
-
-        // 3. Векторы почти совпадают → Identity
-        if (cosTheta > 0.999999f) {
-            return Quaternion::Identity();
-        }
-
-        // 4. Векторы почти противоположны
-        if (cosTheta < -0.999999f) {
-            FVector3 axis = fallbackAxis;
-
-            // если fallbackAxis нулевой — тогда обеспечь ось
-            if (axis.SqrMagnitude() < SR_KINDA_SMALL_NUMBER_EPSILON) {
-                axis = f.Cross(FVector3(1, 0, 0));
-                if (axis.SqrMagnitude() < SR_KINDA_SMALL_NUMBER_EPSILON) {
-                    axis = f.Cross(FVector3(0, 1, 0));
-                }
-            }
-
-            axis = axis.NormalizeSafe();
-            return Quaternion::AngleAxis(180.0f, axis).NormalizeSafe();
-        }
-
-        // 5. Общий случай
-        FVector3 rotationAxis = f.Cross(t);
-        float axisLenSq = rotationAxis.LengthSqr();
-
-        if (axisLenSq < SR_KINDA_SMALL_NUMBER_EPSILON) {
-            // почти коллинеарны → Identity
-            return Quaternion::Identity();
-        }
-
-        rotationAxis = rotationAxis / sqrt(axisLenSq); // нормализация
-        float angle = acosf(cosTheta); // угол
-
-        return Quaternion::AngleAxis(SR_DEG(angle), rotationAxis);*/
     }
 
-    //Quaternion Quaternion::FromToRotation(const Vector3<Unit>& from, const Vector3<Unit>& to) {
-       /*float theta = from.Normalize().Dot(to.Normalize());
-       if (theta >= 1.f) {
-           return Quaternion::Identity();
-       }
-
-       if (theta <= -1.f) {
-           FVector3 axis = from.Cross(FVector3::Right());
-           if (axis.SqrMagnitude() == 0.f) {
-               axis = from.Cross(FVector3::Up());
-           }
-
-           return Quaternion::AngleAxis(180.f, axis);
-       }
-
-       return Quaternion::AngleAxis(SR_ACOS(theta) * SR_RAD_2_DEG, from.Cross(to).Normalize());*/
-
-
-
-
-        /*FVector3 f = from.NormalizeSafe();
-        FVector3 t = to.NormalizeSafe();
-
-        if (f.SqrMagnitude() < 1e-8f || t.SqrMagnitude() < 1e-8f) {
-            return Quaternion::Identity(); // защита degenerate case
-        }
-
-        float theta = f.Dot(t);
-        theta = SR_CLAMP(theta, -1.f, 1.f);
-
-        if (theta >= 1.f) return Quaternion::Identity();
-        if (theta <= -1.f) {
-            FVector3 axis = f.Cross(FVector3::Right());
-            if (axis.SqrMagnitude() < 1e-8f) axis = f.Cross(FVector3::Up());
-            return Quaternion::AngleAxis(180.f, axis.NormalizeSafe());
-        }
-
-        return Quaternion::AngleAxis(SR_ACOS(theta) * SR_RAD_2_DEG, f.Cross(t).NormalizeSafe());*/
-
-       /*
-        БОЛЕЕ МЕНЕЕ РАБОЧИЙ ВАРИАНТ
-
-        const FVector3 f = from.NormalizeSafe();
-       const FVector3 t = to.NormalizeSafe();
-
-       const Unit cosTheta = f.Dot(t);
-
-       // почти совпадают
-       const Unit kEps = 1e-6f;
-       if (cosTheta > (1.0f - kEps)) {
-           return Quaternion::Identity();
-       }
-
-       // почти противоположны
-       if (cosTheta < (-1.0f + kEps)) {
-           // выберем ось, перпендикулярную f
-           FVector3 ortho = FVector3(1,0,0).Cross(f);
-           if (ortho.LengthSqr() < kEps) ortho = FVector3(0,1,0).Cross(f);
-           ortho = ortho.NormalizeSafe();
-           Quaternion q = Quaternion::AngleAxis(SR_DEG(SR_PI), ortho); // 180°
-           return q.NormalizeSafe();
-       }
-
-       // общий случай
-       FVector3 axis = f.Cross(t);
-       const Unit axisLenSq = axis.LengthSqr();
-       if (axisLenSq < 1e-12f) {
-           // численно плохо — вернуть Identity (или небольшой поворот)
-           return Quaternion::Identity();
-       }
-
-       axis = axis / SR_SQRT(axisLenSq);
-       const Unit angle = SR_ACOS(glm::clamp(cosTheta, -1.0f, 1.0f));
-       Quaternion q = Quaternion::AngleAxis(SR_DEG(angle), axis);
-       return q.NormalizeSafe();
-
-*/
-
-
-
-
-      /*// 1. Нормализуем входные векторы безопасно
-        FVector3 f = from.Normalize();
-        FVector3 t = to.Normalize();
-
-        if (f.SqrMagnitude() < 1e-8f || t.SqrMagnitude() < 1e-8f) {
-            // слишком маленький вектор → не вращаем
-            return Quaternion::Identity();
-        }
-
-        // 2. Косинус угла между векторами
-        float cosTheta = f.Dot(t);
-        cosTheta = SR_CLAMP(cosTheta, -1.f, 1.f);
-
-        // 3. Векторы почти совпадают → Identity
-        if (cosTheta > 0.999999f) {
-            return Quaternion::Identity();
-        }
-
-        // 4. Векторы почти противоположны
-        if (cosTheta < -0.999999f) {
-            // эвристика Unity: сначала X, если коллинеарно → Y
-            FVector3 axis = f.Cross(FVector3(1,0,0));
-            if (axis.SqrMagnitude() < 1e-6f) {
-                axis = f.Cross(FVector3(0,1,0));
-            }
-            axis = axis.NormalizeSafe();
-            return Quaternion::AngleAxis(SR_DEG(SR_PI), axis);
-        }
-
-        // 5. Общий случай
-        FVector3 rotationAxis = f.Cross(t);
-        float axisLenSq = rotationAxis.LengthSqr();
-
-        if (axisLenSq < 1e-8f) {
-            // почти коллинеарны → Identity
-            return Quaternion::Identity();
-        }
-
-        rotationAxis = rotationAxis / sqrt(axisLenSq); // нормализация
-        float angle = acosf(cosTheta); // угол
-
-        return Quaternion::AngleAxis(SR_DEG(angle), rotationAxis);*/
-
-
-
-
-       /// нет дрожи но криво вращает
-     /* // 1. Нормализуем входные векторы
-       const FVector3 f = from.Normalized();
-       const FVector3 t = to.Normalized();
-
-       // 2. Считаем косинус угла
-       const Unit cosTheta = f.Dot(t);
-
-       // 3. Векторы почти совпадают
-       if (cosTheta > 0.999999f) {
-           return Quaternion::Identity();
-       }
-
-       // 4. Векторы почти противоположны
-       if (cosTheta < -0.999999f) {
-           // нужно выбрать любую ортонормальную ось
-           FVector3 ortho = FVector3(1, 0, 0).Cross(f);
-           if (ortho.LengthSqr() < 1e-6f) {
-               ortho = FVector3(0, 1, 0).Cross(f);
-           }
-           ortho = ortho.Normalized();
-           return Quaternion::AngleAxis(SR_PI, ortho); // поворот на 180° вокруг оси
-       }
-
-       // 5. Общий случай
-       FVector3 rotationAxis = f.Cross(t);
-       const Unit axisLenSq = rotationAxis.LengthSqr();
-
-       if (axisLenSq < 1e-8f) {
-           // векторы почти коллинеарны → возвращаем Identity
-           return Quaternion::Identity();
-       }
-
-       rotationAxis = rotationAxis / sqrt(axisLenSq); // нормализация
-
-       // угол между векторами
-       const Unit angle = acosf(cosTheta);
-
-       return Quaternion::AngleAxis(angle, rotationAxis);*/
-
-
-
-
-      /* /// Кривая реализация
-       const FVector3 f = from.Normalized();
-       const FVector3 t = to.Normalized();
-
-       const Unit cosTheta = f.Dot(t);
-       FVector3 rotationAxis;
-
-       if (cosTheta >= 1.0f - 1e-6f) {
-           // векторы почти совпадают
-           return Quaternion::Identity();
-       }
-
-       if (cosTheta < -1.0f + 1e-6f) {
-           // векторы противоположны
-           // выбираем любой перпендикулярный вектор
-           rotationAxis = FVector3(1,0,0).Cross(f);
-           if (rotationAxis.Length() < 1e-6f) {
-               rotationAxis = FVector3(0, 1, 0).Cross(f);
-           }
-           rotationAxis = rotationAxis.Normalize();
-           return Quaternion::AngleAxis(SR_DEG(SR_PI), rotationAxis);
-       }
-
-       rotationAxis = f.Cross(t);
-       const Unit s = sqrt((1 + cosTheta) * 2);
-       const Unit invs = 1.0f / s;
-
-       return Quaternion(
-               s * 0.5f,
-               rotationAxis.x * invs,
-               rotationAxis.y * invs,
-               rotationAxis.z * invs
-       );*/
-    //}
-
     Quaternion Quaternion::AngleAxis(float_t angle, const Vector3<float_t>& axis) {
-        /*const Unit halfAngle = SR_RAD(angle) * static_cast<Unit>(.5f);
-        const Unit s = (Unit)SR_SIN(halfAngle);
-
-        auto&& normalized = axis.Normalized();
-
-        Quaternion q;
-        q.x = normalized.x * s;
-        q.y = normalized.y * s;
-        q.z = normalized.z * s;
-        q.w = (Unit)SR_COS(halfAngle);
-
-        return q;*/
-
         const float_t lenSq = axis.SqrMagnitude();
         if (lenSq == 0.f) {
             return Quaternion::Identity();
@@ -603,101 +221,9 @@ namespace SR_MATH_NS {
     }
 
     Quaternion Quaternion::LookAt(const Vector3<Unit>& direction, const Vector3<Unit>& up) {
-        /*const Vector3 z = direction.Normalized();
-        const Vector3 x = up.Cross(direction).Normalized();
-        const Vector3 y = direction.Cross(x).Normalized();
-
-        FVector4 rows[] = {
-            FVector4(x, 0.0f),
-            FVector4(y, 0.0f),
-            FVector4(z, 0.0f),
-            FVector4::UnitW()
-        };
-
-        return Quaternion(Matrix4x4(rows));*/
-
-        /*const auto fw = direction.Normalized(); // Front
-        const auto ri = axis.Cross(fw).Normalized(); // Left
-        const auto up = fw.Cross(ri); // Up
-
-        const auto a0 = ri;
-        const auto a1 = up;
-        const auto a2 = fw;
-        const auto a00 = a0.x;
-        const auto a10 = a0.y;
-        const auto a20 = a0.z;
-        const auto a01 = a1.x;
-        const auto a11 = a1.y;
-        const auto a21 = a1.z;
-        const auto a02 = a2.x;
-        const auto a12 = a2.y;
-        const auto a22 = a2.z;
-
-        const float trace = a00 + a11 + a22;
-        if (trace > 0.0f) {
-            const float s = 0.5f / std::sqrt(trace + 1.0f);
-            return Quaternion(
-                    0.25f / s,
-                    (a21 - a12) * s,
-                    (a02 - a20) * s,
-                    (a10 - a01) * s
-            ).Normalized();
-        } else {
-            if (a00 > a11 && a00 > a22) {
-                const float s = 2.0f * std::sqrt(1.0f + a00 - a11 - a22);
-                return Quaternion(
-                        (a21 - a12) / s,
-                        0.25f * s,
-                        (a01 + a10) / s,
-                        (a02 + a20) / s
-                ).Normalized();
-            } else if (a11 > a22) {
-                const float s = 2.0f * std::sqrt(1.0f + a11 - a00 - a22);
-                return Quaternion(
-                        (a02 - a20) / s,
-                        (a01 + a10) / s,
-                        0.25f * s,
-                        (a12 + a21) / s
-                ).Normalized();
-            } else {
-                const float s = 2.0f * std::sqrt(1.0f + a22 - a00 - a11);
-                return Quaternion(
-                        (a10 - a01) / s,
-                        (a02 + a20) / s,
-                        (a12 + a21) / s,
-                        0.25f * s
-                ).Normalized();
-            }
-        }*/
-
-        //////////
-
-        /*auto&& normalDir = direction.Normalize();
-
-        const Unit dot = up.Dot(normalDir);
-        const Unit angle = std::acos(dot);
-
-        const Vector3 axis = up.Cross(normalDir).Normalize();
-
-        const Unit halfAngle = angle * 0.5f;
-        const Unit s = std::sin(halfAngle);
-
-        return Quaternion(
-            axis.x * s,
-            axis.y * s,
-            axis.z * s,
-            std::cos(halfAngle)
-        );*/
-
-        /////////////
-
-        Quaternion q = glm::quatLookAt(direction.Normalize().ToGLM(), up.ToGLM());
-
-        /// чиним возможные аффинные преобразования
-        //q = q.EulerAngle().Radians().ToQuat();
-
-        /// проверка существования кватерниона
-        if (q.IsFinite()) {
+        FVector3 normDir = direction.Normalize();
+        Quaternion q = glm::quatLookAt(glm::vec3(normDir.x, normDir.y, normDir.z), glm::vec3(up.x, up.y, up.z));
+        if (q.IsFinite()) {  /// проверка существования кватерниона
             return q;
         }
 
@@ -943,12 +469,6 @@ namespace SR_MATH_NS {
         }
 
         return Identity();
-
-        /// const Unit mag = Magnitude();
-        /// if (mag > static_cast<Unit>(0)) {
-        ///     return (*this) / mag;
-        /// }
-        /// return Identity();
     }
 
     Unit Quaternion::Roll() const noexcept {

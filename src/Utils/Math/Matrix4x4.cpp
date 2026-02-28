@@ -150,7 +150,10 @@ namespace SR_MATH_NS {
     }
 
     Matrix4x4 Matrix4x4::LookAt(const SR_MATH_NS::FVector3& eye, const SR_MATH_NS::FVector3& center, const SR_MATH_NS::FVector3& up) {
-        return Matrix4x4(glm::lookAtRH(eye.ToGLM(), center.ToGLM(), up.ToGLM()));
+        const glm::vec3 eyeGLM = glm::vec3(eye.x, eye.y, eye.z);
+        const glm::vec3 centerGLM = glm::vec3(center.x, center.y, center.z);
+        const glm::vec3 upGLM = glm::vec3(up.x, up.y, up.z);
+        return Matrix4x4(glm::lookAtRH(eyeGLM, centerGLM, upGLM));
     }
 
     Matrix4x4 Matrix4x4::FromQuaternion(const Quaternion& quaternion) {
@@ -322,63 +325,8 @@ namespace SR_MATH_NS {
         return SR_MATH_NS::FVector4();
     }
 
-    bool DecomposeTransform(const glm::mat4 &matrix, FVector3 &translation, FVector3 &rotation, FVector3 &scale) {
-        // From glm::decompose in matrix_decompose.inl
-
-        using namespace glm;
-        using T = float;
-
-        mat4 LocalMatrix(matrix);
-
-        // Normalize the matrix.
-        if (epsilonEqual(LocalMatrix[3][3], static_cast<float>(0), epsilon<T>()))
-            return false;
-
-        // First, isolate perspective.  This is the messiest.
-        if (
-                epsilonNotEqual(LocalMatrix[0][3], static_cast<T>(0), epsilon<T>()) ||
-                epsilonNotEqual(LocalMatrix[1][3], static_cast<T>(0), epsilon<T>()) ||
-                epsilonNotEqual(LocalMatrix[2][3], static_cast<T>(0), epsilon<T>()))
-        {
-            // Clear the perspective partition
-            LocalMatrix[0][3] = LocalMatrix[1][3] = LocalMatrix[2][3] = static_cast<T>(0);
-            LocalMatrix[3][3] = static_cast<T>(1);
-        }
-
-        // Next take care of translation (easy).
-        translation = vec3(LocalMatrix[3]);
-        LocalMatrix[3] = vec4(0, 0, 0, LocalMatrix[3].w);
-
-        vec3 Row[3];
-
-        // Now get scale and shear.
-        for (length_t i = 0; i < 3; ++i)
-            for (length_t j = 0; j < 3; ++j)
-                Row[i][j] = LocalMatrix[i][j];
-
-        // Compute X scale factor and normalize first row.
-        scale.x = length(Row[0]);
-        Row[0] = detail::scale(Row[0], static_cast<T>(1));
-        scale.y = length(Row[1]);
-        Row[1] = detail::scale(Row[1], static_cast<T>(1));
-        scale.z = length(Row[2]);
-        Row[2] = detail::scale(Row[2], static_cast<T>(1));
-
-        rotation.y = asin(-Row[0][2]);
-        if (cos(rotation.y) != 0) {
-            rotation.x = atan2(Row[1][2], Row[2][2]);
-            rotation.z = atan2(Row[0][1], Row[0][0]);
-        }
-        else {
-            rotation.x = atan2(-Row[2][0], Row[1][1]);
-            rotation.z = 0;
-        }
-
-        return true;
-    }
-
     Matrix4x4 Matrix4x4::FromScale(const FVector3& scale) {
-        return Matrix4x4(glm::scale(glm::mat4x4(1), scale.ToGLM()));
+        return Matrix4x4(glm::scale(glm::mat4x4(1), glm::vec3(scale.x, scale.y, scale.z)));
     }
 
     Matrix4x4 Matrix4x4::FromTranslate(const FVector3& translation) {
@@ -390,7 +338,7 @@ namespace SR_MATH_NS {
     }
 
     SR_NODISCARD Matrix4x4 Matrix4x4::RotateAxis(const FVector3& axis, const double& angle) const {
-        return Matrix4x4(glm::rotate(self, glm::radians((float)angle), axis.ToGLM()));
+        return Matrix4x4(glm::rotate(self, glm::radians((float)angle), glm::vec3(axis.x, axis.y, axis.z)));
     }
 
     SR_NODISCARD Matrix4x4 Matrix4x4::Rotate(const FVector3& angle) const {
@@ -415,7 +363,7 @@ namespace SR_MATH_NS {
     }
 
     SR_NODISCARD Matrix4x4 Matrix4x4::Translate(const FVector3& vec3) const {
-        return Matrix4x4(glm::translate(self, vec3.ToGLM()));
+        return Matrix4x4(glm::translate(self, glm::vec3(vec3.x, vec3.y, vec3.z)));
     }
 
     SR_NODISCARD FVector4 Matrix4x4::GetAxis(Axis axis) const {
@@ -446,7 +394,7 @@ namespace SR_MATH_NS {
     }
 
     bool Matrix4x4::Decompose(FVector3& translation, Quaternion& quaternion, FVector3& scale) const {
-        translation = glm::vec3(self[3]);
+        translation = value[3].XYZ();
 
         scale[0] = glm::length(glm::vec3(self[0]));
         scale[1] = glm::length(glm::vec3(self[1]));
@@ -463,7 +411,7 @@ namespace SR_MATH_NS {
     }
 
     bool Matrix4x4::Decompose(FVector3& translation, Quaternion& quaternion) const {
-        translation = glm::vec3(self[3]);
+        translation = value[3].XYZ();
 
         auto&& scaleX = glm::length(glm::vec3(self[0]));
         auto&& scaleY = glm::length(glm::vec3(self[1]));
@@ -481,7 +429,7 @@ namespace SR_MATH_NS {
     }
 
     bool Matrix4x4::Decompose(FVector3& translation, FVector3& eulers, FVector3& scale) const {
-        translation = glm::vec3(self[3]);
+        translation = value[3].XYZ();
 
         scale[0] = glm::length(glm::vec3(self[0]));
         scale[1] = glm::length(glm::vec3(self[1]));
@@ -492,31 +440,15 @@ namespace SR_MATH_NS {
                 glm::vec3(self[1]) / static_cast<float>(scale[1]),
                 glm::vec3(self[2]) / static_cast<float>(scale[2]));
 
-        eulers = glm::eulerAngles(glm::normalize(glm::quat_cast(rotMtx)));
+        glm::vec3 glmEulers = glm::eulerAngles(glm::normalize(glm::quat_cast(rotMtx)));
+        eulers = FVector3(glmEulers.x, glmEulers.y, glmEulers.z);
         eulers = eulers.Degrees();
 
         return true;
     }
 
     bool Matrix4x4::Decompose(FVector3& translation, FVector3& eulers, FVector3& scale, FVector3& skew) const {
-        //glm::vec3 _scale;
-        //glm::quat _rotation;
-        //glm::vec3 _translation;
-
-        //glm::vec3 _skew;
-        //glm::vec4 _perspective;
-
-        //if (glm::decompose(self, _scale, _rotation, _translation, _skew, _perspective)) {
-        //    translation = _translation;
-        //    eulers = Quaternion(_rotation).EulerAngle();
-        //    scale = scale;
-        //    skew = _skew;
-        //    return true;
-        //}
-
-        // return false
-
-        translation = glm::vec3(self[3]);
+        translation = value[3].XYZ();
 
         scale[0] = glm::length(glm::vec3(self[0]));
         scale[1] = glm::length(glm::vec3(self[1]));
@@ -527,7 +459,8 @@ namespace SR_MATH_NS {
                 glm::vec3(self[1]) / static_cast<float>(scale[1]),
                 glm::vec3(self[2]) / static_cast<float>(scale[2]));
 
-        eulers = glm::eulerAngles(glm::normalize(glm::quat_cast(rotMtx)));
+        glm::vec3 glmEulers = glm::eulerAngles(glm::normalize(glm::quat_cast(rotMtx)));
+        eulers = FVector3(glmEulers.x, glmEulers.y, glmEulers.z);
         eulers = eulers.Degrees();
 
         return true;
@@ -542,10 +475,10 @@ namespace SR_MATH_NS {
         glm::vec4 _perspective;
 
         if (glm::decompose(self, _scale, _rotation, _translation, _skew, _perspective)) {
-            translation = _translation;
+            translation = FVector3(_translation.x, _translation.y, _translation.z);
             rotation = _rotation;
-            scale = _scale;
-            skew = _skew;
+            scale = FVector3(_scale.x, _scale.y, _scale.z);
+            skew = FVector3(_skew.x, _skew.y, _skew.z);
             return true;
         }
 

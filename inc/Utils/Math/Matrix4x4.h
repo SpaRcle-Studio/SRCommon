@@ -114,7 +114,6 @@ namespace SR_MATH_NS {
     SR_MAYBE_UNUSED FVector4 CalcTranslationPlanNormal(const Matrix4x4& model, const SR_MATH_NS::FVector3& cameraEye, const SR_MATH_NS::FVector3& cameraDir, Axis axis);
     SR_MAYBE_UNUSED FVector4 CalcRotationPlanNormal(const Matrix4x4& model, const SR_MATH_NS::FVector3& cameraDir, Axis axis);
     SR_MAYBE_UNUSED FVector4 CalcRotationPlanNormal(const SR_MATH_NS::FVector3& cameraDir, Axis axis);
-    SR_MAYBE_UNUSED bool DecomposeTransform(const glm::mat4& matrix, FVector3& translation, FVector3& rotation, FVector3& scale);
 
     template<typename U> Vector4<U> Matrix4x4::operator*(const Vector4<U>& vector4) const {
         const glm::vec4 v = self * glm::vec4(

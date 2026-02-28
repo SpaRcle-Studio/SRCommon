@@ -50,7 +50,6 @@ namespace SR_MATH_NS {
         Quaternion(const Quaternion &p_q);
         Quaternion(const Vector3<Unit> &p_euler);
         Quaternion(const glm::quat &q);
-        //Quaternion(const Vector3<Unit>& axis, Unit angle);
         explicit Quaternion(const Matrix4x4& matrix);
         explicit Quaternion(T x, T y, T z, T w);
 

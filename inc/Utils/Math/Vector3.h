@@ -14,12 +14,7 @@ namespace SR_MATH_NS {
         using ValueType = T;
 
         union {
-            struct {
-                T x;
-                T y;
-                T z;
-            };
-
+            struct { T x; T y; T z; };
             T coord[3] = { 0 };
         };
     public:
@@ -54,23 +49,8 @@ namespace SR_MATH_NS {
             z = (Unit)axis[2];
         }
 
-        Vector3(T p_x, T p_y, T p_z) {
-            x = p_x;
-            y = p_y;
-            z = p_z;
-        }
-
-        Vector3(T p) {
-            x = p;
-            y = p;
-            z = p;
-        }
-
-        Vector3(const glm::vec3& v) {
-            x = v.x;
-            y = v.y;
-            z = v.z;
-        }
+        Vector3(T p_x, T p_y, T p_z) { x = p_x; y = p_y; z = p_z; }
+        Vector3(T p) { x = p; y = p; z = p; }
 
     public:
         template<typename U> static Vector3<T> XY(const Vector2<U>& v, U value) {
@@ -155,15 +135,15 @@ namespace SR_MATH_NS {
         SR_NODISCARD Vector2<T> YZ() const { return Vector2<T>(y, z); }
 
         SR_NODISCARD Vector3 Singular(const Vector3& segment) const { return Vector3(
-                     x > 0 ? x + segment.x : x - segment.x,
-                     y > 0 ? y + segment.y : y - segment.y,
-                     z > 0 ? z + segment.z : z - segment.z
-                );
+                 x > 0 ? x + segment.x : x - segment.x,
+                 y > 0 ? y + segment.y : y - segment.y,
+                 z > 0 ? z + segment.z : z - segment.z
+            );
         }
         SR_NODISCARD Vector3 DeSingular(const Vector3& segment) const { return Vector3(
-                    x > 0 ? x - segment.x : x,
-                    y > 0 ? y - segment.y : y,
-                    z > 0 ? z - segment.z : z
+                x > 0 ? x - segment.x : x,
+                y > 0 ? y - segment.y : y,
+                z > 0 ? z - segment.z : z
             );
         }
 
@@ -277,16 +257,6 @@ namespace SR_MATH_NS {
                     return 0.f;
                 }
                 return static_cast<Unit>(SR_ACOS(static_cast<double_t>(SR_CLAMP(Dot(to) / num, -1.f, 1.f))) * 57.29578f);
-
-                /// sqrt(a) * sqrt(b) = sqrt(a * b) -- valid for real numbers
-
-                //const T denominator = static_cast<T>(sqrt(SqrMagnitude() * to.SqrMagnitude()));
-                //if (denominator < static_cast<T>(SR_EPSILON_NORMAL_SQRT)) {
-                //    return static_cast<T>(0);
-                //}
-
-                //const T dot = SR_CLAMP(Dot(to) / denominator, static_cast<T>(-1), static_cast<T>(1));
-                //return static_cast<T>(SR_ACOS(dot) * SR_RAD_2_DEG);
             }
         }
 
@@ -302,17 +272,6 @@ namespace SR_MATH_NS {
             const Unit num5 = SR_MATH_NS::Sign((Unit) ((double) axis.x * (double) num2 + (double) axis.y * (double) num3 + (double) axis.z * (double) num4));
             return num1 * num5;
         }
-
-        /*SR_NODISCARD Vector3<T> Angle(const Vector3<T>& vector3) {
-            Vector3 angle;
-
-            angle.x = (T)(std::atan2(vector3.y, vector3.z) - atan2(y, z));
-            angle.y = (T)(std::atan2(vector3.x, vector3.z) - atan2(x, z));
-            angle.z = (T)(std::atan2(vector3.y, vector3.x) - atan2(y, x));
-
-            Vector3 degrees = Vector3(T(180)) * angle / SR_PI;
-            return (Vector3(T(360)) + degrees.Round()) % Vector3(T(360));
-        }*/
 
         SR_NODISCARD Vector3<T> ProjectOnPlane(const Vector3<T>& planeNormal) const {
             if constexpr (std::is_same_v<T, bool>) {
@@ -635,29 +594,10 @@ namespace SR_MATH_NS {
             else {
                 const double_t num = Magnitude();
                 return static_cast<double_t>(num) > 9.99999974737875E-06 ? *this / num : Vector3<T>();
-
-                /*const float_t sqrMag = SqrMagnitude();
-
-                if (sqrMag > static_cast<T>(SR_KINDA_SMALL_NUMBER_EPSILON)) {
-                    const T len = static_cast<T>(SR_SQRT(sqrMag));
-                    Vector3 vec3 = *this;
-
-                    if (len > static_cast<T>(SR_KINDA_SMALL_NUMBER_EPSILON)) {
-                        vec3.x /= len;
-                        vec3.y /= len;
-                        vec3.z /= len;
-                    }
-
-                    return vec3;
-                }
-
-                return Vector3<T>::UnitZ();*/
             }
         }
 
-        SR_NODISCARD T SquaredNorm() const noexcept {
-            return x * x + y * y + z * z;
-        }
+        SR_NODISCARD T SquaredNorm() const noexcept { return x * x + y * y + z * z; }
 
         SR_NODISCARD Vector3<T> Clamp(const Vector3<T>& lover, const Vector3<T>& upper) const {
             return Vector3<T>(
@@ -842,10 +782,6 @@ namespace SR_MATH_NS {
         SR_FORCE_INLINE bool operator>(const Vector3<T>& p_v) const { return x > p_v.x && y > p_v.y && z > p_v.z; }
 
     public:
-        SR_NODISCARD glm::vec3 ToGLM() const noexcept {
-            return *reinterpret_cast<glm::vec3*>((void*)this);
-        }
-
         static Unit Magnitude(Vector3 vec) {
             return vec.Magnitude();
         }
