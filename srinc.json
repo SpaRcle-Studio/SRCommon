@@ -12,6 +12,7 @@
         "src/Utils/Platform/PlatformAndroid.cpp",
         "src/Utils/Platform/PlatformLinux.cpp",
         "src/Utils/Platform/PlatformWindows.cpp",
+        "src/Utils/Platform/PlatformEmscripten.cpp",
 
         "src/Utils/ECS/EntityRefOld.cpp",
         "src/Utils/World/Observer.cpp",
