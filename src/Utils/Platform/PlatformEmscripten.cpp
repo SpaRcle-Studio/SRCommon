@@ -9,7 +9,28 @@
 #include <Utils/Platform/Stacktrace.h>
 #include <Utils/Common/Breakpoint.h>
 
+#include <emscripten/emscripten.h>
+
 namespace SR_PLATFORM_NS {
+    struct EmscriptenMainLoopData {
+        bool(*mainLoop)(void*);
+        void* pApplication;
+    };
+
+    static EmscriptenMainLoopData g_mainLoopData;
+
+    void MainLoopProxy() {
+        if (!g_mainLoopData.mainLoop(g_mainLoopData.pApplication)) {
+            emscripten_cancel_main_loop();
+        }
+    }
+
+    void SetApplicationMainLoop(bool(*mainLoop)(void*), void* pApplication) {
+        g_mainLoopData.mainLoop = mainLoop;
+        g_mainLoopData.pApplication = pApplication;
+        emscripten_set_main_loop(MainLoopProxy, 0, true);
+    }
+
     void InitSegmentationHandler() {
 
     }
@@ -67,10 +88,6 @@ namespace SR_PLATFORM_NS {
 
     void* GetInstance() {
         return nullptr;
-    }
-
-    bool ReadFile(const Path& path, std::string& buffer) {
-        return false;
     }
 
     void WriteMessage(int log, const std::string& msg) {
@@ -153,18 +170,6 @@ namespace SR_PLATFORM_NS {
 
     bool Delete(const Path& path) {
         return false;
-    }
-
-    Path GetApplicationResourcesPath() {
-        return ":assets:";
-    }
-
-    void InitializeHooks(const std::function<void(PlatformHooks& hooks)>& callback) {
-
-    }
-
-    Path::Type GetPathType(std::string_view path) {
-        return Path::Type::Undefined;
     }
 
     Path GetApplicationPath() {

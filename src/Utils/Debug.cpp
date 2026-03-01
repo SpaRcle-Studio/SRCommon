@@ -38,9 +38,12 @@ namespace SR_UTILS_NS {
                 break;
         }
 
+    #ifndef SR_EMSCRIPTEN
         if (type == DebugLogType::Assert) {
             msg.append("\nStack trace:\n").append(GetStacktrace());
         }
+    #endif
+
         msg.append("\n");
 
         std::string threadName = SR_UTILS_NS::GetThisThreadId();

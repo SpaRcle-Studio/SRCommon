@@ -9,11 +9,11 @@
 
 namespace SR_PLATFORM_NS {
     MessageBoxResultType ShowMessageBox(
-            const std::string_view& title,
-            const std::string_view& message,
-            MessageBoxType type,
-            MessageBoxIconType iconType,
-            MessageBoxDefaultButtonType defaultButtonType
+        const std::string_view& title,
+        const std::string_view& message,
+        MessageBoxType type,
+        MessageBoxIconType iconType,
+        MessageBoxDefaultButtonType defaultButtonType
     ) {
         std::string_view dialogTypeStr;
         std::string_view iconTypeStr;

@@ -43,6 +43,8 @@
 #else
     #ifdef SR_ANDROID
         #include "../src/Utils/Platform/MessageBoxAndroid.cpp"
+    #elif defined(SR_EMSCRIPTEN)
+        #include "../src/Utils/Platform/MessageBoxEmscripten.cpp"
     #endif
 #endif
 

@@ -93,7 +93,7 @@
         #include <iomanip>
     #endif
 
-    #if defined(SR_LINUX) || defined(SR_ANDROID)
+    #if defined(SR_LINUX) || defined(SR_ANDROID) || defined(SR_EMSCRIPTEN)
         #include <sys/stat.h>
     #endif
 
@@ -168,7 +168,7 @@ namespace SR_UTILS_NS {
 
     template <ExecutionPolicy policy, class FwdIt, class Fn>
     void ForEach(FwdIt first, FwdIt last, Fn func) noexcept {
-    #if SR_EMSCRIPTEN
+    #if defined(SR_EMSCRIPTEN) || defined(SR_CLANG) || defined(SR_ANDROID)
         std::for_each(first, last, func);
     #else
         if constexpr (policy == ExecutionPolicy::Seq) {
@@ -182,7 +182,7 @@ namespace SR_UTILS_NS {
 
     template <ExecutionPolicy policy, class FwdIt, class T, class BinaryOp, class UnaryOp>
     T TransformReduce(const FwdIt first, const FwdIt last, T val, BinaryOp binaryOp, UnaryOp unaryOp) noexcept {
-    #if SR_EMSCRIPTEN
+    #if defined(SR_EMSCRIPTEN) || defined(SR_CLANG) || defined(SR_ANDROID)
         return std::transform_reduce(first, last, val, binaryOp, unaryOp);
     #else
         if constexpr (policy == ExecutionPolicy::Seq) {

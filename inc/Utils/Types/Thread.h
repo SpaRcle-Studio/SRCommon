@@ -109,6 +109,8 @@ namespace SR_HTYPES_NS {
 
     template<class Functor, typename... Args>
     bool Thread::Factory::Create(Thread::Ptr& pThread, Functor&& fn, Args&&... args)  {
+        SR_LOG("Thread::Factory::Create() : creating new thread...");
+
         SR_LOCK_GUARD;
 
         pThread = new Thread();
@@ -131,7 +133,7 @@ namespace SR_HTYPES_NS {
         pThread->m_isRan = true;
         pThread->m_isCreated = true;
 
-        SR_LOG("Thread::Factory::Create() : creating new \"{}\" thread...", pThread->m_id.c_str());
+        SR_LOG("Thread::Factory::Create() : thread \"{}\" created.", pThread->m_id.c_str());
 
         return true;
     }

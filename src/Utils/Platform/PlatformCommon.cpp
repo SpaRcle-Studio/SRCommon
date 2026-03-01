@@ -50,7 +50,15 @@ namespace SR_PLATFORM_NS {
         return g_overriddenKeyboardState.load();
     }
 
-#if !defined(SR_ANDROID) && !defined(SR_EMSCRIPTEN)
+#if !defined(SR_EMSCRIPTEN)
+    void SetApplicationMainLoop(bool(*mainLoop)(void*), void* pApplication) {
+        while (mainLoop(pApplication)) {
+            continue;
+        }
+    }
+#endif
+
+#if !defined(SR_ANDROID)
     bool ReadFileOriginal(const Path& path, std::string& buffer) {
         SR_TRACY_ZONE;
 
@@ -94,7 +102,7 @@ namespace SR_PLATFORM_NS {
         }
     #endif
 
-    #if defined(SR_MSVC) || defined (SR_LINUX)
+    #if defined(SR_MSVC) || defined (SR_LINUX) || defined(SR_EMSCRIPTEN)
         struct stat s{};
         if(stat(path.data(), &s) == 0) {
             if (s.st_mode & S_IFDIR) {
