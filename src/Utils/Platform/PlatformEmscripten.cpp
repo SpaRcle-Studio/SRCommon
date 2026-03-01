@@ -268,6 +268,7 @@ namespace SR_PLATFORM_NS {
 
     std::vector<SR_MATH_NS::UVector2> GetScreenResolutions() {
         auto&& resolutions = std::vector<SR_MATH_NS::UVector2>();
+        resolutions.emplace_back(1280, 720);
         return resolutions;
     }
 }

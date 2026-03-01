@@ -14,6 +14,7 @@ namespace SR_UTILS_NS {
     static const StringAtom SR_FEATURE_VARIANT_DEBUG_ID = "Debug";
     static const StringAtom SR_FEATURE_VARIANT_RELEASE_ID = "Release";
     static const StringAtom SR_FEATURE_VARIANT_VALIDATION_ID = "Validation";
+    static const StringAtom SR_FEATURE_VARIANT_EMSCRIPTEN_ID = "Emscripten";
 
     bool FeatureGroup::Register(StringAtom name, bool value) {
         if (m_values.count(name)) {
@@ -84,6 +85,9 @@ namespace SR_UTILS_NS {
         #endif
         #ifdef SR_RELEASE
             SR_FEATURE_VARIANT_RELEASE_ID
+        #endif
+        #if defined(SR_EMSCRIPTEN)
+            SR_FEATURE_VARIANT_EMSCRIPTEN_ID
         #endif
         };
 

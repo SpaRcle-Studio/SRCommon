@@ -42,6 +42,8 @@ namespace SR_UTILS_NS {
             /// @property
             StringAtom name = "Thread";
             /// @property
+            bool useThreads = true;
+            /// @property
             std::vector<ThreadWorkerSettingsState> states;
 
         };

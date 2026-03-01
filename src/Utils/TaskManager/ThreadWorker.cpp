@@ -126,12 +126,14 @@ namespace SR_UTILS_NS {
         SRAssert(!m_isActive);
         m_isActive = true;
 
-        if (!SR_HTYPES_NS::Thread::Factory::Instance().Create(m_thread, &ThreadWorker::Work, this)) {
-            SRHalt("ThreadWorker::Start() : failed to create thread!");
-            return;
-        }
+        if (m_useThreads) {
+            if (!SR_HTYPES_NS::Thread::Factory::Instance().Create(m_thread, &ThreadWorker::Work, this)) {
+                SRHalt("ThreadWorker::Start() : failed to create thread!");
+                return;
+            }
 
-        m_thread->SetName(m_name);
+            m_thread->SetName(m_name);
+        }
     }
 
     void ThreadWorker::Stop() {
@@ -147,6 +149,15 @@ namespace SR_UTILS_NS {
         }
     }
 
+    void ThreadWorker::CheckFinalize() {
+        for (auto&& pState : m_states) {
+            if (GetThreadsWorker()->CheckFinalize(pState->GetMeta()->GetFactoryName())) {
+                SR_LOG("ThreadWorker::Work() : finalize state \"{}\"", pState->GetMeta()->GetFactoryName());
+                pState->Finalize();
+            }
+        }
+    }
+
     void ThreadWorker::Work() {
         SR_TRACY_THREAD_NAME(m_name.c_str());
 
@@ -154,23 +165,27 @@ namespace SR_UTILS_NS {
             SR_TRACY_ZONE_S(m_name.c_str());
             SR_TRACY_FRAME_MARK_N(m_name.c_str());
 
-            m_thread->Synchronize();
+            if (m_useThreads) {
+                m_thread->Synchronize();
+            }
 
             if (!m_isActive) {
                 break;
             }
 
             if (!GetThreadsWorker()->IsAlive()) {
-                for (auto&& pState : m_states) {
-                    if (GetThreadsWorker()->CheckFinalize(pState->GetMeta()->GetFactoryName())) {
-                        SR_LOG("ThreadWorker::Work() : finalize state \"{}\"", pState->GetMeta()->GetFactoryName());
-                        pState->Finalize();
-                    }
+                CheckFinalize();
+                if (!m_useThreads) {
+                    break;
                 }
                 continue;
             }
 
             Update();
+
+            if (!m_useThreads) {
+                break;
+            }
         }
     }
 
@@ -273,6 +288,7 @@ namespace SR_UTILS_NS {
 
         for (const Details::ThreadWorkerThread& thread : settingsVariant.value().threads) {
             ThreadWorker::Ptr pThreadWorker = new ThreadWorker(thread.name);
+            pThreadWorker->SetUseThreads(thread.useThreads);
 
             for (const Details::ThreadWorkerSettingsState& stateName : thread.states) {
                 auto&& pState = SR_UTILS_NS::Factory::Instance().Create<ThreadWorkerStateBase>(stateName.name);
@@ -336,7 +352,7 @@ namespace SR_UTILS_NS {
         m_isAlive = false;
 
         while (!m_finalize.empty()) {
-            SR_NOOP;
+            Execute();
         }
 
         SRAssert(m_isActive);
@@ -392,6 +408,16 @@ namespace SR_UTILS_NS {
             m_context = new SR_HTYPES_NS::DataStorage();
         }
         return *m_context;
+    }
+
+    void ThreadsWorker::Execute() {
+        SR_TRACY_ZONE;
+
+        for (auto&& pThread : m_threadWorkers) {
+            if (!pThread->IsNeedUseThreads()) {
+                pThread->Work();
+            }
+        }
     }
 }
 

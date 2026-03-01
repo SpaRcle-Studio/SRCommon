@@ -75,16 +75,19 @@ namespace SR_UTILS_NS {
         void AddState(ThreadWorkerStateBase::Ptr pState);
 
         void SetThreadsWorker(ThreadsWorker* pThreadsWorker) { m_threadsWorker = pThreadsWorker; }
+        void SetUseThreads(bool useThreads) { m_useThreads = useThreads; }
 
         void Start();
         void Stop();
+        void Work();
 
         SR_NODISCARD ThreadsWorker* GetThreadsWorker() const { return m_threadsWorker; }
         SR_NODISCARD const std::vector<ThreadWorkerStateBase::Ptr>& GetStates() const { return m_states; }
+        SR_NODISCARD bool IsNeedUseThreads() const { return m_useThreads; }
 
     private:
-        void Work();
         void Update();
+        void CheckFinalize();
 
     private:
         ThreadsWorker* m_threadsWorker = nullptr;
@@ -93,6 +96,7 @@ namespace SR_UTILS_NS {
         uint32_t m_currentState = 0;
         std::string m_name;
         std::atomic<bool> m_isActive = false;
+        bool m_useThreads = true;
 
     };
 
@@ -112,6 +116,7 @@ namespace SR_UTILS_NS {
 
         void AddThread(ThreadWorker::Ptr pThread);
 
+        void Execute();
         void Start();
         void Stop();
         void StopAsync() { m_isAlive = false; }
