@@ -207,7 +207,7 @@ namespace SR_UTILS_NS {
                             wait = false;
                             break;
                         case ThreadWorkerResult::Repeat:
-                            break;
+                            return;
                         case ThreadWorkerResult::Skip:
                             skip = true;
                             break;
@@ -224,7 +224,7 @@ namespace SR_UTILS_NS {
                     case ThreadWorkerResult::Skip:
                         break;
                     case ThreadWorkerResult::Repeat:
-                        continue;
+                        return;
                     case ThreadWorkerResult::Break:
                         m_currentState = 0;
                         return;

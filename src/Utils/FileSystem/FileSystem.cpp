@@ -3,9 +3,8 @@
 //
 
 #include <Utils/FileSystem/FileSystem.h>
-#include <Utils/Debug.h>
+#include <Utils/FileSystem/VirtualFS.h>
 #include <Utils/Platform/Platform.h>
-#include <Utils/FileSystem/Path.h>
 #include <Utils/Common/Hashes.h>
 #include <Utils/Common/StringUtils.h>
 #include <Utils/Profile/TracyContext.h>
@@ -21,33 +20,11 @@ namespace SR_UTILS_NS {
         return data;
     }
 
-    SR_COMMON_DLL_API char* FileSystem::Load(std::string path) {
-        /// open file
-        std::ifstream infile(path);
-        if (!infile.is_open()) {
-            SR_ERROR("FileSystem::Load() : failed open file!\n\tPath: "+path);
-            return nullptr;
-        }
-
-
-        /// get length of file
-        infile.seekg(0, std::ios::end);
-        size_t length = infile.tellg();
-        infile.seekg(0, std::ios::beg);
-
-        char* buffer = new char[length];
-
-        /// read file
-        infile.read(buffer, length);
-
-        return buffer;
-    }
-
     SR_COMMON_DLL_API std::vector<std::string_view> FileSystem::ReadAllTextAsStringViewVector(const Path& path, std::string& buffer) {
         SR_TRACY_ZONE;
         std::vector<std::string_view> result;
 
-        if (!SR_PLATFORM_NS::ReadFile(path, buffer)) {
+        if (!SR_UTILS_NS::FileSystem::ReadFile(path, buffer)) {
             return result;
         }
 
@@ -78,88 +55,6 @@ namespace SR_UTILS_NS {
         return result;
     }
 
-    SR_COMMON_DLL_API std::string FileSystem::ReadAllText(const std::string& path) {
-        SR_TRACY_ZONE;
-
-        std::string data = std::string();
-        std::ifstream stream(path, std::ios::in);
-        if (!stream) {
-            SR_ERROR("FileSystem::ReadAllText() : failed to open \"" + path + "\" file!");
-            return data;
-        }
-
-        stream.seekg(0, std::ios::end);
-        std::streampos bytes = stream.tellg();
-        stream.seekg(0, std::ios::beg);
-        data.reserve(bytes);
-
-        if (stream.is_open()) {
-            std::string line;
-            bool first = false;
-            while (getline(stream, line)) {
-                if (!first) {
-                    first = true;
-                    data += line;
-                }
-                else {
-                    data += "\n";
-                    data += line;
-                }
-            }
-            stream.close();
-        }
-        return data;
-    }
-
-    SR_COMMON_DLL_API std::vector<uint8_t> FileSystem::ReadFileAsVector(const std::string &path) {
-        std::ifstream file(path, std::ifstream::binary | std::ios::in);
-
-        if (file.fail()) {
-            return std::vector<uint8_t>();
-        }
-
-        file.seekg(0, std::ios::end);
-        std::streampos end = file.tellg();
-        file.seekg(0, std::ios::beg);
-        std::streampos start = file.tellg();
-        size_t size = static_cast<size_t>(end - start);
-
-        std::vector<uint8_t> result(size);
-
-        file.read(reinterpret_cast<char*>(result.data()), size);
-
-        return result;
-    }
-
-    SR_COMMON_DLL_API std::vector<char> FileSystem::ReadBinary(const std::string_view path) {
-        /*std::ifstream ifd(path,  std::ios::binary |  std::ios::ate);
-        int size = ifd.tellg();
-        ifd.seekg(0,  std::ios::beg);
-        std::vector<char> buffer;
-        buffer.resize(size); // << resize not reserve
-        ifd.read(buffer.data(), size);*/
-
-        //std::ifstream input(path, std::ios::binary);
-        //std::vector<uint32_t> buffer(std::istreambuf_iterator<char>(input), {});
-
-        std::ifstream file(path.data(), std::ios::ate | std::ios::binary);
-
-        if (!file.is_open()) {
-            SR_ERROR("FileSystem::ReadBinary() : failed to open \"{}\"file!", path);
-            return std::vector<char>();
-        }
-
-        size_t fileSize = (size_t) file.tellg();
-        std::vector<char> buffer(fileSize);
-
-        file.seekg(0);
-        file.read(buffer.data(), fileSize);
-
-        file.close();
-
-        return buffer;
-    }
-
     SR_COMMON_DLL_API bool FileSystem::CreatePath(std::string path, uint32_t offset) {
         if (path.empty()) {
             return false;
@@ -187,15 +82,11 @@ namespace SR_UTILS_NS {
     #endif
     }
 
-    //std::string FileSystem::GetFullPath(const std::string& path) {
-    //#ifdef SR_WIN32
-    //    char fullFilename[MAX_PATH];
-    //    GetFullPathName(path.c_str(), MAX_PATH, fullFilename, nullptr);
-    //    return std::string(fullFilename);
-    //#else
-    //    return std::string();
-    //#endif
-    //}
+    SR_COMMON_DLL_API bool FileSystem::ReadFile(const Path& path, std::string& buffer) {
+        SR_TRACY_ZONE;
+
+        return SR_PLATFORM_NS::ReadFile(path, buffer);
+    }
 
     SR_COMMON_DLL_API std::string FileSystem::NormalizePath(const std::string &path) {
         SR_TRACY_ZONE;
@@ -228,29 +119,6 @@ namespace SR_UTILS_NS {
         return true;
     }
 
-    SR_COMMON_DLL_API std::string FileSystem::ReadBinaryAsString(const Path& path, bool checkError) {
-        SR_TRACY_ZONE;
-
-        std::ifstream file(path.ToStringRef(), std::ios::ate | std::ios::binary);
-
-        if (!file.is_open()) {
-            SR_UNUSED_VARIABLE(checkError);
-            SRAssert2(!checkError, "FileSystem::ReadBinaryAsString() : failed to open \"" + path.ToStringRef() + "\" file!");
-            return std::string();
-        }
-
-        size_t fileSize = (size_t) file.tellg();
-        std::string buffer;
-        buffer.resize(fileSize);
-
-        file.seekg(0);
-        file.read(buffer.data(), fileSize);
-
-        file.close();
-
-        return buffer;
-    }
-
     SR_COMMON_DLL_API uint64_t FileSystem::GetFileHash(const std::string& path) {
         SR_TRACY_ZONE;
         SR_TRACY_ZONE_TEXT(path);
@@ -259,7 +127,7 @@ namespace SR_UTILS_NS {
 
         {
             SR_TRACY_ZONE_N("Read file");
-            if (!SR_PLATFORM_NS::ReadFile(path, buffer)) {
+            if (!SR_UTILS_NS::FileSystem::ReadFile(path, buffer)) {
                 SR_WARN("FileSystem::GetFileHash() : failed to read file!\n\tPath: " + path);
                 return SR_UINT64_MAX;
             }
@@ -297,8 +165,16 @@ namespace SR_UTILS_NS {
         return hash;
     }
 
-    SR_COMMON_DLL_API std::shared_ptr<std::vector<uint8_t>> FileSystem::ReadFileAsBlob(const std::string &path) {
-        return std::make_shared<std::vector<uint8_t>>(std::move(ReadFileAsVector(path)));
+    SR_COMMON_DLL_API std::shared_ptr<std::string> FileSystem::ReadFileAsBlob(const std::string& path) {
+        SR_TRACY_ZONE;
+
+        std::shared_ptr<std::string> pBuffer = std::make_shared<std::string>();
+        if (!SR_UTILS_NS::FileSystem::ReadFile(path, *pBuffer)) {
+            SR_ERROR("FileSystem::ReadFileAsBlob() : failed to read file!\n\tPath: " + path);
+            return nullptr;
+        }
+
+        return pBuffer;
     }
 
     SR_COMMON_DLL_API uint64_t FileSystem::ReadHashFromFile(const Path& path) {

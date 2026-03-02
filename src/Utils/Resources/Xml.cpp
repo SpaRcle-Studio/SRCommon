@@ -134,7 +134,7 @@ namespace SR_UTILS_NS {
         auto xml = Document::New();
 
         std::string fileData;
-        if (!SR_PLATFORM_NS::ReadFile(path, fileData)) {
+        if (!SR_UTILS_NS::FileSystem::ReadFile(path, fileData)) {
             SR_ERROR("Document::Load() : file not exists! \n\tPath: " + path.ToString());
             return Document(); /// NOLINT
         }
@@ -179,6 +179,11 @@ namespace SR_UTILS_NS {
     }
 
     Xml::Node Xml::Document::Root() const {
+        if (!Valid()) {
+            SRAssert2(false,"Document::Root() : document is not valid!");
+            g_xml_last_error = -2;
+            return Node();
+        }
         return Node(m_document->root());
     }
 

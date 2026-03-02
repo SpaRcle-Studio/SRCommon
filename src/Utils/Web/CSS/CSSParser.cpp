@@ -11,7 +11,8 @@
 namespace SR_UTILS_NS::Web {
     CSS::Ptr CSSParser::Parse(const Path& path, const CSSParserContext& context) {
         const SR_UTILS_NS::Path fullPath = SR_UTILS_NS::ResourceManager::Instance().GetResPath().Concat(path);
-        const std::string data = SR_UTILS_NS::FileSystem::ReadBinaryAsString(fullPath);
+        //const std::string data = SR_UTILS_NS::FileSystem::ReadBinaryAsString(fullPath);
+        std::string data;
         return Parse(data);
     }
 

@@ -4,6 +4,7 @@
 
 #include <Utils/Platform/Platform.h>
 #include <Utils/Platform/Stacktrace.h>
+#include <Utils/FileSystem/FileSystem.h>
 #include <Utils/Common/Breakpoint.h>
 #include <Utils/Common/StringFormat.h>
 #include <Utils/Debug.h>
@@ -554,7 +555,7 @@ namespace SR_UTILS_NS::Platform {
 
         if (from.IsFile()) {
             std::string buffer;
-            if (!SR_PLATFORM_NS::ReadFile(from, buffer)) {
+            if (!SR_UTILS_NS::FileSystem::ReadFile(from, buffer)) {
                 SR_WARN("Platform::Copy() : failed to read file!\n\tPath: {}", from.c_str());
                 return false;
             }

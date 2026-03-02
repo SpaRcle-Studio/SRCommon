@@ -31,6 +31,7 @@ namespace SR_HTYPES_NS {
         SR_NODISCARD uint64_t size() const { return m_map.size(); }
         SR_NODISCARD uint64_t count(const Key& key) const { return m_map.count(key); }
         SR_NODISCARD bool empty() const { return m_map.empty(); }
+        SR_NODISCARD bool contains(const Key& key) const { return m_map.count(key) > 0; }
         bool erase(const Key& key) { return m_map.erase(key) > 0; }
         Iterator erase(ConstIterator pos) { return m_map.erase(pos); }
         Iterator erase(ConstIterator first, ConstIterator last) { return m_map.erase(first, last); }

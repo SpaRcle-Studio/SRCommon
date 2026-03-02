@@ -3,7 +3,7 @@
 //
 
 #include <Utils/Resources/Yaml.h>
-#include <Utils/FileSystem/Path.h>
+#include <Utils/FileSystem/FileSystem.h>
 #include <Utils/Debug.h>
 #include <Utils/Profile/TracyContext.h>
 
@@ -200,7 +200,7 @@ namespace SR_UTILS_NS::Yaml {
         SR_TRACY_TEXT_N("Path", path.ToStringRef());
 
         std::string contents;
-        if (!SR_PLATFORM_NS::ReadFile(path, contents)) {
+        if (!SR_UTILS_NS::FileSystem::ReadFile(path, contents)) {
             SR_ERROR("Document::Load() : failed to open document!\n\tPath: {}", path);
             return { };
         }

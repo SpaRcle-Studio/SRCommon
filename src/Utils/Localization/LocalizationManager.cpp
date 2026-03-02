@@ -25,8 +25,14 @@ namespace SR_UTILS_NS::Localization {
     void LocalizationFile::LoadLocalizationStrings(const Path& filePath) {
         auto&& resourceManager = SR_UTILS_NS::ResourceManager::Instance();
         //m_watchedFile = resourceManager.StartWatch(filePath);
-        std::string fileContents = FileSystem::ReadAllText(filePath.ToString());
-        ryml::Tree tree = ryml::parse_in_arena(ryml::to_csubstr(fileContents));
+
+        auto&& pFileContents = FileSystem::ReadFileAsBlob(filePath.ToString());
+        if (!pFileContents) {
+            SR_ERROR("LocalizationFile::LoadLocalizationStrings() : failed to read localization file! Path: {}", filePath);
+            return;
+        }
+
+        ryml::Tree tree = ryml::parse_in_arena(ryml::to_csubstr(*pFileContents));
         ryml::ConstNodeRef root = tree.crootref();
         for (auto&& n : root.children()) {
             std::string id; ///это должен был быть StringAtom
@@ -119,8 +125,13 @@ namespace SR_UTILS_NS::Localization {
 
     void LocalizationManager::LoadInfoAsConfigFile(const SpaRcle::Utils::Path &filePath) {
         Path resourcesFolder = SR_UTILS_NS::ResourceManager::Instance().GetResPath();
-        std::string fileContents = FileSystem::ReadAllText(filePath.ToString());
-        ryml::Tree tree = ryml::parse_in_place(fileContents.data());
+        auto&& pFileContents = FileSystem::ReadFileAsBlob(filePath.ToString());
+        if (!pFileContents) {
+            SR_ERROR("LocalizationManager::LoadInfoAsConfigFile() : failed to read localization config file! Path: {}", filePath);
+            return;
+        }
+
+        ryml::Tree tree = ryml::parse_in_place(pFileContents->data());
         ryml::ConstNodeRef root = tree.crootref();
 
         for (auto&& locGroup : root.children()) {

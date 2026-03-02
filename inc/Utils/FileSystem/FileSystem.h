@@ -25,21 +25,15 @@ namespace SR_UTILS_NS {
         static bool WriteToFile(const std::string& path, const std::string_view& text);
         static std::string NormalizePath(const std::string& path);
         static void NormalizePathInPlace(std::string& path);
-
         static std::vector<std::string> ReadAllLines(const SR_UTILS_NS::Path& path);
 
         static uint64_t ReadHashFromFile(const SR_UTILS_NS::Path& path);
         static bool WriteHashToFile(const SR_UTILS_NS::Path& path, uint64_t hash);
 
-        static std::string ReadBinaryAsString(const Path& path, bool checkError = true);
-        static std::vector<char> ReadBinary(std::string_view path);
-        static std::vector<uint8_t> ReadFileAsVector(const std::string& path);
-        static std::shared_ptr<std::vector<uint8_t>> ReadFileAsBlob(const std::string& path);
+        static std::shared_ptr<std::string> ReadFileAsBlob(const std::string& path);
+        static bool ReadFile(const Path& path, std::string& buffer);
 
-        static std::string ReadAllText(const std::string& path);
         static std::vector<std::string_view> ReadAllTextAsStringViewVector(const Path& path, std::string& buffer);
-
-        static char* Load(std::string path);
 
         static void ForEachFileInFolder(const Path& path, bool recursive, const SR_HTYPES_NS::Function<void(const Path&)>& func);
 

@@ -101,12 +101,16 @@ namespace SR_UTILS_NS {
 
         InitColorTheme();
 
-    #ifndef SR_ANDROID
+    #if !defined(SR_ANDROID) && !defined(SR_EMSCRIPTEN)
         auto&& successfulPath = SR_PLATFORM_NS::GetApplicationPath().GetFolder().Concat("/successful");
         if (successfulPath.Exists(Path::Type::File))
             Platform::Delete(successfulPath);
     #endif
 
+        m_isInit = true;
+        m_showUseMemory = ShowUsedMemory;
+
+    #ifndef SR_EMSCRIPTEN
         m_logPath = Path(log_path);
 
         if (!m_logPath.GetFolder().CreateIfNotExists()) {
@@ -122,10 +126,8 @@ namespace SR_UTILS_NS {
             SR_PLATFORM_NS::WriteConsoleError("Debug::Init() : failed to open log file!\n\tLog path: " + m_logPath.ToString());
         }
 
-        m_isInit = true;
-        m_showUseMemory = ShowUsedMemory;
-
         Print("Debugger has been initialized. \n\tLog path: " + m_logPath.ToString(), DebugLogType::Debug);
+    #endif
 
     #ifdef SR_COMMON_GIT_METADATA
         std::string gitMetadata;

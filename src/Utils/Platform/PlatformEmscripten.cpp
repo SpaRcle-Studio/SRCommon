@@ -4,12 +4,13 @@
 
 #include <Utils/Platform/Platform.h>
 #include <Utils/Common/StringFormat.h>
-#include <Utils/Debug.h>
 #include <Utils/Profile/TracyContext.h>
 #include <Utils/Platform/Stacktrace.h>
 #include <Utils/Common/Breakpoint.h>
+#include <Utils/FileSystem/FileSystem.h>
 
 #include <emscripten/emscripten.h>
+#include <filesystem>
 
 namespace SR_PLATFORM_NS {
     struct EmscriptenMainLoopData {
@@ -90,17 +91,16 @@ namespace SR_PLATFORM_NS {
         return nullptr;
     }
 
-    void WriteMessage(int log, const std::string& msg) {
-
-    }
-
     void WriteConsoleLog(const std::string& msg) {
+        std::cout << msg << std::endl;
     }
 
     void WriteConsoleError(const std::string& msg) {
+        std::cerr << msg << std::endl;
     }
 
     void WriteConsoleWarn(const std::string& msg) {
+        std::cerr << msg << std::endl;
     }
 
     void TextToClipboard(const std::string &text) {
@@ -157,18 +157,51 @@ namespace SR_PLATFORM_NS {
 
     bool Copy(const Path& from, const Path& to) {
         SR_TRACY_ZONE;
-        return false;
+        if (from.IsFile()) {
+            std::string buffer;
+            if (!SR_UTILS_NS::FileSystem::ReadFile(from, buffer)) {
+                SR_WARN("Platform::Copy() : failed to read file {}", from.CStr());
+                return false;
+            }
+
+            std::ofstream out(to.CStr(), std::ios::binary);
+            if (!out.is_open()) {
+                SR_WARN("Platform::Copy() : failed to open destination file {}", to.CStr());
+                return false;
+            }
+
+            out.write(buffer.data(), static_cast<std::streamsize>(buffer.size()));
+            return out.good();
+        }
+
+        if (!from.IsDir()) {
+            SR_WARN("Platform::Copy() : \"{}\" is not directory!", from.CStr());
+            return false;
+        }
+
+        to.Create();
+
+        for (auto&& item : GetInDirectory(from, Path::Type::Undefined)) {
+            if (Copy(item, to.Concat(item.GetBaseNameAndExt())))
+                continue;
+
+            return false;
+        }
+
+        return true;
     }
 
     std::list<Path> GetInDirectory(const Path &dir, Path::Type type) {
+        SRHaltOnce("Not implemented!");
         return {};
     }
 
     bool CreateFolder(const std::string& path) {
-        return false;
+        return std::filesystem::create_directories(path);
     }
 
     bool Delete(const Path& path) {
+        SRHaltOnce("Not implemented!");
         return false;
     }
 
@@ -199,11 +232,11 @@ namespace SR_PLATFORM_NS {
     }
 
     void SelfOpen() {
-        SRHaltOnce("Not implemented!");
+        SRHaltOnce("Not suitable for web platform!");
     }
 
     bool IsAbsolutePath(const Path& path) {
-        return false;
+        return std::filesystem::path(path.ToStringRef()).is_absolute();
     }
 
     SR_MATH_NS::UVector2 GetScreenResolution() {
@@ -217,7 +250,7 @@ namespace SR_PLATFORM_NS {
     }
 
     bool IsExists(const Path &path) {
-        return false;
+        return std::filesystem::exists(path.ToStringRef());
     }
 
     void SetEnvironmentVar(const std::string_view& name, const std::string_view& value) {

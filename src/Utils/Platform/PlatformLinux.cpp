@@ -4,6 +4,7 @@
 
 #include <Utils/Platform/Platform.h>
 #include <Utils/Common/StringFormat.h>
+#include <Utils/FileSystem/FileSystem.h>
 #include <Utils/Debug.h>
 #include <Utils/Platform/Stacktrace.h>
 #include <Utils/Common/Breakpoint.h>
@@ -516,7 +517,7 @@ namespace SR_PLATFORM_NS {
     bool Copy(const Path &from, const Path &to) {
         if (from.IsFile()) {
             std::string buffer;
-            if (!SR_PLATFORM_NS::ReadFile(from, buffer)) {
+            if (!SR_UTILS_NS::FileSystem::ReadFile(from, buffer)) {
                 SR_WARN("Platform::Copy() : failed to read file!\n\tPath: {}", from.c_str());
                 return false;
             }

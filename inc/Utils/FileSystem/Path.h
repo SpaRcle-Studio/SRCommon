@@ -134,4 +134,10 @@ template<> struct fmt::formatter<SR_UTILS_NS::Path>
     }
 };
 
+template<> struct std::hash<SR_UTILS_NS::Path> {
+    size_t operator()(const SR_UTILS_NS::Path& path) const noexcept {
+        return path.GetHash();
+    }
+};
+
 #endif //SR_ENGINE_PATH_H

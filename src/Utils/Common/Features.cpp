@@ -15,6 +15,7 @@ namespace SR_UTILS_NS {
     static const StringAtom SR_FEATURE_VARIANT_RELEASE_ID = "Release";
     static const StringAtom SR_FEATURE_VARIANT_VALIDATION_ID = "Validation";
     static const StringAtom SR_FEATURE_VARIANT_EMSCRIPTEN_ID = "Emscripten";
+    static const StringAtom SR_FEATURE_VARIANT_WINDOWS_ID = "Windows";
 
     bool FeatureGroup::Register(StringAtom name, bool value) {
         if (m_values.count(name)) {
@@ -81,13 +82,16 @@ namespace SR_UTILS_NS {
         std::vector<StringAtom> groups = { SR_FEATURE_COMMON_GROUP_ID };
         std::vector<StringAtom> variants = {
         #ifdef SR_DEBUG
-            SR_FEATURE_VARIANT_DEBUG_ID
+            SR_FEATURE_VARIANT_DEBUG_ID,
         #endif
         #ifdef SR_RELEASE
-            SR_FEATURE_VARIANT_RELEASE_ID
+            SR_FEATURE_VARIANT_RELEASE_ID,
         #endif
         #if defined(SR_EMSCRIPTEN)
-            SR_FEATURE_VARIANT_EMSCRIPTEN_ID
+            SR_FEATURE_VARIANT_EMSCRIPTEN_ID,
+        #endif
+        #if defined(SR_WIN32)
+            SR_FEATURE_VARIANT_WINDOWS_ID,
         #endif
         };
 
