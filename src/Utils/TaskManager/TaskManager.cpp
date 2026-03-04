@@ -6,12 +6,13 @@
 #include <Utils/Platform/Platform.h>
 
 namespace SR_UTILS_NS {
-    Task::Task(TaskFn fn, bool createThread)
+    Task::Task(TaskFn fn, bool createThread, TaskPriority priority)
         : m_createThread(createThread)
         , m_id(SR_UINT64_MAX)
         , m_function(std::move(fn))
         , m_state(new std::atomic<State>())
         , m_thread(nullptr)
+        , m_priority(priority)
     {
         m_state->store(State::Waiting);
     }
@@ -83,6 +84,10 @@ namespace SR_UTILS_NS {
         return m_id;
     }
 
+    TaskPriority Task::GetPriority() const {
+        return m_priority;
+    }
+
     bool Task::IsWaiting() const {
         return m_state->load() == State::Waiting;
     }
@@ -122,39 +127,66 @@ namespace SR_UTILS_NS {
         SR_INFO("TaskManager::InitSingleton() : run task manager thread...");
 
         SR_HTYPES_NS::Thread::Factory::Instance().Create(m_thread, [this]() {
-            std::vector<Task::Ptr> toRun;
-            std::vector<uint64_t> completedIds;
+            std::set<Task*> delayedTasks;
 
             while (m_isRun.load()) {
                 SR_TRACY_ZONE_N("TaskManager");
 
-                SR_PLATFORM_NS::Sleep(5);
-                completedIds.clear();
-                toRun.clear();
-
-                /// копируем задачи, которые нужно запустить, чтобы не держать блокировку на весь цикл
+                bool isEmpty = false;
                 {
-                    SR_SCOPED_LOCK;
+                    SR_LOCK_GUARD;
+                    isEmpty = m_tasks.empty();
+                }
+
+                if (isEmpty) {
+                    SR_TRACY_ZONE_COLOR(0x000088);
+                    delayedTasks.clear();
+                    SR_PLATFORM_NS::Sleep(5);
+                    continue;
+                }
+
+                SR_TRACY_ZONE_COLOR(0x008800);
+
+                TaskPriority highestPriority = TaskPriority::Unknown;
+                Task::Ptr pTaskWithHighestPriority = nullptr;
+                {
+                    SR_LOCK_GUARD;
+
                     for (auto&& pTask : m_tasks) {
-                        if (pTask->IsWaiting()) {
-                            toRun.emplace_back(pTask);
+                        if (pTask->IsWaiting() && pTask->GetPriority() > highestPriority && !delayedTasks.count(pTask.get())) {
+                            highestPriority = pTask->GetPriority();
+                        }
+                    }
+
+                    if (highestPriority == TaskPriority::Unknown) {
+                        delayedTasks.clear();
+                        continue;
+                    }
+
+                    for (auto&& pTask : m_tasks) {
+                        if (pTask->IsWaiting() && pTask->GetPriority() == highestPriority) {
+                            pTaskWithHighestPriority = pTask;
+                            break;
                         }
                     }
                 }
 
-                for (auto&& pTask : toRun) {
-                    pTask->Run();
-                    if (pTask->IsCompleted()) {
-                        SR_SCOPED_LOCK;
-                        m_results.insert(std::make_pair(pTask->GetId(), pTask->GetResult()));
-                        m_ids.erase(pTask->GetId());
-                        auto&& pIt = std::ranges::find(m_tasks, pTask); /// удаляем задачу из списка задач, так как она уже завершилась
+                if (pTaskWithHighestPriority) {
+                    pTaskWithHighestPriority->Run();
+                    if (pTaskWithHighestPriority->IsCompleted()) {
+                        SR_LOCK_GUARD;
+                        m_results.insert(std::make_pair(pTaskWithHighestPriority->GetId(), pTaskWithHighestPriority->GetResult()));
+                        m_ids.erase(pTaskWithHighestPriority->GetId());
+                        auto&& pIt = std::ranges::find(m_tasks, pTaskWithHighestPriority); /// удаляем задачу из списка задач, так как она уже завершилась
                         if (pIt != m_tasks.end()) {
                             m_tasks.erase(pIt);
                         }
                         else {
                             SRHalt("TaskManager::InitSingleton() : task is completed, but not found in the list of tasks!");
                         }
+                    }
+                    else {
+                        delayedTasks.insert(pTaskWithHighestPriority.get());
                     }
                 }
             }
@@ -169,13 +201,13 @@ namespace SR_UTILS_NS {
         Singleton::InitSingleton();
     }
 
-    TaskManager::TaskId TaskManager::ExecuteAsync(const SR_HTYPES_NS::Function<void()>& function) {
+    TaskManager::TaskId TaskManager::ExecuteAsync(const SR_HTYPES_NS::Function<void()>& function, TaskPriority priority) {
         SR_LOCK_GUARD;
 
         auto&& pTask = new Task([function](std::atomic<Task::State>* pState) {
             function();
             pState->store(Task::State::Completed);
-        }, false);
+        }, false, priority);
 
         const uint64_t uniqueId = GetUniqueId();
         pTask->SetId(uniqueId);
@@ -185,13 +217,13 @@ namespace SR_UTILS_NS {
         return uniqueId;
     }
 
-    TaskManager::TaskId TaskManager::ExecuteParallel(const Function<void()> &function) {
+    TaskManager::TaskId TaskManager::ExecuteParallel(const Function<void()> &function, TaskPriority priority) {
         SR_LOCK_GUARD;
 
         auto&& pTask = new Task([function](std::atomic<Task::State>* pState) {
             function();
             pState->store(Task::State::Completed);
-        }, true);
+        }, true, priority);
 
         const uint64_t uniqueId = GetUniqueId();
         pTask->SetId(uniqueId);

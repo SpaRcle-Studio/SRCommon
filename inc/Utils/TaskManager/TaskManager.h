@@ -11,6 +11,10 @@
 #include <Utils/Types/Function.h>
 
 namespace SR_UTILS_NS {
+    SR_ENUM_NS_CLASS_T(TaskPriority, uint8_t,
+        Unknown, Discardable, Low, Normal, High
+    );
+
     class SR_COMMON_DLL_API Task : public NonCopyable {
     public:
         using Ptr = std::shared_ptr<Task>;
@@ -22,7 +26,7 @@ namespace SR_UTILS_NS {
         using TaskFn = SR_HTYPES_NS::Function<void(StatePtr)>;
 
     public:
-        explicit Task(TaskFn fn, bool createThread);
+        explicit Task(TaskFn fn, bool createThread, TaskPriority priority);
         ~Task() override;
 
     public:
@@ -35,12 +39,14 @@ namespace SR_UTILS_NS {
         SR_NODISCARD bool IsWaiting() const;
         SR_NODISCARD State GetResult() const;
         SR_NODISCARD uint64_t GetId() const;
+        SR_NODISCARD TaskPriority GetPriority() const;
 
     private:
         bool m_createThread;
         uint64_t m_id;
         Types::Thread::Ptr m_thread;
         TaskFn m_function;
+        TaskPriority m_priority = TaskPriority::Normal;
         /// должен быть динамическим, иначе может потеряться ссылка при перемещении
         StatePtr m_state;
 
@@ -54,8 +60,8 @@ namespace SR_UTILS_NS {
         ~TaskManager() override;
 
     public:
-        TaskId ExecuteAsync(const SR_HTYPES_NS::Function<void()>& function);
-        TaskId ExecuteParallel(const SR_HTYPES_NS::Function<void()>& function);
+        TaskId ExecuteAsync(const SR_HTYPES_NS::Function<void()>& function, TaskPriority priority);
+        TaskId ExecuteParallel(const SR_HTYPES_NS::Function<void()>& function, TaskPriority priority);
 
         Task::State GetResult(TaskId taskId) const;
         bool IsActive(TaskId taskId) const;
@@ -69,7 +75,6 @@ namespace SR_UTILS_NS {
         SR_HTYPES_NS::Thread::Ptr m_thread = nullptr;
         std::atomic<bool> m_isRun;
         std::vector<Task::Ptr> m_tasks;
-
         /// Предполагается, что задач не будет слишком много,
         /// и не будет надобности в unordered set/map
         std::set<TaskId> m_ids;

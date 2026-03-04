@@ -92,6 +92,7 @@ namespace SR_UTILS_NS {
 
         void ReloadAll();
         void Reload(const IResource::Ptr& pResource);
+        void Reload(StringAtom resourceId);
 
         void ReloadDirtyResources();
 

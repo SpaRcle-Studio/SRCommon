@@ -16,6 +16,8 @@ namespace SR_UTILS_NS {
     static const StringAtom SR_FEATURE_VARIANT_VALIDATION_ID = "Validation";
     static const StringAtom SR_FEATURE_VARIANT_EMSCRIPTEN_ID = "Emscripten";
     static const StringAtom SR_FEATURE_VARIANT_WINDOWS_ID = "Windows";
+    static const StringAtom SR_FEATURE_VARIANT_ANDROID_ID = "Android";
+    static const StringAtom SR_FEATURE_VARIANT_LINUX_ID = "Linux";
 
     bool FeatureGroup::Register(StringAtom name, bool value) {
         if (m_values.count(name)) {
@@ -92,6 +94,12 @@ namespace SR_UTILS_NS {
         #endif
         #if defined(SR_WIN32)
             SR_FEATURE_VARIANT_WINDOWS_ID,
+        #endif
+        #if defined(SR_ANDROID)
+            SR_FEATURE_VARIANT_ANDROID_ID,
+        #endif
+        #if defined(SR_LINUX)
+            SR_FEATURE_VARIANT_LINUX_ID,
         #endif
         };
 

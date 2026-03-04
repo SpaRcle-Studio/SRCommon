@@ -457,6 +457,18 @@ namespace SR_UTILS_NS {
         m_hasDirtyResources = true;
     }
 
+    void ResourceManager::ReloadResource(StringAtom id, StringAtom typeName) {
+        SR_TRACY_ZONE;
+        SR_LOCK_GUARD;
+        if (auto&& pIt = m_resources.find(typeName); pIt != m_resources.end()) {
+            pIt->second->Reload(id);
+        }
+        else {
+            SRHalt("ResourceManager::ReloadResource() : resource type not found!\n\tType: {}", typeName);
+        }
+        m_hasDirtyResources = true;
+    }
+
     void ResourceManager::ReloadResource(const IResource::Ptr& pResource) {
         SR_TRACY_ZONE;
         SR_LOCK_GUARD;

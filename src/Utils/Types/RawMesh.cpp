@@ -96,8 +96,6 @@ namespace SR_HTYPES_NS {
         SR_MAYBE_UNUSED const uint64_t resourceHash = path.GetFileHash();
 
         SR_MAYBE_UNUSED bool supportFastLoad = SR_UTILS_NS::Features::Instance().Enabled("FastModelsLoad", false);
-        supportFastLoad &= !SR_PLATFORM_NS::IsMobilePlatform(); /// временно отключено
-
         SR_MAYBE_UNUSED bool needFastLoad = supportFastLoad;
 
     #ifdef SR_UTILS_ASSIMP

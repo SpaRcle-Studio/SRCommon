@@ -81,6 +81,15 @@ namespace SR_UTILS_NS {
         }
     }
 
+    void ResourceType::Reload(StringAtom resourceId) {
+        SR_TRACY_ZONE;
+        if (m_dirtyResources.contains(resourceId)) {
+            return;
+        }
+        SR_LOG("ResourceType::Reload() : resource \"{}\" marked as dirty!", resourceId);
+        m_dirtyResources.insert(resourceId);
+    }
+
     void ResourceType::Reload(const IResource::Ptr& pResource) {
         SR_TRACY_ZONE;
         if (m_dirtyResources.contains(pResource->GetResourceId())) {

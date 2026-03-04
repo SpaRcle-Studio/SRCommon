@@ -49,7 +49,7 @@ namespace SR_UTILS_NS {
         std::string threadName = SR_UTILS_NS::GetThisThreadId();
 
         auto&& prefix = SR_FORMAT("[{}] [{}]", SR_UTILS_NS::EnumReflector::ToStringAtom(type).ToCStr(), threadName);
-        auto&& memoryUsage = m_showUseMemory ? SR_FORMAT("<{} KB> ", static_cast<uint32_t>(SR_PLATFORM_NS::GetProcessUsedMemory() / 1024)) : std::string();
+        auto&& memoryUsage = m_showUseMemory ? SR_FORMAT("<{} MB> ", static_cast<uint32_t>(SR_PLATFORM_NS::GetProcessUsedMemory() / 1024 / 1024)) : std::string();
 
         {
             if (SR_PLATFORM_NS::GetType() == PlatformType::Android) {
