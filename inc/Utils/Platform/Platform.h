@@ -5,9 +5,9 @@
 #ifndef SR_ENGINE_UTILS_PLATFORM_H
 #define SR_ENGINE_UTILS_PLATFORM_H
 
-#include <Utils/Math/Vector2.h>
 #include <Utils/Common/ThreadUtils.h>
 #include <Utils/FileSystem/Path.h>
+#include <Utils/Math/Vector2.h>
 #include <Utils/Platform/PlatformType.h>
 
 namespace SR_UTILS_NS {
@@ -24,13 +24,14 @@ namespace SR_UTILS_NS::Platform {
         MirSocket,
         Web
     );
+    SR_ENUM_NS_CLASS_T(WindowProtocolType, uint8_t, Unknown, Mobile, WinAPI, X11, Wayland, MirSocket, Web);
 
     static bool IsCompiledUnderMSVC() {
-    #ifdef SR_MSVC
+#ifdef SR_MSVC
         return true;
-    #else
+#else
         return false;
-    #endif
+#endif
     }
 
     struct FileMetadata {
@@ -38,7 +39,7 @@ namespace SR_UTILS_NS::Platform {
     };
 
     struct KeyboardState {
-        bool keyStates[256] { false };
+        bool keyStates[256]{false};
         void Set(KeyCode key, bool isPressed);
         bool Get(KeyCode key) const;
     };
@@ -50,7 +51,7 @@ namespace SR_UTILS_NS::Platform {
            3 - X1,
            4 - X2
         */
-        bool buttonStates[5] { false, false, false, false, false };
+        bool buttonStates[5]{false, false, false, false, false};
         bool GetButton(size_t index) const {
             if (index >= COUNT) {
                 SRHalt("MouseState::GetButton() : index out of range!");
@@ -79,7 +80,8 @@ namespace SR_UTILS_NS::Platform {
     SR_COMMON_DLL_API extern WindowProtocolType GetWindowProtocolType();
     SR_COMMON_DLL_API extern bool IsMobilePlatform();
 
-    SR_COMMON_DLL_API extern std::string ExecuteCommand(const std::string& command, const std::vector<std::string>& env = {});
+    SR_COMMON_DLL_API extern std::string
+    ExecuteCommand(const std::string& command, const std::vector<std::string>& env = {});
     SR_COMMON_DLL_API extern void SetEnvironmentVar(const std::string_view& name, const std::string_view& value);
     SR_COMMON_DLL_API extern bool ReadFile(const Path& path, std::string& buffer);
     SR_COMMON_DLL_API extern void TextToClipboard(const std::string& text);
@@ -93,7 +95,8 @@ namespace SR_UTILS_NS::Platform {
     SR_COMMON_DLL_API extern void WriteConsoleWarn(const std::string& msg);
     SR_COMMON_DLL_API extern void SelfOpen();
     SR_COMMON_DLL_API extern void OpenFile(const SR_UTILS_NS::Path& path, const std::string& args);
-    SR_COMMON_DLL_API extern void Unzip(const SR_UTILS_NS::Path& source, const SR_UTILS_NS::Path& destination, bool replace = true);
+    SR_COMMON_DLL_API extern void
+    Unzip(const SR_UTILS_NS::Path& source, const SR_UTILS_NS::Path& destination, bool replace = true);
     SR_COMMON_DLL_API extern void OpenWithAssociatedApp(const Path& filepath);
     SR_COMMON_DLL_API extern bool CreateFolder(const std::string& path);
     SR_COMMON_DLL_API extern bool Copy(const Path& from, const Path& to);
@@ -134,9 +137,19 @@ namespace SR_UTILS_NS::Platform {
     SR_COMMON_DLL_API extern void SetMousePos(const SR_MATH_NS::IVector2& pos);
     SR_COMMON_DLL_API extern void SetCursorVisible(bool isVisible);
     SR_COMMON_DLL_API extern void ConfineCursor(); // TODO: add ability to confine cursor to a specific window
-    SR_COMMON_DLL_API extern void ReleaseCursorConfinement(); // TODO: add ability to confine cursor to a specific window
+    SR_COMMON_DLL_API extern void
+    ReleaseCursorConfinement(); // TODO: add ability to confine cursor to a specific window
     SR_COMMON_DLL_API extern void SetThreadPriority(void* nativeHandle, ThreadPriority priority);
-    SR_COMMON_DLL_API extern void CopyPermissions(const SR_UTILS_NS::Path& source, const SR_UTILS_NS::Path& destination);
+    SR_COMMON_DLL_API extern void
+    CopyPermissions(const SR_UTILS_NS::Path& source, const SR_UTILS_NS::Path& destination);
+
+    /// Wayland cursor lock support: relative pointer delta accumulation.
+    /// When the Wayland pointer is locked, relative motion deltas are accumulated here
+    /// and consumed by InputSystem instead of computing deltas from warped positions.
+    SR_COMMON_DLL_API extern void AccumulateMouseDelta(const SR_MATH_NS::FVector2& delta);
+    SR_COMMON_DLL_API extern SR_MATH_NS::FVector2 ConsumeAccumulatedMouseDelta();
+    SR_COMMON_DLL_API extern void SetWaylandCursorLockActive(bool active);
+    SR_COMMON_DLL_API extern bool IsWaylandCursorLockActive();
 
     struct SR_COMMON_DLL_API PlatformHooks {
         decltype(&ReadFile) originalReadFile = nullptr;
@@ -153,6 +166,6 @@ namespace SR_UTILS_NS::Platform {
     extern std::atomic<std::optional<KeyboardState>> g_overriddenKeyboardState;
 
     SR_COMMON_DLL_API extern void InitializeHooks(const std::function<void(PlatformHooks& hooks)>& callback);
-}
+} // namespace SR_UTILS_NS::Platform
 
-#endif //SR_ENGINE_UTILS_PLATFORM_H
+#endif // SR_ENGINE_UTILS_PLATFORM_H

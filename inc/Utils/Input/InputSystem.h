@@ -5,17 +5,15 @@
 #ifndef SR_ENGINE_INPUT_SYSTEM_H
 #define SR_ENGINE_INPUT_SYSTEM_H
 
-#include <Utils/Math/Vector2.h>
-#include <Utils/Math/Rect.h>
-#include <Utils/Input/KeyCodes.h>
-#include <Utils/Common/Singleton.h>
 #include <Utils/Common/PassKey.h>
+#include <Utils/Common/Singleton.h>
 #include <Utils/Common/SubscriptionHolder.h>
+#include <Utils/Input/KeyCodes.h>
+#include <Utils/Math/Rect.h>
+#include <Utils/Math/Vector2.h>
 
 namespace SR_UTILS_NS {
-    enum class CursorLockMode : uint8_t {
-        Everywhere, Editor, PlayMode
-    };
+    enum class CursorLockMode : uint8_t { Everywhere, Editor, PlayMode };
 
     struct CursorLockInfo {
         std::optional<SR_MATH_NS::FRect> lockRect;
@@ -37,9 +35,8 @@ namespace SR_UTILS_NS {
 
     class Input : public Singleton<Input>, public SubscriptionHolder {
         SR_REGISTER_SINGLETON(Input)
-        enum class State {
-            UnPressed, Down, Pressed, Up
-        };
+        enum class State { UnPressed, Down, Pressed, Up };
+
     protected:
         ~Input() override;
 
@@ -57,6 +54,7 @@ namespace SR_UTILS_NS {
         SR_NODISCARD bool IsAppFocused() const;
         SR_NODISCARD int32_t GetMouseWheel() const;
         SR_NODISCARD SR_MATH_NS::FVector2 GetMouseScroll() const { return m_mouseScroll; }
+        SR_NODISCARD bool IsCursorLocked() const;
 
         bool GetMouseDown(MouseCode code);
         bool GetMouseUp(MouseCode code);
@@ -98,12 +96,12 @@ namespace SR_UTILS_NS {
         std::atomic<bool> m_isVisible = true;
         std::atomic<bool> m_isPlayMode = false;
 
-        State m_keys[256] = { };
-
+        State m_keys[256] = {};
     };
 
     class CursorLock : public NonCopyable {
         using Super = NonCopyable;
+
     public:
         explicit CursorLock(CursorLockMode lockMode, std::optional<SR_MATH_NS::FRect> lockRect = std::nullopt);
         ~CursorLock() override;
@@ -114,8 +112,7 @@ namespace SR_UTILS_NS {
     private:
         CursorLockInfo m_info;
         bool m_isLock = false;
-
     };
-}
+} // namespace SR_UTILS_NS
 
-#endif //SR_ENGINE_INPUT_SYSTEM_H
+#endif // SR_ENGINE_INPUT_SYSTEM_H

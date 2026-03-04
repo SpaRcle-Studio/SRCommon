@@ -4,16 +4,18 @@
 
 #include <Utils/Platform/Platform.h>
 #include <Utils/Common/StringFormat.h>
-#include <Utils/FileSystem/FileSystem.h>
-#include <Utils/Debug.h>
-#include <Utils/Platform/Stacktrace.h>
 #include <Utils/Common/Breakpoint.h>
+#include <Utils/Common/StringFormat.h>
+#include <Utils/Debug.h>
+#include <Utils/FileSystem/FileSystem.h>
+#include <Utils/Platform/Platform.h>
+#include <Utils/Platform/Stacktrace.h>
 
-#include <X11/Xlib.h>
 #include <X11/Xlib-xcb.h>
+#include <X11/Xlib.h>
 
 #include <X11/extensions/Xrandr.h>
-//#include <X11/extensions/XInput.h>
+// #include <X11/extensions/XInput.h>
 #include <X11/extensions/Xfixes.h>
 #include <X11/extensions/shapeconst.h>
 
@@ -24,8 +26,8 @@
 
 #include <filesystem>
 
-#include <spawn.h>
 #include <fcntl.h>
+#include <spawn.h>
 #include <termios.h>
 #include <unistd.h>
 
@@ -36,6 +38,26 @@
 
 namespace SR_PLATFORM_NS {
     static Display* gLinuxPlatformDisplayPtr = nullptr;
+
+    static std::mutex g_mouseDeltaMutex;
+    static SR_MATH_NS::FVector2 g_accumulatedMouseDelta = {};
+    static std::atomic<bool> g_waylandCursorLockActive = false;
+
+    void AccumulateMouseDelta(const SR_MATH_NS::FVector2& delta) {
+        std::lock_guard lock(g_mouseDeltaMutex);
+        g_accumulatedMouseDelta += delta;
+    }
+
+    SR_MATH_NS::FVector2 ConsumeAccumulatedMouseDelta() {
+        std::lock_guard lock(g_mouseDeltaMutex);
+        auto delta = g_accumulatedMouseDelta;
+        g_accumulatedMouseDelta = {};
+        return delta;
+    }
+
+    void SetWaylandCursorLockActive(bool active) { g_waylandCursorLockActive.store(active); }
+
+    bool IsWaylandCursorLockActive() { return g_waylandCursorLockActive.load(); }
 
     void SegmentationHandler(int sig) {
         WriteConsoleError("Crash stacktrace: \n" + SR_UTILS_NS::GetStacktrace());
@@ -62,21 +84,16 @@ namespace SR_PLATFORM_NS {
 
         if (isVisible) {
             XFixesShowCursor(gLinuxPlatformDisplayPtr, root);
-        }
-        else {
+        } else {
             XFixesHideCursor(gLinuxPlatformDisplayPtr, root);
         }
 
         XSync(gLinuxPlatformDisplayPtr, false);
     }
 
-    void StdHandler() {
-        SegmentationHandler(1);
-    }
+    void StdHandler() { SegmentationHandler(1); }
 
-    uint16_t GetCurrentProcessId() {
-        return ::getpid();
-    }
+    uint16_t GetCurrentProcessId() { return ::getpid(); }
 
     void InitSegmentationHandler() {
         signal(SIGSEGV, SegmentationHandler);
@@ -99,10 +116,8 @@ namespace SR_PLATFORM_NS {
     bool IsRunningUnderDebugger() {
         std::ifstream sf("/proc/self/status");
         std::string s;
-        while (sf >> s)
-        {
-            if (s == "TracerPid:")
-            {
+        while (sf >> s) {
+            if (s == "TracerPid:") {
                 int pid;
                 sf >> pid;
                 return pid != 0;
@@ -126,14 +141,13 @@ namespace SR_PLATFORM_NS {
         }
 
         return false;
-   }
+    }
 
     void OpenFile(const SR_UTILS_NS::Path& path, const std::string& args) {
         std::string command;
         if (path.IsAbs()) {
             command = path.ToStringRef() + " " + args;
-        }
-        else {
+        } else {
             command = "./" + path.ToStringRef() + " " + args;
         }
 
@@ -145,27 +159,26 @@ namespace SR_PLATFORM_NS {
         if (source.GetExtensionView() == "zip") {
             if (replace) {
                 command = "unzip -q -o " + source.ToStringRef() + " -d " + destination.ToStringRef();
-            }
-            else {
+            } else {
                 command = "unzip -q -n" + source.ToStringRef() + " -d " + destination.ToStringRef();
             }
 
             system(command.c_str());
-        }
-        else if (source.GetExtensionView() == "tar" || source.GetExtensionView() == "gz") {
-            //TODO: Find a way to use 'replace' variable here.
+        } else if (source.GetExtensionView() == "tar" || source.GetExtensionView() == "gz") {
+            // TODO: Find a way to use 'replace' variable here.
             command += "tar -xf " + source.ToStringRef() + " -C " + destination.ToStringRef();
             system(command.c_str());
-        }
-        else {
+        } else {
             SR_WARN("Platform::Unzip() : unknown file extension. Path: '{}'", source.ToString());
         }
     }
 
     void CopyPermissions(const SR_UTILS_NS::Path& source, const SR_UTILS_NS::Path& destination) {
         if (!source.Exists() || !destination.Exists()) {
-            SR_ERROR("Platform::CopyPermissions() : either source or destination path does not exist."
-                "\n\tSource: '{}'\n\tDestination: '{}'", source.ToString(), destination.ToString()
+            SR_ERROR(
+                "Platform::CopyPermissions() : either source or destination path does not exist."
+                "\n\tSource: '{}'\n\tDestination: '{}'",
+                source.ToString(), destination.ToString()
             );
 
             return;
@@ -182,7 +195,7 @@ namespace SR_PLATFORM_NS {
         struct stat fst;
         fstat(currentHandle, &fst);
         fchown(destinationHandle, fst.st_uid, fst.st_gid);
-        fchmod(destinationHandle,fst.st_mode);
+        fchmod(destinationHandle, fst.st_mode);
 
         close(currentHandle);
         close(destinationHandle);
@@ -193,9 +206,7 @@ namespace SR_PLATFORM_NS {
         return nullptr;
     }
 
-    void SetInstance(void* pInstance) {
-        SRHaltOnce("Not implemented!");
-    }
+    void SetInstance(void* pInstance) { SRHaltOnce("Not implemented!"); }
 
     void SetMousePos(const SR_MATH_NS::IVector2& pos) {
         if (!gLinuxPlatformDisplayPtr) {
@@ -223,16 +234,15 @@ namespace SR_PLATFORM_NS {
         Window root = DefaultRootWindow(gLinuxPlatformDisplayPtr);
 
         XGrabPointer(
-                gLinuxPlatformDisplayPtr,
-                root,
-                False,  // owner_events
-                ButtonPressMask | ButtonReleaseMask | PointerMotionMask,
-                GrabModeAsync,  // pointer_mode
-                GrabModeAsync,  // keyboard_mode
-                root,         // confine_to (the window to confine pointer to)
-                None,           // cursor (use current cursor)
-                CurrentTime
-            );
+            gLinuxPlatformDisplayPtr, root,
+            False, // owner_events
+            ButtonPressMask | ButtonReleaseMask | PointerMotionMask,
+            GrabModeAsync, // pointer_mode
+            GrabModeAsync, // keyboard_mode
+            root,          // confine_to (the window to confine pointer to)
+            None,          // cursor (use current cursor)
+            CurrentTime
+        );
     }
 
     void ReleaseCursorConfinement() {
@@ -248,8 +258,7 @@ namespace SR_PLATFORM_NS {
 
         if (path.IsAbs()) {
             command = path.ToStringRef();
-        }
-        else {
+        } else {
             command = "./" + path.ToStringRef();
         }
 
@@ -263,7 +272,8 @@ namespace SR_PLATFORM_NS {
 
     void WriteConsoleError(const std::string& msg) {
         std::lock_guard lock(g_platformLogMutex);
-        std::cerr << msg << std::flush;;
+        std::cerr << msg << std::flush;
+        ;
     }
 
     void WriteConsoleWarn(const std::string& msg) {
@@ -285,21 +295,13 @@ namespace SR_PLATFORM_NS {
         }
     }
 
-    void TextToClipboard(const std::string &text) {
-        SRHaltOnce("Not implemented!");
-    }
+    void TextToClipboard(const std::string& text) { SRHaltOnce("Not implemented!"); }
 
-    void CopyFilesToClipboard(std::list<SR_UTILS_NS::Path> paths) {
-        SRHaltOnce("Not implemented!");
-    }
+    void CopyFilesToClipboard(std::list<SR_UTILS_NS::Path> paths) { SRHaltOnce("Not implemented!"); }
 
-    void SetCurrentProcessDirectory(const SR_UTILS_NS::Path& directory) {
-        SRHaltOnce("Not implemented!");
-    }
+    void SetCurrentProcessDirectory(const SR_UTILS_NS::Path& directory) { SRHaltOnce("Not implemented!"); }
 
-    void PasteFilesFromClipboard(const SR_UTILS_NS::Path &topath) {
-        SRHaltOnce("Not implemented!");
-    }
+    void PasteFilesFromClipboard(const SR_UTILS_NS::Path& topath) { SRHaltOnce("Not implemented!"); }
 
     std::string GetClipboardText() {
         SRHaltOnce("Not implemented!");
@@ -310,9 +312,7 @@ namespace SR_PLATFORM_NS {
         SR_PLATFORM_NS::WriteConsoleLog("Platform::InitializePlatform() : initializing Linux platform...\n");
     }
 
-    void ClearClipboard() {
-        SRHaltOnce("Not implemented!");
-    }
+    void ClearClipboard() { SRHaltOnce("Not implemented!"); }
 
     MouseState GetMouseState() {
         if (auto&& overridden = GetOverriddenMouseState()) {
@@ -325,7 +325,7 @@ namespace SR_PLATFORM_NS {
 
         if (!gLinuxPlatformDisplayPtr) {
             SR_ERROR("Platform::GetMousePos() : failed to open display.");
-            return { };
+            return {};
         }
 
         Window root = DefaultRootWindow(gLinuxPlatformDisplayPtr);
@@ -333,10 +333,13 @@ namespace SR_PLATFORM_NS {
         int root_x_return, root_y_return, win_x_return, win_y_return;
         unsigned int mask_return;
 
-        XQueryPointer(gLinuxPlatformDisplayPtr, root, &root_return, &child_return, &root_x_return, &root_y_return, &win_x_return, &win_y_return, &mask_return);
+        XQueryPointer(
+            gLinuxPlatformDisplayPtr, root, &root_return, &child_return, &root_x_return, &root_y_return, &win_x_return,
+            &win_y_return, &mask_return
+        );
 
         MouseState mouseState;
-        mouseState.position = { static_cast<float>(root_x_return), static_cast<float>(root_y_return) };
+        mouseState.position = {static_cast<float>(root_x_return), static_cast<float>(root_y_return)};
 
         mouseState.buttonStates[0] = mask_return & Button1Mask;
         mouseState.buttonStates[1] = mask_return & Button3Mask;
@@ -347,9 +350,7 @@ namespace SR_PLATFORM_NS {
         return mouseState;
     }
 
-    SR_MATH_NS::FVector2 GetMousePos() {
-        return GetMouseState().position;
-    }
+    SR_MATH_NS::FVector2 GetMousePos() { return GetMouseState().position; }
 
     KeyboardState GetSystemKeyboardState() {
         if (auto&& state = GetOverriddenKeyboardState()) {
@@ -378,11 +379,10 @@ namespace SR_PLATFORM_NS {
 
                     auto it = keysymToIndex.find(keysym);
                     if (it != keysymToIndex.end()) {
-                        if (keyboardState.keyStates[it->second] == 0) { // Is State::Dowm?
-                            keyboardState.keyStates[it->second] = 1; // Then set State::Pressed
-                        }
-                        else if (keyboardState.keyStates[it->second] == 1) { // Is State::UnPressed?
-                            keyboardState.keyStates[it->second] = 2; // Then set State::Down
+                        if (keyboardState.keyStates[it->second] == 0) {        // Is State::Dowm?
+                            keyboardState.keyStates[it->second] = 1;           // Then set State::Pressed
+                        } else if (keyboardState.keyStates[it->second] == 1) { // Is State::UnPressed?
+                            keyboardState.keyStates[it->second] = 2;           // Then set State::Down
                         }
                     }
                 }
@@ -392,9 +392,7 @@ namespace SR_PLATFORM_NS {
         return keyboardState;
     }
 
-    void Sleep(uint64_t milliseconds) {
-        std::this_thread::sleep_for(std::chrono::milliseconds(milliseconds));
-    }
+    void Sleep(uint64_t milliseconds) { std::this_thread::sleep_for(std::chrono::milliseconds(milliseconds)); }
 
     uint64_t GetProcessUsedMemory() {
         std::ifstream proc_meminfo("/proc/self/status");
@@ -402,7 +400,7 @@ namespace SR_PLATFORM_NS {
         if (proc_meminfo.good()) {
             std::string content((std::istreambuf_iterator<char>(proc_meminfo)), std::istreambuf_iterator<char>());
 
-            static const auto&& getVal = [](const std::string &target, const std::string &content) {
+            static const auto&& getVal = [](const std::string& target, const std::string& content) {
                 int result = -1;
                 std::size_t start = content.find(target);
                 if (start != std::string::npos) {
@@ -414,31 +412,30 @@ namespace SR_PLATFORM_NS {
                 return result * 1024;
             };
 
-            result  = getVal("VmRSS:", content);
+            result = getVal("VmRSS:", content);
         }
 
         return result;
     }
 
-    void SetThreadPriority(void *nativeHandle, ThreadPriority priority) {
-        SRHaltOnce("Not implemented!");
-    }
+    void SetThreadPriority(void* nativeHandle, ThreadPriority priority) { SRHaltOnce("Not implemented!"); }
 
     void Terminate(bool isError) {
         if (isError) {
-            SR_PLATFORM_NS::WriteConsoleError("Function \"Terminate\" has been called... >_<\n" + SR_UTILS_NS::GetStacktrace());
+            SR_PLATFORM_NS::WriteConsoleError(
+                "Function \"Terminate\" has been called... >_<\n" + SR_UTILS_NS::GetStacktrace()
+            );
             SR_UTILS_NS::Breakpoint();
             std::terminate();
-        }
-        else {
-            SR_PLATFORM_NS::WriteConsoleLog("Function \"Terminate\" has been called...\n" + SR_UTILS_NS::GetStacktrace());
+        } else {
+            SR_PLATFORM_NS::WriteConsoleLog(
+                "Function \"Terminate\" has been called...\n" + SR_UTILS_NS::GetStacktrace()
+            );
             std::exit(0);
         }
     }
 
-    void OpenWithAssociatedApp(const Path &filepath) {
-        SRHaltOnce("Not implemented!");
-    }
+    void OpenWithAssociatedApp(const Path& filepath) { SRHaltOnce("Not implemented!"); }
 
     std::pair<std::vector<std::string>, std::vector<char*>> BuildArgv(const std::string& command) {
         std::istringstream iss(command);
@@ -514,7 +511,7 @@ namespace SR_PLATFORM_NS {
         return result;
     }
 
-    bool Copy(const Path &from, const Path &to) {
+    bool Copy(const Path& from, const Path& to) {
         if (from.IsFile()) {
             std::string buffer;
             if (!SR_UTILS_NS::FileSystem::ReadFile(from, buffer)) {
@@ -549,7 +546,7 @@ namespace SR_PLATFORM_NS {
         return true;
     }
 
-    std::list<Path> GetInDirectory(const Path &dir, Path::Type type) {
+    std::list<Path> GetInDirectory(const Path& dir, Path::Type type) {
         std::list<Path> result;
 
         if (!IsExists(dir)) {
@@ -557,7 +554,8 @@ namespace SR_PLATFORM_NS {
         }
 
         for (const auto& entry : std::filesystem::directory_iterator(dir.ToStringRef())) {
-            if ((entry.is_directory() && type == Path::Type::Folder) || (entry.is_regular_file() && type == Path::Type::File)) {
+            if ((entry.is_directory() && type == Path::Type::Folder) ||
+                (entry.is_regular_file() && type == Path::Type::File)) {
                 result.emplace_back(entry.path());
             }
         }
@@ -596,7 +594,7 @@ namespace SR_PLATFORM_NS {
         return true;
     }
 
-    bool Delete(const Path &path) {
+    bool Delete(const Path& path) {
         if (path.IsFile()) {
             const bool result = std::remove(path.CStr()) == 0;
 
@@ -630,20 +628,14 @@ namespace SR_PLATFORM_NS {
 
     Path GetApplicationPath() {
         return std::filesystem::canonical("/proc/self/exe").string();
-        //return std::filesystem::current_path().string();
+        // return std::filesystem::current_path().string();
     }
 
-    Path GetApplicationDirectory() {
-        return GetApplicationPath().GetFolder();
-    }
+    Path GetApplicationDirectory() { return GetApplicationPath().GetFolder(); }
 
-    std::optional<Path> GetApplicationCachePath() {
-        return std::nullopt;
-    }
+    std::optional<Path> GetApplicationCachePath() { return std::nullopt; }
 
-    std::optional<Path> GetApplicationLogPath() {
-        return std::nullopt;
-    }
+    std::optional<Path> GetApplicationLogPath() { return std::nullopt; }
 
     Path GetApplicationName() {
         std::string sp;
@@ -652,9 +644,7 @@ namespace SR_PLATFORM_NS {
         return sp;
     }
 
-    bool FileIsHidden(const Path &path) {
-        return path.GetBaseNameView()[0] == '.';
-    }
+    bool FileIsHidden(const Path& path) { return path.GetBaseNameView()[0] == '.'; }
 
     FileMetadata GetFileMetadata(const Path& file) {
         FileMetadata fileMetadata;
@@ -673,13 +663,12 @@ namespace SR_PLATFORM_NS {
 
         if (pid == 0) {
             execl(applicationPath.c_str(), nullptr);
-        }
-        else {
+        } else {
             SR_WARN("Platform::SelfOpen() : failed to create a new process.");
         }
     }
 
-    bool IsAbsolutePath(const Path &path) {
+    bool IsAbsolutePath(const Path& path) {
         if (!path.empty() && path[0] == '/') {
             return true;
         }
@@ -687,7 +676,7 @@ namespace SR_PLATFORM_NS {
         return false;
     }
 
-    bool IsExists(const Path &path) {
+    bool IsExists(const Path& path) {
         struct stat buffer{};
         return (stat(path.c_str(), &buffer) == 0);
     }
@@ -713,7 +702,7 @@ namespace SR_PLATFORM_NS {
         int screenHeightMM = DisplayHeightMM(gLinuxPlatformDisplayPtr, screen);
 
         // Calculate DPI (dots per inch)
-        double dpiX = screenWidth / (screenWidthMM / 25.4);  // 25.4 mm in an inch
+        double dpiX = screenWidth / (screenWidthMM / 25.4); // 25.4 mm in an inch
         double dpiY = screenHeight / (screenHeightMM / 25.4);
 
         // You can return either dpiX or dpiY (assuming they are close to each other)
@@ -723,13 +712,13 @@ namespace SR_PLATFORM_NS {
     std::vector<SR_MATH_NS::UVector2> GetScreenResolutions() {
         std::vector<SR_MATH_NS::UVector2> resolutions;
         if (auto&& pDisplay = XOpenDisplay(":0")) {
-            XRRScreenResources *screen;
-            XRRCrtcInfo *crtc_info;
+            XRRScreenResources* screen;
+            XRRCrtcInfo* crtc_info;
 
-            screen = XRRGetScreenResources (pDisplay, DefaultRootWindow(pDisplay));
+            screen = XRRGetScreenResources(pDisplay, DefaultRootWindow(pDisplay));
 
             for (int32_t i = 0; i < ScreenCount(pDisplay); ++i) {
-                crtc_info = XRRGetCrtcInfo (pDisplay, screen, screen->crtcs[i]);
+                crtc_info = XRRGetCrtcInfo(pDisplay, screen, screen->crtcs[i]);
                 resolutions.emplace_back(crtc_info->width, crtc_info->height);
             }
 
@@ -749,7 +738,7 @@ namespace SR_PLATFORM_NS {
     }
 
     static std::string GetLastErrorAsString() {
-        if(errno == 0) {
+        if (errno == 0) {
             return std::string();
         }
 
@@ -758,20 +747,20 @@ namespace SR_PLATFORM_NS {
         return message;
     }
 
-
     bool DownloadFile(const std::string& url, const Path& outputPath) {
         SRHaltOnce("Not implemented!");
         return false;
     }
 
-    PlatformType GetType() {
-        return PlatformType::Linux;
-    }
+    PlatformType GetType() { return PlatformType::Linux; }
 
     void* LoadLibraryModule(const Path& path) {
         void* pLibrary = dlopen(path.c_str(), RTLD_LAZY);
         if (!pLibrary) {
-            SR_ERROR("PlatformLinux::LoadLibraryModule() : failed to load library: {}\n\tError: {}", path, std::string(dlerror()));
+            SR_ERROR(
+                "PlatformLinux::LoadLibraryModule() : failed to load library: {}\n\tError: {}", path,
+                std::string(dlerror())
+            );
             return nullptr;
         }
 
@@ -787,11 +776,16 @@ namespace SR_PLATFORM_NS {
         if (dlclose(pLibrary) != 0) {
             auto&& errorMessage = dlerror();
             if (errorMessage) {
-                SR_ERROR("PlatformLinux::UnloadLibraryModule() : failed to unload library!\n\tError: {}", std::string(errorMessage));
+                SR_ERROR(
+                    "PlatformLinux::UnloadLibraryModule() : failed to unload library!\n\tError: {}",
+                    std::string(errorMessage)
+                );
                 return false;
             }
 
-            SR_ERROR("PlatformLinux::UnloadLibraryModule() : failed to unload library, but the OS didn't return any errors!");
+            SR_ERROR(
+                "PlatformLinux::UnloadLibraryModule() : failed to unload library, but the OS didn't return any errors!"
+            );
             return false;
         }
 
@@ -820,4 +814,4 @@ namespace SR_PLATFORM_NS {
         }
         return false;
     }
-}
+} // namespace SR_PLATFORM_NS

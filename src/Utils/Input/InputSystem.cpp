@@ -2,18 +2,16 @@
 // Created by Nikita on 30.12.2020.
 //
 
-#include <Utils/Input/InputSystem.h>
 #include <Utils/Common/Numeric.h>
-#include <Utils/Platform/Platform.h>
-#include <Utils/Profile/TracyContext.h>
 #include <Utils/Common/StringAtomLiterals.h>
 #include <Utils/Common/SubscriptionMessage.h>
+#include <Utils/Input/InputSystem.h>
+#include <Utils/Platform/Platform.h>
+#include <Utils/Profile/TracyContext.h>
 #include <Utils/Types/Thread.h>
 
 namespace SR_UTILS_NS {
-    std::string_view InputTextEvent::GetText() const {
-        return std::string_view(text, length);
-    }
+    std::string_view InputTextEvent::GetText() const { return std::string_view(text, length); }
 
     void InputTextEvent::SetText(std::string_view text) {
         if (text.size() > sizeof(this->text) - 1) {
@@ -39,48 +37,67 @@ namespace SR_UTILS_NS {
         const bool isLocked = IsAppFocused() && pActiveLock;
 
         if (isLocked) {
-            m_mousePrev = pActiveLock->lockRect ? pActiveLock->lockRect->Center() : m_focusedWindowRect->Center();
-            m_mousePrev = m_mousePrev.Round();
+            if (SR_PLATFORM_NS::IsWaylandCursorLockActive()) {
+                /// Wayland path: pointer is locked by compositor, relative deltas are accumulated
+                /// via the zwp_relative_pointer_v1 protocol. No warp needed.
+                if (!m_isLocked) {
+                    m_isLocked = true;
+                    SR_PLATFORM_NS::ConsumeAccumulatedMouseDelta(); /// discard stale deltas
+                    m_mouseDrag = SR_MATH_NS::FVector2(0, 0);
+                } else {
+                    m_mouseDrag = SR_PLATFORM_NS::ConsumeAccumulatedMouseDelta();
+                }
+                /// Cursor visibility is managed by WaylandWindow
+            } else {
+                /// X11/Windows path: warp mouse to center each frame
+                m_mousePrev = pActiveLock->lockRect ? pActiveLock->lockRect->Center() : m_focusedWindowRect->Center();
+                m_mousePrev = m_mousePrev.Round();
 
-            if (!m_isLocked) {
-                m_mouse = m_mousePrev;
-                m_isLocked = true;
-            }
-            else {
-                m_mouse = mouseState.position;
-            }
+                if (!m_isLocked) {
+                    m_mouse = m_mousePrev;
+                    m_isLocked = true;
+                } else {
+                    m_mouse = mouseState.position;
+                }
 
-            SetCursorVisible(false);
-            SR_PLATFORM_NS::SetMousePos(m_mousePrev.CastToInt());
-        }
-        else {
+                SetCursorVisible(false);
+                SR_PLATFORM_NS::SetMousePos(m_mousePrev.CastToInt());
+                m_mouseDrag = m_mouse - m_mousePrev;
+            }
+        } else {
             m_mousePrev = m_mouse;
             m_mouse = mouseState.position;
             m_isLocked = false;
             SetCursorVisible(true);
+            m_mouseDrag = m_mouse - m_mousePrev;
         }
-
-        m_mouseDrag = m_mouse - m_mousePrev;
 
         for (uint8_t i = 0; i < 5; ++i) {
             if (IsAppFocused() && mouseState.buttonStates[i]) {
                 switch (m_keys[i]) {
-                    case State::UnPressed: SetState(i, State::Down); break;
-                    case State::Down: SetState(i, State::Pressed); break;
-                    case State::Pressed: break; /// skip
-                    case State::Up: SetState(i, State::Down); break;
+                case State::UnPressed:
+                    SetState(i, State::Down);
+                    break;
+                case State::Down:
+                    SetState(i, State::Pressed);
+                    break;
+                case State::Pressed:
+                    break; /// skip
+                case State::Up:
+                    SetState(i, State::Down);
+                    break;
                 }
-            }
-            else {
+            } else {
                 switch (m_keys[i]) {
-                    case State::UnPressed: break; /// skip
-                    case State::Down:
-                    case State::Pressed:
-                        SetState(i, State::Up);
-                        break;
-                    case State::Up:
-                        SetState(i, State::UnPressed);
-                        break;
+                case State::UnPressed:
+                    break; /// skip
+                case State::Down:
+                case State::Pressed:
+                    SetState(i, State::Up);
+                    break;
+                case State::Up:
+                    SetState(i, State::UnPressed);
+                    break;
                 }
             }
         }
@@ -176,25 +193,15 @@ namespace SR_UTILS_NS {
         UpdateKeyboard();
     }
 
-    bool Input::GetKeyDown(KeyCode key) {
-        return m_keys[(int)key] == State::Down;
-    }
+    bool Input::GetKeyDown(KeyCode key) { return m_keys[(int)key] == State::Down; }
 
-    bool Input::GetKeyUp(KeyCode key) {
-        return m_keys[(int)key] == State::Up;
-    }
+    bool Input::GetKeyUp(KeyCode key) { return m_keys[(int)key] == State::Up; }
 
-    bool Input::GetKey(KeyCode key) {
-        return (m_keys[(int)key] == State::Pressed || m_keys[(int)key] == State::Down);
-    }
+    bool Input::GetKey(KeyCode key) { return (m_keys[(int)key] == State::Pressed || m_keys[(int)key] == State::Down); }
 
-    SR_MATH_NS::FVector2 Input::GetMouseDrag() {
-        return m_mouseDrag;
-    }
+    SR_MATH_NS::FVector2 Input::GetMouseDrag() { return m_mouseDrag; }
 
-    int32_t Input::GetMouseWheel() const {
-        return m_mouseScroll.y;
-    }
+    int32_t Input::GetMouseWheel() const { return m_mouseScroll.y; }
 
     bool Input::GetMouseDown(MouseCode code) { return GetKeyDown(static_cast<KeyCode>(code)); }
     bool Input::GetMouseUp(MouseCode code) { return GetKeyUp(static_cast<KeyCode>(code)); }
@@ -219,8 +226,7 @@ namespace SR_UTILS_NS {
             SubscriptionMessage msg;
             msg.SetInt("KeyCode"_atom, keyIndex);
             Broadcast("Down"_atom, msg);
-        }
-        else if (state == State::Up && HasSubscriptions()) {
+        } else if (state == State::Up && HasSubscriptions()) {
             SubscriptionMessage msg;
             msg.SetInt("KeyCode"_atom, keyIndex);
             Broadcast("Up"_atom, msg);
@@ -261,31 +267,26 @@ namespace SR_UTILS_NS {
     void Input::UnlockCursor(const CursorLockInfo& info) {
         SR_LOCK_GUARD;
         auto&& locks = m_cursorLocks[static_cast<uint32_t>(info.lockMode)];
-        auto&& pIt = std::find_if(locks.begin(), locks.end(), [&info](const CursorLockInfo& lock) { return lock.id == info.id; });
+        auto&& pIt = std::find_if(locks.begin(), locks.end(), [&info](const CursorLockInfo& lock) {
+            return lock.id == info.id;
+        });
 
         if (pIt != locks.end()) {
             locks.erase(pIt);
-        }
-        else {
+        } else {
             SRHalt("Failed to unlock cursor! Lock not found!");
         }
     }
 
-    SR_MATH_NS::FVector2 Input::GetMousePos() const {
-        return m_mouse;
-    }
+    SR_MATH_NS::FVector2 Input::GetMousePos() const { return m_mouse; }
 
     void Input::SetMouseScroll(double_t xOffset, double_t yOffset) {
-        m_mouseScrollCurrent = { (float_t)xOffset, (float_t)yOffset };
+        m_mouseScrollCurrent = {(float_t)xOffset, (float_t)yOffset};
     }
 
-    void Input::SetFocusedWindowRect(const std::optional<SR_MATH_NS::FRect>& rect) {
-        m_focusedWindowRect = rect;
-    }
+    void Input::SetFocusedWindowRect(const std::optional<SR_MATH_NS::FRect>& rect) { m_focusedWindowRect = rect; }
 
-    void Input::SetPlayMode(bool isPlayMode) {
-        m_isPlayMode = isPlayMode;
-    }
+    void Input::SetPlayMode(bool isPlayMode) { m_isPlayMode = isPlayMode; }
 
     void Input::AddTextEvent(InputTextEvent&& event) {
         SR_TRACY_ZONE;
@@ -296,19 +297,13 @@ namespace SR_UTILS_NS {
         m_textEvents.emplace_back(std::move(event));
     }
 
-    bool Input::IsPlayMode() const {
-        return m_isPlayMode;
-    }
+    bool Input::IsPlayMode() const { return m_isPlayMode; }
 
-    bool Input::IsAppFocused() const {
-        return m_focusedWindowRect.has_value();
-    }
+    bool Input::IsAppFocused() const { return m_focusedWindowRect.has_value(); }
+
+    bool Input::IsCursorLocked() const { return GetActiveLock() != nullptr; }
 
     const CursorLockInfo* Input::GetActiveLock() const {
-    #if defined(SR_LINUX)
-        return nullptr;
-    #endif
-
         if (!m_cursorLocks[static_cast<uint32_t>(CursorLockMode::Everywhere)].empty()) {
             return &m_cursorLocks[static_cast<uint32_t>(CursorLockMode::Everywhere)].back();
         }
@@ -326,8 +321,7 @@ namespace SR_UTILS_NS {
 
     CursorLock::CursorLock(CursorLockMode lockMode, std::optional<SR_MATH_NS::FRect> lockRect)
         : Super()
-        , m_isLock(true)
-    {
+        , m_isLock(true) {
         m_info.lockMode = lockMode;
         m_info.lockRect = lockRect;
         Input::Instance().LockCursor(m_info);
@@ -352,4 +346,4 @@ namespace SR_UTILS_NS {
         }
         return *this;
     }
-}
+} // namespace SR_UTILS_NS
