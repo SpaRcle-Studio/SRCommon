@@ -136,19 +136,14 @@ namespace SR_UTILS_NS::Platform {
     SR_COMMON_DLL_API extern void SetMousePos(const SR_MATH_NS::IVector2& pos);
     SR_COMMON_DLL_API extern void SetCursorVisible(bool isVisible);
     SR_COMMON_DLL_API extern void ConfineCursor(); // TODO: add ability to confine cursor to a specific window
-    SR_COMMON_DLL_API extern void
-    ReleaseCursorConfinement(); // TODO: add ability to confine cursor to a specific window
+    SR_COMMON_DLL_API extern void ReleaseCursorConfinement(); // TODO: add ability to confine cursor to a specific window
     SR_COMMON_DLL_API extern void SetThreadPriority(void* nativeHandle, ThreadPriority priority);
-    SR_COMMON_DLL_API extern void
-    CopyPermissions(const SR_UTILS_NS::Path& source, const SR_UTILS_NS::Path& destination);
+    SR_COMMON_DLL_API extern void CopyPermissions(const SR_UTILS_NS::Path& source, const SR_UTILS_NS::Path& destination);
 
-    /// Wayland cursor lock support: relative pointer delta accumulation.
-    /// When the Wayland pointer is locked, relative motion deltas are accumulated here
-    /// and consumed by InputSystem instead of computing deltas from warped positions.
     SR_COMMON_DLL_API extern void AccumulateMouseDelta(const SR_MATH_NS::FVector2& delta);
     SR_COMMON_DLL_API extern SR_MATH_NS::FVector2 ConsumeAccumulatedMouseDelta();
-    SR_COMMON_DLL_API extern void SetWaylandCursorLockActive(bool active);
-    SR_COMMON_DLL_API extern bool IsWaylandCursorLockActive();
+    SR_COMMON_DLL_API extern void SetCursorLockActive(bool active);
+    SR_COMMON_DLL_API extern bool IsCursorLockActive();
 
     struct SR_COMMON_DLL_API PlatformHooks {
         decltype(&ReadFile) originalReadFile = nullptr;

@@ -22,6 +22,26 @@ namespace SR_PLATFORM_NS {
         }
     }
 
+#ifndef SR_LINUX
+    void AccumulateMouseDelta(const SR_MATH_NS::FVector2& delta) {
+        SRHalt("Platform::AccumulateMouseDelta() : not implemented!");
+    }
+
+    SR_MATH_NS::FVector2 ConsumeAccumulatedMouseDelta() {
+        SRHalt("Platform::ConsumeAccumulatedMouseDelta() : not implemented!");
+        return {};
+    }
+
+    void SetCursorLockActive(bool active) {
+        SRHalt("Platform::SetCursorLockActive() : not implemented!");
+    }
+
+    bool IsCursorLockActive() {
+        SRHalt("Platform::IsCursorLockActive() : not implemented!");
+        return false;
+    }
+#endif
+
     void KeyboardState::Set(KeyCode key, const bool isPressed) {
         const bool current = keyStates[static_cast<uint8_t>(key)];
         if (current == isPressed) {

@@ -55,9 +55,9 @@ namespace SR_PLATFORM_NS {
         return delta;
     }
 
-    void SetWaylandCursorLockActive(bool active) { g_waylandCursorLockActive.store(active); }
+    void SetCursorLockActive(bool active) { g_waylandCursorLockActive.store(active); }
 
-    bool IsWaylandCursorLockActive() { return g_waylandCursorLockActive.load(); }
+    bool IsCursorLockActive() { return g_waylandCursorLockActive.load(); }
 
     void SegmentationHandler(int sig) {
         WriteConsoleError("Crash stacktrace: \n" + SR_UTILS_NS::GetStacktrace());

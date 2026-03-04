@@ -37,7 +37,8 @@ namespace SR_UTILS_NS {
         const bool isLocked = IsAppFocused() && pActiveLock;
 
         if (isLocked) {
-            if (SR_PLATFORM_NS::IsWaylandCursorLockActive()) {
+        #ifdef SR_LINUX
+            if (SR_PLATFORM_NS::IsCursorLockActive()) {
                 /// Wayland path: pointer is locked by compositor, relative deltas are accumulated
                 /// via the zwp_relative_pointer_v1 protocol. No warp needed.
                 if (!m_isLocked) {
@@ -48,22 +49,22 @@ namespace SR_UTILS_NS {
                     m_mouseDrag = SR_PLATFORM_NS::ConsumeAccumulatedMouseDelta();
                 }
                 /// Cursor visibility is managed by WaylandWindow
-            } else {
-                /// X11/Windows path: warp mouse to center each frame
-                m_mousePrev = pActiveLock->lockRect ? pActiveLock->lockRect->Center() : m_focusedWindowRect->Center();
-                m_mousePrev = m_mousePrev.Round();
-
-                if (!m_isLocked) {
-                    m_mouse = m_mousePrev;
-                    m_isLocked = true;
-                } else {
-                    m_mouse = mouseState.position;
-                }
-
-                SetCursorVisible(false);
-                SR_PLATFORM_NS::SetMousePos(m_mousePrev.CastToInt());
-                m_mouseDrag = m_mouse - m_mousePrev;
             }
+        #else
+            m_mousePrev = pActiveLock->lockRect ? pActiveLock->lockRect->Center() : m_focusedWindowRect->Center();
+            m_mousePrev = m_mousePrev.Round();
+
+            if (!m_isLocked) {
+                m_mouse = m_mousePrev;
+                m_isLocked = true;
+            } else {
+                m_mouse = mouseState.position;
+            }
+
+            SetCursorVisible(false);
+            SR_PLATFORM_NS::SetMousePos(m_mousePrev.CastToInt());
+            m_mouseDrag = m_mouse - m_mousePrev;
+        #endif
         } else {
             m_mousePrev = m_mouse;
             m_mouse = mouseState.position;
