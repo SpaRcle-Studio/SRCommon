@@ -24,7 +24,6 @@ namespace SR_UTILS_NS::Platform {
         MirSocket,
         Web
     );
-    SR_ENUM_NS_CLASS_T(WindowProtocolType, uint8_t, Unknown, Mobile, WinAPI, X11, Wayland, MirSocket, Web);
 
     static bool IsCompiledUnderMSVC() {
 #ifdef SR_MSVC
