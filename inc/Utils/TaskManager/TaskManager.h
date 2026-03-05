@@ -12,7 +12,7 @@
 
 namespace SR_UTILS_NS {
     SR_ENUM_NS_CLASS_T(TaskPriority, uint8_t,
-        Unknown, Discardable, Low, Normal, High
+        Unknown, Discardable, Low, Normal, High, Critical
     );
 
     class SR_COMMON_DLL_API Task : public NonCopyable {
@@ -37,6 +37,7 @@ namespace SR_UTILS_NS {
 
         SR_NODISCARD bool IsCompleted() const;
         SR_NODISCARD bool IsWaiting() const;
+        SR_NODISCARD bool IsLaunched() const;
         SR_NODISCARD State GetResult() const;
         SR_NODISCARD uint64_t GetId() const;
         SR_NODISCARD TaskPriority GetPriority() const;
@@ -60,6 +61,8 @@ namespace SR_UTILS_NS {
         ~TaskManager() override;
 
     public:
+        void Update();
+
         TaskId ExecuteAsync(const SR_HTYPES_NS::Function<void()>& function, TaskPriority priority);
         TaskId ExecuteParallel(const SR_HTYPES_NS::Function<void()>& function, TaskPriority priority);
 

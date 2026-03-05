@@ -92,6 +92,10 @@ namespace SR_UTILS_NS {
         return m_state->load() == State::Waiting;
     }
 
+    bool Task::IsLaunched() const {
+        return m_state->load() == State::Launched;
+    }
+
     void Task::SetId(uint64_t id) {
         m_id = id;
     }
@@ -257,5 +261,64 @@ namespace SR_UTILS_NS {
         SR_TRACY_ZONE;
         SR_SCOPED_LOCK;
         return m_ids.count(taskId) == 1;
+    }
+
+    void TaskManager::Update() {
+        SR_TRACY_ZONE;
+
+        Task::Ptr pCriticalTask = nullptr;
+
+        {
+            SR_LOCK_GUARD;
+
+            bool hasAnyLaunchedTask = false;
+
+            for (auto&& pTask : m_tasks) {
+                if (pTask->IsLaunched()) {
+                    hasAnyLaunchedTask = true;
+                    break;
+                }
+            }
+
+            if (!hasAnyLaunchedTask) {
+                return;
+            }
+
+            for (auto pIt = m_tasks.begin(); pIt != m_tasks.end();) {
+                auto&& pTask = *pIt;
+
+                TaskPriority priority = pTask->GetPriority();
+                if (priority == TaskPriority::Critical) {
+                    if (pTask->IsLaunched()) {
+                        return;
+                    }
+
+                    if (pTask->IsWaiting()) {
+                        pCriticalTask = pTask;
+                        m_tasks.erase(pIt);
+                        break;
+                    }
+                }
+
+                ++pIt;
+            }
+        }
+
+        /// Если есть критическая задача и поток занят чем то менее важным,
+        /// то выполняем её в главном потоке, так как она является самой важной задачей в данный момент.
+        if (pCriticalTask) {
+            SR_LOG("TaskManager::Update() : run critical task with id {} in main thread...", pCriticalTask->GetId());
+
+            pCriticalTask->Run();
+            if (pCriticalTask->IsCompleted()) {
+                SR_LOCK_GUARD;
+                m_results.insert(std::make_pair(pCriticalTask->GetId(), pCriticalTask->GetResult()));
+                m_ids.erase(pCriticalTask->GetId());
+            }
+            else {
+                SR_LOCK_GUARD;
+                m_tasks.emplace_back(pCriticalTask);
+            }
+        }
     }
 }
