@@ -19,7 +19,7 @@ namespace SR_UTILS_NS {
     }
 
     void ResourceContainer::AddDependency(const ResourceContainer::Ptr& pContainer) {
-        if (auto&& pResource = pContainer.DynamicCast<IResource>()) {
+        if (auto&& pResource = StaticPointerCast<IResource>(pContainer)) {
             pResource->AddUsePoint();
         }
 
@@ -39,7 +39,7 @@ namespace SR_UTILS_NS {
         m_dependencies.erase(pContainer);
         pContainer->m_parents.erase(this);
 
-        if (auto&& pResource = pContainer.DynamicCast<IResource>()) {
+        if (auto&& pResource = StaticPointerCast<IResource>(pContainer)) {
             pResource->RemoveUsePoint();
         }
     }

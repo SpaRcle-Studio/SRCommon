@@ -33,7 +33,7 @@ namespace SR_UTILS_NS {
         }
 
         m_resourceLoaders[Asset::GetClassStaticName()] = [](const StringAtom& id) -> IResource::Ptr {
-            return Asset::Load(Path(id)).StaticCast<IResource>();
+            return StaticPointerCast<IResource>(Asset::Load(Path(id)));
         };
 
         m_destroyQueue.reserve(256);

@@ -54,6 +54,9 @@ namespace SR_HTYPES_NS {
         SharedPtr<T>& operator=(T* ptr);
         SharedPtr<T>& operator=(SharedPtr<T>&& ptr) noexcept;
 
+        template<typename Y> SR_DEPRECATED SR_NODISCARD SharedPtr<Y> DynamicCast() const;
+        template<typename Y> SR_DEPRECATED SR_NODISCARD SharedPtr<Y> StaticCast() const;
+
         SR_NODISCARD SR_FORCE_INLINE operator bool() const noexcept { return m_data && m_data->valid; } /** NOLINT */
         SR_NODISCARD SR_FORCE_INLINE T& operator*() const { return *m_ptr; }
         SR_NODISCARD SR_FORCE_INLINE T* operator->() const { return m_ptr; }
@@ -68,12 +71,6 @@ namespace SR_HTYPES_NS {
         SR_NODISCARD SR_FORCE_INLINE const void* GetRawPtr() const { return reinterpret_cast<const void*>(m_ptr); } /// NOLINT(modernize-use-nodiscard)
         SR_NODISCARD SR_FORCE_INLINE void* GetRawPtr() { return reinterpret_cast<void*>(m_ptr); }
         SR_NODISCARD SR_FORCE_INLINE bool Valid() const final { return m_data && m_data->valid; }
-
-        template<typename U> SharedPtr<U> PolymorphicCast() const;
-        template<typename U> SharedPtr<U> DynamicCast() const;
-        template<typename U> SharedPtr<U> StaticCast() const;
-        template<typename U> SharedPtr<U> ConstCast() const;
-        template<typename U> U ReinterpretCast();
 
         void SetPointerFromBase(SharedPtrBase* pBase) override;
 
@@ -114,7 +111,7 @@ namespace SR_HTYPES_NS {
         m_ptr = ptr;
 
         if constexpr (!SR_UTILS_NS::IsCompleteTypeV<T>) {
-            SR_SAFE_PTR_ASSERT(ptr == nullptr, "Ptr is not nullptr! But type is incomplete! Check includes.");
+            static_assert(AlwaysFalseV<T>, "SharedPtr<T>::SharedPtr(const T* constPtr) : T must be a complete type!");
         }
         else if constexpr (SR_UTILS_NS::IsDerivedFrom<SharedPtr, T>::value) {
             if ((m_data = ptr->GetPtrData())) {
@@ -329,55 +326,6 @@ namespace SR_HTYPES_NS {
         SR_SAFE_PTR_ASSERT(false, "Incomplete or invalid type!");
     }
 
-    template<class T> template<typename U> U SharedPtr<T>::ReinterpretCast() {
-        return reinterpret_cast<U>(m_ptr);
-    }
-
-    template<class T> template<typename U> SharedPtr<U> SharedPtr<T>::StaticCast() const {
-        if constexpr (std::is_same_v<T, void>) {
-            return SharedPtr<U>();
-        }
-
-        if (m_data && m_data->valid) {
-            return SharedPtr<U>(static_cast<U*>(m_ptr));
-        }
-
-        return SharedPtr<U>();
-    }
-
-    template<class T> template<typename U> SharedPtr<U> SharedPtr<T>::ConstCast() const {
-        if constexpr (std::is_same_v<T, void>) {
-            return SharedPtr<U>();
-        }
-
-        if (m_data && m_data->valid) {
-            return SharedPtr<U>(const_cast<U*>(m_ptr));
-        }
-
-        return SharedPtr<U>();
-    }
-
-    template<class T> template<typename U> SharedPtr<U> SharedPtr<T>::DynamicCast() const {
-        if constexpr (std::is_same_v<T, void>) {
-            return SharedPtr<U>();
-        }
-
-        if (m_data && m_data->valid) {
-            return SharedPtr<U>(dynamic_cast<U*>(m_ptr));
-        }
-
-        return SharedPtr<U>();
-    }
-
-    template<class T> template<typename U> SharedPtr<U> SharedPtr<T>::PolymorphicCast() const {
-    #ifdef SR_DEBUG
-        if (!DynamicCast<U>()) {
-            SR_SAFE_PTR_ASSERT(false, "Invalid cast!");
-        }
-    #endif
-        return StaticCast<U>();
-    }
-
     template<class T> template<typename U, typename R, typename... Args> SharedPtr<R> SharedPtr<T>::MakeShared(Args&&... args) {
         auto&& pData = new U(std::forward<Args>(args)...);
         if constexpr (std::is_same_v<R, T>) {
@@ -385,7 +333,8 @@ namespace SR_HTYPES_NS {
         }
         else {
             SR_STATIC_ASSERT2((std::is_base_of_v<T, R> || std::is_base_of_v<R, T>), "Invalid type!");
-            return pData->GetThis().template StaticCast<R>();
+            auto&& pThis = pData->GetThis();
+            return SharedPtr<R>(static_cast<R*>(pThis.Get()));
         }
     }
 
@@ -462,6 +411,78 @@ namespace SR_HTYPES_NS {
 }
 
 namespace SR_UTILS_NS {
+    template<typename Y, typename T> SR_HTYPES_NS::SharedPtr<Y> SR_FORCE_INLINE DynamicPointerCast(const SR_HTYPES_NS::SharedPtr<T>& pPointer) {
+        if constexpr (std::is_same_v<T, void>) {
+            return SR_HTYPES_NS::SharedPtr<Y>();
+        }
+
+        if constexpr (!SR_UTILS_NS::IsCompleteTypeV<T> || !SR_UTILS_NS::IsCompleteTypeV<Y>) {
+            SRHalt("DynamicPointerCast with incomplete type! Check includes!");
+            return SR_HTYPES_NS::SharedPtr<Y>();
+        }
+
+        auto&& pData = pPointer.GetPtrData();
+        if (pData && pData->valid) {
+            return SR_HTYPES_NS::SharedPtr<Y>(dynamic_cast<Y*>(const_cast<T*>(pPointer.Get())));
+        }
+
+        return SR_HTYPES_NS::SharedPtr<Y>();
+    }
+
+    template<typename Y, typename T> SR_HTYPES_NS::SharedPtr<Y> SR_FORCE_INLINE StaticPointerCast(const SR_HTYPES_NS::SharedPtr<T>& pPointer) {
+        if constexpr (std::is_same_v<T, void>) {
+            return SR_HTYPES_NS::SharedPtr<Y>();
+        }
+
+        auto&& pData = pPointer.GetPtrData();
+        if (pData && pData->valid) {
+            return SR_HTYPES_NS::SharedPtr<Y>(static_cast<Y*>(const_cast<T*>(pPointer.Get())));
+        }
+
+        return SR_HTYPES_NS::SharedPtr<Y>();
+    }
+
+    template<typename Y, typename T> SR_HTYPES_NS::SharedPtr<Y> SR_FORCE_INLINE ConstPointerCast(const SR_HTYPES_NS::SharedPtr<T>& pPointer) {
+        if constexpr (std::is_same_v<T, void>) {
+            return SR_HTYPES_NS::SharedPtr<Y>();
+        }
+
+        auto&& pData = pPointer.GetPtrData();
+        if (pData && pData->valid) {
+            return SR_HTYPES_NS::SharedPtr<Y>(const_cast<Y*>(pPointer.Get()));
+        }
+
+        return SR_HTYPES_NS::SharedPtr<Y>();
+    }
+
+    template<typename Y, typename T> SR_HTYPES_NS::SharedPtr<Y> SR_FORCE_INLINE ReinterpretPointerCast(const SR_HTYPES_NS::SharedPtr<T>& pPointer) {
+        if constexpr (std::is_same_v<T, void>) {
+            return SR_HTYPES_NS::SharedPtr<Y>();
+        }
+
+        auto&& pData = pPointer.GetPtrData();
+        if (pData && pData->valid) {
+            return SR_HTYPES_NS::SharedPtr<Y>(reinterpret_cast<Y*>(const_cast<T*>(pPointer.Get())));
+        }
+
+        return SR_HTYPES_NS::SharedPtr<Y>();
+    }
+
+    template<typename Y, typename T> SR_HTYPES_NS::SharedPtr<Y> SR_FORCE_INLINE PolymorphicPointerCast(const SR_HTYPES_NS::SharedPtr<T>& pPointer) {
+        if constexpr (std::is_same_v<T, void>) {
+            return SR_HTYPES_NS::SharedPtr<Y>();
+        }
+        else {
+        #ifdef SR_DEBUG
+            if (!DynamicPointerCast<T, Y>(pPointer)) {
+                SRHalt("Invalid cast! DynamicPointerCast returned nullptr!");
+                return SR_HTYPES_NS::SharedPtr<Y>();
+            }
+        #endif
+            return StaticPointerCast<T, Y>(pPointer);
+        }
+    }
+
     namespace SharedPointerTraits {
         template<typename T> struct IsSharedPointer : std::false_type { };
         template<typename T> struct IsSharedPointer<SR_HTYPES_NS::SharedPtr<T>> : std::true_type { };
@@ -476,6 +497,16 @@ namespace SR_UTILS_NS {
     template<typename T> struct InnerType<SR_HTYPES_NS::SharedPtr<T>> {
         using type = typename InnerType<T>::type;
     };
+}
+
+namespace SR_HTYPES_NS {
+    template<class T> template<typename Y> SharedPtr<Y> SharedPtr<T>::DynamicCast() const {
+        return SR_UTILS_NS::DynamicPointerCast<Y, T>(GetThis());
+    }
+
+    template<class T> template<typename Y> SharedPtr<Y> SharedPtr<T>::StaticCast() const {
+        return SR_UTILS_NS::StaticPointerCast<Y, T>(GetThis());
+    }
 }
 
 namespace std {

@@ -204,6 +204,7 @@ namespace SR_UTILS_NS::Reflection {
         SR_NODISCARD bool IsStringView() const;
         SR_NODISCARD bool IsStringAtom() const;
         SR_NODISCARD bool IsUnicodeString() const;
+        SR_NODISCARD bool IsAABB() const;
         SR_NODISCARD bool IsPath() const;
         SR_NODISCARD bool IsRect() const;
         SR_NODISCARD bool IsFColor() const;

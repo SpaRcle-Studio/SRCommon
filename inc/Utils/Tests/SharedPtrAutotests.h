@@ -61,7 +61,7 @@ namespace SR_UTILS_NS {
                 {
                     SR_HTYPES_NS::SharedPtr<AutoTests::ManuallySharedPtrTestClass> pInt = new TestClass();
                     pInt.AutoFree();
-                    pInt2 = pInt.DynamicCast<TestClass>();
+                    pInt2 = SR_UTILS_NS::DynamicPointerCast<TestClass>(pInt);
                 }
                 if (pInt2) {
                     pInt2->DoSomething();

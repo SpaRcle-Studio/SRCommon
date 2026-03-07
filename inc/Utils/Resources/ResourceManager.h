@@ -111,30 +111,30 @@ namespace SR_UTILS_NS {
 
     template<typename T> SR_HTYPES_NS::SharedPtr<T> ResourceManager::Find(StringAtom id, const IResourceVariant* pVariant) {
         SR_TRACY_ZONE;
-        return Find(id, T::GetClassStaticName(), pVariant).template DynamicCast<T>();
+        return SR_UTILS_NS::DynamicPointerCast<T>(Find(id, T::GetClassStaticName(), pVariant));
     }
 
     template<typename T> SR_HTYPES_NS::SharedPtr<T> ResourceManager::Find(const Path& path, const IResourceVariant* pVariant) {
         SR_TRACY_ZONE;
-        return Find(path.ToStringRef(), T::GetClassStaticName(), pVariant).template DynamicCast<T>();
+        return SR_UTILS_NS::DynamicPointerCast<T>(Find(path.ToStringRef(), T::GetClassStaticName(), pVariant));
     }
 }
 
 struct CoreResLoader {
     template<typename T> SR_NODISCARD static SR_HTYPES_NS::SharedPtr<T> Load(const char* path, const SR_UTILS_NS::IResourceVariant* pVariant = nullptr) {
-        return SR_UTILS_NS::ResourceManager::Instance().LoadResource(SR_UTILS_NS::Path(path), T::GetClassStaticName(), pVariant).template DynamicCast<T>();
+        return SR_UTILS_NS::DynamicPointerCast<T>(SR_UTILS_NS::ResourceManager::Instance().LoadResource(SR_UTILS_NS::Path(path), T::GetClassStaticName(), pVariant));
     }
     template<typename T> SR_NODISCARD static SR_HTYPES_NS::SharedPtr<T> Load(const std::string_view& path, const SR_UTILS_NS::IResourceVariant* pVariant = nullptr) {
-        return SR_UTILS_NS::ResourceManager::Instance().LoadResource(SR_UTILS_NS::Path(path), T::GetClassStaticName(), pVariant).template DynamicCast<T>();
+        return SR_UTILS_NS::DynamicPointerCast<T>(SR_UTILS_NS::ResourceManager::Instance().LoadResource(SR_UTILS_NS::Path(path), T::GetClassStaticName(), pVariant));
     }
     template<typename T> SR_NODISCARD static SR_HTYPES_NS::SharedPtr<T> Load(const std::string& path, const SR_UTILS_NS::IResourceVariant* pVariant = nullptr) {
-        return SR_UTILS_NS::ResourceManager::Instance().LoadResource(SR_UTILS_NS::Path(path), T::GetClassStaticName(), pVariant).template DynamicCast<T>();
+        return SR_UTILS_NS::DynamicPointerCast<T>(SR_UTILS_NS::ResourceManager::Instance().LoadResource(SR_UTILS_NS::Path(path), T::GetClassStaticName(), pVariant));
     }
     template<typename T> SR_NODISCARD static SR_HTYPES_NS::SharedPtr<T> Load(const SR_UTILS_NS::Path& path, const SR_UTILS_NS::IResourceVariant* pVariant = nullptr) {
-        return SR_UTILS_NS::ResourceManager::Instance().LoadResource(path, T::GetClassStaticName(), pVariant).template DynamicCast<T>();
+        return SR_UTILS_NS::DynamicPointerCast<T>(SR_UTILS_NS::ResourceManager::Instance().LoadResource(path, T::GetClassStaticName(), pVariant));
     }
     template<typename T> SR_NODISCARD static SR_HTYPES_NS::SharedPtr<T> Load(SR_UTILS_NS::StringAtom id, const SR_UTILS_NS::IResourceVariant* pVariant = nullptr) {
-        return SR_UTILS_NS::ResourceManager::Instance().LoadResource(id, T::GetClassStaticName(), pVariant).template DynamicCast<T>();
+        return SR_UTILS_NS::DynamicPointerCast<T>(SR_UTILS_NS::ResourceManager::Instance().LoadResource(id, T::GetClassStaticName(), pVariant));
     }
 };
 

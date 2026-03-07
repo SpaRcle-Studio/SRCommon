@@ -17,7 +17,7 @@ namespace SR_UTILS_NS {
         auto&& resourceManager = ResourceManager::Instance();
         SR_UTILS_NS::Path&& path = rawPath.RemoveSubPath(resourceManager.GetResPath());
 
-        Asset::Ptr pAsset = resourceManager.FindAnyType(path.ToStringRef(), nullptr).DynamicCast<Asset>();
+        Asset::Ptr pAsset = DynamicPointerCast<Asset>(resourceManager.FindAnyType(path.ToStringRef(), nullptr));
         if (pAsset) {
             return pAsset;
         }
@@ -52,7 +52,7 @@ namespace SR_UTILS_NS {
         SR_UTILS_NS::SRASerializer serializer;
         serializer.SetUseTabs(true);
 
-        Asset::Ptr pThis = GetThis().StaticCast<Asset>();
+        Asset::Ptr pThis = StaticPointerCast<Asset>(GetThis());
         Serialization::Save(serializer, pThis, SerializationId::Create("asset"));
 
         if (!serializer.SaveToFile(resourceManager.GetResPath().Concat(path))) {

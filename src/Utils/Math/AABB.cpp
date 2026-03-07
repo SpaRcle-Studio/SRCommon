@@ -12,6 +12,14 @@ namespace SR_MATH_NS {
         , max(max)
     { }
 
+    bool AABB::operator==(const AABB& other) const noexcept {
+        return min == other.min && max == other.max;
+    }
+
+    bool AABB::operator!=(const AABB& other) const noexcept {
+        return !(*this == other);
+    }
+
     bool AABB::IsValid() const noexcept {
         return min.x <= max.x && min.y <= max.y && min.z <= max.z;
     }

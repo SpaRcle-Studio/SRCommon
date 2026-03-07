@@ -51,7 +51,7 @@ namespace SR_UTILS_NS {
 
         SR_NODISCARD SR_HTYPES_NS::SharedPtr<T> GetResource() const noexcept {
             if (auto&& pBase = GetResourceBase()) {
-                return pBase.template StaticCast<T>();
+                return SR_UTILS_NS::StaticPointerCast<T>(pBase);
             }
             return nullptr;
         }

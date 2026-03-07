@@ -51,8 +51,6 @@ namespace SR_UTILS_NS {
         virtual void OnMaskDirty();
         virtual void OnPriorityChanged();
 
-        /// Вызывается при загрузке компонента на игровой объект
-        virtual void OnLoaded();
         /// Вызывается после добавления компонента к игровому объекту
         virtual void OnAttached();
         /// Вызывается когда компонент убирается с объекта, но до OnDestroy и только если был OnAttached
@@ -88,7 +86,6 @@ namespace SR_UTILS_NS {
         void SetEnabled(bool value);
         void SetIndexIdSceneUpdater(int32_t index);
 
-        SR_NODISCARD bool IsComponentLoaded() const noexcept;
         SR_NODISCARD bool IsComponentValid() const noexcept;
         SR_NODISCARD bool IsAttached() const noexcept;
 
@@ -140,7 +137,6 @@ namespace SR_UTILS_NS {
         void SetParent(IComponentable* pParent);
 
     protected:
-        bool m_isComponentLoaded = false;
         bool m_isAttached = false;
         bool m_isActive = false;
         bool m_isAwake = false;

@@ -228,6 +228,16 @@ namespace SR_UTILS_NS::Reflection {
         return GetTypeName() == compare;
     }
 
+    bool Value::IsAABB() const {
+        if (!IsClass()) {
+            return false;
+        }
+
+        static const auto meta = entt::meta_any(SR_MATH_NS::AABB());
+        static const std::string_view compare = meta.base().type().name();
+        return GetTypeName() == compare;
+    }
+
     bool Value::IsPath() const {
         if (!IsClass()) {
             return false;

@@ -162,8 +162,6 @@ namespace SR_UTILS_NS {
         /// Scene may not exist.
         pComponent->SetParent(this);
 
-        pComponent->OnLoaded();
-
         /// pComponent->OnAttached();
         /// Здесь нельзя аттачить, иначе будет очень трудно отлавливаемый deadlock и много других проблем
 
@@ -345,7 +343,6 @@ namespace SR_UTILS_NS {
 
         for (uint32_t i = 0; i < m_components.size(); ++i) {
             m_components[i]->SetParent(this);
-            m_components[i]->OnLoaded();
         }
     }
 

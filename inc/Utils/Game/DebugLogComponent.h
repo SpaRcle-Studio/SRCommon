@@ -15,7 +15,6 @@ namespace SR_UTILS_NS {
         SR_CLASS()
         using Super = Component;
     public:
-        void OnLoaded() override { SR_DEBUG_LOG("DebugLogComponent::OnLoaded()"); Super::OnLoaded(); }
         void Start() override { SR_DEBUG_LOG("DebugLogComponent::Start()"); Super::Start(); }
         void Awake() override { SR_DEBUG_LOG("DebugLogComponent::Awake()"); Super::Awake(); }
         void OnEnable() override { SR_DEBUG_LOG("DebugLogComponent::OnEnable()"); Super::OnEnable(); }

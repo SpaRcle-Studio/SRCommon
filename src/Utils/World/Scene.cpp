@@ -72,13 +72,13 @@ namespace SR_WORLD_NS {
         const GameObject::Ptr pGameObject = SRNew<GameObject>();
         pGameObject->SetName(name);
 
-        RegisterSceneObject(pGameObject.StaticCast<SceneObject>());
+        RegisterSceneObject(StaticPointerCast<SceneObject>(pGameObject));
 
         return pGameObject;
     }
 
     GameObject::Ptr Scene::FindOrInstanceGameObject(SR_UTILS_NS::StringAtom name) {
-        if (auto&& pFound = Find(name).DynamicCast<GameObject>()) {
+        if (auto&& pFound = DynamicPointerCast<GameObject>(Find(name))) {
             return pFound;
         }
 
@@ -160,7 +160,7 @@ namespace SR_WORLD_NS {
         if (!pScene->IsEntityRegistered()) {
             const EntityId entityId = pScene->GetEntityId();
             pScene->SetEntityId(SR_ID_INVALID);
-            pScene->GetEntityController()->Register(pScene.StaticCast<Entity>(), entityId);
+            pScene->GetEntityController()->Register(StaticPointerCast<Entity>(pScene), entityId);
         }
 
         if (!pScene->m_logic || !pScene->m_logic->LoadLogic(deserializer, pScene->m_absPath)) {
@@ -406,7 +406,7 @@ namespace SR_WORLD_NS {
     }
 
     bool Scene::IsPrefab() const noexcept {
-        return m_logic.DynamicCast<ScenePrefabLogic>();
+        return DynamicPointerCast<ScenePrefabLogic>(m_logic);
     }
 
     void Scene::RegisterSceneObject(const Scene::SceneObjectPtr& pSO) {
@@ -589,5 +589,9 @@ namespace SR_WORLD_NS {
     bool Scene::IsEditorMode() const {
         static const StringAtom editorModeKey = "EditorMode";
         return GetDataStorage().GetValueDef<bool>(editorModeKey, false);
+    }
+
+    Scene::GameObjectPtr Scene::GetMainCamera() const {
+        return nullptr;
     }
 }

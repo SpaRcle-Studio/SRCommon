@@ -36,9 +36,18 @@ namespace SR_UTILS_NS {
     SceneObject::Ptr SceneObject::CloneSceneObject() const {
         SR_TRACY_ZONE;
 
-        /// TODO: тут делается сериализация и десериализация, нужно сделать нормальный метод клонирования
+        SR_UTILS_NS::SceneObject::Ptr pClone = SR_UTILS_NS::Factory::Instance().Create<SceneObject>(GetMeta()->GetFactoryName());
+        if (!pClone) {
+            SRHalt("Failed to clone scene object! Factory returned nullptr!");
+            return nullptr;
+        }
 
-        SR_UTILS_NS::SRASerializer serializer;
+        CloneTo(*pClone);
+
+        return pClone;
+
+        /// TODO: тут делается сериализация и десериализация, нужно сделать нормальный метод клонирования
+        /*SR_UTILS_NS::SRASerializer serializer;
         Save(serializer);
 
         auto&& pDeserializer = serializer.CreateDeserializer();
@@ -55,7 +64,7 @@ namespace SR_UTILS_NS {
         }
 
         pSceneObject->Load(*pDeserializer);
-        return pSceneObject;
+        return pSceneObject;*/
     }
 
     bool SceneObject::Load(IDeserializer& deserializer) {
@@ -399,7 +408,7 @@ namespace SR_UTILS_NS {
         UnregisterEntity();
 
         if (m_scene) {
-            m_scene->Remove(GetThis().DynamicCast<SceneObject>());
+            m_scene->Remove(DynamicPointerCast<SceneObject>(GetThis()));
             while (!m_children.empty()) {
                 if (const auto pParent = (*m_children.begin())->GetParent().Get(); pParent != this) {
                     SRHalt("SceneObject::Destroy() : child has different parent!");
@@ -434,7 +443,7 @@ namespace SR_UTILS_NS {
 
     void SceneObject::OnPostLoad() {
         for (auto&& pChild : m_children) {
-            pChild->SetParent(GetThis().StaticCast<SceneObject>());
+            pChild->SetParent(StaticPointerCast<SceneObject>(GetThis()));
         }
         Super::OnPostLoad();
     }
@@ -515,7 +524,7 @@ namespace SR_UTILS_NS {
             m_scene->RegisterSceneObject(pChild);
         }
 
-        if (!pChild->SetParent(GetThis().DynamicCast<SceneObject>())) {
+        if (!pChild->SetParent(DynamicPointerCast<SceneObject>(GetThis()))) {
             SR_WARN("SceneObject::AddChild() : failed to set parent!");
             return false;
         }
@@ -697,6 +706,21 @@ namespace SR_UTILS_NS {
     void SceneObject::OnMaskDirty() {
         for (auto&& pComponent : m_components) {
             pComponent->OnMaskDirty();
+        }
+    }
+
+    void SceneObject::CloneTo(SRClass& clone) const {
+        Super::CloneTo(clone);
+
+        SceneObject& sceneObjectClone = static_cast<SceneObject&>(clone);
+        sceneObjectClone.m_prefabInfo.isOwner = m_prefabInfo.isOwner;
+        sceneObjectClone.m_prefabInfo.pPrefab = m_prefabInfo.pPrefab;
+        if (sceneObjectClone.m_prefabInfo.pPrefab) {
+            sceneObjectClone.m_prefabInfo.pPrefab->AddUsePoint();
+        }
+
+        for (auto&& pChild : sceneObjectClone.m_children) {
+            pChild->SetParent(StaticPointerCast<SceneObject>(sceneObjectClone.GetThis()));
         }
     }
 }

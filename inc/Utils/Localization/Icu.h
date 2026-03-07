@@ -6,6 +6,7 @@
 #define SR_ENGINE_ICU_H
 
 #include <Utils/Debug.h>
+#include <Utils/Localization/EncMethodType.h>
 
 #define U_DISABLE_RENAMING 1
 #define U_COMMON_IMPLEMENTATION 0
@@ -21,14 +22,6 @@
     #include <unicode/utf.h>
     #include <unicode/utf16.h>
 #endif
-
-namespace SR_UTILS_NS::Localization {
-    enum class EncMethodType {
-        Skip = 0,    ///< Skip illegal/unconvertable characters
-        Stop = 1,    ///< Stop conversion and throw conversion_error
-        Default = Skip  ///< Default method - skip
-    };
-}
 
 #define SR_UCNV_GET_MAX_BYTES_FOR_STRING(length, maxCharSize) \
      (((int32_t)(length)+10)*(int32_t)(maxCharSize))

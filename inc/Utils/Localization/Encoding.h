@@ -7,6 +7,7 @@
 
 #include <Utils/Localization/Convert.h>
 #include <Utils/Localization/UTF.h>
+#include <Utils/Localization/EncMethodType.h>
 
 namespace SR_UTILS_NS::Localization {
     SR_MAYBE_UNUSED static void SetLocale() {

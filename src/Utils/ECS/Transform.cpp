@@ -35,7 +35,7 @@ namespace SR_UTILS_NS {
     }
 
     SR_NODISCARD GameObject::Ptr Transform::GetGameObject() const {
-        return m_gameObject->GetThis().DynamicCast<GameObject>();
+        return SR_UTILS_NS::DynamicPointerCast<GameObject>(m_gameObject->GetThis());
     }
 
     void Transform::GlobalTranslate(const Math::FVector3& translation) {

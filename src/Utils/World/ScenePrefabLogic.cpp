@@ -124,7 +124,7 @@ namespace SR_WORLD_NS {
         SceneObject::Ptr pSO = GetPrefabRoot();
 
         if (!pSO) {
-            pSO = GetScene()->InstanceGameObject("Root").StaticCast<SceneObject>();
+            pSO = DynamicPointerCast<SceneObject>(GetScene()->InstanceGameObject("Root"));
         }
 
         pSO->AddEditorFlags(EditorFlags::DontDelete);

@@ -123,6 +123,7 @@ namespace SR_UTILS_NS {
         /// Освобождает память объекта
         void DestroyImpl();
 
+        void CloneTo(SRClass& clone) const override;
         void OnPostLoad() override;
         void OnRootRegistered();
 

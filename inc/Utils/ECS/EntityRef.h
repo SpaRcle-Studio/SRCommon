@@ -55,7 +55,7 @@ namespace SR_UTILS_NS {
 
         SR_NODISCARD SR_HTYPES_NS::SharedPtr<T> Get() const noexcept {
             if constexpr (!std::is_same_v<T, void>) {
-                return GetEntity().template StaticCast<T>();
+                return SR_UTILS_NS::StaticPointerCast<T>(GetEntity());
             }
             else {
                 return SR_HTYPES_NS::SharedPtr<T>();

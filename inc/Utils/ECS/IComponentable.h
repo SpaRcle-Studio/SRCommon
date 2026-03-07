@@ -67,7 +67,7 @@ namespace SR_UTILS_NS {
                 SR_ERROR("IComponentable::AddComponent() : failed to add component of type: {}", T::GetClassStaticName());
                 return nullptr;
             }
-            return pComponent.DynamicCast<T>();
+            return DynamicPointerCast<T>(pComponent);
         }
 
         void RemoveComponents();
@@ -78,7 +78,7 @@ namespace SR_UTILS_NS {
         virtual void ForEachComponent(const std::function<bool(ComponentPtr&)>& fun);
 
         template<typename T> SR_HTYPES_NS::SharedPtr<T> GetComponent() {
-            return GetComponent(T::GetClassStaticName()).template DynamicCast<T>();
+            return DynamicPointerCast<T>(GetComponent(T::GetClassStaticName()));
         }
 
         virtual void OnPriorityChanged();

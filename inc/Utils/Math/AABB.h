@@ -15,6 +15,15 @@ namespace SR_MATH_NS {
         AABB();
         AABB(const FVector3& min, const FVector3& max);
 
+        SR_NODISCARD bool operator==(const AABB& other) const noexcept;
+        SR_NODISCARD bool operator!=(const AABB& other) const noexcept;
+
+        SR_NODISCARD FVector3 Min() const noexcept { return min; }
+        SR_NODISCARD FVector3 Max() const noexcept { return max; }
+
+        void SetMin(const FVector3& _min) noexcept { min = _min; }
+        void SetMax(const FVector3& _max) noexcept { max = _max; }
+
         SR_NODISCARD bool IsValid() const noexcept;
         SR_NODISCARD bool IsEmpty() const noexcept;
         SR_NODISCARD FVector3 GetCenter() const noexcept;

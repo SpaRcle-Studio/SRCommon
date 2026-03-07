@@ -22,7 +22,7 @@ namespace SR_UTILS_NS {
     }
 
     GameObject::Ptr GameObject::GetOrCreateChild(StringAtom name) {
-        if (auto&& pChild = Find(name).DynamicCast<GameObject>()) {
+        if (auto&& pChild = DynamicPointerCast<GameObject>(Find(name))) {
             return pChild;
         }
         return CreateChild(name);
@@ -30,10 +30,10 @@ namespace SR_UTILS_NS {
 
     GameObject::Ptr GameObject::CreateChild(StringAtom name) {
         auto&& pChild = GetScene()->InstanceGameObject(name);
-        if (!Super::AddChild(pChild.StaticCast<SceneObject>())) {
+        if (!Super::AddChild(StaticPointerCast<SceneObject>(pChild))) {
             SRHalt("Something went wrong!");
         }
-        return pChild.StaticCast<GameObject>();
+        return DynamicPointerCast<GameObject>(pChild);
     }
 
     const Transform::Ptr& GameObject::GetTransform() const noexcept {

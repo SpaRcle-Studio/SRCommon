@@ -27,22 +27,22 @@ namespace SR_UTILS_NS::EntityRefUtils {
         for (const PathItem& item : path) {
             switch (item.action) {
                 case Action::Action_Parent: {
-                    SceneObject::Ptr pObject = pEntity.DynamicCast<SceneObject>();
+                    SceneObject::Ptr pObject = DynamicPointerCast<SceneObject>(pEntity);
 
                     if (!pObject && owner.pEntity) {
-                        if (auto&& pComponent = owner.pEntity.DynamicCast<Component>()) {
+                        if (auto&& pComponent = DynamicPointerCast<Component>(owner.pEntity)) {
                             if (!pComponent->IsComponentValid()) {
                                 return nullptr;
                             }
                             pObject = pComponent->GetSceneObject();
                         }
-                        else if (auto&& pOwnerObject = owner.pEntity.DynamicCast<SceneObject>()) {
+                        else if (auto&& pOwnerObject = DynamicPointerCast<SceneObject>(owner.pEntity)) {
                             pObject = pOwnerObject->GetParent();
                         }
                     }
 
                     if (pObject) {
-                        pEntity = pObject->GetParent().DynamicCast<Entity>();
+                        pEntity = DynamicPointerCast<Entity>(pObject->GetParent());
                     }
 
                     break;
@@ -52,13 +52,13 @@ namespace SR_UTILS_NS::EntityRefUtils {
 
                     if (!pEntity) {
                         if (owner.pEntity) {
-                            if (auto&& pSceneObject = owner.pEntity.DynamicCast<SceneObject>()) {
+                            if (auto&& pSceneObject = DynamicPointerCast<SceneObject>(owner.pEntity)) {
                                 tree = &pSceneObject->GetChildrenRef();
                             }
                             //else if (auto&& pComponent = owner.pEntity.DynamicCast<Component>()) {
                             //    tree = &pComponent->GetScene()->GetRootSceneObjects();
                             //}
-                            else if (auto&& pComponent = owner.pEntity.DynamicCast<Component>()) {
+                            else if (auto&& pComponent = DynamicPointerCast<Component>(owner.pEntity)) {
                                 if (auto&& pObject = pComponent->GetSceneObject()) {
                                     tree = &pObject->GetChildrenRef();
                                 }
@@ -68,7 +68,7 @@ namespace SR_UTILS_NS::EntityRefUtils {
                             tree = &owner.pScene->GetRootSceneObjects();
                         }
                     }
-                    else if (auto&& pObject = pEntity.DynamicCast<SceneObject>()) {
+                    else if (auto&& pObject = DynamicPointerCast<SceneObject>(pEntity)) {
                         tree = &pObject->GetChildrenRef();
                     }
 
@@ -87,7 +87,7 @@ namespace SR_UTILS_NS::EntityRefUtils {
                             --index;
                             continue;
                         }
-                        pEntity = pChild.DynamicCast<Entity>();
+                        pEntity = DynamicPointerCast<Entity>(pChild);
                         found = true;
                     }
 
@@ -98,7 +98,7 @@ namespace SR_UTILS_NS::EntityRefUtils {
                     return nullptr;
                 }
                 case Action::Action_Component: {
-                    const std::vector<Component::Ptr>& components = pEntity ? pEntity.DynamicCast<SceneObject>()->GetComponents() : GetSceneFromOwner(owner)->GetComponents();
+                    const std::vector<Component::Ptr>& components = pEntity ? DynamicPointerCast<SceneObject>(pEntity)->GetComponents() : GetSceneFromOwner(owner)->GetComponents();
 
                     if (components.empty()) {
                         return nullptr;
@@ -115,7 +115,7 @@ namespace SR_UTILS_NS::EntityRefUtils {
                             --index;
                             continue;
                         }
-                        pEntity = pComponent->DynamicCast<Entity>();
+                        pEntity = DynamicPointerCast<Entity>(pComponent);
                         break;
                     }
 
@@ -141,7 +141,7 @@ namespace SR_UTILS_NS::EntityRefUtils {
 
         while (pFromEntity) {
             /// ---------------------- [ Component ] ----------------------
-            if (auto&& pComponent = pFromEntity.DynamicCast<Component>()) {
+            if (auto&& pComponent = DynamicPointerCast<Component>(pFromEntity)) {
                 if (auto&& pParent = pComponent->GetParent()) {
                     uint16_t componentIndex = 0;
 
@@ -170,7 +170,7 @@ namespace SR_UTILS_NS::EntityRefUtils {
                 }
             }
                 /// --------------------- [ Game Object ] ---------------------
-            else if (auto&& pObject = pFromEntity.DynamicCast<SceneObject>()) {
+            else if (auto&& pObject = DynamicPointerCast<SceneObject>(pFromEntity)) {
                 auto&& pParent = pObject->GetParent();
 
                 auto&& tree = pParent ? pParent->GetChildrenRef() : pObject->GetScene()->GetRootSceneObjects();
@@ -189,7 +189,7 @@ namespace SR_UTILS_NS::EntityRefUtils {
                 PathItem item(pObject->GetName(), objectIndex, Action::Action_Child);
 
                 refPath.emplace_back(item);
-                pFromEntity = pParent.DynamicCast<Entity>();
+                pFromEntity = DynamicPointerCast<Entity>(pParent);
             }
         }
 
@@ -244,11 +244,11 @@ namespace SR_UTILS_NS::EntityRefUtils {
             return true;
         }
 
-        if (auto&& pComponent = owner.pEntity.DynamicCast<Component>()) {
+        if (auto&& pComponent = DynamicPointerCast<Component>(owner.pEntity)) {
             return pComponent->HasParent();
         }
 
-        if (auto&& pObject = owner.pEntity.DynamicCast<SceneObject>()) {
+        if (auto&& pObject = DynamicPointerCast<SceneObject>(owner.pEntity)) {
             return pObject->GetScene();
         }
 
@@ -259,14 +259,14 @@ namespace SR_UTILS_NS::EntityRefUtils {
         if (owner.pEntity) {
             SR_UTILS_NS::Entity::Ptr pEntity = owner.pEntity;
 
-            if (auto&& pComponent = pEntity.DynamicCast<Component>()) {
+            if (auto&& pComponent = DynamicPointerCast<Component>(pEntity)) {
                 if (!pComponent->IsComponentValid()) {
                     return SR_WORLD_NS::Scene::Ptr();
                 }
                 return pComponent->GetSceneObject()->GetScene();
             }
 
-            if (auto&& pObject = pEntity.DynamicCast<SceneObject>()) {
+            if (auto&& pObject = DynamicPointerCast<SceneObject>(pEntity)) {
                 return pObject->GetScene();
             }
         }

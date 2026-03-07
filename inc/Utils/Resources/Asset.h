@@ -54,7 +54,7 @@ namespace SR_UTILS_NS {
                 return pAsset;
             }
 
-            auto&& pImpl = pAsset->DynamicCast<AssetT>();
+            auto&& pImpl = DynamicPointerCast<AssetT>(pAsset);
             if (!pImpl) {
                 SRHalt("Asset::Load() : failed to cast asset to type: {}\n\tPath:", AssetT::GetClassStaticName(), path);
                 pImpl->CheckResourceUsage();
@@ -82,7 +82,7 @@ namespace SR_UTILS_NS {
             static_assert(AlwaysFalseV<AssetT>, "AssetT must be derived from Asset!");
         }
         else {
-            return CreateNew(rawPath, AssetT::GetClassStaticName()).template StaticCast<AssetT>();
+            return StaticPointerCast<AssetT>(CreateNew(rawPath, AssetT::GetClassStaticName()));
         }
     }
 }

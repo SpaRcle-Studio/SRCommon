@@ -87,7 +87,7 @@ namespace SR_UTILS_NS {
 
     Component::GameObjectPtr Component::GetGameObject() const {
         SRAssert(m_parent);
-        return m_sceneObject.DynamicCast<GameObject>();
+        return DynamicPointerCast<GameObject>(m_sceneObject);
     }
 
     const Component::SceneObjectPtr& Component::GetSceneObject() const {
@@ -125,7 +125,7 @@ namespace SR_UTILS_NS {
         SRAssert(m_parent);
 
         if (m_sceneObject && m_sceneObject->GetSceneObjectType() == SceneObjectType::GameObject) {
-            return const_cast<Transform*>(m_sceneObject.StaticCast<GameObject>()->GetTransform().Get());
+            return const_cast<Transform*>(StaticPointerCast<GameObject>(m_sceneObject)->GetTransform().Get());
         }
 
         return nullptr;
@@ -193,7 +193,6 @@ namespace SR_UTILS_NS {
     void Component::OnMaskDirty() { }
     void Component::OnPriorityChanged() { }
 
-    void Component::OnLoaded() { m_isComponentLoaded = true; }
     void Component::OnAttached() { m_isAttached = true; SRAssert(GetParent()); }
 
     void Component::OnDestroy() {
@@ -231,7 +230,6 @@ namespace SR_UTILS_NS {
         m_indexInSceneUpdater = index;
     }
 
-    SR_NODISCARD bool Component::IsComponentLoaded() const noexcept { return m_isComponentLoaded; }
     SR_NODISCARD bool Component::IsComponentValid() const noexcept { return m_parent; }
     SR_NODISCARD bool Component::IsAttached() const noexcept { return m_isAttached; }
 

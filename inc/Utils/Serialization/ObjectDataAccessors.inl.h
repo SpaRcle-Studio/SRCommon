@@ -80,6 +80,11 @@ template<> struct ObjectDataAccessor<SR_MATH_NS::Quaternion> {
 	static void Load(IDeserializer& deserializer, SR_MATH_NS::Quaternion& value, const SerializationId& id);
 };
 
+template<> struct ObjectDataAccessor<SR_MATH_NS::AABB> {
+	static void Save(ISerializer& serializer, const SR_MATH_NS::AABB& value, const SerializationId& id);
+	static void Load(IDeserializer& deserializer, SR_MATH_NS::AABB& value, const SerializationId& id);
+};
+
 template<> struct ObjectDataAccessor<SR_MATH_NS::FRect> {
     static void Save(ISerializer& serializer, const SR_MATH_NS::FRect& value, const SerializationId& id);
     static void Load(IDeserializer& deserializer, SR_MATH_NS::FRect& value, const SerializationId& id);

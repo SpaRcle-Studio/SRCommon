@@ -37,6 +37,7 @@ namespace SR_UTILS_NS {
         void SetRotation(const SR_MATH_NS::Quaternion& quaternion) override;
         void SetScale(const SR_MATH_NS::FVector3& scale) override;
         void SetSkew(const SR_MATH_NS::FVector3& skew) override;
+        void SetAABB(const SR_MATH_NS::AABB& aabb);
 
         SR_NODISCARD const SR_MATH_NS::Matrix4x4& GetMatrix() const override;
         SR_NODISCARD const SR_MATH_NS::AABB& GetAABB() const override;
@@ -70,7 +71,6 @@ namespace SR_UTILS_NS {
         mutable SR_MATH_NS::Matrix4x4 m_matrix = SR_MATH_NS::Matrix4x4::Identity();
         mutable SR_MATH_NS::Quaternion m_globalRotation = SR_MATH_NS::Quaternion::Identity();
         mutable SR_MATH_NS::AABB m_cachedAABB;
-        SR_MATH_NS::AABB m_aabb = SR_MATH_NS::AABB::UnitCube();
 
         mutable bool m_eulersDirty = true;
 
@@ -84,6 +84,8 @@ namespace SR_UTILS_NS {
         SR_MATH_NS::FVector3 m_scale = SR_MATH_NS::FVector3::One();
         /// @property @setter(SetSkew) @defaultValue(SR_MATH_NS::FVector3::One()) @drag(0.01f) @resetValue(SR_MATH_NS::FVector3::One()) @hidden
         SR_MATH_NS::FVector3 m_skew = SR_MATH_NS::FVector3::One();
+        /// @property @setter(SetAABB) @defaultValue(SR_MATH_NS::AABB::UnitCube())
+        SR_MATH_NS::AABB m_aabb = SR_MATH_NS::AABB::UnitCube();
 
         bool m_skewEnabled = false;
 

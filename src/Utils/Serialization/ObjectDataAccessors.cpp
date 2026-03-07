@@ -148,6 +148,22 @@ namespace SR_UTILS_NS {
         deserializer.EndObject();
     }
 
+    void ObjectDataAccessor<SR_MATH_NS::AABB>::Save(ISerializer& serializer, const SR_MATH_NS::AABB& value, const SerializationId& id) {
+        serializer.BeginObject(id);
+        Serialization::SaveCheckDefault(serializer, value.min, SerializationId::Create("min"));
+        Serialization::SaveCheckDefault(serializer, value.max, SerializationId::Create("max"));
+        serializer.EndObject();
+    }
+
+    void ObjectDataAccessor<SR_MATH_NS::AABB>::Load(IDeserializer& deserializer, SR_MATH_NS::AABB& value, const SerializationId& id) {
+        if (!deserializer.BeginObject(id)) {
+            return;
+        }
+        Serialization::Load(deserializer, value.min, SerializationId::Create("min"));
+        Serialization::Load(deserializer, value.max, SerializationId::Create("max"));
+        deserializer.EndObject();
+    }
+
     void ObjectDataAccessor<SR_MATH_NS::FRect>::Save(ISerializer& serializer, const SR_MATH_NS::FRect& value, const SerializationId& id) {
         serializer.BeginObject(id);
         Serialization::SaveCheckDefault(serializer, value.x, SerializationId::Create("x"));

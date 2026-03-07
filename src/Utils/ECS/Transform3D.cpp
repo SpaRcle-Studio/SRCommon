@@ -159,7 +159,7 @@ namespace SR_UTILS_NS {
         SetRotation(euler);
 
         for (auto&& pChild : m_gameObject->GetChildrenRef()) {
-            if (auto&& pGameObject = pChild.DynamicCast<GameObject>()) {
+            if (auto&& pGameObject = DynamicPointerCast<GameObject>(pChild)) {
                 pGameObject->GetTransform()->GlobalTranslate(deltaTranslation);
                 pGameObject->GetTransform()->RotateAroundParent(deltaRotation);
             }
@@ -181,6 +181,14 @@ namespace SR_UTILS_NS {
         m_scale = scale;
 
         UpdateTree();
+    }
+
+    void Transform3D::SetAABB(const SR_MATH_NS::AABB& aabb) {
+        if (aabb == m_aabb) {
+            return;
+        }
+        m_aabb = aabb;
+        m_aabbDirty = true;
     }
 
     void Transform3D::SetSkew(const SR_MATH_NS::FVector3& rawSkew) {
