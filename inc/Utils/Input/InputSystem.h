@@ -44,7 +44,7 @@ namespace SR_UTILS_NS {
         void SetMouseScroll(double_t xOffset, double_t yOffset);
         void SetFocusedWindowRect(const std::optional<SR_MATH_NS::FRect>& rect);
 
-        void Update();
+        void Update(float_t dt);
         void Reload();
         void ResetMouse();
 
@@ -74,7 +74,7 @@ namespace SR_UTILS_NS {
         void SetCursorVisible(bool isVisible);
         void Reset();
         void SetState(uint16_t keyIndex, State state);
-        void UpdateMouse();
+        void UpdateMouse(float_t dt);
         void UpdateKeyboard();
 
         SR_NODISCARD const CursorLockInfo* GetActiveLock() const;

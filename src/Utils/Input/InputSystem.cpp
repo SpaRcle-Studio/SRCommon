@@ -25,7 +25,7 @@ namespace SR_UTILS_NS {
 
     Input::~Input() = default;
 
-    void Input::UpdateMouse() {
+    void Input::UpdateMouse(float_t dt) {
         SR_TRACY_ZONE;
 
         auto&& mouseState = SR_PLATFORM_NS::GetMouseState();
@@ -63,14 +63,14 @@ namespace SR_UTILS_NS {
 
             SetCursorVisible(false);
             SR_PLATFORM_NS::SetMousePos(m_mousePrev.CastToInt());
-            m_mouseDrag = m_mouse - m_mousePrev;
+            m_mouseDrag = (m_mouse - m_mousePrev);
         #endif
         } else {
             m_mousePrev = m_mouse;
             m_mouse = mouseState.position;
             m_isLocked = false;
             SetCursorVisible(true);
-            m_mouseDrag = m_mouse - m_mousePrev;
+            m_mouseDrag = (m_mouse - m_mousePrev);
         }
 
         for (uint8_t i = 0; i < 5; ++i) {
@@ -174,7 +174,7 @@ namespace SR_UTILS_NS {
     //     }
     // }
 
-    void Input::Update() {
+    void Input::Update(float_t dt) {
         SR_TRACY_ZONE;
         SR_LOCK_GUARD;
 
@@ -190,7 +190,7 @@ namespace SR_UTILS_NS {
         }
         m_textEvents.clear();
 
-        UpdateMouse();
+        UpdateMouse(dt);
         UpdateKeyboard();
     }
 

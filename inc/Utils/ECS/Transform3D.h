@@ -84,7 +84,7 @@ namespace SR_UTILS_NS {
         SR_MATH_NS::FVector3 m_scale = SR_MATH_NS::FVector3::One();
         /// @property @setter(SetSkew) @defaultValue(SR_MATH_NS::FVector3::One()) @drag(0.01f) @resetValue(SR_MATH_NS::FVector3::One()) @hidden
         SR_MATH_NS::FVector3 m_skew = SR_MATH_NS::FVector3::One();
-        /// @property @setter(SetAABB) @defaultValue(SR_MATH_NS::AABB::UnitCube())
+        /// @property @setter(SetAABB) @defaultValue(SR_MATH_NS::AABB::UnitCube()) @hidden
         SR_MATH_NS::AABB m_aabb = SR_MATH_NS::AABB::UnitCube();
 
         bool m_skewEnabled = false;
