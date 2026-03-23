@@ -10,11 +10,18 @@ void* SRMalloc(SR_UTILS_NS::SizeType size) {
     if (g_TracyAllocatorInitialized) {
         SR_TRACY_ZONE;
         SR_TRACY_ZONE_COLOR(0xFF00FF00);
-        void* pMemory = std::malloc(size);
-        SR_TRACY_ALLOC(pMemory, size);
-        return pMemory;
+        void* pAllocation = std::malloc(size);
+        if (!pAllocation) {
+            SRHalt("SRMalloc() : failed to allocate memory! Size: {}Mb", size / (1024 * 1024));
+        }
+        SR_TRACY_ALLOC(pAllocation, size);
+        return pAllocation;
     }
-    return std::malloc(size);
+    void* pAllocation = std::malloc(size);
+    if (!pAllocation) {
+        SRHalt("SRMalloc() : failed to allocate memory! Size: {}Mb", size / (1024 * 1024));
+    }
+    return pAllocation;
 }
 
 void* SRReAlloc(void* pMemory, SR_UTILS_NS::SizeType size) {

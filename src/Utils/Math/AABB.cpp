@@ -36,6 +36,10 @@ namespace SR_MATH_NS {
         return max - min;
     }
 
+    FVector3 AABB::GetPosition() const noexcept {
+        return min;
+    }
+
     AABB AABB::UnitCube(const float_t size) noexcept {
         return AABB(FVector3(-size), FVector3(size));
     }
