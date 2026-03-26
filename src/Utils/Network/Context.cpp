@@ -12,13 +12,19 @@
     #include <Utils/Network/Asio/AsioContext.h>
 #endif
 
+#ifdef SR_COMMON_GNS
+    #include <Utils/Network/GNS/GNSContext.h>
+#endif
+
 namespace SR_NETWORK_NS {
     Context::Context()
         : Super(this, SR_UTILS_NS::SharedPtrPolicy::Automatic)
     { }
 
     SR_HTYPES_NS::SharedPtr<Context> Context::Create() {
-    #ifdef SR_COMMON_ASIO
+    #ifdef SR_COMMON_GNS
+        return GNSContext::MakeShared<GNSContext, Context>();
+    #elif defined(SR_COMMON_ASIO)
         return AsioContext::MakeShared<AsioContext, Context>();
     #else
         SR_ERROR("Context::Create() : no implementation for this platform!");

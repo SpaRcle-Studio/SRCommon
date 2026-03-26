@@ -15,7 +15,8 @@ namespace SR_NETWORK_NS {
 
     SR_ENUM_NS_CLASS_T(NetworkLib, uint8_t,
         Unknown,
-        Asio
+        Asio,
+        GNS
     )
 
     SR_ENUM_NS_CLASS_T(SocketType, uint8_t,

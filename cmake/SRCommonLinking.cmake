@@ -62,3 +62,8 @@ if (SR_COMMON_ASIO)
     target_link_libraries(Utils asio)
     target_compile_definitions(Utils PUBLIC SR_COMMON_ASIO)
 endif()
+
+if (SR_COMMON_GNS)
+    target_link_libraries(Utils GameNetworkingSockets_s)
+    target_compile_definitions(Utils PUBLIC SR_COMMON_GNS)
+endif()
