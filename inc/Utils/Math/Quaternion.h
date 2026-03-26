@@ -55,6 +55,7 @@ namespace SR_MATH_NS {
 
         static bool IsEqualUsingDot(Unit dot);
         static Quaternion FromBasis(const Vector3<Unit>& right, const Vector3<Unit>& up, const Vector3<Unit>& forward);
+        static Quaternion FromAxisAngle(const Vector3<Unit>& axis, Unit angle);
         static Unit Angle(const Quaternion& a, const Quaternion& b);
         static Unit Dot(const Quaternion& a, const Quaternion& b);
         static Quaternion AngleAxis(float_t angle, const Vector3<float_t>& axis);

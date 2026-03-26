@@ -220,6 +220,10 @@ namespace SR_MATH_NS {
         return FromBasis(right, newUp, forward);
     }
 
+    Quaternion Quaternion::FromAxisAngle(const Vector3<Unit>& axis, Unit angle) {
+        return AngleAxis(angle, axis);
+    }
+
     Quaternion Quaternion::LookAt(const Vector3<Unit>& direction, const Vector3<Unit>& up) {
         FVector3 normDir = direction.Normalize();
         Quaternion q = glm::quatLookAt(glm::vec3(normDir.x, normDir.y, normDir.z), glm::vec3(up.x, up.y, up.z));
