@@ -8,6 +8,8 @@
 #include <Utils/Network/Pinger.h>
 #include <Utils/Debug.h>
 
+#ifdef SR_COMMON_GNS
+
 namespace SR_NETWORK_NS {
     GNSContext* GNSContext::s_pCallbackInstance = nullptr;
 
@@ -190,3 +192,5 @@ namespace SR_NETWORK_NS {
         }
     }
 }
+
+#endif

@@ -6,6 +6,8 @@
 #include <Utils/Network/GNS/GNSContext.h>
 #include <Utils/Debug.h>
 
+#ifdef SR_COMMON_GNS
+
 namespace SR_NETWORK_NS {
     GNSSocket::GNSSocket(Context::Ptr pContext)
         : Super(SocketType::TCP, std::move(pContext))
@@ -332,3 +334,5 @@ namespace SR_NETWORK_NS {
         }
     }
 }
+
+#endif

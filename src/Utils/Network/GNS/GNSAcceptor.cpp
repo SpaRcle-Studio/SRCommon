@@ -7,6 +7,8 @@
 #include <Utils/Network/GNS/GNSSocket.h>
 #include <Utils/Debug.h>
 
+#ifdef SR_COMMON_GNS
+
 namespace SR_NETWORK_NS {
     GNSAcceptor::GNSAcceptor(Context::Ptr pContext, std::string address, uint16_t port)
         : Super(SocketType::TCP, std::move(pContext), std::move(address), port)
@@ -165,3 +167,5 @@ namespace SR_NETWORK_NS {
         return m_port;
     }
 }
+
+#endif

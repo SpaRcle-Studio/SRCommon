@@ -53,6 +53,10 @@ if (SR_EMSCRIPTEN)
     set(ZLIB_ONLY_STATIC ON)
 endif()
 
+if (SR_COMMON_GNS AND WIN32)
+    include(cmake/InstallProtobuf.cmake)
+endif()
+
 include(cmake/Linker.cmake)
 include(cmake/CopyDLLToExeFolder.cmake)
 include(cmake/UseAssimp.cmake)
@@ -203,6 +207,9 @@ if (SR_COMMON_ASIO)
 endif()
 
 if (SR_COMMON_GNS)
+    message(STATUS "GameNetworkingSockets will be included in the build.")
+
+    add_compile_definitions(SR_COMMON_GNS)
     set(BUILD_SHARED_LIB OFF CACHE INTERNAL "" FORCE)
     set(BUILD_STATIC_LIB ON CACHE INTERNAL "" FORCE)
     set(BUILD_EXAMPLES OFF CACHE INTERNAL "" FORCE)

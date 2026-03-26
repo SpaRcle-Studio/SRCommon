@@ -7,6 +7,7 @@
 
 #include <Utils/Network/Context.h>
 
+#ifdef SR_COMMON_GNS
 #include <steam/steamnetworkingsockets.h>
 #include <steam/isteamnetworkingutils.h>
 
@@ -52,5 +53,6 @@ namespace SR_NETWORK_NS {
         static GNSContext* s_pCallbackInstance;
     };
 }
+#endif
 
 #endif //SR_UTILS_NETWORK_GNS_CONTEXT_H

@@ -7,6 +7,7 @@
 
 #include <Utils/Network/Acceptor.h>
 
+#ifdef SR_COMMON_GNS
 #include <steam/steamnetworkingsockets.h>
 
 namespace SR_NETWORK_NS {
@@ -43,5 +44,7 @@ namespace SR_NETWORK_NS {
         HSteamListenSocket m_hListenSocket = k_HSteamListenSocket_Invalid;
     };
 }
+
+#endif
 
 #endif //SR_UTILS_NETWORK_GNS_ACCEPTOR_H

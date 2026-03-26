@@ -207,6 +207,13 @@ namespace SR_HTYPES_NS {
             m_size = newSize;
         }
 
+        void fill(const T& value) {
+            SR_TRACY_ZONE;
+            for (SizeType i = 0; i < m_size; ++i) {
+                m_data[i] = value;
+            }
+        }
+
         void reserve(SizeType newCapacity) {
             SR_TRACY_ZONE;
             if (newCapacity > m_capacity) {

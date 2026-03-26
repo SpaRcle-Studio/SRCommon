@@ -7,6 +7,7 @@
 
 #include <Utils/Network/Socket.h>
 
+#ifdef SR_COMMON_GNS
 #include <steam/steamnetworkingsockets.h>
 
 namespace SR_NETWORK_NS {
@@ -69,5 +70,6 @@ namespace SR_NETWORK_NS {
         SendMode m_sendMode = SendMode::Reliable;
     };
 }
+#endif
 
 #endif //SR_UTILS_NETWORK_GNS_SOCKET_H
