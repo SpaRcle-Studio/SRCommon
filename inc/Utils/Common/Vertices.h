@@ -5,7 +5,7 @@
 #ifndef SR_ENGINE_SKYBOXCONSTANTS_H
 #define SR_ENGINE_SKYBOXCONSTANTS_H
 
-#include <Utils/stdInclude.h>
+#include <Utils/Types/FastMemoryArray.h>
 
 namespace SR_UTILS_NS {
     struct Vec2 {
@@ -56,6 +56,37 @@ namespace SR_UTILS_NS {
     };
 
     std::vector<Vertex> ComputeConvexHull(const std::vector<Vertex>& vertices);
+
+    namespace Details {
+        bool OptimizeVerticesImpl(
+            const void* vertices,
+            uint64_t vertexSize,
+            uint64_t verticesCount,
+            const SR_HTYPES_NS::FastMemoryArray<uint32_t>& indices,
+            uint64_t targetIndicesCount,
+            float_t targetError,
+            SR_HTYPES_NS::FastMemoryArray<uint32_t>& outSimplifiedIndices
+        );
+    }
+
+    template<typename T> bool OptimizeVertices(
+        const SR_HTYPES_NS::FastMemoryArray<T>& vertices,
+        const SR_HTYPES_NS::FastMemoryArray<uint32_t>& indices,
+        uint64_t targetIndicesCount,
+        float_t targetError,
+        SR_HTYPES_NS::FastMemoryArray<uint32_t>& outSimplifiedIndices
+    ) {
+        SR_TRACY_ZONE;
+        return Details::OptimizeVerticesImpl(
+            vertices.data(),
+            sizeof(T),
+            vertices.size(),
+            indices,
+            targetIndicesCount,
+            targetError,
+            outSimplifiedIndices
+        );
+    }
 
     template<typename T> static std::vector<T> IndexedVerticesToNonIndexed(
             const std::vector<T>& vertices,

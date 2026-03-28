@@ -22,6 +22,10 @@ if (SR_COMMON_SDL)
     target_link_libraries(Utils SDL3::SDL3)
 endif()
 
+if (SR_COMMON_MESHOPTIMIZER)
+    target_link_libraries(Utils meshoptimizer)
+endif()
+
 if (SR_COMMON_ZLIB)
     target_link_libraries(Utils zlibstatic)
 endif()

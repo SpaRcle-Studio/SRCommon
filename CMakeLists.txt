@@ -37,6 +37,7 @@ option(SR_COMMON_MYHTML "" OFF)
 option(SR_COMMON_LITEHTML "" OFF)
 option(SR_COMMON_ASIO "" OFF)
 option(SR_COMMON_GNS "" OFF)
+option(SR_COMMON_MESHOPTIMIZER "" ON)
 
 option(SR_COMMON_DLL_EXPORTS "" ON)
 option(SR_COMMON_GIT_METADATA "" ON)
@@ -162,6 +163,19 @@ else()
 endif()
 
 add_subdirectory(libs/glm)
+
+if (SR_COMMON_MESHOPTIMIZER)
+    message(STATUS "SRCommon will be using meshoptimizer")
+
+    add_compile_definitions(SR_COMMON_MESHOPTIMIZER)
+
+    set(MESHOPT_BUILD_DEMO OFF CACHE INTERNAL "" FORCE)
+    set(MESHOPT_BUILD_GLTFPACK OFF CACHE INTERNAL "" FORCE)
+    set(MESHOPT_BUILD_SHARED_LIBS OFF CACHE INTERNAL "" FORCE)
+    set(MESHOPT_INSTALL OFF CACHE INTERNAL "" FORCE)
+
+    add_subdirectory(libs/meshoptimizer)
+endif()
 
 if (SR_UTILS_FMT_HEADER_ONLY)
     add_definitions(
