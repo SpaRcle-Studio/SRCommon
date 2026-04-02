@@ -54,8 +54,8 @@ namespace SR_HTYPES_NS {
         SharedPtr<T>& operator=(T* ptr);
         SharedPtr<T>& operator=(SharedPtr<T>&& ptr) noexcept;
 
-        template<typename Y> SR_DEPRECATED SR_NODISCARD SharedPtr<Y> DynamicCast() const;
-        template<typename Y> SR_DEPRECATED SR_NODISCARD SharedPtr<Y> StaticCast() const;
+        template<typename Y> SR_NODISCARD SharedPtr<Y> DynamicCast() const;
+        template<typename Y> SR_NODISCARD SharedPtr<Y> StaticCast() const;
 
         SR_NODISCARD SR_FORCE_INLINE operator bool() const noexcept { return m_data && m_data->valid; } /** NOLINT */
         SR_NODISCARD SR_FORCE_INLINE T& operator*() const { return *m_ptr; }

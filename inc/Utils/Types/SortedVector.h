@@ -41,6 +41,12 @@ namespace SR_HTYPES_NS {
         SR_NODISCARD SR_CONSTEXPR T* data() { return m_data.data(); }
         SR_NODISCARD SR_CONSTEXPR const T* data() const { return m_data.data(); }
 
+        SR_NODISCARD SR_CONSTEXPR T& front() { return m_data.front(); }
+        SR_NODISCARD SR_CONSTEXPR const T& front() const { return m_data.front(); }
+
+        SR_NODISCARD SR_CONSTEXPR T& back() { return m_data.back(); }
+        SR_NODISCARD SR_CONSTEXPR const T& back() const { return m_data.back(); }
+
         SR_NODISCARD SR_CONSTEXPR T& operator[](uint64_t index) {
             return m_data[index];
         }
@@ -127,7 +133,6 @@ namespace SR_HTYPES_NS {
 
         bool Remove(const T& value) {
             if (m_data.empty()) {
-                SRHalt("SortedVector is empty");
                 return false;
             }
 
@@ -144,6 +149,11 @@ namespace SR_HTYPES_NS {
         }
 
         void Clear() {
+            SR_TRACY_ZONE;
+            m_data.clear();
+        }
+
+        void clear() {
             SR_TRACY_ZONE;
             m_data.clear();
         }

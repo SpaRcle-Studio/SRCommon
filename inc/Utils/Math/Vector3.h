@@ -776,10 +776,19 @@ namespace SR_MATH_NS {
         SR_FORCE_INLINE bool operator==(const Vector3<T>& p_v) const { return SR_EQUALS(x, p_v.x) && SR_EQUALS(y, p_v.y) && SR_EQUALS(z, p_v.z); }
         SR_FORCE_INLINE bool operator!=(const Vector3<T>& p_v) const { return !SR_EQUALS(x, p_v.x) || !SR_EQUALS(y, p_v.y) || !SR_EQUALS(z, p_v.z); }
 
-        SR_FORCE_INLINE bool operator<=(const Vector3<T>& p_v) const { return x <= p_v.x && y <= p_v.y && z <= p_v.z; }
-        SR_FORCE_INLINE bool operator>=(const Vector3<T>& p_v) const { return x >= p_v.x && y >= p_v.y && z >= p_v.z; }
-        SR_FORCE_INLINE bool operator<(const Vector3<T>& p_v) const { return x < p_v.x && y < p_v.y && z < p_v.z; }
-        SR_FORCE_INLINE bool operator>(const Vector3<T>& p_v) const { return x > p_v.x && y > p_v.y && z > p_v.z; }
+        SR_FORCE_INLINE bool operator<(const Vector3<T>& p_v) const {
+            return std::tie(x, y, z) < std::tie(p_v.x, p_v.y, p_v.z);
+        }
+        SR_FORCE_INLINE bool operator<=(const Vector3<T>& p_v) const {
+            return std::tie(x, y, z) <= std::tie(p_v.x, p_v.y, p_v.z);
+        }
+
+        SR_FORCE_INLINE bool operator>(const Vector3<T>& p_v) const {
+            return std::tie(x, y, z) > std::tie(p_v.x, p_v.y, p_v.z);
+        }
+        SR_FORCE_INLINE bool operator>=(const Vector3<T>& p_v) const {
+            return std::tie(x, y, z) >= std::tie(p_v.x, p_v.y, p_v.z);
+        }
 
     public:
         static Unit Magnitude(Vector3 vec) {

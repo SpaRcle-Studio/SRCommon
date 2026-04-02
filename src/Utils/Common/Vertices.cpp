@@ -45,7 +45,7 @@ namespace SR_UTILS_NS {
             );
 
             if (resultCount == 0) {
-                SR_ERROR("SR_UTILS_NS::Details::OptimizeVerticesImpl() : mesh simplification failed!");
+                SR_ERROR("OptimizeVerticesImpl() : mesh simplification failed!");
                 outSimplifiedIndices.clear();
                 return false;
             }

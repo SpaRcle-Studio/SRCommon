@@ -20,10 +20,10 @@ namespace SR_HTYPES_NS {
 
         void Update();
 
-        void SetDeltaTime(float_t dt) {
-            m_deltaTime = dt;
-        }
+        void SetDeltaTime(float_t dt) { m_deltaTime = dt; }
+        void SetFixedDeltaTime(float_t dt) { m_fixedDeltaTime = dt; }
 
+        SR_NODISCARD float_t FixedDeltaTime() const noexcept { return m_fixedDeltaTime; }
         SR_NODISCARD float_t DeltaTime() const noexcept { return m_deltaTime; }
         SR_NODISCARD TimePointType Now() const noexcept { return m_timeInfo.load().m_point; }
         SR_NODISCARD uint64_t Count() const noexcept { return m_timeInfo.load().m_point.time_since_epoch().count(); }
@@ -37,6 +37,7 @@ namespace SR_HTYPES_NS {
 
     private:
         float_t m_deltaTime = 0.f;
+        float_t m_fixedDeltaTime = 0.f;
 
         struct TimeInfo {
             TimeInfo() = default;

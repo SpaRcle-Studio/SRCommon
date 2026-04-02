@@ -21,6 +21,20 @@ namespace SR_UTILS_NS {
         return m_pEntity;
     }
 
+    bool EntityRefBase::IsApplicable(const SR_HTYPES_NS::SharedPtr<Entity>& pEntity) const noexcept {
+        if (!pEntity) {
+            SRHalt("EntityRefBase::IsApplicable() : entity is null!");
+            return false;
+        }
+
+        if (!pEntity->GetMeta()) {
+            SRHalt("EntityRefBase::IsApplicable() : entity with id {} has no meta!", pEntity->GetEntityId());
+            return false;
+        }
+
+        return pEntity->GetMeta()->IsSameOrInherited(GetTypeName());
+    }
+
     void EntityRefBase::OnEntityIdReplaced(const EntityReplaceMap& replaceMap) {
         if (m_entityId == SR_ID_INVALID) SR_UNLIKELY_ATTRIBUTE {
             return;
@@ -43,19 +57,8 @@ namespace SR_UTILS_NS {
         }
 
         auto&& pEntity = pActiveController->FindById(m_entityId);
-        if (!pEntity) SR_UNLIKELY_ATTRIBUTE {
-            SR_WARN("EntityRefBase::Resolve() : Entity with id {} not found!", m_entityId);
-            return;
-        }
-
-        if (!pEntity->GetMeta()) SR_LIKELY_ATTRIBUTE {
-            SRHalt("EntityRefBase::Resolve() : Entity with id {} has no meta!", m_entityId);
-            return;
-        }
-
-        if (!pEntity->GetMeta()->IsSameOrInherited(GetTypeName())) SR_UNLIKELY_ATTRIBUTE {
-            SR_WARN("EntityRefBase::Resolve() : Entity with id {} is not of type {}! Actual type: {}",
-                    m_entityId, GetTypeName(), pEntity->GetMeta()->GetFactoryName());
+        if (!IsApplicable(pEntity)) SR_UNLIKELY_ATTRIBUTE {
+            SR_WARN("EntityRefBase::Resolve() : entity with id {} is not applicable for this reference!", m_entityId);
             return;
         }
 

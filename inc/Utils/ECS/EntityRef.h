@@ -23,6 +23,8 @@ namespace SR_UTILS_NS {
         SR_NODISCARD EntityId GetEntityId() const noexcept { return m_entityId; }
         SR_NODISCARD bool IsResolved() const noexcept;
 
+        SR_NODISCARD virtual bool IsApplicable(const SR_HTYPES_NS::SharedPtr<Entity>& pEntity) const noexcept;
+
         void OnEntityIdReplaced(const EntityReplaceMap& replaceMap);
         void SetEntityId(EntityId entityId) noexcept;
 
@@ -37,20 +39,24 @@ namespace SR_UTILS_NS {
 
     };
 
+    template<typename T> SR_NODISCARD StringAtom EntityRefExtractTypeName() noexcept {
+        if constexpr (!std::is_same_v<T, void>) {
+            if constexpr (SR_UTILS_NS::IsCompleteTypeV<T>) {
+                return T::GetClassStaticName();
+            }
+            else {
+                return Factory::Instance().GetNameByTypeId<T>();
+            }
+        }
+        static const StringAtom voidTypeName("void");
+        return voidTypeName;
+    }
+
     template<class T> class EntityRef : public EntityRefBase {
         using Super = EntityRefBase;
     public:
         SR_NODISCARD StringAtom GetTypeName() const noexcept override {
-            if constexpr (!std::is_same_v<T, void>) {
-                if constexpr (SR_UTILS_NS::IsCompleteTypeV<T>) {
-                    return T::GetClassStaticName();
-                }
-                else {
-                    return Factory::Instance().GetNameByTypeId<T>();
-                }
-            }
-            static const StringAtom voidTypeName("void");
-            return voidTypeName;
+            return SR_UTILS_NS::EntityRefExtractTypeName<T>();
         }
 
         SR_NODISCARD SR_HTYPES_NS::SharedPtr<T> Get() const noexcept {
