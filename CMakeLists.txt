@@ -25,6 +25,12 @@ if (MSVC)
     endif()
 endif()
 
+set(BUILD_SHARED_LIBS OFF CACHE INTERNAL "" FORCE)
+set(SKIP_INSTALL_ALL ON)
+
+if (SR_EMSCRIPTEN OR WIN32)
+    set(ZLIB_ONLY_STATIC ON CACHE INTERNAL "" FORCE)
+endif()
 
 option(SR_COMMON_ASSIMP "" ON)
 
@@ -47,13 +53,6 @@ option(SR_COMMON_CI_BUILD "" OFF)
 
 option(SR_USE_PCH "" ON)
 
-set(BUILD_SHARED_LIBS OFF CACHE INTERNAL "" FORCE)
-set(SKIP_INSTALL_ALL ON)
-
-if (SR_EMSCRIPTEN)
-    set(ZLIB_ONLY_STATIC ON)
-endif()
-
 if (SR_COMMON_GNS AND WIN32)
     include(cmake/InstallProtobuf.cmake)
 endif()
@@ -75,12 +74,21 @@ if (UNIX)
 endif()
 
 if (SR_COMMON_ZLIB)
+    message(STATUS "SRCommon will be using zlib")
+
+    add_compile_definitions(SR_COMMON_ZLIB)
     set(ZLIB_BUILD_EXAMPLES OFF)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DASSIMP_BUILD_ZLIB=OFF")
     set(ASSIMP_BUILD_ZLIB OFF CACHE INTERNAL "" FORCE)
     set(ZLIB_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/libs/zlib ${CMAKE_CURRENT_BINARY_DIR}/libs/zlib)
     set(SR_ZLIB_INCLUDE_DIRS ${ZLIB_INCLUDE_DIR})
     add_subdirectory(libs/zlib)
+
+    if (ZLIB_ONLY_STATIC)
+        message(STATUS "Zlib will be built as a static library")
+    else()
+        message(STATUS "Zlib will be built as a shared library")
+    endif()
 endif()
 
 SRUseAssimpIfPossible(SRCommon)

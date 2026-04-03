@@ -104,6 +104,7 @@ namespace SR_UTILS_NS {
     }
 
     std::string ResourceEmbedder::Decompress(const Resource& resource) {
+    #ifdef SR_COMMON_ZLIB
         std::string compressedData = HexToBytes(resource.compressedHex);
 
         uLongf decompressedSize = resource.decompressedSize;
@@ -135,6 +136,10 @@ namespace SR_UTILS_NS {
         inflateEnd(&strm);
 
         return {decompressedData.begin(), decompressedData.begin() + decompressedSize };
+    #else
+        SRHalt("Decompression is not supported! Please define SR_COMMON_ZLIB to enable it.");
+        return std::string();
+    #endif
     }
 
     ResourceEmbedder& ResourceEmbedder::Instance() {

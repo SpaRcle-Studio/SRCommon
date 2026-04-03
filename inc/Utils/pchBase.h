@@ -78,7 +78,9 @@
     #include <xxHash/xxhash.h>
 
     #ifndef SR_ENGINE_SCRIPT_API_MODE
-        #include <zlib.h>
+        #ifdef SR_COMMON_ZLIB
+            #include <zlib.h>
+        #endif
     #endif
 
     #ifdef SR_SUPPORT_PARALLEL
@@ -162,6 +164,7 @@ constexpr uint32_t SR_INVALID_FBO = SR_ID_INVALID;
 
 namespace SR_UTILS_NS {
     enum class ExecutionPolicy {
+        Par,
         ParUnSeq,
         Seq
     };
@@ -173,6 +176,9 @@ namespace SR_UTILS_NS {
     #else
         if constexpr (policy == ExecutionPolicy::Seq) {
             std::for_each(std::execution::seq, first, last, func);
+        }
+        else if constexpr (policy == ExecutionPolicy::Par) {
+            std::for_each(std::execution::par, first, last, func);
         }
         else {
             std::for_each(std::execution::par_unseq, first, last, func);
@@ -187,6 +193,9 @@ namespace SR_UTILS_NS {
     #else
         if constexpr (policy == ExecutionPolicy::Seq) {
             return std::transform_reduce(std::execution::seq, first, last, val, binaryOp, unaryOp);
+        }
+        else if constexpr (policy == ExecutionPolicy::Par) {
+            return std::transform_reduce(std::execution::par, first, last, val, binaryOp, unaryOp);
         }
         else {
             return std::transform_reduce(std::execution::par_unseq, first, last, val, binaryOp, unaryOp);
