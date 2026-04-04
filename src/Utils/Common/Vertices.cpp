@@ -26,6 +26,9 @@ namespace SR_UTILS_NS {
             SR_TRACY_ZONE;
 
             outSimplifiedIndices.resize(indices.size());
+            if (indices.empty()) {
+                return true;
+            }
 
         #ifdef SR_COMMON_MESHOPTIMIZER
             float resultError = 0.0f;
