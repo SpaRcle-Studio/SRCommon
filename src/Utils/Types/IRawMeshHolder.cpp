@@ -111,20 +111,33 @@ namespace SR_HTYPES_NS {
         return m_meshId < m_rawMesh->GetMeshesCount();
     }
 
-    std::vector<SR_UTILS_NS::Vertex> IRawMeshHolder::GetVertices() const noexcept {
-        SR_TRACY_ZONE;
-        static std::vector<SR_UTILS_NS::Vertex> defaultVertices;
-
+    const SR_UTILS_NS::VertexDataBuffer& IRawMeshHolder::GetVertexBuffer(const SR_UTILS_NS::VertexLayoutDescription& layout) const {
+        static const SR_UTILS_NS::VertexDataBuffer empty;
         if (!IsValidMeshId()) {
-            return defaultVertices;
+            return empty;
         }
 
         if (auto&& pRawMesh = GetRawMesh()) {
-            return pRawMesh->GetVertices(GetMeshId());
+            return pRawMesh->GetVertexBuffer(GetMeshId(), layout);
         }
 
-        return defaultVertices;
+        return empty;
     }
+
+    //std::vector<SR_UTILS_NS::Vertex> IRawMeshHolder::GetVertices() const noexcept {
+    //    SR_TRACY_ZONE;
+    //    static std::vector<SR_UTILS_NS::Vertex> defaultVertices;
+
+    //    if (!IsValidMeshId()) {
+    //        return defaultVertices;
+    //    }
+
+    //    if (auto&& pRawMesh = GetRawMesh()) {
+    //        return pRawMesh->GetVertices(GetMeshId());
+    //    }
+
+    //    return defaultVertices;
+    //}
 
     std::string_view IRawMeshHolder::GetGeometryName() const noexcept {
         return GetRawMesh() ? GetRawMesh()->GetGeometryName(GetMeshId()) : std::string_view();

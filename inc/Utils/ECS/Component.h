@@ -152,7 +152,8 @@ namespace SR_UTILS_NS {
         SR_WORLD_NS::Scene* m_scene = nullptr;
 
     };
-}
 
+    constexpr static size_t SIZE_OF_COMPONENT_CLASS = sizeof(Component);
+}
 
 #endif //SR_ENGINE_UTILS_COMPONENT_H

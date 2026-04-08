@@ -59,7 +59,8 @@ namespace SR_HTYPES_NS {
         SR_NODISCARD uint32_t GetMeshesCount() const;
         SR_NODISCARD std::string_view GetGeometryName(uint32_t id) const;
 
-        SR_NODISCARD std::vector<SR_UTILS_NS::Vertex> GetVertices(uint32_t id) const;
+        SR_NODISCARD const SR_UTILS_NS::VertexDataBuffer& GetVertexBuffer(uint32_t id, const SR_UTILS_NS::VertexLayoutDescription& layout) const;
+        //SR_NODISCARD std::vector<SR_UTILS_NS::Vertex> GetVertices(uint32_t id) const;
         SR_NODISCARD const SR_HTYPES_NS::FastMemoryArray<uint32_t>& GetIndices(uint32_t id) const;
         SR_NODISCARD const SR_HTYPES_NS::FlatHashMap<SR_UTILS_NS::StringAtom, uint32_t>& GetBones(uint32_t id) const;
         SR_NODISCARD const SR_HTYPES_NS::FlatHashMap<SR_UTILS_NS::StringAtom, uint16_t>& GetOptimizedBones() const;
@@ -102,6 +103,8 @@ namespace SR_HTYPES_NS {
     #endif
 
     private:
+        mutable std::vector<std::vector<SR_UTILS_NS::VertexDataBuffer>> m_vertexBuffersCache;
+
         std::vector<SR_HTYPES_NS::FlatHashMap<SR_UTILS_NS::StringAtom, uint32_t>> m_bones;
         SR_HTYPES_NS::FlatHashMap<SR_UTILS_NS::StringAtom, uint16_t> m_optimizedBones;
 

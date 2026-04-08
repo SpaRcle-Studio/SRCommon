@@ -60,6 +60,8 @@ namespace SR_HTYPES_NS {
         m_animations.clear();
     #endif
 
+        m_vertexBuffersCache.clear();
+
         m_fromCache = false;
 
         m_indices.clear();
@@ -184,7 +186,7 @@ namespace SR_HTYPES_NS {
     #endif
     }
 
-    std::vector<SR_UTILS_NS::Vertex> RawMesh::GetVertices(uint32_t id) const {
+    /*std::vector<SR_UTILS_NS::Vertex> RawMesh::GetVertices(uint32_t id) const {
         SR_TRACY_ZONE;
 
         if (GetResourceLoadState() == IResource::LoadState::Error) {
@@ -217,10 +219,10 @@ namespace SR_HTYPES_NS {
             vertex.tangent = hasTangents ? (*reinterpret_cast<Vec3*>(&mesh->mTangents[i])) : Vec3 { 0.f, 0.f, 0.f };
             vertex.bitangent = hasTangents ? (*reinterpret_cast<Vec3*>(&mesh->mBitangents[i])) : Vec3 { 0.f, 0.f, 0.f };
 
-            /*vertex.position.x = -vertex.position.x;
-            vertex.normal.x = -vertex.normal.x;
-            vertex.tangent.x = -vertex.tangent.x;
-            vertex.bitangent.x = -vertex.bitangent.x;*/
+            //vertex.position.x = -vertex.position.x;
+            //vertex.normal.x = -vertex.normal.x;
+            //vertex.tangent.x = -vertex.tangent.x;
+            //vertex.bitangent.x = -vertex.bitangent.x;
 
             vertices.emplace_back(vertex);
         }
@@ -282,7 +284,7 @@ namespace SR_HTYPES_NS {
     #endif
 
         return vertices;
-    }
+    }*/
 
     const SR_HTYPES_NS::FastMemoryArray<uint32_t>& RawMesh::GetIndices(uint32_t id) const {
         SR_TRACY_ZONE;
@@ -703,15 +705,15 @@ namespace SR_HTYPES_NS {
     void RawMesh::ComputeConvexHull() {
         SR_TRACY_ZONE;
 
-        if (!m_params.convexHull) {
-            return;
-        }
+        //if (!m_params.convexHull) {
+        //    return;
+        //}
 
-        for (uint16_t i = 0; i <= static_cast<uint16_t>(GetMeshesCount()); ++i) {
-            auto&& computedVertices = SR_UTILS_NS::ComputeConvexHull(GetVertices(i));
-            SR_NOOP;
-
-        }
+        //for (uint16_t i = 0; i <= static_cast<uint16_t>(GetMeshesCount()); ++i) {
+        //    auto&& computedVertices = SR_UTILS_NS::ComputeConvexHull(GetVertices(i));
+        //    SR_NOOP;
+        //
+        //}
 
     }
 
@@ -768,6 +770,45 @@ namespace SR_HTYPES_NS {
 
     void RawMesh::SetVariant(const SR_UTILS_NS::IResourceVariant& variant) {
         m_params = static_cast<const RawMeshParams&>(variant);
+    }
+
+    const SR_UTILS_NS::VertexDataBuffer& RawMesh::GetVertexBuffer(uint32_t id, const SR_UTILS_NS::VertexLayoutDescription& layout) const {
+        SR_TRACY_ZONE;
+
+        static const auto&& empty = SR_UTILS_NS::VertexDataBuffer();
+        if (GetResourceLoadState() == IResource::LoadState::Error) {
+            return empty;
+        }
+
+    #ifdef SR_UTILS_ASSIMP
+        if (!m_scene || id >= m_scene->mNumMeshes) {
+            SRAssert2(false, "Out of range or invalid scene!");
+            return empty;
+        }
+
+        m_vertexBuffersCache.resize(m_scene->mNumMeshes);
+        auto&& pIt = std::ranges::find_if(m_vertexBuffersCache[id], [&layout](const SR_UTILS_NS::VertexDataBuffer& buffer) {
+            return buffer.layout.Compare(layout);
+        });
+
+        if (pIt != m_vertexBuffersCache[id].end()) {
+            return *pIt;
+        }
+
+        m_vertexBuffersCache[id].reserve(8);
+
+        if (m_vertexBuffersCache[id].empty()) {
+            auto&& buffer = SR_UTILS_NS::VertexDataBuffer::AllocateFromAssimp(m_scene->mMeshes[id], GetBones(id));
+            m_vertexBuffersCache[id].emplace_back(std::move(buffer));
+        }
+
+        m_vertexBuffersCache[id].emplace_back(
+            m_vertexBuffersCache[id].front().TransitionToLayout(layout)
+        );
+        return m_vertexBuffersCache[id].back();
+    #else
+        return empty;
+    #endif
     }
 
     bool RawMeshParams::operator==(const RawMeshParams &rhs) const {

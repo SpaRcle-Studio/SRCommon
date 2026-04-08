@@ -18,10 +18,20 @@ namespace SR_HTYPES_NS {
         SortedVector(SortedVector&& other) noexcept
             : m_data(SR_UTILS_NS::Exchange(other.m_data, { }))
         { }
+        SortedVector(const SortedVector& other)
+            : m_data(other.m_data)
+        { }
 
         SortedVector& operator=(SortedVector&& other) noexcept {
             if (this != &other) {
                 m_data = SR_UTILS_NS::Exchange(other.m_data, { });
+            }
+            return *this;
+        }
+
+        SortedVector& operator=(const SortedVector& other) {
+            if (this != &other) {
+                m_data = other.m_data;
             }
             return *this;
         }
@@ -101,6 +111,31 @@ namespace SR_HTYPES_NS {
         SR_NODISCARD SR_CONSTEXPR Iterator end() { return m_data.end(); }
         SR_NODISCARD SR_CONSTEXPR ConstIterator end() const { return m_data.end(); }
 
+        SR_NODISCARD bool Contains(const T& value) const {
+            if (m_data.empty()) {
+                return false;
+            }
+
+            auto it = std::lower_bound(m_data.begin(), m_data.end(), value, m_predicate);
+            return it != m_data.end() && *it == value;
+        }
+
+        SR_NODISCARD const T* Find(const T& value) const {
+            if (m_data.empty()) {
+                return nullptr;
+            }
+
+            auto it = std::lower_bound(m_data.begin(), m_data.end(), value, m_predicate);
+            if (it != m_data.end() && *it == value) {
+                return &(*it);
+            }
+            return nullptr;
+        }
+
+        SR_NODISCARD T* Find(const T& value) {
+            return const_cast<T*>(static_cast<const SortedVector&>(*this).Find(value));
+        }
+
         void Add(const T& value) {
             SR_TRACY_ZONE;
             if (m_data.empty()) {
@@ -145,6 +180,10 @@ namespace SR_HTYPES_NS {
         }
 
         void Reserve(uint64_t size) {
+            m_data.reserve(size);
+        }
+
+        void reserve(uint64_t size) {
             m_data.reserve(size);
         }
 
