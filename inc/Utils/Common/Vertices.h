@@ -109,6 +109,12 @@ namespace SR_UTILS_NS {
 
         SR_NODISCARD bool Compare(const VertexLayoutDescription& other) const;
 
+        void Reset() {
+            attributesCount = 0;
+            strideCache = 0;
+            memset(attributes, 0, sizeof(attributes));
+        }
+
         SR_NODISCARD uint64_t GetHash() const;
         SR_NODISCARD uint64_t GetStride() const;
         SR_NODISCARD const VertexAttributeDescription* Find(VertexAttribute attribute) const;
