@@ -804,6 +804,10 @@ namespace SR_HTYPES_NS {
     #endif
     }
 
+    bool RawMesh::HasBones(uint32_t id) const {
+        return !GetBones(id).empty();
+    }
+
     bool RawMeshParams::operator==(const RawMeshParams &rhs) const {
         return animation == rhs.animation && convexHull == rhs.convexHull;
     }

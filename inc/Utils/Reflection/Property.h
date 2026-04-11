@@ -24,6 +24,7 @@ namespace SR_UTILS_NS::Reflection {
 
         EditorPropertyParams& SetNoHeader() noexcept { m_noHeader = true; return *this; }
         EditorPropertyParams& SetNotNull() noexcept { m_notNull = true; return *this; }
+        EditorPropertyParams& SetDebugOnly() noexcept { m_debugOnly = true; return *this; }
         EditorPropertyParams& SetDisplayName(const StringAtom& displayName) noexcept { m_displayName = displayName; return *this; }
         EditorPropertyParams& SetTooltip(const StringAtom& tooltip) noexcept { m_tooltip = tooltip; return *this; }
         EditorPropertyParams& SetInspector(const StringAtom& inspector) noexcept { m_inspector = inspector; return *this; }
@@ -48,6 +49,7 @@ namespace SR_UTILS_NS::Reflection {
         SR_NODISCARD StringAtom GetInspector() const noexcept { return m_inspector; }
         SR_NODISCARD bool IsNoHeader() const noexcept { return m_noHeader; }
         SR_NODISCARD bool IsNotNull() const noexcept { return m_notNull; }
+        SR_NODISCARD bool IsDebugOnly() const noexcept { return m_debugOnly; }
 
         SR_NODISCARD std::string_view GetCustomArg(const StringAtom& name) const noexcept {
             for (auto&& arg : m_customArgs) {
@@ -72,6 +74,7 @@ namespace SR_UTILS_NS::Reflection {
         float_t m_dragSpeed = 1.f;
         bool m_noHeader = false;
         bool m_notNull = false;
+        bool m_debugOnly = false;
         SR_HTYPES_NS::ArrayVector<CustomArg, 16> m_customArgs;
 
     };
