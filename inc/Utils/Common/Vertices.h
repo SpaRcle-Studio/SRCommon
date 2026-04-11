@@ -96,6 +96,7 @@ namespace SR_UTILS_NS {
         uint8_t count = 0;
         uint16_t offset = 0;
 
+        SR_NODISCARD static uint8_t GetAttributeSizeInBytes(VertexAttributeFormat format, uint8_t count);
         SR_NODISCARD uint8_t GetAttributeSizeInBytes() const;
     };
 
@@ -104,14 +105,14 @@ namespace SR_UTILS_NS {
     struct VertexLayoutDescription {
         VertexAttributeDescription attributes[SR_MAX_VERTEX_ATTRIBUTES] = {};
         uint8_t attributesCount = 0;
+        uint64_t stride = 0;
 
-        mutable uint64_t strideCache = 0;
-
+        SR_NODISCARD static uint32_t Align(uint32_t v, uint32_t a);
         SR_NODISCARD bool Compare(const VertexLayoutDescription& other) const;
 
         void Reset() {
             attributesCount = 0;
-            strideCache = 0;
+            stride = 0;
             memset(attributes, 0, sizeof(attributes));
         }
 

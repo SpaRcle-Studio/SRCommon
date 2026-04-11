@@ -158,22 +158,21 @@ namespace SR_UTILS_NS {
     }
 
     uint8_t VertexAttributeDescription::GetAttributeSizeInBytes() const {
+        return GetAttributeSizeInBytes(format, count);
+    }
+
+    uint8_t VertexAttributeDescription::GetAttributeSizeInBytes(VertexAttributeFormat format, uint8_t count) {
         // Для packed форматов count игнорируем, так как они уже 32-битные
         if (format == VertexAttributeFormat::R10G10B10A2_UNorm || format == VertexAttributeFormat::R11G11B10_Float) {
             return 4;
         }
 
-        return GetVertexAttributeFormatSize(format) * count;
+        const uint8_t size = GetVertexAttributeFormatSize(format) * count;
+        return size == 12 ? 16 : size; // GPU slot rule
     }
 
     uint64_t VertexLayoutDescription::GetStride() const {
-        if (strideCache != 0) {
-            return strideCache;
-        }
-        for (uint8_t i = 0; i < attributesCount; ++i) {
-            strideCache += attributes[i].GetAttributeSizeInBytes() * attributes[i].count;
-        }
-        return strideCache;
+        return stride;
     }
 
     const VertexAttributeDescription* VertexLayoutDescription::Find(VertexAttribute attribute) const {
@@ -185,15 +184,26 @@ namespace SR_UTILS_NS {
         return nullptr;
     }
 
+    uint32_t VertexLayoutDescription::Align(uint32_t v, uint32_t a) {
+        return (v + a - 1) & ~(a - 1);
+    }
+
     VertexLayoutDescription& VertexLayoutDescription::AddAttribute(VertexAttribute attribute, VertexAttributeFormat format, uint8_t count) {
         if (attributesCount >= SR_MAX_VERTEX_ATTRIBUTES) {
             SRHalt("VertexLayoutDescription::AddAttribute() : maximum vertex attributes count exceeded! Max count: {}", SR_MAX_VERTEX_ATTRIBUTES);
             return *this;
         }
-        const uint64_t offset = GetStride();
+
+        uint32_t offset = stride;
+
+        // GPU-safe alignment
+        offset = Align(offset, 16);
         SRAssert(offset < std::numeric_limits<uint16_t>::max());
-        attributes[attributesCount++] = VertexAttributeDescription{ attribute, format, count, static_cast<uint16_t>(offset) };
-        strideCache = 0;
+
+        uint32_t size = VertexAttributeDescription::GetAttributeSizeInBytes(format, count);
+        attributes[attributesCount++] = VertexAttributeDescription{ attribute, format, count, (uint16_t)offset };
+
+        stride = offset + size;
         return *this;
     }
 
