@@ -3,10 +3,6 @@
 //
 
 #include <Utils/Common/Vertices.h>
-#include <Utils/Debug.h>
-
-// #include <Hull/Coordinate.h>
-// #include <QuickHull/FastQuickHull.h>
 
 #ifdef SR_COMMON_MESHOPTIMIZER
     #include <meshoptimizer.h>
@@ -67,31 +63,6 @@ namespace SR_UTILS_NS {
             return true;
         #endif
         }
-    }
-
-    std::vector<Vertex> ComputeConvexHull(const std::vector<Vertex>& vertices) {
-        /*std::vector<hull::Coordinate> coordinates;
-        coordinates.reserve(vertices.size());
-
-        for (auto&& vertex : vertices) {
-            coordinates.emplace_back(hull::Coordinate{vertex.position.x, vertex.position.y, vertex.position.z});
-        }
-
-        auto&& hullCoordinates = qh::convex_hull(coordinates);
-
-        std::vector<Vertex> hullVertices;
-        hullVertices.reserve(hullCoordinates.size() * 3);
-
-        for (uint16_t i = 0; i <= hullCoordinates.size(); ++i) {
-            auto&& face = hullCoordinates[i];
-
-            hullVertices.emplace_back(vertices[face[0]]);
-            hullVertices.emplace_back(vertices[face[1]]);
-            hullVertices.emplace_back(vertices[face[2]]);
-        }
-
-        return hullVertices;*/
-        return std::vector<Vertex>();
     }
 
     uint8_t GetVertexAttributeFormatSize(VertexAttributeFormat format) {
@@ -161,6 +132,8 @@ namespace SR_UTILS_NS {
             case VertexAttribute::BlendWeights:   return "BLEND_WEIGHTS"sv;
             case VertexAttribute::BlendIndices2:   return "BLEND_INDICES2"sv;
             case VertexAttribute::BlendWeights2:   return "BLEND_WEIGHTS2"sv;
+            case VertexAttribute::MaterialIndices:  return "MATERIAL_INDICES"sv;
+            case VertexAttribute::MaterialWeights:  return "MATERIAL_WEIGHTS"sv;
             case VertexAttribute::MaterialID0:      return "MATERIAL_ID0"sv;
             case VertexAttribute::MaterialID1:      return "MATERIAL_ID1"sv;
             case VertexAttribute::MaterialID2:      return "MATERIAL_ID2"sv;

@@ -18,9 +18,11 @@ namespace SR_MATH_NS {
             T coord[3] = { 0 };
         };
     public:
-        Vector3();
+        SR_CONSTEXPR Vector3() { x = static_cast<T>(0); y = static_cast<T>(0); z = static_cast<T>(0); }
+        SR_CONSTEXPR Vector3(T p_x, T p_y, T p_z) { x = p_x; y = p_y; z = p_z; }
+        SR_CONSTEXPR Vector3(T p) { x = p; y = p; z = p; }
 
-        Vector3(const Vector3<T>& vec) {
+        SR_CONSTEXPR Vector3(const Vector3<T>& vec) {
             x = vec.x;
             y = vec.y;
             z = vec.z;
@@ -48,9 +50,6 @@ namespace SR_MATH_NS {
             y = (Unit)axis[1];
             z = (Unit)axis[2];
         }
-
-        Vector3(T p_x, T p_y, T p_z) { x = p_x; y = p_y; z = p_z; }
-        Vector3(T p) { x = p; y = p; z = p; }
 
     public:
         template<typename U> static Vector3<T> XY(const Vector2<U>& v, U value) {
@@ -829,12 +828,6 @@ namespace SR_MATH_NS {
             static_cast<Unit>(CMP_EPSILON),
             static_cast<Unit>(CMP_EPSILON),
     };
-
-    template<typename T> Vector3<T>::Vector3() {
-        x = 0;
-        y = 0;
-        z = 0;
-    }
 
 #ifdef SR_COMMON_DLL_EXPORTS
     // bool inRads

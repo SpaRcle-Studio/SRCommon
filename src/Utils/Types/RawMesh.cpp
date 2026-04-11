@@ -704,17 +704,6 @@ namespace SR_HTYPES_NS {
 
     void RawMesh::ComputeConvexHull() {
         SR_TRACY_ZONE;
-
-        //if (!m_params.convexHull) {
-        //    return;
-        //}
-
-        //for (uint16_t i = 0; i <= static_cast<uint16_t>(GetMeshesCount()); ++i) {
-        //    auto&& computedVertices = SR_UTILS_NS::ComputeConvexHull(GetVertices(i));
-        //    SR_NOOP;
-        //
-        //}
-
     }
 
     int32_t RawMesh::GetMeshId(SR_UTILS_NS::StringAtom name) const {
@@ -800,6 +789,10 @@ namespace SR_HTYPES_NS {
         if (m_vertexBuffersCache[id].empty()) {
             auto&& buffer = SR_UTILS_NS::VertexDataBuffer::AllocateFromAssimp(m_scene->mMeshes[id], GetBones(id));
             m_vertexBuffersCache[id].emplace_back(std::move(buffer));
+        }
+
+        if (layout.attributesCount == 0) {
+            return m_vertexBuffersCache[id].front();
         }
 
         m_vertexBuffersCache[id].emplace_back(

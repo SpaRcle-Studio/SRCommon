@@ -208,7 +208,6 @@
 #define SR_ID_INVALID (-1)
 #define SR_SHADER_PROGRAM int32_t
 #define SR_NULL_SHADER (-1)
-#define SR_VERTEX_DESCRIPTION size_t
 #define GLM_ENABLE_EXPERIMENTAL
 #define SR_NOOP (void)0
 #define SR_FLT_EPSILON FLT_EPSILON
