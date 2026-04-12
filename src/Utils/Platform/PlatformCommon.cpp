@@ -22,6 +22,16 @@ namespace SR_PLATFORM_NS {
         }
     }
 
+    BuildType GetBuildType() {
+    #if defined(SR_DEBUG)
+        return BuildType::Debug;
+    #elif defined(SR_RELEASE)
+        return BuildType::Release;
+    #else
+        return BuildType::Unknown;
+    #endif
+    }
+
 #ifndef SR_LINUX
     void AccumulateMouseDelta(const SR_MATH_NS::FVector2& delta) {
         SRHalt("Platform::AccumulateMouseDelta() : not implemented!");

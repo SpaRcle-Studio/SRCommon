@@ -355,8 +355,8 @@ namespace SR_UTILS_NS {
 
             if (weights.count == 0) {
                 // fallback — чтобы не улетело в (0,0,0)
-                auto* pIdx = reinterpret_cast<SR_MATH_NS::UVector4*>(buffer.GetVertex(v, VertexAttribute::BlendIndices));
-                auto* pW   = reinterpret_cast<SR_MATH_NS::FVector4*>(buffer.GetVertex(v, VertexAttribute::BlendWeights));
+                auto* pIdx = static_cast<SR_MATH_NS::UVector4*>(buffer.GetVertex(v, VertexAttribute::BlendIndices));
+                auto* pW   = static_cast<SR_MATH_NS::FVector4*>(buffer.GetVertex(v, VertexAttribute::BlendWeights));
 
                 (*pIdx)[0] = 0;
                 (*pW)[0]   = 1.0f;
@@ -364,24 +364,14 @@ namespace SR_UTILS_NS {
             }
 
             // 3. сортировка по убыванию веса
-            std::sort(weights.weights, weights.weights + weights.count, [](const BoneWeight& a, const BoneWeight& b) {
+            std::stable_sort(weights.weights, weights.weights + weights.count, [](const BoneWeight& a, const BoneWeight& b) {
                 return a.weight > b.weight;
             });
 
-            // 4. считаем сумму всех весов
-            float totalSum = 0.0f;
-            for (uint8_t i = 0; i < weights.count; ++i) {
-                totalSum += weights.weights[i].weight;
-            }
+            // 4.  выбрать максимум влияний
+            const uint32_t maxInfluences = std::min<uint32_t>(8, weights.count);
 
-            if (totalSum <= 0.0f) {
-                SRHalt("Vertex has zero total bone weight!");
-                return;
-            }
-
-            // 5. решаем: 4 или 8
-            const uint32_t maxInfluences = weights.count > 4 ? std::min<uint32_t>(8, weights.count) : std::min<uint32_t>(4, weights.count);
-
+            // 5. сумма ТОЛЬКО выбранных
             float selectedSum = 0.0f;
             for (uint32_t i = 0; i < maxInfluences; ++i)
                 selectedSum += weights.weights[i].weight;
@@ -394,18 +384,17 @@ namespace SR_UTILS_NS {
             // 6. нормализация выбранных
             const float invSum = 1.0f / selectedSum;
 
-            // 7. запись
-            auto* pIdx1 = reinterpret_cast<SR_MATH_NS::UVector4*>(buffer.GetVertex(v, VertexAttribute::BlendIndices));
-            auto* pW1   = reinterpret_cast<SR_MATH_NS::FVector4*>(buffer.GetVertex(v, VertexAttribute::BlendWeights));
-
             SR_MATH_NS::UVector4 idx1 = {0,0,0,0};
             SR_MATH_NS::FVector4 w1   = {0,0,0,0};
 
             SR_MATH_NS::UVector4 idx2 = {0,0,0,0};
             SR_MATH_NS::FVector4 w2   = {0,0,0,0};
 
-            for (uint32_t i = 0; i < maxInfluences; ++i) {
+            uint32_t used = std::min<uint32_t>(maxInfluences, 8);
+
+            for (uint32_t i = 0; i < used; ++i) {
                 const float w = weights.weights[i].weight * invSum;
+
                 if (i < 4) {
                     idx1[i] = weights.weights[i].boneId;
                     w1[i]   = w;
@@ -416,16 +405,16 @@ namespace SR_UTILS_NS {
                 }
             }
 
+            // 7. запись
+            auto* pIdx1 = static_cast<SR_MATH_NS::UVector4*>(buffer.GetVertex(v, VertexAttribute::BlendIndices));
+            auto* pW1   = static_cast<SR_MATH_NS::FVector4*>(buffer.GetVertex(v, VertexAttribute::BlendWeights));
+            auto* pIdx2 = static_cast<SR_MATH_NS::UVector4*>(buffer.GetVertex(v, VertexAttribute::BlendIndices2));
+            auto* pW2Ptr= static_cast<SR_MATH_NS::FVector4*>(buffer.GetVertex(v, VertexAttribute::BlendWeights2));
+
             *pIdx1 = idx1;
             *pW1   = w1;
-
-            if (maxInfluences > 4) {
-                auto* pIdx2 = reinterpret_cast<SR_MATH_NS::UVector4*>(buffer.GetVertex(v, VertexAttribute::BlendIndices2));
-                auto* pW2Ptr= reinterpret_cast<SR_MATH_NS::FVector4*>(buffer.GetVertex(v, VertexAttribute::BlendWeights2));
-
-                *pIdx2 = idx2;
-                *pW2Ptr= w2;
-            }
+            *pIdx2 = idx2;
+            *pW2Ptr= w2;
 
             // 8. проверка
             float finalSum = 0.0f;

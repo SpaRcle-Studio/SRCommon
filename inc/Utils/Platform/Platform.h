@@ -25,6 +25,12 @@ namespace SR_UTILS_NS::Platform {
         Web
     );
 
+    SR_ENUM_NS_CLASS_T(BuildType, uint8_t,
+        Unknown,
+        Debug,
+        Release
+    )
+
     static bool IsCompiledUnderMSVC() {
 #ifdef SR_MSVC
         return true;
@@ -75,6 +81,7 @@ namespace SR_UTILS_NS::Platform {
     SR_COMMON_DLL_API extern void InitSegmentationHandler();
     SR_COMMON_DLL_API extern void SetInstance(void* pInstance);
     SR_COMMON_DLL_API extern void* GetInstance();
+    SR_COMMON_DLL_API extern BuildType GetBuildType();
     SR_COMMON_DLL_API extern PlatformType GetType();
     SR_COMMON_DLL_API extern WindowProtocolType GetWindowProtocolType();
     SR_COMMON_DLL_API extern bool IsMobilePlatform();

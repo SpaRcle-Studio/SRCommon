@@ -9,7 +9,13 @@ namespace SR_MATH_NS {
 #ifdef SR_EMSCRIPTEN
         return false;
 #elif defined(__GNUC__) || defined(__clang__)
-        return __builtin_cpu_supports("sse4.1");
+        #ifdef SR_COMMON_USE_CLANG_EMULATION
+            int cpuInfo[4];
+            __cpuid(cpuInfo, 1);
+            return (cpuInfo[2] & (1 << 19)) != 0;
+        #else
+            return __builtin_cpu_supports("sse4.1");
+        #endif
 #else
         int cpuInfo[4];
         __cpuid(cpuInfo, 1);

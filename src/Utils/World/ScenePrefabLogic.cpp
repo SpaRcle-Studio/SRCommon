@@ -12,6 +12,10 @@
 #include <Codegen/ScenePrefabLogic.generated.hpp>
 
 namespace SR_WORLD_NS {
+    ScenePrefabLogic::~ScenePrefabLogic() {
+        m_pSOCustomData.reset();
+    }
+
     bool ScenePrefabLogic::SaveSOAsPrefab(ISerializer& serializer, const SR_HTYPES_NS::SharedPtr<SceneObject>& pSO) {
         if (!pSO) {
             SRHalt("ScenePrefabLogic::SaveSOAsPrefab() : pSO is nullptr!");
