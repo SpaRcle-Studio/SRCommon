@@ -107,6 +107,12 @@ namespace SR_UTILS_NS {
         uint8_t attributesCount = 0;
         uint64_t stride = 0;
 
+        VertexLayoutDescription() = default;
+        VertexLayoutDescription(const VertexLayoutDescription& other) = default;
+        VertexLayoutDescription& operator=(const VertexLayoutDescription& other) = default;
+        VertexLayoutDescription(VertexLayoutDescription&& other) noexcept = default;
+        VertexLayoutDescription& operator=(VertexLayoutDescription&& other) noexcept = default;
+
         SR_NODISCARD static uint32_t Align(uint32_t v, uint32_t a);
         SR_NODISCARD bool Compare(const VertexLayoutDescription& other) const;
 
