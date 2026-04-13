@@ -11,8 +11,8 @@ namespace SR_UTILS_NS::UI {
     struct SR_COMMON_DLL_API MaskInfo {
         SR_MATH_NS::IRect rect;
         SR_MATH_NS::IVector2 referenceSize;
-        bool hasMask = false;
-        bool scissor = false;
+        bool hasMask : 4 = false;
+        bool scissor : 4 = false;
 
         bool operator==(const MaskInfo& other) const {
             return rect == other.rect && hasMask == other.hasMask && scissor == other.scissor && referenceSize == other.referenceSize;

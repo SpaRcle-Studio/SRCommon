@@ -15,7 +15,7 @@ namespace SR_UTILS_NS {
     typedef uint64_t EntityId;
     typedef SR_HTYPES_NS::FlatHashMap<EntityId, EntityId> EntityReplaceMap;
 
-    SR_ENUM_NS_STRUCT_T(EditorFlags, uint64_t,
+    SR_ENUM_NS_STRUCT_T(EditorFlags, uint8_t,
         None       = 1 << 0,
         DontDelete = 1 << 1,
         ReadOnly   = 1 << 2,
@@ -62,6 +62,8 @@ namespace SR_UTILS_NS {
         EditorFlags m_editorFlags = EditorFlags::None;
 
     };
+
+    constexpr static size_t SIZE_OF_ENTITY_CLASS = sizeof(Entity);
 }
 
 #endif //SR_ENGINE_UTILS_ENTITY_H

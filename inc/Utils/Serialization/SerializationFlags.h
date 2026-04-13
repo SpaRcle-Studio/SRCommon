@@ -9,7 +9,7 @@
 
 namespace SR_UTILS_NS {
     /// Флаги для сериализатора объектов
-    SR_ENUM_NS_STRUCT_T(SerializationFlags, uint64_t,
+    SR_ENUM_NS_STRUCT_T(SerializationFlags, uint8_t,
         None     = 1 << 0,
         Compress = 1 << 1,
         NoUID    = 1 << 2,

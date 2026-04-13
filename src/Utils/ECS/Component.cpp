@@ -21,22 +21,7 @@ namespace SR_UTILS_NS {
 
     void Component::SetParent(IComponentable* pParent) {
         SR_TRACY_ZONE;
-
-        if ((m_parent = pParent)) {
-            if (auto&& pSceneObject = dynamic_cast<SceneObject*>(m_parent)) {
-                m_sceneObject = pSceneObject;
-                m_scene = m_sceneObject->GetScene();
-                return;
-            }
-            else if (auto&& pScene = dynamic_cast<SR_WORLD_NS::Scene*>(m_parent)) {
-                m_sceneObject.Reset();
-                m_scene = pScene;
-                return;
-            }
-        }
-
-        m_sceneObject.Reset();
-        m_scene = nullptr;
+        m_parent = pParent;
     }
 
     void Component::SetEnabled(bool value) {
@@ -54,45 +39,64 @@ namespace SR_UTILS_NS {
     void Component::CheckActivity() {
         /// если родителя нет, или он отличается от ожидаемого, то будем считать, что родитель активен.
         /// сцена выключенной (в понимании игровых объектов) быть не может.
-        const bool isActive = m_isEnabled && (!m_sceneObject || m_sceneObject->IsActive());
+        const bool isActive = m_isEnabled && (!m_parent || m_parent->IsActive());
         if (isActive == m_isActive) {
             return;
         }
 
         if ((m_isActive = isActive)) {
-            m_scene->GetSceneUpdater()->RegisterComponent(this);
+            GetScene()->GetSceneUpdater()->RegisterComponent(this);
             OnEnable();
         }
         else {
             if (m_indexInSceneUpdater != SR_ID_INVALID) {
-                m_scene->GetSceneUpdater()->UnRegisterComponent(this);
+                GetScene()->GetSceneUpdater()->UnRegisterComponent(this);
             }
             OnDisable();
         }
     }
 
-    Component::ScenePtr Component::GetScene() const {
+    SR_WORLD_NS::Scene* Component::GetScene() const {
         if (auto&& pScene = TryGetScene()) {
             return pScene;
         }
-
         SRHalt("The component have not a valid scene!");
-
         return nullptr;
     }
 
-    Component::ScenePtr Component::TryGetScene() const {
-        return m_scene;
+    SR_WORLD_NS::Scene* Component::TryGetScene() const {
+        if (!m_parent) {
+            return nullptr;
+        }
+        static const auto sceneName = SR_WORLD_NS::Scene::GetClassStaticName();
+        if (m_parent->GetMeta()->IsSameOrInherited(sceneName)) {
+            return static_cast<SR_WORLD_NS::Scene&>(*m_parent).GetScene();
+        }
+        return static_cast<SceneObject&>(*m_parent).GetScene();
     }
 
     Component::GameObjectPtr Component::GetGameObject() const {
-        SRAssert(m_parent);
-        return DynamicPointerCast<GameObject>(m_sceneObject);
+        if (!m_parent) {
+            SRHalt("The component have not a valid parent!");
+            return nullptr;
+        }
+        static const auto meta = SR_UTILS_NS::GameObject::GetMetaStatic();
+        if (m_parent->GetMeta() == meta) {
+            return static_cast<GameObject*>(m_parent);
+        }
+        return nullptr;
     }
 
-    const Component::SceneObjectPtr& Component::GetSceneObject() const {
-        SRAssert(m_parent);
-        return m_sceneObject;
+    Component::SceneObjectPtr Component::GetSceneObject() const {
+        if (!m_parent) {
+            SRHalt("The component have not a valid parent!");
+            return nullptr;
+        }
+        static const auto sceneName = SR_WORLD_NS::Scene::GetClassStaticName();
+        if (m_parent->GetMeta()->IsSameOrInherited(sceneName)) {
+            return nullptr;
+        }
+        return static_cast<SceneObject*>(m_parent);
     }
 
     IComponentable* Component::GetParent() const {
@@ -101,13 +105,7 @@ namespace SR_UTILS_NS {
     }
 
     SceneObject::Ptr Component::GetRoot() const {
-        SRAssert(m_parent);
-
-        if (!m_sceneObject) {
-            return SceneObject::Ptr();
-        }
-
-        SceneObject::Ptr pRoot = m_sceneObject;
+        SceneObject::Ptr pRoot = GetSceneObject();
 
         while (pRoot) {
             if (auto&& parent = pRoot->GetParent()) {
@@ -122,10 +120,8 @@ namespace SR_UTILS_NS {
     }
 
     Transform* Component::GetTransform() const noexcept {
-        SRAssert(m_parent);
-
-        if (m_sceneObject && m_sceneObject->GetSceneObjectType() == SceneObjectType::GameObject) {
-            return const_cast<Transform*>(StaticPointerCast<GameObject>(m_sceneObject)->GetTransform().Get());
+        if (auto&& pGameObject = GetGameObject()) {
+            return const_cast<Transform*>(pGameObject->GetTransform().Get());
         }
 
         return nullptr;
@@ -214,7 +210,7 @@ namespace SR_UTILS_NS {
 
     void Component::OnDetached() {
         if (m_indexInSceneUpdater != SR_ID_INVALID) {
-            m_scene->GetSceneUpdater()->UnRegisterComponent(this);
+            GetScene()->GetSceneUpdater()->UnRegisterComponent(this);
         }
         m_isAttached = false;
     }
@@ -247,7 +243,7 @@ namespace SR_UTILS_NS {
         return SR_MATH_NS::InfinityFV3;
     }
 
-    Component *Component::BaseComponent() noexcept {
+    Component* Component::BaseComponent() noexcept {
         return this;
     }
 

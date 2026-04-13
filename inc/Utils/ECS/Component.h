@@ -39,7 +39,6 @@ namespace SR_UTILS_NS {
     public:
         using Ptr = SR_HTYPES_NS::SharedPtr<Component>;
         using OriginType = Component;
-        using ScenePtr = SR_WORLD_NS::Scene*;
         using GameObjectPtr = SR_HTYPES_NS::SharedPtr<GameObject>;
         using SceneObjectPtr = SR_HTYPES_NS::SharedPtr<SceneObject>;
     public:
@@ -109,11 +108,11 @@ namespace SR_UTILS_NS {
         SR_NODISCARD Component* BaseComponent() noexcept;
         SR_NODISCARD IComponentable* GetParent() const;
         SR_NODISCARD IComponentable* TryGetParent() const;
-        SR_NODISCARD ScenePtr GetScene() const;
+        SR_NODISCARD SR_WORLD_NS::Scene* GetScene() const;
         SR_NODISCARD bool HasScene() const;
         SR_NODISCARD GameObjectPtr GetGameObject() const;
-        SR_NODISCARD const SceneObjectPtr& GetSceneObject() const;
-        SR_NODISCARD ScenePtr TryGetScene() const;
+        SR_NODISCARD SceneObjectPtr GetSceneObject() const;
+        SR_NODISCARD SR_WORLD_NS::Scene* TryGetScene() const;
         SR_NODISCARD SceneObjectPtr GetRoot() const;
         SR_NODISCARD Transform* GetTransform() const noexcept;
         SR_NODISCARD int32_t GetIndexInSceneUpdater() const noexcept;
@@ -137,19 +136,16 @@ namespace SR_UTILS_NS {
         void SetParent(IComponentable* pParent);
 
     protected:
-        bool m_isAttached = false;
-        bool m_isActive = false;
-        bool m_isAwake = false;
-        bool m_isStarted = false;
-
         /// @property @hidden @setter(SetEnabled)
         bool m_isEnabled = true;
 
-        int32_t m_indexInSceneUpdater = SR_ID_INVALID;
+        bool m_isAttached : 2 = false;
+        bool m_isActive   : 2 = false;
+        bool m_isAwake    : 2 = false;
+        bool m_isStarted  : 2 = false;
 
-        SceneObjectPtr m_sceneObject;
+        int32_t m_indexInSceneUpdater = SR_ID_INVALID;
         IComponentable* m_parent = nullptr;
-        SR_WORLD_NS::Scene* m_scene = nullptr;
 
     };
 

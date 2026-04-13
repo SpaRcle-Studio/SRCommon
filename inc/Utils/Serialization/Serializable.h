@@ -11,7 +11,7 @@ namespace SR_UTILS_NS {
     class ISerializer;
     class IDeserializer;
 
-    namespace SerializationFlagsEnumWrappper { enum SerializationFlags : uint64_t; }
+    namespace SerializationFlagsEnumWrappper { enum SerializationFlags : uint8_t; }
     using SerializationFlags = SerializationFlagsEnumWrappper::SerializationFlags;
 
     class Serializable : public SRClass {
@@ -43,6 +43,8 @@ namespace SR_UTILS_NS {
         SerializationFlags m_flags;
 
     };
+
+    constexpr static size_t SIZE_OF_SERIALIZABLE_CLASS = sizeof(Serializable);
 }
 
 #endif //SR_ENGINE_UTILS_SERIALIZABLE_H
