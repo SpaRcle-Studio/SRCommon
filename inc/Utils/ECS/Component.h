@@ -148,8 +148,6 @@ namespace SR_UTILS_NS {
         IComponentable* m_parent = nullptr;
 
     };
-
-    constexpr static size_t SIZE_OF_COMPONENT_CLASS = sizeof(Component);
 }
 
 #endif //SR_ENGINE_UTILS_COMPONENT_H
