@@ -7,7 +7,6 @@
 namespace SR_WORLD_NS {
     bool SceneAllocator::Init(const SceneAllocator::Allocator& allocator) {
         if (m_allocator) {
-            SR_WARN("SceneAllocator::Init() : allocator already initialized!");
             return false;
         }
 

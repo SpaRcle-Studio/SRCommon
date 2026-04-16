@@ -40,11 +40,8 @@ namespace SR_UTILS_NS {
         m_defaultReloader = new DefaultResourceReloader();
 
         m_engineFolder = engineResourceFolder;
-        m_folder = resourcesFolder;
 
-        m_fileSystemWatcher = FileSystemWatcher::MakeShared();
-        m_fileSystemWatcher->AddListener(m_folder);
-        m_fileSystemWatcher->StartAsyncWatch();
+        ChangeResourcesFolder(resourcesFolder);
 
         m_resources.max_load_factor(0.9f);
 
@@ -536,6 +533,13 @@ namespace SR_UTILS_NS {
         return GetResPathRef().Concat("Cache");
     }
 
+    Path ResourceManager::GetEngineCachePath() const {
+        if (auto&& cache = SR_PLATFORM_NS::GetApplicationCachePath()) {
+            return cache->Concat("Cache");
+        }
+        return GetEngineResPathRef().Concat("Cache");
+    }
+
     ResourceType* ResourceManager::GetOrCreateResourceType(SR_UTILS_NS::StringAtom typeName) {
         SR_LOCK_GUARD;
 
@@ -550,5 +554,18 @@ namespace SR_UTILS_NS {
         SR_INFO("ResourceManager::GetOrCreateResourceType() : registered new resource type \"{}\"", typeName);
 
         return pResourceType;
+    }
+
+    void ResourceManager::ChangeResourcesFolder(const Path& path) {
+        SR_LOCK_GUARD;
+        if (path == m_folder) {
+            return;
+        }
+        SR_LOG("ResourceManager::ChangeResourcesFolder() : changing resources folder to \"{}\"...", path);
+        m_folder = path;
+        m_fileSystemWatcher.AutoFree();
+        m_fileSystemWatcher = FileSystemWatcher::MakeShared();
+        m_fileSystemWatcher->AddListener(m_folder);
+        m_fileSystemWatcher->StartAsyncWatch();
     }
 }

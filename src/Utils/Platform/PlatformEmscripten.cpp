@@ -249,10 +249,6 @@ namespace SR_PLATFORM_NS {
         return 0.0;
     }
 
-    bool IsExists(const Path &path) {
-        return std::filesystem::exists(path.ToStringRef());
-    }
-
     void SetEnvironmentVar(const std::string_view& name, const std::string_view& value) {
 
     }

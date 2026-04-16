@@ -8,30 +8,6 @@
 #include <Utils/Types/SharedPtrDynamicData.h>
 
 namespace SR_HTYPES_NS {
-    class SR_COMMON_DLL_API SharedPtrBase {
-    public:
-        SharedPtrBase();
-        explicit SharedPtrBase(SharedPtrDynamicData* data);
-        virtual ~SharedPtrBase();
-
-    public:
-        const SharedPtrDynamicData* GetPtrData() const; /// NOLINT(modernize-use-nodiscard)
-        SharedPtrDynamicData* GetPtrData();
-        SR_NODISCARD virtual SRClass* GetSRClass() const = 0;
-        SR_NODISCARD virtual bool Valid() const = 0;
-        virtual void Reset() = 0;
-        virtual void IncrementPointer() = 0;
-        virtual void DecrementPointer() = 0;
-        virtual void SetPointerFromBase(SharedPtrBase* pBase) = 0;
-
-        SR_NODISCARD uint64_t GetStrongCount() const;
-
-    protected:
-        SharedPtrDynamicData* m_data = nullptr;
-        bool m_basicManually = false;
-
-    };
-
     template<typename T> class WeakPtr;
 
     template<class T> class SharedPtr : public SharedPtrBase {
@@ -311,19 +287,13 @@ namespace SR_HTYPES_NS {
     }
 
     template<class T> void SharedPtr<T>::SetPointerFromBase(SharedPtrBase *pBase) {
-        if constexpr (SR_UTILS_NS::IsCompleteTypeV<T>) {
-            if constexpr (std::is_base_of_v<SRClass, T>) {
-                Reset();
-                if (pBase) {
-                    m_data = pBase->GetPtrData();
-                    m_data->IncrementStrong();
-                    m_ptr = dynamic_cast<T*>(pBase);
-                    SR_SAFE_PTR_ASSERT(m_ptr, "Invalid cast!");
-                }
-                return;
-            }
+        Reset();
+        if (pBase) {
+            m_data = pBase->GetPtrData();
+            m_data->IncrementStrong();
+            m_ptr = static_cast<T*>(m_data->fromBaseGetter(pBase));
+            SR_SAFE_PTR_ASSERT(m_ptr, "Invalid cast!");
         }
-        SR_SAFE_PTR_ASSERT(false, "Incomplete or invalid type!");
     }
 
     template<class T> template<typename U, typename R, typename... Args> SharedPtr<R> SharedPtr<T>::MakeShared(Args&&... args) {

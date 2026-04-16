@@ -32,6 +32,7 @@ namespace SR_UTILS_NS {
 
         static std::shared_ptr<std::string> ReadFileAsBlob(const std::string& path);
         static bool ReadFile(const Path& path, std::string& buffer);
+        static bool IsFileExists(const Path& path);
 
         static std::vector<std::string_view> ReadAllTextAsStringViewVector(const Path& path, std::string& buffer);
 

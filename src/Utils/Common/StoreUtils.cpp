@@ -57,7 +57,6 @@ namespace SR_UTILS_NS::StoreUtils {
     void Storage::Load() {
         SR_TRACY_ZONE;
         SR_UTILS_NS::Path path = SR_UTILS_NS::ResourceManager::Instance().GetCachePath().Concat("User/UserData.xml");
-
         if (!path.Exists(SR_UTILS_NS::Path::Type::File)) {
             return;
         }

@@ -31,11 +31,11 @@ namespace SR_UTILS_NS {
     public:
         void Init(int argc, char** argv);
 
-        std::optional<std::string> GetOptionValue(CLIOptions option);
-        bool IsFlagPresent(CLIFlags flag) const;
+        void SetProjectPath(const std::optional<Path>& path) { m_projectPath = path; }
 
-        bool IsHeadlessMode() const;
-
+        SR_NODISCARD bool IsFlagPresent(CLIFlags flag) const;
+        SR_NODISCARD bool IsHeadlessMode() const;
+        SR_NODISCARD std::optional<std::string> GetOptionValue(CLIOptions option);
         SR_NODISCARD const std::map<CLIOptions, std::optional<std::string>>& GetOptions() const { return m_options; }
         SR_NODISCARD CLIFlags GetFlags() const { return m_flags; }
         SR_NODISCARD const std::optional<Path>& GetProjectPath() const { return m_projectPath; }

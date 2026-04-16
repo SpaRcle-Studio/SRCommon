@@ -549,7 +549,7 @@ namespace SR_PLATFORM_NS {
     std::list<Path> GetInDirectory(const Path& dir, Path::Type type) {
         std::list<Path> result;
 
-        if (!IsExists(dir)) {
+        if (dir.GetType() == Path::Type::Undefined) {
             return result;
         }
 
@@ -566,7 +566,7 @@ namespace SR_PLATFORM_NS {
     std::list<Path> GetAllInDirectory(const Path& dir) {
         std::list<Path> result;
 
-        if (!IsExists(dir)) {
+        if (dir.GetType() == Path::Type::Undefined) {
             return result;
         }
 
@@ -674,11 +674,6 @@ namespace SR_PLATFORM_NS {
         }
 
         return false;
-    }
-
-    bool IsExists(const Path& path) {
-        struct stat buffer{};
-        return (stat(path.c_str(), &buffer) == 0);
     }
 
     SR_MATH_NS::UVector2 GetScreenResolution() {

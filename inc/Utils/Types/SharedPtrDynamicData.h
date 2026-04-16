@@ -28,6 +28,30 @@ namespace SR_UTILS_NS {
 namespace SR_HTYPES_NS {
     class SharedPtrDynamicData;
 
+    class SR_COMMON_DLL_API SharedPtrBase {
+    public:
+        SharedPtrBase();
+        explicit SharedPtrBase(SharedPtrDynamicData* data);
+        virtual ~SharedPtrBase();
+
+    public:
+        const SharedPtrDynamicData* GetPtrData() const; /// NOLINT(modernize-use-nodiscard)
+        SharedPtrDynamicData* GetPtrData();
+        SR_NODISCARD virtual SRClass* GetSRClass() const = 0;
+        SR_NODISCARD virtual bool Valid() const = 0;
+        virtual void Reset() = 0;
+        virtual void IncrementPointer() = 0;
+        virtual void DecrementPointer() = 0;
+        virtual void SetPointerFromBase(SharedPtrBase* pBase) = 0;
+
+        SR_NODISCARD uint64_t GetStrongCount() const;
+
+    protected:
+        SharedPtrDynamicData* m_data = nullptr;
+        bool m_basicManually = false;
+
+    };
+
     class SharedPtrDynamicDataCounter : public Singleton<SharedPtrDynamicDataCounter> {
         SR_REGISTER_SINGLETON(SharedPtrDynamicDataCounter);
     public:
@@ -67,10 +91,17 @@ namespace SR_HTYPES_NS {
         SR_UTILS_NS::SharedPtrPolicy policy = SR_UTILS_NS::SharedPtrPolicy::Automatic;
         void (*deleter)(void*) = nullptr;
         SRClass* (*classGetter)(void*) = nullptr;
+        void* (*fromBaseGetter)(SharedPtrBase*) = nullptr;
 
         template<typename T> void InitBasic() {
             deleter = [](void* p) {
                 delete static_cast<T*>(p);
+            };
+            fromBaseGetter = [](SharedPtrBase* p) -> void* {
+                if constexpr (std::is_base_of_v<SharedPtrBase, T>) {
+                    return static_cast<void*>(static_cast<T*>(p));
+                }
+                return nullptr;
             };
             if constexpr (std::is_base_of_v<SRClass, T>) {
                 classGetter = [](void* p) -> SRClass* {

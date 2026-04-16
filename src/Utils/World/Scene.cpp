@@ -17,6 +17,7 @@
 #include <Utils/ECS/GameObject.h>
 #include <Utils/Platform/Platform.h>
 #include <Utils/Serialization/SRASerialization.h>
+#include <Utils/FileSystem/FileSystem.h>
 
 #include <Enum/SceneLogicType.hpp>
 
@@ -95,7 +96,7 @@ namespace SR_WORLD_NS {
             SR_LOG("Scene::New() : creating new scene...");
         }
 
-        if (SR_PLATFORM_NS::IsExists(path)) {
+        if (SR_UTILS_NS::FileSystem::IsFileExists(path)) {
             SRHalt("Scene::New() : scene already exists!\n\tPath: " + path.ToString());
             return Scene::Ptr();
         }

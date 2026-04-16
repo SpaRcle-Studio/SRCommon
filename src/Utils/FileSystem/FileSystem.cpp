@@ -88,6 +88,11 @@ namespace SR_UTILS_NS {
         return SR_PLATFORM_NS::ReadFile(path, buffer);
     }
 
+    SR_COMMON_DLL_API bool FileSystem::IsFileExists(const Path& path) {
+        SR_TRACY_ZONE;
+        return path.IsFile();
+    }
+
     SR_COMMON_DLL_API std::string FileSystem::NormalizePath(const std::string &path) {
         SR_TRACY_ZONE;
 

@@ -165,16 +165,35 @@ namespace SR_UTILS_NS::Platform {
         return EXCEPTION_EXECUTE_HANDLER;
     }
 
+    void SetRegistryValue(HKEY root, const char* subKey, const char* value) {
+        HKEY hKey;
+        LSTATUS status = RegCreateKeyExA(root, subKey, 0, NULL, 0, KEY_WRITE, NULL, &hKey, NULL);
+        if (status != ERROR_SUCCESS) {
+            SR_PLATFORM_NS::WriteConsoleError("SetRegistryValue() : failed to create/open registry key {}! Error: {}"_format(subKey));
+            return;
+        }
+        status = RegSetValueExA(hKey, NULL, 0, REG_SZ, (const BYTE*)value, (DWORD)strlen(value) + 1);
+        if (status != ERROR_SUCCESS) {
+            SR_PLATFORM_NS::WriteConsoleError("SetRegistryValue() : failed to set registry value for key {}! Error: {}"_format(subKey));
+        }
+        RegCloseKey(hKey);
+    }
+
     void InitializePlatform() {
         SR_TRACY_ZONE;
         SR_PLATFORM_NS::WriteConsoleLog("Platform::InitializePlatform() : initializing Windows platform...\n");
+
         HKEY hKey;
         LPCTSTR lpSubKey = TEXT("Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\ComDlg32\\LastVisitedPidlMRU");
-        const LONG lResult = RegOpenKeyEx(HKEY_CURRENT_USER, lpSubKey, 0, KEY_READ, &hKey);
 
-        if (lResult != ERROR_SUCCESS) {
-            SR_PLATFORM_NS::WriteConsoleError("InitializePlatform() : failed to open registry key!");
-            return;
+        /// Очистка последних открытых папок в диалогах открытия/сохранения файлов
+        {
+            const LONG lResult = RegOpenKeyEx(HKEY_CURRENT_USER, lpSubKey, 0, KEY_READ, &hKey);
+
+            if (lResult != ERROR_SUCCESS) {
+                SR_PLATFORM_NS::WriteConsoleError("InitializePlatform() : failed to open registry key!");
+                return;
+            }
         }
 
         SetUnhandledExceptionFilter(SRCustomExceptionHandler);
@@ -230,6 +249,24 @@ namespace SR_UTILS_NS::Platform {
         }
 
         RegCloseKey(hKey);
+
+        /// Регистрация расширения .srproject для открытия проектов в редакторе
+        {
+            std::string executablePath = GetApplicationPath().ToString();
+            std::replace(executablePath.begin(), executablePath.end(), '/', '\\');
+            std::string appPath = "\"{}\" \"%1\""_format(executablePath);
+
+            // .srproject → SRProjectFile
+            SetRegistryValue(HKEY_CURRENT_USER, "Software\\Classes\\.srproject", "SRProjectFile");
+            // описание
+            SetRegistryValue(HKEY_CURRENT_USER, "SRProjectFile", "SpaRcle Project File");
+            // команда запуска
+            std::string cmdKey = "Software\\Classes\\SRProjectFile\\shell\\open\\command";
+            SetRegistryValue(HKEY_CURRENT_USER, cmdKey.c_str(), appPath.c_str());
+
+            /// Уведомляем систему об изменении ассоциаций файлов, чтобы изменения вступили в силу
+            SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_IDLIST, NULL, NULL);
+        }
     }
 
     void SetInstance(void*) {
@@ -559,6 +596,10 @@ namespace SR_UTILS_NS::Platform {
                 SR_WARN("Platform::Copy() : failed to read file!\n\tPath: {}", from.c_str());
                 return false;
             }
+            if (!to.CreateIfNotExists()) {
+                SR_WARN("Platform::Copy() : failed to create directory!\n\tPath: {}", to.c_str());
+                return false;
+            }
             std::ofstream file(to.CStr(), std::ios::binary);
             if (!file.is_open()) {
                 SR_WARN("Platform::Copy() : failed to open file for writing!\n\tPath: {}", to.c_str());
@@ -695,7 +736,7 @@ namespace SR_UTILS_NS::Platform {
         SR_TRACY_ZONE;
         std::list<Path> result;
 
-        if (!IsExists(dir)) {
+        if (dir.GetType() == Path::Type::Undefined) {
             return result;
         }
 
@@ -798,18 +839,6 @@ namespace SR_UTILS_NS::Platform {
 
     void OpenWithAssociatedApp(const Path &path){
         ShellExecuteA(NULL, "open", path.ToString().c_str(), NULL, NULL, SW_SHOWDEFAULT);
-    }
-
-    bool IsExists(const Path &path) {
-        const DWORD ftyp = GetFileAttributesA(path.CStr());
-
-        if (ftyp == INVALID_FILE_ATTRIBUTES) {
-            return false;  /// something is wrong with your path!
-        }
-
-        /// it is file or directory
-
-        return true;
     }
 
     std::vector<SR_MATH_NS::UVector2> GetScreenResolutions() {

@@ -451,14 +451,6 @@ namespace SR_UTILS_NS::Platform {
         return 0.0;
     }
 
-    bool IsExists(const Path &path) {
-        if (AAsset* asset = AAssetManager_open(pAndroidInstance->activity->assetManager, path.c_str(), AASSET_MODE_STREAMING)) {
-            AAsset_close(asset);
-            return true;
-        }
-        return false;
-    }
-
     void SetEnvironmentVar(const std::string_view& name, const std::string_view& value) {
         setenv(name.data(), value.data(), 1);
     }

@@ -31,6 +31,11 @@ namespace SR_UTILS_NS {
             SR_LOG("IResource::Reload() : reloading {} \"{}\" resource...", GetResourceType(), GetResourceId());
         }
 
+        if (GetResourcePath().IsAbs()) {
+            SR_ERROR("IResource::Reload() : resource path is absolute!\n\tPath: {}", GetResourcePath());
+            return false;
+        }
+
         Broadcast(RELOAD_BEGIN_EVENT);
 
         Unload();

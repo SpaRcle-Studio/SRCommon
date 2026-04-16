@@ -32,6 +32,7 @@ namespace SR_UTILS_NS {
         SR_NODISCARD Path GetEngineResPath() const { return m_engineFolder; }
         SR_NODISCARD const Path& GetEngineResPathRef() const { return m_engineFolder; }
         SR_NODISCARD Path GetCachePath() const;
+        SR_NODISCARD Path GetEngineCachePath() const;
         SR_NODISCARD FileSystemWatcher::Ptr GetFileSystemWatcher() const { return m_fileSystemWatcher; }
         SR_NODISCARD IResourceReloader* GetDefaultReloader() const { return m_defaultReloader.Get(); }
         SR_NODISCARD bool HasDirtyResources() const { return m_hasDirtyResources; }
@@ -49,6 +50,7 @@ namespace SR_UTILS_NS {
         void ReloadResource(const IResource::Ptr& pResource);
         void ReloadResource(StringAtom id, StringAtom typeName);
         void ReloadAll(StringAtom typeName);
+        void ChangeResourcesFolder(const Path& path);
 
         void Execute(const SR_HTYPES_NS::Function<void()>& fun);
         void InspectResources(const SR_HTYPES_NS::Function<void(ResourcesTypes&)>& callback);
