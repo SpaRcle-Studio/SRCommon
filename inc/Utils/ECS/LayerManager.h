@@ -5,30 +5,76 @@
 #ifndef SR_ENGINE_LAYER_MANAGER_H
 #define SR_ENGINE_LAYER_MANAGER_H
 
-#include <Utils/Settings.h>
+#include <Utils/Resources/Asset.h>
 
 namespace SR_UTILS_NS {
-    class LayerManager : public GlobalSettings<LayerManager> {
-        SR_REGISTER_SINGLETON(LayerManager);
-        friend class GlobalSettings<LayerManager>;
-        using Super = GlobalSettings<LayerManager>;
+    struct RenderLayerInfo : public Serializable {
+        SR_STRUCT()
 
+        /// @property
+        StringAtom name;
+
+        /// @property
+        bool isCustom = false;
+        /// @property
+        bool mainRenderer = false;
+        /// @property
+        bool editorOnly = false;
+        /// @property
+        bool castShadows = false;
+        /// @property
+        bool applyShadows = false;
+        /// @property
+        bool colorBuffer = false;
+        /// @property
+        bool frustumCulling = false;
+        /// @property
+        bool clearDepth = false;
+
+        SR_NODISCARD bool CompareParams(const RenderLayerInfo& other) const noexcept {
+            return isCustom == other.isCustom &&
+                mainRenderer == other.mainRenderer &&
+                editorOnly == other.editorOnly &&
+                castShadows == other.castShadows &&
+                applyShadows == other.applyShadows &&
+                colorBuffer == other.colorBuffer &&
+                frustumCulling == other.frustumCulling &&
+                clearDepth == other.clearDepth;
+        }
+    };
+
+    class LayerManagerSettings final : public SR_UTILS_NS::Asset {
+        SR_CLASS()
+        using Super = SR_UTILS_NS::Asset;
+    public:
+        using Ptr = SR_HTYPES_NS::SharedPtr<LayerManagerSettings>;
+
+        /// @property
+        std::vector<RenderLayerInfo> layers;
+        /// @property
+        StringAtom defaultLayer = "Default";
+    };
+
+    class LayerManager : public Singleton<LayerManager> {
+        SR_REGISTER_SINGLETON(LayerManager);
     public:
         SR_NODISCARD bool HasLayer(StringAtom layer) const;
         SR_NODISCARD uint16_t GetLayerIndex(StringAtom layer) const;
         SR_NODISCARD std::vector<StringAtom> GetLayers() const { return m_layers; }
-
-        SR_NODISCARD SR_UTILS_NS::Path GetSettingsPath() const override;
+        SR_NODISCARD std::vector<RenderLayerInfo> GetLayersInfo() const { return m_layersInfo; }
 
         SR_NODISCARD static StringAtom GetDefaultLayer();
-
         SR_NODISCARD uint64_t GetHashState() const { return m_hashState; }
 
-    protected:
-        void ClearSettings() override;
-        bool LoadSettings(const SR_XML_NS::Node& node) override;
+    private:
+        void InitSingleton() override;
+        void OnSingletonDestroy() override;
+        void ReloadSettings();
 
     private:
+        LayerManagerSettings::Ptr m_pSettings;
+        SR_UTILS_NS::Subscription m_onSettingsReloaded;
+        std::vector<RenderLayerInfo> m_layersInfo;
         std::vector<StringAtom> m_layers;
         std::atomic<StringAtom> m_defaultLayer;
         uint64_t m_hashState = 0;

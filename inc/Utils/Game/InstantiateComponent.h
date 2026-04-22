@@ -8,6 +8,7 @@
 #include <Utils/ECS/Component.h>
 #include <Utils/ECS/EntityRef.h>
 #include <Utils/ECS/SceneObject.h>
+#include <Utils/Types/Optional.h>
 
 namespace SR_UTILS_NS {
     SR_ENUM_NS_CLASS_T(InstantiateComponentInstanceMode, uint8_t,
@@ -40,9 +41,9 @@ namespace SR_UTILS_NS {
         /// @property
         uint32_t m_count = 1;
         /// @property
-        std::optional<bool> m_activityOnInstantiate;
+        SR_HTYPES_NS::Optional<bool> m_activityOnInstantiate;
         /// @property
-        std::optional<SR_UTILS_NS::StringAtom> m_instanceName;
+        SR_HTYPES_NS::Optional<SR_UTILS_NS::StringAtom> m_instanceName;
         /// @property
         SR_UTILS_NS::EntityRef<SR_UTILS_NS::SceneObject> m_target;
 

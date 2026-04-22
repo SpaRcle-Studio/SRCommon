@@ -10,6 +10,10 @@
 
 #include <entt/entt.hpp>
 
+namespace SR_HTYPES_NS {
+    class OptionalBase;
+}
+
 namespace SR_UTILS_NS::Reflection {
     class Value;
     class ValueSequenceContainer;
@@ -228,6 +232,7 @@ namespace SR_UTILS_NS::Reflection {
         SR_NODISCARD std::string_view GetEnumType() const;
         SR_NODISCARD SRClass* GetSRClass() const;
         SR_NODISCARD SR_HTYPES_NS::SharedPtrBase* GetSharedPtrBase() const;
+        SR_NODISCARD SR_HTYPES_NS::OptionalBase* GetOptionalBase() const;
 
         SR_NODISCARD operator bool() const noexcept; /// NOLINT
 

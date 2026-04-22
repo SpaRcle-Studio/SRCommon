@@ -5,10 +5,22 @@
 #ifndef SR_ENGINE_UTILS_TYPES_OPTIONAL_H
 #define SR_ENGINE_UTILS_TYPES_OPTIONAL_H
 
-#include <Utils/stdInclude.h>
+#include <Utils/Reflection/Value.h>
 
 namespace SR_HTYPES_NS {
-    template<typename T> class Optional {
+    class OptionalBase {
+    public:
+        OptionalBase() = default;
+        virtual ~OptionalBase() = default;
+
+        SR_NODISCARD virtual bool HasValue() const noexcept = 0;
+        SR_NODISCARD virtual Reflection::Value GetReflectionValue() const noexcept = 0;
+        virtual void Reset() noexcept = 0;
+        virtual void SetValue(const Reflection::Value& value) = 0;
+
+    };
+
+    template<typename T> class Optional : public OptionalBase {
     public:
         Optional() noexcept = default;
 
@@ -50,7 +62,25 @@ namespace SR_HTYPES_NS {
         }
 
     public:
-        SR_NODISCARD bool HasValue() const noexcept { return m_hasValue; }
+        SR_NODISCARD Reflection::Value GetReflectionValue() const noexcept override {
+            if (m_hasValue) {
+                return Reflection::Value::CreateRef(const_cast<T&>(m_value));
+            }
+            static const T defaultValue{};
+            return Reflection::Value::CreateCRef(defaultValue);
+        }
+
+        void SetValue(const Reflection::Value& value) override {
+            if (auto&& pValue = value.TryCast<T>()) {
+                m_value = *pValue;
+                m_hasValue = true;
+            }
+            else {
+                SRHalt("SR_HTYPES_NS::Optional::SetValue() : value is not of the correct type!");
+            }
+        }
+
+        SR_NODISCARD bool HasValue() const noexcept override { return m_hasValue; }
         SR_NODISCARD T& Value() { return m_value; }
         SR_NODISCARD const T& Value() const { return m_value; }
 
@@ -64,12 +94,14 @@ namespace SR_HTYPES_NS {
         SR_NODISCARD T* operator->() { return &m_value; }
         SR_NODISCARD const T* operator->() const { return &m_value; }
 
+        SR_NODISCARD operator bool() const noexcept { return m_hasValue; } /// NOLINT
+
         void reset() noexcept {
             m_hasValue = false;
             m_value = T();
         }
 
-        void Reset() noexcept {
+        void Reset() noexcept override {
             reset();
         }
 

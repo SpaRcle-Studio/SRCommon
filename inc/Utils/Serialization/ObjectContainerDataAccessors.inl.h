@@ -357,10 +357,10 @@ template<typename T, typename U> struct ObjectDataAccessor<std::pair<T, U>> {
 	}
 };
 
-template<typename T> struct ObjectDataAccessor<std::optional<T>> {
+template<typename T> struct ObjectDataAccessor<SR_HTYPES_NS::Optional<T>> {
     static constexpr SerializationId hasValueId = SerializationId::Create("has");
 
-    static void Save(ISerializer& serializer, const std::optional<T>& value, const SerializationId& id) {
+    static void Save(ISerializer& serializer, const SR_HTYPES_NS::Optional<T>& value, const SerializationId& id) {
         serializer.BeginObject(id);
         if (value.has_value()) {
             serializer.WriteBool(true, hasValueId);
@@ -372,7 +372,7 @@ template<typename T> struct ObjectDataAccessor<std::optional<T>> {
         serializer.EndObject();
     }
 
-    static void Load(IDeserializer& deserializer, std::optional<T>& value, const SerializationId& id) {
+    static void Load(IDeserializer& deserializer, SR_HTYPES_NS::Optional<T>& value, const SerializationId& id) {
         if (!deserializer.BeginObject(id)) {
             return;
         }

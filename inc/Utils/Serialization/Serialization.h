@@ -11,6 +11,7 @@
 #include <Utils/TypeTraits/Factory.h>
 #include <Utils/TypeTraits/SRClassMeta.h>
 #include <Utils/Types/SharedPtr.h>
+#include <Utils/Types/Optional.h>
 #include <Utils/Math/Rect.h>
 #include <Utils/Common/StringAtomLiterals.h>
 #include <Utils/Common/AssertFwd.h>

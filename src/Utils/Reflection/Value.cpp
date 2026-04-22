@@ -3,6 +3,7 @@
 //
 
 #include <Utils/Reflection/Value.h>
+#include <Utils/Types/Optional.h>
 #include <Utils/ECS/EntityRef.h>
 #include <Utils/Resources/ResourceRef.h>
 #include <Utils/Math/Rect.h>
@@ -417,7 +418,7 @@ namespace SR_UTILS_NS::Reflection {
             return false;
         }
 
-        static auto meta = entt::meta_any(std::optional<uint64_t>());
+        static auto meta = entt::meta_any(SR_HTYPES_NS::Optional<uint64_t>());
         static const std::string_view compare = meta.base().type().name().substr(0, meta.base().type().name().find('<'));
 
         return GetTypeName().starts_with(compare);
@@ -444,6 +445,13 @@ namespace SR_UTILS_NS::Reflection {
         static const std::string_view compare = meta.base().type().name().substr(0, meta.base().type().name().find('<') - 1);
 
         return GetTypeName().starts_with(compare);
+    }
+
+    SR_HTYPES_NS::OptionalBase* Value::GetOptionalBase() const {
+        if (IsOptional()) {
+            return const_cast<SR_HTYPES_NS::OptionalBase*>(static_cast<const SR_HTYPES_NS::OptionalBase*>(Data()));
+        }
+        return nullptr;
     }
 
     Value::~Value() = default;
