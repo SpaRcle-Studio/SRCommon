@@ -20,8 +20,13 @@ namespace SR_UTILS_NS::Reflection {
 
     class EditorPropertyParams {
     public:
+        using EnumFilterFn = bool(*)(SR_UTILS_NS::SRClass* pClass, SR_UTILS_NS::StringAtom enumValue);
+        using RangeType = std::optional<std::pair<float_t, float_t>>;
+
         EditorPropertyParams() = default;
 
+        EditorPropertyParams& SetEnumFilter(EnumFilterFn filter) noexcept { m_enumFilter = filter; return *this; }
+        EditorPropertyParams& SetRange(float_t min, float_t max) noexcept { m_range = std::make_pair(min, max); return *this; }
         EditorPropertyParams& SetNoHeader() noexcept { m_noHeader = true; return *this; }
         EditorPropertyParams& SetNotNull() noexcept { m_notNull = true; return *this; }
         EditorPropertyParams& SetDebugOnly() noexcept { m_debugOnly = true; return *this; }
@@ -41,6 +46,8 @@ namespace SR_UTILS_NS::Reflection {
             return *this;
         }
 
+        SR_NODISCARD EnumFilterFn GetEnumFilter() const noexcept { return m_enumFilter; }
+        SR_NODISCARD RangeType GetRange() const noexcept { return m_range; }
         SR_NODISCARD StringAtom GetDisplayName() const noexcept { return m_displayName; }
         SR_NODISCARD StringAtom GetTooltip() const noexcept { return m_tooltip; }
         SR_NODISCARD StringAtom GetGroup() const noexcept { return m_group; }
@@ -66,12 +73,14 @@ namespace SR_UTILS_NS::Reflection {
             std::string_view value;
         };
 
+        EnumFilterFn m_enumFilter = nullptr;
         SR_UTILS_NS::StringAtom m_displayName;
         SR_UTILS_NS::StringAtom m_tooltip;
         SR_UTILS_NS::StringAtom m_inspector;
         SR_UTILS_NS::StringAtom m_group;
         float_t m_editorWidth = 0.f;
         float_t m_dragSpeed = 1.f;
+        RangeType m_range;
         bool m_noHeader = false;
         bool m_notNull = false;
         bool m_debugOnly = false;

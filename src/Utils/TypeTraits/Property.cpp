@@ -6,7 +6,7 @@
 #include <Utils/Profile/TracyContext.h>
 
 namespace SR_UTILS_NS {
-    bool Property::IsActive() const noexcept {
+    /*bool Property::IsActive() const noexcept {
         if (!m_activeCondition) {
             return true;
         }
@@ -91,5 +91,5 @@ namespace SR_UTILS_NS {
 
     Property* ExternalProperty::GetExternalProperty() const noexcept {
         return m_getter ? m_getter() : nullptr;
-    }
+    }*/
 }

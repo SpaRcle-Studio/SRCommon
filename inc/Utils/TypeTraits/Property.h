@@ -21,7 +21,7 @@
     SR_NODISCARD uint16_t GetPropertyVersion() const noexcept override { return VESION; }                               \
 
 namespace SR_UTILS_NS {
-    class Property : public SR_UTILS_NS::NonCopyable {
+    /*class Property : public SR_UTILS_NS::NonCopyable {
     public:
         using Base = Property;
         using ActiveConditionFn = SR_HTYPES_NS::Function<bool()>;
@@ -56,8 +56,8 @@ namespace SR_UTILS_NS {
             return *this;
         }
 
-        virtual void SaveProperty(MarshalRef marshal) const noexcept { /** nothing */ }
-        virtual void LoadProperty(MarshalRef marshal) noexcept { /** nothing */ }
+        virtual void SaveProperty(MarshalRef marshal) const noexcept { }
+        virtual void LoadProperty(MarshalRef marshal) noexcept { }
 
         Property& SetPublicity(PropertyPublicity publicity) { m_publicity = publicity; return *this; }
         Property& SetActiveCondition(ActiveConditionFn value) { m_activeCondition = std::move(value); return *this; }
@@ -132,7 +132,7 @@ namespace SR_UTILS_NS {
         SR_UTILS_NS::StringAtom m_label;
         SR_MATH_NS::FColor m_color;
 
-    };
+    };*/
 }
 
 #endif //SR_ENGINE_TYPE_TRAITS_PROPERTY_H

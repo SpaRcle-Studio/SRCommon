@@ -10,7 +10,7 @@
 namespace SR_UTILS_NS {
     /// ---------------------------------------- StandardProperty ------------------------------------------------------
 
-    class StandardProperty : public Property {
+    /*class StandardProperty : public Property {
         SR_REGISTER_TYPE_TRAITS_PROPERTY(StandardProperty, 1000)
         using SetterFn = SR_HTYPES_NS::Function<void(void*)>;
         using GetterFn = SR_HTYPES_NS::Function<void(void*)>;
@@ -200,7 +200,7 @@ namespace SR_UTILS_NS {
         PropertyGetterFn m_propertyGetter;
         bool m_isProperty = false;
 
-    };
+    };*/
 }
 
 #endif //SR_ENGINE_TYPE_TRAITS_STANDARD_PROPERTY_H

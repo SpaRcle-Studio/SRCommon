@@ -5,7 +5,7 @@
 #include <Utils/TypeTraits/Properties.h>
 
 namespace SR_UTILS_NS {
-    PropertyContainer::PropertyContainer() {
+    /*PropertyContainer::PropertyContainer() {
         m_properties.reserve(16);
     }
 
@@ -116,5 +116,5 @@ namespace SR_UTILS_NS {
         propertyInfo.pProperty = pProperty;
         propertyInfo.isExternal = true;
         m_properties.emplace_back(propertyInfo);
-    }
+    }*/
 }

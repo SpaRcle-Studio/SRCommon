@@ -9,7 +9,7 @@
 #include <Utils/Profile/TracyContext.h>
 
 namespace SR_UTILS_NS {
-    class PropertyContainer : public Property {
+    /*class PropertyContainer : public Property {
         SR_REGISTER_TYPE_TRAITS_PROPERTY(PropertyContainer, 1000)
         struct PropertyInfo {
             bool isExternal = false;
@@ -227,7 +227,7 @@ namespace SR_UTILS_NS {
         OnPropertyAdded(pProperty);
 
         return *pProperty;
-    }
+    }*/
 }
 
 #endif //SR_ENGINE_TYPE_TRAITS_PROPERTIES_H

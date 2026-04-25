@@ -7,7 +7,7 @@
 namespace SR_UTILS_NS {
     /// ---------------------------------------- StandardProperty ------------------------------------------------------
 
-    void StandardProperty::SaveProperty(MarshalRef marshal) const noexcept {
+    /*void StandardProperty::SaveProperty(MarshalRef marshal) const noexcept {
         if (auto&& pBlock = AllocatePropertyBlock()) {
             pBlock->Write<StringAtom>(SR_UTILS_NS::EnumReflector::ToStringAtom(GetStandardType()));
 
@@ -137,5 +137,5 @@ namespace SR_UTILS_NS {
                 m_loadArray(*pBlock);
             }
         }
-    }
+    }*/
 }
