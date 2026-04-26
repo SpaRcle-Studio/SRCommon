@@ -27,6 +27,10 @@ namespace SR_WORLD_NS {
     class Scene;
 }
 
+namespace SR_UTILS_NS {
+    class MappedFile;
+}
+
 namespace SR_HTYPES_NS {
     struct RawMeshParams : public SR_UTILS_NS::IResourceVariant {
         bool animation = false;
@@ -120,7 +124,7 @@ namespace SR_HTYPES_NS {
         RawMeshParams m_params;
 
         bool m_fromCache = false;
-        std::pair<char*, uint64_t> m_cacheHeap;
+        SR_HTYPES_NS::RawPointerHolder<SR_UTILS_NS::MappedFile> m_pMappedFileCache;
 
     #ifdef SR_UTILS_ASSIMP
         SR_HTYPES_NS::FlatHashMap<Hash, aiAnimation*> m_animations;

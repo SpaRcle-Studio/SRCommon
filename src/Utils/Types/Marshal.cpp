@@ -101,7 +101,10 @@ namespace SR_HTYPES_NS {
         fseek(f, 0, SEEK_SET);
 
         char* buffer = Allocate(size);
-        fread(buffer, 1, size, f);
+        {
+            SR_TRACY_ZONE_N("Read");
+            fread(buffer, 1, size, f);
+        }
         fclose(f);
 
         return Marshal(buffer, size, false);
@@ -190,6 +193,10 @@ namespace SR_HTYPES_NS {
     void Marshal::ReadChars(char *pBuffer, uint64_t size) {
         read(pBuffer, size);
     }
+
+    Marshal::Marshal(const MappedFile &mappedFile)
+        : Stream(mappedFile)
+    { }
 
     Marshal::Marshal() = default;
     Marshal::~Marshal() = default;

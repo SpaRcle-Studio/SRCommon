@@ -3,6 +3,7 @@
 //
 
 #include <Utils/FileSystem/AssimpCache.h>
+#include <Utils/FileSystem/MappedFile.h>
 #include <Utils/Types/Marshal.h>
 #include <Utils/Profile/TracyContext.h>
 
@@ -100,16 +101,18 @@ namespace SR_UTILS_NS {
         return marshal.Save(path);
     }
 
-    aiScene* AssimpCache::Load(const Path& path, std::pair<char*, uint64_t>& heap) const {
+    aiScene* AssimpCache::Load(const Path& path, SR_HTYPES_NS::RawPointerHolder<SR_UTILS_NS::MappedFile>& cache) const {
         SR_TRACY_ZONE;
         SR_TRACY_ZONE_TEXT(path.ToStringRef());
 
-        SRAssert2(heap.first == nullptr, "Heap is not empty!");
+        SRAssert2(!cache, "Heap is not empty!");
 
-        auto&& marshal = SR_HTYPES_NS::Marshal::Load(path);
-        if (!marshal.Valid()) {
+        SR_UTILS_NS::MappedFile mappedFile = SR_UTILS_NS::MappedFile::Open(path, true);
+        if (!mappedFile) {
             return nullptr;
         }
+
+        auto&& marshal = SR_HTYPES_NS::Marshal(mappedFile);
 
         /// version
         if (marshal.Read<uint64_t>() != VERSION) {
@@ -128,7 +131,7 @@ namespace SR_UTILS_NS {
         LoadTextures(marshal, pScene);
         LoadAnimations(marshal, pScene);
 
-        heap = marshal.Detach();
+        cache = new SR_UTILS_NS::MappedFile(std::move(mappedFile));
 
         return pScene;
     }
@@ -502,14 +505,6 @@ namespace SR_UTILS_NS {
         }
 
         return std::move(meshMap);
-    }
-
-    void AssimpCache::FreeCache(std::pair<char*, uint64_t>& heap) const {
-        if (heap.first) {
-            SRFree(heap.first);
-            heap.first = nullptr;
-        }
-        heap.second = 0;
     }
 
     void AssimpCache::SaveMaterials(SR_HTYPES_NS::Marshal& marshal, const aiScene* pScene) const {

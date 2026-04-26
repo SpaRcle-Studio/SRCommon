@@ -6,6 +6,7 @@
     "exclude": [
         "src/Utils/Network/Asio/",
         "src/Utils/Profile/TracyContext.cpp",
+        "src/Utils/FileSystem/MappedFile.cpp",
         "src/Utils/Platform/Android",
         "src/Utils/Platform/Stacktrace",
         "src/Utils/Platform/MessageBox",

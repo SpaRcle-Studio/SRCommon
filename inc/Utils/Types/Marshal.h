@@ -22,6 +22,7 @@ namespace SR_HTYPES_NS {
 
     public:
         Marshal();
+        Marshal(const MappedFile& mappedFile);
         Marshal(std::ifstream& ifs); /** NOLINT */
         Marshal(const std::string& str); /** NOLINT */
         Marshal(const char* pData, uint64_t size, bool copy = true);

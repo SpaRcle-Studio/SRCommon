@@ -4,10 +4,18 @@
 
 #include <Utils/Types/Stream.h>
 #include <Utils/Common/StringUtils.h>
-#include <Utils/Debug.h>
 #include <Utils/Profile/TracyContext.h>
+#include <Utils/FileSystem/MappedFile.h>
 
 namespace SR_HTYPES_NS {
+    Stream::Stream(const MappedFile& mappedFile)
+        : m_capacity(mappedFile.GetSize())
+        , m_size(mappedFile.GetSize())
+        , m_pos(0)
+        , m_data(const_cast<char*>(mappedFile.GetData()))
+        , m_isOwner(false)
+    { }
+
     Stream::Stream(const char* pData, uint64_t size, bool copy)
         : m_capacity(size)
         , m_size(size)
@@ -50,6 +58,7 @@ namespace SR_HTYPES_NS {
     Stream::Stream(const Stream& other) noexcept
         : m_capacity(other.m_capacity)
         , m_size(other.m_size)
+        , m_isOwner(other.m_isOwner)
         , m_pos(0)
     {
         if (other.m_data) {
@@ -63,10 +72,11 @@ namespace SR_HTYPES_NS {
         , m_pos(SR_UTILS_NS::Exchange(other.m_pos, { }))
         , m_size(SR_UTILS_NS::Exchange(other.m_size, { }))
         , m_capacity(SR_UTILS_NS::Exchange(other.m_capacity, { }))
+        , m_isOwner(SR_UTILS_NS::Exchange(other.m_isOwner, { }))
     { }
 
     Stream::~Stream() {
-        if (!m_data) {
+        if (!m_data || !m_isOwner) {
             return;
         }
         Free(m_data);
@@ -75,6 +85,7 @@ namespace SR_HTYPES_NS {
     Stream& Stream::operator=(const Stream& other) noexcept {
         m_capacity = other.m_capacity;
         m_size = other.m_size;
+        m_isOwner = other.m_isOwner;
         m_pos = 0;
 
         if (other.m_data) {
@@ -94,6 +105,7 @@ namespace SR_HTYPES_NS {
         m_pos = SR_UTILS_NS::Exchange(other.m_pos, { });
         m_size = SR_UTILS_NS::Exchange(other.m_size, { });
         m_capacity = SR_UTILS_NS::Exchange(other.m_capacity, { });
+        m_isOwner = SR_UTILS_NS::Exchange(other.m_isOwner, { });
         return *this;
     }
 
@@ -127,6 +139,8 @@ namespace SR_HTYPES_NS {
     }
 
     Stream& Stream::Write(const void* pSrc, uint64_t count) noexcept {
+        SRAssert(m_isOwner);
+
         m_size += count;
 
         if (m_size >= m_capacity) {
@@ -141,6 +155,8 @@ namespace SR_HTYPES_NS {
     }
 
     void Stream::Reserve(uint64_t capacity) {
+        SRAssert(m_isOwner);
+
         if (m_capacity >= capacity) {
             return;
         }
@@ -257,6 +273,7 @@ namespace SR_HTYPES_NS {
         m_size = 0;
         m_capacity = 0;
         m_pos = 0;
+        m_isOwner = false;
         return { pData, size };
     }
 

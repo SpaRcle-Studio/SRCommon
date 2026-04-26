@@ -4,6 +4,7 @@
 
 #include <Utils/FileSystem/FileSystem.h>
 #include <Utils/FileSystem/VirtualFS.h>
+#include <Utils/FileSystem/MappedFile.h>
 #include <Utils/Platform/Platform.h>
 #include <Utils/Common/Hashes.h>
 #include <Utils/Common/StringUtils.h>
@@ -84,7 +85,6 @@ namespace SR_UTILS_NS {
 
     SR_COMMON_DLL_API bool FileSystem::ReadFile(const Path& path, std::string& buffer) {
         SR_TRACY_ZONE;
-
         return SR_PLATFORM_NS::ReadFile(path, buffer);
     }
 
@@ -128,19 +128,15 @@ namespace SR_UTILS_NS {
         SR_TRACY_ZONE;
         SR_TRACY_ZONE_TEXT(path);
 
-        static SR_THREAD_LOCAL std::string buffer;
-
-        {
-            SR_TRACY_ZONE_N("Read file");
-            if (!SR_UTILS_NS::FileSystem::ReadFile(path, buffer)) {
-                SR_WARN("FileSystem::GetFileHash() : failed to read file!\n\tPath: " + path);
-                return SR_UINT64_MAX;
-            }
+        MappedFile mappedFile = MappedFile::Open(path);
+        if (!mappedFile) {
+            SR_WARN("FileSystem::GetFileHash() : failed to read file!\n\tPath: " + path);
+            return SR_UINT64_MAX;
         }
 
         {
             SR_TRACY_ZONE_N("Hash file");
-            return SR_HASH_STR_VIEW(std::string_view(buffer));
+            return SR_HASH_STR_VIEW(mappedFile.GetDataView());
         }
     }
 

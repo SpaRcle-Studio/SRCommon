@@ -7,10 +7,15 @@
 
 #include <Utils/stdInclude.h>
 
+namespace SR_UTILS_NS {
+    class MappedFile;
+}
+
 namespace SR_HTYPES_NS {
     class SR_COMMON_DLL_API Stream {
     public:
         Stream();
+        Stream(const MappedFile& mappedFile);  /** NOLINT */
         Stream(std::ifstream& ifs);  /** NOLINT */
         Stream(const std::string& str);  /** NOLINT */
         Stream(const char* pData, uint64_t size, bool copy = true);
@@ -67,6 +72,7 @@ namespace SR_HTYPES_NS {
         uint64_t m_capacity = 0;
 
         char* m_data = nullptr;
+        bool m_isOwner = true;
 
     };
 }

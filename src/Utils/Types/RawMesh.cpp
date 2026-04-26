@@ -38,7 +38,7 @@ namespace SR_HTYPES_NS {
         delete m_importer;
 
         if (m_fromCache) {
-            SR_UTILS_NS::AssimpCache::Instance().FreeCache(m_cacheHeap);
+            m_pMappedFileCache.Reset();
             m_scene = nullptr;
         }
     #endif
@@ -53,7 +53,7 @@ namespace SR_HTYPES_NS {
         }
 
         if (m_fromCache) {
-            SR_UTILS_NS::AssimpCache::Instance().FreeCache(m_cacheHeap);
+            m_pMappedFileCache.Reset();
             m_scene = nullptr;
         }
 
@@ -103,7 +103,7 @@ namespace SR_HTYPES_NS {
     #ifdef SR_UTILS_ASSIMP
     retry:
         if (needFastLoad && resourceHash == SR_UTILS_NS::FileSystem::ReadHashFromFile(hashFile)) {
-            if ((m_scene = SR_UTILS_NS::AssimpCache::Instance().Load(binary, m_cacheHeap))) {
+            if ((m_scene = SR_UTILS_NS::AssimpCache::Instance().Load(binary, m_pMappedFileCache))) {
                 m_fromCache = true;
             }
             else {

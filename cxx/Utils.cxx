@@ -48,6 +48,8 @@
     #endif
 #endif
 
+#include "../src/Utils/FileSystem/MappedFile.cpp"
+
 #include "../src/Utils/Profile/TracyContext.cpp"
 
 #include "../libs/xxHash/xxhash.c"

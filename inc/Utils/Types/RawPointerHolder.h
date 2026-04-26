@@ -121,6 +121,15 @@ namespace SR_HTYPES_NS {
             return m_ptr != nullptr;
         }
 
+        void Reset() noexcept {
+            if (m_deleter && m_ptr) {
+                m_deleter(m_ptr);
+            }
+            m_ptr = nullptr;
+            m_deleter = nullptr;
+            m_copier = nullptr;
+        }
+
     private:
         T* m_ptr = nullptr;
         DeleterFn m_deleter = nullptr;
