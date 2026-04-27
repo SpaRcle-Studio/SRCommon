@@ -63,6 +63,9 @@ namespace SR_UTILS_NS {
             scale = SR_MATH_NS::FVector3::One();
         }
 
+        if (scale == m_scale) {
+            return;
+        }
         m_scale = scale;
 
         UpdateTree();
@@ -403,6 +406,20 @@ namespace SR_UTILS_NS {
             m_dirtyRotation = false;
         }
         return m_globalRotation;
+    }
+
+    SR_MATH_NS::FVector3 TransformRect::GetGlobalScale() const {
+        if (m_dirtyScale) SR_UNLIKELY_ATTRIBUTE {
+            if (auto&& pParent = GetParentTransform()) SR_LIKELY_ATTRIBUTE {
+                m_globalScale = pParent->GetGlobalScale() * m_scale;
+            }
+            else {
+                m_globalScale = m_scale;
+            }
+
+            m_dirtyScale = false;
+        }
+        return m_globalScale;
     }
 
     void TransformRect::SetMaskInfo(const UI::MaskInfo& maskInfo) {

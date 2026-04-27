@@ -56,15 +56,15 @@ namespace SR_MATH_NS {
         u = g[0] * rx0 + g[1] * ry0;
         g = NoiseTable::grads2[idxfunc(ix + 1, iy)];
         v = g[0] * rx1 + g[1] * ry0;
-        a = Lerp(sx, u, v);
+        a = LerpDeprecated(sx, u, v);
 
         g = NoiseTable::grads2[idxfunc(ix, iy + 1)];
         u = g[0] * rx0 + g[1] * ry1;
         g = NoiseTable::grads2[idxfunc(ix + 1, iy + 1)];
         v = g[0] * rx1 + g[1] * ry1;
-        b = Lerp(sx, u, v);
+        b = LerpDeprecated(sx, u, v);
 
-        return Lerp(sy, a, b);
+        return LerpDeprecated(sy, a, b);
     }
 
     template<class T_IndexFunc> double_t NoiseTemplate(T_IndexFunc idxfunc, double_t x, double_t y, double_t z) {
@@ -93,31 +93,31 @@ namespace SR_MATH_NS {
         u = g[0] * rx0 + g[1] * ry0 + g[2] * rz0;
         g = NoiseTable::grads3[idxfunc(ix + 1, iy, iz)];
         v = g[0] * rx1 + g[1] * ry0 + g[2] * rz0;
-        a = Lerp(sx, u, v);
+        a = LerpDeprecated(sx, u, v);
 
         g = NoiseTable::grads3[idxfunc(ix, iy + 1, iz)];
         u = g[0] * rx0 + g[1] * ry1 + g[2] * rz0;
         g = NoiseTable::grads3[idxfunc(ix + 1, iy + 1, iz)];
         v = g[0] * rx1 + g[1] * ry1 + g[2] * rz0;
-        b = Lerp(sx, u, v);
+        b = LerpDeprecated(sx, u, v);
 
-        c = Lerp(sy, a, b);
+        c = LerpDeprecated(sy, a, b);
 
         g = NoiseTable::grads3[idxfunc(ix, iy, iz + 1)];
         u = g[0] * rx0 + g[1] * ry0 + g[2] * rz1;
         g = NoiseTable::grads3[idxfunc(ix + 1, iy, iz + 1)];
         v = g[0] * rx1 + g[1] * ry0 + g[2] * rz1;
-        a = Lerp(sx, u, v);
+        a = LerpDeprecated(sx, u, v);
 
         g = NoiseTable::grads3[idxfunc(ix, iy + 1, iz + 1)];
         u = g[0] * rx0 + g[1] * ry1 + g[2] * rz1;
         g = NoiseTable::grads3[idxfunc(ix + 1, iy + 1, iz + 1)];
         v = g[0] * rx1 + g[1] * ry1 + g[2] * rz1;
-        b = Lerp(sx, u, v);
+        b = LerpDeprecated(sx, u, v);
 
-        d = Lerp(sy, a, b);
+        d = LerpDeprecated(sy, a, b);
 
-        return Lerp(sz, c, d);
+        return LerpDeprecated(sz, c, d);
     }
 
     template<class T_IndexFunc> double_t NoiseTemplate(T_IndexFunc idxfunc, double_t x, double_t y, double_t z, double_t t) {
@@ -151,64 +151,64 @@ namespace SR_MATH_NS {
         u = g[0] * rx0 + g[1] * ry0 + g[2] * rz0 + g[3] * rt0;
         g = NoiseTable::grads4[idxfunc(ix + 1, iy, iz, it)];
         v = g[0] * rx1 + g[1] * ry0 + g[2] * rz0 + g[3] * rt0;
-        a = Lerp(sx, u, v);
+        a = LerpDeprecated(sx, u, v);
 
         g = NoiseTable::grads4[idxfunc(ix, iy + 1, iz, it)];
         u = g[0] * rx0 + g[1] * ry1 + g[2] * rz0 + g[3] * rt0;
         g = NoiseTable::grads4[idxfunc(ix + 1, iy + 1, iz, it)];
         v = g[0] * rx1 + g[1] * ry1 + g[2] * rz0 + g[3] * rt0;
-        b = Lerp(sx, u, v);
+        b = LerpDeprecated(sx, u, v);
 
-        c = Lerp(sy, a, b);
+        c = LerpDeprecated(sy, a, b);
 
         g = NoiseTable::grads4[idxfunc(ix, iy, iz + 1, it)];
         u = g[0] * rx0 + g[1] * ry0 + g[2] * rz1 + g[3] * rt0;
         g = NoiseTable::grads4[idxfunc(ix + 1, iy, iz + 1, it)];
         v = g[0] * rx1 + g[1] * ry0 + g[2] * rz1 + g[3] * rt0;
-        a = Lerp(sx, u, v);
+        a = LerpDeprecated(sx, u, v);
 
         g = NoiseTable::grads4[idxfunc(ix, iy + 1, iz + 1, it)];
         u = g[0] * rx0 + g[1] * ry1 + g[2] * rz1 + g[3] * rt0;
         g = NoiseTable::grads4[idxfunc(ix + 1, iy + 1, iz + 1, it)];
         v = g[0] * rx1 + g[1] * ry1 + g[2] * rz1 + g[3] * rt0;
-        b = Lerp(sx, u, v);
+        b = LerpDeprecated(sx, u, v);
 
-        d = Lerp(sy, a, b);
+        d = LerpDeprecated(sy, a, b);
 
-        e = Lerp(sz, c, d);
+        e = LerpDeprecated(sz, c, d);
 
         /// at it + 1
         g = NoiseTable::grads4[idxfunc(ix, iy, iz, it + 1)];
         u = g[0] * rx0 + g[1] * ry0 + g[2] * rz0 + g[3] * rt1;
         g = NoiseTable::grads4[idxfunc(ix + 1, iy, iz, it + 1)];
         v = g[0] * rx1 + g[1] * ry0 + g[2] * rz0 + g[3] * rt1;
-        a = Lerp(sx, u, v);
+        a = LerpDeprecated(sx, u, v);
 
         g = NoiseTable::grads4[idxfunc(ix, iy + 1, iz, it + 1)];
         u = g[0] * rx0 + g[1] * ry1 + g[2] * rz0 + g[3] * rt1;
         g = NoiseTable::grads4[idxfunc(ix + 1, iy + 1, iz, it + 1)];
         v = g[0] * rx1 + g[1] * ry1 + g[2] * rz0 + g[3] * rt1;
-        b = Lerp(sx, u, v);
+        b = LerpDeprecated(sx, u, v);
 
-        c = Lerp(sy, a, b);
+        c = LerpDeprecated(sy, a, b);
 
         g = NoiseTable::grads4[idxfunc(ix, iy, iz + 1, it + 1)];
         u = g[0] * rx0 + g[1] * ry0 + g[2] * rz1 + g[3] * rt1;
         g = NoiseTable::grads4[idxfunc(ix + 1, iy, iz + 1, it + 1)];
         v = g[0] * rx1 + g[1] * ry0 + g[2] * rz1 + g[3] * rt1;
-        a = Lerp(sx, u, v);
+        a = LerpDeprecated(sx, u, v);
 
         g = NoiseTable::grads4[idxfunc(ix, iy + 1, iz + 1, it + 1)];
         u = g[0] * rx0 + g[1] * ry1 + g[2] * rz1 + g[3] * rt1;
         g = NoiseTable::grads4[idxfunc(ix + 1, iy + 1, iz + 1, it + 1)];
         v = g[0] * rx1 + g[1] * ry1 + g[2] * rz1 + g[3] * rt1;
-        b = Lerp(sx, u, v);
+        b = LerpDeprecated(sx, u, v);
 
-        d = Lerp(sy, a, b);
+        d = LerpDeprecated(sy, a, b);
 
-        f = Lerp(sz, c, d);
+        f = LerpDeprecated(sz, c, d);
 
-        return Lerp(st, e, f);
+        return LerpDeprecated(st, e, f);
     }
 }
 

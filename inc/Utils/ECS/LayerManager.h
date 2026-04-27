@@ -17,6 +17,8 @@ namespace SR_UTILS_NS {
         /// @property
         bool isCustom = false;
         /// @property
+        bool noPostProcess = false;
+        /// @property
         bool mainRenderer = false;
         /// @property
         bool editorOnly = false;
@@ -33,6 +35,7 @@ namespace SR_UTILS_NS {
 
         SR_NODISCARD bool CompareParams(const RenderLayerInfo& other) const noexcept {
             return isCustom == other.isCustom &&
+                noPostProcess == other.noPostProcess &&
                 mainRenderer == other.mainRenderer &&
                 editorOnly == other.editorOnly &&
                 castShadows == other.castShadows &&

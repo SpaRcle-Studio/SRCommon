@@ -233,8 +233,12 @@ namespace SR_MATH_NS {
         return value >= static_cast<Unit>(0) ? static_cast<Unit>(1) : static_cast<Unit>(-1);
     }
 
-    static SR_FORCE_INLINE double_t Lerp(double_t t, double_t a, double_t b) {
+    static SR_FORCE_INLINE double_t LerpDeprecated(double_t t, double_t a, double_t b) {
         return a + (b + -a) * t;
+    }
+
+    static SR_FORCE_INLINE double_t Lerp(double_t a, double_t b, double_t t) {
+        return a + (b - a) * t;
     }
 
     static SR_FORCE_INLINE double_t Mix(double_t a, double_t b, double_t t) {
@@ -245,8 +249,23 @@ namespace SR_MATH_NS {
         return static_cast<float_t>(Mix(static_cast<double_t>(a), static_cast<double_t>(b), static_cast<double_t>(t)));
     }
 
-    template<typename MaskLeft, typename MakeRight> static SR_FORCE_INLINE bool IsMaskIncludedSubMask(MaskLeft mask, MakeRight subMask) {
-        return (subMask & mask) == subMask;
+    template<typename T, bool = std::is_enum_v<T>>
+    struct UnderlyingOrSelfImpl {
+        using type = T;
+    };
+
+    template<typename T>
+    struct UnderlyingOrSelfImpl<T, true> {
+        using type = std::underlying_type_t<T>;
+    };
+
+    template<typename T>
+    using UnderlyingOrSelf = typename UnderlyingOrSelfImpl<T>::type;
+
+    template<typename MaskLeft, typename MaskRight> static SR_FORCE_INLINE bool IsMaskIncludedSubMask(MaskLeft mask, MaskRight subMask) {
+        using TypeLeft  = UnderlyingOrSelf<MaskLeft>;
+        using TypeRight = UnderlyingOrSelf<MaskRight>;
+        return (static_cast<TypeRight>(subMask) & static_cast<TypeLeft>(mask)) == static_cast<TypeRight>(subMask);
     }
 
     template<typename MaskLeft, typename MakeRight> static SR_FORCE_INLINE bool IsAnyMaskIncludedSubMask(MaskLeft mask, std::initializer_list<MakeRight> subMasks) {

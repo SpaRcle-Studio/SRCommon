@@ -104,6 +104,7 @@ namespace SR_UTILS_NS {
 
         SR_NODISCARD SR_MATH_NS::FVector3 GetGlobalTranslation() const;
         SR_NODISCARD virtual SR_MATH_NS::Quaternion GetGlobalRotation() const;
+        SR_NODISCARD virtual SR_MATH_NS::FVector3 GetGlobalScale() const;
 
         SR_NODISCARD Transform* GetParentTransform() const;
         SR_NODISCARD SR_HTYPES_NS::SharedPtr<GameObject> GetGameObject() const;
@@ -119,6 +120,7 @@ namespace SR_UTILS_NS {
         GameObject* m_gameObject = nullptr;
         mutable bool m_aabbDirty = true;
         mutable bool m_dirtyRotation = false;
+        mutable bool m_dirtyScale = false;
         mutable bool m_dirtyMatrix = false;
 
     };

@@ -72,6 +72,7 @@ namespace SR_UTILS_NS {
         void SetRelativePriority(bool relative);
 
         SR_NODISCARD SR_MATH_NS::Quaternion GetGlobalRotation() const override;
+        SR_NODISCARD SR_MATH_NS::FVector3 GetGlobalScale() const override;
         SR_NODISCARD SR_MATH_NS::Quaternion GetQuaternion() const override { return m_quaternion; }
         SR_NODISCARD SR_MATH_NS::FVector3 GetTranslation() const override { return m_translation; }
         SR_NODISCARD SR_MATH_NS::FVector3 GetRotation() const override { return m_rotation; }
@@ -116,6 +117,7 @@ namespace SR_UTILS_NS {
         mutable SR_MATH_NS::Matrix4x4 m_localMatrix = SR_MATH_NS::Matrix4x4::Identity();
         mutable SR_MATH_NS::Matrix4x4 m_matrix = SR_MATH_NS::Matrix4x4::Identity();
         mutable SR_MATH_NS::Quaternion m_globalRotation = SR_MATH_NS::Quaternion::Identity();
+        mutable SR_MATH_NS::FVector3 m_globalScale = SR_MATH_NS::FVector3::One();
 
         UI::MaskInfo m_localMaskInfo;
         mutable UI::MaskInfo m_globalMaskInfo;

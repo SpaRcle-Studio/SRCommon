@@ -123,6 +123,12 @@ namespace SR_UTILS_NS {
         return SR_MATH_NS::Quaternion::Identity();
     }
 
+    SR_MATH_NS::FVector3 Transform::GetGlobalScale() const {
+        SR_TRACY_ZONE;
+        SRHalt("Transform::GetGlobalScale() is not implemented!");
+        return SR_MATH_NS::FVector3::One();
+    }
+
     SR_MATH_NS::FVector3 Transform::GetTranslation() const {
         return SR_MATH_NS::FVector3();
     }
@@ -181,11 +187,12 @@ namespace SR_UTILS_NS {
         /// а дерево грязное и никто не может запросить актуальную матрицу.
         /// Такие баги надо править со стороны КОМПОНЕНТОВ,
         /// чтобы они при своей инициализации могли запросить перестроение дерева!
-        if (m_dirtyMatrix && m_dirtyRotation) {
+        if (m_dirtyMatrix && m_dirtyRotation && m_dirtyScale) {
             return;
         }
         m_dirtyMatrix = true;
         m_dirtyRotation = true;
+        m_dirtyScale = true;
         m_aabbDirty = true;
 
         m_gameObject->OnMatrixDirty();
