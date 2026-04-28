@@ -119,13 +119,13 @@ namespace SR_UTILS_NS {
 
     SR_MATH_NS::Quaternion Transform::GetGlobalRotation() const {
         SR_TRACY_ZONE;
-        SRHalt("Transform::GetGlobalRotation() is not implemented!");
+        SRHaltOnce("Transform::GetGlobalRotation() is not implemented!");
         return SR_MATH_NS::Quaternion::Identity();
     }
 
     SR_MATH_NS::FVector3 Transform::GetGlobalScale() const {
         SR_TRACY_ZONE;
-        SRHalt("Transform::GetGlobalScale() is not implemented!");
+        SRHaltOnce("Transform::GetGlobalScale() is not implemented!");
         return SR_MATH_NS::FVector3::One();
     }
 
