@@ -104,6 +104,11 @@ namespace SR_UTILS_NS {
         return m_layoutRect;
     }
 
+    const SR_MATH_NS::FRect& TransformRect::GetScaledLayoutRect() const {
+        SR_MAYBE_UNUSED_VAR GetMatrix();
+        return m_scaledLayoutRect;
+    }
+
     const SR_MATH_NS::Matrix4x4& TransformRect::GetMatrix() const {
         SR_TRACY_ZONE;
 
@@ -222,6 +227,12 @@ namespace SR_UTILS_NS {
                    -pivotPos.y,
                    0.f
                 });
+
+            {
+                SR_MATH_NS::FVector2 globalScale = GetGlobalScale().XY();
+                m_scaledLayoutRect.SetMin(pivotPos + (m_layoutRect.Min() - pivotPos) * globalScale);
+                m_scaledLayoutRect.SetMax(pivotPos + (m_layoutRect.Max() - pivotPos) * globalScale);
+            }
 
             m_dirtyMatrix = false;
 

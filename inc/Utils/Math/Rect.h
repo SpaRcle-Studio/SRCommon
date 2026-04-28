@@ -42,6 +42,7 @@ namespace SR_MATH_NS {
         Rect(T _x, T _y, T _w, T _h);
         Rect(const Vector2<T>& position, const Vector2<T>& size);
         Rect(const Vector2<T>& position, T width, T height);
+        Rect(const Vector4<T>& vec4);
         Rect(T x, T y, const Vector2<T>& size);
         Rect();
 
@@ -224,6 +225,13 @@ namespace SR_MATH_NS {
         , y(position.y)
         , w(width)
         , h(height)
+    { }
+
+    template<typename T> Rect<T>::Rect(const Vector4<T>& vec4)
+        : x(vec4.x)
+        , y(vec4.y)
+        , w(vec4.z)
+        , h(vec4.w)
     { }
 
     template<typename T> Rect<T>::Rect(T x, T y, const Vector2<T>& size)

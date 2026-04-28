@@ -93,6 +93,7 @@ namespace SR_UTILS_NS {
         SR_NODISCARD const SR_MATH_NS::Matrix4x4& GetMatrix() const override;
 
         SR_NODISCARD const SR_MATH_NS::FRect& GetLayoutRect() const;
+        SR_NODISCARD const SR_MATH_NS::FRect& GetScaledLayoutRect() const;
 
         SR_NODISCARD int32_t GetPriority() const;
         SR_NODISCARD int32_t GetLocalPriority() const noexcept { return m_localPriority; }
@@ -118,6 +119,7 @@ namespace SR_UTILS_NS {
         mutable SR_MATH_NS::Matrix4x4 m_matrix = SR_MATH_NS::Matrix4x4::Identity();
         mutable SR_MATH_NS::Quaternion m_globalRotation = SR_MATH_NS::Quaternion::Identity();
         mutable SR_MATH_NS::FVector3 m_globalScale = SR_MATH_NS::FVector3::One();
+        mutable SR_MATH_NS::FRect m_scaledLayoutRect;
 
         UI::MaskInfo m_localMaskInfo;
         mutable UI::MaskInfo m_globalMaskInfo;
