@@ -10,14 +10,13 @@
 #include <Utils/Profile/TracyContext.h>
 
 namespace SR_HTYPES_NS {
-    template<typename T, bool FastMode = true> class FastMemoryArray {
+    template<typename T, bool FastMode = true, typename SizeType = size_t> class FastMemoryArray {
     public:
         using ValueType = T;
 
     public:
         using Iterator = T*;
         using ConstIterator = const T*;
-        using SizeType = size_t;
 
         FastMemoryArray() = default;
 

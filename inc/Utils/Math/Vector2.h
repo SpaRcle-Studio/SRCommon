@@ -149,6 +149,7 @@ namespace SR_MATH_NS {
         SR_NODISCARD Vector2<int32_t> CastToInt() const noexcept { return Cast<int32_t>(); }
         SR_NODISCARD Vector2<float_t> CastToFloat() const noexcept { return Cast<float_t>(); }
         SR_NODISCARD Vector2<uint32_t> CastToUInt() const noexcept { return Cast<uint32_t>(); }
+        SR_NODISCARD Vector2<uint16_t> CastToUSInt() const noexcept { return Cast<uint16_t>(); }
 
         SR_FORCE_INLINE Vector2 operator-() const { return Vector2(-x, -y); }
         SR_FORCE_INLINE Vector2 operator+() const { return *this; }

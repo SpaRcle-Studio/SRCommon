@@ -61,3 +61,6 @@
 [submodule "libs/meshoptimizer"]
 	path = libs/meshoptimizer
 	url = https://github.com/SpaRcle-Studio/meshoptimizer
+[submodule "libs/libpng"]
+	path = libs/libpng
+	url = https://github.com/SpaRcle-Studio/libpng

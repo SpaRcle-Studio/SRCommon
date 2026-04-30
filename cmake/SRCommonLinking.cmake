@@ -22,6 +22,10 @@ if (SR_COMMON_SDL)
     target_link_libraries(Utils SDL3::SDL3)
 endif()
 
+if (SR_COMMON_LIBPNG)
+    target_link_libraries(Utils png_static)
+endif()
+
 if (SR_COMMON_MESHOPTIMIZER)
     target_link_libraries(Utils meshoptimizer)
 endif()

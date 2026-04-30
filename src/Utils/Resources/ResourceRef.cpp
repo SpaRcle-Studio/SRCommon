@@ -84,6 +84,7 @@ namespace SR_UTILS_NS {
     }
 
     void ResourceRefBase::SetResource(StringAtom id) {
+        SR_TRACY_ZONE;
         if (m_id == id) {
             return;
         }
@@ -106,6 +107,7 @@ namespace SR_UTILS_NS {
     }
 
     void ResourceRefBase::OnPostLoad() {
+        SR_TRACY_ZONE;
         if (m_resource) {
             m_resource->RemoveUsePoint();
         }
@@ -114,6 +116,7 @@ namespace SR_UTILS_NS {
     }
 
     void ResourceRefBase::CloneTo(SRClass& clone) const {
+        SR_TRACY_ZONE;
         Super::CloneTo(clone);
         if (m_resource) {
             m_resource->AddUsePoint();

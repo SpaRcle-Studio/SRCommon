@@ -29,6 +29,7 @@ namespace SR_UTILS_NS {
 
     protected:
         virtual void OnAssetLoaded() { }
+        virtual void OnAssetUnloaded() { }
 
     private:
         SR_NODISCARD static Asset::Ptr LoadImpl(const Path& path);

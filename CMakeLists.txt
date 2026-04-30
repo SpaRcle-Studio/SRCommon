@@ -35,6 +35,7 @@ endif()
 option(SR_COMMON_ASSIMP "" ON)
 
 option(SR_COMMON_ZLIB "" ON)
+option(SR_COMMON_LIBPNG "" ON)
 option(SR_COMMON_OPENSSL "" OFF)
 option(SR_COMMON_SDL "" OFF)
 option(SR_COMMON_CURL "" OFF)
@@ -103,6 +104,23 @@ if (SR_COMMON_ASSIMP)
         target_compile_options(assimp PRIVATE -Wno-deprecated-copy)
         target_compile_options(assimp PRIVATE -Wno-unused-function)
     endif()
+endif()
+
+if (SR_COMMON_LIBPNG AND SR_COMMON_ZLIB)
+    message(STATUS "SRCommon will be using libpng")
+
+    add_compile_definitions(SR_COMMON_LIBPNG)
+    set(PNG_STATIC ON CACHE INTERNAL "" FORCE)
+    set(PNG_TESTS OFF CACHE INTERNAL "" FORCE)
+    set(PNG_TOOLS OFF CACHE INTERNAL "" FORCE)
+    set(PNG_SHARED OFF CACHE INTERNAL "" FORCE)
+    set(PNG_USE_BUNDLED_ZLIB OFF CACHE INTERNAL "" FORCE)
+    set(ZLIB_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/libs/zlib ${CMAKE_CURRENT_BINARY_DIR}/libs/zlib)
+
+    add_subdirectory(libs/libpng)
+
+    set(PNG_LIBRARY png_static CACHE INTERNAL "" FORCE)
+    set(PNG_PNG_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/libs/libpng CACHE INTERNAL "" FORCE)
 endif()
 
 if (NOT ANDROID_NDK AND NOT SR_EMSCRIPTEN)

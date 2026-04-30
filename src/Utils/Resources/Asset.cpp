@@ -89,6 +89,8 @@ namespace SR_UTILS_NS {
             property.Set(this, property.GetDefaultValue());
         });
 
+        OnAssetUnloaded();
+
         return Super::Unload();
     }
 

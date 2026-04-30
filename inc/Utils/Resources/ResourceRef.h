@@ -27,6 +27,7 @@ namespace SR_UTILS_NS {
 
         SR_NODISCARD static IResource::Ptr LoadResource(StringAtom type, StringAtom id);
 
+        SR_NODISCARD bool IsValid() const noexcept { return m_resource.Valid(); }
         SR_NODISCARD StringAtom GetId() const noexcept { return m_id; }
         SR_NODISCARD virtual StringAtom GetResourceType() const noexcept { return {}; }
         SR_NODISCARD StringAtom GetExtension() const noexcept;

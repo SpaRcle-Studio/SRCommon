@@ -344,6 +344,7 @@ namespace SR_MATH_NS {
     typedef Rect<Unit> FRect;
     typedef Rect<int32_t> IRect;
     typedef Rect<uint32_t> URect;
+    typedef Rect<uint16_t> USRect;
 }
 
 template<typename T> struct fmt::formatter<SR_MATH_NS::Rect<T>> {

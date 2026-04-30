@@ -629,9 +629,12 @@ namespace SR_UTILS_NS::Platform {
 
     std::list<Path> GetInDirectory(const Path &dir, Path::Type type) {
         std::list<Path> items;
-        const std::string search_path = dir.ToString() + "/*.*";
+        SR_THREAD_LOCAL static std::string searchPath;
+        searchPath.clear();
+        searchPath += dir.ToStringRef();
+        searchPath += "/*.*";
         WIN32_FIND_DATA fd;
-        HANDLE hFind = ::FindFirstFile(search_path.c_str(), &fd);
+        HANDLE hFind = ::FindFirstFile(searchPath.c_str(), &fd);
         if(hFind != INVALID_HANDLE_VALUE) {
             do {
                 if ((fd.dwFileAttributes & static_cast<uint64_t>(FILE_ATTRIBUTE_DIRECTORY)) && type == Path::Type::File) {
@@ -642,9 +645,10 @@ namespace SR_UTILS_NS::Platform {
                     continue;
                 }
 
-                const auto filename = std::string(fd.cFileName);
-                if (filename != "." && filename != ".." && !filename.empty())
-                    items.emplace_back(dir.ToString() + "/" + filename);
+                const auto filename = std::string_view(fd.cFileName);
+                if (filename != "." && filename != ".." && !filename.empty()) {
+                    items.emplace_back("{}/{}"_format(dir, filename));
+                }
             }
             while(::FindNextFile(hFind, &fd));
 
