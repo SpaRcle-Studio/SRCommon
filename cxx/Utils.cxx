@@ -16,14 +16,16 @@
     #include "../src/Utils/Network/Asio/AsioICMPSocket.cpp"
 #endif
 
-#ifdef SR_LINUX
-    #include "../src/Utils/Platform/PlatformLinux.cpp"
-    #include "../src/Utils/Platform/StacktraceLinux.cpp"
-
+#if defined(SR_LINUX) || defined(SR_ANDROID)
     #include <sys/mman.h>
     #include <sys/stat.h>
     #include <fcntl.h>
     #include <unistd.h>
+#endif
+
+#ifdef SR_LINUX
+    #include "../src/Utils/Platform/PlatformLinux.cpp"
+    #include "../src/Utils/Platform/StacktraceLinux.cpp"
 #endif
 
 #ifdef SR_EMSCRIPTEN

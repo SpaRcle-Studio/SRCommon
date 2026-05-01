@@ -95,14 +95,14 @@ namespace SR_UTILS_NS {
          int prot = PROT_READ | (write ? PROT_WRITE : 0);
          int mapFlags = MAP_PRIVATE; // COW, безопаснее чем MAP_SHARED
 
-         mappedFile.m_pData = mmap(
+         mappedFile.m_pData = static_cast<char*>(mmap(
              nullptr,
              mappedFile.m_size,
              prot,
              mapFlags,
              mappedFile.m_fd,
              0
-         );
+         ));
 
          if (mappedFile.m_pData == MAP_FAILED) {
              mappedFile.m_pData = nullptr;
