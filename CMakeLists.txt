@@ -35,7 +35,7 @@ endif()
 option(SR_COMMON_ASSIMP "" ON)
 
 option(SR_COMMON_ZLIB "" ON)
-option(SR_COMMON_LIBPNG "" ON)
+option(SR_COMMON_LIBPNG "" OFF)
 option(SR_COMMON_OPENSSL "" OFF)
 option(SR_COMMON_SDL "" OFF)
 option(SR_COMMON_CURL "" OFF)
