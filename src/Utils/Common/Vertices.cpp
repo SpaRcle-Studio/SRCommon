@@ -110,6 +110,8 @@ namespace SR_UTILS_NS {
     std::string_view VertexAttributeToName(VertexAttribute attribute) {
         switch (attribute) {
             case VertexAttribute::Position:       return "VERTEX"sv;
+            case VertexAttribute::Position0:      return "POSITION0"sv;
+            case VertexAttribute::Position1:      return "POSITION1"sv;
             case VertexAttribute::Normal:         return "NORMAL"sv;
             case VertexAttribute::Tangent:        return "TANGENT"sv;
             case VertexAttribute::UV0:            return "UV"sv;
@@ -209,7 +211,7 @@ namespace SR_UTILS_NS {
 
     bool VertexLayoutDescription::Compare(const VertexLayoutDescription& other) const {
         SR_TRACY_ZONE;
-        if (attributesCount != other.attributesCount) {
+        if (attributesCount != other.attributesCount || instanced != other.instanced || stride != other.stride) {
             return false;
         }
         for (uint8_t i = 0; i < attributesCount; ++i) {
@@ -226,14 +228,13 @@ namespace SR_UTILS_NS {
 
     uint64_t VertexLayoutDescription::GetHash() const {
         SR_TRACY_ZONE;
-        uint64_t hash = 0;
+        uint64_t hash = HashCombine(instanced);
         for (uint8_t i = 0; i < attributesCount; ++i) {
             const auto& attribute = attributes[i];
-            hash ^= std::hash<uint64_t>()(static_cast<uint64_t>(attribute.attribute)) +
-                    std::hash<uint64_t>()(static_cast<uint64_t>(attribute.format)) +
-                    std::hash<uint64_t>()(attribute.count) +
-                    std::hash<uint64_t>()(attribute.offset) +
-                    0x9e3779b9 + (hash << 6) + (hash >> 2);
+            hash = HashCombine(static_cast<uint64_t>(attribute.attribute), hash);
+            hash = HashCombine(static_cast<uint64_t>(attribute.format), hash);
+            hash = HashCombine(attribute.count, hash);
+            hash = HashCombine(attribute.offset, hash);
         }
         return hash;
     }

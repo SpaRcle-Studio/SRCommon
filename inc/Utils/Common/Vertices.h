@@ -45,6 +45,8 @@ namespace SR_UTILS_NS {
     SR_ENUM_NS_CLASS_T(VertexAttribute, uint8_t,
         None                   ,  // none
         Position               ,  // vec3
+        Position0              ,  // vec2 or vec3
+        Position1              ,  // vec2 or vec3
         Normal                 ,  // vec3
         Tangent                ,  // vec4 (w = sign)
         UV0                    ,  // vec2
@@ -106,6 +108,7 @@ namespace SR_UTILS_NS {
         VertexAttributeDescription attributes[SR_MAX_VERTEX_ATTRIBUTES] = {};
         uint8_t attributesCount = 0;
         uint64_t stride = 0;
+        bool instanced = false;
 
         VertexLayoutDescription() = default;
         VertexLayoutDescription(const VertexLayoutDescription& other) = default;
@@ -119,6 +122,7 @@ namespace SR_UTILS_NS {
         void Reset() {
             attributesCount = 0;
             stride = 0;
+            instanced = false;
             memset(attributes, 0, sizeof(attributes));
         }
 
@@ -127,6 +131,7 @@ namespace SR_UTILS_NS {
         SR_NODISCARD const VertexAttributeDescription* Find(VertexAttribute attribute) const;
 
         VertexLayoutDescription& AddAttribute(VertexAttribute attribute, VertexAttributeFormat format, uint8_t count);
+        VertexLayoutDescription& SetInstanced(bool isInstanced) { instanced = isInstanced; return *this; }
     };
 
     constexpr uint64_t VERTEX_LAYOUT_DESCRIPTION_SIZE = sizeof(VertexLayoutDescription);
@@ -146,6 +151,10 @@ namespace SR_UTILS_NS {
         void SetVertex(uint64_t index, VertexAttribute attribute, const void* pSrc);
         void CopyFrom(const VertexDataBuffer& other);
         void SetLayout(const VertexLayoutDescription& newLayout) { layout = newLayout; }
+
+        template<typename T> void SetVertexT(uint64_t index, VertexAttribute attribute, const T& value) {
+            SetVertex(index, attribute, &value);
+        }
 
         SR_NODISCARD const VertexLayoutDescription& GetLayout() const { return layout; }
         SR_NODISCARD void* GetVertex(uint64_t index, VertexAttribute attribute);
