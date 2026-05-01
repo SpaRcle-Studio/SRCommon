@@ -75,7 +75,7 @@ namespace SR_UTILS_NS {
         }
     }
 #elif defined(SR_LINUX) || defined(SR_ANDROID)
-     MappedFile MappedFileImpl::Open(const Path& path) {
+     MappedFile MappedFileImpl::Open(const Path& path, bool write) {
          MappedFile mappedFile;
 
          int flags = write ? O_RDWR : O_RDONLY;
@@ -123,7 +123,7 @@ namespace SR_UTILS_NS {
     }
 #else
     /// buffered fallback for unsupported platforms
-    MappedFile MappedFileImpl::Open(const Path& path) {
+    MappedFile MappedFileImpl::Open(const Path& path, bool write) {
         MappedFile mappedFile;
         mappedFile.m_pHandle = new std::string();
         if (!FileSystem::ReadFile(path, *static_cast<std::string*>(mappedFile.m_pHandle))) {
