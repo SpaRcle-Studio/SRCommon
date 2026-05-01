@@ -69,6 +69,9 @@ namespace SR_UTILS_NS {
         Task::State GetResult(TaskId taskId) const;
         bool IsActive(TaskId taskId) const;
 
+        void WaitForIdle();
+        void RemoveDiscardable();
+
     private:
         SR_NODISCARD uint64_t GetUniqueId() const;
         void OnSingletonDestroy() override;

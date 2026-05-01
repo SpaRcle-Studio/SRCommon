@@ -321,4 +321,50 @@ namespace SR_UTILS_NS {
             }
         }
     }
+
+    void TaskManager::WaitForIdle() {
+        SR_TRACY_ZONE;
+        for (;;) {
+            Update();
+
+            bool isIdle = true;
+
+            {
+                SR_LOCK_GUARD;
+                for (auto&& pTask : m_tasks) {
+                    if (!pTask->IsCompleted()) {
+                        isIdle = false;
+                        break;
+                    }
+                }
+            }
+
+            if (isIdle) {
+                return;
+            }
+
+            SR_PLATFORM_NS::Sleep(5);
+        }
+    }
+
+    void TaskManager::RemoveDiscardable() {
+        SR_TRACY_ZONE;
+        SR_LOCK_GUARD;
+
+        for (auto pIt = m_tasks.begin(); pIt != m_tasks.end();) {
+            auto&& pTask = *pIt;
+            if (pTask->GetPriority() == TaskPriority::Discardable) {
+                if (pTask->IsLaunched()) {
+                    pTask->Stop();
+                }
+
+                SR_LOG("TaskManager::RemoveDiscardable() : remove discardable task with id {}...", pTask->GetId());
+                m_ids.erase(pTask->GetId());
+                pIt = m_tasks.erase(pIt);
+            }
+            else {
+                ++pIt;
+            }
+        }
+    }
 }
