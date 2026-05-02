@@ -170,7 +170,7 @@ namespace SR_UTILS_NS {
         }
 
         if (m_countErrors == 0 && m_countWarnings == 0) {
-            std::string msg = "Debugger has been stopped.";
+            std::string msg = "Debugger has been stopped with no errors and warnings!";
             Print(msg, DebugLogType::Debug);
         }
         else {
