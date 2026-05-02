@@ -180,6 +180,7 @@ namespace SR_UTILS_NS {
         void EndArray() override;
 
         void ReadString(std::string& value, const SerializationId& name) override { return ReadStringImpl(value, name); }
+        void ReadString(String& value, const SerializationId& name) override { return ReadStringImpl(value, name); }
         void ReadString(SR_UTILS_NS::StringAtom& value, const SerializationId& name) override { return ReadStringImpl(value, name); }
         void ReadString(SR_UTILS_NS::Path& value, const SerializationId& name) override { return ReadStringImpl(value, name); }
 

@@ -18,7 +18,7 @@ namespace SR_UTILS_NS {
     public:
         explicit SubscriptionInternalInfo(SR_HTYPES_NS::Function<void(const SubscriptionMessage&)>&& callback, SubscriptionHolder* pHolder);
 
-        uint32_t index = SR_ID_INVALID;
+        uint32_t index = SR_UINT32_MAX;
         SR_HTYPES_NS::Function<void(const SubscriptionMessage&)> callback;
         SubscriptionHolder* pHolder = nullptr;
         StringAtom id;

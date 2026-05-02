@@ -121,7 +121,7 @@ namespace SR_HTYPES_NS {
             m_scene = m_importer->ReadFileFromMemory(buffer.data(), buffer.size(), m_params.animation ? SR_RAW_MESH_ASSIMP_ANIMATION_FLAGS : SR_RAW_MESH_ASSIMP_FLAGS);
 
             if (!m_scene) {
-                SR_ERROR("RawMesh::Load() : failed to load file!\n\tPath: " + path.ToStringRef() + "\n\tReason: " + std::string(m_importer->GetErrorString()));
+                SR_ERROR("RawMesh::Load() : failed to load file!\n\tPath: {}\n\tReason: {}", path, m_importer->GetErrorString());
                 return false;
             }
 

@@ -57,6 +57,7 @@ namespace SR_UTILS_NS {
         void ReadAny(std::any& value, const SerializationId& name);
 
         virtual void ReadString(std::string& value, const SerializationId& name) = 0;
+        virtual void ReadString(String& value, const SerializationId& name) = 0;
         virtual void ReadString(SR_UTILS_NS::StringAtom& value, const SerializationId& name) = 0;
         virtual void ReadString(SR_HTYPES_NS::UnicodeString& value, const SerializationId& name) = 0;
         virtual void ReadString(SR_UTILS_NS::Path& value, const SerializationId& name) = 0;

@@ -304,12 +304,11 @@ namespace SR_UTILS_NS {
         }
     }
 
-
     IResource::Ptr ResourceManager::LoadResource(const Path& rawPath, SR_UTILS_NS::StringAtom typeName, const IResourceVariant* pVariant) {
         SR_TRACY_ZONE;
         SR_SCOPED_LOCK;
         const SR_UTILS_NS::Path path = rawPath.RemoveSubPath(GetResPathRef());
-        return LoadResource(StringAtom(path.ToStringRef()), typeName, pVariant);
+        return LoadResource(StringAtom(path.View()), typeName, pVariant);
     }
 
     IResource::Ptr ResourceManager::LoadResource(SR_UTILS_NS::StringAtom id, SR_UTILS_NS::StringAtom typeName, const IResourceVariant* pVariant) {

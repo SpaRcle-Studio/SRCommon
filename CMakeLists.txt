@@ -427,3 +427,9 @@ set_target_properties(Utils PROPERTIES
     BUILD_RPATH "\$ORIGIN"
     INSTALL_RPATH "\$ORIGIN"
 )
+
+if (MSVC AND NOT SR_COMMON_USE_CLANG_EMULATION)
+    #target_compile_options(Utils PUBLIC /WX)
+    #target_compile_options(Utils PUBLIC /W4)
+    #target_compile_options(Utils PUBLIC /permissive- /sdl)
+endif()

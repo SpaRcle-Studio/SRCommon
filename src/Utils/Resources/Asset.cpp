@@ -17,7 +17,7 @@ namespace SR_UTILS_NS {
         auto&& resourceManager = ResourceManager::Instance();
         SR_UTILS_NS::Path&& path = rawPath.RemoveSubPath(resourceManager.GetResPath());
 
-        Asset::Ptr pAsset = DynamicPointerCast<Asset>(resourceManager.FindAnyType(path.ToStringRef(), nullptr));
+        Asset::Ptr pAsset = DynamicPointerCast<Asset>(resourceManager.FindAnyType(SR_UTILS_NS::StringAtom(path.View()), nullptr));
         if (pAsset) {
             return pAsset;
         }
@@ -39,7 +39,7 @@ namespace SR_UTILS_NS {
         }
 
         pAsset->m_loadState = IResource::LoadState::Loaded;
-        pAsset->SetId(path.ToStringRef(), true);
+        pAsset->SetId(SR_UTILS_NS::StringAtom(path.View()), true);
         pAsset->OnAssetLoaded();
 
         return pAsset;
@@ -118,7 +118,7 @@ namespace SR_UTILS_NS {
             return nullptr;
         }
 
-        pAsset->SetId(path.ToStringRef(), true);
+        pAsset->SetId(StringAtom(path.View()), true);
         return pAsset;
     }
 }

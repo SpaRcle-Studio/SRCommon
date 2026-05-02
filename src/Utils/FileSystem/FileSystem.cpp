@@ -113,9 +113,13 @@ namespace SR_UTILS_NS {
         return newPath;
     }
 
-    SR_COMMON_DLL_API bool FileSystem::WriteToFile(const std::string& path, const std::string_view& text) {
-        std::ofstream stream(path);
+    SR_COMMON_DLL_API bool FileSystem::WriteToFile(const Path& path, const std::string_view& text) {
+        SR_TRACY_ZONE;
+        std::ofstream stream(path.c_str());
         if (!stream.is_open()) {
+            char buffer[256];
+            strerror_s(buffer, sizeof(buffer), errno);
+            SR_ERROR("FileSystem::WriteToFile() : failed to open file for writing!\n\tPath: {}\n\tError: {}"_format(path, buffer));
             return false;
         }
         stream << text;
@@ -124,13 +128,13 @@ namespace SR_UTILS_NS {
         return true;
     }
 
-    SR_COMMON_DLL_API uint64_t FileSystem::GetFileHash(const std::string& path) {
+    SR_COMMON_DLL_API uint64_t FileSystem::GetFileHash(const Path& path) {
         SR_TRACY_ZONE;
-        SR_TRACY_ZONE_TEXT(path);
+        SR_TRACY_ZONE_TEXT_VIEW(path.View());
 
         MappedFile mappedFile = MappedFile::Open(path);
         if (!mappedFile) {
-            SR_WARN("FileSystem::GetFileHash() : failed to read file!\n\tPath: " + path);
+            SR_WARN("FileSystem::GetFileHash() : failed to read file!\n\tPath: {}"_format(path));
             return SR_UINT64_MAX;
         }
 
@@ -166,12 +170,12 @@ namespace SR_UTILS_NS {
         return hash;
     }
 
-    SR_COMMON_DLL_API std::shared_ptr<std::string> FileSystem::ReadFileAsBlob(const std::string& path) {
+    SR_COMMON_DLL_API std::shared_ptr<std::string> FileSystem::ReadFileAsBlob(const Path& path) {
         SR_TRACY_ZONE;
 
         std::shared_ptr<std::string> pBuffer = std::make_shared<std::string>();
         if (!SR_UTILS_NS::FileSystem::ReadFile(path, *pBuffer)) {
-            SR_ERROR("FileSystem::ReadFileAsBlob() : failed to read file!\n\tPath: " + path);
+            SR_ERROR("FileSystem::ReadFileAsBlob() : failed to read file!\n\tPath: {}", path);
             return nullptr;
         }
 
@@ -265,10 +269,10 @@ namespace SR_UTILS_NS {
             return 0;
         }
 
-        hash = GetFileHash(appPath.ToStringRef());
+        hash = GetFileHash(appPath);
         for (auto&& filePath : appPath.GetFolder().GetFiles()) {
             if (filePath.GetExtensionView() == "dll" || filePath.GetExtensionView() == "so" || filePath.GetExtensionView() == "dylib") {
-                auto&& fileHash = GetFileHash(filePath.ToStringRef());
+                auto&& fileHash = GetFileHash(filePath);
                 if (fileHash != SR_UINT64_MAX) {
                     hash = CombineTwoHashes(hash, fileHash);
                 }
@@ -278,7 +282,7 @@ namespace SR_UTILS_NS {
         return hash;
     }
 
-    void FileSystem::NormalizePathInPlace(std::string& path) {
+    void FileSystem::NormalizePathInPlace(String& path) {
         SR_TRACY_ZONE;
 
         if (path.empty()) {

@@ -234,7 +234,7 @@ namespace SR_UTILS_NS::Platform {
         }
 
         auto&& appName = SR_PLATFORM_NS::GetApplicationName();
-        auto&& appNameW = ConvertToUnicode(appName);
+        auto&& appNameW = ConvertToUnicode(appName.ToString());
 
         for (const auto& [name, data] : values) {
             if (data.find(appNameW) == 0) {
@@ -744,7 +744,7 @@ namespace SR_UTILS_NS::Platform {
             return result;
         }
 
-        for (const auto& entry : std::filesystem::directory_iterator(dir.ToStringRef())) {
+        for (const auto& entry : std::filesystem::directory_iterator(dir.View())) {
             if (entry.is_directory() || entry.is_regular_file()) {
                 result.emplace_back(entry.path());
             }

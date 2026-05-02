@@ -12,7 +12,7 @@
 #include <Utils/Math/Vector6.h>
 
 namespace SR_UTILS_NS {
-	struct SerializationId {
+	struct SR_COMMON_DLL_API SerializationId {
 		SR_CONSTEXPR SerializationId() noexcept = default;
 
 		SR_CONSTEXPR ~SerializationId() noexcept = default;

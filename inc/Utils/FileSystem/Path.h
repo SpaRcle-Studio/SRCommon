@@ -5,7 +5,7 @@
 #ifndef SR_ENGINE_PATH_H
 #define SR_ENGINE_PATH_H
 
-#include <Utils/stdInclude.h>
+#include <Utils/Types/String.h>
 
 namespace SR_UTILS_NS {
     class StringAtom;
@@ -24,7 +24,8 @@ namespace SR_UTILS_NS {
         Path(const Path& path);
         Path(const char* path);
         Path(SR_UTILS_NS::StringAtom stringAtom);
-        Path(std::string path);
+        Path(const std::string& path);
+        Path(const String& path);
         Path(std::string_view path);
         Path(const std::wstring& path);
 
@@ -32,7 +33,7 @@ namespace SR_UTILS_NS {
         ~Path();
 
         Path& operator=(Path&& path) noexcept;
-        operator const std::string&(); /** NOLINT */
+        operator const String&(); /** NOLINT */
         Path& operator=(const Path& path);
         bool operator==(const Path& path) const noexcept;
         char operator[](size_t index) const noexcept;
@@ -56,8 +57,7 @@ namespace SR_UTILS_NS {
 
         SR_NODISCARD std::string ToString() const;
         SR_NODISCARD std::string ConvertToFileName() const;
-        SR_NODISCARD const std::string& ToStringRef() const;
-        SR_NODISCARD std::string* ToStringPtr() { return &m_path; }
+        SR_NODISCARD const String& ToStringRef() const;
         SR_NODISCARD std::string_view ToStringView() const;
         SR_NODISCARD std::wstring ToWinApiPath() const;
         SR_NODISCARD std::wstring ToUnicodeString() const;
@@ -76,6 +76,7 @@ namespace SR_UTILS_NS {
         SR_NODISCARD Path Concat(const std::string_view path) const;
         SR_NODISCARD Path Concat(const char* path) const;
         SR_NODISCARD Path Concat(const Path& path) const;
+        SR_NODISCARD Path Concat(const String& path) const;
 
         SR_NODISCARD Path ConcatExt(const std::string& ext) const;
         SR_NODISCARD Path ConcatExt(const std::string_view& ext) const;
@@ -113,10 +114,10 @@ namespace SR_UTILS_NS {
         SR_NODISCARD std::string GetWithoutExtension() const;
 
     private:
-        const std::string& GetNormalized() const;
+        const String& GetNormalized() const;
 
     private:
-        mutable std::string m_path;
+        mutable String m_path;
         mutable uint64_t m_hash = SR_UINT64_MAX;
         mutable bool m_isNormalized = false;
 

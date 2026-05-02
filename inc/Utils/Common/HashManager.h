@@ -13,7 +13,7 @@ namespace SR_UTILS_NS {
     struct StringHashInfo {
         std::string data;
         std::string_view view;
-        uint64_t hash = SR_ID_INVALID;
+        uint64_t hash = SR_UINT64_MAX;
         uint64_t size = 0; /// TODO: remove
     };
 

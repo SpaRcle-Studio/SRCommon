@@ -96,7 +96,7 @@ namespace SR_UTILS_NS {
         }
     }
 
-    void Debug::Initialize(const std::string& log_path, bool ShowUsedMemory, Theme colorTheme) {
+    void Debug::Initialize(const Path& logPath, bool ShowUsedMemory, Theme colorTheme) {
         m_theme = colorTheme;
 
         InitColorTheme();
@@ -111,7 +111,7 @@ namespace SR_UTILS_NS {
         m_showUseMemory = ShowUsedMemory;
 
     #ifndef SR_EMSCRIPTEN
-        m_logPath = Path(log_path);
+        m_logPath = logPath;
 
         if (!m_logPath.GetFolder().CreateIfNotExists()) {
             SR_PLATFORM_NS::WriteConsoleError("Failed to create log folder!\n\tLog path: " + m_logPath.ToString());
@@ -121,7 +121,7 @@ namespace SR_UTILS_NS {
             Platform::Delete(m_logPath);
         }
 
-        m_file.open(m_logPath);
+        m_file.open(m_logPath.c_str());
         if (!m_file.is_open()) {
             SR_PLATFORM_NS::WriteConsoleError("Debug::Init() : failed to open log file!\n\tLog path: " + m_logPath.ToString());
         }
@@ -185,7 +185,8 @@ namespace SR_UTILS_NS {
         }
 
     #ifndef SR_ANDROID
-        std::ofstream success(Platform::GetApplicationPath().GetFolder().Concat("/successful"));
+        auto&& path = Platform::GetApplicationPath().GetFolder().Concat("/successful");
+        std::ofstream success(path.c_str());
         if (success.is_open()) {
             success.close();
         }

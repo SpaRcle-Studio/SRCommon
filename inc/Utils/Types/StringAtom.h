@@ -8,7 +8,7 @@
 #include <Utils/stdInclude.h>
 
 namespace SR_UTILS_NS {
-    class StringHashInfo;
+    struct StringHashInfo;
 
     class SR_COMMON_DLL_API StringAtom {
         static std::string DEFAULT;

@@ -163,7 +163,7 @@ namespace SR_UTILS_NS {
         SRAssert(m_countUses != SR_UINT16_MAX);
 
         if (m_isRegistered && m_countUses == 0 && m_isDestroyed) {
-            SRHalt("IResource::AddUsePoint() : potential multi threading error! Path: " + GetResourcePath().ToStringRef());
+            SRHalt("IResource::AddUsePoint() : potential multi threading error! Path: {}", GetResourcePath());
         }
 
         ++m_countUses;

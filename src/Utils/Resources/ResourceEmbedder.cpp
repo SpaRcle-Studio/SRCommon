@@ -74,9 +74,9 @@ namespace SR_UTILS_NS {
     }
 
     bool ResourceEmbedder::ExportToFile(const SR_UTILS_NS::Path& path) {
-        auto&& pIt = m_resources.find(path.ToStringRef());
+        auto&& pIt = m_resources.find(path.View());
         if (pIt == m_resources.end()) {
-            SR_ERROR("ResourceEmbedder::ExportToFile() : resource '{}' not found!", path.ToStringRef());
+            SR_ERROR("ResourceEmbedder::ExportToFile() : resource '{}' not found!", path);
             return false;
         }
         return ExportToFile(pIt->first, pIt->second, SR_UTILS_NS::Path());

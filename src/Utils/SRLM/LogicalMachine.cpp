@@ -87,7 +87,7 @@ namespace SR_SRLM_NS {
         auto&& path = SR_UTILS_NS::ResourceManager::Instance().GetResPath().Concat(GetResourcePath());
         auto&& xmlDocument = SR_XML_NS::Document::Load(path);
         if (!xmlDocument) {
-            SR_ERROR("LogicalMachine::Load() : failed to load xml!\n\tPath: " + path.ToStringRef());
+            SR_ERROR("LogicalMachine::Load() : failed to load xml!\n\tPath: {}", path);
             return false;
         }
 

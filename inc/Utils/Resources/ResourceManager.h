@@ -118,7 +118,7 @@ namespace SR_UTILS_NS {
 
     template<typename T> SR_HTYPES_NS::SharedPtr<T> ResourceManager::Find(const Path& path, const IResourceVariant* pVariant) {
         SR_TRACY_ZONE;
-        return SR_UTILS_NS::DynamicPointerCast<T>(Find(path.ToStringRef(), T::GetClassStaticName(), pVariant));
+        return SR_UTILS_NS::DynamicPointerCast<T>(Find(SR_UTILS_NS::StringAtom(path.View()), T::GetClassStaticName(), pVariant));
     }
 }
 

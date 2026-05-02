@@ -17,7 +17,7 @@ namespace SR_UTILS_NS {
 #ifdef SR_EFSW_USE
     class FileSystemUpdateListener : public efsw::FileWatchListener, SR_UTILS_NS::NonCopyable {
     public:
-        FileSystemUpdateListener(FileSystemWatcher* pWatcher, std::string path)
+        FileSystemUpdateListener(FileSystemWatcher* pWatcher, Path path)
             : m_pWatcher(pWatcher)
             , m_path(std::move(path))
         { }
@@ -54,7 +54,7 @@ namespace SR_UTILS_NS {
 
     private:
         FileSystemWatcher* m_pWatcher = nullptr;
-        std::string m_path;
+        Path m_path;
 
     };
 #endif
@@ -126,12 +126,12 @@ namespace SR_UTILS_NS {
         m_events.clear();
     }
 
-    void FileSystemWatcher::AddListener(const std::string& path) {
+    void FileSystemWatcher::AddListener(const Path& path) {
         SR_TRACY_ZONE;
 
     #ifdef SR_EFSW_USE
         auto&& pListener = new FileSystemUpdateListener(this, path);
-        const efsw::WatchID id = static_cast<efsw::FileWatcher*>(m_pImpl)->addWatch(path, pListener, true);
+        const efsw::WatchID id = static_cast<efsw::FileWatcher*>(m_pImpl)->addWatch(path.ToString(), pListener, true);
         if (m_listeners.find(id) != m_listeners.end()) {
             SRHalt("FileSystemWatcher::AddListener() : listener already exists!");
         }

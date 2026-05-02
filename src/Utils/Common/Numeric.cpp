@@ -14,7 +14,7 @@ namespace SR_UTILS_NS {
     { }
 
     void Random::Initialize() {
-        srand(time(NULL)); /// NOLINT
+        srand(static_cast<uint32_t>(time(nullptr)));
     }
 
     SR_NODISCARD float_t Random::Float(float_t minimum, float_t maximum) {

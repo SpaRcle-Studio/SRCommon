@@ -50,7 +50,7 @@ namespace SR_UTILS_NS {
         void MakeCrash();
         void TestPrint();
 
-        void Initialize(const std::string& log_path, bool ShowUsedMemory, Theme colorTheme = Theme::Light);
+        void Initialize(const Path& logPath, bool ShowUsedMemory, Theme colorTheme = Theme::Light);
         void DeInitialize();
 
         bool IsSingletonCanBeDestroyed() const override { return false; }

@@ -62,6 +62,7 @@ namespace SR_UTILS_NS {
     #define SR_TRACY_ZONE ZoneScoped /** NOLINT */
     #define SR_TRACY_ZONE_VALUE(value) ZoneValue(value)
     #define SR_TRACY_ZONE_TEXT(value) ZoneText(value.c_str(), value.size())
+    #define SR_TRACY_ZONE_TEXT_VIEW(value) ZoneText(value.data(), value.size())
     #define SR_TRACY_ZONE_TEXT_C(value) ZoneText(value, strlen(value))
     #define SR_TRACY_ZONE_N(name) ZoneScopedN(name)
     #define SR_TRACY_ZONE_S(name) ZoneTransientN(TracyConcat(__tracy_source_location, TracyLine), name, true)
@@ -86,6 +87,7 @@ namespace SR_UTILS_NS {
     #define SR_TRACY_ZONE SR_NOOP
     #define SR_TRACY_ZONE_VALUE(value) SR_NOOP
     #define SR_TRACY_ZONE_TEXT(value) SR_NOOP
+    #define SR_TRACY_ZONE_TEXT_VIEW(value) SR_NOOP
     #define SR_TRACY_ZONE_TEXT_C(value) SR_NOOP
     #define SR_TRACY_ZONE_N(name) SR_NOOP
     #define SR_TRACY_ZONE_S(name) SR_NOOP

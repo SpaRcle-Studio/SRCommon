@@ -22,15 +22,15 @@ namespace SR_UTILS_NS {
         static bool IsAllowedPathSymbol(char c);
         static bool IsPathSeparator(char c);
 
-        static bool WriteToFile(const std::string& path, const std::string_view& text);
+        static bool WriteToFile(const Path& path, const std::string_view& text);
         static std::string NormalizePath(const std::string& path);
-        static void NormalizePathInPlace(std::string& path);
+        static void NormalizePathInPlace(String& path);
         static std::vector<std::string> ReadAllLines(const SR_UTILS_NS::Path& path);
 
         static uint64_t ReadHashFromFile(const SR_UTILS_NS::Path& path);
         static bool WriteHashToFile(const SR_UTILS_NS::Path& path, uint64_t hash);
 
-        static std::shared_ptr<std::string> ReadFileAsBlob(const std::string& path);
+        static std::shared_ptr<std::string> ReadFileAsBlob(const Path& path);
         static bool ReadFile(const Path& path, std::string& buffer);
         static bool IsFileExists(const Path& path);
 
@@ -38,7 +38,7 @@ namespace SR_UTILS_NS {
 
         static void ForEachFileInFolder(const Path& path, bool recursive, const SR_HTYPES_NS::Function<void(const Path&)>& func);
 
-        static uint64_t GetFileHash(const std::string& path);
+        static uint64_t GetFileHash(const Path& path);
         static uint64_t GetFolderHash(const Path& path, uint64_t deep = SR_UINT64_MAX);
 
         static const char* FileMapView(std::string path);

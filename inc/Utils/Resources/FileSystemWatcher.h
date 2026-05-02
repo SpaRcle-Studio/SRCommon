@@ -40,7 +40,7 @@ namespace SR_UTILS_NS {
         void StartAsyncWatch();
         void WatchPull();
 
-        void AddListener(const std::string& path);
+        void AddListener(const Path& path);
 
         void OnEvent(Event&& event);
 

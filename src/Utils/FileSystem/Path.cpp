@@ -29,11 +29,15 @@ namespace SR_UTILS_NS {
     { }
 
     Path::Path(SR_UTILS_NS::StringAtom stringAtom)
-        : m_path(stringAtom)
+        : m_path(stringAtom.ToStringView())
     { }
 
-    Path::Path(std::string path)
-        : m_path(std::move(path))
+    Path::Path(const std::string& path)
+        : m_path(path)
+    { }
+
+    Path::Path(const String& path)
+        : m_path(path)
     { }
 
     Path::Path(const Path& path) = default;
@@ -55,7 +59,7 @@ namespace SR_UTILS_NS {
         return GetNormalized();
     }
 
-    const std::string& Path::ToStringRef() const {
+    const String& Path::ToStringRef() const {
         return GetNormalized();
     }
 
@@ -133,6 +137,10 @@ namespace SR_UTILS_NS {
 
     Path Path::Concat(const Path& path) const {
         return Concat(path.GetNormalized());
+    }
+
+    Path Path::Concat(const String& path) const {
+        return Concat(path.view());
     }
 
     bool Path::Exists() const {
@@ -376,7 +384,7 @@ namespace SR_UTILS_NS {
     std::string_view Path::GetWithoutExtensionView() const {
         auto&& normalized = GetNormalized();
         SR_UTILS_NS::SizeType pos = std::string::npos;
-        for (uint32_t i = normalized.size(); i > 0; --i) {
+        for (uint32_t i = normalized.size() - 1; i > 0; --i) {
             if (normalized[i] == '/') {
                 return normalized;
             }
@@ -425,10 +433,6 @@ namespace SR_UTILS_NS {
         return IsEmpty();
     }
 
-    Path::operator const std::string&() {
-        return GetNormalized();
-    }
-
     char Path::operator[](size_t index) const noexcept {
         if (index >= GetNormalized().size()) {
             SRHalt("Path::operator[] : index is out of range!");
@@ -438,18 +442,18 @@ namespace SR_UTILS_NS {
     }
 
     bool Path::operator==(const Path &path) const noexcept {
-        return GetNormalized() == path.ToStringRef();
+        return GetNormalized() == path.GetNormalized();
     }
 
     bool Path::operator<(const Path& path) const noexcept {
-        return GetNormalized() < path.ToStringRef();
+        return GetNormalized() < path.GetNormalized();
     }
 
     bool Path::operator>(const Path& path) const noexcept {
-        return GetNormalized() > path.ToStringRef();
+        return GetNormalized() > path.GetNormalized();
     }
 
-    const std::string& Path::GetNormalized() const {
+    const String& Path::GetNormalized() const {
         if (m_isNormalized) {
             return m_path;
         }
@@ -510,5 +514,9 @@ namespace SR_UTILS_NS {
         m_path.clear();
         m_hash = SR_UINT64_MAX;
         m_isNormalized = false;
+    }
+
+    Path::operator const String&() {
+        return GetNormalized();
     }
 }

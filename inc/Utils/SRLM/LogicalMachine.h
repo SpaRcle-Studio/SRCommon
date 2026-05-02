@@ -68,7 +68,7 @@ namespace SR_SRLM_NS {
 
     template<class T> LogicalMachine* LogicalMachine::Load(const Path& rawPath) {
         if (!rawPath.Exists()) {
-            SR_ERROR("LogicalMachine::Load() : file not exists! Path: " + rawPath.ToStringRef());
+            SR_ERROR("LogicalMachine::Load() : file not exists! Path: {}", rawPath);
             return nullptr;
         }
 
@@ -77,7 +77,7 @@ namespace SR_SRLM_NS {
 
         auto&& pResource = new T();
 
-        pResource->SetId(path.ToStringRef(), false);
+        pResource->SetId(SR_UTILS_NS::StringAtom(path.View()), false);
 
         if (!pResource->Reload()) {
             SR_ERROR("LogicalMachine::Load() : failed to load!");
