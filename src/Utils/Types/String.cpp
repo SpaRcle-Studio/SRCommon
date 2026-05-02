@@ -360,3 +360,13 @@ namespace SR_UTILS_NS {
     }
     bool StringView::operator>(const StringView& other) const noexcept { return other < *this; }
 }
+
+SR_UTILS_NS::String operator+(const char* lhs, const SR_UTILS_NS::String& rhs) {
+    return SR_UTILS_NS::String(lhs) + rhs;
+}
+SR_UTILS_NS::String operator+(const std::string& lhs, const SR_UTILS_NS::String& rhs) {
+    return SR_UTILS_NS::String(lhs) + rhs;
+}
+SR_UTILS_NS::String operator+(std::string_view lhs, const SR_UTILS_NS::String& rhs) {
+    return SR_UTILS_NS::String(lhs) + rhs;
+}

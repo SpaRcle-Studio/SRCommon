@@ -31,7 +31,7 @@ namespace SR_UTILS_NS::Platform {
         Release
     )
 
-    static bool IsCompiledUnderMSVC() {
+    SR_MAYBE_UNUSED static bool IsCompiledUnderMSVC() {
 #ifdef SR_MSVC
         return true;
 #else
@@ -155,7 +155,7 @@ namespace SR_UTILS_NS::Platform {
         decltype(&ReadFile) originalReadFile = nullptr;
         decltype(&GetPathType) originalGetPathType = nullptr;
 
-        SR_HTYPES_NS::Function<bool(const Path&, String& buffer)> readFileHook;
+        SR_HTYPES_NS::Function<bool(const Path&, String&)> readFileHook;
         SR_HTYPES_NS::Function<Path::Type(const StringView&)> getFileTypeHook;
 
         SR_HTYPES_NS::Function<StringView(StringView)> pathResolver;

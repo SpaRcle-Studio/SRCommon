@@ -27,7 +27,7 @@ namespace SR_UTILS_NS {
         bool Register(StringAtom name, bool value);
 
     private:
-        std::unordered_map<StringAtom, bool> m_values;
+        SR_HTYPES_NS::FlatHashMap<StringAtom, bool> m_values;
 
     };
 
@@ -52,7 +52,7 @@ namespace SR_UTILS_NS {
 
     private:
         bool m_isInitialized = false;
-        std::unordered_map<StringAtom, FeatureGroup> m_features;
+        SR_HTYPES_NS::FlatHashMap<StringAtom, FeatureGroup> m_features;
         Path m_path;
 
     };

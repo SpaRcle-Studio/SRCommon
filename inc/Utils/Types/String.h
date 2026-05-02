@@ -143,9 +143,9 @@ namespace std {
     };
 }
 
-SR_UTILS_NS::String operator+(const char* lhs, const SR_UTILS_NS::String& rhs) { return SR_UTILS_NS::String(lhs) + rhs; }
-SR_UTILS_NS::String operator+(const std::string& lhs, const SR_UTILS_NS::String& rhs) { return SR_UTILS_NS::String(lhs) + rhs; }
-SR_UTILS_NS::String operator+(std::string_view lhs, const SR_UTILS_NS::String& rhs) { return SR_UTILS_NS::String(lhs) + rhs; }
+SR_COMMON_DLL_API extern SR_UTILS_NS::String operator+(const char* lhs, const SR_UTILS_NS::String& rhs);
+SR_COMMON_DLL_API extern SR_UTILS_NS::String operator+(const std::string& lhs, const SR_UTILS_NS::String& rhs);
+SR_COMMON_DLL_API extern SR_UTILS_NS::String operator+(std::string_view lhs, const SR_UTILS_NS::String& rhs);
 
 template<> struct fmt::formatter<SR_UTILS_NS::String> {
     template<typename ParseContext>

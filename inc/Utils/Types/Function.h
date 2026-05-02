@@ -36,9 +36,9 @@
 #define SR_GENERATE_MEMBER_FUNCTION_VARIANTS(PATTERN) SR_GENERATE_MEMBER_FUNCTION_CONST_VARIANTS(PATTERN)
 
 namespace SR_UTILS_NS::Details {
-    class UnusedClass {};
+    class SR_COMMON_DLL_API UnusedClass {};
 
-    union FunctorStorageAligment {
+    union SR_COMMON_DLL_API FunctorStorageAligment {
         void (*unused_func_ptr)(void);
         void (UnusedClass::*unused_func_mem_ptr)(void);
         void* unused_ptr;
@@ -46,7 +46,7 @@ namespace SR_UTILS_NS::Details {
     };
 
     template <int SIZE_IN_BYTES>
-    struct FunctorStorage {
+    struct SR_COMMON_DLL_API FunctorStorage {
         static_assert(SIZE_IN_BYTES >= 0, "local buffer storage cannot have a negative size!");
         union {
             FunctorStorageAligment align;
@@ -54,14 +54,14 @@ namespace SR_UTILS_NS::Details {
         };
     };
 
-    template <> struct FunctorStorage<0> {
+    template <> struct SR_COMMON_DLL_API FunctorStorage<0> {
         union {
             FunctorStorageAligment align;
             char storage[sizeof(FunctorStorageAligment)];
         };
     };
 
-    template <typename Functor, int SIZE_IN_BYTES> struct IsFunctorInPlaceAllocatable {
+    template <typename Functor, int SIZE_IN_BYTES> struct SR_COMMON_DLL_API IsFunctorInPlaceAllocatable {
         static SR_CONSTEXPR bool value = sizeof(Functor) <= sizeof(FunctorStorage<SIZE_IN_BYTES>) && (alignof(FunctorStorage<SIZE_IN_BYTES>) % alignof(Functor)) == 0;
     };
 
@@ -76,7 +76,7 @@ namespace SR_UTILS_NS::Details {
     #endif
     };
 
-    template <int SIZE_IN_BYTES> class FunctionBaseDetail {
+    template <int SIZE_IN_BYTES> class SR_COMMON_DLL_API FunctionBaseDetail {
     public:
         using FunctorStorageType = FunctorStorage<SIZE_IN_BYTES>;
         FunctorStorageType mStorage;
@@ -237,7 +237,7 @@ namespace SR_UTILS_NS::Details {
     template <int SIZE_IN_BYTES, typename R, typename... Args>
     class FunctionDetail<SIZE_IN_BYTES, R(Args...)> : public FunctionBaseDetail<SIZE_IN_BYTES> {
     template <int OTHER_SIZE_IN_BYTES, typename T>
-    friend class FunctionDetail;
+    friend class SR_COMMON_DLL_API FunctionDetail;
     public:
         using ResultType = R;
 
@@ -514,7 +514,7 @@ namespace SR_UTILS_NS {
 	static_assert(SR_FUNCTION_DEFAULT_CAPTURE_SSO_SIZE >= sizeof(void*), "Functor storage must be able to hold at least a pointer!");
 
 	template <typename>
-	class Function;
+	class SR_COMMON_DLL_API Function;
 
 	template <typename R, typename... Args>
 	class Function<R(Args...)> : public Details::FunctionDetail<SR_FUNCTION_DEFAULT_CAPTURE_SSO_SIZE, R(Args...)>

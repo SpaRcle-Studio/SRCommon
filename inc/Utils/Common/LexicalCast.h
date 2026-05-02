@@ -217,7 +217,7 @@ namespace SR_UTILS_NS {
                 return static_cast<uint8_t>(str.front());
             }
             else if constexpr (std::is_same<T, int16_t>()) {
-                return std::stoi(str.data());
+                return static_cast<T>(std::stoi(str.data()));
             }
             else if constexpr (std::is_same<T, uint16_t>()) {
                 return static_cast<uint16_t>(std::stoi(str.data()));

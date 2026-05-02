@@ -156,13 +156,13 @@ namespace SR_UTILS_NS {
         }
 
         SR_MAYBE_UNUSED SR_INLINE_STATIC void SR_FASTCALL SaveShortString(SR_HTYPES_NS::Stream& stream, const std::string& str) {
-            const int16_t size = str.size();
+            const int16_t size = static_cast<int16_t>(str.size());
             stream.write((const char*)&size, sizeof(int16_t));
             stream.write((const char*)&str[0], size * sizeof(char));
         }
 
         SR_MAYBE_UNUSED SR_INLINE_STATIC void SR_FASTCALL SaveUnicodeString(SR_HTYPES_NS::Stream& stream, const SR_HTYPES_NS::UnicodeString& str) {
-            const int16_t size = str.size();
+            const int16_t size = static_cast<int16_t>(str.size());
             stream.write((const char*)&size, sizeof(int16_t));
             stream.write((const char*)&str[0], size * sizeof(SR_HTYPES_NS::UnicodeString::CharType));
         }

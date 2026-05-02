@@ -4,44 +4,8 @@
 
 #include <Utils/Common/StringUtils.h>
 #include <Utils/Profile/TracyContext.h>
-#include <Utils/Debug.h>
 
 namespace SR_UTILS_NS {
-    std::string StringUtils::GetExtensionFromFilePath(std::string path) {
-        if (path.empty()) {
-            return std::string();
-        }
-
-        size_t size = path.size() - 1;
-
-        if (size == 0) {
-            return std::string();
-        }
-
-        std::string result;
-        result.reserve(size / 2);
-
-        bool found = false;
-
-        for (long long l = size; l >= 0; l--) {
-            if (path[l] == '/' || path[l] == '\\')
-                break;
-            else if (path[l] == '.') {
-                found = true;
-                break;
-            }
-            else {
-                result += path[l];
-            }
-        }
-
-        if (!found) {
-            return std::string();
-        }
-
-        return Reverse(result);
-    }
-
     std::string StringUtils::Reverse(const std::string& str) {
         std::string result;
         result.resize(str.size());
@@ -68,10 +32,10 @@ namespace SR_UTILS_NS {
                     if (was_lower_or_digit && !in_separator) {
                         result += '-';
                     }
-                    result += std::tolower(static_cast<unsigned char>(ch));
+                    result += static_cast<char>(std::tolower(static_cast<unsigned char>(ch)));
                     in_separator = false;
                 } else {
-                    result += std::tolower(static_cast<unsigned char>(ch));
+                    result += static_cast<char>(std::tolower(static_cast<unsigned char>(ch)));
                     in_separator = false;
                 }
                 was_lower_or_digit = std::islower(ch) || std::isdigit(ch);
@@ -90,104 +54,6 @@ namespace SR_UTILS_NS {
         }
 
         return result;
-    }
-
-    glm::vec2 StringUtils::MakeVec2FromString(const char *source, char chr, unsigned short start) {
-        glm::vec2 position = glm::vec3();
-        unsigned char found_floats = 0;
-
-        unsigned short count = 0;
-        unsigned short found = start;
-
-        static short t = 0;
-        static short len = 0;
-
-        len = FastStrLen(source);
-
-        for (t = start; t < len; t++) {
-            count++;
-
-            if (t + 1 == len) {
-                if (found_floats == 2)
-                    return position;
-
-                char *temp = new char[count + 1];
-                strcpy(temp, "");
-
-                strncat(temp, source + found, count);
-                position[found_floats] = (float) atof(temp);
-                found_floats++;
-
-                delete[] temp;
-
-                return position;
-            } else if (source[t] == chr) {
-                if (found_floats == 2) //if (found_floats + 1 == 2) - bug
-                    return position;
-
-                char *temp = new char[count + 1];
-                strcpy(temp, "");
-
-                strncat(temp, source + found, count - 1);
-                position[found_floats] = (float) atof(temp);
-                found_floats++;
-
-                delete[] temp;
-
-                found = t + 1;
-                count = 0;
-            }
-        }
-        return position;
-    }
-
-    glm::vec3 StringUtils::MakeVec3FromString(const char *source, char chr, unsigned short start) {
-        glm::vec3 position = glm::vec3();
-        unsigned char found_floats = 0;
-
-        unsigned short count = 0;
-        unsigned short found = start;
-
-        static short t = 0;
-        static short len = 0;
-
-        len = FastStrLen(source);
-
-        for (t = start; t < len; t++) {
-            count++;
-
-            if (t + 1 == len) {
-                if (found_floats == 3)
-                    return position;
-
-                char *temp = new char[count + 1];
-                strcpy(temp, "");
-
-                strncat(temp, source + found, count);
-                position[found_floats] = (float) atof(temp);
-                found_floats++;
-
-                delete[] temp;
-
-                return position;
-            } else if (source[t] == chr) {
-                if (found_floats + 1 == 3)
-                    return position;
-
-                char *temp = new char[count + 1];
-                strcpy(temp, "");
-
-                strncat(temp, source + found, count - 1);
-                position[found_floats] = (float) atof(temp);
-                found_floats++;
-
-                delete[] temp;
-
-                found = t + 1;
-                count = 0;
-            }
-        }
-        return position;
     }
 
     std::string StringUtils::ReadFrom(const std::string &str, const char &c, uint32_t start) {
@@ -276,7 +142,7 @@ namespace SR_UTILS_NS {
     }
 
     std::string StringUtils::Base64Encode(const std::string &data) {
-        int in_len = data.size();
+        int in_len = static_cast<int>(data.size());
         char* bytes_to_encode = (char*)(data.data());
 
         std::string ret;
@@ -323,7 +189,7 @@ namespace SR_UTILS_NS {
     std::string StringUtils::Base64Decode(const std::string & base64) {
         SR_TRACY_ZONE;
 
-        int in_len = base64.size();
+        int in_len = static_cast<int>(base64.size());
         int i = 0;
         int j = 0;
         int in_ = 0;
@@ -334,7 +200,7 @@ namespace SR_UTILS_NS {
             char_array_4[i++] = base64[in_]; in_++;
             if (i ==4) {
                 for (i = 0; i <4; i++)
-                    char_array_4[i] = base64_chars.find(char_array_4[i]);
+                    char_array_4[static_cast<size_t>(i)] = static_cast<unsigned char>(std::string_view(base64_chars).find(char_array_4[static_cast<size_t>(i)]));
 
                 char_array_3[0] = (char_array_4[0] << 2) + ((char_array_4[1] & 0x30) >> 4);
                 char_array_3[1] = ((char_array_4[1] & 0xf) << 4) + ((char_array_4[2] & 0x3c) >> 2);
@@ -351,7 +217,7 @@ namespace SR_UTILS_NS {
                 char_array_4[j] = 0;
 
             for (j = 0; j <4; j++)
-                char_array_4[j] = base64_chars.find(char_array_4[j]);
+                char_array_4[j] = static_cast<unsigned char>(std::string_view(base64_chars).find(char_array_4[j]));
 
             char_array_3[0] = (char_array_4[0] << 2) + ((char_array_4[1] & 0x30) >> 4);
             char_array_3[1] = ((char_array_4[1] & 0xf) << 4) + ((char_array_4[2] & 0x3c) >> 2);

@@ -50,7 +50,7 @@ namespace SR_UTILS_NS {
         StringUtils(StringUtils&) = delete;
         ~StringUtils() = delete;
     public:
-        inline static const std::string base64_chars =
+        inline static const char* base64_chars =
                 "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
                 "abcdefghijklmnopqrstuvwxyz"
                 "0123456789+/";
@@ -137,6 +137,27 @@ namespace SR_UTILS_NS {
             return source;
         }
 
+        static char* Strncat(char* dest, const char* src, size_t count) {
+            char* d = dest;
+            while (*d) {
+                ++d;
+            }
+            while (count-- && *src) {
+                *d++ = *src++;
+            }
+            *d = '\0';
+            return dest;
+        }
+
+        static char* Strcpy(char* dest, const char* src) {
+            char* d = dest;
+            while (*src) {
+                *d++ = *src++;
+            }
+            *d = '\0';
+            return dest;
+        }
+
         static std::string Remove(std::string source, uint32_t count);
         static std::string Remove(std::string source, uint32_t start, uint32_t count);
 
@@ -177,7 +198,7 @@ namespace SR_UTILS_NS {
 
             size_t size = str.size();
 
-            for (int64_t i = (size - 1) + offset; i >= 0; --i) {
+            for (int64_t i = (static_cast<int64_t>(size) - 1) + offset; i >= 0; --i) {
                 if (str[i] != c)
                     result += str[i];
                 else
@@ -195,14 +216,12 @@ namespace SR_UTILS_NS {
 
         static int32_t FindClosest(const std::string& str, const std::string& characters) {
             int32_t pos = SR_INVALID_STR_POS;
-
             for (char c : characters) {
                 auto find = str.find(c);
-                if (find != std::string::npos)
-                    if (pos == -1 || find < pos)
-                        pos = find;
+                if (find != std::string::npos && (pos == -1 || find < pos)) {
+                    pos = static_cast<int32_t>(find);
+                }
             }
-
             return pos;
         }
 
@@ -233,13 +252,9 @@ namespace SR_UTILS_NS {
             return std::string();
         }
 
-        static std::string GetExtensionFromFilePath(std::string path);
         static std::string Reverse(const std::string& str);
 
         static std::string ToKebabCase(std::string_view str);
-
-        static glm::vec2 MakeVec2FromString(const char* source, char chr, unsigned short start);
-        static glm::vec3 MakeVec3FromString(const char* source, char chr, unsigned short start);
 
         inline static unsigned long FastStrLen(const char* str) noexcept {
             unsigned long len = 0;
@@ -266,18 +281,18 @@ namespace SR_UTILS_NS {
             static short t = 0;
             static short len = 0;
 
-            len = FastStrLen(source);
+            len = static_cast<short>(FastStrLen(source));
 
-            for (t = start; t < len; t++) {
+            for (t = static_cast<short>(start); t < len; t++) {
                 count++;
 
                 if (t + 1 == len) {
                     if (found_floats == count_strs)
                         return strs;
 
-                    char* temp = new char[count + 1]; strcpy(temp, "");
+                    char* temp = new char[count + 1]; Strcpy(temp, "");
 
-                    strncat(temp, source + found, count);
+                    Strncat(temp, source + found, count);
 
                     strs[found_floats] = temp;
 
@@ -287,9 +302,9 @@ namespace SR_UTILS_NS {
                     if (found_floats + 1 == count_strs)
                         return strs;
 
-                    char* temp = new char[count + 1]; strcpy(temp, "");
+                    char* temp = new char[count + 1]; Strcpy(temp, "");
 
-                    strncat(temp, source + found, count - 1);
+                    Strncat(temp, source + found, count - 1);
 
                     strs[found_floats] = temp;
                     found_floats++;
@@ -317,7 +332,7 @@ namespace SR_UTILS_NS {
 
             len = (short)FastStrLen(source);
 
-            for (t = start; t < len; t++) {
+            for (t = static_cast<short>(start); t < len; t++) {
                 count++;
 
                 if (t + 1 == len) {
@@ -325,12 +340,10 @@ namespace SR_UTILS_NS {
                     if (found_floats == count_floats)
                         return floats;
 
-                    char* temp = new char[count + 1]; strcpy(temp, "");
+                    char* temp = new char[count + 1]; Strcpy(temp, "");
 
-                    strncat(temp, source + found, count);
-
-                    floats[found_floats] = (float)atof(temp);
-
+                    Strncat(temp, source + found, count);
+                    floats[found_floats] = std::strtof(temp, nullptr);
                     delete[] temp;
 
                     return floats;
@@ -338,11 +351,11 @@ namespace SR_UTILS_NS {
                     if (found_floats + 1 == count_floats)
                         return floats;
 
-                    char* temp = new char[count + 1]; strcpy(temp, "");
+                    char* temp = new char[count + 1]; Strcpy(temp, "");
 
-                    strncat(temp, source + found, count - 1);
+                    Strncat(temp, source + found, count - 1);
 
-                    floats[found_floats] = (float)atof(temp);
+                    floats[found_floats] = std::strtof(temp, nullptr);
                     found_floats++;
 
                     delete[] temp;
@@ -439,15 +452,6 @@ namespace SR_UTILS_NS {
             }
             return str;
         }
-
-/*#ifdef WIN32
-        inline static const wchar_t* CharsToWchar(const char* str) noexcept {
-            const size_t cSize = strlen(str) + 1;
-            auto wc = new wchar_t[cSize];
-            mbstowcs(wc, str, cSize);
-            return wc;
-        }
-#endif*/
     };
 }
 
