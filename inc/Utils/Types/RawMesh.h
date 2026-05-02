@@ -32,7 +32,7 @@ namespace SR_UTILS_NS {
 }
 
 namespace SR_HTYPES_NS {
-    struct RawMeshParams : public SR_UTILS_NS::IResourceVariant {
+    struct SR_COMMON_DLL_API RawMeshParams : public SR_UTILS_NS::IResourceVariant {
         bool animation = false;
         bool convexHull = false;
 

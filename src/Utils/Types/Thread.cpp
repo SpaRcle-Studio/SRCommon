@@ -17,12 +17,11 @@ namespace SR_HTYPES_NS {
         DeInitialize();
     }
 
-    Thread::Thread(std::thread &&thread)
-        : m_thread(std::exchange(thread, {}))
-    {
-        m_isCreated = true;
-        m_isRan = true;
-        m_id = SR_UTILS_NS::GetThreadId(m_thread);
+    Thread::Thread(std::thread&& thread) {
+        GetImpl().thread = std::move(thread);
+        GetImpl().isCreated = true;
+        GetImpl().isRan = true;
+        m_id = SR_UTILS_NS::GetThreadId(GetImpl().thread);
         m_context = new DataStorage();
     }
 
@@ -36,8 +35,8 @@ namespace SR_HTYPES_NS {
 
     Thread::Thread(Thread::ThreadId id)
         : m_id(id)
-        , m_thread(std::thread())
     {
+        GetImpl().thread = std::thread();
         m_context = new DataStorage();
     }
 
@@ -51,7 +50,7 @@ namespace SR_HTYPES_NS {
     }
 
     void Thread::SetPriority(ThreadPriority priority) {
-        Platform::SetThreadPriority(reinterpret_cast<void*>(m_thread.native_handle()), priority);
+        Platform::SetThreadPriority(reinterpret_cast<void*>(GetImpl().thread.native_handle()), priority);
     }
 
     SR_NODISCARD Thread::Ptr Thread::Factory::CreateEmpty() {
@@ -136,7 +135,7 @@ namespace SR_HTYPES_NS {
 
     void Thread::Synchronize() {
         SR_TRACY_ZONE;
-        SR_WRITE_LOCK;
+        std::lock_guard<std::shared_mutex> lock(GetImpl().mutex);
 
     #if defined(SR_DEBUG) && SR_THREAD_SAFE_CHECKS
         auto&& pThread = Thread::Factory::Instance().GetThisThread();
@@ -151,14 +150,14 @@ namespace SR_HTYPES_NS {
         }
     #endif
 
-        if (m_nameChanged) {
+        if (GetImpl().nameChanged) {
             SR_TRACY_THREAD_NAME(m_name.c_str());
-            m_nameChanged = false;
+            GetImpl().nameChanged = false;
         }
 
-        if (m_function) {
-            m_executeResult = (*m_function)();
-            m_function = nullptr;
+        if (GetImpl().function) {
+            GetImpl().executeResult = (*GetImpl().function)();
+            GetImpl().function = nullptr;
         }
     }
 
@@ -168,30 +167,30 @@ namespace SR_HTYPES_NS {
         }
 
         /// сначала дожидаемся предыдущей работы. Операция атомарная.
-        while (m_function) {
+        while (GetImpl().function) {
             SR_TRACY_ZONE_N("Thread::Execute - wait previous");
             SR_NOOP;
         }
 
         /// синхронно записываем
         {
-            SR_WRITE_LOCK;
-            m_function = &function;
+            std::lock_guard<std::shared_mutex> lock(GetImpl().mutex);
+            GetImpl().function = &function;
         }
 
         /// синхронно ждем выволнения работы. Операция атомарная.
-        while (m_function) {
+        while (GetImpl().function) {
             SR_TRACY_ZONE_N("Thread::Execute - wait");
             SR_NOOP;
         }
 
-        return m_executeResult;
+        return GetImpl().executeResult;
     }
 
     void Thread::SetName(const std::string& name) {
-        SR_WRITE_LOCK;
+        std::lock_guard<std::shared_mutex> lock(GetImpl().mutex);
         m_name = name;
-        m_nameChanged = true;
+        GetImpl().nameChanged = true;
     }
 
     bool Thread::HasId() const {
@@ -211,15 +210,15 @@ namespace SR_HTYPES_NS {
     }
 
     void Thread::Detach() {
-        m_thread.detach();
+        GetImpl().thread.detach();
     }
 
     void Thread::Join() {
-        m_thread.join();
+        GetImpl().thread.join();
     }
 
     bool Thread::Joinable() const {
-        return m_thread.joinable();
+        return GetImpl().thread.joinable();
     }
 
     DataStorage *Thread::GetContext() {
@@ -229,6 +228,13 @@ namespace SR_HTYPES_NS {
     Thread::ThreadId Thread::EmptyThreadId() {
         static const auto id = SR_UTILS_NS::StringAtom("[EMPTY]");
         return id;
+    }
+
+    ThreadImpl& Thread::GetImpl() const {
+        if (!m_impl) {
+            m_impl = new ThreadImpl();
+        }
+        return *m_impl;
     }
 
     uint32_t Thread::Factory::GetThreadsCount() {

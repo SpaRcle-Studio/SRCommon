@@ -14,6 +14,7 @@ namespace SR_UTILS_NS {
 
     typedef uint64_t EntityId;
     typedef SR_HTYPES_NS::FlatHashMap<EntityId, EntityId> EntityReplaceMap;
+    constexpr EntityId SR_INVALID_ENTITY_ID = SR_UINT64_MAX;
 
     SR_ENUM_NS_STRUCT_T(EditorFlags, uint8_t,
         None       = 1 << 0,
@@ -22,7 +23,7 @@ namespace SR_UTILS_NS {
         Hidden     = 1 << 4
     )
 
-    class Entity : public Serializable, public SR_HTYPES_NS::SharedPtr<Entity> {
+    class SR_COMMON_DLL_API Entity : public Serializable, public SR_HTYPES_NS::SharedPtr<Entity> {
         SR_CLASS()
         using Super = Serializable;
     public:
@@ -56,7 +57,7 @@ namespace SR_UTILS_NS {
     private:
         /// @property @hidden @dontSaveTags(Inspector)
         /// @loadCondition(!This.IsPrefabLoadingState())
-        EntityId m_entityId = SR_ID_INVALID;
+        EntityId m_entityId = SR_INVALID_ENTITY_ID;
 
         EntityController* m_pEntityController = nullptr;
         EditorFlags m_editorFlags = EditorFlags::None;

@@ -14,7 +14,7 @@ namespace SR_WORLD_NS {
 namespace SR_UTILS_NS {
     class Component;
 
-    class IComponentable : public Entity {
+    class SR_COMMON_DLL_API IComponentable : public Entity {
         using Super = Entity;
         SR_CLASS()
     public:

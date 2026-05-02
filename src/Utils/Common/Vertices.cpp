@@ -196,7 +196,7 @@ namespace SR_UTILS_NS {
             return *this;
         }
 
-        uint32_t offset = stride;
+        uint32_t offset = static_cast<uint32_t>(stride);
 
         // GPU-safe alignment
         offset = Align(offset, 16);

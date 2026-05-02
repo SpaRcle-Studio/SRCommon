@@ -97,7 +97,7 @@ namespace SR_UTILS_NS {
 
     private:
         SR_HTYPES_NS::FlatHashMap<StringView, StringAtom> m_nameTypeId;
-        std::unordered_map<SR_UTILS_NS::StringAtom, TypeInfo> m_types;
+        SR_HTYPES_NS::FlatHashMap<SR_UTILS_NS::StringAtom, TypeInfo> m_types;
         bool m_logRegistration = false;
 
     };

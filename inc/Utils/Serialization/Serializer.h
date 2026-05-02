@@ -71,7 +71,7 @@ namespace SR_UTILS_NS {
             return true;
         }
 
-        SR_NODISCARD virtual bool SaveToFile(const SR_UTILS_NS::Path& path) const { return false; }
+        SR_NODISCARD virtual bool SaveToFile(const SR_UTILS_NS::Path& /* path */) const { return false; }
 
     private:
         std::set<StringAtom> m_dontSaveTags;

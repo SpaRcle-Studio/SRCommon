@@ -60,7 +60,7 @@ namespace SR_HTYPES_NS {
             SR_TRACY_ZONE;
             Index index;
             if (m_freeIndices.empty()) SR_UNLIKELY_ATTRIBUTE {
-                index = m_objects.size();
+                index = static_cast<Index>(m_objects.size());
                 m_objects.emplace_back(true, object);
             }
             else SR_LIKELY_ATTRIBUTE {

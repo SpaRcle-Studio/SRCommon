@@ -102,7 +102,7 @@ namespace SR_UTILS_NS {
         const int64_t currentIndex = std::distance(m_components.begin(), pIt);
         const int64_t newIndex = currentIndex + offset;
 
-        if (newIndex < 0 || newIndex >= m_components.size()) {
+        if (newIndex < 0 || newIndex >= static_cast<int64_t>(m_components.size())) {
             return false;
         }
 

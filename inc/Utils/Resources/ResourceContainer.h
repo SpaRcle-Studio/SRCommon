@@ -8,7 +8,7 @@
 #include <Utils/Types/SharedPtr.h>
 
 namespace SR_UTILS_NS {
-    class ResourceContainer : public SR_HTYPES_NS::SharedPtr<ResourceContainer> {
+    class SR_COMMON_DLL_API ResourceContainer : public SR_HTYPES_NS::SharedPtr<ResourceContainer> {
     public:
         using Ptr = SR_HTYPES_NS::SharedPtr<ResourceContainer>;
 

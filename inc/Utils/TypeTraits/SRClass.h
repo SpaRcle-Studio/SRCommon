@@ -24,7 +24,7 @@ namespace SR_UTILS_NS {
         std::set<std::string> warnings;
     };
 
-    class SRClass {
+    class SR_COMMON_DLL_API SRClass {
     public:
         virtual ~SRClass() = default;
 

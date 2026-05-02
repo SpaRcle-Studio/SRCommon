@@ -19,6 +19,17 @@ namespace SR_HTYPES_NS {
     class DataStorage;
     class Thread;
 
+    struct ThreadImpl {
+        std::thread thread;
+        std::atomic<bool> nameChanged = false;
+        std::atomic<bool> isCreated = false;
+        std::atomic<bool> isRan = false;
+
+        mutable std::shared_mutex mutex;
+        mutable std::atomic<const SR_HTYPES_NS::Function<bool()>*> function = nullptr;
+        mutable std::atomic<bool> executeResult = false;
+    };
+
     class SR_COMMON_DLL_API Thread : public NonCopyable {
     public:
         using Ptr = Thread*;
@@ -26,6 +37,7 @@ namespace SR_HTYPES_NS {
         using ThreadsMap = std::map<ThreadId, Thread::Ptr>;
 
         SR_NODISCARD static ThreadId EmptyThreadId();
+        SR_NODISCARD ThreadImpl& GetImpl() const;
 
         class Factory : public Singleton<Factory> {
             SR_REGISTER_SINGLETON(Factory)
@@ -92,18 +104,10 @@ namespace SR_HTYPES_NS {
         static void Sleep(uint64_t milliseconds);
 
     private:
-        std::thread m_thread;
         ThreadId m_id;
-        std::string m_name;
+        String m_name;
         DataStorage* m_context = nullptr;
-
-        std::atomic<bool> m_nameChanged = false;
-        std::atomic<bool> m_isCreated = false;
-        std::atomic<bool> m_isRan = false;
-
-        mutable std::shared_mutex m_mutex;
-        mutable std::atomic<const SR_HTYPES_NS::Function<bool()>*> m_function = nullptr;
-        mutable std::atomic<bool> m_executeResult = false;
+        mutable ThreadImpl* m_impl = nullptr;
 
     };
 
@@ -116,8 +120,8 @@ namespace SR_HTYPES_NS {
         pThread = new Thread();
 
         std::thread thread([fn = std::forward<Functor>(fn), pThread, argsTuple = std::make_tuple(args...)]() mutable {
-            while (!pThread->m_isCreated || !pThread->HasId()) {
-                pThread->m_id = SR_UTILS_NS::GetThreadId(pThread->m_thread);
+            while (!pThread->GetImpl().isCreated || !pThread->HasId()) {
+                pThread->m_id = SR_UTILS_NS::GetThreadId(pThread->GetImpl().thread);
             }
 
             std::apply(fn, std::forward<decltype(argsTuple)>(argsTuple));
@@ -129,9 +133,9 @@ namespace SR_HTYPES_NS {
 
         m_threads.insert(std::make_pair(pThread->GetId(), pThread));
 
-        pThread->m_thread = std::move(thread);
-        pThread->m_isRan = true;
-        pThread->m_isCreated = true;
+        pThread->GetImpl().thread = std::move(thread);
+        pThread->GetImpl().isRan = true;
+        pThread->GetImpl().isCreated = true;
 
         SR_LOG("Thread::Factory::Create() : thread \"{}\" created.", pThread->m_id.c_str());
 
@@ -147,24 +151,24 @@ namespace SR_HTYPES_NS {
         Factory::LockSingleton();
 
         auto&& thread = std::thread([function = std::forward<Functor>(fn), this]() {
-            while (!m_isCreated || m_id == "0" || m_id.empty()) {
-                m_id = SR_UTILS_NS::GetThreadId(m_thread);
+            while (!GetImpl().isCreated || m_id == "0" || m_id.empty()) {
+                m_id = SR_UTILS_NS::GetThreadId(GetImpl().thread);
             }
             Factory::Instance().m_threads.insert(std::make_pair(m_id, this));
             SR_LOG("Thread::Run() : run thread \"{}\"",  m_id);
-            while (!m_isRan) {
+            while (!GetImpl().isRan) {
                 SR_NOOP;
             }
             function();
         });
 
-        m_thread = std::move(thread);
+        GetImpl().thread = std::move(thread);
         SR_LOG("Thread::Run() : thread is moved");
-        m_isCreated = true;
+        GetImpl().isCreated = true;
 
         Factory::UnlockSingleton();
 
-        m_isRan = true;
+        GetImpl().isRan = true;
 
         return true;
     }

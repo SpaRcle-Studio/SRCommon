@@ -331,10 +331,6 @@ namespace SR_UTILS_NS {
         else {
             return EnumReflectorManager::Instance().GetReflector(SR_CODEGEN_GET_ENUM_HASH_NAME_BY_TYPE(EnumType()));
         }
-
-        std::cerr << "EnumReflector::GetReflector() : unknown type!\n";
-
-        return nullptr;
     }
 }
 

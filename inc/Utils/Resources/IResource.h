@@ -17,7 +17,7 @@ namespace SR_UTILS_NS {
 
     struct ResourceInfo;
 
-    struct IResourceVariant {
+    struct SR_COMMON_DLL_API IResourceVariant {
         virtual ~IResourceVariant() = default;
         SR_NODISCARD virtual SRHashType GetHash() const = 0;
     };

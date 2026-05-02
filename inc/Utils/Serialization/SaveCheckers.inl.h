@@ -7,7 +7,7 @@
 
 template<typename T, typename Enable = void>
 struct SaveChecker {
-    static bool CanBeSaved(const T& value) {
+    static bool CanBeSaved(const T& /* value */) {
         return true;
     }
 };

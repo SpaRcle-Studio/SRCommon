@@ -24,7 +24,7 @@ namespace SR_UTILS_NS {
     )
 
     /// @abstract
-    class SceneObject : public IComponentable {
+    class SR_COMMON_DLL_API SceneObject : public IComponentable {
         SR_CLASS()
         using Super = IComponentable;
     public:

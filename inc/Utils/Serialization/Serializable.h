@@ -14,7 +14,7 @@ namespace SR_UTILS_NS {
     namespace SerializationFlagsEnumWrappper { enum SerializationFlags : uint8_t; }
     using SerializationFlags = SerializationFlagsEnumWrappper::SerializationFlags;
 
-    class Serializable : public SRClass {
+    class SR_COMMON_DLL_API Serializable : public SRClass {
         using Super = SRClass;
         SR_CLASS()
     public:

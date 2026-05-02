@@ -39,14 +39,9 @@ namespace SR_UTILS_NS {
 
     private:
         SR_HTYPES_NS::FlatHashMap<EntityId, Entity::Ptr> m_entities;
+        SR_HTYPES_NS::FlatHashSet<EntityId> m_reserved;
 
-    #ifdef SR_EMSCRIPTEN
-        std::unordered_set<EntityId> m_reserved;
-    #else
-        ska::flat_hash_set<EntityId> m_reserved;
-    #endif
-
-        EntityId m_nextId = SR_ID_INVALID;
+        EntityId m_nextId = SR_INVALID_ENTITY_ID;
 
     };
 
