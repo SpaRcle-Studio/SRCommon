@@ -15,13 +15,16 @@ namespace SR_UTILS_NS {
         Unknown, Discardable, Low, Normal, High, Critical
     );
 
+    enum class TaskState : uint8_t {
+        Unknown, Waiting, Launched, Stopped, Completed, Failed
+    };
+
     class SR_COMMON_DLL_API Task : public NonCopyable {
     public:
         using Ptr = std::shared_ptr<Task>;
-        enum class State {
-            Unknown, Waiting, Launched, Stopped, Completed, Failed
-        };
+        using State = TaskState;
         using StatePtr = std::atomic<State>*;
+        using AtomicState = std::atomic<State>;
 
         using TaskFn = SR_HTYPES_NS::Function<void(StatePtr)>;
 
@@ -38,12 +41,13 @@ namespace SR_UTILS_NS {
         SR_NODISCARD bool IsCompleted() const;
         SR_NODISCARD bool IsWaiting() const;
         SR_NODISCARD bool IsLaunched() const;
+        SR_NODISCARD bool IsStopped() const;
         SR_NODISCARD State GetResult() const;
         SR_NODISCARD uint64_t GetId() const;
         SR_NODISCARD TaskPriority GetPriority() const;
 
     private:
-        bool m_createThread;
+        bool m_createThread = false;
         uint64_t m_id;
         Types::Thread::Ptr m_thread;
         TaskFn m_function;
@@ -63,8 +67,8 @@ namespace SR_UTILS_NS {
     public:
         void Update();
 
-        TaskId ExecuteAsync(const SR_HTYPES_NS::Function<void()>& function, TaskPriority priority);
-        TaskId ExecuteParallel(const SR_HTYPES_NS::Function<void()>& function, TaskPriority priority);
+        TaskId ExecuteAsync(const SR_HTYPES_NS::Function<void(Task::AtomicState&)>& function, TaskPriority priority);
+        TaskId ExecuteParallel(const SR_HTYPES_NS::Function<void(Task::AtomicState&)>& function, TaskPriority priority);
 
         Task::State GetResult(TaskId taskId) const;
         bool IsActive(TaskId taskId) const;

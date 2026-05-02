@@ -18,7 +18,7 @@ namespace SR_UTILS_NS {
     }
 
     Task::~Task() {
-        SRAssert(!m_state || m_state->load() == State::Completed);
+        SRAssert(!m_state || (m_state->load() == State::Completed || m_state->load() == State::Failed || m_state->load() == State::Stopped));
         SRAssert(!m_thread || !m_thread->Joinable());
 
         if (m_thread) {
@@ -36,7 +36,9 @@ namespace SR_UTILS_NS {
     }
 
     bool Task::Stop() {
-        if (m_state->load() != State::Launched || !m_thread->Joinable()) {
+        const bool isThreadValid = !m_createThread || (m_thread && m_thread->Joinable());
+        const bool isStatusValid = m_state->load() == State::Launched || m_state->load() == State::Waiting;
+        if (!isStatusValid || !isThreadValid) {
             SRAssert(false);
             return false;
         }
@@ -90,6 +92,10 @@ namespace SR_UTILS_NS {
 
     bool Task::IsWaiting() const {
         return m_state->load() == State::Waiting;
+    }
+
+    bool Task::IsStopped() const {
+        return m_state->load() == State::Stopped;
     }
 
     bool Task::IsLaunched() const {
@@ -185,7 +191,7 @@ namespace SR_UTILS_NS {
                         if (pIt != m_tasks.end()) {
                             m_tasks.erase(pIt);
                         }
-                        else {
+                        else if (!pTaskWithHighestPriority->IsStopped()) {
                             SRHalt("TaskManager::InitSingleton() : task is completed, but not found in the list of tasks!");
                         }
                     }
@@ -205,12 +211,14 @@ namespace SR_UTILS_NS {
         Singleton::InitSingleton();
     }
 
-    TaskManager::TaskId TaskManager::ExecuteAsync(const SR_HTYPES_NS::Function<void()>& function, TaskPriority priority) {
+    TaskManager::TaskId TaskManager::ExecuteAsync(const SR_HTYPES_NS::Function<void(Task::AtomicState&)>& function, TaskPriority priority) {
         SR_LOCK_GUARD;
 
         auto&& pTask = new Task([function](std::atomic<Task::State>* pState) {
-            function();
-            pState->store(Task::State::Completed);
+            function(*pState);
+            if (pState->load() != Task::State::Stopped && pState->load() != Task::State::Failed) {
+                pState->store(Task::State::Completed);
+            }
         }, false, priority);
 
         const uint64_t uniqueId = GetUniqueId();
@@ -221,12 +229,14 @@ namespace SR_UTILS_NS {
         return uniqueId;
     }
 
-    TaskManager::TaskId TaskManager::ExecuteParallel(const Function<void()> &function, TaskPriority priority) {
+    TaskManager::TaskId TaskManager::ExecuteParallel(const Function<void(Task::AtomicState&)> &function, TaskPriority priority) {
         SR_LOCK_GUARD;
 
         auto&& pTask = new Task([function](std::atomic<Task::State>* pState) {
-            function();
-            pState->store(Task::State::Completed);
+            function(*pState);
+            if (pState->load() != Task::State::Stopped && pState->load() != Task::State::Failed) {
+                pState->store(Task::State::Completed);
+            }
         }, true, priority);
 
         const uint64_t uniqueId = GetUniqueId();
@@ -354,7 +364,7 @@ namespace SR_UTILS_NS {
         for (auto pIt = m_tasks.begin(); pIt != m_tasks.end();) {
             auto&& pTask = *pIt;
             if (pTask->GetPriority() == TaskPriority::Discardable) {
-                if (pTask->IsLaunched()) {
+                if (pTask->IsLaunched() || pTask->IsWaiting()) {
                     pTask->Stop();
                 }
 
