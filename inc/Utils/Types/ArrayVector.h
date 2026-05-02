@@ -8,7 +8,7 @@
 #include <Utils/Common/AssertFwd.h>
 
 namespace SR_HTYPES_NS {
-    template<typename T, size_t N> class ArrayVector {
+    template<typename T, size_t N> class SR_COMMON_DLL_API ArrayVector {
         using Iterator = typename std::array<T, N>::iterator;
         using ConstIterator = typename std::array<T, N>::const_iterator;
     public:

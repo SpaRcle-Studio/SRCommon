@@ -93,6 +93,10 @@ namespace std {
     };
 }
 
+SR_UTILS_NS::String operator+(const char* lhs, const SR_UTILS_NS::String& rhs) { return SR_UTILS_NS::String(lhs) + rhs; }
+SR_UTILS_NS::String operator+(const std::string& lhs, const SR_UTILS_NS::String& rhs) { return SR_UTILS_NS::String(lhs) + rhs; }
+SR_UTILS_NS::String operator+(std::string_view lhs, const SR_UTILS_NS::String& rhs) { return SR_UTILS_NS::String(lhs) + rhs; }
+
 template<> struct fmt::formatter<SR_UTILS_NS::String> {
     template<typename ParseContext>
     constexpr auto parse(ParseContext& ctx) { return ctx.begin(); }

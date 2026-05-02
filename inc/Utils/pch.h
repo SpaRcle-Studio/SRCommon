@@ -24,6 +24,7 @@
 #include <Utils/Types/SharedPtr.h>
 #include <Utils/Types/SafePointer.h>
 #include <Utils/Types/Function.h>
+#include <Utils/Types/String.h>
 
 #include <Utils/Reflection/Value.h>
 #include <Utils/Reflection/Property.h>

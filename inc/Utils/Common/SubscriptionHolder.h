@@ -43,7 +43,7 @@ namespace SR_UTILS_NS {
         void Broadcast(StringAtom id, const SubscriptionMessage& message);
 
     private:
-        std::map<StringAtom, SR_HTYPES_NS::ObjectPool<SubscriptionInternalInfo*, uint32_t>> m_subscriptions;
+        SR_HTYPES_NS::FlatHashMap<StringAtom, SR_HTYPES_NS::ObjectPool<SubscriptionInternalInfo*, uint32_t>> m_subscriptions;
         uint32_t m_count = 0;
 
     };

@@ -155,10 +155,10 @@ namespace SR_UTILS_NS::Platform {
         decltype(&ReadFile) originalReadFile = nullptr;
         decltype(&GetPathType) originalGetPathType = nullptr;
 
-        std::function<bool(const Path&, std::string& buffer)> readFileHook;
-        std::function<Path::Type(const std::string_view&)> getFileTypeHook;
+        SR_HTYPES_NS::Function<bool(const Path&, std::string& buffer)> readFileHook;
+        SR_HTYPES_NS::Function<Path::Type(const std::string_view&)> getFileTypeHook;
 
-        std::function<std::string_view(std::string_view)> pathResolver;
+        SR_HTYPES_NS::Function<std::string_view(std::string_view)> pathResolver;
     };
 
     extern PlatformHooks g_platformHooks;

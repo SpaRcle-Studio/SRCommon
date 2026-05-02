@@ -144,7 +144,7 @@ namespace SR_PLATFORM_NS {
     }
 
     void OpenFile(const SR_UTILS_NS::Path& path, const std::string& args) {
-        std::string command;
+        String command;
         if (path.IsAbs()) {
             command = path.ToStringRef() + " " + args;
         } else {
@@ -553,7 +553,7 @@ namespace SR_PLATFORM_NS {
             return result;
         }
 
-        for (const auto& entry : std::filesystem::directory_iterator(dir.ToStringRef())) {
+        for (const auto& entry : std::filesystem::directory_iterator(dir.View())) {
             if ((entry.is_directory() && type == Path::Type::Folder) ||
                 (entry.is_regular_file() && type == Path::Type::File)) {
                 result.emplace_back(entry.path());
@@ -570,7 +570,7 @@ namespace SR_PLATFORM_NS {
             return result;
         }
 
-        for (const auto& entry : std::filesystem::directory_iterator(dir.ToStringRef())) {
+        for (const auto& entry : std::filesystem::directory_iterator(dir.View())) {
             if (entry.is_directory() || entry.is_regular_file()) {
                 result.emplace_back(entry.path());
             }
