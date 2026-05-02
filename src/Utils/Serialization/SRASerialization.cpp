@@ -167,7 +167,7 @@ namespace SR_UTILS_NS {
             return false;
         }
 
-        std::string buffer;
+        String buffer;
         std::vector<std::string_view> lines = FileSystem::ReadAllTextAsStringViewVector(path, buffer);
         if (lines.empty()) {
             SR_ERROR("SRADeserializer::LoadFromFile() : empty data!\n\tPath: {}", path);

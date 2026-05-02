@@ -44,20 +44,21 @@ namespace SR_UTILS_NS {
         SR_NODISCARD operator std::string_view() const; /// NOLINT
 
         SR_NODISCARD const char* c_str() const;
-        SR_NODISCARD uint32_t size() const;
+        SR_NODISCARD uint64_t size() const;
         SR_NODISCARD bool empty() const;
         SR_NODISCARD const char* data() const;
+        SR_NODISCARD char* data();
         SR_NODISCARD char& back();
         SR_NODISCARD const char& back() const;
         SR_NODISCARD std::string_view view() const;
 
-        SR_NODISCARD String substr(uint32_t pos, uint32_t count = SR_UINT32_MAX) const;
+        SR_NODISCARD String substr(uint64_t pos, uint64_t count = SR_UINT64_MAX) const;
 
-        SR_NODISCARD uint64_t find(const char* str, uint32_t pos = 0) const;
-        SR_NODISCARD uint64_t find(std::string_view str, uint32_t pos = 0) const;
-        SR_NODISCARD uint64_t find(const String& str, uint32_t pos = 0) const;
-        SR_NODISCARD uint64_t find(char c, uint32_t pos = 0) const;
-        SR_NODISCARD uint64_t rfind(char c, uint32_t pos = SR_UINT32_MAX) const;
+        SR_NODISCARD uint64_t find(const char* str, uint64_t pos = 0) const;
+        SR_NODISCARD uint64_t find(std::string_view str, uint64_t pos = 0) const;
+        SR_NODISCARD uint64_t find(const String& str, uint64_t pos = 0) const;
+        SR_NODISCARD uint64_t find(char c, uint64_t pos = 0) const;
+        SR_NODISCARD uint64_t rfind(char c, uint64_t pos = SR_UINT64_MAX) const;
 
         SR_NODISCARD const char* begin() const;
         SR_NODISCARD const char* end() const;
@@ -67,14 +68,51 @@ namespace SR_UTILS_NS {
         char operator[](size_t index) const;
         char& operator[](size_t index);
 
-        void reserve(uint32_t newSize);
-        void resize(uint32_t newSize);
+        void reserve(uint64_t newSize);
+        void resize(uint64_t newSize);
         void clear();
 
     private:
         char* m_data = nullptr;
-        uint32_t m_size = 0;
-        uint32_t m_capacity = 0;
+        uint64_t m_size = 0;
+        uint64_t m_capacity = 0;
+
+    };
+
+    class SR_COMMON_DLL_API StringView {
+    public:
+        StringView();
+        StringView(const char* str); /// NOLINT
+        StringView(const std::string& str); /// NOLINT
+        StringView(std::string_view str); /// NOLINT
+        StringView(const String& str); /// NOLINT
+
+        SR_NODISCARD operator std::string_view() const; /// NOLINT
+
+        SR_NODISCARD const char* c_str() const;
+        SR_NODISCARD uint64_t size() const;
+        SR_NODISCARD bool empty() const;
+        SR_NODISCARD const char* data() const;
+        SR_NODISCARD char& back();
+        SR_NODISCARD const char& back() const;
+        SR_NODISCARD StringView substr(uint64_t pos, uint64_t count = SR_UINT64_MAX) const;
+
+        SR_NODISCARD bool operator==(const StringView& rhs) const noexcept;
+        SR_NODISCARD bool operator!=(const StringView& rhs) const noexcept;
+        SR_NODISCARD bool operator==(const char* rhs) const noexcept;
+        SR_NODISCARD bool operator!=(const char* rhs) const noexcept;
+        SR_NODISCARD bool operator==(const std::string& rhs) const noexcept;
+        SR_NODISCARD bool operator!=(const std::string& rhs) const noexcept;
+        SR_NODISCARD bool operator==(const String& rhs) const noexcept;
+        SR_NODISCARD bool operator!=(const String& rhs) const noexcept;
+        SR_NODISCARD bool operator==(std::string_view rhs) const noexcept;
+        SR_NODISCARD bool operator!=(std::string_view rhs) const noexcept;
+        SR_NODISCARD bool operator<(const StringView& other) const noexcept;
+        SR_NODISCARD bool operator>(const StringView& other) const noexcept;
+
+    private:
+        const char* m_data = nullptr;
+        uint64_t m_size = 0;
 
     };
 }
@@ -89,6 +127,18 @@ namespace std {
     template<> struct less<SR_UTILS_NS::String> {
         bool operator()(const SR_UTILS_NS::String& lhs, const SR_UTILS_NS::String& rhs) const noexcept {
             return lhs.view() < rhs.view();
+        }
+    };
+
+    template<> struct hash<SR_UTILS_NS::StringView> {
+        size_t operator()(SR_UTILS_NS::StringView const& object) const noexcept {
+            return std::hash<std::string_view>()(object);
+        }
+    };
+
+    template<> struct less<SR_UTILS_NS::StringView> {
+        bool operator()(const SR_UTILS_NS::StringView& lhs, const SR_UTILS_NS::StringView& rhs) const noexcept {
+            return lhs < rhs;
         }
     };
 }

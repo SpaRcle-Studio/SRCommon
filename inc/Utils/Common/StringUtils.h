@@ -113,7 +113,7 @@ namespace SR_UTILS_NS {
             if (index == std::string::npos) {
                 return SR_INVALID_STR_POS;
             }
-            return index;
+            return static_cast<int32_t>(index);
         }
 
         static SR_FORCE_INLINE std::string GetFileNameFromFullPath(std::string full_path) {

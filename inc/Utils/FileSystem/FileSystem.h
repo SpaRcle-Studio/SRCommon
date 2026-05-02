@@ -30,11 +30,11 @@ namespace SR_UTILS_NS {
         static uint64_t ReadHashFromFile(const SR_UTILS_NS::Path& path);
         static bool WriteHashToFile(const SR_UTILS_NS::Path& path, uint64_t hash);
 
-        static std::shared_ptr<std::string> ReadFileAsBlob(const Path& path);
-        static bool ReadFile(const Path& path, std::string& buffer);
+        static std::shared_ptr<String> ReadFileAsBlob(const Path& path);
+        static bool ReadFile(const Path& path, String& buffer);
         static bool IsFileExists(const Path& path);
 
-        static std::vector<std::string_view> ReadAllTextAsStringViewVector(const Path& path, std::string& buffer);
+        static std::vector<std::string_view> ReadAllTextAsStringViewVector(const Path& path, String& buffer);
 
         static void ForEachFileInFolder(const Path& path, bool recursive, const SR_HTYPES_NS::Function<void(const Path&)>& func);
 

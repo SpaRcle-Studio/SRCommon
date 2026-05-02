@@ -199,7 +199,7 @@ namespace SR_UTILS_NS::Yaml {
         SR_TRACY_ZONE;
         SR_TRACY_TEXT_N("Path", path.ToStringRef());
 
-        std::string contents;
+        SR_UTILS_NS::String contents;
         if (!SR_UTILS_NS::FileSystem::ReadFile(path, contents)) {
             SR_ERROR("Document::Load() : failed to open document!\n\tPath: {}", path);
             return { };

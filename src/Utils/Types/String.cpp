@@ -16,7 +16,7 @@ namespace SR_UTILS_NS {
     { }
 
     String::String(std::string_view str) {
-        resize(static_cast<uint32_t>(str.size()));
+        resize(static_cast<uint64_t>(str.size()));
         if (m_data) {
             memcpy(m_data, str.data(), m_size);
         }
@@ -79,7 +79,7 @@ namespace SR_UTILS_NS {
             return *this;
         }
         String result;
-        uint32_t newSize = m_size + static_cast<uint32_t>(rhs.size());
+        uint64_t newSize = m_size + static_cast<uint64_t>(rhs.size());
         result.resize(newSize);
         memcpy(result.m_data, m_data, m_size);
         memcpy(result.m_data + m_size, rhs.data(), rhs.size());
@@ -164,20 +164,21 @@ namespace SR_UTILS_NS {
 
     const char* String::c_str() const { return m_data ? m_data : nullptr; }
 
-    uint32_t String::size() const { return m_size; }
+    uint64_t String::size() const { return m_size; }
 
     bool String::empty() const { return m_size == 0; }
 
     const char* String::data() const { return m_data; }
+    char* String::data() { return m_data; }
 
     const char* String::begin() const { return m_data; }
     const char* String::end() const { return m_data ? m_data + m_size : nullptr; }
     char* String::begin() { return m_data; }
     char* String::end() { return const_cast<char*>(m_data ? m_data + m_size : nullptr); }
 
-    uint64_t String::find(const char* str, uint32_t pos) const { return find(std::string_view(str), pos); }
-    uint64_t String::find(const String& str, uint32_t pos) const { return find(std::string_view(str.m_data, str.m_size), pos); }
-    uint64_t String::find(std::string_view str, uint32_t pos) const {
+    uint64_t String::find(const char* str, uint64_t pos) const { return find(std::string_view(str), pos); }
+    uint64_t String::find(const String& str, uint64_t pos) const { return find(std::string_view(str.m_data, str.m_size), pos); }
+    uint64_t String::find(std::string_view str, uint64_t pos) const {
         if (pos >= m_size || empty()) {
             return SR_UINT64_MAX;
         }
@@ -187,7 +188,7 @@ namespace SR_UTILS_NS {
         }
         return SR_UINT64_MAX;
     }
-    uint64_t String::find(char c, uint32_t pos) const {
+    uint64_t String::find(char c, uint64_t pos) const {
         if (pos >= m_size || empty()) {
             return SR_UINT64_MAX;
         }
@@ -197,11 +198,11 @@ namespace SR_UTILS_NS {
         }
         return SR_UINT64_MAX;
     }
-    uint64_t String::rfind(char c, uint32_t pos) const {
+    uint64_t String::rfind(char c, uint64_t pos) const {
         if (empty()) {
             return SR_UINT64_MAX;
         }
-        uint32_t searchStart = pos < m_size ? pos : m_size - 1;
+        uint64_t searchStart = pos < m_size ? pos : m_size - 1;
         for (int64_t i = searchStart; i >= 0; --i) {
             if (m_data[i] == c) {
                 return static_cast<uint64_t>(i);
@@ -224,18 +225,18 @@ namespace SR_UTILS_NS {
         return std::string_view(m_data ? m_data : "", m_size);
     }
 
-    String String::substr(uint32_t pos, uint32_t count) const {
+    String String::substr(uint64_t pos, uint64_t count) const {
         if (pos >= m_size || empty()) {
             return String();
         }
-        uint32_t maxCount = m_size - pos;
+        uint64_t maxCount = m_size - pos;
         if (count > maxCount) {
             count = maxCount;
         }
         return String(std::string_view(m_data + pos, count));
     }
 
-    void String::reserve(uint32_t newSize) {
+    void String::reserve(uint64_t newSize) {
         if (newSize <= m_capacity) {
             return;
         }
@@ -259,7 +260,7 @@ namespace SR_UTILS_NS {
         other.m_capacity = 0;
     }
 
-    void String::resize(uint32_t newSize) {
+    void String::resize(uint64_t newSize) {
         reserve(newSize);
         if (m_data) {
             m_data[newSize] = '\0';
@@ -273,4 +274,89 @@ namespace SR_UTILS_NS {
         }
         m_size = 0;
     }
+
+    StringView::StringView() = default;
+    StringView::StringView(const char* str)
+        : m_data(str)
+        , m_size(str ? static_cast<uint64_t>(strlen(str)) : 0)
+    { }
+
+    StringView::StringView(const std::string& str)
+        : m_data(str.data())
+        , m_size(static_cast<uint64_t>(str.size()))
+    { }
+
+    StringView::StringView(std::string_view str)
+        : m_data(str.data())
+        , m_size(static_cast<uint64_t>(str.size()))
+    { }
+
+    StringView::StringView(const String& str)
+        : m_data(str.data())
+        , m_size(str.size())
+    { }
+
+    StringView::operator std::string_view() const {
+        return std::string_view(m_data ? m_data : "", m_size);
+    }
+
+    const char* StringView::c_str() const { return m_data ? m_data : ""; }
+    uint64_t StringView::size() const { return m_size; }
+    bool StringView::empty() const { return m_size == 0; }
+    const char* StringView::data() const { return m_data; }
+    char& StringView::back() {
+        if (m_size == 0) {
+            SRHalt("StringView::back() : string is empty!");
+            static char dummy = '\0';
+            return dummy;
+        }
+        return const_cast<char*>(m_data)[m_size - 1];
+    }
+    const char& StringView::back() const { return const_cast<StringView*>(this)->back(); }
+    StringView StringView::substr(uint64_t pos, uint64_t count) const {
+        if (pos >= m_size || empty()) {
+            return StringView();
+        }
+        uint64_t maxCount = m_size - pos;
+        if (count > maxCount) {
+            count = maxCount;
+        }
+        return StringView(std::string_view(m_data + pos, count));
+    }
+
+    bool StringView::operator==(const StringView& rhs) const noexcept {
+        if (m_size != rhs.m_size) {
+            return false;
+        }
+        if (m_data == rhs.m_data) {
+            return true; // same pointer, considered equal
+        }
+        return m_data && rhs.m_data && memcmp(m_data, rhs.m_data, m_size) == 0;
+    }
+    bool StringView::operator!=(const StringView& rhs) const noexcept { return !(*this == rhs); }
+    bool StringView::operator==(const char* rhs) const noexcept { return *this == std::string_view(rhs); }
+    bool StringView::operator!=(const char* rhs) const noexcept { return !(*this == rhs); }
+    bool StringView::operator==(const std::string& rhs) const noexcept { return *this == std::string_view(rhs); }
+    bool StringView::operator!=(const std::string& rhs) const noexcept { return !(*this == rhs); }
+    bool StringView::operator==(const String& rhs) const noexcept { return *this == std::string_view(rhs.data(), rhs.size()); }
+    bool StringView::operator!=(const String& rhs) const noexcept { return !(*this == rhs); }
+    bool StringView::operator==(std::string_view rhs) const noexcept { return *this == StringView(rhs); }
+    bool StringView::operator!=(std::string_view rhs) const noexcept { return !(*this == rhs); }
+    bool StringView::operator<(const StringView& other) const noexcept {
+        if (m_data == other.m_data) {
+            return false; // same pointer, considered equal
+        }
+        if (!m_data) {
+            return true; // null is less than non-null
+        }
+        if (!other.m_data) {
+            return false; // non-null is greater than null
+        }
+        int cmp = memcmp(m_data, other.m_data, std::min(m_size, other.m_size));
+        if (cmp == 0) {
+            return m_size < other.m_size; // shorter string is less if prefixes are equal
+        }
+        return cmp < 0;
+    }
+    bool StringView::operator>(const StringView& other) const noexcept { return other < *this; }
 }

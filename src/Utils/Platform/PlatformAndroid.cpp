@@ -110,7 +110,7 @@ namespace SR_UTILS_NS::Platform {
         return (void*)pAndroidInstance;
     }
 
-    bool ReadFile(const Path& path, std::string& buffer) {
+    bool ReadFile(const Path& path, String& buffer) {
         std::string_view pathView = path.ToStringView();
         if (!RemoveAssetsPrefix(pathView)) {
             // Открываем файл в бинарном режиме и сразу получаем размер
@@ -248,7 +248,7 @@ namespace SR_UTILS_NS::Platform {
         }
 
         if (from.IsFile()) {
-            std::string buffer;
+            SR_UTILS_NS::String buffer;
             if (!SR_UTILS_NS::FileSystem::ReadFile(from, buffer)) {
                 SR_WARN("Platform::Copy() : failed to read file {}", from.CStr());
                 return false;

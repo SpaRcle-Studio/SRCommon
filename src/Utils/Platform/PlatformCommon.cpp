@@ -89,7 +89,7 @@ namespace SR_PLATFORM_NS {
 #endif
 
 #if !defined(SR_ANDROID)
-    bool ReadFileOriginal(const Path& path, std::string& buffer) {
+    bool ReadFileOriginal(const Path& path, String& buffer) {
         SR_TRACY_ZONE;
 
         // Открываем файл в бинарном режиме и сразу получаем размер
@@ -108,7 +108,7 @@ namespace SR_PLATFORM_NS {
         return true;
     }
 
-    bool ReadFile(const Path& path, std::string& buffer) {
+    bool ReadFile(const Path& path, String& buffer) {
         SR_TRACY_ZONE;
 
         if (g_platformHooks.readFileHook) {

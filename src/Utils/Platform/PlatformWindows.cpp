@@ -591,7 +591,7 @@ namespace SR_UTILS_NS::Platform {
         SR_TRACY_ZONE;
 
         if (from.IsFile()) {
-            std::string buffer;
+            SR_UTILS_NS::String buffer;
             if (!SR_UTILS_NS::FileSystem::ReadFile(from, buffer)) {
                 SR_WARN("Platform::Copy() : failed to read file!\n\tPath: {}", from.c_str());
                 return false;

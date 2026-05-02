@@ -112,7 +112,7 @@ namespace SR_HTYPES_NS {
             }
         }
         else {
-            std::string buffer;
+            String buffer;
             if (!SR_UTILS_NS::FileSystem::ReadFile(path, buffer)) {
                 SR_ERROR("RawMesh::Load() : failed to read file!\n\tPath: {}", path);
                 return false;

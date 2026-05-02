@@ -41,7 +41,7 @@ namespace SR_UTILS_NS {
         if (!resourcePath.Exists()) {
         #ifdef SR_LINUX
             /// It is needed because on Linux there are files without extensions.
-            if (!SR_PLATFORM_NS::CreateFolder(resourcePath.GetPrevious().GetFolder())) {
+            if (!SR_PLATFORM_NS::CreateFolder(resourcePath.GetPrevious().GetFolder().ToString())) {
                 SR_ERROR("ResourceEmbedder::ExportToFile() : failed to create path!");
                 return false;
             }

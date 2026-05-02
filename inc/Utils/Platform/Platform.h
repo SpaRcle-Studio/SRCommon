@@ -89,7 +89,7 @@ namespace SR_UTILS_NS::Platform {
     SR_COMMON_DLL_API extern std::string
     ExecuteCommand(const std::string& command, const std::vector<std::string>& env = {});
     SR_COMMON_DLL_API extern void SetEnvironmentVar(const std::string_view& name, const std::string_view& value);
-    SR_COMMON_DLL_API extern bool ReadFile(const Path& path, std::string& buffer);
+    SR_COMMON_DLL_API extern bool ReadFile(const Path& path, String& buffer);
     SR_COMMON_DLL_API extern void TextToClipboard(const std::string& text);
     SR_COMMON_DLL_API extern void CopyFilesToClipboard(std::list<SR_UTILS_NS::Path> paths);
     SR_COMMON_DLL_API extern void SetCurrentProcessDirectory(const SR_UTILS_NS::Path& directory);
@@ -155,10 +155,10 @@ namespace SR_UTILS_NS::Platform {
         decltype(&ReadFile) originalReadFile = nullptr;
         decltype(&GetPathType) originalGetPathType = nullptr;
 
-        SR_HTYPES_NS::Function<bool(const Path&, std::string& buffer)> readFileHook;
-        SR_HTYPES_NS::Function<Path::Type(const std::string_view&)> getFileTypeHook;
+        SR_HTYPES_NS::Function<bool(const Path&, String& buffer)> readFileHook;
+        SR_HTYPES_NS::Function<Path::Type(const StringView&)> getFileTypeHook;
 
-        SR_HTYPES_NS::Function<std::string_view(std::string_view)> pathResolver;
+        SR_HTYPES_NS::Function<StringView(StringView)> pathResolver;
     };
 
     extern PlatformHooks g_platformHooks;

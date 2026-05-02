@@ -133,7 +133,7 @@ namespace SR_UTILS_NS {
 
         auto xml = Document::New();
 
-        std::string fileData;
+        String fileData;
         if (!SR_UTILS_NS::FileSystem::ReadFile(path, fileData)) {
             SR_ERROR("Document::Load() : file not exists! \n\tPath: " + path.ToString());
             return Document(); /// NOLINT

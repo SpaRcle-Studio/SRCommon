@@ -96,7 +96,7 @@ namespace SR_UTILS_NS {
         void WriteError(const std::string& message) const noexcept;
 
     private:
-        SR_HTYPES_NS::FlatHashMap<std::string_view, SR_UTILS_NS::StringAtom> m_nameTypeId;
+        SR_HTYPES_NS::FlatHashMap<StringView, StringAtom> m_nameTypeId;
         std::unordered_map<SR_UTILS_NS::StringAtom, TypeInfo> m_types;
         bool m_logRegistration = false;
 

@@ -20,7 +20,7 @@ namespace SR_UTILS_NS {
         return data;
     }
 
-    SR_COMMON_DLL_API std::vector<std::string_view> FileSystem::ReadAllTextAsStringViewVector(const Path& path, std::string& buffer) {
+    SR_COMMON_DLL_API std::vector<std::string_view> FileSystem::ReadAllTextAsStringViewVector(const Path& path, String& buffer) {
         SR_TRACY_ZONE;
         std::vector<std::string_view> result;
 
@@ -82,7 +82,7 @@ namespace SR_UTILS_NS {
     #endif
     }
 
-    SR_COMMON_DLL_API bool FileSystem::ReadFile(const Path& path, std::string& buffer) {
+    SR_COMMON_DLL_API bool FileSystem::ReadFile(const Path& path, String& buffer) {
         SR_TRACY_ZONE;
         return SR_PLATFORM_NS::ReadFile(path, buffer);
     }
@@ -167,10 +167,10 @@ namespace SR_UTILS_NS {
         return hash;
     }
 
-    SR_COMMON_DLL_API std::shared_ptr<std::string> FileSystem::ReadFileAsBlob(const Path& path) {
+    SR_COMMON_DLL_API std::shared_ptr<String> FileSystem::ReadFileAsBlob(const Path& path) {
         SR_TRACY_ZONE;
 
-        std::shared_ptr<std::string> pBuffer = std::make_shared<std::string>();
+        std::shared_ptr<String> pBuffer = std::make_shared<String>();
         if (!SR_UTILS_NS::FileSystem::ReadFile(path, *pBuffer)) {
             SR_ERROR("FileSystem::ReadFileAsBlob() : failed to read file!\n\tPath: {}", path);
             return nullptr;
