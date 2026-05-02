@@ -8,6 +8,17 @@
 #include <Utils/Math/Mathematics.h>
 
 namespace SR_UTILS_NS {
+    SR_MAYBE_UNUSED static std::string GetErrorString(int err) {
+        char buf[256]{};
+    #ifdef _WIN32
+        strerror_s(buf, sizeof(buf), err);
+        return buf;
+    #else
+        const char* msg = strerror(err);
+        return msg ? msg : "unknown error";
+    #endif
+    }
+
     class StringAtom;
 
     SR_MAYBE_UNUSED static std::wstring s2ws(const std::string& str)

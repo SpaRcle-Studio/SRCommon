@@ -7,7 +7,6 @@
 #include <Utils/FileSystem/MappedFile.h>
 #include <Utils/Platform/Platform.h>
 #include <Utils/Common/Hashes.h>
-#include <Utils/Common/StringUtils.h>
 #include <Utils/Profile/TracyContext.h>
 
 namespace SR_UTILS_NS {
@@ -117,9 +116,7 @@ namespace SR_UTILS_NS {
         SR_TRACY_ZONE;
         std::ofstream stream(path.c_str());
         if (!stream.is_open()) {
-            char buffer[256];
-            strerror_s(buffer, sizeof(buffer), errno);
-            SR_ERROR("FileSystem::WriteToFile() : failed to open file for writing!\n\tPath: {}\n\tError: {}"_format(path, buffer));
+            SR_ERROR("FileSystem::WriteToFile() : failed to open file for writing!\n\tPath: {}\n\tError: {}"_format(path, GetErrorString(errno)));
             return false;
         }
         stream << text;
