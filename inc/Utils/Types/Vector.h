@@ -7,359 +7,485 @@
 
 #include <Utils/stdInclude.h>
 
-/*
+#define SR_VECTOR_REALLOCATE_MULTIPLIER 2
+#define SR_VECTOR_INITIAL_CAPACITY 4
+
 namespace SR_UTILS_NS {
-    template<typename T, class Alloc = std::allocator<T>> class SR_COMMON_DLL_API Vector {
-        using AllocType = RebindAllocT<Alloc, T>;
-        using AllocTypeTraits = std::allocator_traits<AllocType>;
+    template<typename T> class Vector {
     public:
-        SR_CONSTEXPR Vector() noexcept(std::is_nothrow_default_constructible_v<AllocType>) {
+        using SizeType = size_t;
+
+        using value_type = T;
+        using const_reference = const T&;
+        using reference = T&;
+
+        using Iterator = T*;
+        using ConstIterator = const T*;
+
+        using iterator = Iterator;
+        using const_iterator = ConstIterator;
+
+    public:
+        SR_CONSTEXPR Vector() noexcept = default;
+        SR_CONSTEXPR Vector(const Vector& other);
+        SR_CONSTEXPR Vector(Vector&& other) noexcept;
+        SR_CONSTEXPR Vector(std::initializer_list<T> init);
+
+        SR_CONSTEXPR explicit Vector(SizeType count);
+        SR_CONSTEXPR Vector(SizeType count, const T& value);
+
+        SR_CONSTEXPR ~Vector();
+
+    public:
+        SR_CONSTEXPR Vector& operator=(const Vector& other);
+        SR_CONSTEXPR Vector& operator=(Vector&& other) noexcept;
+        SR_CONSTEXPR Vector& operator=(std::initializer_list<T> init);
+
+    public:
+        void reserve(SizeType newCapacity);
+        void resize(SizeType newSize);
+        void shrink_to_fit();
+        void clear() noexcept;
+        void swap(Vector& other) noexcept;
+        void assign(SizeType count, const T& value);
+        void pop_back();
+        void push_back(const T& value);
+        void push_back(T&& value);
+        template <class... ValueType> T& emplace_back(ValueType&&... value);
+        SR_NODISCARD ConstIterator find(const T& value) const noexcept;
+        SR_NODISCARD Iterator find(const T& value) noexcept;
+        Iterator erase(ConstIterator pos);
+        Iterator erase(ConstIterator first, ConstIterator last);
+        template <class... ValueType> Iterator insert(ConstIterator pos, ValueType&&... value);
+        SR_NODISCARD T& at(SizeType index);
+        SR_NODISCARD const T& at(SizeType index) const { return const_cast<Vector*>(this)->at(index); }
+
+        SR_NODISCARD bool empty() const noexcept { return m_size == 0; }
+        SR_NODISCARD SizeType size() const noexcept { return m_size; }
+        SR_NODISCARD SizeType capacity() const noexcept { return m_capacity; }
+        SR_NODISCARD static SizeType max_size() noexcept { return std::numeric_limits<SizeType>::max() / sizeof(T); }
+
+        SR_NODISCARD Iterator begin() noexcept { return static_cast<T*>(m_data); }
+        SR_NODISCARD Iterator end() noexcept { return static_cast<T*>(m_data) + m_size; }
+        SR_NODISCARD ConstIterator begin() const noexcept { return static_cast<const T*>(m_data); }
+        SR_NODISCARD ConstIterator end() const noexcept { return static_cast<const T*>(m_data) + m_size; }
+        SR_NODISCARD ConstIterator cbegin() const noexcept { return static_cast<const T*>(m_data); }
+        SR_NODISCARD ConstIterator cend() const noexcept { return static_cast<const T*>(m_data) + m_size; }
+
+        SR_NODISCARD T& operator[](SizeType index) noexcept { return static_cast<T*>(m_data)[index]; }
+        SR_NODISCARD const T& operator[](SizeType index) const noexcept { return static_cast<const T*>(m_data)[index]; }
+
+        SR_NODISCARD T* data() noexcept { return static_cast<T*>(m_data); }
+        SR_NODISCARD T& front() noexcept { return static_cast<T*>(m_data)[0]; }
+        SR_NODISCARD T& back() noexcept { return static_cast<T*>(m_data)[m_size - 1]; }
+        SR_NODISCARD const T* data() const noexcept { return static_cast<const T*>(m_data); }
+        SR_NODISCARD const T& front() const noexcept { return static_cast<const T*>(m_data)[0]; }
+        SR_NODISCARD const T& back() const noexcept { return static_cast<const T*>(m_data)[m_size - 1]; }
+
+    private:
+        void ConstructRange(SizeType start, SizeType end);
+        void ConstructRange(SizeType start, SizeType end, const T& value);
+        void DestructRange(SizeType start, SizeType end);
+
+    private:
+        SizeType m_capacity = 0;
+        SizeType m_size = 0;
+        void* m_data = nullptr;
+
+    };
+
+    template<typename T> template<class... ValueType> T& Vector<T>::emplace_back(ValueType &&... value) {
+        if (m_size >= m_capacity) {
+            reserve(m_capacity > 0 ? m_capacity * SR_VECTOR_REALLOCATE_MULTIPLIER : SR_VECTOR_INITIAL_CAPACITY);
         }
 
-    _CONSTEXPR20 explicit vector(const _Alloc& _Al) noexcept : _Mypair(_One_then_variadic_args_t{}, _Al) {
-        _Mypair._Myval2._Alloc_proxy(_GET_PROXY_ALLOCATOR(_Alty, _Getal()));
-    }
-
-    _CONSTEXPR20 explicit vector(_CRT_GUARDOVERFLOW const size_type _Count, const _Alloc& _Al = _Alloc())
-        : _Mypair(_One_then_variadic_args_t{}, _Al) {
-        _Construct_n(_Count);
-    }
-
-    _CONSTEXPR20 vector(_CRT_GUARDOVERFLOW const size_type _Count, const _Ty& _Val, const _Alloc& _Al = _Alloc())
-        : _Mypair(_One_then_variadic_args_t{}, _Al) {
-        _Construct_n(_Count, _Val);
-    }
-
-    template <class _Iter, enable_if_t<_Is_iterator_v<_Iter>, int> = 0>
-    _CONSTEXPR20 vector(_Iter _First, _Iter _Last, const _Alloc& _Al = _Alloc())
-        : _Mypair(_One_then_variadic_args_t{}, _Al) {
-        _Adl_verify_range(_First, _Last);
-        auto _UFirst = _Get_unwrapped(_First);
-        auto _ULast  = _Get_unwrapped(_Last);
-        if constexpr (_Is_cpp17_fwd_iter_v<_Iter>) {
-            const auto _Length = static_cast<size_t>(_STD distance(_UFirst, _ULast));
-            const auto _Count  = _Convert_size<size_type>(_Length);
-            _Construct_n(_Count, _STD move(_UFirst), _STD move(_ULast));
-#ifdef __cpp_lib_concepts
-        } else if constexpr (forward_iterator<_Iter>) {
-            const auto _Length = _To_unsigned_like(_RANGES distance(_UFirst, _ULast));
-            const auto _Count  = _Convert_size<size_type>(_Length);
-            _Construct_n(_Count, _STD move(_UFirst), _STD move(_ULast));
-#endif // __cpp_lib_concepts
-        } else {
-            auto&& _Alproxy = _GET_PROXY_ALLOCATOR(_Alty, _Getal());
-            _Container_proxy_ptr<_Alty> _Proxy(_Alproxy, _Mypair._Myval2);
-            _Tidy_guard<vector> _Guard{this};
-
-            _Append_uncounted_range(_STD move(_UFirst), _STD move(_ULast));
-
-            _Guard._Target = nullptr;
-            _Proxy._Release();
+        if (std::is_trivially_copyable_v<T>) {
+            T temp(std::forward<ValueType>(value)...);
+            std::memcpy(static_cast<T*>(m_data) + m_size, &temp, sizeof(T));
         }
-    }
-
-    _CONSTEXPR20 vector(initializer_list<_Ty> _Ilist, const _Alloc& _Al = _Alloc())
-        : _Mypair(_One_then_variadic_args_t{}, _Al) {
-        _Construct_n(_Convert_size<size_type>(_Ilist.size()), _Ilist.begin(), _Ilist.end());
-    }
-
-#if _HAS_CXX23 && defined(__cpp_lib_concepts) // TRANSITION, GH-395
-    template <_Container_compatible_range<_Ty> _Rng>
-    constexpr vector(from_range_t, _Rng&& _Range, const _Alloc& _Al = _Alloc())
-        : _Mypair(_One_then_variadic_args_t{}, _Al) {
-        if constexpr (_RANGES sized_range<_Rng> || _RANGES forward_range<_Rng>) {
-            const auto _Length = _To_unsigned_like(_RANGES distance(_Range));
-            const auto _Count  = _Convert_size<size_type>(_Length);
-            _Construct_n(_Count, _RANGES _Ubegin(_Range), _RANGES _Uend(_Range));
-        } else {
-            auto&& _Alproxy = _GET_PROXY_ALLOCATOR(_Alty, _Getal());
-            _Container_proxy_ptr<_Alty> _Proxy(_Alproxy, _Mypair._Myval2);
-            _Tidy_guard<vector> _Guard{this};
-
-            _Append_uncounted_range(_RANGES _Ubegin(_Range), _RANGES _Uend(_Range));
-
-            _Guard._Target = nullptr;
-            _Proxy._Release();
+        else {
+            new (static_cast<T*>(m_data) + m_size) T(std::forward<ValueType>(value)...);
         }
-    }
-#endif // _HAS_CXX23 && defined(__cpp_lib_concepts)
-
-    _CONSTEXPR20 vector(const vector& _Right)
-        : _Mypair(_One_then_variadic_args_t{}, _Alty_traits::select_on_container_copy_construction(_Right._Getal())) {
-        const auto& _Right_data = _Right._Mypair._Myval2;
-        const auto _Count       = static_cast<size_type>(_Right_data._Mylast - _Right_data._Myfirst);
-        _Construct_n(_Count, _Right_data._Myfirst, _Right_data._Mylast);
+        ++m_size;
+        return back();
     }
 
-    _CONSTEXPR20 vector(const vector& _Right, const _Identity_t<_Alloc>& _Al)
-        : _Mypair(_One_then_variadic_args_t{}, _Al) {
-        const auto& _Right_data = _Right._Mypair._Myval2;
-        const auto _Count       = static_cast<size_type>(_Right_data._Mylast - _Right_data._Myfirst);
-        _Construct_n(_Count, _Right_data._Myfirst, _Right_data._Mylast);
-    }
-
-    _CONSTEXPR20 vector(vector&& _Right) noexcept
-        : _Mypair(_One_then_variadic_args_t{}, _STD move(_Right._Getal()),
-            _STD exchange(_Right._Mypair._Myval2._Myfirst, nullptr),
-            _STD exchange(_Right._Mypair._Myval2._Mylast, nullptr),
-            _STD exchange(_Right._Mypair._Myval2._Myend, nullptr)) {
-        _Mypair._Myval2._Alloc_proxy(_GET_PROXY_ALLOCATOR(_Alty, _Getal()));
-        _Mypair._Myval2._Swap_proxy_and_iterators(_Right._Mypair._Myval2);
-    }
-
-    _CONSTEXPR20 vector(vector&& _Right, const _Identity_t<_Alloc>& _Al_) noexcept(
-        _Alty_traits::is_always_equal::value) // strengthened
-        : _Mypair(_One_then_variadic_args_t{}, _Al_) {
-        _Alty& _Al        = _Getal();
-        auto&& _Alproxy   = _GET_PROXY_ALLOCATOR(_Alty, _Al);
-        auto& _My_data    = _Mypair._Myval2;
-        auto& _Right_data = _Right._Mypair._Myval2;
-        _Container_proxy_ptr<_Alty> _Proxy(_Alproxy, _My_data);
-
-        if constexpr (!_Alty_traits::is_always_equal::value) {
-            if (_Al != _Right._Getal()) {
-                const auto _Count = static_cast<size_type>(_Right_data._Mylast - _Right_data._Myfirst);
-                if (_Count != 0) {
-                    _Buy_raw(_Count);
-                    _Tidy_guard<vector> _Guard{this};
-                    _My_data._Mylast =
-                        _Uninitialized_move(_Right_data._Myfirst, _Right_data._Mylast, _My_data._Myfirst, _Al);
-
-                    _ASAN_VECTOR_CREATE;
-                    _Guard._Target = nullptr;
+    template<typename T> SR_CONSTEXPR Vector<T>& Vector<T>::operator=(const Vector& other) {
+        if (this != &other) {
+            if (other.m_size > m_capacity) {
+                Vector temp(other);
+                swap(temp);
+            }
+            else {
+                DestructRange(0, m_size);
+                if (std::is_trivially_copyable_v<T>) {
+                    std::memcpy(m_data, other.m_data, sizeof(T) * other.m_size);
                 }
-                _Proxy._Release();
-                return;
+                else {
+                    for (size_t i = 0; i < other.m_size; ++i) {
+                        new (static_cast<T*>(m_data) + i) T(static_cast<const T*>(other.m_data)[i]);
+                    }
+                }
+                m_size = other.m_size;
             }
         }
-
-        _My_data._Take_contents(_Right_data);
-        _Proxy._Release();
-    }
-
-    _CONSTEXPR20 vector& operator=(vector&& _Right) noexcept(
-        _Choose_pocma_v<_Alty> != _Pocma_values::_No_propagate_allocators) {
-        if (this == _STD addressof(_Right)) {
-            return *this;
-        }
-
-        _Alty& _Al                = _Getal();
-        _Alty& _Right_al          = _Right._Getal();
-        constexpr auto _Pocma_val = _Choose_pocma_v<_Alty>;
-        if constexpr (_Pocma_val == _Pocma_values::_No_propagate_allocators) {
-            if (_Al != _Right_al) {
-                _Move_assign_unequal_alloc(_Right);
-                return *this;
-            }
-        }
-
-        _Tidy();
-#if _ITERATOR_DEBUG_LEVEL != 0
-        if constexpr (_Pocma_val == _Pocma_values::_Propagate_allocators) {
-            if (_Al != _Right_al) {
-                // intentionally slams into noexcept on OOM, TRANSITION, VSO-466800
-                _Mypair._Myval2._Reload_proxy(_GET_PROXY_ALLOCATOR(_Alty, _Al), _GET_PROXY_ALLOCATOR(_Alty, _Right_al));
-            }
-        }
-#endif // _ITERATOR_DEBUG_LEVEL != 0
-
-        _Pocma(_Al, _Right_al);
-        _Mypair._Myval2._Take_contents(_Right._Mypair._Myval2);
         return *this;
     }
 
-    _CONSTEXPR20 ~vector() noexcept {
-        _Tidy();
-#if _ITERATOR_DEBUG_LEVEL != 0
-        auto&& _Alproxy = _GET_PROXY_ALLOCATOR(_Alty, _Getal());
-        _Delete_plain_internal(_Alproxy, _STD exchange(_Mypair._Myval2._Myproxy, nullptr));
-#endif // _ITERATOR_DEBUG_LEVEL != 0
+    template<typename T> T& Vector<T>::at(SizeType index) {
+        if (index >= m_size) {
+            SRHalt("Vector::at() : index {} is out of bounds! Size is {}!", index, m_size);
+            static T dummy{};
+            return dummy;
+        }
+        return static_cast<T*>(m_data)[index];
     }
-    public:
-        SR_NODISCARD uint64_t size() const noexcept { return m_size; }
-        SR_NODISCARD uint64_t capacity() const noexcept { return m_capacity; }
 
-    public:
-        SR_CONSTEXPR void push_back(const T& value) {
-            EmplaceOneAtBack(value);
+    template<typename T> Vector<T>::Iterator Vector<T>::erase(Vector::ConstIterator pos) {
+        if (pos == end()) {
+            return end();
         }
 
-        template <class... ValueType> SR_CONSTEXPR decltype(auto) emplace_back(ValueType&&... value) {
-            return EmplaceOneAtBack(_STD forward<ValueType>(value)...);
-        }
+        SizeType index = pos - begin();
+        T* data = static_cast<T*>(m_data);
 
-        T* find(const T& value) {
-            for (uint64_t i = 0; i < m_size; ++i) {
-                if (m_data[i] == value) {
-                    return m_data + i;
-                }
+        if constexpr (std::is_trivially_copyable_v<T>) {
+            std::memmove(data + index, data + index + 1, sizeof(T) * (m_size - index - 1));
+        }
+        else {
+            for (SizeType i = index; i < m_size - 1; ++i) {
+                data[i] = std::move(data[i + 1]);
             }
-            return nullptr;
+            data[m_size - 1].~T();
         }
 
-        SR_NODISCARD bool empty() const noexcept { return m_size == 0; }
+        --m_size;
 
-        T* begin() noexcept { return m_data; }
-        T* end() noexcept { return m_data + m_size; }
-        const T* begin() const noexcept { return m_data; }
-        const T* end() const noexcept { return m_data + m_size; }
+        return data + index;
+    }
 
-        T& operator[](uint64_t index) noexcept { return m_data[index]; }
-        const T& operator[](uint64_t index) const noexcept { return m_data[index]; }
+    template<typename T> Vector<T>::Iterator Vector<T>::erase(Vector::ConstIterator first, Vector::ConstIterator last) {
+        if (first == last) {
+            return const_cast<Iterator>(first);
+        }
 
-        T* data() noexcept { return m_data; }
+        SizeType firstIndex = first - begin();
+        SizeType lastIndex  = last - begin();
 
-        T& back() noexcept { return m_data[m_size - 1]; }
+        SizeType count = lastIndex - firstIndex;
 
-        T* erase(T* pElement) {
-            if (pElement < m_data || pElement >= m_data + m_size) {
-                return nullptr;
+        T* data = static_cast<T*>(m_data);
+
+        if constexpr (std::is_trivially_copyable_v<T>) {
+            std::memmove(data + firstIndex, data + lastIndex, sizeof(T) * (m_size - lastIndex));
+        }
+        else {
+            for (SizeType i = firstIndex; i < m_size - count; ++i) {
+                data[i] = std::move(data[i + count]);
             }
 
-            DestroyInPlace(pElement);
-            std::memmove(pElement, pElement + 1, (m_size - 1) * sizeof(T));
+            for (SizeType i = m_size - count; i < m_size; ++i) {
+                data[i].~T();
+            }
+        }
+
+        m_size -= count;
+
+        return data + firstIndex;
+    }
+
+    template<typename T> template<class... ValueType> Vector<T>::Iterator Vector<T>::insert(Vector::ConstIterator pos, ValueType&&... value) {
+        SizeType index = pos - begin();
+
+        if (index > m_size) {
+            return end();
+        }
+
+        if (m_size >= m_capacity) {
+            reserve(m_capacity > 0 ? m_capacity * SR_VECTOR_REALLOCATE_MULTIPLIER : SR_VECTOR_INITIAL_CAPACITY);
+        }
+
+        T* data = static_cast<T*>(m_data);
+
+        if constexpr (std::is_trivially_copyable_v<T>) {
+            std::memmove(data + index + 1, data + index, sizeof(T) * (m_size - index));
+            T temp(std::forward<ValueType>(value)...);
+            std::memcpy(data + index, &temp, sizeof(T));
+        }
+        else {
+            T temp(std::forward<ValueType>(value)...);
+            for (SizeType i = m_size; i > index; --i) {
+                new (data + i) T(std::move(data[i - 1]));
+                data[i - 1].~T();
+            }
+            new (data + index) T(std::move(temp));
+        }
+
+        ++m_size;
+
+        return data + index;
+    }
+
+    template<typename T> Vector<T>::ConstIterator Vector<T>::find(const T& value) const noexcept {
+        for (SizeType i = 0; i < m_size; ++i) {
+            if (static_cast<T*>(m_data)[i] == value) {
+                return begin() + i;
+            }
+        }
+        return end();
+    }
+
+    template<typename T> Vector<T>::Iterator Vector<T>::find(const T& value) noexcept {
+        return const_cast<Iterator>(static_cast<const Vector*>(this)->find(value));
+    }
+
+    template<typename T> void Vector<T>::push_back(const T& value) {
+        if (m_size >= m_capacity) {
+            reserve(m_capacity > 0 ? m_capacity * SR_VECTOR_REALLOCATE_MULTIPLIER : SR_VECTOR_INITIAL_CAPACITY);
+        }
+
+        if (std::is_trivially_copyable_v<T>) {
+            std::memcpy(static_cast<T*>(m_data) + m_size, &value, sizeof(T));
+        }
+        else {
+            new (static_cast<T*>(m_data) + m_size) T(value);
+        }
+        ++m_size;
+    }
+
+    template<typename T> void Vector<T>::push_back(T&& value) {
+        if (m_size >= m_capacity) {
+            reserve(m_capacity > 0 ? m_capacity * SR_VECTOR_REALLOCATE_MULTIPLIER : SR_VECTOR_INITIAL_CAPACITY);
+        }
+
+        if (std::is_trivially_copyable_v<T>) {
+            std::memcpy(static_cast<T*>(m_data) + m_size, &value, sizeof(T));
+        }
+        else {
+            new (static_cast<T*>(m_data) + m_size) T(std::move(value));
+        }
+        ++m_size;
+    }
+
+    template<typename T> void Vector<T>::pop_back() {
+        if (m_size > 0) {
+            DestructRange(m_size - 1, m_size);
             --m_size;
-            return pElement;
         }
+    }
 
-        void pop_back() {
-            if (m_size > 0) {
-                DestroyInPlace(m_data + m_size - 1);
-                --m_size;
-            }
+    template<typename T> void Vector<T>::assign(SizeType count, const T& value) {
+        if (count > m_capacity) {
+            Vector temp(count, value);
+            swap(temp);
         }
-
-        SR_NODISCARD static uint64_t max_size() noexcept { return std::numeric_limits<uint64_t>::max(); }
-
-        void clear() {
-            DestroyRange(m_data, m_data + m_size);
-            m_size = 0;
+        else {
+            DestructRange(0, m_size);
+            ConstructRange(0, count, value);
+            m_size = count;
         }
+    }
 
-        void reserve(uint64_t newCapacity) {
-            if (newCapacity > capacity()) {
-                if (newCapacity > max_size()) {
-                    throw std::length_error("Vector<T> too long!");
-                }
+    template<typename T> void Vector<T>::swap(Vector& other) noexcept {
+        std::swap(m_data, other.m_data);
+        std::swap(m_size, other.m_size);
+        std::swap(m_capacity, other.m_capacity);
+    }
 
-                ReallocateExactly(newCapacity);
-            }
+    template<typename T> SR_CONSTEXPR Vector<T>& Vector<T>::operator=(std::initializer_list<T> init) {
+        if (init.size() > m_capacity) {
+            Vector temp(init);
+            swap(temp);
         }
-
-    private:
-        SR_CONSTEXPR void ReallocateExactly(uint64_t newCapacity) {
-            const T* pNewData = m_allocator.allocate(newCapacity);
-
-            if constexpr (std::is_nothrow_move_constructible_v<T> || !std::is_copy_constructible_v<T>) {
-                UninitializedMove(_Myfirst, _Mylast, _Newvec, m_allocator);
+        else {
+            DestructRange(0, m_size);
+            if (std::is_trivially_copyable_v<T>) {
+                std::memcpy(m_data, init.begin(), sizeof(T) * init.size());
             }
             else {
-                UninitializedCopy(_Myfirst, _Mylast, _Newvec, m_allocator);
+                for (size_t i = 0; i < init.size(); ++i) {
+                    new (static_cast<T*>(m_data) + i) T(init.begin()[i]);
+                }
             }
-
-            ChangeArray(pNewData, m_size, newCapacity);
+            m_size = init.size();
         }
+        return *this;
+    }
 
-        SR_CONSTEXPR void ChangeArray(const T* pNewData, const uint64_t newSize, const uint64_t newCapacity) {
-            if (m_data) { // destroy and deallocate old array
-                DestroyRange(m_data, m_data + m_size);
-                m_allocator.deallocate(m_data, static_cast<uint64_t>(m_capacity));
+    template<typename T> void Vector<T>::clear() noexcept {
+        if (m_data) {
+            DestructRange(0, m_size);
+            m_size = 0;
+        }
+    }
+
+    template<typename T> SR_CONSTEXPR Vector<T>& Vector<T>::operator=(Vector&& other) noexcept {
+        if (this != &other) {
+            if (m_data) {
+                DestructRange(0, m_size);
+                SRFree(m_data);
             }
 
-            m_data = pNewData;
-            m_size = newSize;
+            m_data = other.m_data;
+            m_size = other.m_size;
+            m_capacity = other.m_capacity;
+
+            other.m_data = nullptr;
+            other.m_size = 0;
+            other.m_capacity = 0;
+        }
+        return *this;
+    }
+
+    template<typename T> SR_CONSTEXPR Vector<T>::Vector(std::initializer_list<T> init) {
+        m_data = SRMalloc(sizeof(T) * init.size());
+        m_size = init.size();
+        m_capacity = init.size();
+
+        if (std::is_trivially_copyable_v<T>) {
+            std::memcpy(m_data, init.begin(), sizeof(T) * init.size());
+        }
+        else {
+            for (size_t i = 0; i < init.size(); ++i) {
+                new (static_cast<T*>(m_data) + i) T(init.begin()[i]);
+            }
+        }
+    }
+
+    template<typename T> SR_CONSTEXPR Vector<T>::Vector(const Vector& other) {
+        m_data = SRMalloc(sizeof(T) * other.m_size);
+        m_size = other.m_size;
+        m_capacity = other.m_size;
+        if (std::is_trivially_copyable_v<T>) {
+            std::memcpy(m_data, other.m_data, sizeof(T) * other.m_size);
+        }
+        else {
+            for (size_t i = 0; i < other.m_size; ++i) {
+                new (static_cast<T*>(m_data) + i) T(static_cast<T*>(other.m_data)[i]);
+            }
+        }
+    }
+
+    template<typename T> SR_CONSTEXPR Vector<T>::Vector(Vector&& other) noexcept {
+        m_data = other.m_data;
+        m_size = other.m_size;
+        m_capacity = other.m_capacity;
+
+        other.m_data = nullptr;
+        other.m_size = 0;
+        other.m_capacity = 0;
+    }
+
+    template<typename T> SR_CONSTEXPR Vector<T>::Vector(const SizeType count) {
+        m_data = SRMalloc(sizeof(T) * count);
+        m_size = count;
+        m_capacity = count;
+        ConstructRange(0, count);
+    }
+
+    template<typename T> SR_CONSTEXPR Vector<T>::Vector(const SizeType count, const T& value) {
+        m_data = SRMalloc(sizeof(T) * count);
+        m_size = count;
+        m_capacity = count;
+        ConstructRange(0, count, value);
+    }
+
+    template<typename T> SR_CONSTEXPR Vector<T>::~Vector() {
+        if (m_data) {
+            DestructRange(0, m_size);
+            SRFree(m_data);
+        }
+    }
+
+
+
+    template<typename T> void Vector<T>::DestructRange(SizeType start, SizeType end) {
+        if (std::is_trivially_destructible_v<T>) {
+            return;
+        }
+        for (SizeType i = start; i < end; ++i) {
+            static_cast<T*>(m_data)[i].~T();
+        }
+    }
+
+    template<typename T> void Vector<T>::ConstructRange(SizeType start, SizeType end) {
+        if constexpr (std::is_trivially_default_constructible_v<T>) {
+            std::memset(static_cast<T*>(m_data) + start, 0, sizeof(T) * (end - start));
+            return;
+        }
+        for (SizeType i = start; i < end; ++i) {
+            new (static_cast<T*>(m_data) + i) T();
+        }
+    }
+
+    template<typename T> void Vector<T>::ConstructRange(SizeType start, SizeType end, const T& value) {
+        if (std::is_trivially_copy_constructible_v<T>) {
+            for (SizeType i = start; i < end; ++i) {
+                std::memcpy(static_cast<T*>(m_data) + i, &value, sizeof(T));
+            }
+            return;
+        }
+        for (SizeType i = start; i < end; ++i) {
+            new (static_cast<T*>(m_data) + i) T(value);
+        }
+    }
+
+    template<typename T> void Vector<T>::shrink_to_fit() {
+        if (m_size < m_capacity) {
+            SR_TRACY_ZONE;
+
+            void* pOldData = m_data;
+            m_data = SRMalloc(sizeof(T) * m_size);
+            m_capacity = m_size;
+
+            if (pOldData) {
+                if (std::is_trivially_copyable_v<T>) {
+                    std::memcpy(m_data, pOldData, sizeof(T) * m_size);
+                }
+                else {
+                    for (SizeType i = 0; i < m_size; ++i) {
+                        new (static_cast<T*>(m_data) + i) T(std::move(static_cast<T*>(pOldData)[i]));
+                        static_cast<T*>(pOldData)[i].~T();
+                    }
+                }
+                SRFree(pOldData);
+            }
+        }
+    }
+
+    template<typename T> void Vector<T>::resize(const SizeType newSize) {
+        if (newSize > m_size) {
+            reserve(newSize);
+            ConstructRange(m_size, newSize);
+        }
+        else if (newSize < m_size) {
+            DestructRange(newSize, m_size);
+        }
+        m_size = newSize;
+    }
+
+    template<typename T> void Vector<T>::reserve(const SizeType newCapacity) {
+        if (newCapacity > m_capacity) {
+            SR_TRACY_ZONE;
+
+            void* pOldData = m_data;
+            m_data = SRMalloc(sizeof(T) * newCapacity);
             m_capacity = newCapacity;
-        }
 
-        SR_CONSTEXPR void DestroyRange(T* pFirst, const T* pLast) noexcept {
-            using Type = typename Alloc::value_type;
-            if constexpr (!std::conjunction_v<std::is_trivially_destructible<Type>, std::_Uses_default_destroy<Alloc, Type*>>) {
-                for (; pFirst != pLast; ++pFirst) {
-                    std::allocator_traits<Alloc>::destroy(m_allocator, std::_Unfancy(pFirst));
+            if (pOldData) {
+                if (std::is_trivially_copyable_v<T>) {
+                    std::memcpy(m_data, pOldData, sizeof(T) * m_size);
                 }
-            }
-        }
-
-        template <class... ValueType> SR_CONSTEXPR T& EmplaceOneAtBack(ValueType&&... value) {
-            if (m_size < m_capacity) {
-                return EmplaceBackWithUnusedCapacity(std::forward<ValueType>(value)...);
-            }
-
-            return *EmplaceReallocate(std::forward<ValueType>(value)...);
-        }
-
-        template <class... ValueType> SR_CONSTEXPR T& EmplaceBackWithUnusedCapacity(ValueType&&... value) {
-            if constexpr (std::conjunction_v<std::is_nothrow_constructible<T, ValueType...>, std::_Uses_default_construct<Alloc, T*, ValueType...>>) {
-                _Construct_in_place(*_Mylast, _STD forward<ValueType>(value)...);
-            } else {
-                _ASAN_VECTOR_EXTEND_GUARD(static_cast<size_type>(_Mylast - _My_data._Myfirst) + 1);
-                _Alty_traits::construct(_Getal(), _Unfancy(_Mylast), _STD forward<_Valty>(_Val)...);
-                _ASAN_VECTOR_RELEASE_GUARD;
-            }
-
-            _Orphan_range(_Mylast, _Mylast);
-            _Ty& _Result = *_Mylast;
-            ++_Mylast;
-
-            return _Result;
-        }
-
-        template <class... _Valty> _CONSTEXPR20 pointer EmplaceReallocate(const pointer _Whereptr, _Valty&&... _Val) {
-            // reallocate and insert by perfectly forwarding _Val at _Whereptr
-            _Alty& _Al        = _Getal();
-            auto& _My_data    = _Mypair._Myval2;
-            pointer& _Myfirst = _My_data._Myfirst;
-            pointer& _Mylast  = _My_data._Mylast;
-
-            _STL_INTERNAL_CHECK(_Mylast == _My_data._Myend); // check that we have no unused capacity
-
-            const auto _Whereoff = static_cast<size_type>(_Whereptr - _Myfirst);
-            const auto _Oldsize  = static_cast<size_type>(_Mylast - _Myfirst);
-
-            if (_Oldsize == max_size()) {
-                _Xlength();
-            }
-
-            const size_type _Newsize     = _Oldsize + 1;
-            const size_type _Newcapacity = _Calculate_growth(_Newsize);
-
-            const pointer _Newvec           = _Al.allocate(_Newcapacity);
-            const pointer _Constructed_last = _Newvec + _Whereoff + 1;
-            pointer _Constructed_first      = _Constructed_last;
-
-            _TRY_BEGIN
-            _Alty_traits::construct(_Al, _Unfancy(_Newvec + _Whereoff), _STD forward<_Valty>(_Val)...);
-            _Constructed_first = _Newvec + _Whereoff;
-
-            if (_Whereptr == _Mylast) { // at back, provide strong guarantee
-                if constexpr (is_nothrow_move_constructible_v<_Ty> || !is_copy_constructible_v<_Ty>) {
-                    _Uninitialized_move(_Myfirst, _Mylast, _Newvec, _Al);
-                } else {
-                    _Uninitialized_copy(_Myfirst, _Mylast, _Newvec, _Al);
+                else {
+                    for (SizeType i = 0; i < m_size; ++i) {
+                        new (static_cast<T*>(m_data) + i) T(std::move(static_cast<T*>(pOldData)[i]));
+                        static_cast<T*>(pOldData)[i].~T();
+                    }
                 }
-            } else { // provide basic guarantee
-                _Uninitialized_move(_Myfirst, _Whereptr, _Newvec, _Al);
-                _Constructed_first = _Newvec;
-                _Uninitialized_move(_Whereptr, _Mylast, _Newvec + _Whereoff + 1, _Al);
+                SRFree(pOldData);
             }
-            _CATCH_ALL
-            _Destroy_range(_Constructed_first, _Constructed_last, _Al);
-            _Al.deallocate(_Newvec, _Newcapacity);
-            _RERAISE;
-            _CATCH_END
-
-            _Change_array(_Newvec, _Newsize, _Newcapacity);
-            return _Newvec + _Whereoff;
         }
-
-
-    private:
-        Alloc m_allocator;
-        uint64_t m_capacity = 0;
-        uint64_t m_size = 0;
-        T* m_data = nullptr;
-
-    };
+    }
 }
-*/
+
 #endif //SR_COMMON_VECTOR_H

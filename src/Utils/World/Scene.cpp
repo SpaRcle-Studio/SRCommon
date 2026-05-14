@@ -328,7 +328,7 @@ namespace SR_WORLD_NS {
         return true;
     }
 
-    SceneObject::Ptr Scene::Instance(const SR_HTYPES_NS::RawMesh* pRawMesh) {
+    SceneObject::Ptr Scene::Instance(const SR_HTYPES_NS::RawMesh*) {
         SRHalt("Method isn't implemented!");
         return SceneObject::Ptr();
     }

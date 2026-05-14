@@ -229,11 +229,11 @@ namespace SR_UTILS_NS {
         return ret;
     }
 
-    std::string StringUtils::Remove(std::string source, uint32_t count) {
+    std::string StringUtils::Remove(const String& source, uint64_t count) {
         return source.substr(count, source.size() - count);
     }
 
-    std::string StringUtils::Remove(std::string source, uint32_t start, uint32_t count) {
+    std::string StringUtils::Remove(const String& source, uint64_t start, uint64_t count) {
         const uint64_t size = source.size();
 
         if (static_cast<int64_t>(size) - count < 0) {

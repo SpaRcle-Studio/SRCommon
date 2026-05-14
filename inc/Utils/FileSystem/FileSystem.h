@@ -17,7 +17,7 @@ namespace SR_UTILS_NS {
     public:
         static uint64_t GetExecutableAndModulesHash();
 
-        static bool CreatePath(std::string path, uint32_t offset = 0);
+        static bool CreatePath(std::string path, SizeType offset = 0);
 
         static bool IsAllowedPathSymbol(char c);
         static bool IsPathSeparator(char c);
@@ -40,9 +40,6 @@ namespace SR_UTILS_NS {
 
         static uint64_t GetFileHash(const Path& path);
         static uint64_t GetFolderHash(const Path& path, uint64_t deep = SR_UINT64_MAX);
-
-        static const char* FileMapView(std::string path);
-        static void UnmapFile(const char* str);
     };
 }
 

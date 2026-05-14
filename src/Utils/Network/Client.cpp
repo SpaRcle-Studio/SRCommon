@@ -5,7 +5,7 @@
 #include <Utils/Network/Client.h>
 
 namespace SR_NETWORK_NS {
-    Client::Client(SocketType type, int32_t domain, int32_t service, int32_t protocol, int32_t port, uint64_t interface)
+    Client::Client(SocketType /*type*/, int32_t domain, int32_t service, int32_t protocol, int32_t port, uint64_t /*interface*/)
         : Super(this, SR_UTILS_NS::SharedPtrPolicy::Automatic)
         , m_domain(domain)
         , m_service(service)

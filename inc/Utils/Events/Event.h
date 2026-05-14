@@ -19,7 +19,7 @@ namespace SR_UTILS_NS {
     };
 
     template <typename ..._args> class SR_COMMON_DLL_API Event : public IEvent {
-        using CallBack = std::function<void(_args...)>;
+        // using CallBack = std::function<void(_args...)>;
     public:
         explicit Event(SR_UTILS_NS::StringAtom name)
             : m_name(name)
@@ -28,7 +28,7 @@ namespace SR_UTILS_NS {
         ~Event() override = default;
 
     public:
-        virtual void Trigger(_args... a) { }
+        virtual void Trigger(_args... /* a */) { }
 
     private:
         SR_NODISCARD SR_UTILS_NS::StringAtom GetEventName() const override;

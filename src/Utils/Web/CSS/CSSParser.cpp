@@ -139,7 +139,7 @@ namespace SR_UTILS_NS::Web {
         return SR_EXCHANGE(m_pCSS, {});
     }
 
-    bool CSSParser::EvaluateMedia(const std::string& media, const CSSParserContext& context) const {
+    bool CSSParser::EvaluateMedia(const std::string&, const CSSParserContext&) const {
         volatile bool result = true;
         return result;
     }

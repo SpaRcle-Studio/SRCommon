@@ -95,9 +95,9 @@ namespace SR_MATH_NS {
     IVector3 HEXToRGB(uint32_t hex) {
         IVector3 color;
 
-        color.x = static_cast<Unit>(((hex >> 16) & 0xFF));
-        color.y = static_cast<Unit>(((hex >> 8) & 0xFF));
-        color.z = static_cast<Unit>(((hex) & 0xFF));
+        color.x = static_cast<int32_t>(((hex >> 16) & 0xFF));
+        color.y = static_cast<int32_t>(((hex >> 8) & 0xFF));
+        color.z = static_cast<int32_t>(((hex) & 0xFF));
 
         return color;
     }
@@ -105,9 +105,9 @@ namespace SR_MATH_NS {
     IVector3 HEXToBGR(uint32_t hex) {
         IVector3 color;
 
-        color.x = static_cast<Unit>(((hex) & 0xFF));
-        color.y = static_cast<Unit>(((hex >> 8) & 0xFF));
-        color.z = static_cast<Unit>(((hex >> 16) & 0xFF));
+        color.x = static_cast<int32_t>(((hex) & 0xFF));
+        color.y = static_cast<int32_t>(((hex >> 8) & 0xFF));
+        color.z = static_cast<int32_t>(((hex >> 16) & 0xFF));
 
         return color;
     }
@@ -226,10 +226,10 @@ namespace SR_MATH_NS {
 
     FColor FColor::RGBFromHash(SRHashType hash) {
         FColor c;
-        c.r = (hash >>  0) & 0xFF;
-        c.g = (hash >>  8) & 0xFF;
-        c.b = (hash >> 16) & 0xFF;
-        c.a = 255;
+        c.r = static_cast<float_t>((hash >>  0) & 0xFF);
+        c.g = static_cast<float_t>((hash >>  8) & 0xFF);
+        c.b = static_cast<float_t>((hash >> 16) & 0xFF);
+        c.a = static_cast<float_t>(255);
         return c;
     }
 

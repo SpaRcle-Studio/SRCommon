@@ -61,7 +61,7 @@ namespace SR_MATH_NS {
         const FVector3 t = to.NormalizeSafe();
 
         const Unit cosTheta = f.Dot(t);
-        const Unit kEps = SR_KINDA_SMALL_NUMBER_EPSILON;
+        const Unit kEps = static_cast<Unit>(SR_KINDA_SMALL_NUMBER_EPSILON);
 
         // почти совпадают
         if (cosTheta > (1.0f - kEps)) {

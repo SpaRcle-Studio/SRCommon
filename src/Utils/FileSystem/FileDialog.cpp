@@ -62,7 +62,7 @@ namespace SR_UTILS_NS {
             pFilterItem[i].spec = filter[i].second.c_str();
         }
 
-        nfdresult_t result = NFD_SaveDialog(&outPath, pFilterItem, filter.size(), defaultPath.ToString().c_str(), NULL);
+        nfdresult_t result = NFD_SaveDialog(&outPath, pFilterItem, static_cast<nfdfiltersize_t>(filter.size()), defaultPath.ToString().c_str(), NULL);
         if (result == NFD_OKAY)
         {
             path = std::string(outPath);
@@ -94,7 +94,7 @@ namespace SR_UTILS_NS {
             pFilterItem[i].spec = filter[i].second.c_str();
         }
 
-        nfdresult_t result = NFD_OpenDialog(&outPath, pFilterItem, filter.size(), defaultPath.ToString().c_str());
+        nfdresult_t result = NFD_OpenDialog(&outPath, pFilterItem, static_cast<nfdfiltersize_t>(filter.size()), defaultPath.ToString().c_str());
         if (result == NFD_OKAY)
         {
             path = std::string(outPath);

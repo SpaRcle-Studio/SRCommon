@@ -69,7 +69,7 @@ namespace SR_UTILS_NS {
             }
 
             m_mouseData->m_code = code;
-            m_mouseData->m_wheel = input.GetMouseWheel();
+            m_mouseData->m_wheel = static_cast<float_t>(input.GetMouseWheel());
             m_mouseData->m_position = input.GetMousePos();
             m_mouseData->m_drag = input.GetMouseDrag();
 

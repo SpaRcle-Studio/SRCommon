@@ -8,6 +8,7 @@
 #include <Utils/Types/Stack.h>
 #include <Utils/Types/Function.h>
 #include <Utils/Types/FastMemoryArray.h>
+#include <Utils/Types/Vector.h>
 
 namespace SR_HTYPES_NS {
     template<typename T, typename Index = uint64_t> class SR_COMMON_DLL_API ObjectPool : public SR_UTILS_NS::NonCopyable {
@@ -37,7 +38,7 @@ namespace SR_HTYPES_NS {
             return m_objects.size();
         }
 
-        SR_NODISCARD const std::vector<std::pair<bool, T>>& GetObjects() const {
+        SR_NODISCARD const SR_UTILS_NS::Vector<std::pair<bool, T>>& GetObjects() const {
             return m_objects;
         }
 
@@ -230,7 +231,7 @@ namespace SR_HTYPES_NS {
         }
 
     private:
-        std::vector<std::pair<bool, T>> m_objects;
+        Vector<std::pair<bool, T>> m_objects;
         SR_HTYPES_NS::FastMemoryArray<Index> m_freeIndices;
 
     };

@@ -23,9 +23,6 @@ namespace SR_UTILS_NS::Localization {
     }
 
     void LocalizationFile::LoadLocalizationStrings(const Path& filePath) {
-        auto&& resourceManager = SR_UTILS_NS::ResourceManager::Instance();
-        //m_watchedFile = resourceManager.StartWatch(filePath);
-
         auto&& pFileContents = FileSystem::ReadFileAsBlob(filePath.ToString());
         if (!pFileContents) {
             SR_ERROR("LocalizationFile::LoadLocalizationStrings() : failed to read localization file! Path: {}", filePath);

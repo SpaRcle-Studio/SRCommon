@@ -8,7 +8,7 @@
 #include <Utils/Common/AssertFwd.h>
 
 namespace SR_HTYPES_NS {
-    template<typename T, size_t N> class SR_COMMON_DLL_API ArrayVector {
+    template<typename T, size_t N> class ArrayVector {
         using Iterator = T*;
         using ConstIterator = const T*;
     public:

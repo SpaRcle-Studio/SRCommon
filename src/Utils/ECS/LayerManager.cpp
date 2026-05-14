@@ -11,7 +11,7 @@ namespace SR_UTILS_NS {
     static SR_UTILS_NS::StringAtom LAYER_MANAGER_SETTINGS_PATH = "Engine/Configs/Layers.sras";
 
     uint16_t LayerManager::GetLayerIndex(StringAtom layer) const {
-        for (uint16_t i = 0; i < m_layers.size(); ++i) {
+        for (SizeType i = 0; i < m_layers.size(); ++i) {
             if (layer == m_layers[i]) {
                 return i;
             }
@@ -21,7 +21,7 @@ namespace SR_UTILS_NS {
     }
 
     bool LayerManager::HasLayer(StringAtom layer) const {
-        for (uint16_t i = 0; i < m_layers.size(); ++i) {
+        for (SizeType i = 0; i < m_layers.size(); ++i) {
             if (layer == m_layers[i]) {
                 return true;
             }

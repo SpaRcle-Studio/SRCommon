@@ -163,6 +163,10 @@ constexpr uint32_t SR_INVALID_DESCRIPTOR_SET = SR_ID_INVALID;
 constexpr uint32_t SR_INVALID_FBO = SR_ID_INVALID;
 
 namespace SR_UTILS_NS {
+    // Предназначено в основном для использования в static_assert, чтобы сделать его зависимым от T
+    template<class T>
+    inline constexpr bool AlwaysFalseV = std::is_same_v<std::decay_t<T>, std::add_cv_t<std::decay_t<T>>>;
+
     enum class ExecutionPolicy {
         Par,
         ParUnSeq,
@@ -293,6 +297,7 @@ namespace SR_UTILS_NS {
     using RebindAllocT = typename std::allocator_traits<Alloc>::template rebind_alloc<ValueType>;
 
     using SRHashType = uint64_t;
+    static constexpr SRHashType SRInvalidHash = std::numeric_limits<SRHashType>::max();
 
     #if defined(SR_LINUX) && !defined(SR_ANDROID)
         using TimePointType = std::chrono::time_point<std::chrono::high_resolution_clock>;

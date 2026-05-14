@@ -114,6 +114,11 @@ struct ObjectDataAccessor<std::vector<T, TOther...>> : ObjectDataAccessorVector<
 {
 };
 
+template<typename T>
+struct ObjectDataAccessor<SR_UTILS_NS::Vector<T>> : ObjectDataAccessorVector<SR_UTILS_NS::Vector<T>>
+{
+};
+
 template<typename T, size_t N> struct ObjectDataAccessor<std::array<T, N>> {
 	static void Save(ISerializer& serializer, const std::array<T, N>& value, const SerializationId& id) {
 		uint64_t count = 0;

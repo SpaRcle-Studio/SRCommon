@@ -18,17 +18,17 @@ namespace SR_MATH_NS {
                     euler.z = 0;
                 } else {
                     euler.x = atan2(-elements[1][2], elements[2][2]);
-                    euler.y = asin(sy);
+                    euler.y = static_cast<float_t>(asin(sy));
                     euler.z = atan2(-elements[0][1], elements[0][0]);
                 }
             } else {
                 euler.x = atan2(elements[2][1], elements[1][1]);
-                euler.y = -SR_PI / 2.0;
+                euler.y = static_cast<float_t>(-SR_PI / 2.0);
                 euler.z = 0.0;
             }
         } else {
             euler.x = atan2(elements[2][1], elements[1][1]);
-            euler.y = SR_PI / 2.0;
+            euler.y = static_cast<float_t>(SR_PI / 2.0);
             euler.z = 0.0;
         }
         return euler;

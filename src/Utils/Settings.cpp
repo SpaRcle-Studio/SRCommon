@@ -61,7 +61,7 @@ namespace SR_UTILS_NS {
 
     }
 
-    bool Settings::LoadSettings(const Xml::Node& node) {
+    bool Settings::LoadSettings(const Xml::Node&) {
         return true;
     }
 

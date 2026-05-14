@@ -48,7 +48,7 @@ namespace SR_UTILS_NS::EntityRefUtils {
                     break;
                 }
                 case Action::Action_Child: {
-                    const std::vector<SR_UTILS_NS::SceneObject::Ptr>* tree = nullptr;
+                    const Vector<SR_UTILS_NS::SceneObject::Ptr>* tree = nullptr;
 
                     if (!pEntity) {
                         if (owner.pEntity) {
@@ -196,43 +196,6 @@ namespace SR_UTILS_NS::EntityRefUtils {
         std::reverse(refPath.begin(), refPath.end());
 
         return std::move(refPath);
-    }
-
-    RefPath CalculateRelativePath(const OwnerRef& from, const OwnerRef& target) {
-        RefPath refPath;
-
-        auto&& fromPath = CalculatePath(from);
-        auto&& targetPath = CalculatePath(target);
-
-        /**
-         * File-System example:
-         *      from: C:/A/B/C/file.txt
-         *      to:   C:/A/G/C/file.txt
-         *      path: ../../../G/C/file.txt
-        */
-
-        const int32_t minSize = SR_MIN(fromPath.size(), targetPath.size());
-        int32_t offset = 0;
-
-        for (int32_t i = 0; i < minSize; ++i) {
-            if (fromPath[i] != targetPath[i]) {
-                break;
-            }
-            ++offset;
-        }
-
-        /// Вычитаем 2, так как один это конец массива, а второй это компонент
-        for (int32_t i = fromPath.size() - 2; i >= offset; --i) {
-            PathItem item;
-            item.action = Action::Action_Parent;
-            refPath.emplace_back(item);
-        }
-
-        for (int32_t i = offset; i < targetPath.size(); ++i) {
-            refPath.emplace_back(targetPath[i]);
-        }
-
-        return refPath;
     }
 
     bool IsOwnerValid(const OwnerRef& owner) {

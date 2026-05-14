@@ -112,7 +112,7 @@ namespace SR_UTILS_NS {
 
         void SetId(SR_UTILS_NS::StringAtom id, bool autoRegister = true);
         void SetId(SR_UTILS_NS::StringAtom id, const SR_UTILS_NS::Path& path, bool autoRegister = true);
-        virtual void SetVariant(const IResourceVariant& variant) { }
+        virtual void SetVariant(const IResourceVariant& /* variant */) { }
 
         virtual void ReviveResource();
 
@@ -124,10 +124,9 @@ namespace SR_UTILS_NS {
 
         std::atomic<bool> m_isFromMemory = false;
 
-        std::list<SR_HTYPES_NS::SharedPtr<FileWatcher>> m_watchers;
-
-        std::list<SR_UTILS_NS::StringAtom> m_debugUseStackTraces;
-        std::list<SR_UTILS_NS::StringAtom> m_debugUnUseStackTraces;
+        Vector<SR_HTYPES_NS::SharedPtr<FileWatcher>> m_watchers;
+        Vector<SR_UTILS_NS::StringAtom> m_debugUseStackTraces;
+        Vector<SR_UTILS_NS::StringAtom> m_debugUnUseStackTraces;
 
     private:
         ResourceInfoWeakPtr m_resourceInfo;

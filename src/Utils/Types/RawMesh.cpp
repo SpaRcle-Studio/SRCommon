@@ -409,14 +409,14 @@ namespace SR_HTYPES_NS {
         return 0;
     }
 
-    std::vector<SR_UTILS_NS::StringAtom> RawMesh::GetAnimationNames() const {
+    Vector<SR_UTILS_NS::StringAtom> RawMesh::GetAnimationNames() const {
     #ifdef SR_UTILS_ASSIMP
         if (!m_scene) {
             SRHalt("Invalid scene!");
             return {};
         }
 
-        std::vector<SR_UTILS_NS::StringAtom> names;
+        Vector<SR_UTILS_NS::StringAtom> names;
         names.reserve(m_scene->mNumAnimations);
 
         for (uint32_t i = 0; i < m_scene->mNumAnimations; ++i) {
@@ -722,7 +722,7 @@ namespace SR_HTYPES_NS {
         return SR_ID_INVALID;
     }
 
-    const std::vector<SR_MATH_NS::Matrix4x4> &RawMesh::GetBoneOffsets() const {
+    const Vector<SR_MATH_NS::Matrix4x4>& RawMesh::GetBoneOffsets() const {
         return m_boneOffsets;
     }
 

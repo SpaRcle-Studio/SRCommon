@@ -64,7 +64,6 @@ namespace SR_HTYPES_NS {
         SR_NODISCARD std::string_view GetGeometryName(uint32_t id) const;
 
         SR_NODISCARD const SR_UTILS_NS::VertexDataBuffer& GetVertexBuffer(uint32_t id, const SR_UTILS_NS::VertexLayoutDescription& layout) const;
-        //SR_NODISCARD std::vector<SR_UTILS_NS::Vertex> GetVertices(uint32_t id) const;
         SR_NODISCARD const SR_HTYPES_NS::FastMemoryArray<uint32_t>& GetIndices(uint32_t id) const;
         SR_NODISCARD const SR_HTYPES_NS::FlatHashMap<SR_UTILS_NS::StringAtom, uint32_t>& GetBones(uint32_t id) const;
         SR_NODISCARD const SR_HTYPES_NS::FlatHashMap<SR_UTILS_NS::StringAtom, uint16_t>& GetOptimizedBones() const;
@@ -72,14 +71,14 @@ namespace SR_HTYPES_NS {
         SR_NODISCARD const SR_MATH_NS::Matrix4x4& GetBoneTransform(uint32_t index) const;
         SR_NODISCARD const SR_MATH_NS::Matrix4x4& GetBoneTransform(SR_UTILS_NS::StringAtom name) const;
         SR_NODISCARD uint32_t GetBoneIndex(SR_UTILS_NS::StringAtom name) const;
-        SR_NODISCARD const std::vector<SR_MATH_NS::Matrix4x4>& GetBoneOffsets() const;
+        SR_NODISCARD const Vector<SR_MATH_NS::Matrix4x4>& GetBoneOffsets() const;
         SR_NODISCARD std::string_view GetRootBoneName() const;
         SR_NODISCARD bool HasBones(uint32_t id) const;
 
         SR_NODISCARD uint32_t GetVerticesCount(uint32_t id) const;
         SR_NODISCARD uint32_t GetIndicesCount(uint32_t id) const;
         SR_NODISCARD uint32_t GetAnimationsCount() const;
-        SR_NODISCARD std::vector<SR_UTILS_NS::StringAtom> GetAnimationNames() const;
+        SR_NODISCARD Vector<SR_UTILS_NS::StringAtom> GetAnimationNames() const;
         SR_NODISCARD int32_t GetMeshId(SR_UTILS_NS::StringAtom name) const;
 
         SR_NODISCARD float_t GetScaleFactor() const;
@@ -108,18 +107,18 @@ namespace SR_HTYPES_NS {
     #endif
 
     private:
-        mutable std::vector<std::vector<SR_UTILS_NS::VertexDataBuffer>> m_vertexBuffersCache;
+        mutable SR_UTILS_NS::Vector<SR_UTILS_NS::Vector<SR_UTILS_NS::VertexDataBuffer>> m_vertexBuffersCache;
 
-        std::vector<SR_HTYPES_NS::FlatHashMap<SR_UTILS_NS::StringAtom, uint32_t>> m_bones;
+        SR_UTILS_NS::Vector<SR_HTYPES_NS::FlatHashMap<SR_UTILS_NS::StringAtom, uint32_t>> m_bones;
         SR_HTYPES_NS::FlatHashMap<SR_UTILS_NS::StringAtom, uint16_t> m_optimizedBones;
 
         SR_HTYPES_NS::FlatHashMap<SR_UTILS_NS::StringAtom, SR_MATH_NS::Matrix4x4> m_boneOffsetsMap;
         SR_HTYPES_NS::FlatHashMap<SR_UTILS_NS::StringAtom, SR_MATH_NS::Matrix4x4> m_boneTransformsMap;
 
-        std::vector<SR_MATH_NS::Matrix4x4> m_boneOffsets;
-        std::vector<SR_MATH_NS::Matrix4x4> m_boneTransforms;
+        SR_UTILS_NS::Vector<SR_MATH_NS::Matrix4x4> m_boneOffsets;
+        SR_UTILS_NS::Vector<SR_MATH_NS::Matrix4x4> m_boneTransforms;
 
-        mutable std::vector<SR_HTYPES_NS::FastMemoryArray<uint32_t>> m_indices;
+        mutable SR_UTILS_NS::Vector<SR_HTYPES_NS::FastMemoryArray<uint32_t>> m_indices;
 
         RawMeshParams m_params;
 

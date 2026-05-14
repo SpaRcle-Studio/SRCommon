@@ -43,11 +43,11 @@ namespace SR_UTILS_NS {
         SR_NODISCARD bool LoadFromString(const std::string& str) override;
         SR_NODISCARD bool LoadFromNode(SR_UTILS_NS::SerializationNode&& node);
 
-        SR_NODISCARD bool ShouldSetDefaults(const SerializationId& name) const noexcept override { return true; }
+        SR_NODISCARD bool ShouldSetDefaults(const SerializationId& /* name */) const noexcept override { return true; }
         SR_NODISCARD bool ShouldSetDefaults() const noexcept override { return true; }
         SR_NODISCARD bool AllowNewMapKeys() const noexcept override { return false; }
         SR_NODISCARD bool IsPreserveMode() const noexcept override { return false; }
-        SR_NODISCARD bool AllowReAllocPointer(ReAllocPointerReason reason) const noexcept override { return false; }
+        SR_NODISCARD bool AllowReAllocPointer(ReAllocPointerReason /* reason */) const noexcept override { return false; }
 
         void ReportError(const std::string& message) override;
 

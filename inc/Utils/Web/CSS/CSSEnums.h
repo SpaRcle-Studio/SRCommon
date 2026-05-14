@@ -62,22 +62,22 @@ namespace SR_UTILS_NS::Web {
     SR_INLINE_STATIC CSSPosition DEFAULT_CSS_POSITION = CSSPosition::Static;
     SR_INLINE_STATIC CSSBoxSizing DEFAULT_CSS_BOX_SIZING = CSSBoxSizing::ContentBox;
 
-    static CSSPosition StringToCSSPosition(const std::string_view str) {
-        static std::unordered_map<SRHashType, CSSPosition> map = {
-            { "absolute"_atom_hash, CSSPosition::Absolute },
-            { "relative"_atom_hash, CSSPosition::Relative },
-            { "fixed"_atom_hash, CSSPosition::Fixed },
-            { "static"_atom_hash, CSSPosition::Static },
-            { "sticky"_atom_hash, CSSPosition::Sticky },
-        };
+    //static CSSPosition StringToCSSPosition(const std::string_view str) {
+    //    static std::unordered_map<SRHashType, CSSPosition> map = {
+    //        { "absolute"_atom_hash, CSSPosition::Absolute },
+    //        { "relative"_atom_hash, CSSPosition::Relative },
+    //        { "fixed"_atom_hash, CSSPosition::Fixed },
+    //        { "static"_atom_hash, CSSPosition::Static },
+    //        { "sticky"_atom_hash, CSSPosition::Sticky },
+    //    };
 
-        if (auto it = map.find(SR_HASH_STR_VIEW(str)); it != map.end()) {
-            return it->second;
-        }
-        return DEFAULT_CSS_POSITION;
-    }
+    //    if (auto it = map.find(SR_HASH_STR_VIEW(str)); it != map.end()) {
+    //        return it->second;
+    //    }
+    //    return DEFAULT_CSS_POSITION;
+    //}
 
-    static CSSBoxSizing StringToCSSBoxSizing(const std::string_view str) {
+    SR_MAYBE_UNUSED static CSSBoxSizing StringToCSSBoxSizing(const std::string_view str) {
         static std::unordered_map<SRHashType, CSSBoxSizing> map = {
             { "content-box"_atom_hash, CSSBoxSizing::ContentBox },
             { "border-box"_atom_hash, CSSBoxSizing::BorderBox },
@@ -90,7 +90,7 @@ namespace SR_UTILS_NS::Web {
         return DEFAULT_CSS_BOX_SIZING;
     }
 
-    static CSSDisplay StringToCSSDisplay(const std::string_view str) {
+    SR_MAYBE_UNUSED static CSSDisplay StringToCSSDisplay(const std::string_view str) {
         static std::unordered_map<SRHashType, CSSDisplay> map = {
             { "block"_atom_hash, CSSDisplay::Block },
             { "inline"_atom_hash, CSSDisplay::Inline },
@@ -140,7 +140,7 @@ namespace SR_UTILS_NS::Web {
         return DEFAULT_CSS_DISPLAY;
     }
 
-    static SR_UTILS_NS::StringAtom CSSPositionToString(CSSPosition position) { /// NOLINT
+    SR_MAYBE_UNUSED static SR_UTILS_NS::StringAtom CSSPositionToString(CSSPosition position) { /// NOLINT
         static std::array<SR_UTILS_NS::StringAtom, static_cast<uint32_t>(CSSPosition::Sticky) + 1> strings = {
             "absolute"_atom,
             "relative"_atom,
@@ -156,7 +156,7 @@ namespace SR_UTILS_NS::Web {
         return CSSPositionToString(DEFAULT_CSS_POSITION);
     }
 
-    static SR_UTILS_NS::StringAtom CSSBoxSizingToString(CSSBoxSizing boxSizing) { /// NOLINT
+    SR_MAYBE_UNUSED static SR_UTILS_NS::StringAtom CSSBoxSizingToString(CSSBoxSizing boxSizing) { /// NOLINT
         static std::array<SR_UTILS_NS::StringAtom, static_cast<uint32_t>(CSSBoxSizing::Inherit) + 1> strings = {
             "content-box"_atom,
             "border-box"_atom,
@@ -170,7 +170,7 @@ namespace SR_UTILS_NS::Web {
         return CSSBoxSizingToString(DEFAULT_CSS_BOX_SIZING);
     }
 
-    static SR_UTILS_NS::StringAtom CSSDisplayToString(CSSDisplay display) { /// NOLINT
+    SR_MAYBE_UNUSED static SR_UTILS_NS::StringAtom CSSDisplayToString(CSSDisplay display) { /// NOLINT
         static std::array<SR_UTILS_NS::StringAtom, static_cast<uint32_t>(CSSDisplay::SIZE)> strings = {
             "block"_atom,
             "inline"_atom,

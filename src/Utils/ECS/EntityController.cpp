@@ -80,28 +80,28 @@ namespace SR_UTILS_NS {
         SRAssert(pEntity);
         SRAssert2(!pEntity->IsEntityRegistered(), "Entity already registered!");
 
-        if (pEntity->GetEntityId() != SR_ID_INVALID) SR_UNLIKELY_ATTRIBUTE {
+        if (pEntity->GetEntityId() != SR_INVALID_ENTITY_ID) SR_UNLIKELY_ATTRIBUTE {
             SRHalt("Entity already has id! Id: {}", pEntity->GetEntityId());
             return pEntity->GetEntityId();
         }
 
         EntityId id = m_nextId;
 
-        if (wantedId != SR_ID_INVALID && !IsIdUsed(wantedId)) {
+        if (wantedId != SR_INVALID_ENTITY_ID && !IsIdUsed(wantedId)) {
             id = wantedId;
             goto complete;
         }
 
-        if (id != SR_ID_INVALID) {
+        if (id != SR_INVALID_ENTITY_ID) {
             m_reserved.erase(m_nextId);
-            m_nextId = SR_ID_INVALID;
+            m_nextId = SR_INVALID_ENTITY_ID;
             goto complete;
         }
 
     retry:
         id = Random::Instance().UInt64();
 
-        if (m_entities.count(id) || m_reserved.count(id) || id == SR_ID_INVALID) {
+        if (m_entities.count(id) || m_reserved.count(id) || id == SR_INVALID_ENTITY_ID) {
             SR_WARN("EntityController::Register() : collision detected! Id: " + std::to_string(id));
             goto retry;
         }

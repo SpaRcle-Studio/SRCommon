@@ -20,7 +20,7 @@ namespace SR_UTILS_NS {
         }
 
         SR_NODISCARD bool Allocate(uint32_t w, uint32_t h, SR_MATH_NS::USRect& out);
-        SR_NODISCARD uint32_t GetNodesCount() const { return m_nodes.size(); }
+        SR_NODISCARD SizeType GetNodesCount() const { return m_nodes.size(); }
 
     private:
         SR_NODISCARD int32_t Fit(uint32_t index, uint32_t w, uint32_t h);

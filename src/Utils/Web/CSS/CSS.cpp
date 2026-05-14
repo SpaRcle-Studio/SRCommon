@@ -38,7 +38,7 @@ namespace SR_UTILS_NS::Web {
         const SRHashType nameHash = SR_HASH_STR_VIEW(name);
 
         if (nameHash == "position"_atom_hash) {
-            position = StringToCSSPosition(data);
+            // position = StringToCSSPosition(data);
         }
         else if (nameHash == "box-sizing"_atom_hash) {
             boxSizing = StringToCSSBoxSizing(data);

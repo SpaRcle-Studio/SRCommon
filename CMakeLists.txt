@@ -429,7 +429,37 @@ set_target_properties(Utils PROPERTIES
 )
 
 if (MSVC AND NOT SR_COMMON_USE_CLANG_EMULATION)
-    #target_compile_options(Utils PUBLIC /WX)
-    #target_compile_options(Utils PUBLIC /W4)
-    #target_compile_options(Utils PUBLIC /permissive- /sdl)
+    target_compile_options(Utils PUBLIC /WX)
+    target_compile_options(Utils PUBLIC /W4)
+    target_compile_options(Utils PUBLIC /permissive- /sdl)
+    target_compile_options(Utils PUBLIC
+        # Unfixable warnings
+
+        /wd4251 # dll interface warning
+        /wd4275 # inheritance dll warning
+
+        # TODO: enable these warnings and fix the issues
+
+        /wd4100 # unreferenced formal parameter
+        /wd4099 # type name first seen using 'class' now seen using 'struct'
+        /wd4996 # deprecated functions
+        /wd4244 # possible loss of data
+        /wd4245 # conversion from 'type1' to 'type2', signed/unsigned mismatch
+        /wd4267 # conversion from 'size_t' to 'type', possible loss of data
+        /wd4706 # assignment within conditional expression
+        /wd4702 # unreachable code
+        /wd4458 # declaration of 'identifier' hides class member
+        /wd4127 # conditional expression is constant
+        /wd4459 # declaration of 'identifier' hides global declaration
+        /wd4456 # declaration of 'identifier' hides previous local declaration
+        /wd4310 # cast truncates constant value
+        /wd4457 # declaration of 'identifier' hides function parameter
+        /wd4189 # local variable is initialized but not referenced
+        /wd4389 # signed/unsigned mismatch
+        /wd5054 # operator '+=': deprecated between enumerations of different types
+        /wd4018 # signed/unsigned mismatch
+        /wd4701 # potentially uninitialized variable
+        /wd4305 # truncation from 'type1' to 'type2'
+        /wd4324 # structure was padded due to alignment specifier
+    )
 endif()

@@ -384,7 +384,7 @@ namespace SR_UTILS_NS {
     std::string_view Path::GetWithoutExtensionView() const {
         auto&& normalized = GetNormalized();
         SR_UTILS_NS::SizeType pos = std::string::npos;
-        for (uint32_t i = normalized.size() - 1; i > 0; --i) {
+        for (SizeType i = normalized.size() - 1; i > 0; --i) {
             if (normalized[i] == '/') {
                 return normalized;
             }

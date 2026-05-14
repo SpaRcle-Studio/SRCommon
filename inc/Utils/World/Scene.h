@@ -9,6 +9,7 @@
 
 #include <Utils/Types/StringAtom.h>
 #include <Utils/Types/DataStorage.h>
+#include <Utils/Types/Vector.h>
 
 #include <Utils/World/SceneLogicType.h>
 #include <Utils/World/CameraData.h>
@@ -36,7 +37,7 @@ namespace SR_WORLD_NS {
         using SceneLogicPtr = SR_HTYPES_NS::SharedPtr<SceneLogic>;
         using Super = SR_UTILS_NS::IComponentable;
         using SceneObjectPtr = SR_HTYPES_NS::SharedPtr<SceneObject>;
-        using SceneObjects = std::vector<SceneObjectPtr>;
+        using SceneObjects = Vector<SceneObjectPtr>;
         using GameObjectPtr = SR_HTYPES_NS::SharedPtr<GameObject>;
 
         SR_MAYBE_UNUSED SR_INLINE_STATIC const std::string RuntimeScenePath = "Scenes/Runtime-cache-scene"; /// NOLINT

@@ -101,7 +101,9 @@ namespace SR_HTYPES_NS {
                 if constexpr (std::is_base_of_v<SharedPtrBase, T>) {
                     return static_cast<void*>(static_cast<T*>(p));
                 }
-                return nullptr;
+                else {
+                    return nullptr;
+                }
             };
             if constexpr (std::is_base_of_v<SRClass, T>) {
                 classGetter = [](void* p) -> SRClass* {

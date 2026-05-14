@@ -90,7 +90,8 @@ namespace SR_HTYPES_NS {
             static_assert(AlwaysFalseV<T>, "SharedPtr<T>::SharedPtr(const T* constPtr) : T must be a complete type!");
         }
         else if constexpr (SR_UTILS_NS::IsDerivedFrom<SharedPtr, T>::value) {
-            if ((m_data = ptr->GetPtrData())) {
+            m_data = ptr->GetPtrData();
+            if (m_data) {
                 m_data->IncrementStrong();
             }
             else {
@@ -144,7 +145,8 @@ namespace SR_HTYPES_NS {
 
     template<class T> SharedPtr<T>::SharedPtr(const SharedPtr& ptr) {
         m_ptr = ptr.m_ptr;
-        if ((m_data = ptr.m_data)) {
+        m_data = ptr.m_data;
+        if (m_data) {
             m_data->IncrementStrong();
         }
     }
@@ -177,7 +179,8 @@ namespace SR_HTYPES_NS {
 
         m_ptr = ptr.m_ptr;
 
-        if ((m_data = ptr.m_data)) {
+        m_data = ptr.m_data;
+        if (m_data) {
             m_data->valid = bool(m_ptr);
             m_data->IncrementStrong();
         }
@@ -200,7 +203,8 @@ namespace SR_HTYPES_NS {
         m_ptr = ptr;
 
         if constexpr (SR_UTILS_NS::IsDerivedFrom<SharedPtr, T>::value) {
-            if ((m_data = ptr->GetPtrData())) {
+            m_data = ptr->GetPtrData();
+            if (m_data) {
                 m_data->IncrementStrong();
                 m_ptr = ptr;
             }

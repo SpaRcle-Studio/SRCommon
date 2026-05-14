@@ -7,8 +7,15 @@
 
 #include <Utils/Reflection/ValueImpl.h>
 #include <Utils/Types/SharedPtr.h>
+#include <Utils/Types/Vector.h>
 
 #include <entt/entt.hpp>
+
+namespace entt {
+    template<typename... Args>
+    struct meta_sequence_container_traits<SR_UTILS_NS::Vector<Args...>>
+        : basic_meta_sequence_container_traits<SR_UTILS_NS::Vector<Args...>> {};
+}
 
 namespace SR_HTYPES_NS {
     class OptionalBase;

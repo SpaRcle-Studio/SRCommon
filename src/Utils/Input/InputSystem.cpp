@@ -13,19 +13,19 @@
 namespace SR_UTILS_NS {
     std::string_view InputTextEvent::GetText() const { return std::string_view(text, length); }
 
-    void InputTextEvent::SetText(std::string_view text) {
-        if (text.size() > sizeof(this->text) - 1) {
+    void InputTextEvent::SetText(std::string_view newText) {
+        if (newText.size() > sizeof(this->text) - 1) {
             SRHalt("InputTextEvent::SetText() : text size exceeds maximum length!");
             return;
         }
-        std::memcpy(this->text, text.data(), text.size());
-        this->text[text.size()] = '\0'; // null-terminate the string
-        length = static_cast<uint8_t>(text.size());
+        std::memcpy(this->text, newText.data(), newText.size());
+        this->text[newText.size()] = '\0'; // null-terminate the string
+        length = static_cast<uint8_t>(newText.size());
     }
 
     Input::~Input() = default;
 
-    void Input::UpdateMouse(float_t dt) {
+    void Input::UpdateMouse(float_t /* dt */) {
         SR_TRACY_ZONE;
 
         auto&& mouseState = SR_PLATFORM_NS::GetMouseState();
@@ -202,7 +202,7 @@ namespace SR_UTILS_NS {
 
     SR_MATH_NS::FVector2 Input::GetMouseDrag() { return m_mouseDrag; }
 
-    int32_t Input::GetMouseWheel() const { return m_mouseScroll.y; }
+    int32_t Input::GetMouseWheel() const { return m_mouseScroll.CastToInt().y; }
 
     bool Input::GetMouseDown(MouseCode code) { return GetKeyDown(static_cast<KeyCode>(code)); }
     bool Input::GetMouseUp(MouseCode code) { return GetKeyUp(static_cast<KeyCode>(code)); }

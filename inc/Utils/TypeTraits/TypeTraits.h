@@ -349,10 +349,6 @@ namespace SR_UTILS_NS {
 	template<class T, auto val>
 	using TypeValuePairT = typename TypeValuePair<T, val>::type;
 
-	// Предназначено в основном для использования в static_assert, чтобы сделать его зависимым от T
-	template<class T>
-	inline constexpr bool AlwaysFalseV = std::is_same_v<std::decay_t<T>, std::add_cv_t<std::decay_t<T>>>;
-
 	template<class T>
 	struct GetFirstOfTypeFromSequenceAssert
 	{

@@ -447,7 +447,7 @@ namespace SR_MATH_NS {
         return true;
     }
 
-    bool Matrix4x4::Decompose(FVector3& translation, FVector3& eulers, FVector3& scale, FVector3& skew) const {
+    bool Matrix4x4::Decompose(FVector3& translation, FVector3& eulers, FVector3& scale, FVector3& /* skew */) const {
         translation = value[3].XYZ();
 
         scale[0] = glm::length(glm::vec3(self[0]));
@@ -541,29 +541,14 @@ namespace SR_MATH_NS {
     }
 
     SR_NODISCARD Quaternion Matrix4x4::GetQuat() const {
-        glm::mat3 m(self);
+        glm::mat3 glmMat(self);
 
         // Gram–Schmidt ортонормализация
-        glm::vec3 x = glm::normalize(m[0]);
-        glm::vec3 y = glm::normalize(m[1] - x * glm::dot(m[1], x));
+        glm::vec3 x = glm::normalize(glmMat[0]);
+        glm::vec3 y = glm::normalize(glmMat[1] - x * glm::dot(glmMat[1], x));
         glm::vec3 z = glm::cross(x, y); // автоматическая ортогональность
 
         return glm::quat_cast(glm::mat3(x, y, z));
-
-        /*glm::mat4 mat = self;
-        glm::mat3 rot;
-        glm::extractMatrixRotation(mat, rot);
-        return glm::quat_cast(rot);*/
-
-        /*auto&& upperLeft = glm::mat3(self);  // Верхний левый 3x3 подматрица матрицы
-
-        // Нормализация столбцов матрицы (избегаем влияния масштабирования)
-        glm::vec3 col1 = glm::normalize(upperLeft[0]);
-        glm::vec3 col2 = glm::normalize(upperLeft[1]);
-        glm::vec3 col3 = glm::normalize(upperLeft[2]);
-
-        // Создание кватерниона из верхней левой 3x3 подматрицы
-        return glm::quat_cast(glm::mat3(col1, col2, col3));*/
     }
 
     SR_NODISCARD FVector3 Matrix4x4::GetEulers() const {

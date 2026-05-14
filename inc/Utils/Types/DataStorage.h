@@ -225,7 +225,7 @@ namespace SR_HTYPES_NS {
         try {
             return std::any_cast<T>(m_values.at(hashCode));
         }
-        catch (const std::bad_any_cast& e) {
+        catch (const std::bad_any_cast&) {
             SRHalt("DataStorage::GetValue() : bad cast!");
             return T();
         }
@@ -240,7 +240,7 @@ namespace SR_HTYPES_NS {
         try {
             return std::any_cast<T>(pIt->second);
         }
-        catch (const std::bad_any_cast& e) {
+        catch (const std::bad_any_cast&) {
             SRHalt("DataStorage::GetValueDef() : bad cast!");
             return def;
         }

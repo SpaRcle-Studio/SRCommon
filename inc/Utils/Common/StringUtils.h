@@ -158,8 +158,8 @@ namespace SR_UTILS_NS {
             return dest;
         }
 
-        static std::string Remove(std::string source, uint32_t count);
-        static std::string Remove(std::string source, uint32_t start, uint32_t count);
+        static std::string Remove(const String& source, uint64_t count);
+        static std::string Remove(const String& source, uint64_t start, uint64_t count);
 
         static std::string GetBetween(const std::string& source, int64_t begin, uint64_t end);
         static std::string_view GetBetween(std::string_view source, char begin, char end, int8_t* pResult = nullptr);

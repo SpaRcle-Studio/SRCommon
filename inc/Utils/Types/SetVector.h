@@ -5,13 +5,13 @@
 #ifndef SR_ENGINE_COMMON_TYPES_SET_VECTOR_H
 #define SR_ENGINE_COMMON_TYPES_SET_VECTOR_H
 
-#include <Utils/Debug.h>
+#include <Utils/Types/Vector.h>
 
 namespace SR_HTYPES_NS {
     /// отсортированный вектор, который не позволяет вставлять дубликаты
     template<typename T> class SetVector {
     public:
-        using VectorType = std::vector<T>;
+        using VectorType = Vector<T>;
         using Iterator = typename VectorType::iterator;
         using ConstIterator = typename VectorType::const_iterator;
 

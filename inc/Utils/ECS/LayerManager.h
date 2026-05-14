@@ -53,7 +53,7 @@ namespace SR_UTILS_NS {
         using Ptr = SR_HTYPES_NS::SharedPtr<LayerManagerSettings>;
 
         /// @property
-        std::vector<RenderLayerInfo> layers;
+        SR_UTILS_NS::Vector<RenderLayerInfo> layers;
         /// @property
         StringAtom defaultLayer = "Default";
     };
@@ -63,8 +63,8 @@ namespace SR_UTILS_NS {
     public:
         SR_NODISCARD bool HasLayer(StringAtom layer) const;
         SR_NODISCARD uint16_t GetLayerIndex(StringAtom layer) const;
-        SR_NODISCARD std::vector<StringAtom> GetLayers() const { return m_layers; }
-        SR_NODISCARD std::vector<RenderLayerInfo> GetLayersInfo() const { return m_layersInfo; }
+        SR_NODISCARD SR_UTILS_NS::Vector<StringAtom> GetLayers() const { return m_layers; }
+        SR_NODISCARD SR_UTILS_NS::Vector<RenderLayerInfo> GetLayersInfo() const { return m_layersInfo; }
 
         SR_NODISCARD static StringAtom GetDefaultLayer();
         SR_NODISCARD uint64_t GetHashState() const { return m_hashState; }
@@ -77,8 +77,8 @@ namespace SR_UTILS_NS {
     private:
         LayerManagerSettings::Ptr m_pSettings;
         SR_UTILS_NS::Subscription m_onSettingsReloaded;
-        std::vector<RenderLayerInfo> m_layersInfo;
-        std::vector<StringAtom> m_layers;
+        SR_UTILS_NS::Vector<RenderLayerInfo> m_layersInfo;
+        SR_UTILS_NS::Vector<StringAtom> m_layers;
         std::atomic<StringAtom> m_defaultLayer;
         uint64_t m_hashState = 0;
 

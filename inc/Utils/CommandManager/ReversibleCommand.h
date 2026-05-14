@@ -7,6 +7,7 @@
 
 #include <Utils/CommandManager/ICommand.h>
 #include <Utils/Resources/Xml.h>
+#include <Utils/Types/Vector.h>
 
 namespace SR_UTILS_NS {
     class CmdManager;
@@ -23,7 +24,7 @@ namespace SR_UTILS_NS {
         virtual std::string GetName() { return "Unnamed"; }
 
     public:
-        virtual bool Load(const Xml::Node& node) { return false; }
+        virtual bool Load(const Xml::Node&) { return false; }
         SR_NODISCARD virtual Xml::Node Save() const { return Xml::Node(); }
 
     };
@@ -31,7 +32,7 @@ namespace SR_UTILS_NS {
     class SR_COMMON_DLL_API GroupCommand : public ReversibleCommand {
         friend class CmdManager;
     public:
-        GroupCommand(std::vector<ReversibleCommand*>&& commands);
+        GroupCommand(Vector<ReversibleCommand*>&& commands);
         ~GroupCommand() override;
 
     private:
@@ -40,11 +41,11 @@ namespace SR_UTILS_NS {
         std::string GetName() override { return "GroupCommand"; } ;
 
     public:
-        bool Load(const Xml::Node& node) override { return false; }
+        bool Load(const Xml::Node&) override { return false; }
         SR_NODISCARD Xml::Node Save() const override { return Xml::Node(); }
 
     private:
-        std::vector<ReversibleCommand*> m_commands;
+        Vector<ReversibleCommand*> m_commands;
 
     };
 }

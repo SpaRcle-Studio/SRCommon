@@ -187,7 +187,7 @@ namespace SR_MATH_NS {
     }
 
     float_t Curve::SinusoidalEaseInOut(float_t t) {
-        return -0.5f * (cosf(SR_PI * t) - 1.f);
+        return -0.5f * (cosf(static_cast<float_t>(SR_PI) * t) - 1.f);
     }
 
     float_t Curve::QuadraticEaseInOut(float_t t) {
@@ -225,7 +225,7 @@ namespace SR_MATH_NS {
     }
 
     float_t Curve::SmoothStep(float_t edge0, float_t edge1, float_t x) {
-        const float_t t = SR_CLAMP((static_cast<double_t>(x) - static_cast<double_t>(edge0)) / (static_cast<double_t>(edge1) - static_cast<double_t>(edge0)), 0.0, 1.0);
+        const double_t t = SR_CLAMP((static_cast<double_t>(x) - static_cast<double_t>(edge0)) / (static_cast<double_t>(edge1) - static_cast<double_t>(edge0)), 0.0, 1.0);
         return static_cast<float_t>(t * t * (3.0 - 2.0 * t));
     }
 }

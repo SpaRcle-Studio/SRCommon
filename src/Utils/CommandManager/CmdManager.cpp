@@ -97,7 +97,7 @@ namespace SR_UTILS_NS {
         SR_LOCK_GUARD;
 
         if (m_historyPC != UINT32_MAX) {
-            for (uint32_t PC = m_history.size() - 1; PC > m_historyPC; --PC) {
+            for (SizeType PC = m_history.size() - 1; PC > m_historyPC; --PC) {
                 SR_SAFE_DELETE_PTR(m_history[PC])
             }
 
@@ -119,7 +119,7 @@ namespace SR_UTILS_NS {
         SR_LOCK_GUARD;
 
         if (m_historyPC != UINT32_MAX) {
-            for (uint32_t PC = m_history.size() - 1; PC > m_historyPC; --PC) {
+            for (SizeType PC = m_history.size() - 1; PC > m_historyPC; --PC) {
                 SR_SAFE_DELETE_PTR(m_history[PC])
             }
 

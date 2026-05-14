@@ -31,7 +31,7 @@ namespace SR_UTILS_NS {
         using Ptr = SR_HTYPES_NS::SharedPtr<SceneObject>;
         using ScenePtr = SR_WORLD_NS::Scene*;
         using ObjectNameT = SR_UTILS_NS::StringAtom;
-        using ChildrenType = std::vector<SceneObject::Ptr>;
+        using ChildrenType = Vector<SceneObject::Ptr>;
         using OriginType = SceneObject;
 
     public:
@@ -156,7 +156,7 @@ namespace SR_UTILS_NS {
         StringAtom m_cachedTag;
 
         ScenePtr m_scene = nullptr;
-        SRHashType m_idInScene = SR_ID_INVALID;
+        SRHashType m_idInScene = SRInvalidHash;
 
     private:
         /// @property @setter(SetTag) @hidden @dontSaveTags(Inspector)
@@ -167,7 +167,7 @@ namespace SR_UTILS_NS {
         StringAtom m_name;
         /// @property @propertyCondition(!This.IsPrefab()) @hidden @dontSaveTags(Inspector)
         /// @loadCondition(!This.IsPrefab())
-        std::vector<SceneObject::Ptr> m_children;
+        Vector<SceneObject::Ptr> m_children;
         /// @property @setter(SetEnabled) @hidden @dontSaveTags(Inspector)
         /// @loadCondition(!This.IsPrefabLoadingState())
         bool m_isEnabled = true;

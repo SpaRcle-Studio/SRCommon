@@ -5,7 +5,7 @@
 #include <Utils/CommandManager/ReversibleCommand.h>
 
 namespace SR_UTILS_NS {
-    GroupCommand::GroupCommand(std::vector<ReversibleCommand*>&& commands)
+    GroupCommand::GroupCommand(Vector<ReversibleCommand*>&& commands)
         : m_commands(std::move(commands))
     { }
 

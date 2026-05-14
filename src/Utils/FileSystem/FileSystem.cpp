@@ -10,16 +10,6 @@
 #include <Utils/Profile/TracyContext.h>
 
 namespace SR_UTILS_NS {
-    SR_COMMON_DLL_API void FileSystem::UnmapFile(const char *str) {
-
-    }
-
-    SR_COMMON_DLL_API const char *FileSystem::FileMapView(std::string path) {
-        const char *data = nullptr;
-
-        return data;
-    }
-
     SR_COMMON_DLL_API std::vector<std::string_view> FileSystem::ReadAllTextAsStringViewVector(const Path& path, String& buffer) {
         SR_TRACY_ZONE;
         std::vector<std::string_view> result;
@@ -55,7 +45,7 @@ namespace SR_UTILS_NS {
         return result;
     }
 
-    SR_COMMON_DLL_API bool FileSystem::CreatePath(std::string path, uint32_t offset) {
+    SR_COMMON_DLL_API bool FileSystem::CreatePath(std::string path, SizeType offset) {
         if (path.empty()) {
             return false;
         }

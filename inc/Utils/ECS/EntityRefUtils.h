@@ -62,7 +62,6 @@ namespace SR_UTILS_NS::EntityRefUtils {
     SR_MAYBE_UNUSED SR_HTYPES_NS::SharedPtr<Entity> GetEntity(const OwnerRef& owner, const RefPath& path);
 
     SR_MAYBE_UNUSED RefPath CalculatePath(const OwnerRef& from);
-    SR_MAYBE_UNUSED RefPath CalculateRelativePath(const OwnerRef& from, const OwnerRef& target);
 
     SR_MAYBE_UNUSED bool IsOwnerValid(const OwnerRef& owner);
     SR_MAYBE_UNUSED bool IsTargetInitialized(const OwnerRef& owner);

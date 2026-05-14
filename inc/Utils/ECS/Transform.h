@@ -25,7 +25,7 @@ namespace SR_UTILS_NS {
     enum class LookAtAxis : uint8_t;
 
     /// @abstract
-    class Transform : public Serializable, public SR_HTYPES_NS::SharedPtr<Transform> {
+    class SR_COMMON_DLL_API Transform : public Serializable, public SR_HTYPES_NS::SharedPtr<Transform> {
         SR_CLASS()
         friend class GameObject;
         using Super = Serializable;
