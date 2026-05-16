@@ -397,8 +397,6 @@ namespace SR_UTILS_NS {
         }
     }
 
-
-
     template<typename T> void Vector<T>::DestructRange(SizeType start, SizeType end) {
         if (std::is_trivially_destructible_v<T>) {
             return;
@@ -432,8 +430,6 @@ namespace SR_UTILS_NS {
 
     template<typename T> void Vector<T>::shrink_to_fit() {
         if (m_size < m_capacity) {
-            SR_TRACY_ZONE;
-
             void* pOldData = m_data;
             m_data = SRMalloc(sizeof(T) * m_size);
             m_capacity = m_size;
@@ -466,8 +462,6 @@ namespace SR_UTILS_NS {
 
     template<typename T> void Vector<T>::reserve(const SizeType newCapacity) {
         if (newCapacity > m_capacity) {
-            SR_TRACY_ZONE;
-
             void* pOldData = m_data;
             m_data = SRMalloc(sizeof(T) * newCapacity);
             m_capacity = newCapacity;

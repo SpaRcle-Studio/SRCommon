@@ -10,6 +10,7 @@
 
 #include <Utils/Math/Vector4.h>
 #include <Utils/Math/Vector6.h>
+#include <Utils/Types/Vector.h>
 
 namespace SR_UTILS_NS {
 	struct SR_COMMON_DLL_API SerializationId {
@@ -130,6 +131,10 @@ namespace SR_UTILS_NS {
         using type = typename InnerType<T>::type;
     };
 
+    template<typename T> struct InnerType<SR_UTILS_NS::Vector<T>> {
+        using type = typename InnerType<T>::type;
+    };
+
     template<typename T, size_t N> struct InnerType<std::array<T, N>> {
         using type = typename InnerType<T>::type;
     };
@@ -183,6 +188,9 @@ namespace SR_UTILS_NS {
 
     template<typename T, typename Alloc>
     struct IsStdVector<std::vector<T, Alloc>> : std::true_type {};
+
+    template<typename T>
+    struct IsStdVector<SR_UTILS_NS::Vector<T>> : std::true_type {};
 
     template<typename T>
     constexpr bool IsStdVectorV = IsStdVector<RemoveQualifiersT<T>>::value;

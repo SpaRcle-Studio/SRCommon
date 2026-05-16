@@ -74,7 +74,10 @@ struct DefaultChecker<T, std::enable_if_t<SerializationTraits<T>::HasEmpty && !I
             }
 
             /// is std vector and not bitset
-            if constexpr (std::is_same_v<RemoveQualifiersT<T>, std::vector<typename T::value_type>> && !std::is_same_v<typename T::value_type, bool>) {
+            constexpr bool isStdVector = std::is_same_v<RemoveQualifiersT<T>, std::vector<typename T::value_type>>
+                || std::is_same_v<RemoveQualifiersT<T>, SR_UTILS_NS::Vector<typename T::value_type>>;
+
+            if constexpr (isStdVector && !std::is_same_v<typename T::value_type, bool>) {
                 for (size_t i = 0; i < value.size(); ++i) {
                     if (!DefaultChecker<typename T::value_type>::IsDefault(value[i], &(*defaultValue)[i])) {
                         return false;
