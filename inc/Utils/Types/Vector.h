@@ -99,7 +99,7 @@ namespace SR_UTILS_NS {
             reserve(m_capacity > 0 ? m_capacity * SR_VECTOR_REALLOCATE_MULTIPLIER : SR_VECTOR_INITIAL_CAPACITY);
         }
 
-        if (std::is_trivially_copyable_v<T>) {
+        if constexpr (std::is_trivially_copyable_v<T>) {
             T temp(std::forward<ValueType>(value)...);
             std::memcpy(static_cast<T*>(m_data) + m_size, &temp, sizeof(T));
         }

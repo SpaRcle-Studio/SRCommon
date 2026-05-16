@@ -44,6 +44,8 @@ namespace SR_HTYPES_NS {
     }
 
     void IRawMeshHolder::SetRawMesh(const RawMeshPtr& pRawMesh) {
+        SR_TRACY_ZONE;
+
         if (m_rawMesh == pRawMesh) {
             return;
         }
@@ -71,6 +73,8 @@ namespace SR_HTYPES_NS {
     }
 
     void IRawMeshHolder::SetMeshId(IRawMeshHolder::MeshIndex meshIndex, bool forceReload) {
+        SR_TRACY_ZONE;
+
         if (!m_rawMesh) {
             if (m_meshId != SR_ID_INVALID) {
                 m_meshId = SR_ID_INVALID;
@@ -112,6 +116,7 @@ namespace SR_HTYPES_NS {
     }
 
     const SR_UTILS_NS::VertexDataBuffer& IRawMeshHolder::GetVertexBuffer(const SR_UTILS_NS::VertexLayoutDescription& layout) const {
+        SR_TRACY_ZONE;
         static const SR_UTILS_NS::VertexDataBuffer empty;
         if (!IsValidMeshId()) {
             return empty;
@@ -144,6 +149,8 @@ namespace SR_HTYPES_NS {
     }
 
     void IRawMeshHolder::SetRawMesh(const SR_UTILS_NS::Path& path) {
+        SR_TRACY_ZONE;
+
         if (path.empty()) {
             SetRawMesh(RawMeshPtr());
             return;
