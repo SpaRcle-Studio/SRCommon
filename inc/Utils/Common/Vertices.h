@@ -6,6 +6,8 @@
 #define SR_ENGINE_COMMON_VERTICES_H
 
 #include <Utils/Types/FastMemoryArray.h>
+#include <Utils/Types/RawPointerHolder.h>
+#include <Utils/Common/Enumerations.h>
 
 #define SR_MAX_VERTEX_ATTRIBUTES 48
 

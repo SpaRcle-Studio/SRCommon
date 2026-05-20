@@ -5,8 +5,8 @@
 #ifndef SR_ENGINE_ASSIMP_CACHE_H
 #define SR_ENGINE_ASSIMP_CACHE_H
 
-#include <Utils/Debug.h>
-#include <Utils/Types/Marshal.h>
+#include <Utils/Types/RawPointerHolder.h>
+#include <Utils/Common/Singleton.h>
 
 #ifdef SR_UTILS_ASSIMP
 namespace Assimp {
@@ -24,6 +24,8 @@ namespace SR_HTYPES_NS {
 }
 
 namespace SR_UTILS_NS {
+    class MappedFile;
+
     extern const uint8_t SR_ASSIMP_MAX_NUMBER_OF_COLOR_SETS;
     extern const uint8_t SR_ASSIMP_MAX_NUMBER_OF_TEXTURECOORDS;
 

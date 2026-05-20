@@ -72,6 +72,7 @@ namespace SR_UTILS_NS {
     #define SR_TRACY_FRAME_START(name) FrameMarkStart(name)
     #define SR_TRACY_FRAME_END(name) FrameMarkEnd(name)
     #define SR_TRACY_PLOT(name, val) TracyPlot(name, val)
+    #define SR_TRACY_PLOT_CONFIG_MEMORY(name) TracyPlotConfig(name, tracy::PlotFormatType::Memory, false, false, 0)
     #define SR_TRACY_ZONE_COLOR(color) ZoneColor(color)
 
     #define SR_TRACY_GET_CONTEXT(tracyType, pIdentifier) \
@@ -97,6 +98,7 @@ namespace SR_UTILS_NS {
     #define SR_TRACY_FRAME_START(name) SR_NOOP
     #define SR_TRACY_FRAME_END(name) SR_NOOP
     #define SR_TRACY_PLOT(name, val) SR_NOOP
+    #define SR_TRACY_PLOT_CONFIG_MEMORY(name) SR_NOOP
     #define SR_TRACY_ZONE_COLOR(color)
 
     #define SR_TRACY_GET_CONTEXT(tracyType, pIdentifier)

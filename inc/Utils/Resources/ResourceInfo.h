@@ -7,6 +7,7 @@
 
 #include <Utils/Resources/IResource.h>
 #include <Utils/Types/SetVector.h>
+#include <Utils/Types/RawPointerHolder.h>
 
 namespace SR_UTILS_NS {
     class ResourceManager;

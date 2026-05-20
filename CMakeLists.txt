@@ -51,6 +51,7 @@ option(SR_COMMON_GIT_METADATA "" ON)
 option(SR_COMMON_STATIC_LIBRARY "" ON)
 option(SR_COMMON_EMBED_RESOURCES "" OFF)
 option(SR_COMMON_CI_BUILD "" OFF)
+option(SR_COMMON_USE_MINHOOK "" OFF)
 
 option(SR_USE_PCH "" ON)
 
@@ -293,6 +294,14 @@ else()
     SR_COPY_STATIC_LIBRARY_TO_LIBRARY_FOLDER(Utils)
 endif()
 
+if (SR_COMMON_USE_MINHOOK AND MSVC AND NOT SR_COMMON_USE_CLANG_EMULATION)
+    message(STATUS "MinHook will be included in the build.")
+    add_subdirectory(libs/minhook)
+    SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_SOURCE_DIR}/libs/MinHook/include)
+    target_link_libraries(Utils minhook)
+    target_compile_definitions(Utils PUBLIC SR_COMMON_USE_MINHOOK)
+endif()
+
 if (SR_COMMON_USE_CLANG_EMULATION)
     target_compile_options(Utils PUBLIC "-Wno-microsoft-include")
     target_compile_options(Utils PUBLIC "-Wno-deprecated-declarations")
@@ -302,6 +311,8 @@ endif()
 if (SR_USE_PCH)
     target_compile_definitions(Utils PUBLIC SR_USE_PCH)
     target_precompile_headers(Utils PUBLIC ${SR_COMMON_PCH_HEADER_PATH})
+else()
+    target_compile_definitions(Utils PUBLIC SR_ENGINE_COMMON_PCH_FOR_BASE_CODE)
 endif()
 
 if (SR_TRACY_ENABLE)
@@ -461,5 +472,6 @@ if (MSVC AND NOT SR_COMMON_USE_CLANG_EMULATION)
         /wd4701 # potentially uninitialized variable
         /wd4305 # truncation from 'type1' to 'type2'
         /wd4324 # structure was padded due to alignment specifier
+        /wd4201 # nonstandard extension used: nameless struct/union
     )
 endif()

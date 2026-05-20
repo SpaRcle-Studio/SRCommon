@@ -5,6 +5,11 @@
 #ifndef SR_COMMON_MACROS_H
 #define SR_COMMON_MACROS_H
 
+/// check if std headers were included before macros.h
+#if defined(_GLIBCXX_IOSTREAM) || defined(_IOSTREAM_) || defined(_YVALS_CORE_H_)
+    #error "std headers were included before macros.h. Please include macros.h in every header file before any other header."
+#endif
+
 #ifdef _WINDOWS_
     #error "Windows.h was included before macros.h"
 #endif

@@ -4,6 +4,7 @@
 
 #include <Utils/TaskManager/TaskManager.h>
 #include <Utils/Platform/Platform.h>
+#include <Utils/Profile/TracyContext.h>
 
 namespace SR_UTILS_NS {
     Task::Task(TaskFn fn, bool createThread, TaskPriority priority)

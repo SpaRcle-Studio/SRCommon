@@ -7,6 +7,7 @@
 #include <Utils/FileSystem/MappedFile.h>
 #include <Utils/Platform/Platform.h>
 #include <Utils/Common/Hashes.h>
+#include <Utils/Common/StringAtomLiterals.h>
 #include <Utils/Profile/TracyContext.h>
 
 namespace SR_UTILS_NS {

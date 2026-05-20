@@ -7,6 +7,7 @@
 
 #include <Utils/Common/StringAtomLiterals.h>
 #include <Utils/Types/SharedPtr.h>
+#include <Utils/Types/String.h>
 #include <Utils/Profile/TracyContext.h>
 
 namespace SR_UTILS_NS {

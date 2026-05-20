@@ -8,6 +8,12 @@
 
 SR_COMMON_DLL_API extern bool g_TracyAllocatorInitialized;
 
+namespace SR_UTILS_NS {
+    SR_COMMON_DLL_API extern void OnMemoryAllocated(SR_UTILS_NS::SizeType size);
+    SR_COMMON_DLL_API extern void OnMemoryFreed(SR_UTILS_NS::SizeType size);
+    SR_COMMON_DLL_API extern SR_UTILS_NS::SizeType GetApplicationHeapSize();
+}
+
 void* SRMalloc(SR_UTILS_NS::SizeType size);
 void* SRReAlloc(void* pMemory, SR_UTILS_NS::SizeType size);
 void SRFree(void* pMemory);

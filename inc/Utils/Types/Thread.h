@@ -9,6 +9,7 @@
 #include <Utils/Common/Singleton.h>
 #include <Utils/Types/Function.h>
 #include <Utils/Types/LockGuard.h>
+#include <Utils/Types/String.h>
 
 #define SR_THREAD_SAFE_CHECKS 1
 

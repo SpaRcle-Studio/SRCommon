@@ -6,6 +6,22 @@
 
 bool g_TracyAllocatorInitialized = false;
 
+namespace SR_UTILS_NS {
+    static std::atomic<int64_t> g_heapAllocatedBytes = 0;
+
+    void OnMemoryAllocated(SR_UTILS_NS::SizeType size) {
+        g_heapAllocatedBytes += size;
+    }
+
+    void OnMemoryFreed(SR_UTILS_NS::SizeType size) {
+        g_heapAllocatedBytes -= size;
+    }
+
+    SR_UTILS_NS::SizeType GetApplicationHeapSize() {
+        return g_heapAllocatedBytes.load();
+    }
+}
+
 void* SRMalloc(SR_UTILS_NS::SizeType size) {
     if (g_TracyAllocatorInitialized) {
         SR_TRACY_ZONE;

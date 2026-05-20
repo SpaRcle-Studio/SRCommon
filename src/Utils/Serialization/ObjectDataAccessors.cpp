@@ -9,6 +9,7 @@
 #include <Utils/Types/SharedPtr.h>
 #include <Utils/Math/Rect.h>
 #include <Utils/Math/Vector4.h>
+#include <Utils/Math/AABB.h>
 #include <Utils/Serialization/SerializationTraits.h>
 #include <Utils/Serialization/SerializationSaveUtils.h>
 #include <Utils/Serialization/SerializationLoadUtils.h>

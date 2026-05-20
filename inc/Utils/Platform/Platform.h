@@ -78,6 +78,7 @@ namespace SR_UTILS_NS::Platform {
     SR_NORETURN SR_COMMON_DLL_API extern void Terminate(bool isError = true);
 
     SR_COMMON_DLL_API extern void InitializePlatform();
+    SR_COMMON_DLL_API extern void DeInitializePlatform();
     SR_COMMON_DLL_API extern void InitSegmentationHandler();
     SR_COMMON_DLL_API extern void SetInstance(void* pInstance);
     SR_COMMON_DLL_API extern void* GetInstance();

@@ -36,6 +36,7 @@
 #ifdef SR_WIN32
     #include "../src/Utils/Platform/PlatformWindows.cpp"
     #include "../src/Utils/Platform/StacktraceWindows.cpp"
+    #include "../src/Utils/Platform/WindowsMemoryAllocationHooks.cpp"
 #endif
 
 #ifdef SR_ANDROID

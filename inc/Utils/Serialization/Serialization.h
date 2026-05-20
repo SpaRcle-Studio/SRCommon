@@ -13,6 +13,7 @@
 #include <Utils/Types/SharedPtr.h>
 #include <Utils/Types/Optional.h>
 #include <Utils/Math/Rect.h>
+#include <Utils/Math/AABB.h>
 #include <Utils/Common/StringAtomLiterals.h>
 #include <Utils/Common/AssertFwd.h>
 

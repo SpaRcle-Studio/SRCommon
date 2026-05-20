@@ -5,7 +5,7 @@
 #ifndef SR_COMMON_VECTOR_H
 #define SR_COMMON_VECTOR_H
 
-#include <Utils/stdInclude.h>
+#include <Utils/Common/AssertFwd.h>
 
 #define SR_VECTOR_REALLOCATE_MULTIPLIER 2
 #define SR_VECTOR_INITIAL_CAPACITY 4

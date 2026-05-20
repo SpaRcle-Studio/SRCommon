@@ -8,6 +8,7 @@
 #include <Utils/Common/Breakpoint.h>
 #include <Utils/Common/StringFormat.h>
 #include <Utils/Debug.h>
+#include <Utils/Common/StringAtomLiterals.h>
 #include <Utils/Profile/TracyContext.h>
 
 #include <Windows.h>
@@ -30,6 +31,8 @@
 #ifdef SR_MINGW
     #include <ShObjIdl.h>
 #endif
+
+#include <Utils/Platform/WindowsMemoryAllocationHooks.h>
 
 namespace SR_UTILS_NS::Platform {
     std::wstring ConvertToUnicode(const std::string& str) {
@@ -179,9 +182,15 @@ namespace SR_UTILS_NS::Platform {
         RegCloseKey(hKey);
     }
 
+    void DeInitializePlatform() {
+        DeInitMemoryHooks();
+    }
+
     void InitializePlatform() {
         SR_TRACY_ZONE;
         SR_PLATFORM_NS::WriteConsoleLog("Platform::InitializePlatform() : initializing Windows platform...\n");
+
+        InitMemoryHooks();
 
         HKEY hKey;
         LPCTSTR lpSubKey = TEXT("Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\ComDlg32\\LastVisitedPidlMRU");

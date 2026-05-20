@@ -7,6 +7,7 @@
 #include <Utils/ECS/EntityRef.h>
 #include <Utils/Resources/ResourceRef.h>
 #include <Utils/Math/Rect.h>
+#include <Utils/Math/AABB.h>
 #include <Utils/Debug.h>
 
 namespace SR_UTILS_NS::Reflection {

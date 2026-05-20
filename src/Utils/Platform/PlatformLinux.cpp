@@ -308,6 +308,10 @@ namespace SR_PLATFORM_NS {
         return std::string();
     }
 
+    void DeInitializePlatform() {
+
+    }
+
     void InitializePlatform() {
         SR_PLATFORM_NS::WriteConsoleLog("Platform::InitializePlatform() : initializing Linux platform...\n");
     }

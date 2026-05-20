@@ -6,6 +6,7 @@
 #define SR_ENGINE_UTILS_RAW_POINTER_HOLDER_H
 
 #include <Utils/Common/AssertFwd.h>
+#include <Utils/TypeTraits/TypeTraits.h>
 
 namespace SR_HTYPES_NS {
     template<typename T> class RawPointerHolder {

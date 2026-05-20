@@ -193,6 +193,10 @@ namespace SR_UTILS_NS::Platform {
         return std::string();
     }
 
+    void DeInitializePlatform() {
+
+    }
+
     void InitializePlatform() {
         SR_PLATFORM_NS::WriteConsoleLog("Platform::InitializePlatform() : initializing Android platform...\n");
     }

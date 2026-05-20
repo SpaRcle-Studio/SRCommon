@@ -3,6 +3,7 @@
 //
 
 #include <Utils/Types/String.h>
+#include <Utils/Common/AssertFwd.h>
 
 namespace SR_UTILS_NS {
     String::String() = default;

@@ -6,6 +6,8 @@
 #define SR_ENGINE_STRINGUTILS_H
 
 #include <Utils/Math/Mathematics.h>
+#include <Utils/Profile/TracyContext.h>
+#include <Utils/Types/String.h>
 
 namespace SR_UTILS_NS {
     SR_MAYBE_UNUSED static std::string GetErrorString(int err) {

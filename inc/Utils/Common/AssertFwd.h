@@ -81,5 +81,4 @@ namespace SR_UTILS_NS::LogDetails {
 #define SRAssert1Once(expr) SRAssert2Once(expr, #expr)
 #define SRAssertOnce(expr) SRAssert2Once(expr, "An exception has been occured!")
 
-
 #endif //SR_ENGINE_UTILS_ASSERT_FWD_H

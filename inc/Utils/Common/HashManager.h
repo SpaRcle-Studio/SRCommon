@@ -6,6 +6,7 @@
 #define SR_ENGINE_HASH_MANAGER_H
 
 #include <Utils/Common/NonCopyable.h>
+#include <Utils/Types/FlatHashMap.h>
 
 namespace SR_UTILS_NS {
     class StringAtom;
