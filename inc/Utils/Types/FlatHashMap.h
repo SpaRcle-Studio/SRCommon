@@ -14,8 +14,11 @@ namespace SR_HTYPES_NS {
     #else
         using Impl = ska::flat_hash_map<Key, Value>;
     #endif
+    public:
         using Iterator = typename Impl::iterator;
         using ConstIterator = typename Impl::const_iterator;
+        using value_type = typename std::pair<const Key, Value>;
+
     public:
         void clear() { m_map.clear(); }
         SR_NODISCARD Iterator find(const Key& key) { return m_map.find(key); }

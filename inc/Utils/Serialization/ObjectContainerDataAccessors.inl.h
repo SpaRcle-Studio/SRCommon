@@ -189,11 +189,7 @@ template<typename T, size_t N> struct ObjectDataAccessor<std::array<T, N>> {
 	}
 };
 
-template<typename T, typename U, typename Compare, typename Allocator>
-struct ObjectDataAccessor<std::map<T, U, Compare, Allocator>> {
-	using MapType = std::map<T, U, Compare, Allocator>;
-	using ValueType = typename MapType::value_type;
-
+template<typename MapType, typename T, typename U> struct ObjectDataAccessorMap {
 	static_assert(std::is_arithmetic_v<T> || IsSREnumV<T> || std::is_same_v<T, std::string> || std::is_same_v<T, SR_UTILS_NS::StringAtom>, "Custom types and structs are not supported as id of map");
 
     static constexpr SerializationId itemId = SerializationId::Create("item");
@@ -279,6 +275,15 @@ struct ObjectDataAccessor<std::map<T, U, Compare, Allocator>> {
 	}
 };
 
+template<typename T, typename U, typename Compare, typename Allocator>
+struct ObjectDataAccessor<std::map<T, U, Compare, Allocator>> : public ObjectDataAccessorMap<std::map<T, U, Compare, Allocator>, T, U> { };
+
+template<typename T, typename U, typename Compare, typename Allocator>
+struct ObjectDataAccessor<std::unordered_map<T, U, Compare, Allocator>> : public ObjectDataAccessorMap<std::unordered_map<T, U, Compare, Allocator>, T, U> { };
+
+template<typename T, typename U>
+struct ObjectDataAccessor<SR_HTYPES_NS::FlatHashMap<T, U>> : public ObjectDataAccessorMap<SR_HTYPES_NS::FlatHashMap<T, U>, T, U> { };
+
 template<typename T, typename Less, typename Allocator>
 struct ObjectDataAccessor<std::set<T, Less, Allocator>> {
 private:
@@ -287,7 +292,6 @@ private:
 
 public:
 	using SetType = std::set<T, Less, Allocator>;
-	using ValueType = typename SetType::value_type;
 
     static void Save(ISerializer& serializer, const SetType& value, const SerializationId& id) {
         uint64_t count = 0;

@@ -23,6 +23,7 @@
 #include <Utils/Types/StringAtom.h>
 #include <Utils/Types/SharedPtr.h>
 #include <Utils/Types/SafePointer.h>
+#include <Utils/Types/FlatHashMap.h>
 #include <Utils/Types/Function.h>
 #include <Utils/Types/String.h>
 

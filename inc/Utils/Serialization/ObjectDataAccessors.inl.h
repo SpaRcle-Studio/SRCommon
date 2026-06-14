@@ -105,6 +105,11 @@ template<> struct ObjectDataAccessor<SR_MATH_NS::URect> {
     static void Load(IDeserializer& deserializer, SR_MATH_NS::URect& value, const SerializationId& id);
 };
 
+template<> struct ObjectDataAccessor<SR_MATH_NS::USRect> {
+    static void Save(ISerializer& serializer, const SR_MATH_NS::USRect& value, const SerializationId& id);
+    static void Load(IDeserializer& deserializer, SR_MATH_NS::USRect& value, const SerializationId& id);
+};
+
 template<> struct ObjectDataAccessor<SR_MATH_NS::FVector2> {
     static void Save(ISerializer& serializer, const SR_MATH_NS::FVector2& value, const SerializationId& id);
     static void Load(IDeserializer& deserializer, SR_MATH_NS::FVector2& value, const SerializationId& id);
@@ -116,6 +121,10 @@ template<> struct ObjectDataAccessor<SR_MATH_NS::IVector2> {
 template<> struct ObjectDataAccessor<SR_MATH_NS::UVector2> {
     static void Save(ISerializer& serializer, const SR_MATH_NS::UVector2& value, const SerializationId& id);
     static void Load(IDeserializer& deserializer, SR_MATH_NS::UVector2& value, const SerializationId& id);
+};
+template<> struct ObjectDataAccessor<SR_MATH_NS::USVector2> {
+    static void Save(ISerializer& serializer, const SR_MATH_NS::USVector2& value, const SerializationId& id);
+    static void Load(IDeserializer& deserializer, SR_MATH_NS::USVector2& value, const SerializationId& id);
 };
 
 template<> struct ObjectDataAccessor<SR_MATH_NS::FVector3> {

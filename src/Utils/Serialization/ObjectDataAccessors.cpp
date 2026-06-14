@@ -245,6 +245,26 @@ namespace SR_UTILS_NS {
         deserializer.EndObject();
     }
 
+    void ObjectDataAccessor<SR_MATH_NS::USRect>::Save(ISerializer& serializer, const SR_MATH_NS::USRect& value, const SerializationId& id) {
+        serializer.BeginObject(id);
+        Serialization::SaveCheckDefault(serializer, value.x, SerializationId::Create("x"));
+        Serialization::SaveCheckDefault(serializer, value.y, SerializationId::Create("y"));
+        Serialization::SaveCheckDefault(serializer, value.w, SerializationId::Create("w"));
+        Serialization::SaveCheckDefault(serializer, value.h, SerializationId::Create("h"));
+        serializer.EndObject();
+    }
+
+    void ObjectDataAccessor<SR_MATH_NS::USRect>::Load(IDeserializer& deserializer, SR_MATH_NS::USRect& value, const SerializationId& id) {
+        if (!deserializer.BeginObject(id)) {
+            return;
+        }
+        Serialization::Load(deserializer, value.x, SerializationId::Create("x"));
+        Serialization::Load(deserializer, value.y, SerializationId::Create("y"));
+        Serialization::Load(deserializer, value.w, SerializationId::Create("w"));
+        Serialization::Load(deserializer, value.h, SerializationId::Create("h"));
+        deserializer.EndObject();
+    }
+
     template<uint64_t dim, typename Type> void SaveVec(ISerializer& serializer, const Type& value, const SerializationId& id) {
         serializer.BeginObject(id);
         if constexpr (dim >= 1) { Serialization::SaveCheckDefault(serializer, value.x, SerializationId::Create("x")); }
@@ -275,6 +295,8 @@ namespace SR_UTILS_NS {
     void ObjectDataAccessor<SR_MATH_NS::IVector2>::Load(IDeserializer& deserializer, SR_MATH_NS::IVector2& value, const SerializationId& id) { LoadVec<2>(deserializer, value, id); }
     void ObjectDataAccessor<SR_MATH_NS::UVector2>::Save(ISerializer& serializer, const SR_MATH_NS::UVector2& value, const SerializationId& id) { SaveVec<2>(serializer, value, id); }
     void ObjectDataAccessor<SR_MATH_NS::UVector2>::Load(IDeserializer& deserializer, SR_MATH_NS::UVector2& value, const SerializationId& id) { LoadVec<2>(deserializer, value, id); }
+    void ObjectDataAccessor<SR_MATH_NS::USVector2>::Save(ISerializer& serializer, const SR_MATH_NS::USVector2& value, const SerializationId& id) { SaveVec<2>(serializer, value, id); }
+    void ObjectDataAccessor<SR_MATH_NS::USVector2>::Load(IDeserializer& deserializer, SR_MATH_NS::USVector2& value, const SerializationId& id) { LoadVec<2>(deserializer, value, id); }
 
     void ObjectDataAccessor<SR_MATH_NS::FVector3>::Save(ISerializer& serializer, const SR_MATH_NS::FVector3& value, const SerializationId& id) { SaveVec<3>(serializer, value, id); }
     void ObjectDataAccessor<SR_MATH_NS::FVector3>::Load(IDeserializer& deserializer, SR_MATH_NS::FVector3& value, const SerializationId& id) { LoadVec<3>(deserializer, value, id); }
