@@ -8,6 +8,37 @@
 
 #ifdef SR_TRACY_ENABLE
 
+bool ContainsTracyProcess()
+{
+#ifdef SR_WIN32
+    HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+    if (snapshot == INVALID_HANDLE_VALUE)
+        return false;
+
+    PROCESSENTRY32W entry;
+    entry.dwSize = sizeof(entry);
+
+    bool found = false;
+
+    if (Process32FirstW(snapshot, &entry)) {
+        do {
+            std::wstring name = entry.szExeFile;
+            std::wstring lowerName = name;
+            std::transform(lowerName.begin(), lowerName.end(), lowerName.begin(), ::towlower);
+            if (lowerName.find(L"tracy") != std::wstring::npos) {
+                found = true;
+                break;
+            }
+        } while (Process32NextW(snapshot, &entry));
+    }
+
+    CloseHandle(snapshot);
+    return found;
+#else
+    return false;
+#endif
+}
+
 namespace SR_UTILS_NS {
     TracyContextManager::TracyContextManager()
         : Super()
@@ -69,6 +100,17 @@ namespace SR_UTILS_NS {
 
     void StartupEngineProfiler() {
         tracy::StartupProfiler();
+
+        TracySetProgramName("SpaRcle Engine");
+        FrameMark;
+
+        const bool containsTracyProcess = ContainsTracyProcess();
+        if (containsTracyProcess) {
+            SR_PLATFORM_NS::WriteConsoleLog("Tracy profiler detected! Waiting for connection...");
+            while (!TracyIsConnected) {
+                std::this_thread::sleep_for(std::chrono::milliseconds(1));
+            }
+        }
 
         g_TracyAllocatorInitialized = true;
     }

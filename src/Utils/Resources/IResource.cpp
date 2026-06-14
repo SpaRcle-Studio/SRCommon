@@ -32,7 +32,7 @@ namespace SR_UTILS_NS {
         }
 
         if (GetResourcePath().IsAbs()) {
-            SR_ERROR("IResource::Reload() : resource path is absolute!\n\tPath: {}", GetResourcePath());
+            SRHalt("IResource::Reload() : resource path is absolute!\n\tPath: {}", GetResourcePath());
             return false;
         }
 

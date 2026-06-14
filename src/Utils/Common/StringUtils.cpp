@@ -365,4 +365,71 @@ namespace SR_UTILS_NS {
 
         return result;
     }
+
+    String StringUtils::MakeDisplayName(StringView name) {
+        SR_TRACY_ZONE;
+        // strip prefixes
+        if (name.size() > 2 && name[0] == 'm' && name[1] == '_')
+            name.remove_prefix(2);
+        else if (!name.empty() && name[0] == '_')
+            name.remove_prefix(1);
+
+        String out;
+        out.reserve(name.size());
+
+        auto is_upper = [](char c) {
+            return std::isupper(static_cast<unsigned char>(c));
+        };
+
+        auto is_lower = [](char c) {
+            return std::islower(static_cast<unsigned char>(c));
+        };
+
+        for (size_t i = 0; i < name.size(); ++i) {
+            char c = name[i];
+            if (c == '_') {
+                if (!out.empty() && out.back() != ' ') {
+                    out.push_back(' ');
+                }
+                continue;
+            }
+
+            // uppercase sequence handling (ABBREVIATIONS)
+            if (is_upper(c)) {
+                bool prev_is_lower = (i > 0 && is_lower(name[i - 1]));
+                bool next_is_lower = (i + 1 < name.size() && is_lower(name[i + 1]));
+
+                // start of word
+                if (prev_is_lower) {
+                    if (!out.empty() && out.back() != ' ')
+                        out.push_back(' ');
+                }
+
+                // if this is a single uppercase or end of acronym
+                if (next_is_lower) {
+                    // treat as word boundary (e.g. "JSONData" -> "JSON Data")
+                    if (!out.empty() && out.back() != ' ')
+                        out.push_back(' ');
+
+                    out.push_back(c);
+                }
+                else {
+                    // part of acronym
+                    out.push_back(c);
+                }
+
+                continue;
+            }
+
+            // lowercase / digits
+            if (out.empty() || out.back() == ' ') {
+                out.push_back(static_cast<char>(std::toupper(static_cast<unsigned char>(c))));
+            }
+            else {
+                out.push_back(static_cast<char>(std::tolower(static_cast<unsigned char>(c))));
+            }
+        }
+
+        return out;
+    }
 }

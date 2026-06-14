@@ -5,7 +5,7 @@
 #if !defined(SR_ENGINE_UTILS_STRING_FORMAT_H) && defined(SR_ENGINE_COMMON_PCH_FOR_BASE_CODE)
 #define SR_ENGINE_UTILS_STRING_FORMAT_H
 
-#include <Utils/stdInclude.h>
+#include <Utils/Types/String.h>
 
 namespace SR_UTILS_NS {
     namespace Details {
@@ -34,6 +34,15 @@ namespace SR_UTILS_NS {
 
     template <class... Args> SR_NODISCARD std::string Format(const std::string& format_str, Args&&... args) {
         return Format<Args...>(format_str.c_str(), std::forward<Args>(args)...);
+    }
+
+    template<class... Args> void FormatTo(String& dest, const char* format_str, Args&&... args) {
+        try {
+            fmt::format_to(std::back_inserter(dest), fmt::runtime(format_str), std::forward<Args>(args)...);
+        }
+        catch (std::exception& exception) {
+            Details::StringFormatError("FormatTo() : an exception has occurred! Exception: " + std::string(exception.what()) + "\n", true);
+        }
     }
 }
 

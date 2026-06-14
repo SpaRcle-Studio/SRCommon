@@ -60,6 +60,22 @@ namespace SR_UTILS_NS {
     	}
     }
 
+    void SRClassMeta::ForEachMethod(const std::function<void(const SR_UTILS_NS::Reflection::Method& method, uint64_t index)>& func, uint64_t* pIndex) const {
+    	uint64_t index = 0;
+    	if (!pIndex) {
+    		pIndex = &index;
+    	}
+
+    	for (auto&& pBase : GetBaseMetas()) {
+    		pBase->ForEachMethod(func, pIndex);
+    	}
+
+    	for (auto&& method : GetMethods()) {
+    		func(method, *pIndex);
+    		++(*pIndex);
+    	}
+    }
+
     std::span<const SR_UTILS_NS::StringAtom> SRClassMeta::GetCategory() const noexcept {
     	for (auto&& pBase : GetBaseMetas()) {
 			if (!pBase->GetCategory().empty()) {

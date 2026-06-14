@@ -165,7 +165,7 @@ namespace SR_UTILS_NS {
         /// @loadCondition(!This.IsPrefabLoadingState())
         /// @property @setter(SetName) @hidden @dontSaveTags(Inspector)
         StringAtom m_name;
-        /// @property @propertyCondition(!This.IsPrefab()) @hidden @dontSaveTags(Inspector)
+        /// @property @condition(!This.IsPrefab()) @hidden @dontSaveTags(Inspector)
         /// @loadCondition(!This.IsPrefab())
         Vector<SceneObject::Ptr> m_children;
         /// @property @setter(SetEnabled) @hidden @dontSaveTags(Inspector)
@@ -176,7 +176,7 @@ namespace SR_UTILS_NS {
         StringAtom m_layer = LayerManager::GetDefaultLayer();
 
         /// @virtualProperty(prefab) @dontLoad @getter(GetPrefabPath) @hidden @dontSaveTags(Inspector)
-        /// @propertyCondition(This.IsPrefab() && This.m_prefabInfo.isOwner)
+        /// @condition(This.IsPrefab() && This.m_prefabInfo.isOwner)
         SR_VIRTUAL_PROPERTY;
 
     };

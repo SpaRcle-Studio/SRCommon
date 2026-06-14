@@ -12,6 +12,7 @@
     #include <assimp/scene.h>
     #include <assimp/postprocess.h>
     #include <assimp/Importer.hpp>
+    #include <assimp/config.h>
     #include <assimp/include/assimp/Exporter.hpp>
     #include <assimp/include/assimp/cexport.h>
 #endif
@@ -116,6 +117,18 @@ namespace SR_HTYPES_NS {
             if (!SR_UTILS_NS::FileSystem::ReadFile(path, buffer)) {
                 SR_ERROR("RawMesh::Load() : failed to read file!\n\tPath: {}", path);
                 return false;
+            }
+
+            if (m_importer) {
+                std::string ext = path.GetExtension();
+                std::transform(ext.begin(), ext.end(), ext.begin(), [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+
+                /// Mixamo/FBX часто используют pivot/pre-rotation.
+                /// Для МЕША preserve pivots обычно нужен (иначе skinning/offsets могут разъехаться и геометрия "схлопнется").
+                /// Для АНИМАЦИИ preserve pivots часто ломает каналы (кости "выворачивает"), поэтому отключаем только в animation-режиме.
+                if (ext == "fbx") {
+                    //m_importer->SetPropertyBool(AI_CONFIG_IMPORT_FBX_PRESERVE_PIVOTS, m_params.animation ? false : true);
+                }
             }
 
             m_scene = m_importer->ReadFileFromMemory(buffer.data(), buffer.size(), m_params.animation ? SR_RAW_MESH_ASSIMP_ANIMATION_FLAGS : SR_RAW_MESH_ASSIMP_FLAGS);

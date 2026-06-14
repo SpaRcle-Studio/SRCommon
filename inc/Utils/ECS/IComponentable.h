@@ -98,7 +98,7 @@ namespace SR_UTILS_NS {
 
     protected:
         /// @property @hidden @dontSaveTags(Inspector)
-        /// @propertyCondition(!This.IsPrefab())
+        /// @condition(!This.IsPrefab())
         std::vector<ComponentPtr> m_components;
 
     private:

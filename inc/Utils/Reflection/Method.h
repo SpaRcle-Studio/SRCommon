@@ -18,8 +18,14 @@ namespace SR_UTILS_NS::Reflection {
         using FunctorNoReturnWithParams = SR_HTYPES_NS::Function<void(Owner&, const Params&)>;
         using FunctorWithReturnNoParams = SR_HTYPES_NS::Function<Value(Owner&)>;
         using FunctorWithReturnWithParams = SR_HTYPES_NS::Function<Value(Owner&, const Params&)>;
+        using MethodActiveCallbackFn = bool(*)(SRClass* pOwner);
     public:
         SR_NODISCARD StringAtom GetName() const;
+        SR_NODISCARD StringAtom GetDisplayName() const;
+        SR_NODISCARD uint32_t GetParamsCount() const;
+        SR_NODISCARD bool HasReturn() const;
+        SR_NODISCARD bool IsEditorButton() const;
+        SR_NODISCARD bool IsActive(Owner& owner) const;
 
         void InvokeVoid(Owner& owner) const;
         void InvokeVoid(Owner& owner, const Params& params) const;
@@ -33,16 +39,21 @@ namespace SR_UTILS_NS::Reflection {
         Method& SetName(StringAtom name);
         Method& SetParamsCount(uint32_t count);
         Method& SetHasReturn(bool hasReturn);
+        Method& SetEditorButton();
+        Method& SetCondition(MethodActiveCallbackFn condition);
 
     private:
         FunctorNoReturnNoParams m_noReturnNoParams;
         FunctorNoReturnWithParams m_noReturnWithParams;
         FunctorWithReturnNoParams m_withReturnNoParams;
         FunctorWithReturnWithParams m_withReturnWithParams;
+        MethodActiveCallbackFn m_methodActiveCallback = nullptr;
 
         StringAtom m_name;
+        mutable StringAtom m_displayName;
         uint32_t m_paramsCount = 0;
         bool m_hasReturn = false;
+        bool m_isEditorButton = false;
 
     };
 

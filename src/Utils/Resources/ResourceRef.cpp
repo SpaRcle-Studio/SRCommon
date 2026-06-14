@@ -111,7 +111,7 @@ namespace SR_UTILS_NS {
         if (m_resource) {
             m_resource->RemoveUsePoint();
         }
-        m_resource = LoadResource(GetResourceType(), m_id);
+        m_resource = m_id.empty() ? nullptr : LoadResource(GetResourceType(), m_id);
         Super::OnPostLoad();
     }
 

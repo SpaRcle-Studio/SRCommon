@@ -65,6 +65,8 @@ namespace SR_UTILS_NS {
             return (isalnum(c) || (c == '+') || (c == '/'));
         }
 
+        static String MakeDisplayName(StringView name);
+
         static std::string Base64Decode(const std::string& base64);
         static std::string Base64Encode(const std::string& data);
 

@@ -88,6 +88,9 @@ namespace SR_HTYPES_NS {
         SR_NODISCARD T& value() { return m_value; }
         SR_NODISCARD const T& value() const { return m_value; }
 
+        SR_NODISCARD T& value_or(T&& defaultValue) { return m_hasValue ? m_value : defaultValue; }
+        SR_NODISCARD const T& value_or(const T& defaultValue) const { return m_hasValue ? m_value : defaultValue; }
+
         SR_NODISCARD T& operator*() { return m_value; }
         SR_NODISCARD const T& operator*() const { return m_value; }
 

@@ -57,6 +57,12 @@ namespace SR_UTILS_NS {
         }
 
         auto&& pEntity = pActiveController->FindById(m_entityId);
+        if (!pEntity) SR_UNLIKELY_ATTRIBUTE {
+            SR_WARN("EntityRefBase::Resolve() : failed to find entity with id {}!", m_entityId);
+            m_pEntity = nullptr;
+            return;
+        }
+
         if (!IsApplicable(pEntity)) SR_UNLIKELY_ATTRIBUTE {
             SR_WARN("EntityRefBase::Resolve() : entity with id {} is not applicable for this reference!", m_entityId);
             return;

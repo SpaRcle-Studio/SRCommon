@@ -30,7 +30,6 @@ namespace SR_UTILS_NS::Reflection {
         EditorPropertyParams& SetNoHeader() noexcept { m_noHeader = true; return *this; }
         EditorPropertyParams& SetNotNull() noexcept { m_notNull = true; return *this; }
         EditorPropertyParams& SetDebugOnly() noexcept { m_debugOnly = true; return *this; }
-        EditorPropertyParams& SetDisplayName(const StringAtom& displayName) noexcept { m_displayName = displayName; return *this; }
         EditorPropertyParams& SetTooltip(const StringAtom& tooltip) noexcept { m_tooltip = tooltip; return *this; }
         EditorPropertyParams& SetInspector(const StringAtom& inspector) noexcept { m_inspector = inspector; return *this; }
         EditorPropertyParams& SetGroup(const StringAtom& group) noexcept { m_group = group; return *this; }
@@ -48,7 +47,6 @@ namespace SR_UTILS_NS::Reflection {
 
         SR_NODISCARD EnumFilterFn GetEnumFilter() const noexcept { return m_enumFilter; }
         SR_NODISCARD RangeType GetRange() const noexcept { return m_range; }
-        SR_NODISCARD StringAtom GetDisplayName() const noexcept { return m_displayName; }
         SR_NODISCARD StringAtom GetTooltip() const noexcept { return m_tooltip; }
         SR_NODISCARD StringAtom GetGroup() const noexcept { return m_group; }
         SR_NODISCARD float_t GetDragSpeed() const noexcept { return m_dragSpeed; }
@@ -74,7 +72,6 @@ namespace SR_UTILS_NS::Reflection {
         };
 
         EnumFilterFn m_enumFilter = nullptr;
-        SR_UTILS_NS::StringAtom m_displayName;
         SR_UTILS_NS::StringAtom m_tooltip;
         SR_UTILS_NS::StringAtom m_inspector;
         SR_UTILS_NS::StringAtom m_group;
@@ -111,7 +108,9 @@ namespace SR_UTILS_NS::Reflection {
                 m_onChangeCallback(pOwner);
             }
         }
+
         SR_NODISCARD StringAtom GetName() const noexcept { return m_name; }
+        SR_NODISCARD StringAtom GetDisplayName() const noexcept;
         SR_NODISCARD StringAtom GetSerializeName() const noexcept { return m_serializeName; }
         SR_NODISCARD PropertyPublicity GetPublicity() const noexcept { return m_publicity; }
         SR_NODISCARD const Value& GetDefaultValue() const noexcept;
@@ -119,15 +118,15 @@ namespace SR_UTILS_NS::Reflection {
         SR_NODISCARD const EditorPropertyParams& GetEditorParams() const noexcept { return m_editorParams; }
         SR_NODISCARD bool HasExplicitSetter() const noexcept { return m_hasExplicitSetter; }
 
-        SR_NODISCARD bool IsActive(SRClass* pOwner) const noexcept {
-            if (pOwner && m_propertyActiveCallback) {
-                return m_propertyActiveCallback(pOwner);
+        SR_NODISCARD bool IsActive(SRClass& owner) const noexcept {
+            if (m_propertyActiveCallback) {
+                return m_propertyActiveCallback(&owner);
             }
             return true;
         }
 
-        SR_NODISCARD bool IsHidden(SRClass* pOwner) const noexcept {
-            if (!IsActive(pOwner)) {
+        SR_NODISCARD bool IsHidden(SRClass& owner) const noexcept {
+            if (!IsActive(owner)) {
                 return true;
             }
             return m_publicity == PropertyPublicity::Hidden || m_publicity == PropertyPublicity::HiddenReadOnly;
@@ -150,6 +149,7 @@ namespace SR_UTILS_NS::Reflection {
         Property& SetEditorParams(const EditorPropertyParams& params) noexcept { m_editorParams = params; return *this; }
         Property& SetPropertyCondition(PropertyActiveCallbackFn callback) noexcept { m_propertyActiveCallback = callback; return *this; }
         Property& SetHasExplicitSetter(bool hasExplicitSetter) noexcept { m_hasExplicitSetter = hasExplicitSetter; return *this; }
+        Property& SetDisplayName(const StringAtom& displayName) noexcept { m_displayName = displayName; return *this; }
 
         template<typename T> Property& CheckSRClass() {
             if constexpr (IsSRClassV<T>) {
@@ -173,6 +173,7 @@ namespace SR_UTILS_NS::Reflection {
         mutable SR_HTYPES_NS::RawPointerHolder<Reflection::Value> m_resetValue;
         SR_UTILS_NS::StringAtom m_name;
         SR_UTILS_NS::StringAtom m_serializeName;
+        mutable SR_UTILS_NS::StringAtom m_displayName;
         PropertyPublicity m_publicity = PropertyPublicity::Public;
         SetCallbackFn m_setCallback = nullptr;
         GetCallbackFn m_getCallback = nullptr;

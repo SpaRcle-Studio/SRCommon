@@ -11,6 +11,26 @@ namespace SR_UTILS_NS::Reflection {
         return m_name;
     }
 
+    uint32_t Method::GetParamsCount() const {
+        return m_paramsCount;
+    }
+
+    bool Method::HasReturn() const {
+        return m_hasReturn;
+    }
+
+    bool Method::IsEditorButton() const {
+        return m_isEditorButton;
+    }
+
+    StringAtom Method::GetDisplayName() const {
+        if (m_displayName.empty()) {
+            SR_TRACY_ZONE;
+            m_displayName = Reflection::MakeDisplayName(m_name);
+        }
+        return m_displayName;
+    }
+
     void Method::InvokeVoid(Owner& owner) const {
         if (m_noReturnNoParams) {
             m_noReturnNoParams(owner);
@@ -83,6 +103,23 @@ namespace SR_UTILS_NS::Reflection {
     Method& Method::SetHasReturn(bool hasReturn) {
         m_hasReturn = hasReturn;
         return *this;
+    }
+
+    Method& Method::SetEditorButton() {
+        m_isEditorButton = true;
+        return *this;
+    }
+
+    Method& Method::SetCondition(MethodActiveCallbackFn condition) {
+        m_methodActiveCallback = condition;
+        return *this;
+    }
+
+    bool Method::IsActive(Method::Owner& owner) const {
+        if (m_methodActiveCallback) {
+            return m_methodActiveCallback(&owner);
+        }
+        return true;
     }
 
     void InvokeMethodVoid(Method::Owner& owner, StringAtom name) {

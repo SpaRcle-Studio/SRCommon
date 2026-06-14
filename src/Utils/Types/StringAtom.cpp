@@ -26,6 +26,14 @@ namespace SR_UTILS_NS {
         : StringAtom(SR_UTILS_NS::HashManager::Instance().GetOrAddInfo(str))
     { }
 
+    StringAtom::StringAtom(const String& str)
+        : StringAtom(SR_UTILS_NS::HashManager::Instance().GetOrAddInfo(str))
+    { }
+
+    StringAtom::StringAtom(StringView str)
+        : StringAtom(SR_UTILS_NS::HashManager::Instance().GetOrAddInfo(str))
+    { }
+
     StringAtom::StringAtom(StringHashInfo* pInfo)
         : m_info(pInfo)
     {
@@ -44,6 +52,14 @@ namespace SR_UTILS_NS {
         return m_info ? m_info->data : DEFAULT;
     }
 
+    StringAtom::operator String() const noexcept { /// NOLINT
+        return m_info ? m_info->data : DEFAULT;
+    }
+
+    StringAtom::operator StringView() const noexcept { /// NOLINT
+        return m_info ? StringView(m_info->data) : StringView();
+    }
+
     bool StringAtom::operator==(const StringAtom& rhs) const noexcept {
         return m_info == rhs.m_info;
     }
@@ -57,6 +73,21 @@ namespace SR_UTILS_NS {
     }
 
     StringAtom& StringAtom::operator=(const std::string& str) {
+        m_info = SR_UTILS_NS::HashManager::Instance().GetOrAddInfo(str);
+        return *this;
+    }
+
+    StringAtom& StringAtom::operator=(const std::string_view& str) {
+        m_info = SR_UTILS_NS::HashManager::Instance().GetOrAddInfo(str);
+        return *this;
+    }
+
+    StringAtom& StringAtom::operator=(const String& str) {
+        m_info = SR_UTILS_NS::HashManager::Instance().GetOrAddInfo(str);
+        return *this;
+    }
+
+    StringAtom& StringAtom::operator=(const StringView& str) {
         m_info = SR_UTILS_NS::HashManager::Instance().GetOrAddInfo(str);
         return *this;
     }

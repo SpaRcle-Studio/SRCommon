@@ -41,6 +41,18 @@ namespace SR_UTILS_NS {
         return *this = std::string_view(str);
     }
 
+    String& String::operator=(std::string_view str) {
+        resize(static_cast<uint64_t>(str.size()));
+        if (m_data) {
+            memcpy(m_data, str.data(), m_size);
+        }
+        return *this;
+    }
+
+    String& String::operator=(StringView str) {
+        return *this = std::string_view(str.data(), str.size());
+    }
+
     String& String::operator=(std::string&& str) noexcept {
         return *this = std::string_view(str);
     }
@@ -226,6 +238,24 @@ namespace SR_UTILS_NS {
         return std::string_view(m_data ? m_data : "", m_size);
     }
 
+    bool String::starts_with(std::string_view prefix) const {
+        if (prefix.size() > m_size) {
+            return false;
+        }
+        return std::equal(prefix.begin(), prefix.end(), m_data);
+    }
+
+    bool String::ends_with(std::string_view suffix) const {
+        if (suffix.size() > m_size) {
+            return false;
+        }
+        return std::equal(suffix.rbegin(), suffix.rend(), m_data + m_size - suffix.size());
+    }
+
+    bool String::contains(std::string_view str) const {
+        return find(str) != SR_UINT64_MAX;
+    }
+
     String String::substr(uint64_t pos, uint64_t count) const {
         if (pos >= m_size || empty()) {
             return String();
@@ -261,6 +291,15 @@ namespace SR_UTILS_NS {
         other.m_capacity = 0;
     }
 
+    void String::push_back(char c) {
+        if (m_size + 1 > m_capacity) {
+            reserve(m_capacity > 0 ? m_capacity * 2 : 8);
+        }
+        m_data[m_size] = c;
+        m_size++;
+        m_data[m_size] = '\0';
+    }
+
     void String::resize(uint64_t newSize) {
         reserve(newSize);
         if (m_data) {
@@ -274,6 +313,32 @@ namespace SR_UTILS_NS {
             m_data[0] = '\0';
         }
         m_size = 0;
+    }
+
+    void String::ToLowerInPlace() {
+        for (uint64_t i = 0; i < m_size; ++i) {
+            m_data[i] = static_cast<char>(tolower(static_cast<unsigned char>(m_data[i])));
+        }
+    }
+
+    void String::ToUpperInPlace() {
+        for (uint64_t i = 0; i < m_size; ++i) {
+            m_data[i] = static_cast<char>(toupper(static_cast<unsigned char>(m_data[i])));
+        }
+    }
+
+    void String::SubStrInPlace(uint64_t pos, uint64_t count) {
+        if (pos >= m_size || empty()) {
+            clear();
+            return;
+        }
+        uint64_t maxCount = m_size - pos;
+        if (count > maxCount) {
+            count = maxCount;
+        }
+        memmove(m_data, m_data + pos, count);
+        m_size = count;
+        m_data[m_size] = '\0';
     }
 
     StringView::StringView() = default;
@@ -297,6 +362,17 @@ namespace SR_UTILS_NS {
         , m_size(str.size())
     { }
 
+    void StringView::remove_prefix(uint64_t n) {
+        if (n > m_size) {
+            SRHalt("StringView::remove_prefix() : prefix size exceeds string size!");
+            m_data = nullptr;
+            m_size = 0;
+            return;
+        }
+        m_data += n;
+        m_size -= n;
+    }
+
     StringView::operator std::string_view() const {
         return std::string_view(m_data ? m_data : "", m_size);
     }
@@ -314,6 +390,7 @@ namespace SR_UTILS_NS {
         return const_cast<char*>(m_data)[m_size - 1];
     }
     const char& StringView::back() const { return const_cast<StringView*>(this)->back(); }
+
     StringView StringView::substr(uint64_t pos, uint64_t count) const {
         if (pos >= m_size || empty()) {
             return StringView();
@@ -324,6 +401,18 @@ namespace SR_UTILS_NS {
         }
         return StringView(std::string_view(m_data + pos, count));
     }
+
+
+    SR_NODISCARD char StringView::operator[](size_t index) const {
+        if (index >= m_size) {
+            SRHalt("StringView::operator[]() : index out of bounds!");
+            return '\0';
+        }
+        return m_data[index];
+    }
+
+    SR_NODISCARD const char* StringView::begin() const { return m_data; }
+    SR_NODISCARD const char* StringView::end() const { return m_data ? m_data + m_size : nullptr; }
 
     bool StringView::operator==(const StringView& rhs) const noexcept {
         if (m_size != rhs.m_size) {

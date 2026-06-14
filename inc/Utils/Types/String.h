@@ -8,7 +8,13 @@
 #include <Utils/stdInclude.h>
 
 namespace SR_UTILS_NS {
+    class StringView;
+
     class SR_COMMON_DLL_API String {
+    public:
+        using value_type = char;
+        static constexpr auto npos{static_cast<uint64_t>(-1)};
+
     public:
         String();
         String(const char* str); /// NOLINT
@@ -20,8 +26,10 @@ namespace SR_UTILS_NS {
 
         String& operator=(const char* str);
         String& operator=(const std::string& str);
+        String& operator=(std::string_view str);
         String& operator=(std::string&& str) noexcept;
         String& operator=(const String& other);
+        String& operator=(StringView str);
         String& operator=(String&& other) noexcept;
 
         SR_NODISCARD String operator+(const String& rhs) const;
@@ -52,6 +60,10 @@ namespace SR_UTILS_NS {
         SR_NODISCARD const char& back() const;
         SR_NODISCARD std::string_view view() const;
 
+        SR_NODISCARD bool contains(std::string_view str) const;
+        SR_NODISCARD bool starts_with(std::string_view str) const;
+        SR_NODISCARD bool ends_with(std::string_view str) const;
+
         SR_NODISCARD String substr(uint64_t pos, uint64_t count = SR_UINT64_MAX) const;
 
         SR_NODISCARD uint64_t find(const char* str, uint64_t pos = 0) const;
@@ -68,9 +80,14 @@ namespace SR_UTILS_NS {
         char operator[](size_t index) const;
         char& operator[](size_t index);
 
+        void push_back(char c);
         void reserve(uint64_t newSize);
         void resize(uint64_t newSize);
         void clear();
+
+        void ToLowerInPlace();
+        void ToUpperInPlace();
+        void SubStrInPlace(uint64_t pos, uint64_t count = SR_UINT64_MAX);
 
     private:
         char* m_data = nullptr;
@@ -87,6 +104,8 @@ namespace SR_UTILS_NS {
         StringView(std::string_view str); /// NOLINT
         StringView(const String& str); /// NOLINT
 
+        void remove_prefix(uint64_t n);
+
         SR_NODISCARD operator std::string_view() const; /// NOLINT
 
         SR_NODISCARD const char* c_str() const;
@@ -96,6 +115,11 @@ namespace SR_UTILS_NS {
         SR_NODISCARD char& back();
         SR_NODISCARD const char& back() const;
         SR_NODISCARD StringView substr(uint64_t pos, uint64_t count = SR_UINT64_MAX) const;
+
+        SR_NODISCARD char operator[](size_t index) const;
+
+        SR_NODISCARD const char* begin() const;
+        SR_NODISCARD const char* end() const;
 
         SR_NODISCARD bool operator==(const StringView& rhs) const noexcept;
         SR_NODISCARD bool operator!=(const StringView& rhs) const noexcept;

@@ -81,6 +81,8 @@ namespace SR_UTILS_NS {
         virtual void LookAt(const SR_MATH_NS::FVector3& position);
         virtual void LookAt(const SR_MATH_NS::FVector3& position, LookAtAxis axis);
 
+        SR_NODISCARD SR_MATH_NS::Matrix4x4 GetLocalMatrix() const;
+
         SR_NODISCARD virtual const SR_MATH_NS::Matrix4x4& GetMatrix() const;
         SR_NODISCARD virtual const SR_MATH_NS::AABB& GetAABB() const;
 

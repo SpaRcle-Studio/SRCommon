@@ -238,4 +238,12 @@ namespace SR_UTILS_NS {
         SRHalt("Abstract method called!");
         return Measurement::MeasurementMAX;
     }
+
+    SR_MATH_NS::Matrix4x4 Transform::GetLocalMatrix() const {
+        return SR_MATH_NS::Matrix4x4(
+            GetTranslation(),
+            GetRotation(),
+            GetScale()
+        );
+    }
 }

@@ -100,6 +100,8 @@ namespace SR_UTILS_NS::Tests {
         }
 
     private:
+        /// @property
+        bool m_SOMEstrangeNaMe = false;
         /// @property @onChanged(OnChanged)
         ReflectionTestComponentAssociative m_associative;
         /// @property @onChanged(OnChanged)

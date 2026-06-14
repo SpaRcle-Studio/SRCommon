@@ -6,6 +6,7 @@
 #define SR_ENGINE_STRING_ATOM_H
 
 #include <Utils/stdInclude.h>
+#include <Utils/Types/String.h>
 
 namespace SR_UTILS_NS {
     struct StringHashInfo;
@@ -24,10 +25,14 @@ namespace SR_UTILS_NS {
         StringAtom(const char* str); /// NOLINT
         StringAtom(const std::string& str); /// NOLINT
         StringAtom(std::string_view str); /// NOLINT
+        StringAtom(const String& str); /// NOLINT
+        StringAtom(StringView str); /// NOLINT
 
     public:
         operator const std::string&() const noexcept; /// NOLINT
+        operator String() const noexcept; /// NOLINT
         operator std::string_view() const noexcept; /// NOLINT
+        operator StringView() const noexcept; /// NOLINT
         /// @operator
         bool operator==(const StringAtom& rhs) const noexcept;
         bool operator==(const std::string& rhs) const noexcept;
@@ -35,6 +40,9 @@ namespace SR_UTILS_NS {
         /// @operator
         bool operator==(const char* rhs) const noexcept;
         StringAtom& operator=(const std::string& str);
+        StringAtom& operator=(const String& str);
+        StringAtom& operator=(const std::string_view& str);
+        StringAtom& operator=(const StringView& str);
         /// @operator
         StringAtom& operator=(const char* str);
 

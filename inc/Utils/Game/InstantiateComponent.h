@@ -47,9 +47,9 @@ namespace SR_UTILS_NS {
         /// @property
         SR_UTILS_NS::EntityRef<SR_UTILS_NS::SceneObject> m_target;
 
-        /// @property @propertyCondition(This.m_instanceMode == SR_UTILS_NS::InstantiateComponentInstanceMode::Clone)
+        /// @property @condition(This.m_instanceMode == SR_UTILS_NS::InstantiateComponentInstanceMode::Clone)
         SR_UTILS_NS::EntityRef<SR_UTILS_NS::SceneObject> m_source;
-        /// @property @propertyCondition(This.m_instanceMode == SR_UTILS_NS::InstantiateComponentInstanceMode::Prefab)
+        /// @property @condition(This.m_instanceMode == SR_UTILS_NS::InstantiateComponentInstanceMode::Prefab)
         SR_UTILS_NS::StringAtom m_prefabId;
 
     };

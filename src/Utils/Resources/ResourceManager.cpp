@@ -315,6 +315,11 @@ namespace SR_UTILS_NS {
         SR_TRACY_ZONE;
         SR_SCOPED_LOCK;
 
+        if (id.empty()) {
+            SRHalt("ResourceManager::LoadResource() : resource id is empty!");
+            return nullptr;
+        }
+
         if (auto&& pFound = Find(id, typeName, pVariant)) {
             return pFound;
         }

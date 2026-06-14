@@ -25,6 +25,7 @@
 #include <shobjidl.h>
 #include <winsock2.h>
 #include <ws2tcpip.h>
+#include <tlhelp32.h>
 
 #include <filesystem>
 

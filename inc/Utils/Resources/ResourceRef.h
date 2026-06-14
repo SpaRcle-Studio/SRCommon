@@ -79,7 +79,7 @@ namespace SR_UTILS_NS {
     }
 
     template<class T> ResourceRef<T>::ResourceRef(const Path& path)
-        : ResourceRef(path.ToStringRef())
+        : ResourceRef(StringAtom(path.ToStringRef()))
     { }
 }
 

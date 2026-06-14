@@ -151,7 +151,7 @@ namespace SR_WORLD_NS {
         /// @property
         SR_HTYPES_NS::SharedPtr<SceneLogic> m_logic;
         /// @property @getter(GetRootSceneObjects)
-        /// @propertyCondition(This.m_logic && This.m_logic->IsAllowedRootSave())
+        /// @condition(This.m_logic && This.m_logic->IsAllowedRootSave())
         SceneObjects m_root;
 
     };
