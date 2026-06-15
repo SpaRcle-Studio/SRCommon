@@ -63,8 +63,8 @@ namespace SR_UTILS_NS {
     public:
         SR_NODISCARD bool HasLayer(StringAtom layer) const;
         SR_NODISCARD uint16_t GetLayerIndex(StringAtom layer) const;
-        SR_NODISCARD SR_UTILS_NS::Vector<StringAtom> GetLayers() const { return m_layers; }
-        SR_NODISCARD SR_UTILS_NS::Vector<RenderLayerInfo> GetLayersInfo() const { return m_layersInfo; }
+        SR_NODISCARD const SR_UTILS_NS::Vector<StringAtom>& GetLayers() const { return m_layers; }
+        SR_NODISCARD const SR_UTILS_NS::Vector<RenderLayerInfo>& GetLayersInfo() const { return m_layersInfo; }
 
         SR_NODISCARD static StringAtom GetDefaultLayer();
         SR_NODISCARD uint64_t GetHashState() const { return m_hashState; }

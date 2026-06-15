@@ -53,8 +53,8 @@ namespace SR_UTILS_NS::LogDetails {
     #define SRAssert1(expr) SRAssert2(expr, #expr)
     #define SRAssert(expr) SRAssert2(expr, "An exception has been occured.")
 
-    #define SRVerifyFalse2(expr, ...) ((!(expr) || SR_UTILS_NS::LogDetails::AssertFwd(SR_MAKE_ASSERT_MSG(SR_FORMAT(__VA_ARGS__)))))
-    #define SRVerify2(expr, ...) ((expr) || SR_UTILS_NS::LogDetails::AssertFwd(SR_MAKE_ASSERT_MSG(SR_FORMAT(__VA_ARGS__))))
+    #define SRVerifyFalse2(expr, ...) (!(expr) || (SR_UTILS_NS::LogDetails::AssertFwd(SR_MAKE_ASSERT_MSG(SR_FORMAT(__VA_ARGS__))) && false))
+    #define SRVerify2(expr, ...) ((expr) || (SR_UTILS_NS::LogDetails::AssertFwd(SR_MAKE_ASSERT_MSG(SR_FORMAT(__VA_ARGS__))) && false))
 
     #define SR_SAFE_PTR_ASSERT(expr, msg) SRAssert2(expr, SR_FORMAT("[SafePtr] {} \n\tPtr: {}", msg, (void *) m_ptr));
 

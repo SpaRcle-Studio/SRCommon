@@ -9,6 +9,8 @@
 #include <Utils/FileSystem/AssimpCache.h>
 
 #ifdef SR_UTILS_ASSIMP
+    #include <Utils/Resources/AssimpTools.h>
+
     #include <assimp/scene.h>
     #include <assimp/postprocess.h>
     #include <assimp/Importer.hpp>
@@ -61,19 +63,14 @@ namespace SR_HTYPES_NS {
         m_animations.clear();
     #endif
 
-        m_vertexBuffersCache.clear();
+        m_meshes.clear();
 
         m_fromCache = false;
 
-        m_indices.clear();
-        m_bones.clear();
         m_optimizedBones.clear();
 
         m_boneOffsetsMap.clear();
-        m_boneTransformsMap.clear();
-
         m_boneOffsets.clear();
-        m_boneTransforms.clear();
 
         return !hasErrors;
     }
@@ -157,7 +154,6 @@ namespace SR_HTYPES_NS {
             CalculateBones();
             OptimizeSkeleton();
             CalculateOffsets();
-            CalculateTransforms();
             CalculateAnimations();
         }
         else {
@@ -188,129 +184,25 @@ namespace SR_HTYPES_NS {
         }
 
     #ifdef SR_UTILS_ASSIMP
-        if (!m_scene || id >= m_scene->mNumMeshes) {
-            SRAssert2(false, "Out of range or invalid scene!");
-            return {};
+        if (SRVerify(m_scene && id < m_scene->mNumMeshes)) {
+            return m_scene->mMeshes[id]->mName.C_Str();
         }
-
-        return m_scene->mMeshes[id]->mName.C_Str();
-    #else
+    #endif
         return std::string_view();
-    #endif
     }
-
-    /*std::vector<SR_UTILS_NS::Vertex> RawMesh::GetVertices(uint32_t id) const {
-        SR_TRACY_ZONE;
-
-        if (GetResourceLoadState() == IResource::LoadState::Error) {
-            return {};
-        }
-
-        std::vector<SR_UTILS_NS::Vertex> vertices;
-
-    #ifdef SR_UTILS_ASSIMP
-        if (!m_scene || id >= m_scene->mNumMeshes) {
-            SRAssert2(false, "Out of range or invalid scene!");
-            return {};
-        }
-
-        auto&& mesh = m_scene->mMeshes[id];
-
-        vertices.reserve(mesh->mNumVertices);
-
-        const bool hasUV = mesh->mTextureCoords[0];
-        const bool hasNormals = mesh->mNormals;
-        const bool hasTangents = mesh->mTangents;
-        const bool hasBones = mesh->mBones;
-
-        for (uint32_t i = 0; i < mesh->mNumVertices; ++i) {
-            SR_UTILS_NS::Vertex vertex = SR_UTILS_NS::Vertex();
-            vertex.position = *reinterpret_cast<Vec3*>(&mesh->mVertices[i]);
-            vertex.uv = hasUV ? (*reinterpret_cast<Vec2*>(&mesh->mTextureCoords[0][i])) : Vec2 { 0.f, 0.f };
-            //vertex.uv.x = -vertex.uv.x;
-            vertex.normal = hasNormals ? (*reinterpret_cast<Vec3*>(&mesh->mNormals[i])) : Vec3 { 0.f, 0.f, 0.f };
-            vertex.tangent = hasTangents ? (*reinterpret_cast<Vec3*>(&mesh->mTangents[i])) : Vec3 { 0.f, 0.f, 0.f };
-            vertex.bitangent = hasTangents ? (*reinterpret_cast<Vec3*>(&mesh->mBitangents[i])) : Vec3 { 0.f, 0.f, 0.f };
-
-            //vertex.position.x = -vertex.position.x;
-            //vertex.normal.x = -vertex.normal.x;
-            //vertex.tangent.x = -vertex.tangent.x;
-            //vertex.bitangent.x = -vertex.bitangent.x;
-
-            vertices.emplace_back(vertex);
-        }
-
-        //std::reverse(vertices.begin(), vertices.end());
-
-        //for (uint32_t i = 0; i < vertices.size() / 3; i += 3) {
-        //    std::swap(vertices[i + 1], vertices[i + 2]);
-        //}
-
-        if (hasBones) {
-            auto&& bones = GetBones(id);
-
-            bool hasWarn = false;
-
-            for (uint32_t i = 0; i < mesh->mNumBones; i++) {
-                auto&& boneIndex = bones.at(SR_UTILS_NS::StringAtom(mesh->mBones[i]->mName.C_Str()));
-                for (uint32_t j = 0; j < mesh->mBones[i]->mNumWeights; j++) {
-                    auto&& vertex = vertices[mesh->mBones[i]->mWeights[j].mVertexId];
-
-                    vertex.weightsNum++;
-
-                    if (vertex.weightsNum > SR_MAX_BONES_ON_VERTEX) {
-                        if (!hasWarn) {
-                            SR_WARN("RawMesh::GetVertices() : number of weights on vertex is already {}. Some weights will be omitted! VertexID = {}. weightsNum = {}",
-                                SR_MAX_BONES_ON_VERTEX, mesh->mBones[i]->mWeights[j].mVertexId, vertex.weightsNum);
-                            hasWarn = true;
-                        }
-                        continue;
-                    }
-
-                    vertex.weights[vertex.weightsNum - 1].boneId = boneIndex;
-                    vertex.weights[vertex.weightsNum - 1].weight = mesh->mBones[i]->mWeights[j].mWeight;
-                }
-            }
-
-        #ifdef SR_DEBUG
-            static bool hasError = false;
-
-            if (!hasError) {
-                for (auto&& vertex : vertices) {
-                    float_t sum = 0.f;
-
-                    for (auto&&[boneId, weight] : vertex.weights) {
-                        sum += weight;
-                    }
-
-                    if (!SR_EQUALS(sum, 1.f)) {
-                        SR_WARN("RawMesh::GetVertices() : incorrect mesh weight!\n\tPath: " + GetResourcePath().ToStringRef() +
-                            "\n\tIndex: " + std::to_string(id) + "\n\tSum: " + std::to_string(sum)
-                        );
-                        hasError = true;
-                        break;
-                    }
-                }
-            }
-        #endif
-        }
-    #endif
-
-        return vertices;
-    }*/
 
     const SR_HTYPES_NS::FastMemoryArray<uint32_t>& RawMesh::GetIndices(uint32_t id) const {
         SR_TRACY_ZONE;
 
         static SR_HTYPES_NS::FastMemoryArray<uint32_t> empty;
 
-        if (id >= m_indices.size()) {
+        if (id >= m_meshes.size()) {
             SRHalt("Out of range!");
             return empty;
         }
 
-        if (!m_indices[id].empty()) {
-            return m_indices[id];
+        if (!m_meshes[id].indices.empty()) {
+            return m_meshes[id].indices;
         }
 
         SR_HTYPES_NS::FastMemoryArray<uint32_t> indices;
@@ -328,23 +220,19 @@ namespace SR_HTYPES_NS {
 
         for (uint32_t i = 0; i < mesh->mNumFaces; ++i) {
             const aiFace& face = mesh->mFaces[i];
-
             if (face.mNumIndices > 3) {
                 SRHalt("Mesh isn't triangulated!");
                 return empty;
             }
-
             memcpy(&indices[count], face.mIndices, sizeof(uint32_t) * face.mNumIndices);
-
             count += face.mNumIndices;
         }
 
         indices.resize(count);
     #endif
 
-        m_indices[id] = std::move(indices);
-
-        return m_indices[id];
+        m_meshes[id].indices = std::move(indices);
+        return m_meshes[id].indices;
     }
 
     uint32_t RawMesh::GetVerticesCount(uint32_t id) const {
@@ -443,12 +331,10 @@ namespace SR_HTYPES_NS {
 
     const SR_HTYPES_NS::FlatHashMap<SR_UTILS_NS::StringAtom, uint32_t>& RawMesh::GetBones(uint32_t id) const {
         static const auto&& def = SR_HTYPES_NS::FlatHashMap<SR_UTILS_NS::StringAtom, uint32_t>();
-
-        if (id >= m_bones.size()) {
+        if (id >= m_meshes.size()) {
             return def;
         }
-
-        return m_bones.at(id);
+        return m_meshes.at(id).bones;
     }
 
     const SR_MATH_NS::Matrix4x4& RawMesh::GetBoneOffset(SR_UTILS_NS::StringAtom name) const {
@@ -462,46 +348,25 @@ namespace SR_HTYPES_NS {
         return pIt->second;
     }
 
-    const SR_MATH_NS::Matrix4x4& RawMesh::GetBoneTransform(uint32_t index) const {
-        static const auto&& def = SR_MATH_NS::Matrix4x4::Identity();
-        if (index >= m_boneTransforms.size()) SR_UNLIKELY_ATTRIBUTE {
-            SRHalt("Out of range!");
-            return def;
-        }
-        return m_boneTransforms[index];
-    }
-
-    const SR_MATH_NS::Matrix4x4& RawMesh::GetBoneTransform(SR_UTILS_NS::StringAtom name) const {
-        static const auto&& def = SR_MATH_NS::Matrix4x4::Identity();
-
-        auto&& pIt = m_boneTransformsMap.find(name);
-        if (pIt == m_boneTransformsMap.end()) {
-            return def;
-        }
-
-        return pIt->second;
-    }
-
     void RawMesh::CalculateBones() {
         SR_TRACY_ZONE;
     #ifdef SR_UTILS_ASSIMP
-        m_bones.resize(m_scene->mNumMeshes);
-        m_indices.resize(m_scene->mNumMeshes);
+        m_meshes.resize(m_scene->mNumMeshes);
 
         for (uint32_t meshId = 0; meshId < m_scene->mNumMeshes; ++meshId) {
             auto&& pMesh = m_scene->mMeshes[meshId];
+            auto&& bones = m_meshes[meshId].bones;
 
             for (uint32_t boneId = 0; boneId < pMesh->mNumBones; ++boneId) {
                 auto&& name = SR_UTILS_NS::StringAtom(pMesh->mBones[boneId]->mName.data);
 
-                if (m_bones[meshId].count(name) == 1) {
+                if (bones.count(name) == 1) {
                     SR_WARN("RawMesh::CalculateBones() : bone already exists! \n\tName: " + name.ToString());
                     continue;
                 }
 
-                const auto size = static_cast<uint32_t>(m_bones[meshId].size());
-
-                m_bones[meshId].insert(std::make_pair(name, size));
+                const auto size = static_cast<uint32_t>(bones.size());
+                bones.insert(std::make_pair(name, size));
             }
         }
     #endif
@@ -527,8 +392,8 @@ namespace SR_HTYPES_NS {
 
         m_optimizedBones.clear();
 
-        for (auto&& mesh : m_bones) {
-            for (auto&& [hashName, index] : mesh) {
+        for (auto&& mesh : m_meshes) {
+            for (auto&& [hashName, index] : mesh.bones) {
                 if (m_optimizedBones.count(hashName) == 1) {
                     index = m_optimizedBones[hashName];
                     continue;
@@ -559,9 +424,9 @@ namespace SR_HTYPES_NS {
                 matrix.Decompose(scaling, rotation, translation);
 
                 SR_MATH_NS::Matrix4x4 matrix4X4(
-                        SR_MATH_NS::FVector3(translation.x, translation.y, translation.z),
-                        SR_MATH_NS::Quaternion(rotation.x, rotation.y, rotation.z, rotation.w),
-                        SR_MATH_NS::FVector3(scaling.x, scaling.y, scaling.z)
+                    SR_MATH_NS::FVector3(translation.x, translation.y, translation.z),
+                    SR_MATH_NS::Quaternion(rotation.x, rotation.y, rotation.z, rotation.w),
+                    SR_MATH_NS::FVector3(scaling.x, scaling.y, scaling.z)
                 );
 
                 m_boneOffsetsMap.insert(std::make_pair(name, matrix4X4));
@@ -579,57 +444,6 @@ namespace SR_HTYPES_NS {
         }
     }
 
-    void RawMesh::CalculateTransforms() {
-        SR_TRACY_ZONE;
-
-#ifdef SR_UTILS_ASSIMP
-        std::map<SR_UTILS_NS::StringAtom, SR_MATH_NS::Matrix4x4> matrices;
-
-        std::function<void(aiNode*, SR_MATH_NS::Matrix4x4)> processNode;
-
-        processNode = [&matrices, &processNode](aiNode* pNode, SR_MATH_NS::Matrix4x4 matrix) {
-            aiQuaternion rotation;
-            aiVector3D scaling, translation;
-            pNode->mTransformation.Decompose(scaling, rotation, translation);
-
-            SR_MATH_NS::Matrix4x4 local(
-                    SR_MATH_NS::FVector3(translation.x, translation.y, translation.z),
-                    SR_MATH_NS::Quaternion(rotation.x, rotation.y, rotation.z, rotation.w),
-                    SR_MATH_NS::FVector3(scaling.x, scaling.y, scaling.z));
-
-            matrices.insert(std::make_pair(SR_UTILS_NS::StringAtom(pNode->mName.C_Str()), local));
-
-            for (uint32_t i = 0; i < pNode->mNumChildren; ++i) {
-                processNode(pNode->mChildren[i], local);
-            }
-        };
-        processNode(m_scene->mRootNode, SR_MATH_NS::Matrix4x4::Identity());
-
-        for (uint32_t meshId = 0; meshId < m_scene->mNumMeshes; ++meshId) {
-            auto&& pMesh = m_scene->mMeshes[meshId];
-
-            for (uint32_t boneId = 0; boneId < pMesh->mNumBones; ++boneId) {
-                auto&& name = SR_UTILS_NS::StringAtom(pMesh->mBones[boneId]->mName.data);
-
-                if (m_boneTransformsMap.count(name) == 1 || matrices.count(name) == 0) {
-                    continue;
-                }
-
-                m_boneTransformsMap.insert(std::make_pair(name, matrices.at(name)));
-            }
-        }
-#endif
-
-        m_boneTransforms.resize(m_boneTransformsMap.size());
-
-        for (auto&& [hashName, boneId] : m_optimizedBones) {
-            if (boneId >= m_boneTransforms.size()) {
-                m_boneTransforms.resize(boneId + 1);
-            }
-            m_boneTransforms[boneId] = GetBoneTransform(hashName);
-        }
-    }
-
     uint32_t RawMesh::GetBoneIndex(SR_UTILS_NS::StringAtom name) const {
         auto&& pIt = m_optimizedBones.find(name);
         if (pIt == m_optimizedBones.end()) {
@@ -643,77 +457,13 @@ namespace SR_HTYPES_NS {
         SR_TRACY_ZONE;
 
     #ifdef SR_UTILS_ASSIMP
-        if (!m_scene) {
-            SR_ERROR("RawMesh::NormalizeWeights() : scene is nullptr!");
-            return;
-        }
-
-        for (uint32_t i = 0; i < m_scene->mNumMeshes; ++i) {
-            NormalizeWeights(m_scene->mMeshes[i]);
+        if (SRVerify(m_scene)) {
+            for (uint32_t i = 0; i < m_scene->mNumMeshes; ++i) {
+                AssimpTools::NormalizeWeights(m_scene->mMeshes[i]);
+            }
         }
     #endif
     }
-
-#ifdef SR_UTILS_ASSIMP
-    uint32_t RawMesh::NormalizeWeights(const aiMesh* pMesh) {
-        if (pMesh->mNumBones == 0) {
-            return 0;
-        }
-
-        struct BoneWeight {
-            uint32_t mBoneIndex; /// index of a bone in current mesh
-            aiVertexWeight* mVertexWeight; /// a pointer to mVertexWeight in meshs[x]->mBones[x]->mWeight for quick visit
-        };
-
-        struct VertexBoneWeights {
-            float_t mTotalWeight = 0.f;
-            std::vector<BoneWeight> mBoneWeights;
-        };
-
-        std::map<uint32_t, VertexBoneWeights> map;
-
-        for (uint32_t b = 0; b < pMesh->mNumBones; b++)
-        {
-            auto bone = pMesh->mBones[b];
-
-            for (unsigned int w = 0; w < bone->mNumWeights; w++)
-            {
-                auto vertexWeight = &bone->mWeights[w];
-                auto key = vertexWeight->mVertexId;
-
-                if (map.find(key) == map.end()) {
-                    map.insert(std::map<uint32_t, VertexBoneWeights>::value_type(key, VertexBoneWeights()));
-                }
-
-                auto& vertex_BoneWeights = map[key];
-
-                BoneWeight boneWeights = {};
-                boneWeights.mBoneIndex = b;
-                boneWeights.mVertexWeight = vertexWeight;
-
-                vertex_BoneWeights.mTotalWeight += vertexWeight->mWeight;
-                vertex_BoneWeights.mBoneWeights.push_back(boneWeights);
-            }
-        }
-
-
-        uint32_t count = 0;
-        /// normalize all weights:
-        /// every weight for a same vertex divided by totalWeight of this vertex
-        for (auto& item : map)
-        {
-            auto& vertex_BoneWeights = item.second;
-            auto f = 1.f / vertex_BoneWeights.mTotalWeight;
-            for (auto&& mBoneWeight : vertex_BoneWeights.mBoneWeights)
-            {
-                mBoneWeight.mVertexWeight->mWeight *= f;
-                count++;
-            }
-        }
-
-        return count;
-    }
-#endif
 
     void RawMesh::ComputeConvexHull() {
         SR_TRACY_ZONE;
@@ -755,17 +505,9 @@ namespace SR_HTYPES_NS {
 
     std::string_view RawMesh::GetRootBoneName() const {
     #ifdef SR_UTILS_ASSIMP
-        if (!m_scene) {
-            SRHalt("Invalid scene!");
-            return {};
+        if (SRVerify(m_scene && m_scene->mRootNode)) {
+            return std::string_view(m_scene->mRootNode->mName.C_Str(), m_scene->mRootNode->mName.length);
         }
-
-        if (!m_scene->mRootNode) {
-            SRHalt("Invalid root node!");
-            return {};
-        }
-
-        return std::string_view(m_scene->mRootNode->mName.C_Str(), m_scene->mRootNode->mName.length);
     #endif
         return {};
     }
@@ -788,30 +530,28 @@ namespace SR_HTYPES_NS {
             return empty;
         }
 
-        m_vertexBuffersCache.resize(m_scene->mNumMeshes);
-        auto&& pIt = std::ranges::find_if(m_vertexBuffersCache[id], [&layout](const SR_UTILS_NS::VertexDataBuffer& buffer) {
+        m_meshes.resize(m_scene->mNumMeshes);
+        auto&& vertexBuffers = m_meshes[id].vertexBuffers;
+        auto&& pIt = std::ranges::find_if(vertexBuffers, [&layout](const SR_UTILS_NS::VertexDataBuffer& buffer) {
             return buffer.layout.Compare(layout);
         });
 
-        if (pIt != m_vertexBuffersCache[id].end()) {
+        if (pIt != vertexBuffers.end()) {
             return *pIt;
         }
 
-        m_vertexBuffersCache[id].reserve(8);
-
-        if (m_vertexBuffersCache[id].empty()) {
+        vertexBuffers.reserve(8);
+        if (vertexBuffers.empty()) {
             auto&& buffer = SR_UTILS_NS::VertexDataBuffer::AllocateFromAssimp(m_scene->mMeshes[id], GetBones(id));
-            m_vertexBuffersCache[id].emplace_back(std::move(buffer));
+            vertexBuffers.emplace_back(std::move(buffer));
         }
 
         if (layout.attributesCount == 0) {
-            return m_vertexBuffersCache[id].front();
+            return vertexBuffers.front();
         }
 
-        m_vertexBuffersCache[id].emplace_back(
-            m_vertexBuffersCache[id].front().TransitionToLayout(layout)
-        );
-        return m_vertexBuffersCache[id].back();
+        vertexBuffers.emplace_back(vertexBuffers.front().TransitionToLayout(layout));
+        return vertexBuffers.back();
     #else
         return empty;
     #endif
