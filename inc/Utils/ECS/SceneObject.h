@@ -36,6 +36,7 @@ namespace SR_UTILS_NS {
 
     public:
         SceneObject();
+        explicit SceneObject(StringAtom name);
         ~SceneObject() override;
 
     public:

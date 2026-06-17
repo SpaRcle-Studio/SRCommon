@@ -14,9 +14,7 @@
     #include <assimp/scene.h>
     #include <assimp/postprocess.h>
     #include <assimp/Importer.hpp>
-    #include <assimp/config.h>
     #include <assimp/include/assimp/Exporter.hpp>
-    #include <assimp/include/assimp/cexport.h>
 #endif
 
 #include <Codegen/RawMesh.generated.hpp>
@@ -59,18 +57,10 @@ namespace SR_HTYPES_NS {
             m_pMappedFileCache.Reset();
             m_scene = nullptr;
         }
-
-        m_animations.clear();
     #endif
 
-        m_meshes.clear();
-
+        m_sceneStructure = {};
         m_fromCache = false;
-
-        m_optimizedBones.clear();
-
-        m_boneOffsetsMap.clear();
-        m_boneOffsets.clear();
 
         return !hasErrors;
     }
@@ -116,18 +106,6 @@ namespace SR_HTYPES_NS {
                 return false;
             }
 
-            if (m_importer) {
-                std::string ext = path.GetExtension();
-                std::transform(ext.begin(), ext.end(), ext.begin(), [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
-
-                /// Mixamo/FBX часто используют pivot/pre-rotation.
-                /// Для МЕША preserve pivots обычно нужен (иначе skinning/offsets могут разъехаться и геометрия "схлопнется").
-                /// Для АНИМАЦИИ preserve pivots часто ломает каналы (кости "выворачивает"), поэтому отключаем только в animation-режиме.
-                if (ext == "fbx") {
-                    //m_importer->SetPropertyBool(AI_CONFIG_IMPORT_FBX_PRESERVE_PIVOTS, m_params.animation ? false : true);
-                }
-            }
-
             m_scene = m_importer->ReadFileFromMemory(buffer.data(), buffer.size(), m_params.animation ? SR_RAW_MESH_ASSIMP_ANIMATION_FLAGS : SR_RAW_MESH_ASSIMP_FLAGS);
 
             if (!m_scene) {
@@ -139,7 +117,9 @@ namespace SR_HTYPES_NS {
                 ComputeConvexHull();
             }
 
-            NormalizeWeights();
+            for (uint32_t i = 0; i < m_scene->mNumMeshes; ++i) {
+                AssimpTools::NormalizeWeights(m_scene->mMeshes[i]);
+            }
 
             if (needFastLoad) {
                 SR_UTILS_NS::FileSystem::WriteHashToFile(hashFile, resourceHash);
@@ -151,10 +131,7 @@ namespace SR_HTYPES_NS {
         }
 
         if (m_scene) {
-            CalculateBones();
-            OptimizeSkeleton();
-            CalculateOffsets();
-            CalculateAnimations();
+            m_sceneStructure.ImportFromAssimp(m_scene, m_params.animation);
         }
         else {
             SR_ERROR("RawMesh::Load() : failed to read file! \n\tPath: " + path.ToString() + "\n\tReason: " + m_importer->GetErrorString());
@@ -166,16 +143,7 @@ namespace SR_HTYPES_NS {
     }
 
     uint32_t RawMesh::GetMeshesCount() const {
-    #ifdef SR_UTILS_ASSIMP
-        if (!m_scene) {
-            SRHalt("RawMesh::GetMeshesCount() : assimp scene is invalid!");
-            return 0;
-        }
-
-        return m_scene->mNumMeshes;
-    #else
-        return 0;
-    #endif
+        return m_sceneStructure.GetMeshes().size();
     }
 
     std::string_view RawMesh::GetGeometryName(uint32_t id) const {
@@ -191,18 +159,42 @@ namespace SR_HTYPES_NS {
         return std::string_view();
     }
 
+    const SR_UTILS_NS::Vector<SR_MATH_NS::Matrix4x4>& RawMesh::GetBoneOffsetMatrices(uint32_t id) const {
+        static const SR_UTILS_NS::Vector<SR_MATH_NS::Matrix4x4> empty;
+        if (!SRVerify(id < GetMeshesCount())) {
+            return empty;
+        }
+
+        auto&& mesh = GetMeshData(id);
+        if (!mesh.maxBoneId) {
+            return empty;
+        }
+
+        auto&& cache = mesh.boneOffsetMatricesCache;
+        if (!cache.empty()) {
+            return cache;
+        }
+
+        auto&& bones = GetMeshData(id).bones;
+        cache.resize(mesh.maxBoneId.value() + 1);
+        for (const auto& [boneName, boneInfo] : bones) {
+            cache[boneInfo.boneId.value()] = boneInfo.offsetMatrix;
+        }
+        return cache;
+    }
+
     const SR_HTYPES_NS::FastMemoryArray<uint32_t>& RawMesh::GetIndices(uint32_t id) const {
         SR_TRACY_ZONE;
 
         static SR_HTYPES_NS::FastMemoryArray<uint32_t> empty;
 
-        if (id >= m_meshes.size()) {
-            SRHalt("Out of range!");
+        auto&& meshes = m_sceneStructure.GetMeshes();
+        if (id >= meshes.size()) {
             return empty;
         }
 
-        if (!m_meshes[id].indices.empty()) {
-            return m_meshes[id].indices;
+        if (!meshes[id].indices.empty()) {
+            return meshes[id].indices;
         }
 
         SR_HTYPES_NS::FastMemoryArray<uint32_t> indices;
@@ -231,8 +223,8 @@ namespace SR_HTYPES_NS {
         indices.resize(count);
     #endif
 
-        m_meshes[id].indices = std::move(indices);
-        return m_meshes[id].indices;
+        meshes[id].indices = std::move(indices);
+        return meshes[id].indices;
     }
 
     uint32_t RawMesh::GetVerticesCount(uint32_t id) const {
@@ -275,6 +267,20 @@ namespace SR_HTYPES_NS {
     #else
         return 0;
     #endif
+    }
+
+    const MeshSceneStructure::BoneInfo& RawMesh::GetBoneInfo(uint32_t id, SR_UTILS_NS::StringAtom name) const {
+        static const MeshSceneStructure::BoneInfo defValue;
+        auto&& meshes = m_sceneStructure.GetMeshes();
+        if (id >= meshes.size()) {
+            return defValue;
+        }
+
+        auto&& bones = meshes[id].bones;
+        if (auto&& pIt = bones.find(name); pIt != bones.end()) {
+            return pIt->second;
+        }
+        return defValue;
     }
 
     float_t RawMesh::GetScaleFactor() const {
@@ -329,140 +335,13 @@ namespace SR_HTYPES_NS {
         return {};
     }
 
-    const SR_HTYPES_NS::FlatHashMap<SR_UTILS_NS::StringAtom, uint32_t>& RawMesh::GetBones(uint32_t id) const {
-        static const auto&& def = SR_HTYPES_NS::FlatHashMap<SR_UTILS_NS::StringAtom, uint32_t>();
-        if (id >= m_meshes.size()) {
-            return def;
+    const MeshSceneStructure::MeshData& RawMesh::GetMeshData(uint32_t id) const {
+        static const MeshSceneStructure::MeshData empty;
+        auto&& meshes = m_sceneStructure.GetMeshes();
+        if (id >= meshes.size()) {
+            return empty;
         }
-        return m_meshes.at(id).bones;
-    }
-
-    const SR_MATH_NS::Matrix4x4& RawMesh::GetBoneOffset(SR_UTILS_NS::StringAtom name) const {
-        static const auto&& def = SR_MATH_NS::Matrix4x4::Identity();
-
-        auto&& pIt = m_boneOffsetsMap.find(name);
-        if (pIt == m_boneOffsetsMap.end()) {
-            return def;
-        }
-
-        return pIt->second;
-    }
-
-    void RawMesh::CalculateBones() {
-        SR_TRACY_ZONE;
-    #ifdef SR_UTILS_ASSIMP
-        m_meshes.resize(m_scene->mNumMeshes);
-
-        for (uint32_t meshId = 0; meshId < m_scene->mNumMeshes; ++meshId) {
-            auto&& pMesh = m_scene->mMeshes[meshId];
-            auto&& bones = m_meshes[meshId].bones;
-
-            for (uint32_t boneId = 0; boneId < pMesh->mNumBones; ++boneId) {
-                auto&& name = SR_UTILS_NS::StringAtom(pMesh->mBones[boneId]->mName.data);
-
-                if (bones.count(name) == 1) {
-                    SR_WARN("RawMesh::CalculateBones() : bone already exists! \n\tName: " + name.ToString());
-                    continue;
-                }
-
-                const auto size = static_cast<uint32_t>(bones.size());
-                bones.insert(std::make_pair(name, size));
-            }
-        }
-    #endif
-    }
-
-    void RawMesh::CalculateAnimations() {
-        SR_TRACY_ZONE;
-
-    #ifdef SR_UTILS_ASSIMP
-        if (!m_params.animation || !m_scene) {
-            return;
-        }
-
-        for (uint32_t i = 0; i < m_scene->mNumAnimations; ++i) {
-            auto&& pAnimation = m_scene->mAnimations[i];
-            m_animations[SR_HASH_STR(pAnimation->mName.C_Str())] = pAnimation;
-        }
-    #endif
-    }
-
-    void RawMesh::OptimizeSkeleton() {
-        SR_TRACY_ZONE;
-
-        m_optimizedBones.clear();
-
-        for (auto&& mesh : m_meshes) {
-            for (auto&& [hashName, index] : mesh.bones) {
-                if (m_optimizedBones.count(hashName) == 1) {
-                    index = m_optimizedBones[hashName];
-                    continue;
-                }
-                m_optimizedBones[hashName] = index;
-            }
-        }
-    }
-
-    void RawMesh::CalculateOffsets() {
-        SR_TRACY_ZONE;
-
-    #ifdef SR_UTILS_ASSIMP
-        for (uint32_t meshId = 0; meshId < m_scene->mNumMeshes; ++meshId) {
-            auto&& pMesh = m_scene->mMeshes[meshId];
-
-            for (uint32_t boneId = 0; boneId < pMesh->mNumBones; ++boneId) {
-                auto&& name = SR_UTILS_NS::StringAtom(pMesh->mBones[boneId]->mName.data);
-
-                if (m_boneOffsetsMap.count(name) == 1) {
-                    continue;
-                }
-
-                auto&& matrix = pMesh->mBones[boneId]->mOffsetMatrix;
-
-                aiQuaternion rotation;
-                aiVector3D scaling, translation;
-                matrix.Decompose(scaling, rotation, translation);
-
-                SR_MATH_NS::Matrix4x4 matrix4X4(
-                    SR_MATH_NS::FVector3(translation.x, translation.y, translation.z),
-                    SR_MATH_NS::Quaternion(rotation.x, rotation.y, rotation.z, rotation.w),
-                    SR_MATH_NS::FVector3(scaling.x, scaling.y, scaling.z)
-                );
-
-                m_boneOffsetsMap.insert(std::make_pair(name, matrix4X4));
-            }
-        }
-    #endif
-
-        m_boneOffsets.resize(m_boneOffsetsMap.size());
-
-        for (auto&& [hashName, boneId] : m_optimizedBones) {
-            if (boneId >= m_boneOffsets.size()) {
-                m_boneOffsets.resize(boneId + 1);
-            }
-            m_boneOffsets[boneId] = GetBoneOffset(hashName);
-        }
-    }
-
-    uint32_t RawMesh::GetBoneIndex(SR_UTILS_NS::StringAtom name) const {
-        auto&& pIt = m_optimizedBones.find(name);
-        if (pIt == m_optimizedBones.end()) {
-            return SR_ID_INVALID;
-        }
-
-        return pIt->second;
-    }
-
-    void RawMesh::NormalizeWeights() {
-        SR_TRACY_ZONE;
-
-    #ifdef SR_UTILS_ASSIMP
-        if (SRVerify(m_scene)) {
-            for (uint32_t i = 0; i < m_scene->mNumMeshes; ++i) {
-                AssimpTools::NormalizeWeights(m_scene->mMeshes[i]);
-            }
-        }
-    #endif
+        return meshes[id];
     }
 
     void RawMesh::ComputeConvexHull() {
@@ -485,14 +364,6 @@ namespace SR_HTYPES_NS {
         return SR_ID_INVALID;
     }
 
-    const Vector<SR_MATH_NS::Matrix4x4>& RawMesh::GetBoneOffsets() const {
-        return m_boneOffsets;
-    }
-
-    const SR_HTYPES_NS::FlatHashMap<SR_UTILS_NS::StringAtom, uint16_t> &RawMesh::GetOptimizedBones() const {
-        return m_optimizedBones;
-    }
-
 #ifdef SR_UTILS_ASSIMP
     const void* RawMesh::GetAssimpScene() const noexcept {
         return m_scene;
@@ -501,15 +372,6 @@ namespace SR_HTYPES_NS {
 
     bool RawMesh::IsAllowedToRevive() const {
         return true;
-    }
-
-    std::string_view RawMesh::GetRootBoneName() const {
-    #ifdef SR_UTILS_ASSIMP
-        if (SRVerify(m_scene && m_scene->mRootNode)) {
-            return std::string_view(m_scene->mRootNode->mName.C_Str(), m_scene->mRootNode->mName.length);
-        }
-    #endif
-        return {};
     }
 
     void RawMesh::SetVariant(const SR_UTILS_NS::IResourceVariant& variant) {
@@ -525,13 +387,13 @@ namespace SR_HTYPES_NS {
         }
 
     #ifdef SR_UTILS_ASSIMP
-        if (!m_scene || id >= m_scene->mNumMeshes) {
+        auto&& meshes = m_sceneStructure.GetMeshes();
+        if (!m_scene || id >= meshes.size()) {
             SRAssert2(false, "Out of range or invalid scene!");
             return empty;
         }
 
-        m_meshes.resize(m_scene->mNumMeshes);
-        auto&& vertexBuffers = m_meshes[id].vertexBuffers;
+        auto&& vertexBuffers = meshes[id].vertexBuffers;
         auto&& pIt = std::ranges::find_if(vertexBuffers, [&layout](const SR_UTILS_NS::VertexDataBuffer& buffer) {
             return buffer.layout.Compare(layout);
         });
@@ -542,7 +404,13 @@ namespace SR_HTYPES_NS {
 
         vertexBuffers.reserve(8);
         if (vertexBuffers.empty()) {
-            auto&& buffer = SR_UTILS_NS::VertexDataBuffer::AllocateFromAssimp(m_scene->mMeshes[id], GetBones(id));
+            auto&& bones = GetMeshData(id).bones;
+            auto&& buffer = SR_UTILS_NS::VertexDataBuffer::AllocateFromAssimp(m_scene->mMeshes[id], [&bones](SR_UTILS_NS::StringAtom name)-> uint32_t {
+                if (auto&& pIt = bones.find(name); pIt != bones.end() && pIt->second.boneId.has_value()) {
+                    return pIt->second.boneId.value();
+                }
+                return SR_ID_INVALID;
+            });
             vertexBuffers.emplace_back(std::move(buffer));
         }
 
@@ -558,7 +426,11 @@ namespace SR_HTYPES_NS {
     }
 
     bool RawMesh::HasBones(uint32_t id) const {
-        return !GetBones(id).empty();
+        return !GetMeshData(id).bones.empty();
+    }
+
+    const MeshSceneStructure& RawMesh::GetSceneStructure() const {
+        return m_sceneStructure;
     }
 
     bool RawMeshParams::operator==(const RawMeshParams &rhs) const {

@@ -27,6 +27,7 @@ namespace SR_UTILS_NS {
         StringAtom(std::string_view str); /// NOLINT
         StringAtom(const String& str); /// NOLINT
         StringAtom(StringView str); /// NOLINT
+        StringAtom(const char* str, SizeType length);
 
     public:
         operator const std::string&() const noexcept; /// NOLINT

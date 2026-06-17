@@ -44,6 +44,17 @@ namespace SR_MATH_NS {
         GLMScaleMat4x4(self, scale);
     }
 
+    Matrix4x4::Matrix4x4(float_t m00v, float_t m01v, float_t m02v, float_t m03v,
+                         float_t m10v, float_t m11v, float_t m12v, float_t m13v,
+                         float_t m20v, float_t m21v, float_t m22v, float_t m23v,
+                         float_t m30v, float_t m31v, float_t m32v, float_t m33v) noexcept
+    {
+        m00 = m00v; m01 = m01v; m02 = m02v; m03 = m03v;
+        m10 = m10v; m11 = m11v; m12 = m12v; m13 = m13v;
+        m20 = m20v; m21 = m21v; m22 = m22v; m23 = m23v;
+        m30 = m30v; m31 = m31v; m32 = m32v; m33 = m33v;
+    }
+
     Matrix4x4 Matrix4x4::operator*(const Matrix4x4& mat) const {
         return Matrix4x4(GLMMultiplyMat4x4(self, mat.self));
     }

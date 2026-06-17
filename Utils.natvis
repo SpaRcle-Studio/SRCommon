@@ -1,0 +1,316 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+    <Type Name="SpaRcle::Utils::Vector&lt;*&gt;">
+        <DisplayString Condition="m_size == 0">empty</DisplayString>
+        <DisplayString Condition="m_size != 0">size={m_size}, capacity={m_capacity}</DisplayString>
+        <Expand>
+            <Synthetic Name="[size]">
+                <DisplayString>{m_size}</DisplayString>
+            </Synthetic>
+            <Synthetic Name="[capacity]">
+                <DisplayString>{m_capacity}</DisplayString>
+            </Synthetic>
+            <ArrayItems>
+                <Size>m_size</Size>
+                <ValuePointer>m_data</ValuePointer>
+            </ArrayItems>
+        </Expand>
+    </Type>
+    <Type Name="SpaRcle::Utils::SmallVector&lt;*,*&gt;">
+        <DisplayString Condition="m_size == 0">empty</DisplayString>
+        <DisplayString Condition="m_size != 0">size={m_size}, capacity={m_capacity}</DisplayString>
+        <Expand>
+            <Synthetic Name="[size]">
+                <DisplayString>{m_size}</DisplayString>
+            </Synthetic>
+            <Synthetic Name="[capacity]">
+                <DisplayString>{m_capacity}</DisplayString>
+            </Synthetic>
+            <Synthetic Name="[is_small]">
+                <DisplayString>{(void*)m_data == (void*)m_inline}</DisplayString>
+            </Synthetic>
+            <ArrayItems>
+                <Size>m_size</Size>
+                <ValuePointer>m_data</ValuePointer>
+            </ArrayItems>
+        </Expand>
+    </Type>
+    <Type Name="SpaRcle::Utils::Types::FastMemoryArray&lt;*&gt;">
+        <DisplayString Condition="m_size == 0">empty</DisplayString>
+        <DisplayString Condition="m_size != 0">size={m_size}, capacity={m_capacity}</DisplayString>
+        <Expand>
+            <Synthetic Name="[size]">
+                <DisplayString>{m_size}</DisplayString>
+            </Synthetic>
+            <Synthetic Name="[capacity]">
+                <DisplayString>{m_capacity}</DisplayString>
+            </Synthetic>
+            <ArrayItems>
+                <Size>m_size</Size>
+                <ValuePointer>m_data</ValuePointer>
+            </ArrayItems>
+        </Expand>
+    </Type>
+
+    <!-- ska::flat_hash_map / ska::flat_hash_set (Malte Skarupke "ska" containers) -->
+    <Type Name="ska::flat_hash_map&lt;*,*,*,*,*&gt;">
+        <DisplayString Condition="num_elements == 0">empty</DisplayString>
+        <DisplayString Condition="num_elements != 0">size={num_elements}</DisplayString>
+        <Expand>
+            <Synthetic Name="[size]">
+                <DisplayString>{num_elements}</DisplayString>
+            </Synthetic>
+            <Synthetic Name="[bucket_count]">
+                <DisplayString>{num_slots_minus_one ? (num_slots_minus_one + 1) : 0}</DisplayString>
+            </Synthetic>
+            <Synthetic Name="[max_lookups]">
+                <DisplayString>{max_lookups}</DisplayString>
+            </Synthetic>
+            <CustomListItems>
+                <Variable Name="p" InitialValue="entries" />
+                <Variable Name="endp" InitialValue="entries + (num_slots_minus_one + max_lookups)" />
+                <Size>num_elements</Size>
+                <Loop>
+                    <Break Condition="p == endp" />
+                    <If Condition="p->distance_from_desired &lt; 0">
+                        <Exec>++p</Exec>
+                    </If>
+                    <If Condition="p != endp &amp;&amp; p->distance_from_desired &gt;= 0">
+                        <Item Name="[{p->value.first}]">p->value.second</Item>
+                        <Exec>++p</Exec>
+                    </If>
+                </Loop>
+            </CustomListItems>
+        </Expand>
+    </Type>
+
+    <Type Name="ska::flat_hash_set&lt;*,*,*,*&gt;">
+        <DisplayString Condition="num_elements == 0">empty</DisplayString>
+        <DisplayString Condition="num_elements != 0">size={num_elements}</DisplayString>
+        <Expand>
+            <Synthetic Name="[size]">
+                <DisplayString>{num_elements}</DisplayString>
+            </Synthetic>
+            <Synthetic Name="[bucket_count]">
+                <DisplayString>{num_slots_minus_one ? (num_slots_minus_one + 1) : 0}</DisplayString>
+            </Synthetic>
+            <Synthetic Name="[max_lookups]">
+                <DisplayString>{max_lookups}</DisplayString>
+            </Synthetic>
+            <CustomListItems>
+                <Variable Name="p" InitialValue="entries" />
+                <Variable Name="endp" InitialValue="entries + (num_slots_minus_one + max_lookups)" />
+                <Size>num_elements</Size>
+                <Loop>
+                    <Break Condition="p == endp" />
+                    <If Condition="p->distance_from_desired &lt; 0">
+                        <Exec>++p</Exec>
+                    </If>
+                    <If Condition="p != endp &amp;&amp; p->distance_from_desired &gt;= 0">
+                        <Item>p->value</Item>
+                        <Exec>++p</Exec>
+                    </If>
+                </Loop>
+            </CustomListItems>
+        </Expand>
+    </Type>
+
+    <!-- SR wrappers: show as normal map/set by iterating underlying Impl -->
+    <Type Name="SR_HTYPES_NS::FlatHashMap&lt;*,*&gt;">
+        <DisplayString Condition="m_map.size() == 0">empty</DisplayString>
+        <DisplayString Condition="m_map.size() != 0">size={m_map.size()}</DisplayString>
+        <Expand>
+            <Item Name="[impl]">m_map</Item>
+        </Expand>
+    </Type>
+
+    <Type Name="SR_HTYPES_NS::FlatHashSet&lt;*&gt;">
+        <DisplayString Condition="m_map.size() == 0">empty</DisplayString>
+        <DisplayString Condition="m_map.size() != 0">size={m_map.size()}</DisplayString>
+        <Expand>
+            <Item Name="[impl]">m_map</Item>
+        </Expand>
+    </Type>
+
+    <!-- Utils strings -->
+    <Type Name="SR_UTILS_NS::String">
+        <DisplayString Condition="m_data == 0 || m_size == 0">empty</DisplayString>
+        <DisplayString Condition="m_data != 0 &amp;&amp; m_size != 0">"{m_data,s8}" (size={m_size}, cap={m_capacity})</DisplayString>
+        <Expand>
+            <Synthetic Name="[size]"><DisplayString>{m_size}</DisplayString></Synthetic>
+            <Synthetic Name="[capacity]"><DisplayString>{m_capacity}</DisplayString></Synthetic>
+            <Synthetic Name="[data]"><DisplayString>{m_data}</DisplayString></Synthetic>
+            <ArrayItems Condition="m_data != 0">
+                <Size>m_size</Size>
+                <ValuePointer>m_data</ValuePointer>
+            </ArrayItems>
+        </Expand>
+    </Type>
+
+    <Type Name="SR_UTILS_NS::StringView">
+        <DisplayString Condition="m_data == 0 || m_size == 0">empty</DisplayString>
+        <DisplayString Condition="m_data != 0 &amp;&amp; m_size != 0">size={m_size}</DisplayString>
+        <Expand>
+            <Synthetic Name="[size]"><DisplayString>{m_size}</DisplayString></Synthetic>
+            <Synthetic Name="[data]"><DisplayString>{m_data}</DisplayString></Synthetic>
+            <ArrayItems Condition="m_data != 0">
+                <Size>m_size</Size>
+                <ValuePointer>m_data</ValuePointer>
+            </ArrayItems>
+        </Expand>
+    </Type>
+
+    <Type Name="SR_UTILS_NS::StringAtom">
+        <DisplayString Condition="m_info == 0">empty</DisplayString>
+        <DisplayString Condition="m_info != 0">hash={m_info->hash}</DisplayString>
+        <Expand>
+            <Item Name="[hash]" Condition="m_info != 0">m_info->hash</Item>
+            <Item Name="[str]" Condition="m_info != 0">m_info->data</Item>
+            <Item Name="[view]" Condition="m_info != 0">m_info->view</Item>
+            <Item Name="[info]" Condition="m_info != 0">*m_info</Item>
+        </Expand>
+    </Type>
+
+    <Type Name="SR_HTYPES_NS::UnicodeString">
+        <DisplayString Condition="m_internal.size() == 0">empty</DisplayString>
+        <DisplayString Condition="m_internal.size() != 0">size={m_internal.size()}</DisplayString>
+        <Expand>
+            <Item Name="[impl]">m_internal</Item>
+        </Expand>
+    </Type>
+
+    <!-- Utils math -->
+    <Type Name="SR_MATH_NS::Vector2&lt;*&gt;">
+        <DisplayString>({x}, {y})</DisplayString>
+        <Expand>
+            <Item Name="x">x</Item>
+            <Item Name="y">y</Item>
+        </Expand>
+    </Type>
+
+    <Type Name="SR_MATH_NS::Vector3&lt;*&gt;">
+        <DisplayString>({x}, {y}, {z})</DisplayString>
+        <Expand>
+            <Item Name="x">x</Item>
+            <Item Name="y">y</Item>
+            <Item Name="z">z</Item>
+        </Expand>
+    </Type>
+
+    <Type Name="SR_MATH_NS::Vector4&lt;*&gt;">
+        <DisplayString>({x}, {y}, {z}, {w})</DisplayString>
+        <Expand>
+            <Item Name="x">x</Item>
+            <Item Name="y">y</Item>
+            <Item Name="z">z</Item>
+            <Item Name="w">w</Item>
+        </Expand>
+    </Type>
+
+    <Type Name="SR_MATH_NS::Vector6&lt;*&gt;">
+        <DisplayString>({x}, {y}, {z}, {w}, {v}, {u})</DisplayString>
+        <Expand>
+            <Item Name="x">x</Item>
+            <Item Name="y">y</Item>
+            <Item Name="z">z</Item>
+            <Item Name="w">w</Item>
+            <Item Name="v">v</Item>
+            <Item Name="u">u</Item>
+        </Expand>
+    </Type>
+
+    <Type Name="SR_MATH_NS::Rect&lt;*&gt;">
+        <DisplayString>(x={x}, y={y}, w={w}, h={h})</DisplayString>
+        <Expand>
+            <Item Name="x">x</Item>
+            <Item Name="y">y</Item>
+            <Item Name="w">w</Item>
+            <Item Name="h">h</Item>
+        </Expand>
+    </Type>
+
+    <Type Name="SR_MATH_NS::Size&lt;*&gt;">
+        <DisplayString>{v} ({metric})</DisplayString>
+        <Expand>
+            <Item Name="v">v</Item>
+            <Item Name="metric">metric</Item>
+        </Expand>
+    </Type>
+
+    <Type Name="SR_MATH_NS::Size2&lt;*&gt;">
+        <DisplayString>({w}, {h})</DisplayString>
+        <Expand>
+            <Item Name="w">w</Item>
+            <Item Name="h">h</Item>
+        </Expand>
+    </Type>
+
+    <Type Name="SR_MATH_NS::AABB">
+        <DisplayString>min={min}, max={max}</DisplayString>
+        <Expand>
+            <Item Name="min">min</Item>
+            <Item Name="max">max</Item>
+        </Expand>
+    </Type>
+
+    <Type Name="SR_MATH_NS::Quaternion">
+        <DisplayString>({x}, {y}, {z}, {w})</DisplayString>
+        <Expand>
+            <Item Name="x">x</Item>
+            <Item Name="y">y</Item>
+            <Item Name="z">z</Item>
+            <Item Name="w">w</Item>
+            <Item Name="[glm]">self</Item>
+        </Expand>
+    </Type>
+
+    <Type Name="SR_MATH_NS::Matrix3x3">
+        <DisplayString>[{elements[0]}, {elements[1]}, {elements[2]}]</DisplayString>
+        <Expand>
+            <ArrayItems>
+                <Size>3</Size>
+                <ValuePointer>elements</ValuePointer>
+            </ArrayItems>
+        </Expand>
+    </Type>
+
+    <Type Name="SR_MATH_NS::Matrix4x4">
+        <DisplayString>pos=({v.position.x}, {v.position.y}, {v.position.z})</DisplayString>
+        <Expand>
+            <Item Name="right">v.right</Item>
+            <Item Name="up">v.up</Item>
+            <Item Name="dir">v.dir</Item>
+            <Item Name="position">v.position</Item>
+            <ArrayItems>
+                <Size>4</Size>
+                <ValuePointer>value</ValuePointer>
+            </ArrayItems>
+        </Expand>
+    </Type>
+
+    <Type Name="SR_MATH_NS::FColor">
+        <DisplayString>rgba=({r}, {g}, {b}, {a})</DisplayString>
+        <Expand>
+            <Item Name="r">r</Item>
+            <Item Name="g">g</Item>
+            <Item Name="b">b</Item>
+            <Item Name="a">a</Item>
+        </Expand>
+    </Type>
+
+    <Type Name="SR_MATH_NS::Ray">
+        <DisplayString>o={origin}, d={direction}</DisplayString>
+        <Expand>
+            <Item Name="origin">origin</Item>
+            <Item Name="direction">direction</Item>
+        </Expand>
+    </Type>
+
+    <Type Name="SR_MATH_NS::Plane">
+        <DisplayString>n={normal}, d={distance}</DisplayString>
+        <Expand>
+            <Item Name="normal">normal</Item>
+            <Item Name="distance">distance</Item>
+        </Expand>
+    </Type>
+</AutoVisualizer>

@@ -13,7 +13,7 @@ namespace SR_UTILS_NS {
     class SR_COMMON_DLL_API String {
     public:
         using value_type = char;
-        static constexpr auto npos{static_cast<uint64_t>(-1)};
+        static constexpr auto npos{static_cast<SizeType>(-1)};
 
     public:
         String();
@@ -98,7 +98,11 @@ namespace SR_UTILS_NS {
 
     class SR_COMMON_DLL_API StringView {
     public:
+        static constexpr auto npos{static_cast<SizeType>(-1)};
+
+    public:
         StringView();
+        StringView(const char* str, SizeType size); /// NOLINT
         StringView(const char* str); /// NOLINT
         StringView(const std::string& str); /// NOLINT
         StringView(std::string_view str); /// NOLINT
@@ -120,6 +124,12 @@ namespace SR_UTILS_NS {
 
         SR_NODISCARD const char* begin() const;
         SR_NODISCARD const char* end() const;
+
+        SR_NODISCARD SizeType find(const char* str, uint64_t pos = 0) const;
+        SR_NODISCARD SizeType find(std::string_view str, uint64_t pos = 0) const;
+        SR_NODISCARD SizeType find(StringView str, uint64_t pos = 0) const;
+        SR_NODISCARD SizeType find(const String& str, uint64_t pos = 0) const;
+        SR_NODISCARD SizeType find(char c, uint64_t pos = 0) const;
 
         SR_NODISCARD bool operator==(const StringView& rhs) const noexcept;
         SR_NODISCARD bool operator!=(const StringView& rhs) const noexcept;

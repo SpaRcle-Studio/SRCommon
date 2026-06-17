@@ -67,7 +67,7 @@ namespace SR_HTYPES_NS {
         SR_NODISCARD const std::unordered_set<SharedPtrDynamicData*>& GetData() const;
 
     private:
-        uint64_t m_count = 0;
+        std::atomic<uint64_t> m_count = 0;
         std::unordered_set<SharedPtrDynamicData*> m_data;
 
     };

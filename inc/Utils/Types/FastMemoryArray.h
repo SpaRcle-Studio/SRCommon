@@ -254,9 +254,9 @@ namespace SR_HTYPES_NS {
         }
 
     private:
+        T* m_data = nullptr;
         SizeType m_size = 0;
         SizeType m_capacity = 0;
-        T* m_data = nullptr;
 
     };
 }

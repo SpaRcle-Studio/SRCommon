@@ -347,6 +347,11 @@ namespace SR_UTILS_NS {
         , m_size(str ? static_cast<uint64_t>(strlen(str)) : 0)
     { }
 
+    StringView::StringView(const char *str, SizeType size)
+        : m_data(str)
+        , m_size(size)
+    { }
+
     StringView::StringView(const std::string& str)
         : m_data(str.data())
         , m_size(static_cast<uint64_t>(str.size()))
@@ -403,7 +408,7 @@ namespace SR_UTILS_NS {
     }
 
 
-    SR_NODISCARD char StringView::operator[](size_t index) const {
+    char StringView::operator[](size_t index) const {
         if (index >= m_size) {
             SRHalt("StringView::operator[]() : index out of bounds!");
             return '\0';
@@ -411,8 +416,42 @@ namespace SR_UTILS_NS {
         return m_data[index];
     }
 
-    SR_NODISCARD const char* StringView::begin() const { return m_data; }
-    SR_NODISCARD const char* StringView::end() const { return m_data ? m_data + m_size : nullptr; }
+    const char* StringView::begin() const { return m_data; }
+    const char* StringView::end() const { return m_data ? m_data + m_size : nullptr; }
+
+    SizeType StringView::find(const char* str, uint64_t pos) const {
+        return find(StringView(str), pos);
+    }
+
+    SizeType StringView::find(std::string_view str, uint64_t pos) const {
+        return find(StringView(str));
+    }
+
+    SizeType StringView::find(StringView str, uint64_t pos) const {
+        if (pos >= m_size || empty()) {
+            return SR_UINT64_MAX;
+        }
+        const char* found = std::search(m_data + pos, m_data + m_size, str.data(), str.data() + str.size());
+        if (found != m_data + m_size) {
+            return static_cast<uint64_t>(found - m_data);
+        }
+        return SR_UINT64_MAX;
+    }
+
+    SizeType StringView::find(const String& str, uint64_t pos) const {
+        return find(StringView(str));
+    }
+
+    SizeType StringView::find(char c, uint64_t pos) const {
+        if (pos >= m_size || empty()) {
+            return SR_UINT64_MAX;
+        }
+        const char* found = static_cast<const char*>(memchr(m_data + pos, c, m_size - pos));
+        if (found) {
+            return static_cast<uint64_t>(found - m_data);
+        }
+        return SR_UINT64_MAX;
+    }
 
     bool StringView::operator==(const StringView& rhs) const noexcept {
         if (m_size != rhs.m_size) {

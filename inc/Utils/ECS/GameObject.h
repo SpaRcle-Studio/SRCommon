@@ -28,6 +28,7 @@ namespace SR_UTILS_NS {
 
     public:
         GameObject() = default;
+        explicit GameObject(StringAtom name);
         ~GameObject() override;
 
     public:

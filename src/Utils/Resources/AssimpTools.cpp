@@ -8,6 +8,7 @@
 
 #include <assimp/scene.h>
 #include <assimp/mesh.h>
+#include <assimp/matrix4x4.h>
 
 namespace SR_UTILS_NS::AssimpTools {
     uint32_t NormalizeWeights(const aiMesh* pMesh) {
@@ -69,6 +70,15 @@ namespace SR_UTILS_NS::AssimpTools {
         }
 
         return count;
+    }
+
+    SR_MATH_NS::Matrix4x4 ConvertAssimpMatrix(const aiMatrix4x4& matrix) {
+        return SR_MATH_NS::Matrix4x4(
+            matrix.a1, matrix.a2, matrix.a3, matrix.a4,
+            matrix.b1, matrix.b2, matrix.b3, matrix.b4,
+            matrix.c1, matrix.c2, matrix.c3, matrix.c4,
+            matrix.d1, matrix.d2, matrix.d3, matrix.d4
+        );
     }
 }
 

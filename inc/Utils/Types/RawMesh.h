@@ -2,26 +2,13 @@
 // Created by Monika on 24.03.2022.
 //
 
-#ifndef SR_ENGINE_RAWMESH_H
-#define SR_ENGINE_RAWMESH_H
+#ifndef SR_ENGINE_COMMON_RAW_MESH_H
+#define SR_ENGINE_COMMON_RAW_MESH_H
 
 #include <Utils/Resources/IResource.h>
 #include <Utils/Types/SafePointer.h>
+#include <Utils/Types/MeshSceneStructure.h>
 #include <Utils/Types/Map.h>
-#include <Utils/Common/Vertices.h>
-#include <Utils/Math/Matrix4x4.h>
-#include <Utils/Types/FastMemoryArray.h>
-#include <Utils/Types/FlatHashMap.h>
-
-#ifdef SR_UTILS_ASSIMP
-namespace Assimp {
-    class Importer;
-}
-
-class aiScene;
-class aiAnimation;
-class aiMesh;
-#endif
 
 namespace SR_WORLD_NS {
     class Scene;
@@ -32,7 +19,7 @@ namespace SR_UTILS_NS {
 }
 
 namespace SR_HTYPES_NS {
-    struct SR_COMMON_DLL_API RawMeshParams : public SR_UTILS_NS::IResourceVariant {
+    struct SR_COMMON_DLL_API RawMeshParams : public IResourceVariant {
         bool animation = false;
         bool convexHull = false;
 
@@ -47,7 +34,6 @@ namespace SR_HTYPES_NS {
         SR_CLASS()
         using Super = IResource;
         using ScenePtr = SR_HTYPES_NS::SharedPtr<SR_WORLD_NS::Scene>;
-        using Hash = uint64_t;
     public:
         using Ptr = SR_HTYPES_NS::SharedPtr<RawMesh>;
 
@@ -58,29 +44,27 @@ namespace SR_HTYPES_NS {
     public:
         void ComputeConvexHull();
 
-        void SetVariant(const SR_UTILS_NS::IResourceVariant& variant) override;
+        void SetVariant(const IResourceVariant& variant) override;
 
         SR_NODISCARD uint32_t GetMeshesCount() const;
         SR_NODISCARD std::string_view GetGeometryName(uint32_t id) const;
 
-        SR_NODISCARD const SR_UTILS_NS::VertexDataBuffer& GetVertexBuffer(uint32_t id, const SR_UTILS_NS::VertexLayoutDescription& layout) const;
+        SR_NODISCARD const VertexDataBuffer& GetVertexBuffer(uint32_t id, const VertexLayoutDescription& layout) const;
         SR_NODISCARD const SR_HTYPES_NS::FastMemoryArray<uint32_t>& GetIndices(uint32_t id) const;
-        SR_NODISCARD const SR_HTYPES_NS::FlatHashMap<SR_UTILS_NS::StringAtom, uint32_t>& GetBones(uint32_t id) const;
-        SR_NODISCARD const SR_HTYPES_NS::FlatHashMap<SR_UTILS_NS::StringAtom, uint16_t>& GetOptimizedBones() const;
-        SR_NODISCARD const SR_MATH_NS::Matrix4x4& GetBoneOffset(SR_UTILS_NS::StringAtom name) const;
-        SR_NODISCARD uint32_t GetBoneIndex(SR_UTILS_NS::StringAtom name) const;
-        SR_NODISCARD const Vector<SR_MATH_NS::Matrix4x4>& GetBoneOffsets() const;
-        SR_NODISCARD std::string_view GetRootBoneName() const;
+        SR_NODISCARD const Vector<SR_MATH_NS::Matrix4x4>& GetBoneOffsetMatrices(uint32_t id) const;
+        SR_NODISCARD const MeshSceneStructure::MeshData& GetMeshData(uint32_t id) const;
+        SR_NODISCARD const MeshSceneStructure::BoneInfo& GetBoneInfo(uint32_t id, StringAtom name) const;
+        SR_NODISCARD const MeshSceneStructure& GetSceneStructure() const;
         SR_NODISCARD bool HasBones(uint32_t id) const;
 
         SR_NODISCARD uint32_t GetVerticesCount(uint32_t id) const;
         SR_NODISCARD uint32_t GetIndicesCount(uint32_t id) const;
         SR_NODISCARD uint32_t GetAnimationsCount() const;
-        SR_NODISCARD Vector<SR_UTILS_NS::StringAtom> GetAnimationNames() const;
-        SR_NODISCARD int32_t GetMeshId(SR_UTILS_NS::StringAtom name) const;
+        SR_NODISCARD Vector<StringAtom> GetAnimationNames() const;
+        SR_NODISCARD int32_t GetMeshId(StringAtom name) const;
 
         SR_NODISCARD float_t GetScaleFactor() const;
-        SR_NODISCARD SR_UTILS_NS::Path GetAssociatedPath() const override;
+        SR_NODISCARD Path GetAssociatedPath() const override;
 
         SR_NODISCARD bool IsAllowedToRevive() const override;
 
@@ -93,33 +77,12 @@ namespace SR_HTYPES_NS {
         bool Load() override;
 
     private:
-        void NormalizeWeights();
-        void CalculateBones();
-        void OptimizeSkeleton();
-        void CalculateOffsets();
-        void CalculateAnimations();
-
-    private:
-        SR_HTYPES_NS::RawPointerHolder<SR_UTILS_NS::MappedFile> m_pMappedFileCache;
-
-        struct MeshData {
-            SR_UTILS_NS::Vector<SR_UTILS_NS::VertexDataBuffer> vertexBuffers;
-            SR_HTYPES_NS::FastMemoryArray<uint32_t> indices;
-            SR_HTYPES_NS::FlatHashMap<SR_UTILS_NS::StringAtom, uint32_t> bones;
-        };
-        mutable SR_UTILS_NS::Vector<MeshData> m_meshes;
-
-        SR_HTYPES_NS::FlatHashMap<SR_UTILS_NS::StringAtom, uint16_t> m_optimizedBones;
-
-        SR_HTYPES_NS::FlatHashMap<SR_UTILS_NS::StringAtom, SR_MATH_NS::Matrix4x4> m_boneOffsetsMap;
-        SR_UTILS_NS::Vector<SR_MATH_NS::Matrix4x4> m_boneOffsets;
-
+        SR_HTYPES_NS::RawPointerHolder<MappedFile> m_pMappedFileCache;
+        mutable MeshSceneStructure m_sceneStructure;
         RawMeshParams m_params;
-
         bool m_fromCache = false;
 
     #ifdef SR_UTILS_ASSIMP
-        SR_HTYPES_NS::FlatHashMap<Hash, aiAnimation*> m_animations;
         const aiScene* m_scene = nullptr;
         Assimp::Importer* m_importer = nullptr;
     #endif
@@ -140,4 +103,4 @@ template<> struct SR_UTILS_NS::SRHash<SR_HTYPES_NS::RawMeshParams> {
     }
 };
 
-#endif //SR_ENGINE_RAWMESH_H
+#endif //SR_ENGINE_COMMON_RAW_MESH_H

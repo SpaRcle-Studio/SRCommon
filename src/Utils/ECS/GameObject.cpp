@@ -17,6 +17,10 @@
 #include <Codegen/GameObject.generated.hpp>
 
 namespace SR_UTILS_NS {
+    GameObject::GameObject(StringAtom name)
+        : Super(name)
+    { }
+
     GameObject::~GameObject() {
         m_transform.AutoFree();
     }

@@ -16,7 +16,17 @@
 #include <Codegen/SceneObject.generated.hpp>
 
 namespace SR_UTILS_NS {
-    SceneObject::SceneObject() {
+    SceneObject::SceneObject()
+        : Super()
+    {
+        SetLayer(SR_UTILS_NS::LayerManager::GetDefaultLayer());
+        SetTag(SR_UTILS_NS::TagManager::GetDefaultTag());
+    }
+
+    SceneObject::SceneObject(StringAtom name)
+        : Super()
+        , m_name(name)
+    {
         SetLayer(SR_UTILS_NS::LayerManager::GetDefaultLayer());
         SetTag(SR_UTILS_NS::TagManager::GetDefaultTag());
     }

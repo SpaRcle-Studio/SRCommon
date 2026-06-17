@@ -72,8 +72,14 @@ namespace SR_UTILS_NS {
         SR_NODISCARD ConstIterator cbegin() const noexcept { return static_cast<const T*>(m_data); }
         SR_NODISCARD ConstIterator cend() const noexcept { return static_cast<const T*>(m_data) + m_size; }
 
-        SR_NODISCARD T& operator[](SizeType index) noexcept { return static_cast<T*>(m_data)[index]; }
-        SR_NODISCARD const T& operator[](SizeType index) const noexcept { return static_cast<const T*>(m_data)[index]; }
+        SR_NODISCARD T& operator[](SizeType index) noexcept {
+            SRAssert2(index < m_size, "Index {} is out of bounds! Size is {}!", index, m_size);
+            return static_cast<T*>(m_data)[index];
+        }
+        SR_NODISCARD const T& operator[](SizeType index) const noexcept {
+            SRAssert2(index < m_size, "Index {} is out of bounds! Size is {}!", index, m_size);
+            return static_cast<const T*>(m_data)[index];
+        }
 
         SR_NODISCARD T* data() noexcept { return static_cast<T*>(m_data); }
         SR_NODISCARD T& front() noexcept { return static_cast<T*>(m_data)[0]; }
@@ -88,9 +94,9 @@ namespace SR_UTILS_NS {
         void DestructRange(SizeType start, SizeType end);
 
     private:
-        SizeType m_capacity = 0;
+        T* m_data = nullptr;
         SizeType m_size = 0;
-        void* m_data = nullptr;
+        SizeType m_capacity = 0;
 
     };
 
@@ -338,7 +344,7 @@ namespace SR_UTILS_NS {
     }
 
     template<typename T> SR_CONSTEXPR Vector<T>::Vector(std::initializer_list<T> init) {
-        m_data = SRMalloc(sizeof(T) * init.size());
+        m_data = static_cast<T*>(SRMalloc(sizeof(T) * init.size()));
         m_size = init.size();
         m_capacity = init.size();
 
@@ -353,7 +359,7 @@ namespace SR_UTILS_NS {
     }
 
     template<typename T> SR_CONSTEXPR Vector<T>::Vector(const Vector& other) {
-        m_data = SRMalloc(sizeof(T) * other.m_size);
+        m_data = static_cast<T*>(SRMalloc(sizeof(T) * other.m_size));
         m_size = other.m_size;
         m_capacity = other.m_size;
         if (std::is_trivially_copyable_v<T>) {
@@ -377,14 +383,14 @@ namespace SR_UTILS_NS {
     }
 
     template<typename T> SR_CONSTEXPR Vector<T>::Vector(const SizeType count) {
-        m_data = SRMalloc(sizeof(T) * count);
+        m_data = static_cast<T*>(SRMalloc(sizeof(T) * count));
         m_size = count;
         m_capacity = count;
         ConstructRange(0, count);
     }
 
     template<typename T> SR_CONSTEXPR Vector<T>::Vector(const SizeType count, const T& value) {
-        m_data = SRMalloc(sizeof(T) * count);
+        m_data = static_cast<T*>(SRMalloc(sizeof(T) * count));
         m_size = count;
         m_capacity = count;
         ConstructRange(0, count, value);
@@ -431,7 +437,7 @@ namespace SR_UTILS_NS {
     template<typename T> void Vector<T>::shrink_to_fit() {
         if (m_size < m_capacity) {
             void* pOldData = m_data;
-            m_data = SRMalloc(sizeof(T) * m_size);
+            m_data = static_cast<T*>(SRMalloc(sizeof(T) * m_size));
             m_capacity = m_size;
 
             if (pOldData) {
@@ -463,7 +469,7 @@ namespace SR_UTILS_NS {
     template<typename T> void Vector<T>::reserve(const SizeType newCapacity) {
         if (newCapacity > m_capacity) {
             void* pOldData = m_data;
-            m_data = SRMalloc(sizeof(T) * newCapacity);
+            m_data = static_cast<T*>(SRMalloc(sizeof(T) * newCapacity));
             m_capacity = newCapacity;
 
             if (pOldData) {

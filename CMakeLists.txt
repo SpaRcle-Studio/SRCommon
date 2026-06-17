@@ -368,6 +368,11 @@ include(cmake/SRCommonLinking.cmake)
 
 if (MSVC)
     target_compile_options(Utils PUBLIC /openmp)
+    if (NOT SR_COMMON_USE_CLANG_EMULATION)
+        set_target_properties(Utils PROPERTIES
+            VS_DEBUGGER_NATVIS "Utils.natvis"
+        )
+    endif()
 endif()
 
 if (SR_UTILS_FMT_HEADER_ONLY)

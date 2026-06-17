@@ -33,6 +33,10 @@ namespace SR_HTYPES_NS {
     #ifdef SR_SHARED_PTR_TRACE
         m_data.erase(pData);
     #endif
+        if (m_count == 0) {
+            SRHalt("SharedPtrDynamicDataCounter::Decrement() : count underflow!");
+            return;
+        }
         --m_count;
     }
 
@@ -67,7 +71,6 @@ namespace SR_HTYPES_NS {
         return SR_UTILS_NS::StringAtom();
     #endif
     }
-
 
     void SharedPtrDynamicData::IncrementStrong() {
         SRAssert2(strongCount != SR_UINT64_MAX, "Strong count overflow!");

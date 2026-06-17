@@ -304,7 +304,7 @@ namespace SR_UTILS_NS {
     }
 
 #ifdef SR_UTILS_ASSIMP
-    void LoadBonesFromAssimp(const aiMesh* pMesh, const SR_HTYPES_NS::FlatHashMap<SR_UTILS_NS::StringAtom, uint32_t>& bones, VertexDataBuffer& buffer) {
+    void LoadBonesFromAssimp(const aiMesh* pMesh, const VertexDataBuffer::GetBoneIndexFn& getBoneIndexFn, VertexDataBuffer& buffer) {
         SR_TRACY_ZONE;
         SR_GLOBAL_LOCK;
 
@@ -333,7 +333,11 @@ namespace SR_UTILS_NS {
 
         for (uint32_t i = 0; i < pMesh->mNumBones; ++i) {
             auto&& bone = pMesh->mBones[i];
-            const uint32_t boneId = bones.at(SR_UTILS_NS::StringAtom(bone->mName.C_Str()));
+            const uint32_t boneId = getBoneIndexFn(SR_UTILS_NS::StringAtom(bone->mName.C_Str()));
+            if (boneId == SR_ID_INVALID) {
+                SR_WARN("Bone {} not found in mesh data! Bone will be ignored!", bone->mName.C_Str());
+                continue;
+            }
 
             for (uint32_t j = 0; j < bone->mNumWeights; ++j) {
                 const uint32_t vertexId = bone->mWeights[j].mVertexId;
@@ -429,7 +433,7 @@ namespace SR_UTILS_NS {
         });
     }
 
-    VertexDataBuffer VertexDataBuffer::AllocateFromAssimp(aiMesh* pMesh, const SR_HTYPES_NS::FlatHashMap<SR_UTILS_NS::StringAtom, uint32_t>& bones) {
+    VertexDataBuffer VertexDataBuffer::AllocateFromAssimp(aiMesh* pMesh, const GetBoneIndexFn& getBoneIndexFn) {
         SR_TRACY_ZONE;
 
         VertexDataBuffer buffer;
@@ -502,37 +506,7 @@ namespace SR_UTILS_NS {
         });
 
         if (pMesh->mNumBones > 0) {
-            LoadBonesFromAssimp(pMesh, bones, buffer);
-
-            /*SR_TRACY_ZONE_N("Setup vertex bone weights");
-            SR_HTYPES_NS::FastMemoryArray<uint8_t> weightsNumPerVertex;
-            weightsNumPerVertex.resize(pMesh->mNumVertices);
-            weightsNumPerVertex.fill(0);
-
-            for (uint32_t i = 0; i < pMesh->mNumBones; i++) {
-                auto&& bone = pMesh->mBones[i];
-                const uint32_t boneId = bones.at(SR_UTILS_NS::StringAtom(bone->mName.C_Str()));
-                for (uint32_t j = 0; j < bone->mNumWeights; j++) {
-                    const uint32_t vertexId = bone->mWeights[j].mVertexId;
-                    const float weightValue = bone->mWeights[j].mWeight;
-                    uint8_t& vertexWeightsNum = weightsNumPerVertex[vertexId];
-
-                    if (vertexWeightsNum < 4) {
-                        SR_MATH_NS::UVector4* pBoneId = reinterpret_cast<SR_MATH_NS::UVector4*>(buffer.GetVertex(vertexId, VertexAttribute::BlendIndices));
-                        SR_MATH_NS::FVector4* pWeight = reinterpret_cast<SR_MATH_NS::FVector4*>(buffer.GetVertex(vertexId, VertexAttribute::BlendWeights));
-                        (*pBoneId)[vertexWeightsNum] = boneId;
-                        (*pWeight)[vertexWeightsNum] = weightValue;
-                    }
-                    else if (vertexWeightsNum < 8) {
-                        SR_MATH_NS::UVector4* pBoneId = reinterpret_cast<SR_MATH_NS::UVector4*>(buffer.GetVertex(vertexId, VertexAttribute::BlendIndices2));
-                        SR_MATH_NS::FVector4* pWeight = reinterpret_cast<SR_MATH_NS::FVector4*>(buffer.GetVertex(vertexId, VertexAttribute::BlendWeights2));
-                        (*pBoneId)[vertexWeightsNum - 4] = boneId;
-                        (*pWeight)[vertexWeightsNum - 4] = weightValue;
-                    }
-
-                    vertexWeightsNum++;
-                }
-            }*/
+            LoadBonesFromAssimp(pMesh, getBoneIndexFn, buffer);
         }
 
         return buffer;

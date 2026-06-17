@@ -34,6 +34,10 @@ namespace SR_UTILS_NS {
         : StringAtom(SR_UTILS_NS::HashManager::Instance().GetOrAddInfo(str))
     { }
 
+    StringAtom::StringAtom(const char* str, SizeType length)
+        : StringAtom(std::string_view(str, length))
+    { }
+
     StringAtom::StringAtom(StringHashInfo* pInfo)
         : m_info(pInfo)
     {

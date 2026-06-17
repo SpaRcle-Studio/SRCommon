@@ -140,6 +140,7 @@ namespace SR_UTILS_NS {
 
     struct VertexDataBuffer : public NonCopyable {
         using Ptr = SR_HTYPES_NS::RawPointerHolder<VertexDataBuffer>;
+        using GetBoneIndexFn = SR_HTYPES_NS::Function<uint32_t(SR_UTILS_NS::StringAtom)>;
 
         VertexDataBuffer() = default;
         VertexDataBuffer(VertexDataBuffer&& other) noexcept;
@@ -167,7 +168,7 @@ namespace SR_UTILS_NS {
         SR_NODISCARD uint64_t GetVertexCount() const { return vertexCount; }
 
     #ifdef SR_UTILS_ASSIMP
-        SR_NODISCARD static VertexDataBuffer AllocateFromAssimp(aiMesh* pMesh, const SR_HTYPES_NS::FlatHashMap<SR_UTILS_NS::StringAtom, uint32_t>& bones);
+        SR_NODISCARD static VertexDataBuffer AllocateFromAssimp(aiMesh* pMesh, const GetBoneIndexFn& getBoneIndexFn);
     #endif
 
     };
