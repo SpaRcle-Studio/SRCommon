@@ -30,11 +30,10 @@ namespace SR_HTYPES_NS {
     public:
         SR_NODISCARD MeshIndex GetMeshId() const noexcept { return m_meshId; }
         SR_NODISCARD const RawMeshPtr& GetRawMesh() const noexcept { return m_rawMesh; }
-        SR_NODISCARD SR_UTILS_NS::Path GetMeshPath() const noexcept;
+        SR_NODISCARD const SR_UTILS_NS::Path& GetMeshPath() const noexcept;
         SR_NODISCARD std::string GetMeshStringPath() const noexcept;
         SR_NODISCARD bool IsValidMeshId() const noexcept;
         SR_NODISCARD std::string_view GetGeometryName() const noexcept;
-        //SR_NODISCARD std::vector<SR_UTILS_NS::Vertex> GetVertices() const noexcept;
         SR_NODISCARD const SR_UTILS_NS::VertexDataBuffer& GetVertexBuffer(const SR_UTILS_NS::VertexLayoutDescription& layout) const;
 
         virtual void OnRawMeshChanged() { }
@@ -61,6 +60,7 @@ namespace SR_HTYPES_NS {
         /// @customArg(filter value: fbx,blend,obj,pmx,stl,dae)
         SR_VIRTUAL_PROPERTY
         /// @virtualProperty(meshId) @getter(GetMeshId) @setter(SetMeshId)
+        /// @condition(!This.GetMeshPath().empty())
         SR_VIRTUAL_PROPERTY
 
     };

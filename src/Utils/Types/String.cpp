@@ -246,10 +246,8 @@ namespace SR_UTILS_NS {
     }
 
     bool String::ends_with(std::string_view suffix) const {
-        if (suffix.size() > m_size) {
-            return false;
-        }
-        return std::equal(suffix.rbegin(), suffix.rend(), m_data + m_size - suffix.size());
+        const size_t n = suffix.size();
+        return n <= m_size && std::memcmp(m_data + m_size - n, suffix.data(), n) == 0;
     }
 
     bool String::contains(std::string_view str) const {

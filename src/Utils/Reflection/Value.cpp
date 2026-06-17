@@ -261,6 +261,15 @@ namespace SR_UTILS_NS::Reflection {
         return GetTypeName().starts_with(compare);
     }
 
+    bool Value::IsQuaternion() const {
+        if (!IsClass() || IsTemplate()){
+            return false;
+        }
+
+        static const auto meta = entt::meta_any(SR_MATH_NS::Quaternion());
+        return GetTypeName() == meta.base().type().name();
+    }
+
     bool Value::IsMathVector() const {
         if (!IsClass() || !IsTemplate()) {
             return false;

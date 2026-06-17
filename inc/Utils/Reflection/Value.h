@@ -220,6 +220,7 @@ namespace SR_UTILS_NS::Reflection {
         SR_NODISCARD bool IsRect() const;
         SR_NODISCARD bool IsFColor() const;
         SR_NODISCARD bool IsMathVector() const;
+        SR_NODISCARD bool IsQuaternion() const;
         SR_NODISCARD bool IsMathSize() const;
         SR_NODISCARD bool IsBool() const;
         SR_NODISCARD bool IsArithmetic() const;

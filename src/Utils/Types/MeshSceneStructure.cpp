@@ -78,7 +78,7 @@ namespace SR_HTYPES_NS {
                 auto&& name = SR_UTILS_NS::StringAtom(boneName);
 
                 if (bones.count(name) == 1) {
-                    SR_WARN("RawMesh::CalculateBones() : bone already exists! \n\tName: " + name.ToString());
+                    SR_WARN("RawMesh::CalculateBones() : bone already exists! \n\tName: {}", name);
                     continue;
                 }
 
@@ -89,12 +89,18 @@ namespace SR_HTYPES_NS {
 
                 MeshSceneStructure::BoneInfo& info = bones[name];
                 info.boneId = static_cast<uint32_t>(bones.size());
-                //info.offsetMatrix = SR_MATH_NS::Matrix4x4(AssimpTools::ConvertAssimpMatrix(matrix));
                 info.offsetMatrix = SR_MATH_NS::Matrix4x4(
                     SR_MATH_NS::FVector3(translation.x, translation.y, translation.z),
                     SR_MATH_NS::Quaternion(rotation.x, rotation.y, rotation.z, rotation.w),
                     SR_MATH_NS::FVector3(scaling.x, scaling.y, scaling.z)
                 );
+
+                if (auto&& pNode = FindNodeByName(boneName)) {
+                    info.nodeIndex = pNode->index;
+                }
+                else {
+                    SR_ERROR("RawMesh::CalculateBones() : bone node not found! \n\tName: {}", name);
+                }
             }
         }
     }
@@ -139,11 +145,9 @@ namespace SR_HTYPES_NS {
         preTransform *= pNode->mTransformation;
         preTransform.Decompose(scaling, rotation, translation);
 
-        sceneNode.transform = SR_MATH_NS::Matrix4x4(
-            SR_MATH_NS::FVector3(translation.x, translation.y, translation.z),
-            SR_MATH_NS::Quaternion(rotation.x, rotation.y, rotation.z, rotation.w),
-            SR_MATH_NS::FVector3(scaling.x, scaling.y, scaling.z)
-        );
+        sceneNode.transform.translation = SR_MATH_NS::FVector3(translation.x, translation.y, translation.z);
+        sceneNode.transform.rotation = SR_MATH_NS::Quaternion(rotation.x, rotation.y, rotation.z, rotation.w);
+        sceneNode.transform.scale = SR_MATH_NS::FVector3(scaling.x, scaling.y, scaling.z);
 
         for (uint32_t i = 0; i < pNode->mNumMeshes; ++i) {
             uint32_t meshId = pNode->mMeshes[i];
@@ -216,5 +220,23 @@ namespace SR_HTYPES_NS {
                 callback(m_meshes[meshIndex]);
             }
         }
+    }
+
+    const MeshSceneStructure::SceneNode* MeshSceneStructure::FindNodeByName(StringAtom name) const {
+        for (const auto& node : m_scenePool) {
+            if (node.name == name) {
+                return &node;
+            }
+        }
+        return nullptr;
+    }
+
+    const MeshSceneStructure::SceneNode& MeshSceneStructure::GetNodeByIndex(uint16_t index) const {
+        if (index >= m_scenePool.size()) {
+            SRHalt("MeshSceneStructure::GetNodeByIndex() : index is out of range!");
+            static SceneNode emptyNode;
+            return emptyNode;
+        }
+        return m_scenePool[index];
     }
 }

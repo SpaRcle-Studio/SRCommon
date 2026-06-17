@@ -13,6 +13,12 @@
 #include <glm/gtx/matrix_decompose.hpp>
 
 namespace SR_MATH_NS {
+    struct DecomposedMatrix {
+        SR_MATH_NS::FVector3 translation;
+        SR_MATH_NS::Quaternion rotation;
+        SR_MATH_NS::FVector3 scale;
+    };
+
     class SR_COMMON_DLL_API Matrix4x4 {
         SR_INLINE_STATIC constexpr glm::mat4 GLM_IDENTITY_MAT4X4 = glm::mat4(1); /** NOLINT */
     public:

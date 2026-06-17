@@ -56,6 +56,8 @@ namespace SR_UTILS_NS {
         SR_NODISCARD Iterator find(const T& value) noexcept;
         Iterator erase(ConstIterator pos);
         Iterator erase(ConstIterator first, ConstIterator last);
+        template<typename Predicate> Iterator remove_if(Predicate&& predicate);
+        template<typename Predicate> SizeType erase_if(Predicate&& predicate);
         template <class... ValueType> Iterator insert(ConstIterator pos, ValueType&&... value);
         SR_NODISCARD T& at(SizeType index);
         SR_NODISCARD const T& at(SizeType index) const { return const_cast<Vector*>(this)->at(index); }
@@ -168,6 +170,28 @@ namespace SR_UTILS_NS {
         --m_size;
 
         return data + index;
+    }
+
+    template<typename T> template<typename Predicate> Vector<T>::Iterator Vector<T>::remove_if(Predicate&& predicate) {
+        Iterator newEnd = begin();
+        for (Iterator it = begin(); it != end(); ++it) {
+            if (!predicate(*it)) {
+                if (newEnd != it) {
+                    *newEnd = std::move(*it);
+                }
+                ++newEnd;
+            }
+        }
+        SizeType newSize = newEnd - begin();
+        DestructRange(newSize, m_size);
+        m_size = newSize;
+        return newEnd;
+    }
+
+    template<typename T> template<typename Predicate> Vector<T>::SizeType Vector<T>::erase_if(Predicate&& predicate) {
+        SizeType originalSize = m_size;
+        remove_if(std::forward<Predicate>(predicate));
+        return originalSize - m_size;
     }
 
     template<typename T> Vector<T>::Iterator Vector<T>::erase(Vector::ConstIterator first, Vector::ConstIterator last) {

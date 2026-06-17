@@ -30,16 +30,14 @@ namespace SR_HTYPES_NS {
     #else
         using AnimationMap = SR_HTYPES_NS::FlatHashMap<StringAtom, void*>;
     #endif
-
         struct BoneInfo {
-            StringAtom parentName;
             std::optional<uint32_t> boneId;
+            std::optional<uint16_t> nodeIndex;
             SR_MATH_NS::Matrix4x4 offsetMatrix;
-            SR_MATH_NS::Matrix4x4 bindPoseMatrix;
         };
         using BonesMap = SR_HTYPES_NS::FlatHashMap<StringAtom, BoneInfo>;
         struct MeshData {
-            uint32_t meshId = SR_UINT32_MAX;
+            uint16_t meshId = SR_UINT16_MAX;
             Vector<VertexDataBuffer> vertexBuffers;
             SR_HTYPES_NS::FastMemoryArray<uint32_t> indices;
             BonesMap bones;
@@ -54,7 +52,7 @@ namespace SR_HTYPES_NS {
             StringAtom name;
             uint16_t index = SR_UINT16_MAX;
             std::optional<uint16_t> parent = SR_UINT16_MAX;
-            SR_MATH_NS::Matrix4x4 transform;
+            SR_MATH_NS::DecomposedMatrix transform;
             SmallVector<uint16_t, 4> children;
             SmallVector<uint16_t, 1> meshes;
         };
@@ -70,6 +68,8 @@ namespace SR_HTYPES_NS {
         SR_NODISCARD const SceneNode& GetRootNode() const;
         SR_NODISCARD const AnimationMap& GetAnimations() const { return m_animations; }
         SR_NODISCARD uint16_t GetNodesCount() const { return static_cast<uint16_t>(m_scenePool.size()); }
+        SR_NODISCARD const SceneNode* FindNodeByName(StringAtom name) const;
+        SR_NODISCARD const SceneNode& GetNodeByIndex(uint16_t index) const;
 
         void ForEachNode(bool hierarchical, const SR_HTYPES_NS::Function<void(const SceneNode&)>& callback) const;
         void ForEachMeshOnNode(uint16_t nodeIndex, const SR_HTYPES_NS::Function<void(const MeshData&)>& callback) const;
