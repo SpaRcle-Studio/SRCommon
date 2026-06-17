@@ -44,6 +44,7 @@ namespace SR_UTILS_NS {
     public:
         void reserve(SizeType newCapacity);
         void resize(SizeType newSize);
+        void resize(SizeType newSize, const T& value);
         void shrink_to_fit();
         void clear() noexcept;
         void swap(Vector& other) noexcept;
@@ -477,6 +478,17 @@ namespace SR_UTILS_NS {
                 SRFree(pOldData);
             }
         }
+    }
+
+    template<typename T> void Vector<T>::resize(const SizeType newSize, const T& value) {
+        if (newSize > m_size) {
+            reserve(newSize);
+            ConstructRange(m_size, newSize, value);
+        }
+        else if (newSize < m_size) {
+            DestructRange(newSize, m_size);
+        }
+        m_size = newSize;
     }
 
     template<typename T> void Vector<T>::resize(const SizeType newSize) {
