@@ -199,26 +199,29 @@ template<typename MapType, typename T, typename U> struct ObjectDataAccessorMap 
 	static void Save(ISerializer& serializer, const MapType& value, const SerializationId& id) {
         uint64_t count = 0;
 
+        SR_THREAD_LOCAL static std::vector<std::pair<const T*, const U*>> tempVector;
+        tempVector.clear();
         for (auto&& item : value) {
             if (SR_UTILS_NS::Serialization::CanBeSaved(item)) {
                 ++count;
+                tempVector.emplace_back(&item.first, &item.second);
             }
         }
 
         serializer.BeginArray(count, id);
 
-		for (auto&& item : value) {
-            if (!SR_UTILS_NS::Serialization::CanBeSaved(item)) {
-                continue;
-            }
+        std::stable_sort(tempVector.begin(), tempVector.end(), [](const std::pair<const T*, const U*>& a, const std::pair<const T*, const U*>& b) {
+            return *a.first < *b.first;
+        });
 
+        for (auto&& item : tempVector) {
             serializer.BeginItem(itemId);
 
-            Serialization::Save(serializer, item.first, firstId);
-            Serialization::Save(serializer, item.second, secondId);
+            Serialization::Save(serializer, *item.first, firstId);
+            Serialization::Save(serializer, *item.second, secondId);
 
             serializer.EndItem();
-		}
+        }
 
 		serializer.EndArray();
 	}
