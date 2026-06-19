@@ -166,6 +166,7 @@ namespace SR_UTILS_NS {
     void Transform::SetSkew(const SR_MATH_NS::FVector3& skew) { }
 
     void Transform::LookAt(const SR_MATH_NS::FVector3& position) { }
+    void Transform::LookAt(const SR_MATH_NS::FVector3& position, const SR_MATH_NS::FVector3& up) { }
     void Transform::LookAt(const SR_MATH_NS::FVector3& position, LookAtAxis axis) { }
 
     const SR_MATH_NS::Matrix4x4& Transform::GetMatrix() const {

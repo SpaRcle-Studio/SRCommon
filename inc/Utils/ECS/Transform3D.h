@@ -57,6 +57,7 @@ namespace SR_UTILS_NS {
         SR_NODISCARD SR_MATH_NS::FVector3 GetSkew() const override { return m_skew; }
 
         void LookAt(const SR_MATH_NS::FVector3& position) override;
+        void LookAt(const SR_MATH_NS::FVector3& position, const SR_MATH_NS::FVector3& up) override;
         void LookAt(const SR_MATH_NS::FVector3& position, LookAtAxis axis) override;
 
         SR_NODISCARD Measurement GetMeasurement() const override { return Measurement::Space3D; }

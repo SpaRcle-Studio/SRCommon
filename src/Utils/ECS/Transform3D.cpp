@@ -264,7 +264,7 @@ namespace SR_UTILS_NS {
     }
 
     void Transform3D::LookAt(const SR_MATH_NS::FVector3& position, LookAtAxis axis) {
-        /*SR_MATH_NS::FVector3 target;
+        SR_MATH_NS::FVector3 target;
 
         switch (axis) {
             case LookAtAxis::AxisX: target = Transform3D::RIGHT; break;
@@ -276,11 +276,14 @@ namespace SR_UTILS_NS {
             default:
                 SRHalt0();
                 break;
-        }*/
+        }
 
-        //auto&& source = GetMatrix().GetTranslate();
+        return LookAt(position, target);
+    }
 
-        //SetRotation(m_quaternion.LookAt(source - position));
+    void Transform3D::LookAt(const SR_MATH_NS::FVector3& position, const SR_MATH_NS::FVector3& up) {
+        SR_MATH_NS::Matrix4x4 lookAt = SR_MATH_NS::Matrix4x4::LookAt(m_translation, position, up);
+        SetRotation(lookAt.GetQuat());
     }
 
     SR_MATH_NS::Quaternion Transform3D::GetGlobalRotation() const {

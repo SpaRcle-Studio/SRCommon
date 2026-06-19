@@ -392,6 +392,10 @@ namespace SR_MATH_NS {
         return value[3].XYZ();
     }
 
+    SR_NODISCARD FVector3 Matrix4x4::GetTranslation() const {
+        return value[3].XYZ();
+    }
+
     SR_NODISCARD FVector3 Matrix4x4::GetScale() const {
         SR_MATH_NS::FVector3 scale;
         scale.x = value[0].XYZ().Length();

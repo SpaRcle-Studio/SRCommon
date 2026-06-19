@@ -251,6 +251,44 @@ namespace SR_MATH_NS {
         return 2 * atan2(qd.Vector().Length(), qd.W());
     }
 
+    Quaternion::Quaternion(const Matrix3x3& matrix) {
+        Vector3 m0 = matrix[0],
+                m1 = matrix[1],
+                m2 = matrix[2];
+
+        const Unit tr = m0[0] + m1[1] + m2[2];
+
+        if (tr > 0.0f) {
+            Unit S = sqrt(tr + 1.0f) * 2.0f; // S=4*qw
+
+            x = (m2[1] - m1[2]) / S;
+            y = (m0[2] - m2[0]) / S;
+            z = (m1[0] - m0[1]) / S;
+            w = 0.25f * S;
+        } else if ((m0[0] > m1[1]) && (m0[0] > m2[2])) {
+            Unit S = sqrt(1.0f + m0[0] - m1[1] - m2[2]) * 2.0f; // S=4*qx
+
+            x = 0.25f * S;
+            y = (m0[1] + m1[0]) / S;
+            z = (m0[2] + m2[0]) / S;
+            w = (m2[1] - m1[2]) / S;
+        } else if (m1[1] > m2[2]) {
+            Unit S = sqrt(1.0f + m1[1] - m0[0] - m2[2]) * 2.0f; // S=4*qy
+
+            x = (m0[1] + m1[0]) / S;
+            y = 0.25f * S;
+            z = (m1[2] + m2[1]) / S;
+            w = (m0[2] - m2[0]) / S;
+        } else {
+            Unit S = sqrt(1.0f + m2[2] - m0[0] - m1[1]) * 2.0f; // S=4*qz
+
+            x = (m0[2] + m2[0]) / S;
+            y = (m1[2] + m2[1]) / S;
+            z = 0.25f * S;
+            w = (m1[0] - m0[1]) / S;
+        }
+    }
+
     Quaternion::Quaternion(const Matrix4x4& matrix) {
         Vector3 m0 = matrix[0].XYZ(),
                 m1 = matrix[1].XYZ(),

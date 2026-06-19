@@ -52,7 +52,8 @@ namespace SR_HTYPES_NS {
             StringAtom name;
             uint16_t index = SR_UINT16_MAX;
             std::optional<uint16_t> parent = SR_UINT16_MAX;
-            SR_MATH_NS::DecomposedMatrix transform;
+            SR_MATH_NS::DecomposedMatrix localTransform;
+            SR_MATH_NS::DecomposedMatrix globalTransform;
             SmallVector<uint16_t, 4> children;
             SmallVector<uint16_t, 1> meshes;
         };
@@ -70,6 +71,7 @@ namespace SR_HTYPES_NS {
         SR_NODISCARD uint16_t GetNodesCount() const { return static_cast<uint16_t>(m_scenePool.size()); }
         SR_NODISCARD const SceneNode* FindNodeByName(StringAtom name) const;
         SR_NODISCARD const SceneNode& GetNodeByIndex(uint16_t index) const;
+        SR_NODISCARD const Vector<SceneNode>& GetNodes() const { return m_scenePool; }
 
         void ForEachNode(bool hierarchical, const SR_HTYPES_NS::Function<void(const SceneNode&)>& callback) const;
         void ForEachMeshOnNode(uint16_t nodeIndex, const SR_HTYPES_NS::Function<void(const MeshData&)>& callback) const;
@@ -83,6 +85,8 @@ namespace SR_HTYPES_NS {
     #endif
 
         SceneNode& AddSceneNode(std::optional<uint16_t> parentIndex);
+
+        void CalculateGlobalTransforms();
 
     private:
         Vector<SceneNode> m_scenePool;

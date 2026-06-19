@@ -86,6 +86,7 @@ namespace SR_MATH_NS {
         SR_NODISCARD Matrix4x4 Translate(const FVector3& vec3) const;
         SR_NODISCARD FVector4 GetAxis(Axis axis) const;
         SR_NODISCARD FVector3 GetTranslate() const;
+        SR_NODISCARD FVector3 GetTranslation() const;
         SR_NODISCARD FVector3 GetScale() const;
         SR_NODISCARD bool IsFinite() const;
         SR_NODISCARD AABB TransformAABB(const AABB& localBox) const;

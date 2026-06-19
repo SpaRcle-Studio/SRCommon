@@ -12,6 +12,7 @@ namespace SR_MATH_NS {
     template<typename T> struct Vector4;
 
     class Matrix4x4;
+    class Matrix3x3;
 
     class SR_COMMON_DLL_API Quaternion {
         friend Vector3<Unit>;
@@ -51,6 +52,7 @@ namespace SR_MATH_NS {
         Quaternion(const Vector3<Unit> &p_euler);
         Quaternion(const glm::quat &q);
         explicit Quaternion(const Matrix4x4& matrix);
+        explicit Quaternion(const Matrix3x3& matrix);
         explicit Quaternion(T x, T y, T z, T w);
 
         static bool IsEqualUsingDot(Unit dot);

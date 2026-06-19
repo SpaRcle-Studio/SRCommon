@@ -79,6 +79,7 @@ namespace SR_UTILS_NS {
         virtual void SetSkew(SR_MATH_NS::Unit x, SR_MATH_NS::Unit y, SR_MATH_NS::Unit z);
 
         virtual void LookAt(const SR_MATH_NS::FVector3& position);
+        virtual void LookAt(const SR_MATH_NS::FVector3& position, const SR_MATH_NS::FVector3& up);
         virtual void LookAt(const SR_MATH_NS::FVector3& position, LookAtAxis axis);
 
         SR_NODISCARD SR_MATH_NS::Matrix4x4 GetLocalMatrix() const;

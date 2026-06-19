@@ -60,6 +60,8 @@ namespace SR_HTYPES_NS {
                 mesh.maxBoneId = SR_MAX(mesh.maxBoneId, boneInfo.boneId);
             }
         }
+
+        CalculateGlobalTransforms();
     }
 
     void MeshSceneStructure::ImportBones(const aiScene* pScene) {
@@ -145,9 +147,9 @@ namespace SR_HTYPES_NS {
         preTransform *= pNode->mTransformation;
         preTransform.Decompose(scaling, rotation, translation);
 
-        sceneNode.transform.translation = SR_MATH_NS::FVector3(translation.x, translation.y, translation.z);
-        sceneNode.transform.rotation = SR_MATH_NS::Quaternion(rotation.x, rotation.y, rotation.z, rotation.w);
-        sceneNode.transform.scale = SR_MATH_NS::FVector3(scaling.x, scaling.y, scaling.z);
+        sceneNode.localTransform.translation = SR_MATH_NS::FVector3(translation.x, translation.y, translation.z);
+        sceneNode.localTransform.rotation = SR_MATH_NS::Quaternion(rotation.x, rotation.y, rotation.z, rotation.w);
+        sceneNode.localTransform.scale = SR_MATH_NS::FVector3(scaling.x, scaling.y, scaling.z);
 
         for (uint32_t i = 0; i < pNode->mNumMeshes; ++i) {
             uint32_t meshId = pNode->mMeshes[i];
@@ -171,6 +173,23 @@ namespace SR_HTYPES_NS {
         }
         m_scenePool.emplace_back(std::move(node));
         return m_scenePool.back();
+    }
+
+    void MeshSceneStructure::CalculateGlobalTransforms() {
+        SR_TRACY_ZONE;
+
+        for (auto&& node : m_scenePool) {
+            if (!node.parent.has_value()) {
+                node.globalTransform = node.localTransform;
+            }
+            else {
+                auto&& parentNode = m_scenePool[node.parent.value()];
+                auto&& parentGlobalMatrix = SR_MATH_NS::Matrix4x4(parentNode.globalTransform.translation, parentNode.globalTransform.rotation, parentNode.globalTransform.scale);
+                auto&& localMatrix = SR_MATH_NS::Matrix4x4(node.localTransform.translation, node.localTransform.rotation, node.localTransform.scale);
+                auto&& globalMatrix = parentGlobalMatrix * localMatrix;
+                globalMatrix.Decompose(node.globalTransform.translation, node.globalTransform.rotation, node.globalTransform.scale);
+            }
+        }
     }
 
     const MeshSceneStructure::SceneNode& MeshSceneStructure::GetRootNode() const {
