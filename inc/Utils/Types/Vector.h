@@ -30,6 +30,7 @@ namespace SR_UTILS_NS {
         SR_CONSTEXPR Vector(const Vector& other);
         SR_CONSTEXPR Vector(Vector&& other) noexcept;
         SR_CONSTEXPR Vector(std::initializer_list<T> init);
+        SR_CONSTEXPR Vector(Iterator first, Iterator last);
 
         SR_CONSTEXPR explicit Vector(SizeType count);
         SR_CONSTEXPR Vector(SizeType count, const T& value);
@@ -49,6 +50,7 @@ namespace SR_UTILS_NS {
         void clear() noexcept;
         void swap(Vector& other) noexcept;
         void assign(SizeType count, const T& value);
+        void assign(Iterator first, Iterator last);
         void pop_back();
         void push_back(const T& value);
         void push_back(T&& value);
@@ -366,6 +368,42 @@ namespace SR_UTILS_NS {
             other.m_capacity = 0;
         }
         return *this;
+    }
+
+    template<typename T> void Vector<T>::assign(Vector::Iterator first, Vector::Iterator last) {
+        SizeType count = last - first;
+        if (count > m_capacity) {
+            Vector temp(first, last);
+            swap(temp);
+        }
+        else {
+            DestructRange(0, m_size);
+            if (std::is_trivially_copyable_v<T>) {
+                std::memcpy(m_data, first, sizeof(T) * count);
+            }
+            else {
+                for (SizeType i = 0; i < count; ++i) {
+                    new (static_cast<T*>(m_data) + i) T(first[i]);
+                }
+            }
+            m_size = count;
+        }
+    }
+
+    template<typename T> SR_CONSTEXPR Vector<T>::Vector(Vector::Iterator first, Vector::Iterator last) {
+        SizeType count = last - first;
+        m_data = static_cast<T*>(SRMalloc(sizeof(T) * count));
+        m_size = count;
+        m_capacity = count;
+
+        if (std::is_trivially_copyable_v<T>) {
+            std::memcpy(m_data, first, sizeof(T) * count);
+        }
+        else {
+            for (SizeType i = 0; i < count; ++i) {
+                new (static_cast<T*>(m_data) + i) T(first[i]);
+            }
+        }
     }
 
     template<typename T> SR_CONSTEXPR Vector<T>::Vector(std::initializer_list<T> init) {
