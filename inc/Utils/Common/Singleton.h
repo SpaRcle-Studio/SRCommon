@@ -19,16 +19,6 @@
         }                                                                                                               \
         uint64_t GetSingletonHashName() const noexcept final { return GetStaticSingletonHashName(); };                  \
 
-#define SR_REGISTER_TEMPLATE_SINGLETON(className, T)                                                                    \
-    private:                                                                                                            \
-        friend class SR_UTILS_NS::Singleton<className>;                                                                 \
-        /** TODO: replace typeid(T).name() with something more stable **/                                               \
-        SR_NODISCARD static SR_UTILS_NS::StringAtom GetStaticTemplatedSingletonName() noexcept {                        \
-            return SR_FORMAT("{}<{}>", #className, typeid(T).name());                                                   \
-        }                                                                                                               \
-        static SR_UTILS_NS::StringAtom GetStaticSingletonName() { return GetStaticTemplatedSingletonName(); }           \
-        SR_UTILS_NS::StringAtom GetSingletonName() const noexcept final { return GetStaticSingletonName(); };           \
-
 namespace SR_UTILS_NS {
     class SingletonManager;
     template<typename T> class Singleton;
