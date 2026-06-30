@@ -7,6 +7,7 @@
 
 #include <Utils/Types/FastMemoryArray.h>
 #include <Utils/Types/RawPointerHolder.h>
+#include <Utils/Types/SmallVector.h>
 #include <Utils/Common/Enumerations.h>
 
 #define SR_MAX_VERTEX_ATTRIBUTES 48
@@ -134,6 +135,46 @@ namespace SR_UTILS_NS {
 
         VertexLayoutDescription& AddAttribute(VertexAttribute attribute, VertexAttributeFormat format, uint8_t count);
         VertexLayoutDescription& SetInstanced(bool isInstanced) { instanced = isInstanced; return *this; }
+    };
+
+    struct VertexLayoutDescriptions {
+        using Layouts = SR_UTILS_NS::SmallVector<VertexLayoutDescription, 2>;
+
+        SR_NODISCARD const Layouts& GetLayouts() const { return layouts; }
+        SR_NODISCARD uint32_t GetLayoutsCount() const { return static_cast<uint32_t>(layouts.size()); }
+        SR_NODISCARD uint32_t GetAttributesCount() const;
+        SR_NODISCARD const VertexAttributeDescription* Find(VertexAttribute attribute) const;
+        SR_NODISCARD VertexLayoutDescription& AddLayout() { return layouts.emplace_back(); }
+        SR_NODISCARD VertexLayoutDescriptions& AddLayout(const VertexLayoutDescription& layout) { layouts.emplace_back(layout); return *this; }
+        SR_NODISCARD const VertexLayoutDescription& GetLayout(uint32_t index) const;
+        SR_NODISCARD uint64_t GetHash() const;
+
+        void ForEachAttribute(const SR_HTYPES_NS::Function<void(const VertexAttributeDescription&, uint32_t)>& fn) const;
+        void Reset();
+
+        Layouts layouts;
+    };
+
+    struct VertexLayoutDescriptionsRef {
+        using Layouts = std::span<const VertexLayoutDescription>;
+
+        VertexLayoutDescriptionsRef() = default;
+        VertexLayoutDescriptionsRef(const VertexLayoutDescription& layout) : layouts(&layout, 1) {}
+        VertexLayoutDescriptionsRef(const Layouts& layouts) : layouts(layouts) {}
+        VertexLayoutDescriptionsRef(const VertexLayoutDescriptions& descriptions) : layouts(descriptions.layouts) {}
+
+        SR_NODISCARD VertexLayoutDescriptions Detach() const;
+
+        SR_NODISCARD const Layouts& GetLayouts() const { return layouts; }
+        SR_NODISCARD uint32_t GetLayoutsCount() const { return static_cast<uint32_t>(layouts.size()); }
+        SR_NODISCARD uint32_t GetAttributesCount() const;
+        SR_NODISCARD const VertexAttributeDescription* Find(VertexAttribute attribute) const;
+        SR_NODISCARD const VertexLayoutDescription& GetLayout(uint32_t index) const;
+        SR_NODISCARD uint64_t GetHash() const;
+
+        void ForEachAttribute(const SR_HTYPES_NS::Function<void(const VertexAttributeDescription&, uint32_t)>& fn) const;
+
+        Layouts layouts;
     };
 
     constexpr uint64_t VERTEX_LAYOUT_DESCRIPTION_SIZE = sizeof(VertexLayoutDescription);

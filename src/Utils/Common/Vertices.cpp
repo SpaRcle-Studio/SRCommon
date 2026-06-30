@@ -520,4 +520,113 @@ namespace SR_UTILS_NS {
     }
 
 #endif
+
+    uint32_t VertexLayoutDescriptions::GetAttributesCount() const {
+        SR_TRACY_ZONE;
+        return std::accumulate(layouts.begin(), layouts.end(), 0u, [](size_t sum, const SR_UTILS_NS::VertexLayoutDescription& layout) {
+            return sum + layout.attributesCount;
+        });
+    }
+
+    void VertexLayoutDescriptions::ForEachAttribute(const Function<void(const VertexAttributeDescription &, uint32_t index)>& fn) const {
+        SR_TRACY_ZONE;
+        uint32_t index = 0;
+        for (const auto& layout : layouts) {
+            for (uint8_t i = 0; i < layout.attributesCount; ++i) {
+                fn(layout.attributes[i], index);
+                ++index;
+            }
+        }
+    }
+
+    const VertexAttributeDescription* VertexLayoutDescriptions::Find(VertexAttribute attribute) const {
+        SR_TRACY_ZONE;
+        for (const auto& layout : layouts) {
+            if (auto&& pDescription = layout.Find(attribute)) {
+                return pDescription;
+            }
+        }
+        return nullptr;
+    }
+
+    void VertexLayoutDescriptions::Reset() {
+        SR_TRACY_ZONE;
+        layouts.clear();
+    }
+
+    uint64_t VertexLayoutDescriptions::GetHash() const {
+        SR_TRACY_ZONE;
+        uint64_t hash = 0;
+        for (const auto& layout : layouts) {
+            hash = HashCombine(layout.GetHash(), hash);
+        }
+        return hash;
+    }
+
+    const VertexLayoutDescription& VertexLayoutDescriptions::GetLayout(uint32_t index) const {
+        SR_TRACY_ZONE;
+        if (index >= layouts.size()) {
+            SRHalt("VertexLayoutDescriptions::GetLayout() : index out of range! Index: {}, Layouts count: {}", index, layouts.size());
+            static const VertexLayoutDescription empty;
+            return empty;
+        }
+        return layouts[index];
+    }
+
+    uint32_t VertexLayoutDescriptionsRef::GetAttributesCount() const {
+        SR_TRACY_ZONE;
+        return std::accumulate(layouts.begin(), layouts.end(), 0u, [](size_t sum, const SR_UTILS_NS::VertexLayoutDescription& layout) {
+            return sum + layout.attributesCount;
+        });
+    }
+
+    const VertexAttributeDescription* VertexLayoutDescriptionsRef::Find(VertexAttribute attribute) const {
+        SR_TRACY_ZONE;
+        for (const auto& layout : layouts) {
+            if (auto&& pDescription = layout.Find(attribute)) {
+                return pDescription;
+            }
+        }
+        return nullptr;
+    }
+
+    const VertexLayoutDescription& VertexLayoutDescriptionsRef::GetLayout(uint32_t index) const {
+        SR_TRACY_ZONE;
+        if (index >= layouts.size()) {
+            SRHalt("VertexLayoutDescriptionsRef::GetLayout() : index out of range! Index: {}, Layouts count: {}", index, layouts.size());
+            static const VertexLayoutDescription empty;
+            return empty;
+        }
+        return layouts[index];
+    }
+
+    uint64_t VertexLayoutDescriptionsRef::GetHash() const {
+        SR_TRACY_ZONE;
+        uint64_t hash = 0;
+        for (const auto& layout : layouts) {
+            hash = HashCombine(layout.GetHash(), hash);
+        }
+        return hash;
+    }
+
+    void VertexLayoutDescriptionsRef::ForEachAttribute(const Function<void(const VertexAttributeDescription&, uint32_t)>& fn) const {
+        SR_TRACY_ZONE;
+        uint32_t index = 0;
+        for (const auto& layout : layouts) {
+            for (uint8_t i = 0; i < layout.attributesCount; ++i) {
+                fn(layout.attributes[i], index);
+                ++index;
+            }
+        }
+    }
+
+    VertexLayoutDescriptions VertexLayoutDescriptionsRef::Detach() const {
+        SR_TRACY_ZONE;
+        VertexLayoutDescriptions descriptions;
+        descriptions.layouts.reserve(layouts.size());
+        for (const auto& layout : layouts) {
+            descriptions.layouts.emplace_back(layout);
+        }
+        return descriptions;
+    }
 }
