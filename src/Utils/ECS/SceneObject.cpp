@@ -733,4 +733,20 @@ namespace SR_UTILS_NS {
             pChild->SetParent(StaticPointerCast<SceneObject>(sceneObjectClone.GetThis()));
         }
     }
+
+    SceneObject::Ptr SceneObject::FindRecursively(StringAtom name) const noexcept {
+        SR_TRACY_ZONE;
+
+        for (auto&& pChild : m_children) {
+            if (pChild->GetName() == name) {
+                return pChild;
+            }
+
+            if (const auto pFound = pChild->FindRecursively(name)) {
+                return pFound;
+            }
+        }
+
+        return SceneObject::Ptr();
+    }
 }

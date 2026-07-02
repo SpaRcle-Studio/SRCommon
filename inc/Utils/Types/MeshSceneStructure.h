@@ -17,10 +17,10 @@ namespace Assimp {
     class Importer;
 }
 
-class aiScene;
+struct aiScene;
 struct aiNode;
-class aiAnimation;
-class aiMesh;
+struct aiAnimation;
+struct aiMesh;
 #endif
 
 namespace SR_HTYPES_NS {

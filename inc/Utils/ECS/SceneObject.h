@@ -69,6 +69,7 @@ namespace SR_UTILS_NS {
         SR_NODISCARD SceneObject::Ptr Find(const std::string& name) const noexcept;
         SR_NODISCARD SceneObject::Ptr Find(const std::string_view& name) const noexcept;
         SR_NODISCARD SceneObject::Ptr Find(StringAtom name) const noexcept;
+        SR_NODISCARD SceneObject::Ptr FindRecursively(StringAtom name) const noexcept;
 
         SR_NODISCARD Path GetPrefabPath() const;
         SR_NODISCARD SR_UTILS_NS::EntityIdList GetEntityIdList() const;

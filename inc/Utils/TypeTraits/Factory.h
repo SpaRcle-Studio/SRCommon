@@ -22,8 +22,9 @@ namespace SR_UTILS_NS {
     };
 
     class SR_COMMON_DLL_API Factory : public BaseFactory {
-        using AllocatorT = std::function<SRClass*()>;
+        using AllocatorT = SRClass* (*)();
         using MetaGetterT = const SRClassMeta*(*)();
+    public:
         struct TypeInfo {
             SR_UTILS_NS::StringAtom moduleName;
             AllocatorT allocator;

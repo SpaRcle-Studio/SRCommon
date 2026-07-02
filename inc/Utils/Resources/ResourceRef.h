@@ -20,6 +20,7 @@ namespace SR_UTILS_NS {
         ResourceRefBase& operator=(ResourceRefBase&& other) noexcept;
         ~ResourceRefBase() override;
 
+        void ResetResource();
         void SetResource(StringAtom id);
 
         void OnPostLoad() override;

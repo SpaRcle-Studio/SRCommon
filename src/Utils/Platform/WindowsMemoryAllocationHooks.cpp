@@ -162,7 +162,36 @@ namespace SR_UTILS_NS {
 
 #else
 namespace SR_UTILS_NS {
-    void InitMemoryHooks() { }
+    /*static int DebugAllocHook(const int allocType, void* const userData, const size_t size, int blockType, long requestNumber, const uint8_t* filename, int lineNumber) {
+        switch (allocType) {
+            case _HOOK_ALLOC:
+                SR_TRACY_ALLOC(userData, size);
+                break;
+
+            case _HOOK_REALLOC:
+                //if (userData) {
+                //    SR_TRACY_FREE(userData);
+                //}
+                //SR_TRACY_ALLOC(userData, size);
+                break;
+
+            case _HOOK_FREE:
+                if (userData) {
+                    SR_TRACY_FREE(userData);
+                }
+                break;
+
+            default:
+                break;
+        }
+
+        return TRUE;
+    }*/
+
+    void InitMemoryHooks() {
+        //_CrtSetAllocHook(&DebugAllocHook);
+    }
+
     void DeInitMemoryHooks() { }
 }
 #endif

@@ -63,4 +63,17 @@ namespace SR_MATH_NS {
     FVector3 Mix(const FVector3& a, const FVector3& b, const float_t t) {
         return a * (1.0f - t) + b * t;
     }
+
+    FVector3 SafePerpendicular(const FVector3& v) {
+        FVector3 perp = GetPerpendicularVector(v);
+        const float mag = perp.Magnitude();
+        if (mag > 0.0001f) {
+            return perp / mag;
+        }
+        return FVector3::Up();
+    }
+
+    FVector3 ProjectOnPlane(const FVector3& v, const FVector3&planeNormal) {
+        return v - FVector3::Project(v, planeNormal);
+    }
 }

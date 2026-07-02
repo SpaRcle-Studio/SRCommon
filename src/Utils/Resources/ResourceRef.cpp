@@ -23,14 +23,11 @@ namespace SR_UTILS_NS {
     }
 
     ResourceRefBase::ResourceRefBase(ResourceRefBase&& other) noexcept {
-        m_id = SR_EXCHANGE(other.m_id, StringAtom());
         if (m_resource) {
             m_resource->RemoveUsePoint();
         }
+        m_id = SR_EXCHANGE(other.m_id, StringAtom());
         m_resource = SR_EXCHANGE(other.m_resource, {});
-        if (m_resource) {
-            m_resource->AddUsePoint();
-        }
     }
 
     ResourceRefBase& ResourceRefBase::operator=(const ResourceRefBase& other) {
@@ -49,14 +46,11 @@ namespace SR_UTILS_NS {
 
     ResourceRefBase& ResourceRefBase::operator=(ResourceRefBase&& other) noexcept {
         if (this != &other) {
-            m_id = SR_EXCHANGE(other.m_id, StringAtom());
             if (m_resource) {
                 m_resource->RemoveUsePoint();
             }
+            m_id = SR_EXCHANGE(other.m_id, StringAtom());
             m_resource = SR_EXCHANGE(other.m_resource, {});
-            if (m_resource) {
-                m_resource->AddUsePoint();
-            }
         }
         return *this;
     }
@@ -81,6 +75,14 @@ namespace SR_UTILS_NS {
         }
         pResource->AddUsePoint();
         return pResource;
+    }
+
+    void ResourceRefBase::ResetResource() {
+        SR_TRACY_ZONE;
+        if (m_resource) {
+            m_resource->RemoveUsePoint();
+        }
+        m_resource.Reset();
     }
 
     void ResourceRefBase::SetResource(StringAtom id) {

@@ -7,17 +7,18 @@
 
 #include <Utils/Types/RawPointerHolder.h>
 #include <Utils/Common/Singleton.h>
+#include <Utils/FileSystem/Path.h>
 
 #ifdef SR_UTILS_ASSIMP
 namespace Assimp {
     class Importer;
 }
 
-class aiScene;
-class aiNode;
-class aiMesh;
-class aiAnimMesh;
-class aiString;
+struct aiScene;
+struct aiNode;
+struct aiMesh;
+struct aiAnimMesh;
+struct aiString;
 
 namespace SR_HTYPES_NS {
     class Marshal;
