@@ -15,7 +15,13 @@ namespace SR_UTILS_NS {
         void SetUseTabs(const bool value) noexcept { m_isNeedUseTabs = value; }
         SR_NODISCARD bool IsNeedUseTabs() const noexcept { return m_isNeedUseTabs; }
 
-        SR_NODISCARD std::string ToStringBase() const noexcept override;
+        SR_NODISCARD String ToStringBase() const noexcept override;
+
+    private:
+        void SerializeNode(String& result, const SerializationNode& node, uint64_t depth) const;
+        SR_NODISCARD StringView GenerateTabs(uint64_t depth) const;
+        SR_NODISCARD static StringView StringFromSmallInt(uint64_t value);
+        SR_NODISCARD uint64_t AnalyzeByteSize(const SerializationNode& node, uint64_t depth) const;
 
     private:
         bool m_isNeedUseTabs = false;

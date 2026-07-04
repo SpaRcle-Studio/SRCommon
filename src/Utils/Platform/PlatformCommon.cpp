@@ -83,6 +83,7 @@ namespace SR_PLATFORM_NS {
 #if !defined(SR_EMSCRIPTEN)
     void SetApplicationMainLoop(bool(*mainLoop)(void*), void* pApplication) {
         while (mainLoop(pApplication)) {
+            SR_PLATFORM_NS::Sleep(10);
             continue;
         }
     }

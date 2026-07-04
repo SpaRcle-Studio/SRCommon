@@ -34,7 +34,8 @@ namespace SR_UTILS_NS {
             return false;
         }
 
-        file << ToStringBase();
+        String buffer = ToStringBase();
+        file << std::string_view(buffer.data(), buffer.size());
         file.close();
         return true;
     }

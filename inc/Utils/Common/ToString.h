@@ -9,16 +9,19 @@
 #include <Utils/Math/Mathematics.h>
 
 namespace SR_UTILS_NS {
-    static SR_INLINE std::string SerializeDouble(double_t value) {
-        char buffer[64];
-        std::snprintf(buffer, sizeof(buffer), "%.17g", value);
-        return std::string(buffer);
+    static SR_INLINE StringView SerializeDouble(double_t value, char* pBuffer, uint64_t bufferSize) {
+        const int32_t result = std::snprintf(pBuffer, bufferSize, "%.17g", value);
+        return StringView(pBuffer, result);
     }
 
-    static SR_INLINE std::string SerializeFloat(float value) {
-        char buffer[64];
-        std::snprintf(buffer, sizeof(buffer), "%.6g", value);
-        return std::string(buffer);
+    static SR_INLINE StringView SerializeFloat(float_t value, char* pBuffer, uint64_t bufferSize) {
+        const int32_t result = std::snprintf(pBuffer, bufferSize, "%.6g", value);
+        return StringView(pBuffer, result);
+    }
+
+    static SR_INLINE StringView SerializeInt(int64_t value, char* pBuffer, uint64_t bufferSize) {
+        const int32_t result = std::snprintf(pBuffer, bufferSize, "%lld", value);
+        return StringView(pBuffer, result);
     }
 
     template<typename T> std::string ToString(const T& value) {

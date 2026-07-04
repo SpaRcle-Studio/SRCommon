@@ -80,6 +80,24 @@ namespace SR_UTILS_NS {
         return *this;
     }
 
+    String& String::operator+=(const String& rhs) { return *this += std::string_view(rhs.m_data, rhs.m_size); }
+    String& String::operator+=(const StringView& rhs) { return *this += std::string_view(rhs.data(), rhs.size()); }
+    String& String::operator+=(const char* rhs) { return *this += std::string_view(rhs); }
+    String& String::operator+=(const std::string& rhs) { return *this += std::string_view(rhs); }
+    String& String::operator+=(std::string_view rhs) {
+        if (rhs.empty()) {
+            return *this;
+        }
+        uint64_t newSize = m_size + static_cast<uint64_t>(rhs.size());
+        if (newSize > m_capacity) {
+            reserve(SR_MAX(newSize, m_capacity * 2));
+        }
+        m_size = newSize;
+        memcpy(m_data + m_size - rhs.size(), rhs.data(), rhs.size());
+        m_data[newSize] = '\0';
+        return *this;
+    }
+
     String String::operator+(const String& rhs) const { return *this + std::string_view(rhs.m_data, rhs.m_size); }
     String String::operator+(const char* rhs) const { return *this + std::string_view(rhs); }
     String String::operator+(const std::string& rhs) const { return *this + std::string_view(rhs); }
@@ -178,6 +196,7 @@ namespace SR_UTILS_NS {
     const char* String::c_str() const { return m_data ? m_data : nullptr; }
 
     uint64_t String::size() const { return m_size; }
+    uint64_t String::capacity() const { return m_capacity; }
 
     bool String::empty() const { return m_size == 0; }
 
@@ -306,6 +325,19 @@ namespace SR_UTILS_NS {
         m_size = newSize;
     }
 
+    void String::resize(uint64_t newSize, char fillChar) {
+        if (newSize > m_size) {
+            reserve(newSize);
+            if (m_data) {
+                memset(m_data + m_size, fillChar, newSize - m_size);
+            }
+        }
+        m_size = newSize;
+        if (m_data) {
+            m_data[m_size] = '\0';
+        }
+    }
+
     void String::clear() {
         if (m_data) {
             m_data[0] = '\0';
@@ -338,32 +370,6 @@ namespace SR_UTILS_NS {
         m_size = count;
         m_data[m_size] = '\0';
     }
-
-    StringView::StringView() = default;
-    StringView::StringView(const char* str)
-        : m_data(str)
-        , m_size(str ? static_cast<uint64_t>(strlen(str)) : 0)
-    { }
-
-    StringView::StringView(const char *str, SizeType size)
-        : m_data(str)
-        , m_size(size)
-    { }
-
-    StringView::StringView(const std::string& str)
-        : m_data(str.data())
-        , m_size(static_cast<uint64_t>(str.size()))
-    { }
-
-    StringView::StringView(std::string_view str)
-        : m_data(str.data())
-        , m_size(static_cast<uint64_t>(str.size()))
-    { }
-
-    StringView::StringView(const String& str)
-        : m_data(str.data())
-        , m_size(str.size())
-    { }
 
     void StringView::remove_prefix(uint64_t n) {
         if (n > m_size) {

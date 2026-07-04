@@ -21,14 +21,14 @@ namespace SR_UTILS_NS {
     enum class SerializationDataType : uint8_t {
         Unknown,
         Root,
+        Object,
+        Item,
+        Array,
         String,
         Boolean,
         Integer,
         Floating,
         Double,
-        Object,
-        Item,
-        Array
     };
 
     struct SerializationNode {
@@ -97,7 +97,7 @@ namespace SR_UTILS_NS {
         IBaseSerialization();
         ~IBaseSerialization();
 
-        SR_NODISCARD virtual std::string ToStringBase() const noexcept = 0;
+        SR_NODISCARD virtual String ToStringBase() const noexcept = 0;
 
         SR_NODISCARD SerializationNode& GetCurrentNode() noexcept { return *m_stack.back(); }
         SR_NODISCARD const SerializationNode& GetCurrentNode() const noexcept { return *m_stack.back(); }

@@ -25,6 +25,7 @@ namespace SR_UTILS_NS {
 			}
 			id.name[S - 1] = '\0';
 			id.hash = ComputeHashConstexpr(text);
+            id.length = S - 1;
 			return id;
 		}
 
@@ -33,6 +34,7 @@ namespace SR_UTILS_NS {
 			SR_STRNCPY(id.name, text, MaxNameLength - 1);
 			id.name[MaxNameLength - 1] = '\0';
 			id.hash = ComputeHash(text);
+            id.length = strlen(text);
 			return id;
 		}
 
@@ -41,16 +43,20 @@ namespace SR_UTILS_NS {
 			SR_STRNCPY(id.name, text.data(), SR_MIN(text.size(), MaxNameLength - 1));
 			id.name[MaxNameLength - 1] = '\0';
 			id.hash = ComputeHash(text);
+            id.length = SR_MIN(text.size(), MaxNameLength - 1);
 			return id;
 		}
 
+		SR_NODISCARD SR_INLINE uint64_t GetSize() const noexcept { return sizeof(name); }
 		SR_NODISCARD SR_INLINE const char* GetName() const noexcept { return name; }
 		SR_NODISCARD SR_INLINE uint64_t GetHash() const noexcept { return hash; }
 		SR_NODISCARD SR_INLINE std::string ToString() const noexcept { return std::string(name); }
+		SR_NODISCARD SR_INLINE StringView GetNameView() const noexcept { return StringView(name, length); }
 
 	private:
 		static constexpr uint64_t MaxNameLength = 256;
 		uint64_t hash = 0;
+		uint64_t length = 0;
 		char name[MaxNameLength]{};
 	};
 

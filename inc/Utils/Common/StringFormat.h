@@ -44,6 +44,17 @@ namespace SR_UTILS_NS {
             Details::StringFormatError("FormatTo() : an exception has occurred! Exception: " + std::string(exception.what()) + "\n", true);
         }
     }
+
+    template<class... Args> void FormatConcat(String& dest, String& buffer, const char* format_str, Args&&... args) {
+        try {
+            buffer.clear();
+            fmt::format_to(std::back_inserter(buffer), fmt::runtime(format_str), std::forward<Args>(args)...);
+            dest += buffer;
+        }
+        catch (std::exception& exception) {
+            Details::StringFormatError("FormatConcat() : an exception has occurred! Exception: " + std::string(exception.what()) + "\n", true);
+        }
+    }
 }
 
 #define SR_FORMAT(...) SR_UTILS_NS::Format(__VA_ARGS__)

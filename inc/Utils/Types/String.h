@@ -32,6 +32,12 @@ namespace SR_UTILS_NS {
         String& operator=(StringView str);
         String& operator=(String&& other) noexcept;
 
+        String& operator+=(const String& rhs);
+        String& operator+=(const StringView& rhs);
+        String& operator+=(const char* rhs);
+        String& operator+=(const std::string& rhs);
+        String& operator+=(std::string_view rhs);
+
         SR_NODISCARD String operator+(const String& rhs) const;
         SR_NODISCARD String operator+(const char* rhs) const;
         SR_NODISCARD String operator+(const std::string& rhs) const;
@@ -53,6 +59,7 @@ namespace SR_UTILS_NS {
 
         SR_NODISCARD const char* c_str() const;
         SR_NODISCARD uint64_t size() const;
+        SR_NODISCARD uint64_t capacity() const;
         SR_NODISCARD bool empty() const;
         SR_NODISCARD const char* data() const;
         SR_NODISCARD char* data();
@@ -83,6 +90,7 @@ namespace SR_UTILS_NS {
         void push_back(char c);
         void reserve(uint64_t newSize);
         void resize(uint64_t newSize);
+        void resize(uint64_t newSize, char fillChar);
         void clear();
 
         void ToLowerInPlace();
@@ -101,14 +109,46 @@ namespace SR_UTILS_NS {
         static constexpr auto npos{static_cast<SizeType>(-1)};
 
     public:
-        StringView();
-        StringView(const char* str, SizeType size); /// NOLINT
-        StringView(const char* str); /// NOLINT
-        StringView(const std::string& str); /// NOLINT
-        StringView(std::string_view str); /// NOLINT
-        StringView(const String& str); /// NOLINT
+        constexpr StringView() = default;
+
+        constexpr StringView(const StringView& other) = default;
+        constexpr StringView(StringView&& other) noexcept = default;
+
+        template<size_t N> constexpr StringView(const char (&str)[N]) noexcept
+            : m_data(str)
+            , m_size(N - 1) // без '\0'
+        { }
+
+        constexpr StringView(const char* str)
+            : m_data(str)
+        {
+            for (; m_data && m_data[m_size] != '\0'; ++m_size) { }
+        }
+
+        constexpr StringView(const char *str, SizeType size)
+            : m_data(str)
+            , m_size(size)
+        { }
+
+        constexpr StringView(const std::string& str)
+            : m_data(str.data())
+            , m_size(static_cast<uint64_t>(str.size()))
+        { }
+
+        constexpr StringView(std::string_view str)
+            : m_data(str.data())
+            , m_size(static_cast<uint64_t>(str.size()))
+        { }
+
+        StringView(const String& str)
+            : m_data(str.data())
+            , m_size(str.size())
+        { }
 
         void remove_prefix(uint64_t n);
+
+        constexpr StringView& operator=(const StringView& other) = default;
+        constexpr StringView& operator=(StringView&& other) noexcept = default;
 
         SR_NODISCARD operator std::string_view() const; /// NOLINT
 

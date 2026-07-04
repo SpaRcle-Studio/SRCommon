@@ -103,7 +103,6 @@ namespace SR_UTILS_NS {
     }
 
     SR_MATH_NS::FVector3 Transform::InverseTransformDirection(const SR_MATH_NS::FVector3& direction) const {
-        SR_TRACY_ZONE;
         return GetGlobalRotation().Inverse() * direction;
     }
 
@@ -113,7 +112,6 @@ namespace SR_UTILS_NS {
     }
 
     SR_MATH_NS::FVector3 Transform::GetGlobalTranslation() const {
-        SR_TRACY_ZONE;
         return GetMatrix().GetTranslate();
     }
 

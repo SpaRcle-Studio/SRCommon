@@ -9,129 +9,206 @@
 #include <Utils/Serialization/SRASerialization.h>
 
 namespace SR_UTILS_NS {
-    std::string SRAISerialization::ToStringBase() const noexcept {
+    String SRAISerialization::ToStringBase() const noexcept {
         SR_TRACY_ZONE;
 
-        std::string result;
+        String result;
+        {
+            SR_TRACY_ZONE_N("Analyze and reserve");
+            result.reserve(AnalyzeByteSize(m_root, 0));
+            SR_TRACY_ZONE_VALUE(result.capacity());
+        }
 
         result += "sra format\n";
-        result += "use tabs: "s + (IsNeedUseTabs() ? "true\n" : "false\n");
 
-        std::function<void(const SerializationNode&, size_t)> serializeNode;
+        if (IsNeedUseTabs()) {
+            result += "use tabs: true\n";
+        }
+        else {
+            result += "use tabs: false\n";
+        }
 
-        serializeNode = [this, &result, &serializeNode](const SerializationNode& node, const uint64_t depth) {
-            if (IsNeedUseTabs()) {
-                result += std::string(depth, '\t');
-            }
-
-            switch (node.type) {
-                case SerializationDataType::Root:
-                    result += SR_UTILS_NS::ToString(depth) + "-r:"s + node.id.GetName() + "\n";
-                    break;
-                case SerializationDataType::Object:
-                    result += SR_UTILS_NS::ToString(depth) + "-o:"s + node.id.GetName() + "\n";
-                    break;
-                case SerializationDataType::Array:
-                    result += SR_UTILS_NS::ToString(depth) + "-a:"s + node.id.GetName() + "\n";
-                    break;
-                case SerializationDataType::Item:
-                    if (node.children.empty() && !IsAllowEmptyElementsInArrayImpl()) {
-                        return;
-                    }
-                    result += SR_UTILS_NS::ToString(depth) + "-k:"s + node.id.GetName() + "\n";
-                    if (node.children.empty()) {
-                        return;
-                    }
-                    break;
-                case SerializationDataType::Unknown:
-                    SRHalt("SRAISerialization::ToString() : unknown type!");
-                    return;
-                default:
-                    result += SR_UTILS_NS::ToString(depth) + "-v:"s + node.id.GetName() + "\n";
-                    break;
-            }
-
-            switch (node.type) {
-                case SerializationDataType::Root:
-                    for (auto&& child : node.children) {
-                        serializeNode(child, depth + 1);
-                    }
-                    break;
-                case SerializationDataType::String: {
-                    if (IsNeedUseTabs()) {
-                        result += std::string(depth + 1, '\t');
-                    }
-
-                    const uint32_t newLineCount = std::ranges::count(node.string, '\n');
-
-                    if (newLineCount > 0) {
-                        result += SR_UTILS_NS::ToString(depth + 1) + "-m:";
-                        result += std::to_string(newLineCount + 1) + "\n";
-                    }
-                    else {
-                        result += SR_UTILS_NS::ToString(depth + 1) + "-s:";
-                    }
-
-                    result += node.string + "\n";
-
-                    SRAssert2(node.children.empty(), "SerializationDataType::Integer : children is not empty!");
-                    break;
-                }
-                case SerializationDataType::Boolean:
-                    if (IsNeedUseTabs()) {
-                        result += std::string(depth + 1, '\t');
-                    }
-                    result += SR_UTILS_NS::ToString(depth + 1) + "-b:";
-                    result += node.data.boolean ? "true\n" : "false\n";
-                    SRAssert2(node.children.empty(), "SerializationDataType::Boolean : children is not empty!");
-                    break;
-                case SerializationDataType::Integer:
-                    if (IsNeedUseTabs()) {
-                        result += std::string(depth + 1, '\t');
-                    }
-                    result += SR_UTILS_NS::ToString(depth + 1) + "-i:";
-                    result += std::to_string(node.data.integer) + "\n";
-                    SRAssert2(node.children.empty(), "SerializationDataType::Integer : children is not empty!");
-                    break;
-                case SerializationDataType::Double:
-                    if (IsNeedUseTabs()) {
-                        result += std::string(depth + 1, '\t');
-                    }
-                    result += SR_UTILS_NS::ToString(depth + 1) + "-d:";
-                    result += SerializeDouble(node.data.floatingDouble) + "\n";
-                    SRAssert2(node.children.empty(), "SerializationDataType::Double : children is not empty!");
-                    break;
-                case SerializationDataType::Floating:
-                    if (IsNeedUseTabs()) {
-                        result += std::string(depth + 1, '\t');
-                    }
-                    result += SR_UTILS_NS::ToString(depth + 1) + "-f:";
-                    result += SerializeFloat(node.data.floating) + "\n";
-                    SRAssert2(node.children.empty(), "SerializationDataType::Floating : children is not empty!");
-                    break;
-                case SerializationDataType::Object:
-                    for (auto&& child : node.children) {
-                        serializeNode(child, depth + 1);
-                    }
-                    break;
-                case SerializationDataType::Item:
-                    for (auto&& child : node.children) {
-                        serializeNode(child, depth + 1);
-                    }
-                    break;
-                case SerializationDataType::Array:
-                    for (auto&& child : node.children) {
-                        serializeNode(child, depth + 1);
-                    }
-                    break;
-                default:
-                    break;
-            }
-        };
-
-        serializeNode(m_root, 0);
+        SerializeNode(result, m_root, 0);
 
         return result;
+    }
+
+    void SRAISerialization::SerializeNode(String& result, const SerializationNode& node, const uint64_t depth) const {
+        result += GenerateTabs(depth);
+
+        static constexpr StringView prefixes[] = {
+            /* Unknown  */ "",
+            /* Root     */ "-r:",
+            /* Object   */ "-o:",
+            /* Item     */ "-k:",
+            /* Array     */ "-a:",
+            /* String   */ "-s:",
+            /* Boolean  */ "-b:",
+            /* Integer  */ "-i:",
+            /* Floating */ "-f:",
+            /* Double   */ "-d:",
+        };
+
+        static constexpr StringView basePrefixes[] = {
+            /* Unknown  */ "",
+            /* Root     */ "-r:",
+            /* Object   */ "-o:",
+            /* Item     */ "-k:",
+            /* Array     */ "-a:",
+            /* String   */ "-v:",
+            /* Boolean  */ "-v:",
+            /* Integer  */ "-v:",
+            /* Floating */ "-v:",
+            /* Double   */ "-v:",
+        };
+
+        switch (node.type) {
+            case SerializationDataType::Item:
+                if (node.children.empty() && !IsAllowEmptyElementsInArrayImpl()) {
+                    return;
+                }
+                result += StringFromSmallInt(depth);
+                result += basePrefixes[static_cast<uint8_t>(node.type)];
+                result += node.id.GetNameView();
+                result += "\n";
+                if (node.children.empty()) {
+                    return;
+                }
+                break;
+            default:
+                result += StringFromSmallInt(depth);
+                result += basePrefixes[static_cast<uint8_t>(node.type)];
+                result += node.id.GetNameView();
+                result += "\n";
+                break;
+            case SerializationDataType::Unknown:
+                SRHalt("SRAISerialization::ToString() : unknown type!");
+                return;
+        }
+
+        if (node.type >= SerializationDataType::Root && node.type <= SerializationDataType::Array) {
+            for (auto&& child : node.children) {
+                SerializeNode(result, child, depth + 1);
+            }
+            return;
+        }
+
+
+        if (node.type >= SerializationDataType::String && node.type <= SerializationDataType::Double) {
+            if (!node.children.empty()) {
+                SRHalt("SRAISerialization::ToString() : node has children!");
+            }
+        }
+        else {
+            return;
+        }
+
+        result += GenerateTabs(depth + 1);
+
+        if (node.type == SerializationDataType::String) {
+            if (const uint32_t newLineCount = std::ranges::count(node.string, '\n'); newLineCount > 0) {
+                char buffer[64];
+                result += StringFromSmallInt(depth + 1);
+                result += "-m:";
+                result += SerializeInt(newLineCount + 1, buffer, sizeof(buffer));
+                result += "\n";
+            }
+            else {
+                result += StringFromSmallInt(depth + 1);
+                result += prefixes[static_cast<uint8_t>(node.type)];
+            }
+
+            result += node.string;
+            result += "\n";
+            return;
+        }
+
+        result += StringFromSmallInt(depth + 1);
+        result += prefixes[static_cast<uint8_t>(node.type)];
+
+        if (node.type == SerializationDataType::Boolean) {
+            result += node.data.boolean ? "true\n" : "false\n";
+            return;
+        }
+
+        char buffer[64];
+        switch (node.type) {
+            case SerializationDataType::Integer:
+                result += SerializeInt(node.data.integer, buffer, sizeof(buffer));
+                break;
+            case SerializationDataType::Double:
+                result += SerializeDouble(node.data.floating, buffer, sizeof(buffer));
+                break;
+            case SerializationDataType::Floating:
+                result += SerializeFloat(node.data.floating, buffer, sizeof(buffer));
+                break;
+            default:
+                SRHalt("SRAISerialization::ToString() : unknown type!");
+                break;
+        }
+
+        result += "\n";
+    }
+
+    StringView SRAISerialization::GenerateTabs(uint64_t depth) const {
+        if (!IsNeedUseTabs()) {
+            return {};
+        }
+
+        static SR_THREAD_LOCAL String tabs;
+        tabs.resize(SR_MAX(128, SR_MAX(tabs.size(), depth)), '\t');
+        return StringView(tabs.data(), depth);
+    }
+
+    uint64_t SRAISerialization::AnalyzeByteSize(const SerializationNode& node, uint64_t depth) const {
+        uint64_t size = 128;
+
+        switch (node.type) {
+            case SerializationDataType::Root:
+            case SerializationDataType::Object:
+            case SerializationDataType::Array:
+            case SerializationDataType::Item:
+                size += node.id.GetSize() + 4 + (m_isNeedUseTabs ? depth : 0);
+                break;
+            case SerializationDataType::String:
+                size += node.id.GetSize() + 4 + (m_isNeedUseTabs ? depth : 0);
+                size += 4 + (m_isNeedUseTabs ? (depth + 1) : 0);
+                size += node.string.size();
+                break;
+            default:
+                size += node.id.GetSize() + 4 + (m_isNeedUseTabs ? depth : 0);
+                size += 4 + (m_isNeedUseTabs ? (depth + 1) : 0);
+                size += 10; /// среднее количество символов для числа
+                break;
+        }
+
+        for (auto&& child : node.children) {
+            size += AnalyzeByteSize(child, depth + 1);
+        }
+
+        return size;
+    }
+
+    StringView SRAISerialization::StringFromSmallInt(uint64_t value) {
+        if (value >= 1000) {
+            SRHaltTerminate("Value is too big! Depth: {}. Limits is reached... Crash.", value);
+        }
+        struct SmallString {
+            char buffer[4] = { 0 };
+            uint8_t size = 0;
+        };
+        static SR_THREAD_LOCAL Vector<SmallString> strings; /// maximum 5 kilobytes of memory for 1000 strings
+
+        if ((value + 1) > strings.size()) {
+            SR_TRACY_ZONE;
+            strings.reserve(128);
+            const int64_t oldSize = strings.size();
+            strings.resize(value + 1);
+            for (int64_t i = oldSize; i <= value; ++i) {
+                strings[i].size = SerializeInt(i, strings[i].buffer, sizeof(strings[i].buffer)).size();
+            }
+        }
+        return StringView(strings[value].buffer, strings[value].size);
     }
 
     /// ========================================= SRAISerialization ====================================================
@@ -346,8 +423,6 @@ namespace SR_UTILS_NS {
                     auto& node = GetCurrentNode();
                     node.type = SerializationDataType::Floating;
                     node.data.floating = ParseFloat(line.substr(line.find_first_of(':') + 1));
-                    //node.data.floating = FastSToD(line.substr(line.find_first_of(':') + 1));
-                    //node.data.floating = std::stod(std::string(line.substr(line.find_first_of(':') + 1)));
                     m_stack.pop_back();
                     continue;
                 }
@@ -355,8 +430,6 @@ namespace SR_UTILS_NS {
                     auto& node = GetCurrentNode();
                     node.type = SerializationDataType::Double;
                     node.data.floatingDouble = ParseDouble(line.substr(line.find_first_of(':') + 1));
-                    //node.data.floating = FastSToD(line.substr(line.find_first_of(':') + 1));
-                    //node.data.floating = std::stod(std::string(line.substr(line.find_first_of(':') + 1)));
                     m_stack.pop_back();
                     continue;
                 }
