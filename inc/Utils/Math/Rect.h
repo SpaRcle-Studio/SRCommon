@@ -71,6 +71,9 @@ namespace SR_MATH_NS {
         SR_NODISCARD SR_MATH_NS::Vector2<T> Min() const noexcept;
         SR_NODISCARD SR_MATH_NS::Vector2<T> Max() const noexcept;
 
+        SR_NODISCARD SR_MATH_NS::Vector2<T> GetMin() const noexcept;
+        SR_NODISCARD SR_MATH_NS::Vector2<T> GetMax() const noexcept;
+
         SR_NODISCARD SR_MATH_NS::Vector2<T> Center() const noexcept;
         SR_NODISCARD SR_MATH_NS::Vector2<T> Size() const noexcept;
 
@@ -170,6 +173,14 @@ namespace SR_MATH_NS {
     }
 
     template<typename T> SR_MATH_NS::Vector2<T> Rect<T>::Max() const noexcept {
+        return SR_MATH_NS::Vector2<T>(Right(), Top());
+    }
+
+    template<typename T> SR_MATH_NS::Vector2<T> Rect<T>::GetMin() const noexcept {
+        return SR_MATH_NS::Vector2<T>(Left(), Bottom());
+    }
+
+    template<typename T> SR_MATH_NS::Vector2<T> Rect<T>::GetMax() const noexcept {
         return SR_MATH_NS::Vector2<T>(Right(), Top());
     }
 

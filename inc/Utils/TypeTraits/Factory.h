@@ -137,6 +137,7 @@ namespace SR_UTILS_NS {
             info.moduleName = moduleName;
             info.metaGetter = T::GetMetaStatic;
             info.version = pMeta->GetVersion();
+            info.isAbstract |= pMeta->IsAbstract();
 
             m_nameTypeId[std::string_view(typeid(T*).name())] = name;
 
