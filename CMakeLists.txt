@@ -393,30 +393,10 @@ target_include_directories(Utils PUBLIC ${SR_UTILS_INCLUDE_DIRECTORIES_CONTENT})
 set(SR_UTILS_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR} CACHE INTERNAL "" FORCE)
 set(SR_UTILS_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR} CACHE INTERNAL "" FORCE)
 
-include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/CopyFiles.cmake)
 
 if (SR_COMMON_DLL_EXPORTS)
     message("SRCommon will be using DLL exports")
     target_compile_definitions(Utils PUBLIC SR_COMMON_DLL_EXPORTS)
-endif()
-
-set(SR_UTILS_DEPENDENCIES "")
-
-if (NOT SR_COMMON_CI_BUILD)
-    include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/CopyFiles.cmake)
-    add_custom_target(CopyUtilsFiles)
-    add_custom_command(TARGET CopyUtilsFiles
-        PRE_BUILD
-        COMMAND ${CMAKE_COMMAND}
-            -DSR_UTILS_SOURCE_DIR=${SR_UTILS_SOURCE_DIR}
-            -DSR_UTILS_BINARY_DIR=${SR_UTILS_BINARY_DIR}
-            -DSR_ICU=${SR_ICU}
-            -DSR_TRACY_ENABLE=${SR_TRACY_ENABLE}
-            -P "${CMAKE_CURRENT_SOURCE_DIR}/cmake/CopyFiles.cmake"
-        COMMENT "SRCommon: Copy utils source files to build directory"
-    )
-
-    set(SR_UTILS_DEPENDENCIES ${SR_UTILS_DEPENDENCIES} "CopyUtilsFiles")
 endif()
 
 SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_BINARY_DIR}/include)
@@ -436,7 +416,7 @@ if (SR_COMMON_CI_BUILD)
 endif()
 
 if (SR_COMMON_EMBED_RESOURCES)
-    add_dependencies(${PROJECT_NAME} CopyUtilsFiles EmbedResourcesTarget)
+    add_dependencies(${PROJECT_NAME} EmbedResourcesTarget)
 endif()
 
 set_target_properties(Utils PROPERTIES

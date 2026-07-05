@@ -113,10 +113,6 @@ def create_header(path, export_path):
         print(f"Path is not a file: {path}")
         return
 
-    # file = open(path, "rb")
-    # binary_data = file.read()
-    # file.close()
-
     filename, file_extension = os.path.splitext(os.path.basename(path))
     file_extension = file_extension[1:]
 
@@ -125,8 +121,7 @@ def create_header(path, export_path):
     header_include_guard = "CODEGEN_" + header_name.upper() + "_H"
     header_include_guard = header_include_guard.replace("-", "_")
 
-    if not os.path.exists(f"{export_path}/EmbedResources"):
-        os.mkdir(f"{export_path}/EmbedResources")
+    os.makedirs(f"{export_path}/EmbedResources", exist_ok=True)
 
     headerfile = open(f"{export_path}/EmbedResources/{header_name}.h", "w", encoding="utf-8")
 
