@@ -16,8 +16,8 @@ namespace SR_UTILS_NS::Localization {
         setlocale(LC_NUMERIC, "C");
     }
 
-    template<typename CharOut,typename CharIn> std::basic_string<CharOut> UtfToUtf(CharIn const *begin, CharIn const *end, EncMethodType how = EncMethodType::Default) {
-        std::basic_string<CharOut> result;
+    template<typename CharOut,typename CharIn> void UtfToUtf(std::basic_string<CharOut>& result, CharIn const* begin, CharIn const* end, EncMethodType how = EncMethodType::Default) {
+        result.clear();
         result.reserve(end - begin);
 
         typedef std::back_insert_iterator<std::basic_string<CharOut>> inserter_type;
@@ -30,38 +30,38 @@ namespace SR_UTILS_NS::Localization {
             if (c == Utf::Illegal || c == Utf::Incomplete) {
                 if (how == EncMethodType::Stop) {
                     SRHalt("Conversion error!");
-                    return std::basic_string<CharOut>();
+                    result.clear();
+                    return;
                 }
             }
             else {
                 Utf::UtfTraits<CharOut>::template Encode<inserter_type>(c, inserter);
             }
         }
-        return result;
     }
 
     ///
     /// Convert a Unicode NUL terminated string \a str other Unicode encoding
     ///
-    template<typename CharOut,typename CharIn> std::basic_string<CharOut> UtfToUtf(CharIn const *str, EncMethodType how = EncMethodType::Default) {
+    template<typename CharOut,typename CharIn> void UtfToUtf(std::basic_string<CharOut>& result, CharIn const *str, EncMethodType how = EncMethodType::Default) {
         CharIn const *end = str;
 
         while (*end) {
             end++;
         }
 
-        return UtfToUtf<CharOut, CharIn>(str, end, how);
+        UtfToUtf<CharOut, CharIn>(result, str, end, how);
     }
 
     ///
     /// Convert a Unicode string \a str other Unicode encoding
     ///
-    template<typename CharOut,typename CharIn> std::basic_string<CharOut> UtfToUtf(std::basic_string<CharIn> const& str, EncMethodType how = EncMethodType::Default) {
-        return UtfToUtf<CharOut, CharIn>(str.c_str(), str.c_str() + str.size(), how);
+    template<typename CharOut, typename CharIn> void UtfToUtf(std::basic_string<CharOut>& result, std::basic_string<CharIn> const& str, EncMethodType how = EncMethodType::Default) {
+        UtfToUtf<CharOut, CharIn>(result, str.c_str(), str.c_str() + str.size(), how);
     }
 
-    template<typename CharOut,typename CharIn> std::basic_string<CharOut> UtfToUtf(std::basic_string_view<CharIn> const& str, EncMethodType how = EncMethodType::Default) {
-        return UtfToUtf<CharOut, CharIn>(str.data(), str.data() + str.size(), how);
+    template<typename CharOut, typename CharIn> void UtfToUtf(std::basic_string<CharOut>& result, std::basic_string_view<CharIn> const& str, EncMethodType how = EncMethodType::Default) {
+        UtfToUtf<CharOut, CharIn>(result, str.data(), str.data() + str.size(), how);
     }
 
     ///std::string Between(const char* begin,

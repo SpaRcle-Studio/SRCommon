@@ -9,6 +9,7 @@
 
 namespace SR_UTILS_NS {
     class StringView;
+    class IAllocator;
 
     class SR_COMMON_DLL_API String {
     public:
@@ -17,11 +18,19 @@ namespace SR_UTILS_NS {
 
     public:
         String();
+
+        String(const char* str, uint64_t size, IAllocator* pAllocator);
+        String(StringView str, IAllocator* pAllocator);
+        String(String str, IAllocator* pAllocator);
+        String(const std::string& str, IAllocator* pAllocator);
+        String(std::string_view str, IAllocator* pAllocator);
+
         String(const char* str); /// NOLINT
         String(const std::string& str); /// NOLINT
         String(std::string_view str); /// NOLINT
         String(const String& other); /// NOLINT
         String(String&& other) noexcept;
+
         ~String();
 
         String& operator=(const char* str);
@@ -72,6 +81,8 @@ namespace SR_UTILS_NS {
         SR_NODISCARD bool ends_with(std::string_view str) const;
 
         SR_NODISCARD String substr(uint64_t pos, uint64_t count = SR_UINT64_MAX) const;
+        SR_NODISCARD String DetachAllocator() const;
+        SR_NODISCARD bool HasAllocator() const;
 
         SR_NODISCARD uint64_t find(const char* str, uint64_t pos = 0) const;
         SR_NODISCARD uint64_t find(std::string_view str, uint64_t pos = 0) const;
@@ -87,6 +98,14 @@ namespace SR_UTILS_NS {
         char operator[](size_t index) const;
         char& operator[](size_t index);
 
+        void append(const String& str);
+        void append(const StringView& str);
+        void append(const char* str);
+        void append(const std::string& str);
+        void append(std::string_view str);
+        void append(char c);
+        void append(const char* str, uint64_t count);
+
         void push_back(char c);
         void reserve(uint64_t newSize);
         void resize(uint64_t newSize);
@@ -101,6 +120,7 @@ namespace SR_UTILS_NS {
         char* m_data = nullptr;
         uint64_t m_size = 0;
         uint64_t m_capacity = 0;
+        IAllocator* m_allocator = nullptr;
 
     };
 

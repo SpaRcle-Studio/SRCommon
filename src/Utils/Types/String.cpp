@@ -8,6 +8,31 @@
 namespace SR_UTILS_NS {
     String::String() = default;
 
+    String::String(const char* str, uint64_t size, IAllocator* pAllocator)
+        : m_allocator(pAllocator)
+    {
+        resize(size);
+        if (m_data) {
+            memcpy(m_data, str, m_size);
+        }
+    }
+
+    String::String(StringView str, IAllocator* pAllocator)
+        : String(str.data(), str.size(), pAllocator)
+    { }
+
+    String::String(String str, IAllocator* pAllocator)
+        : String(str.m_data, str.m_size, pAllocator)
+    { }
+
+    String::String(const std::string& str, IAllocator* pAllocator)
+        : String(str.data(), static_cast<uint64_t>(str.size()), pAllocator)
+    { }
+
+    String::String(std::string_view str, IAllocator* pAllocator)
+        : String(str.data(), static_cast<uint64_t>(str.size()), pAllocator)
+    { }
+
     String::String(const char* str)
         : String(std::string_view(str))
     { }
@@ -24,12 +49,29 @@ namespace SR_UTILS_NS {
     }
 
     String::String(const String& other)
-        : String(std::string_view(other.m_data, other.m_size))
+        : String(other.m_data, other.m_size, other.m_allocator)
     { }
+
+    String::String(String&& other) noexcept
+        : m_data(other.m_data)
+        , m_size(other.m_size)
+        , m_capacity(other.m_capacity)
+        , m_allocator(other.m_allocator)
+    {
+        other.m_data = nullptr;
+        other.m_size = 0;
+        other.m_capacity = 0;
+        other.m_allocator = nullptr;
+    }
 
     String::~String() {
         if (m_data) {
-            SRFree(m_data);
+            if (m_allocator) {
+                m_allocator->Free(m_data, m_capacity + 1);
+            }
+            else {
+                SRFree(m_data);
+            }
         }
     }
 
@@ -61,18 +103,25 @@ namespace SR_UTILS_NS {
         if (this == &other) {
             return *this;
         }
-        return *this = std::string_view(other.m_data, other.m_size);
+        return *this = String(other.m_data, other.m_size, other.m_allocator);
     }
 
     String& String::operator=(String&& other) noexcept {
         if (this != &other) {
             if (m_data) {
-                SRFree(m_data);
+                if (m_allocator) {
+                    m_allocator->Free(m_data, m_capacity + 1);
+                }
+                else {
+                    SRFree(m_data);
+                }
             }
             m_data = other.m_data;
             m_size = other.m_size;
             m_capacity = other.m_capacity;
+            m_allocator = other.m_allocator;
 
+            other.m_allocator = nullptr;
             other.m_data = nullptr;
             other.m_size = 0;
             other.m_capacity = 0;
@@ -288,24 +337,67 @@ namespace SR_UTILS_NS {
         if (newSize <= m_capacity) {
             return;
         }
-        char* newData = (char*)SRMalloc(newSize + 1);
+        char* newData = (char*)(m_allocator ? m_allocator->Allocate(newSize + 1) : SRMalloc(newSize + 1));
         if (m_data) {
             memcpy(newData, m_data, m_size);
             newData[m_size] = '\0';
-            SRFree(m_data);
+            if (m_allocator) {
+                m_allocator->Free(m_data, m_capacity + 1);
+            }
+            else {
+                SRFree(m_data);
+            }
         }
         m_data = newData;
         m_capacity = newSize;
     }
 
-    String::String(String&& other) noexcept
-        : m_data(other.m_data)
-        , m_size(other.m_size)
-        , m_capacity(other.m_capacity)
-    {
-        other.m_data = nullptr;
-        other.m_size = 0;
-        other.m_capacity = 0;
+    void String::append(const String& str) {
+        append(std::string_view(str.m_data, str.m_size));
+    }
+    void String::append(const StringView& str) {
+        append(std::string_view(str.data(), str.size()));
+    }
+    void String::append(const char* str) {
+        append(std::string_view(str));
+    }
+    void String::append(const std::string& str) {
+        append(std::string_view(str));
+    }
+
+    void String::append(std::string_view str) {
+        if (str.empty()) {
+            return;
+        }
+        uint64_t newSize = m_size + static_cast<uint64_t>(str.size());
+        if (newSize > m_capacity) {
+            reserve(SR_MAX(newSize, m_capacity * 2));
+        }
+        memcpy(m_data + m_size, str.data(), str.size());
+        m_size = newSize;
+        m_data[newSize] = '\0';
+    }
+
+    void String::append(char c) {
+        if (m_size + 1 > m_capacity) {
+            reserve(m_capacity > 0 ? m_capacity * 2 : 8);
+        }
+        m_data[m_size] = c;
+        m_size++;
+        m_data[m_size] = '\0';
+    }
+
+    void String::append(const char* str, uint64_t count) {
+        if (count == 0) {
+            return;
+        }
+        uint64_t newSize = m_size + count;
+        if (newSize > m_capacity) {
+            reserve(SR_MAX(newSize, m_capacity * 2));
+        }
+        memcpy(m_data + m_size, str, count);
+        m_size = newSize;
+        m_data[newSize] = '\0';
     }
 
     void String::push_back(char c) {
@@ -369,6 +461,14 @@ namespace SR_UTILS_NS {
         memmove(m_data, m_data + pos, count);
         m_size = count;
         m_data[m_size] = '\0';
+    }
+
+    String String::DetachAllocator() const {
+        return String(m_data, m_size, nullptr);
+    }
+
+    bool String::HasAllocator() const {
+        return m_allocator;
     }
 
     void StringView::remove_prefix(uint64_t n) {

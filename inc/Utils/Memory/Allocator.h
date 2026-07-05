@@ -1,42 +1,44 @@
 //
-// Created by Monika on 27.04.2025.
+// Created by Monika on 04.07.2026.
 //
 
-#ifndef SR_ALLOCATOR_INCLUDE_GUARD
-    #error "Do not include Allocator.h directly!"
-#endif
+#ifndef SR_ENGINE_COMMON_MEMORY_ALLOCATOR_H
+#define SR_ENGINE_COMMON_MEMORY_ALLOCATOR_H
 
-SR_COMMON_DLL_API extern bool g_TracyAllocatorInitialized;
+#include <Utils/stdInclude.h>
 
 namespace SR_UTILS_NS {
-    SR_COMMON_DLL_API extern void OnMemoryAllocated(SR_UTILS_NS::SizeType size);
-    SR_COMMON_DLL_API extern void OnMemoryFreed(SR_UTILS_NS::SizeType size);
-    SR_COMMON_DLL_API extern SR_UTILS_NS::SizeType GetApplicationHeapSize();
+    class SR_COMMON_DLL_API DefaultAllocator : public IAllocator {
+    public:
+        SR_NODISCARD void* Allocate(SR_UTILS_NS::SizeType size, SR_UTILS_NS::SizeType alignment) override;
+        SR_NODISCARD void* ReAllocate(void* pMemory, SR_UTILS_NS::SizeType size, SR_UTILS_NS::SizeType alignment) override;
+        void Free(void* pMemory, SR_UTILS_NS::SizeType size, SR_UTILS_NS::SizeType alignment) override;
+
+    };
+
+    class SR_COMMON_DLL_API UnSynchronizedPoolAllocator : public IAllocator {
+    public:
+        SR_NODISCARD void* Allocate(SR_UTILS_NS::SizeType size, SR_UTILS_NS::SizeType alignment) override;
+        SR_NODISCARD void* ReAllocate(void* pMemory, SR_UTILS_NS::SizeType size, SR_UTILS_NS::SizeType alignment) override;
+        void Free(void* pMemory, SR_UTILS_NS::SizeType size, SR_UTILS_NS::SizeType alignment) override;
+
+    private:
+        std::pmr::unsynchronized_pool_resource m_poolResource;
+
+    };
+
+    class SR_COMMON_DLL_API MonotonicAllocator : public IAllocator {
+    public:
+        explicit MonotonicAllocator(SR_UTILS_NS::SizeType blockSize = 1024 * 1024);
+
+        SR_NODISCARD void* Allocate(SR_UTILS_NS::SizeType size, SR_UTILS_NS::SizeType alignment) override;
+        SR_NODISCARD void* ReAllocate(void* pMemory, SR_UTILS_NS::SizeType size, SR_UTILS_NS::SizeType alignment) override;
+        void Free(void* pMemory, SR_UTILS_NS::SizeType size, SR_UTILS_NS::SizeType alignment) override;
+
+    private:
+        std::pmr::monotonic_buffer_resource m_monotonicResource;
+
+    };
 }
 
-void* SRMalloc(SR_UTILS_NS::SizeType size);
-void* SRReAlloc(void* pMemory, SR_UTILS_NS::SizeType size);
-void SRFree(void* pMemory);
-
-template<typename T, typename... Args> T* SRNew(Args&& ...args) {
-    void* pMemory = SRMalloc(sizeof(T));
-    T* pObject = new(pMemory) T(Forward<Args>(args)...);
-    if constexpr (requires(T t) { t.InitializeClass(); }) {
-        pObject->InitializeClass();
-    }
-    return pObject;
-}
-
-template<typename T> void SRDelete(T* pObject) {
-    if constexpr (requires(T t) { t.DeinitializeClass(); }) {
-        pObject->DeinitializeClass();
-    }
-    pObject->~T();
-    SRFree(pObject);
-}
-
-void* operator new(SR_UTILS_NS::SizeType size);
-void operator delete(void* pMemory) noexcept;
-void* operator new[](SR_UTILS_NS::SizeType size);
-void operator delete[](void* pMemory) noexcept;
-
+#endif //SR_ENGINE_COMMON_MEMORY_ALLOCATOR_H

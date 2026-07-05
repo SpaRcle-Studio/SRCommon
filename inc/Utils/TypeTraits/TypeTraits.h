@@ -54,7 +54,7 @@ namespace SR_UTILS_NS {
 		SR_NODISCARD SR_INLINE StringView GetNameView() const noexcept { return StringView(name, length); }
 
 	private:
-		static constexpr uint64_t MaxNameLength = 256;
+		static constexpr uint64_t MaxNameLength = 128;
 		uint64_t hash = 0;
 		uint64_t length = 0;
 		char name[MaxNameLength]{};

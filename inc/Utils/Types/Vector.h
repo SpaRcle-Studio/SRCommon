@@ -27,6 +27,7 @@ namespace SR_UTILS_NS {
 
     public:
         SR_CONSTEXPR Vector() noexcept = default;
+        SR_CONSTEXPR Vector(IAllocator* allocator) noexcept;
         SR_CONSTEXPR Vector(const Vector& other);
         SR_CONSTEXPR Vector(Vector&& other) noexcept;
         SR_CONSTEXPR Vector(std::initializer_list<T> init);
@@ -92,18 +93,55 @@ namespace SR_UTILS_NS {
         SR_NODISCARD const T* data() const noexcept { return static_cast<const T*>(m_data); }
         SR_NODISCARD const T& front() const noexcept { return static_cast<const T*>(m_data)[0]; }
         SR_NODISCARD const T& back() const noexcept { return static_cast<const T*>(m_data)[m_size - 1]; }
+        SR_NODISCARD IAllocator* GetAllocator() const noexcept { return m_allocator; }
+        SR_NODISCARD Vector<T> DetachAllocator() const;
 
     private:
         void ConstructRange(SizeType start, SizeType end);
         void ConstructRange(SizeType start, SizeType end, const T& value);
         void DestructRange(SizeType start, SizeType end);
 
+        SR_NODISCARD void* AllocateMemory(SizeType size) const;
+        void FreeMemory(void* pData, SizeType size) const;
+
     private:
         T* m_data = nullptr;
         SizeType m_size = 0;
         SizeType m_capacity = 0;
+        IAllocator* m_allocator = nullptr;
 
     };
+
+    template<typename T> void Vector<T>::FreeMemory(void *pData, SizeType size) const {
+        if (m_allocator) {
+            m_allocator->Free(pData, size);
+        }
+        else {
+            SRFree(pData);
+        }
+    }
+
+    template<typename T> void* Vector<T>::AllocateMemory(SizeType size) const {
+        if (m_allocator) {
+            return m_allocator->Allocate(size);
+        }
+        return SRMalloc(size);
+    }
+
+    template<typename T> Vector<T> Vector<T>::DetachAllocator() const {
+        Vector<T> newVector;
+        newVector.reserve(m_size);
+        if constexpr (std::is_trivially_copyable_v<T>) {
+            std::memcpy(newVector.m_data, m_data, sizeof(T) * m_size);
+        }
+        else {
+            for (SizeType i = 0; i < m_size; ++i) {
+                new (newVector.m_data + i) T(static_cast<const T*>(m_data)[i]);
+            }
+        }
+        newVector.m_size = m_size;
+        return newVector;
+    }
 
     template<typename T> template<class... ValueType> T& Vector<T>::emplace_back(ValueType &&... value) {
         if (m_size >= m_capacity) {
@@ -123,7 +161,7 @@ namespace SR_UTILS_NS {
 
     template<typename T> SR_CONSTEXPR Vector<T>& Vector<T>::operator=(const Vector& other) {
         if (this != &other) {
-            if (other.m_size > m_capacity) {
+            if (other.m_size > m_capacity || m_allocator != other.m_allocator) {
                 Vector temp(other);
                 swap(temp);
             }
@@ -323,6 +361,7 @@ namespace SR_UTILS_NS {
         std::swap(m_data, other.m_data);
         std::swap(m_size, other.m_size);
         std::swap(m_capacity, other.m_capacity);
+        std::swap(m_allocator, other.m_allocator);
     }
 
     template<typename T> SR_CONSTEXPR Vector<T>& Vector<T>::operator=(std::initializer_list<T> init) {
@@ -356,18 +395,24 @@ namespace SR_UTILS_NS {
         if (this != &other) {
             if (m_data) {
                 DestructRange(0, m_size);
-                SRFree(m_data);
+                FreeMemory(m_data, sizeof(T) * m_capacity);
             }
 
             m_data = other.m_data;
             m_size = other.m_size;
             m_capacity = other.m_capacity;
+            m_allocator = other.m_allocator;
 
             other.m_data = nullptr;
             other.m_size = 0;
             other.m_capacity = 0;
+            other.m_allocator = nullptr;
         }
         return *this;
+    }
+
+    template<typename T> constexpr Vector<T>::Vector(IAllocator* pAllocator) noexcept {
+        m_allocator = pAllocator;
     }
 
     template<typename T> void Vector<T>::assign(Vector::Iterator first, Vector::Iterator last) {
@@ -392,7 +437,7 @@ namespace SR_UTILS_NS {
 
     template<typename T> SR_CONSTEXPR Vector<T>::Vector(Vector::Iterator first, Vector::Iterator last) {
         SizeType count = last - first;
-        m_data = static_cast<T*>(SRMalloc(sizeof(T) * count));
+        m_data = static_cast<T*>(AllocateMemory(sizeof(T) * count));
         m_size = count;
         m_capacity = count;
 
@@ -407,7 +452,7 @@ namespace SR_UTILS_NS {
     }
 
     template<typename T> SR_CONSTEXPR Vector<T>::Vector(std::initializer_list<T> init) {
-        m_data = static_cast<T*>(SRMalloc(sizeof(T) * init.size()));
+        m_data = static_cast<T*>(AllocateMemory(sizeof(T) * init.size()));
         m_size = init.size();
         m_capacity = init.size();
 
@@ -422,9 +467,11 @@ namespace SR_UTILS_NS {
     }
 
     template<typename T> SR_CONSTEXPR Vector<T>::Vector(const Vector& other) {
-        m_data = static_cast<T*>(SRMalloc(sizeof(T) * other.m_size));
+        m_allocator = other.m_allocator;
         m_size = other.m_size;
         m_capacity = other.m_size;
+        m_data = static_cast<T*>(AllocateMemory(sizeof(T) * other.m_size));
+
         if (std::is_trivially_copyable_v<T>) {
             std::memcpy(m_data, other.m_data, sizeof(T) * other.m_size);
         }
@@ -439,21 +486,23 @@ namespace SR_UTILS_NS {
         m_data = other.m_data;
         m_size = other.m_size;
         m_capacity = other.m_capacity;
+        m_allocator = other.m_allocator;
 
         other.m_data = nullptr;
         other.m_size = 0;
         other.m_capacity = 0;
+        other.m_allocator = nullptr;
     }
 
     template<typename T> SR_CONSTEXPR Vector<T>::Vector(const SizeType count) {
-        m_data = static_cast<T*>(SRMalloc(sizeof(T) * count));
+        m_data = static_cast<T*>(AllocateMemory(sizeof(T) * count));
         m_size = count;
         m_capacity = count;
         ConstructRange(0, count);
     }
 
     template<typename T> SR_CONSTEXPR Vector<T>::Vector(const SizeType count, const T& value) {
-        m_data = static_cast<T*>(SRMalloc(sizeof(T) * count));
+        m_data = static_cast<T*>(AllocateMemory(sizeof(T) * count));
         m_size = count;
         m_capacity = count;
         ConstructRange(0, count, value);
@@ -462,7 +511,7 @@ namespace SR_UTILS_NS {
     template<typename T> SR_CONSTEXPR Vector<T>::~Vector() {
         if (m_data) {
             DestructRange(0, m_size);
-            SRFree(m_data);
+            FreeMemory(m_data, sizeof(T) * m_capacity);
         }
     }
 
@@ -500,8 +549,7 @@ namespace SR_UTILS_NS {
     template<typename T> void Vector<T>::shrink_to_fit() {
         if (m_size < m_capacity) {
             void* pOldData = m_data;
-            m_data = static_cast<T*>(SRMalloc(sizeof(T) * m_size));
-            m_capacity = m_size;
+            m_data = static_cast<T*>(AllocateMemory(sizeof(T) * m_size));
 
             if (pOldData) {
                 if (std::is_trivially_copyable_v<T>) {
@@ -513,8 +561,10 @@ namespace SR_UTILS_NS {
                         static_cast<T*>(pOldData)[i].~T();
                     }
                 }
-                SRFree(pOldData);
+                FreeMemory(pOldData, sizeof(T) * m_capacity);
             }
+
+            m_capacity = m_size;
         }
     }
 
@@ -543,8 +593,7 @@ namespace SR_UTILS_NS {
     template<typename T> void Vector<T>::reserve(const SizeType newCapacity) {
         if (newCapacity > m_capacity) {
             void* pOldData = m_data;
-            m_data = static_cast<T*>(SRMalloc(sizeof(T) * newCapacity));
-            m_capacity = newCapacity;
+            m_data = static_cast<T*>(AllocateMemory(sizeof(T) * newCapacity));
 
             if (pOldData) {
                 if (std::is_trivially_copyable_v<T>) {
@@ -556,8 +605,9 @@ namespace SR_UTILS_NS {
                         static_cast<T*>(pOldData)[i].~T();
                     }
                 }
-                SRFree(pOldData);
+                FreeMemory(pOldData, sizeof(T) * m_capacity);
             }
+            m_capacity = newCapacity;
         }
     }
 }

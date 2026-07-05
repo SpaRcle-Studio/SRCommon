@@ -5,14 +5,22 @@
 #include <Utils/Serialization/BaseSerialization.h>
 #include <Utils/Localization/Encoding.h>
 #include <Utils/Types/UnicodeString.h>
+#include <Utils/Memory/Allocator.h>
 
 namespace SR_UTILS_NS {
     IBaseSerialization::IBaseSerialization() {
+        SR_TRACY_ZONE;
+
         m_walker.reserve(64);
         m_stack.reserve(64);
 
         m_walker.emplace_back(&m_root);
         m_stack.emplace_back(&m_root);
+
+        m_stringsPool = new MonotonicAllocator();
+        m_nodesPool = new MonotonicAllocator();
+
+        m_root.children = Vector<SerializationNode>(GetNodesPool());
     }
 
     bool IBaseSerialization::SaveToFileImpl(const SR_UTILS_NS::Path& path) const {
@@ -48,37 +56,42 @@ namespace SR_UTILS_NS {
         SR_TRACY_ZONE;
         m_stack.Destroy();
         m_walker.Destroy();
-        m_root.Clear();
+        m_root = SerializationNode();
     }
 
     /// ========================================== IBaseSerializer =====================================================
 
     void IBaseSerializer::WriteString(std::string_view value, const SerializationId& name) {
         SerializationNode node(name, SerializationDataType::String);
-        node.string = value;
+        node.children = Vector<SerializationNode>(GetImpl().GetNodesPool());
+        node.string = String(value, GetImpl().GetStringsPool());
         GetImpl().GetCurrentNode().children.emplace_back(node);
     }
 
     void IBaseSerializer::WriteBool(const bool value, const SerializationId& name) {
         SerializationNode node(name, SerializationDataType::Boolean);
+        node.children = Vector<SerializationNode>(GetImpl().GetNodesPool());
         node.data.boolean = value;
         GetImpl().GetCurrentNode().children.emplace_back(node);
     }
 
     void IBaseSerializer::WriteInt(const int64_t value, const SerializationId& name) {
         SerializationNode node(name, SerializationDataType::Integer);
+        node.children = Vector<SerializationNode>(GetImpl().GetNodesPool());
         node.data.integer = value;
         GetImpl().GetCurrentNode().children.emplace_back(node);
     }
 
     void IBaseSerializer::WriteDouble(const double_t value, const SerializationId& name) {
         SerializationNode node(name, SerializationDataType::Double);
+        node.children = Vector<SerializationNode>(GetImpl().GetNodesPool());
         node.data.floatingDouble = value;
         GetImpl().GetCurrentNode().children.emplace_back(node);
     }
 
     void IBaseSerializer::WriteFloat(const float_t value, const SerializationId& name) {
         SerializationNode node(name, SerializationDataType::Floating);
+        node.children = Vector<SerializationNode>(GetImpl().GetNodesPool());
         node.data.floating = value;
         GetImpl().GetCurrentNode().children.emplace_back(node);
     }
@@ -90,6 +103,7 @@ namespace SR_UTILS_NS {
         }
 
         SerializationNode node(id, SerializationDataType::Item);
+        node.children = Vector<SerializationNode>(GetImpl().GetNodesPool());
         currentNode.children.emplace_back(node);
         GetImpl().m_stack.emplace_back(&currentNode.children.back());
     }
@@ -100,23 +114,22 @@ namespace SR_UTILS_NS {
     }
 
     void IBaseSerializer::BeginObject(const SerializationId& name) {
-        SR_TRACY_ZONE;
         SerializationNode node(name, SerializationDataType::Object);
+        node.children = Vector<SerializationNode>(GetImpl().GetNodesPool());
         auto&& currentNode = GetImpl().GetCurrentNode();
         currentNode.children.emplace_back(node);
         GetImpl().m_stack.emplace_back(&currentNode.children.back());
     }
 
     void IBaseSerializer::EndObject() {
-        SR_TRACY_ZONE;
         SRAssert2(GetImpl().GetCurrentNode().type == SerializationDataType::Object, "IBaseSerializer::EndObject() : invalid node type!");
         SRAssert2(!GetImpl().m_stack.empty(), "IBaseSerializer::EndObject() : invalid stack size!");
         GetImpl().m_stack.pop_back();
     }
 
     void IBaseSerializer::BeginArray(const uint64_t size, const SerializationId& name) {
-        SR_TRACY_ZONE;
         SerializationNode node(name, SerializationDataType::Array);
+        node.children = Vector<SerializationNode>(GetImpl().GetNodesPool());
         node.children.reserve(size);
         auto&& currentNode = GetImpl().GetCurrentNode();
         currentNode.children.emplace_back(node);
@@ -124,7 +137,6 @@ namespace SR_UTILS_NS {
     }
 
     void IBaseSerializer::EndArray() {
-        SR_TRACY_ZONE;
         SRAssert2(GetImpl().GetCurrentNode().type == SerializationDataType::Array, "IBaseSerializer::EndArray() : invalid node type!");
         SRAssert2(!GetImpl().m_stack.empty(), "IBaseSerializer::EndArray() : invalid stack size!");
         GetImpl().m_stack.pop_back();
@@ -132,7 +144,10 @@ namespace SR_UTILS_NS {
 
     void IBaseSerializer::WriteString(std::u32string_view value, const SerializationId& name) {
         SerializationNode node(name, SerializationDataType::String);
-        node.string = SR_UTILS_NS::Localization::UtfToUtf<char, char32_t>(value);
+        node.children = Vector<SerializationNode>(GetImpl().GetNodesPool());
+        static SR_THREAD_LOCAL std::string temp;
+        SR_UTILS_NS::Localization::UtfToUtf<char, char32_t>(temp, value);
+        node.string = String(temp, GetImpl().GetStringsPool());
         GetImpl().GetCurrentNode().children.emplace_back(node);
     }
 
@@ -229,8 +244,33 @@ namespace SR_UTILS_NS {
     }
 
     void IBaseDeserializer::ReadString(SR_HTYPES_NS::UnicodeString& value, const SerializationId& name) {
-        std::string temp;
-        ReadStringImpl(temp, name);
-        value = SR_UTILS_NS::Localization::UtfToUtf<char32_t, char>(temp);
+        static SR_THREAD_LOCAL String tempUtf;
+        static SR_THREAD_LOCAL std::u32string tempUnicode;
+        tempUtf.clear();
+        ReadStringImpl(tempUtf, name);
+
+        SR_UTILS_NS::Localization::UtfToUtf<char32_t, char>(tempUnicode, std::string_view(tempUtf));
+        value = tempUnicode;
+    }
+
+    SerializationNode SerializationNode::DetachAllocator() const noexcept {
+        SR_TRACY_ZONE;
+        SerializationNode node = *this;
+        node.DetachAllocatorImpl();
+        return node;
+    }
+
+    void SerializationNode::DetachAllocatorImpl() noexcept {
+        children = children.DetachAllocator();
+        for (auto&& child : children) {
+            child.DetachAllocatorImpl();
+        }
+        string = string.DetachAllocator();
+    }
+
+    SerializationNode& SerializationNode::AddChild(IAllocator* pAllocator) {
+        SerializationNode& node = children.emplace_back();
+        node.children = Vector<SerializationNode>(pAllocator);
+        return node;
     }
 }

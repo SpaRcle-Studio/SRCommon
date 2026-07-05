@@ -272,7 +272,8 @@ namespace SR_UTILS_NS {
             return false;
         }
 
-        bool restoreMode = SR_UTILS_NS::Features::Instance().Enabled("SRARestoreMode", false);
+        static const SR_UTILS_NS::StringAtom RESTORE_MODE_TAG = "SRARestoreMode";
+        bool restoreMode = SR_UTILS_NS::Features::Instance().Enabled(RESTORE_MODE_TAG, false);
 
         for (int32_t i = 1; i < lines.size(); ++i) {
             std::string_view line = lines[i];
@@ -337,35 +338,31 @@ namespace SR_UTILS_NS {
                     continue;
                 }
                 case 'v': {
-                    //UpdateDepth(depth, i + 1);
                     auto& node = GetCurrentNode();
-                    auto&& newNode = node.children.emplace_back();
+                    auto&& newNode = node.AddChild(GetNodesPool());
                     newNode.id = SerializationId::CreateFromString(line.substr(line.find_first_of(':') + 1));
                     m_stack.emplace_back(&newNode);
                     continue;
                 }
                 case 'o': {
-                    //UpdateDepth(depth, i + 1);
                     auto& node = GetCurrentNode();
-                    auto&& newNode = node.children.emplace_back();
+                    auto&& newNode = node.AddChild(GetNodesPool());
                     newNode.id = SerializationId::CreateFromString(line.substr(line.find_first_of(':') + 1));
                     newNode.type = SerializationDataType::Object;
                     m_stack.emplace_back(&newNode);
                     break;
                 }
                 case 'a': {
-                    //UpdateDepth(depth, i + 1);
                     auto& node = GetCurrentNode();
-                    auto&& newNode = node.children.emplace_back();
+                    auto&& newNode = node.AddChild(GetNodesPool());
                     newNode.id = SerializationId::CreateFromString(line.substr(line.find_first_of(':') + 1));
                     newNode.type = SerializationDataType::Array;
                     m_stack.emplace_back(&newNode);
                     break;
                 }
                 case 'k': {
-                    //UpdateDepth(depth, i + 1);
                     auto& node = GetCurrentNode();
-                    auto&& newNode = node.children.emplace_back();
+                    auto&& newNode = node.AddChild(GetNodesPool());
                     newNode.id = SerializationId::CreateFromString(line.substr(line.find_first_of(':') + 1));
                     newNode.type = SerializationDataType::Item;
                     m_stack.emplace_back(&newNode);
@@ -374,7 +371,8 @@ namespace SR_UTILS_NS {
                 case 's': {
                     auto& node = GetCurrentNode();
                     node.type = SerializationDataType::String;
-                    node.string = std::string(line.substr(line.find_first_of(':') + 1));
+                    StringView data = line.substr(line.find_first_of(':') + 1);
+                    node.string = String(data, GetStringsPool());
                     m_stack.pop_back();
                     continue;
                 }
@@ -383,7 +381,8 @@ namespace SR_UTILS_NS {
                     node.type = SerializationDataType::String;
                     const uint32_t lineCount = FastSToU(line.substr(line.find_first_of(':') + 1));
 
-                    std::string multiline;
+                    static SR_THREAD_LOCAL String multiline;
+                    multiline.clear();
 
                     if (lineCount == 0) {
                         ReportError("Invalid line count: "s + std::to_string(lineCount));
@@ -401,7 +400,7 @@ namespace SR_UTILS_NS {
                             }
                         }
                     }
-                    node.string = multiline;
+                    node.string = String(multiline, GetStringsPool());
                     m_stack.pop_back();
                     continue;
                 }

@@ -1,75 +1,49 @@
 //
-// Created by Monika on 27.04.2025.
+// Created by Monika on 04.07.2026.
 //
 
-#include <Utils/Profile/TracyContext.h>
-
-bool g_TracyAllocatorInitialized = false;
+#include <Utils/Memory/Allocator.h>
 
 namespace SR_UTILS_NS {
-    static std::atomic<int64_t> g_heapAllocatedBytes = 0;
-
-    void OnMemoryAllocated(SR_UTILS_NS::SizeType size) {
-        g_heapAllocatedBytes += size;
+    void* DefaultAllocator::Allocate(SR_UTILS_NS::SizeType size, SR_UTILS_NS::SizeType alignment) {
+        return SRMalloc(size);
     }
 
-    void OnMemoryFreed(SR_UTILS_NS::SizeType size) {
-        g_heapAllocatedBytes -= size;
+    void* DefaultAllocator::ReAllocate(void* pMemory, SR_UTILS_NS::SizeType size, SR_UTILS_NS::SizeType alignment) {
+        return SRReAlloc(pMemory, size);
     }
 
-    SR_UTILS_NS::SizeType GetApplicationHeapSize() {
-        return g_heapAllocatedBytes.load();
+    void DefaultAllocator::Free(void* pMemory, SR_UTILS_NS::SizeType size, SR_UTILS_NS::SizeType alignment) {
+        SRFree(pMemory);
     }
-}
 
-void* SRMalloc(SR_UTILS_NS::SizeType size) {
-    if (g_TracyAllocatorInitialized) {
-        SR_TRACY_ZONE;
-        SR_TRACY_ZONE_COLOR(0xFF00FF00);
-        void* pAllocation = std::malloc(size);
-        if (!pAllocation) {
-            SRHalt("SRMalloc() : failed to allocate memory! Size: {}Mb", size / (1024 * 1024));
-        }
-        SR_TRACY_ALLOC(pAllocation, size);
-        return pAllocation;
+    void* UnSynchronizedPoolAllocator::Allocate(SR_UTILS_NS::SizeType size, SR_UTILS_NS::SizeType alignment) {
+        return m_poolResource.allocate(size, alignment);
     }
-    void* pAllocation = std::malloc(size);
-    if (!pAllocation) {
-        SRHalt("SRMalloc() : failed to allocate memory! Size: {}Mb", size / (1024 * 1024));
+
+    void* UnSynchronizedPoolAllocator::ReAllocate(void* pMemory, SR_UTILS_NS::SizeType size, SR_UTILS_NS::SizeType alignment) {
+        SRHalt("UnSynchronizedPoolAllocator::ReAllocate() : not available for pool allocator!");
+        return nullptr;
     }
-    return pAllocation;
-}
 
-void* SRReAlloc(void* pMemory, SR_UTILS_NS::SizeType size) {
-    if (g_TracyAllocatorInitialized) {
-        SR_TRACY_ZONE;
-        return std::realloc(pMemory, size);
+    void UnSynchronizedPoolAllocator::Free(void* pMemory, SR_UTILS_NS::SizeType size, SR_UTILS_NS::SizeType alignment) {
+        m_poolResource.deallocate(pMemory, size, alignment);
     }
-    return std::realloc(pMemory, size);
-}
 
-void SRFree(void* pMemory) {
-    if (g_TracyAllocatorInitialized) {
-        SR_TRACY_ZONE;
-        SR_TRACY_ZONE_COLOR(0xFFFF0000);
-        SR_TRACY_FREE(pMemory);
-        return std::free(pMemory);
+    MonotonicAllocator::MonotonicAllocator(SR_UTILS_NS::SizeType size)
+        : m_monotonicResource(size)
+    { }
+
+    void* MonotonicAllocator::Allocate(SR_UTILS_NS::SizeType size, SR_UTILS_NS::SizeType alignment) {
+        return m_monotonicResource.allocate(size, alignment);
     }
-    std::free(pMemory);
-}
 
-void* operator new(SR_UTILS_NS::SizeType size) {
-    return SRMalloc(size);
-}
+    void* MonotonicAllocator::ReAllocate(void* pMemory, SR_UTILS_NS::SizeType size, SR_UTILS_NS::SizeType alignment) {
+        SRHalt("MonotonicAllocator::ReAllocate() : not available for monotonic allocator!");
+        return nullptr;
+    }
 
-void operator delete(void* pMemory) noexcept {
-    SRFree(pMemory);
-}
-
-void* operator new[](SR_UTILS_NS::SizeType size) {
-    return SRMalloc(size);
-}
-
-void operator delete[](void* pMemory) noexcept {
-    SRFree(pMemory);
+    void MonotonicAllocator::Free(void* pMemory, SR_UTILS_NS::SizeType size, SR_UTILS_NS::SizeType alignment) {
+        /// Monotonic allocator does not support freeing individual allocations.
+    }
 }

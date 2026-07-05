@@ -39,7 +39,6 @@ namespace SR_UTILS_NS {
     }
 
     bool Serializable::HasSerializationFlags(const SerializationFlags flags) const noexcept {
-        SR_TRACY_ZONE;
         return SR_MATH_NS::IsMaskIncludedSubMask(m_flags, flags);
     }
 }

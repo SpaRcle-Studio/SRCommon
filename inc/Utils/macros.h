@@ -434,10 +434,12 @@ namespace SR_UTILS_NS {
     template<typename T> constexpr T&& Forward(RemoveReferenceT <T>&& t) noexcept {
         return static_cast<T &&>(t);
     }
+
+    using MaxAlignT = double; // most aligned type
 }
 
 #define SR_ALLOCATOR_INCLUDE_GUARD
-#include <Utils/Memory/Allocator.h>
+#include <Utils/Memory/BaseAllocator.h>
 #undef SR_ALLOCATOR_INCLUDE_GUARD
 
 #define SR_CODEGEN_DLL_API_EXPORT_UTILS_MODULE SR_CODEGEN_DLL_API_EXPORT

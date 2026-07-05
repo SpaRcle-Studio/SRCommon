@@ -72,7 +72,9 @@
     #include <numeric>
     #include <numbers>
     #include <execution>
+    #include <memory_resource>
     #include <future>
+    #include <cstddef>
 
     #define XXH_STATIC_LINKING_ONLY
     #include <xxHash/xxhash.h>

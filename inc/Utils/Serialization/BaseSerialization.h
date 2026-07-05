@@ -80,11 +80,19 @@ namespace SR_UTILS_NS {
             children.clear();
         }
 
+        SR_NODISCARD SerializationNode DetachAllocator() const noexcept;
+
+        SR_NODISCARD SerializationNode& AddChild(IAllocator* pAllocator);
+
         SerializationId id;
         SerializationDataType type = SerializationDataType::Unknown;
-        std::string string;
+        String string;
         SerializationTrivialDataType data = {};
-        std::vector<SerializationNode> children;
+        Vector<SerializationNode> children;
+
+    private:
+        void DetachAllocatorImpl() noexcept;
+
     };
 
     class IBaseSerializer;
@@ -104,6 +112,9 @@ namespace SR_UTILS_NS {
         SR_NODISCARD SerializationNode& GetWalkNode() noexcept { return *m_walker.back(); }
         SR_NODISCARD const SerializationNode& GetWalkNode() const noexcept { return *m_walker.back(); }
 
+        SR_NODISCARD IAllocator* GetStringsPool() const noexcept { return m_stringsPool.Get(); }
+        SR_NODISCARD IAllocator* GetNodesPool() const noexcept { return m_nodesPool.Get(); }
+
         void WriteNode(const SerializationNode& node) noexcept;
 
     protected:
@@ -111,9 +122,11 @@ namespace SR_UTILS_NS {
         SR_NODISCARD bool SaveToFileImpl(const SR_UTILS_NS::Path& path) const;
 
     protected:
+        SerializationNode m_root;
         SR_HTYPES_NS::FastMemoryArray<SerializationNode*> m_stack;
         SR_HTYPES_NS::FastMemoryArray<SerializationNode*> m_walker;
-        SerializationNode m_root;
+        SR_HTYPES_NS::RawPointerHolder<IAllocator> m_stringsPool;
+        SR_HTYPES_NS::RawPointerHolder<IAllocator> m_nodesPool;
 
     };
 
@@ -258,7 +271,12 @@ namespace SR_UTILS_NS {
             for (auto&& child : node.children) {
                 if (child.id.GetHash() == name.GetHash()) {
                     if (child.type == SerializationDataType::String) {
-                        value = child.string;
+                        if (child.string.HasAllocator()) {
+                            value = child.string.DetachAllocator();
+                        }
+                        else {
+                            value = child.string;
+                        }
                     }
                     break;
                 }
