@@ -4,63 +4,29 @@
 
 #include <Utils/Math/Rect.h>
 
-namespace SR_MATH_NS::StaticTest {
-    /*SR_MAYBE_UNUSED static constexpr bool VerifyRectTest1() {
-        IRect rect(5, -5, 10, -10);
+namespace SR_MATH_NS {
+    FVector2 ClipToRectEdge(const FRect& rect, const FVector2& from, const FVector2& to) {
+        const FVector2 c = rect.Center();
+        FVector2 dir = to - from;
+        const float len = std::sqrt(dir.x * dir.x + dir.y * dir.y);
+        dir = len > 0.0001f ? (dir / len) : FVector2(1.f, 0.f);
 
-        const int32_t right = rect.Right() + 5;
-        const int32_t top = rect.Top() + 5;
+        const float halfW = rect.Width() * 0.5f;
+        const float halfH = rect.Height() * 0.5f;
 
-        rect.SetRight(right);
-        rect.SetTop(top);
+        const float adx = std::abs(dir.x);
+        const float ady = std::abs(dir.y);
 
-        rect.SetLeft(5);
-        rect.SetBottom(5);
+        float s = 0.f;
+        if (adx * halfH > ady * halfW) {
+            // hit left/right
+            s = halfW / (adx > 0.0001f ? adx : 1.f);
+        }
+        else {
+            // hit top/bottom
+            s = halfH / (ady > 0.0001f ? ady : 1.f);
+        }
 
-        return rect.Right() == right && rect.Top() == top;
+        return c + dir * s;
     }
-
-    SR_MAYBE_UNUSED static constexpr bool VerifyRectTest2() {
-        IRect rect(5, -5, 10, -10);
-
-        const int32_t right = rect.Right() + 5;
-        const int32_t top = rect.Top() + 5;
-
-        rect.SetRight(right);
-        rect.SetTop(top);
-
-        rect.SetLeft(-5);
-        rect.SetBottom(-5);
-
-        return rect.Right() == right && rect.Top() == top;
-    }
-
-    SR_MAYBE_UNUSED static constexpr bool VerifyRectTest3() {
-        IRect rect(5, -5, 10, -10);
-
-        const int32_t left = rect.Left();
-        const int32_t bottom = rect.Bottom();
-
-        rect.SetRight(5);
-        rect.SetTop(5);
-
-        return rect.Left() == left && rect.Bottom() == bottom;
-    }
-
-    SR_MAYBE_UNUSED static constexpr bool VerifyRectTest4() {
-        IRect rect(5, -5, 10, -10);
-
-        const int32_t left = rect.Left();
-        const int32_t bottom = rect.Bottom();
-
-        rect.SetRight(-5);
-        rect.SetTop(-5);
-
-        return rect.Left() == left && rect.Bottom() == bottom;
-    }
-
-    SR_STATIC_ASSERT2(VerifyRectTest1(), "Failed verify rect!");
-    SR_STATIC_ASSERT2(VerifyRectTest2(), "Failed verify rect!");
-    SR_STATIC_ASSERT2(VerifyRectTest3(), "Failed verify rect!");
-    SR_STATIC_ASSERT2(VerifyRectTest4(), "Failed verify rect!");*/
 }

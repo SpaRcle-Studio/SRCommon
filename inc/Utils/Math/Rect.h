@@ -356,6 +356,8 @@ namespace SR_MATH_NS {
     typedef Rect<int32_t> IRect;
     typedef Rect<uint32_t> URect;
     typedef Rect<uint16_t> USRect;
+
+    SR_MATH_NS::FVector2 ClipToRectEdge(const SR_MATH_NS::FRect& rect, const SR_MATH_NS::FVector2& from, const SR_MATH_NS::FVector2& to);
 }
 
 template<typename T> struct fmt::formatter<SR_MATH_NS::Rect<T>> {

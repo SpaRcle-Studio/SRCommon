@@ -269,6 +269,11 @@ namespace SR_MATH_NS {
             return x == static_cast<T>(value) || y == static_cast<T>(value);
         }
 
+        template<typename U> SR_NODISCARD bool Contains(const Vector2<U>& value) const {
+            return (x >= static_cast<T>(value.x) && x <= static_cast<T>(value.y)) ||
+                   (y >= static_cast<T>(value.x) && y <= static_cast<T>(value.y));
+        }
+
         SR_NODISCARD SR_FORCE_INLINE glm::vec2 ToGLM() const noexcept {
             return { static_cast<float_t>(x), static_cast<float_t>(y) };
         }
@@ -298,6 +303,8 @@ namespace SR_MATH_NS {
     SR_INLINE static const FVector2 InfinityFV2 = FVector2 { UnitMAX, UnitMAX };
 
     constexpr IVector2 IVector2MAX = IVector2(SR_INT32_MAX);
+
+    SR_NODISCARD float_t DistanceToLineSegment(const FVector2& point, const FVector2& lineStart, const FVector2& lineEnd);
 }
 
 namespace std {
