@@ -9,6 +9,8 @@
 #include <Utils/Types/StringAtom.h>
 #include <Utils/Types/Function.h>
 
+#include <mutex>
+
 template <typename EnumType> struct EnumSelector {};
 
 template<typename T> constexpr SR_UTILS_NS::EnumVariant GetEnumVariant(T) noexcept;
@@ -73,7 +75,7 @@ namespace SR_UTILS_NS {
 
         template<typename EnumType> SR_NODISCARD static const std::vector<SR_UTILS_NS::StringAtom>& GetNames();
         template<typename EnumType> SR_NODISCARD static const std::vector<Enumerator>& GetValues();
-        template<typename EnumType> SR_NODISCARD static std::vector<SR_UTILS_NS::StringAtom> GetNamesFilter(const std::function<bool(EnumType)>& filter);
+        template<typename EnumType> SR_NODISCARD static std::vector<SR_UTILS_NS::StringAtom> GetNamesFilter(const SR_HTYPES_NS::Function<bool(EnumType)>& filter);
 
         template<typename EnumType> SR_NODISCARD static int64_t GetIndex(EnumType value);
         template<typename EnumType> SR_NODISCARD static int64_t GetIndex(int64_t value);
@@ -240,7 +242,7 @@ namespace SR_UTILS_NS {
         return GetReflector<EnumType>()->m_data->values;
     }
 
-    template<typename EnumType> std::vector<SR_UTILS_NS::StringAtom> EnumReflector::GetNamesFilter(const std::function<bool(EnumType)> &filter) {
+    template<typename EnumType> std::vector<SR_UTILS_NS::StringAtom> EnumReflector::GetNamesFilter(const SR_HTYPES_NS::Function<bool(EnumType)> &filter) {
         std::vector<SR_UTILS_NS::StringAtom> names;
 
         auto&& data = GetReflector<EnumType>()->m_data;
@@ -320,6 +322,21 @@ namespace SR_UTILS_NS {
     }
 
     template<typename EnumType> EnumReflector* EnumReflector::GetReflector() {
+        static std::once_flag s_registerOnce;
+        std::call_once(s_registerOnce, []() {
+            if constexpr (std::is_class_v<EnumType>) {
+                if constexpr (std::is_enum_v<EnumType>) {
+                    SR_CODEGEN_REGISTER_ENUM_REFLECTOR(EnumType());
+                }
+                else {
+                    SR_CODEGEN_REGISTER_ENUM_REFLECTOR(EnumType::TypeT());
+                }
+            }
+            else {
+                SR_CODEGEN_REGISTER_ENUM_REFLECTOR(EnumType());
+            }
+        });
+
         if constexpr (std::is_class_v<EnumType>) {
             if constexpr (std::is_enum_v<EnumType>) {
                 return EnumReflectorManager::Instance().GetReflector(SR_CODEGEN_GET_ENUM_HASH_NAME_BY_TYPE(EnumType()));
@@ -393,7 +410,5 @@ namespace SR_UTILS_NS {
                 .RegisterReflector(SR_CODEGEN_ALLOCATE_ENUM_REFLECTOR(enumName()));                                     \
         return true;                                                                                                    \
     }                                                                                                                   \
-    SR_INLINE_STATIC const bool SR_MACRO_CONCAT(enumName, RegistrationCodegenResult) =            /** NOLINT */         \
-        SR_CODEGEN_REGISTER_ENUM_REFLECTOR(enumName());                                           /** NOLINT */         \
 
 #endif //SR_ENGINE_ENUMREFLECTOR_H

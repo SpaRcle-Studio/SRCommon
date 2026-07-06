@@ -65,9 +65,9 @@ namespace SR_HTYPES_NS {
             return SafePtr<U>(dynamic_cast<U*>(m_ptr));
         }
 
-        bool Do(const std::function<void(T* ptr)>& func);
-        template<typename U> U Do(const std::function<U(T* ptr)>& func, U _default);
-        template<typename U> U TryDo(const std::function<U(T* ptr)>& func, U _default);
+        bool Do(const SR_HTYPES_NS::Function<void(T* ptr)>& func);
+        template<typename U> U Do(const SR_HTYPES_NS::Function<U(T* ptr)>& func, U _default);
+        template<typename U> U TryDo(const SR_HTYPES_NS::Function<U(T* ptr)>& func, U _default);
 
         SR_NODISCARD bool TryLockIfValid() const;
         SR_NODISCARD bool TryRecursiveLockIfValid() const;
@@ -84,10 +84,10 @@ namespace SR_HTYPES_NS {
         SR_NODISCARD bool IsLocked() const { return Valid() && m_data->m_lock; }
         SR_NODISCARD uint32_t GetUseCount() const;
 
-        bool AutoFree(const std::function<void(T *ptr)> &freeFun);
+        bool AutoFree(const SR_HTYPES_NS::Function<void(T *ptr)> &freeFun);
         bool AutoFree();
     private:
-        bool FreeImpl(const std::function<void(T *ptr)> &freeFun);
+        bool FreeImpl(const SR_HTYPES_NS::Function<void(T *ptr)> &freeFun);
 
     private:
         SafePtrDynamicData* m_data = nullptr;
@@ -214,7 +214,7 @@ namespace SR_HTYPES_NS {
         return *this;
     }
 
-    template<typename T> bool SafePtr<T>::AutoFree(const std::function<void(T *)> &freeFun) {
+    template<typename T> bool SafePtr<T>::AutoFree(const SR_HTYPES_NS::Function<void(T *)> &freeFun) {
         SafePtr<T> ptrCopy = SafePtr<T>(*this);
         /// после вызова FreeImpl this может потенциально инвалидироваться!
 
@@ -242,7 +242,7 @@ namespace SR_HTYPES_NS {
         return result;
     }
 
-    template<typename T> bool SafePtr<T>::FreeImpl(const std::function<void(T *ptr)> &freeFun) {
+    template<typename T> bool SafePtr<T>::FreeImpl(const SR_HTYPES_NS::Function<void(T *ptr)> &freeFun) {
         if (m_data && m_data->m_valid) {
             freeFun(m_ptr);
             m_data->m_valid = false;
@@ -495,7 +495,7 @@ namespace SR_HTYPES_NS {
         m_data->m_lock.store(false, std::memory_order_release);
     }
 
-    template<class T> bool SafePtr<T>::Do(const std::function<void(T *)> &func)  {
+    template<class T> bool SafePtr<T>::Do(const SR_HTYPES_NS::Function<void(T *)> &func)  {
         if (RecursiveLockIfValid()) {
             func(m_ptr);
             Unlock();
@@ -505,7 +505,7 @@ namespace SR_HTYPES_NS {
         return false;
     }
 
-    template<class T> template<typename U> U SafePtr<T>::Do(const std::function<U(T *)> &func, U _default) {
+    template<class T> template<typename U> U SafePtr<T>::Do(const SR_HTYPES_NS::Function<U(T *)> &func, U _default) {
         if (RecursiveLockIfValid()) {
             const auto&& result = func(m_ptr);
             Unlock();
@@ -515,7 +515,7 @@ namespace SR_HTYPES_NS {
         return _default;
     }
 
-    template<class T> template<typename U> U SafePtr<T>::TryDo(const std::function<U(T *)> &func, U _default) {
+    template<class T> template<typename U> U SafePtr<T>::TryDo(const SR_HTYPES_NS::Function<U(T *)> &func, U _default) {
         if (TryLockIfValid()) {
             const auto&& result = func(m_ptr);
             Unlock();

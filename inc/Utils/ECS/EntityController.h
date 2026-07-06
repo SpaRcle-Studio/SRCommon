@@ -8,7 +8,7 @@
 #include <Utils/ECS/Entity.h>
 
 namespace SR_UTILS_NS {
-    typedef std::function<Entity::Ptr(void)> EntityAllocator;
+    typedef SR_HTYPES_NS::Function<Entity::Ptr(void)> EntityAllocator;
 
     class EntityController final : public SR_HTYPES_NS::SharedPtr<EntityController> {
         using Super = SR_HTYPES_NS::SharedPtr<EntityController>;

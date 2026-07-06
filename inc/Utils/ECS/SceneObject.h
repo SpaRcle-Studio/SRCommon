@@ -89,8 +89,8 @@ namespace SR_UTILS_NS {
         bool MoveToTree(const SceneObject::Ptr& destination);
         void RemoveChild(const SceneObject::Ptr& pChild);
         bool AddChild(const SceneObject::Ptr& pChild);
-        void ForEachChild(const std::function<void(SceneObject::Ptr&)>& fn);
-        void ForEachChild(const std::function<void(const SceneObject::Ptr&)>& fn) const;
+        void ForEachChild(const SR_HTYPES_NS::Function<void(SceneObject::Ptr&)>& fn);
+        void ForEachChild(const SR_HTYPES_NS::Function<void(const SceneObject::Ptr&)>& fn) const;
         bool SetParent(const SceneObject::Ptr& parent);
         void SetName(ObjectNameT name);
         void SetTag(SR_UTILS_NS::StringAtom tag);

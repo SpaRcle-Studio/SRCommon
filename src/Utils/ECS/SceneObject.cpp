@@ -675,7 +675,7 @@ namespace SR_UTILS_NS {
         return Super::VerifyAfterLoad(context);
     }
 
-    void SceneObject::ForEachChild(const std::function<void(SceneObject::Ptr&)>& fn) {
+    void SceneObject::ForEachChild(const SR_HTYPES_NS::Function<void(SceneObject::Ptr&)>& fn) {
         SR_TRACY_ZONE;
         for (auto&& child : m_children) {
             if (child.Valid()) {
@@ -684,7 +684,7 @@ namespace SR_UTILS_NS {
         }
     }
 
-    void SceneObject::ForEachChild(const std::function<void(const SceneObject::Ptr&)>& fn) const {
+    void SceneObject::ForEachChild(const SR_HTYPES_NS::Function<void(const SceneObject::Ptr&)>& fn) const {
         for (auto&& child : m_children) {
             if (child) {
                 fn(child);

@@ -10,25 +10,6 @@
 #include <Utils/TypeTraits/Factory.h>
 
 namespace SR_UTILS_NS::Reflection {
-    /*static void ForEachSRClass(const SR_UTILS_NS::Reflection::Value& value, const SR_HTYPES_NS::Function<void(SRClass&)>& callback) {
-        if (value.IsClass()) {
-            if (auto&& pSRClass = value.GetSRClass()) {
-                callback(*pSRClass);
-                pSRClass->GetMeta()->ForEachProperty([&callback, pSRClass](const SR_UTILS_NS::Reflection::Property& property, uint64_t index) {
-                    ForEachSRClass(property.Get(pSRClass), callback);
-                });
-                return;
-            }
-        }
-
-        if (value.IsSequenceContainer()) {
-            auto&& container = value.AsSequenceContainer();
-            for (auto&& pIt = container.begin(); pIt != container.end(); ++pIt) {
-                ForEachSRClass(*pIt, callback);
-            }
-        }
-    }*/
-
     template<typename T> SR_INLINE void CloneTo(const T& from, T& to) {
         if constexpr (IsSRClassV<T>) {
             from.CloneTo(to);

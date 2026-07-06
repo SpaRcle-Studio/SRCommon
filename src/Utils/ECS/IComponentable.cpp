@@ -122,7 +122,7 @@ namespace SR_UTILS_NS {
         return true;
     }
 
-    void IComponentable::ForEachComponent(const std::function<bool(const Component::Ptr&)> &fun) const {
+    void IComponentable::ForEachComponent(const SR_HTYPES_NS::Function<bool(const Component::Ptr&)> &fun) const {
         for (uint32_t i = 0; i < m_components.size(); ++i) {
             auto&& pComponent = m_components[i];
             if (!fun(pComponent)) {
@@ -131,7 +131,7 @@ namespace SR_UTILS_NS {
         }
     }
 
-    void IComponentable::ForEachComponent(const std::function<bool(Component::Ptr&)> &fun) {
+    void IComponentable::ForEachComponent(const SR_HTYPES_NS::Function<bool(Component::Ptr&)> &fun) {
         for (uint32_t i = 0; i < m_components.size(); ++i) {
             auto&& pComponent = m_components[i];
             if (!fun(pComponent)) {

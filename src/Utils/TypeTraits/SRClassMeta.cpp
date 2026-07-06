@@ -44,7 +44,7 @@ namespace SR_UTILS_NS {
     	return false;
     }
 
-    void SRClassMeta::ForEachProperty(const std::function<void(const SR_UTILS_NS::Reflection::Property& property, uint64_t index)>& func, uint64_t* pIndex) const {
+    void SRClassMeta::ForEachProperty(const SR_HTYPES_NS::Function<void(const SR_UTILS_NS::Reflection::Property& property, uint64_t index)>& func, uint64_t* pIndex) const {
     	uint64_t index = 0;
     	if (!pIndex) {
     		pIndex = &index;
@@ -60,7 +60,7 @@ namespace SR_UTILS_NS {
     	}
     }
 
-    void SRClassMeta::ForEachMethod(const std::function<void(const SR_UTILS_NS::Reflection::Method& method, uint64_t index)>& func, uint64_t* pIndex) const {
+    void SRClassMeta::ForEachMethod(const SR_HTYPES_NS::Function<void(const SR_UTILS_NS::Reflection::Method& method, uint64_t index)>& func, uint64_t* pIndex) const {
     	uint64_t index = 0;
     	if (!pIndex) {
     		pIndex = &index;
@@ -200,36 +200,6 @@ namespace SR_UTILS_NS {
         for (auto&& pBase : GetBaseMetas()) {
             pBase->CloneTo(src, dest);
         }
-
-        /*auto&& properties = src.GetMeta()->GetProperties();
-
-        for (auto&& property : properties) {
-            switch (property.GetSRClassContainsMode()) {
-                case Reflection::PropertySRClassContainsMode::NotContains:
-                    property.Set(&dest, property.Get(const_cast<SRClass*>(&src)));
-                    break;
-                case Reflection::PropertySRClassContainsMode::SharedPointer: {
-                    if (auto&& pSrcSharedPtrBase = property.Get(const_cast<SRClass*>(&src)).GetSharedPtrBase()) {
-                        if (auto&& pSrcSRClass = pSrcSharedPtrBase->GetSRClass()) {
-                            SR_HTYPES_NS::SharedPtr<SRClass> pClone = SR_UTILS_NS::Factory::Instance().CreateBase(pSrcSRClass->GetMeta()->GetFactoryName());
-                            pSrcSRClass->CloneTo(*pClone);
-                            property.Set(&dest, SR_UTILS_NS::Reflection::Value::Create(pClone));
-                        }
-                    }
-                    break;
-                }
-                case Reflection::PropertySRClassContainsMode::Contains: {
-                    SRClass* pDestination = property.Get(&dest).GetSRClass();
-                    property.Get(const_cast<SRClass*>(&src)).GetSRClass()->CloneTo(*pDestination);
-                    break;
-                }
-                case Reflection::PropertySRClassContainsMode::Inner:
-                    break;
-                default:
-                    SRHalt("Unknown SRClassContainsMode!");
-                    break;
-            }
-        }*/
     }
 
     const SR_UTILS_NS::Reflection::Method* SRClassMeta::FindMethod(StringAtom name) const noexcept {

@@ -85,13 +85,6 @@ namespace SR_UTILS_NS::Reflection {
 
     };
 
-    enum class PropertySRClassContainsMode {
-        NotContains,
-        SharedPointer,
-        Contains,
-        Inner
-    };
-
     class Property {
         using SetCallbackFn = void(*)(SRClass* pOwner, const Value& value);
         using GetCallbackFn = Value(*)(SRClass* pOwner);
@@ -136,8 +129,6 @@ namespace SR_UTILS_NS::Reflection {
             return m_publicity == PropertyPublicity::ReadOnly || m_publicity == PropertyPublicity::HiddenReadOnly;
         }
 
-        SR_NODISCARD PropertySRClassContainsMode GetSRClassContainsMode() const noexcept { return m_srClassContainsMode; }
-
         Property& SetName(const StringAtom& name) noexcept { m_name = name; return *this; }
         Property& SetSerializeName(const StringAtom& serializeName) noexcept { m_serializeName = serializeName; return *this; }
         Property& SetPublicity(PropertyPublicity publicity) noexcept { m_publicity = publicity; return *this; }
@@ -150,22 +141,6 @@ namespace SR_UTILS_NS::Reflection {
         Property& SetPropertyCondition(PropertyActiveCallbackFn callback) noexcept { m_propertyActiveCallback = callback; return *this; }
         Property& SetHasExplicitSetter(bool hasExplicitSetter) noexcept { m_hasExplicitSetter = hasExplicitSetter; return *this; }
         Property& SetDisplayName(const StringAtom& displayName) noexcept { m_displayName = displayName; return *this; }
-
-        template<typename T> Property& CheckSRClass() {
-            if constexpr (IsSRClassV<T>) {
-                m_srClassContainsMode = PropertySRClassContainsMode::Contains;
-            }
-            else if constexpr (IsSharedPointerV<T>) {
-                m_srClassContainsMode = PropertySRClassContainsMode::SharedPointer;
-            }
-            else if constexpr (ContainsSRClassV<T>) {
-                m_srClassContainsMode = PropertySRClassContainsMode::Inner;
-            }
-            else {
-                m_srClassContainsMode = PropertySRClassContainsMode::NotContains;
-            }
-            return *this;
-        }
 
     private:
         EditorPropertyParams m_editorParams;
@@ -180,7 +155,6 @@ namespace SR_UTILS_NS::Reflection {
         ChangeCallbackFn m_onChangeCallback = nullptr;
         PropertyActiveCallbackFn m_propertyActiveCallback = nullptr;
         bool m_hasExplicitSetter = false;
-        PropertySRClassContainsMode m_srClassContainsMode = PropertySRClassContainsMode::NotContains;
     };
 
     template<typename T> SR_UTILS_NS::StringAtom GetPropertyInspector() {

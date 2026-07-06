@@ -90,7 +90,7 @@ namespace SR_UTILS_NS {
         return nullptr;
     }
 
-    void Factory::ForEachClassInModule(SR_UTILS_NS::StringAtom moduleName, const std::function<void(const SRClassMeta*)>& func) const noexcept {
+    void Factory::ForEachClassInModule(SR_UTILS_NS::StringAtom moduleName, const SR_HTYPES_NS::Function<void(const SRClassMeta*)>& func) const noexcept {
         for (auto&& [name, info] : m_types) {
             if (info.moduleName == moduleName) {
                 if (auto&& pMeta = info.metaGetter()) {

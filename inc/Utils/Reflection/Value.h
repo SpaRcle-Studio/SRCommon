@@ -2,7 +2,7 @@
 // Created by Monika on 20.01.2025.
 //
 
-#if !defined(SR_UTILS_TYPE_TRAITS_VALUE_H) && defined(SR_ENGINE_COMMON_PCH_FOR_BASE_CODE)
+#ifndef SR_UTILS_TYPE_TRAITS_VALUE_H
 #define SR_UTILS_TYPE_TRAITS_VALUE_H
 
 #include <Utils/Reflection/ValueImpl.h>
