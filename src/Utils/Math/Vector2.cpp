@@ -5,6 +5,12 @@
 #include <Utils/Math/Vector2.h>
 
 namespace SR_MATH_NS {
+    template class Vector2<Unit>;
+    template class Vector2<uint16_t>;
+    template class Vector2<int32_t>;
+    template class Vector2<uint32_t>;
+    template class Vector2<bool>;
+
     float_t DistanceToLineSegment(const FVector2 &point, const FVector2 &lineStart, const FVector2 &lineEnd) {
         const FVector2 line = lineEnd - lineStart;
         const float_t lineLengthSquared = line.Length() * line.Length();

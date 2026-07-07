@@ -211,22 +211,25 @@ namespace SR_MATH_NS {
             return coefficient;
         }
 
-        SR_NODISCARD Quaternion LookAt(const Vector3& target) const {
-            const auto&& direction = (target - *this).Normalized();
-            const auto&& cosAngle = UnitZ().Dot(direction);
+        SR_NODISCARD Quaternion LookAt(const Vector3& target) const requires(std::is_same_v<T, Unit>) {
+            if constexpr (std::is_same_v<T, Unit>) {
+                const auto &&direction = (target - *this).Normalized();
+                const auto &&cosAngle = UnitZ().Dot(direction);
 
-            if (cosAngle >= 1.0 - static_cast<T>(SR_EPSILON)) {
+                if (cosAngle >= 1.0 - static_cast<T>(SR_EPSILON)) {
+                    return Quaternion::Identity();
+                } else if (cosAngle <= -1.0 + static_cast<T>(SR_EPSILON)) {
+                    return Quaternion::FromAxisAngle(UnitX(), static_cast<T>(SR_PI));
+                }
+
+                const auto &&axis = UnitZ().Cross(direction);
+                const auto &&angle = std::acos(cosAngle);
+
+                return Quaternion::FromAxisAngle(axis, angle);
+            }
+            else {
                 return Quaternion::Identity();
             }
-
-            else if (cosAngle <= -1.0 + static_cast<T>(SR_EPSILON)) {
-                return Quaternion(UnitY(), SR_PI);
-            }
-
-            const auto&& axis = UnitZ().Cross(direction);
-            const auto&& angle = std::acos(cosAngle);
-
-            return Quaternion(axis, angle);
         }
 
         SR_NODISCARD T SqrMagnitude() const {
@@ -328,13 +331,13 @@ namespace SR_MATH_NS {
             return unsignedAngle * sign;
         }
 
-        SR_NODISCARD Quaternion AngleAxis(const Vector3& target, const Vector3& axis = Vector3::UnitZ()) const {
+        SR_NODISCARD Quaternion AngleAxis(const Vector3& target, const Vector3& axis = Vector3::UnitZ()) const requires(std::is_same_v<T, Unit>) {
             auto&& direction = (target - *this).Normalized();
 
             auto&& crossAxis = axis.Cross(direction);
             const Unit angle = acos(axis.Dot(direction));
 
-            return Quaternion(crossAxis, angle);
+            return Quaternion::AngleAxis(angle, crossAxis);
         }
 
         SR_NODISCARD std::string ToString() const {
@@ -606,7 +609,7 @@ namespace SR_MATH_NS {
             );
         }
 
-        SR_NODISCARD Quaternion ToQuat() const;
+        SR_NODISCARD Quaternion ToQuat() const requires(std::is_same_v<T, Unit>);
 
         SR_FORCE_INLINE const T &operator[](int p_axis) const {
             return coord[p_axis];
@@ -647,10 +650,6 @@ namespace SR_MATH_NS {
             return Vector3(static_cast<T>(std::round(x)), static_cast<T>(std::round(y)), static_cast<T>(std::round(z)));
         }
 
-        SR_NODISCARD Vector3 FixEulerAngles() const {
-            return Vector3(FixAxis(x), FixAxis(y), FixAxis(z));
-        }
-
         SR_NODISCARD T Dot(const Vector3<T>& p_b) const {
             return static_cast<T>(
                 static_cast<double_t>(x) * static_cast<double_t>(p_b.x) +
@@ -669,7 +668,7 @@ namespace SR_MATH_NS {
             return ret;
         }
 
-        SR_NODISCARD Vector3<T> Rotate(const Quaternion& q) const;
+        SR_NODISCARD Vector3<T> Rotate(const Quaternion& q) const requires(std::is_same_v<T, Unit>);
 
         template<typename U> SR_FORCE_INLINE Vector3<T>& SR_FASTCALL TemplateOperatorPlusAssign(const Vector3<U> &p_v){
             if constexpr (!std::is_same_v<T, bool>) {
@@ -803,21 +802,15 @@ namespace SR_MATH_NS {
         static Vector3 Cross(const Vector3 &p_a, const Vector3 &p_b) {
             return p_a.Cross(p_b);
         }
-
-        static T FixAxis(T axis) {
-            if (axis == 0)
-                return static_cast<T>(CMP_BIG_EPSILON);
-
-            T absolute = std::abs(axis);
-            if (SR_EQUALS(absolute, 90) || SR_EQUALS(absolute, 180) || SR_EQUALS(absolute, 270) || SR_EQUALS(absolute, 360))
-                return axis - static_cast<T>(CMP_BIG_EPSILON);
-
-            return axis;
-        }
     };
 
+    extern template class Vector3<Unit>;
+    extern template class Vector3<uint16_t>;
+    extern template class Vector3<int32_t>;
+    extern template class Vector3<uint32_t>;
+    extern template class Vector3<bool>;
+
     typedef Vector3<Unit> FVector3;
-    typedef Vector3<double_t> DVector3;
     typedef Vector3<int32_t> IVector3;
     typedef Vector3<uint32_t> UVector3;
     typedef Vector3<bool> BVector3;
@@ -830,14 +823,16 @@ namespace SR_MATH_NS {
     };
 
 #ifdef SR_COMMON_DLL_EXPORTS
-    // bool inRads
-    template<typename T>
-    Quaternion Vector3<T>::ToQuat() const {
-        return Quaternion(*this); //, inRads
+    template<typename T> Quaternion Vector3<T>::ToQuat() const requires(std::is_same_v<T, Unit>) {
+        if constexpr (std::is_same_v<T, Unit>) {
+            return Quaternion(*this); //, inRads
+        }
+        else {
+            return Quaternion::Identity();
+        }
     }
 
-    template<typename T>
-    Vector3<T> Vector3<T>::Rotate(const Quaternion &q) const  {
+    template<typename T> Vector3<T> Vector3<T>::Rotate(const Quaternion &q) const requires(std::is_same_v<T, Unit>)  {
         // Extract the vector part of the quaternion
         Vector3 u(q.self.x, q.self.y, q.self.z);
 

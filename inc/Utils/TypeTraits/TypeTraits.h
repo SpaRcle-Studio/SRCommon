@@ -15,7 +15,6 @@
 namespace SR_UTILS_NS {
 	struct SR_COMMON_DLL_API SerializationId {
 		SR_CONSTEXPR SerializationId() noexcept = default;
-
 		SR_CONSTEXPR ~SerializationId() noexcept = default;
 
 		template<uint64_t S> static constexpr SerializationId Create(const char (&text)[S]) noexcept {
@@ -29,29 +28,14 @@ namespace SR_UTILS_NS {
 			return id;
 		}
 
-		static SerializationId CreateFromCStr(const char* text) noexcept {
-			SerializationId id;
-			SR_STRNCPY(id.name, text, MaxNameLength - 1);
-			id.name[MaxNameLength - 1] = '\0';
-			id.hash = ComputeHash(text);
-            id.length = strlen(text);
-			return id;
-		}
+		static SerializationId CreateFromCStr(const char* text) noexcept;
+		static SerializationId CreateFromString(std::string_view text) noexcept;
 
-		static SerializationId CreateFromString(const std::string_view text) noexcept {
-			SerializationId id;
-			SR_STRNCPY(id.name, text.data(), SR_MIN(text.size(), MaxNameLength - 1));
-			id.name[MaxNameLength - 1] = '\0';
-			id.hash = ComputeHash(text);
-            id.length = SR_MIN(text.size(), MaxNameLength - 1);
-			return id;
-		}
-
-		SR_NODISCARD SR_INLINE uint64_t GetSize() const noexcept { return sizeof(name); }
-		SR_NODISCARD SR_INLINE const char* GetName() const noexcept { return name; }
-		SR_NODISCARD SR_INLINE uint64_t GetHash() const noexcept { return hash; }
-		SR_NODISCARD SR_INLINE std::string ToString() const noexcept { return std::string(name); }
-		SR_NODISCARD SR_INLINE StringView GetNameView() const noexcept { return StringView(name, length); }
+		SR_NODISCARD uint64_t GetSize() const noexcept { return sizeof(name); }
+		SR_NODISCARD const char* GetName() const noexcept { return name; }
+		SR_NODISCARD uint64_t GetHash() const noexcept { return hash; }
+		SR_NODISCARD std::string ToString() const noexcept { return std::string(name); }
+		SR_NODISCARD StringView GetNameView() const noexcept { return StringView(name, length); }
 
 	private:
 		static constexpr uint64_t MaxNameLength = 128;
@@ -60,7 +44,7 @@ namespace SR_UTILS_NS {
 		char name[MaxNameLength]{};
 	};
 
-	template <typename T, typename = void>
+    template <typename T, typename = void>
 	struct IsCompleteType : std::false_type {};
 
 	template <typename T>
@@ -78,7 +62,7 @@ namespace SR_UTILS_NS {
 	{};
 
 	template<template<typename, size_t> typename Tmpl>
-	SR_INLINE constexpr bool IsStdArrayTemplateV = IsStdArrayTemplate<Tmpl>::value;
+    constexpr bool IsStdArrayTemplateV = IsStdArrayTemplate<Tmpl>::value;
 
 	template<typename T>
 	struct IsTypeFromStdArrayTemplate : std::false_type
@@ -89,7 +73,7 @@ namespace SR_UTILS_NS {
 	{};
 
 	template<typename T>
-	SR_INLINE constexpr bool IsTypeFromStdArrayTemplateV = IsTypeFromStdArrayTemplate<T>::value;
+    constexpr bool IsTypeFromStdArrayTemplateV = IsTypeFromStdArrayTemplate<T>::value;
 
 	namespace Details
 	{

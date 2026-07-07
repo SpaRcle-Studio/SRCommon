@@ -109,7 +109,13 @@ namespace SR_MATH_NS {
         }
 
         SR_NODISCARD Vector2 Abs() const {
-            return Vector2(static_cast<T>(abs(x)), static_cast<T>(abs(y)));
+            /// if its unsigned type, then abs is not needed
+            if constexpr (std::is_unsigned_v<T>) {
+                return *this;
+            }
+            else {
+                return Vector2(static_cast<T>(abs(x)), static_cast<T>(abs(y)));
+            }
         }
 
         SR_NODISCARD Vector2 InverseX() const { return Vector2(static_cast<T>(-x), y); }
@@ -290,6 +296,12 @@ namespace SR_MATH_NS {
             return "(" + std::to_string(x) + ", " + std::to_string(y) + ")";
         }
     };
+
+    extern template class Vector2<Unit>;
+    extern template class Vector2<uint16_t>;
+    extern template class Vector2<int32_t>;
+    extern template class Vector2<uint32_t>;
+    extern template class Vector2<bool>;
 
     typedef Vector2<Unit> FVector2;
     typedef Vector2<Unit> FPoint;

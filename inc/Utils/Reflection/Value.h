@@ -244,60 +244,21 @@ namespace SR_UTILS_NS::Reflection {
 
         SR_NODISCARD operator bool() const noexcept; /// NOLINT
 
-    //private:
-    //    template<typename T> static void InitBase(Value& value);
-
     private:
         entt::meta_any m_storage;
 
     };
 
-    /// Implementation
-
-    //template<typename T> void Value::InitBase(Value& value) {
-        /*if constexpr (IsSharedPointerV<T>) {
-            value.m_SRClassGetter = [](const Value& value) -> SRClass* {
-                if (auto&& pData = value.TryCast<T>()) {
-                    return const_cast<SRClass*>(dynamic_cast<const SRClass*>((*pData).Get()));
-                }
-                return nullptr;
-            };
-
-            if constexpr (!std::is_abstract_v<T>) {
-                value.m_SRClassSetter = [](Value& value, SRClass* pSRClass) {
-                    value.m_storage = entt::meta_any(*(dynamic_cast<T*>(pSRClass)));
-                };
-            }
-        }
-        else if constexpr (std::is_base_of_v<SRClass, T> || std::is_same_v<SRClass, T>) {
-            value.m_SRClassGetter = [](const Value& value) -> SRClass* {
-                if (auto&& pData = value.TryCast<T>()) {
-                    return const_cast<SRClass*>(dynamic_cast<const SRClass*>(pData));
-                }
-                return nullptr;
-            };
-        }*/
-    //}
-
     template<typename T> Value Value::Create(T&& value) {
         return Value(entt::meta_any(std::forward<T>(value)));
-        //auto&& reflected = Value(entt::meta_any(std::forward<T>(value)));
-        //InitBase<T>(reflected);
-        //return std::move(reflected);
     }
 
     template<typename T> Value Value::CreateRef(T& value) {
         return Value(entt::meta_any::create_ref(value));
-        //auto&& reflected = Value(entt::meta_any::create_ref(value));
-        //InitBase<T>(reflected);
-        //return std::move(reflected);
     }
 
     template<typename T> Value Value::CreateCRef(const T& value) {
         return Value(entt::meta_any::create_cref(value));
-        //auto&& reflected = Value(entt::meta_any::create_cref(value));
-        //InitBase<T>(reflected);
-        //return std::move(reflected);
     }
 }
 

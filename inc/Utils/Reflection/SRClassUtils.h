@@ -10,7 +10,7 @@
 #include <Utils/TypeTraits/Factory.h>
 
 namespace SR_UTILS_NS::Reflection {
-    template<typename T> SR_INLINE void CloneTo(const T& from, T& to) {
+    template<typename T> void CloneTo(const T& from, T& to) {
         if constexpr (IsSRClassV<T>) {
             from.CloneTo(to);
         }
@@ -48,7 +48,7 @@ namespace SR_UTILS_NS::Reflection {
         }
     }
 
-    template<typename T> SR_INLINE void ForEachSRClass(T&& object, const auto& func) {
+    template<typename T> void ForEachSRClass(T&& object, const auto& func) {
         if constexpr (IsSRClassV<T>) {
             func(object);
         }

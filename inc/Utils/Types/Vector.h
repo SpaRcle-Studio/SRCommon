@@ -26,22 +26,22 @@ namespace SR_UTILS_NS {
         using const_iterator = ConstIterator;
 
     public:
-        SR_CONSTEXPR Vector() noexcept = default;
-        SR_CONSTEXPR Vector(IAllocator* allocator) noexcept;
-        SR_CONSTEXPR Vector(const Vector& other);
-        SR_CONSTEXPR Vector(Vector&& other) noexcept;
-        SR_CONSTEXPR Vector(std::initializer_list<T> init);
-        SR_CONSTEXPR Vector(Iterator first, Iterator last);
+        Vector() noexcept = default;
+        Vector(IAllocator* allocator) noexcept;
+        Vector(const Vector& other);
+        Vector(Vector&& other) noexcept;
+        Vector(std::initializer_list<T> init);
+        Vector(Iterator first, Iterator last);
 
-        SR_CONSTEXPR explicit Vector(SizeType count);
-        SR_CONSTEXPR Vector(SizeType count, const T& value);
+        explicit Vector(SizeType count);
+        Vector(SizeType count, const T& value);
 
-        SR_CONSTEXPR ~Vector();
+        ~Vector();
 
     public:
-        SR_CONSTEXPR Vector& operator=(const Vector& other);
-        SR_CONSTEXPR Vector& operator=(Vector&& other) noexcept;
-        SR_CONSTEXPR Vector& operator=(std::initializer_list<T> init);
+        Vector& operator=(const Vector& other);
+        Vector& operator=(Vector&& other) noexcept;
+        Vector& operator=(std::initializer_list<T> init);
 
     public:
         void reserve(SizeType newCapacity);
@@ -159,7 +159,7 @@ namespace SR_UTILS_NS {
         return back();
     }
 
-    template<typename T> SR_CONSTEXPR Vector<T>& Vector<T>::operator=(const Vector& other) {
+    template<typename T> Vector<T>& Vector<T>::operator=(const Vector& other) {
         if (this != &other) {
             if (other.m_size > m_capacity || m_allocator != other.m_allocator) {
                 Vector temp(other);
@@ -364,7 +364,7 @@ namespace SR_UTILS_NS {
         std::swap(m_allocator, other.m_allocator);
     }
 
-    template<typename T> SR_CONSTEXPR Vector<T>& Vector<T>::operator=(std::initializer_list<T> init) {
+    template<typename T> Vector<T>& Vector<T>::operator=(std::initializer_list<T> init) {
         if (init.size() > m_capacity) {
             Vector temp(init);
             swap(temp);
@@ -391,7 +391,7 @@ namespace SR_UTILS_NS {
         }
     }
 
-    template<typename T> SR_CONSTEXPR Vector<T>& Vector<T>::operator=(Vector&& other) noexcept {
+    template<typename T> Vector<T>& Vector<T>::operator=(Vector&& other) noexcept {
         if (this != &other) {
             if (m_data) {
                 DestructRange(0, m_size);
@@ -411,7 +411,7 @@ namespace SR_UTILS_NS {
         return *this;
     }
 
-    template<typename T> constexpr Vector<T>::Vector(IAllocator* pAllocator) noexcept {
+    template<typename T> Vector<T>::Vector(IAllocator* pAllocator) noexcept {
         m_allocator = pAllocator;
     }
 
@@ -435,7 +435,7 @@ namespace SR_UTILS_NS {
         }
     }
 
-    template<typename T> SR_CONSTEXPR Vector<T>::Vector(Vector::Iterator first, Vector::Iterator last) {
+    template<typename T> Vector<T>::Vector(Vector::Iterator first, Vector::Iterator last) {
         SizeType count = last - first;
         m_data = static_cast<T*>(AllocateMemory(sizeof(T) * count));
         m_size = count;
@@ -451,7 +451,7 @@ namespace SR_UTILS_NS {
         }
     }
 
-    template<typename T> SR_CONSTEXPR Vector<T>::Vector(std::initializer_list<T> init) {
+    template<typename T> Vector<T>::Vector(std::initializer_list<T> init) {
         m_data = static_cast<T*>(AllocateMemory(sizeof(T) * init.size()));
         m_size = init.size();
         m_capacity = init.size();
@@ -466,7 +466,7 @@ namespace SR_UTILS_NS {
         }
     }
 
-    template<typename T> SR_CONSTEXPR Vector<T>::Vector(const Vector& other) {
+    template<typename T> Vector<T>::Vector(const Vector& other) {
         m_allocator = other.m_allocator;
         m_size = other.m_size;
         m_capacity = other.m_size;
@@ -482,7 +482,7 @@ namespace SR_UTILS_NS {
         }
     }
 
-    template<typename T> SR_CONSTEXPR Vector<T>::Vector(Vector&& other) noexcept {
+    template<typename T> Vector<T>::Vector(Vector&& other) noexcept {
         m_data = other.m_data;
         m_size = other.m_size;
         m_capacity = other.m_capacity;
@@ -494,21 +494,21 @@ namespace SR_UTILS_NS {
         other.m_allocator = nullptr;
     }
 
-    template<typename T> SR_CONSTEXPR Vector<T>::Vector(const SizeType count) {
+    template<typename T> Vector<T>::Vector(const SizeType count) {
         m_data = static_cast<T*>(AllocateMemory(sizeof(T) * count));
         m_size = count;
         m_capacity = count;
         ConstructRange(0, count);
     }
 
-    template<typename T> SR_CONSTEXPR Vector<T>::Vector(const SizeType count, const T& value) {
+    template<typename T> Vector<T>::Vector(const SizeType count, const T& value) {
         m_data = static_cast<T*>(AllocateMemory(sizeof(T) * count));
         m_size = count;
         m_capacity = count;
         ConstructRange(0, count, value);
     }
 
-    template<typename T> SR_CONSTEXPR Vector<T>::~Vector() {
+    template<typename T> Vector<T>::~Vector() {
         if (m_data) {
             DestructRange(0, m_size);
             FreeMemory(m_data, sizeof(T) * m_capacity);
@@ -610,6 +610,10 @@ namespace SR_UTILS_NS {
             m_capacity = newCapacity;
         }
     }
+
+    extern template class Vector<int32_t>;
+    extern template class Vector<uint32_t>;
+    extern template class Vector<StringAtom>;
 }
 
 #endif //SR_COMMON_VECTOR_H
