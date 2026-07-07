@@ -253,6 +253,10 @@ namespace SR_PLATFORM_NS {
         XUngrabPointer(gLinuxPlatformDisplayPtr, CurrentTime);
     }
 
+    void ShowWindow(void* pHandle, ShowWindowActionType action) {
+
+    }
+
     void OpenFile(const SR_UTILS_NS::Path& path) {
         std::string command;
 

@@ -25,6 +25,14 @@ namespace SR_UTILS_NS::Platform {
         Web
     );
 
+    SR_ENUM_NS_CLASS_T(ShowWindowActionType, uint8_t,
+        Show,
+        Hide,
+        Minimize,
+        Maximize,
+        Restore
+    )
+
     SR_ENUM_NS_CLASS_T(BuildType, uint8_t,
         Unknown,
         Debug,
@@ -86,9 +94,9 @@ namespace SR_UTILS_NS::Platform {
     SR_COMMON_DLL_API extern PlatformType GetType();
     SR_COMMON_DLL_API extern WindowProtocolType GetWindowProtocolType();
     SR_COMMON_DLL_API extern bool IsMobilePlatform();
+    SR_COMMON_DLL_API extern void ShowWindow(void* pHandle, ShowWindowActionType action);
 
-    SR_COMMON_DLL_API extern std::string
-    ExecuteCommand(const std::string& command, const std::vector<std::string>& env = {});
+    SR_COMMON_DLL_API extern std::string ExecuteCommand(const std::string& command, const std::vector<std::string>& env = {});
     SR_COMMON_DLL_API extern void SetEnvironmentVar(const std::string_view& name, const std::string_view& value);
     SR_COMMON_DLL_API extern bool ReadFile(const Path& path, String& buffer);
     SR_COMMON_DLL_API extern void TextToClipboard(const std::string& text);
@@ -102,8 +110,7 @@ namespace SR_UTILS_NS::Platform {
     SR_COMMON_DLL_API extern void WriteConsoleWarn(const std::string& msg);
     SR_COMMON_DLL_API extern void SelfOpen();
     SR_COMMON_DLL_API extern void OpenFile(const SR_UTILS_NS::Path& path, const std::string& args);
-    SR_COMMON_DLL_API extern void
-    Unzip(const SR_UTILS_NS::Path& source, const SR_UTILS_NS::Path& destination, bool replace = true);
+    SR_COMMON_DLL_API extern void Unzip(const SR_UTILS_NS::Path& source, const SR_UTILS_NS::Path& destination, bool replace = true);
     SR_COMMON_DLL_API extern void OpenWithAssociatedApp(const Path& filepath);
     SR_COMMON_DLL_API extern bool CreateFolder(const std::string& path);
     SR_COMMON_DLL_API extern bool Copy(const Path& from, const Path& to);

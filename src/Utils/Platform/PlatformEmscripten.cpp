@@ -271,6 +271,10 @@ namespace SR_PLATFORM_NS {
         SRHaltOnce("Not implemented!");
     }
 
+    void ShowWindow(void* pHandle, ShowWindowActionType action) {
+
+    }
+
     PlatformType GetType() {
         return PlatformType::Emscripten;
     }

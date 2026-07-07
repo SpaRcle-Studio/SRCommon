@@ -297,12 +297,6 @@ namespace SR_MATH_NS {
         }
     };
 
-    extern template class Vector2<Unit>;
-    extern template class Vector2<uint16_t>;
-    extern template class Vector2<int32_t>;
-    extern template class Vector2<uint32_t>;
-    extern template class Vector2<bool>;
-
     typedef Vector2<Unit> FVector2;
     typedef Vector2<Unit> FPoint;
     typedef Vector2<uint16_t> USVector2;

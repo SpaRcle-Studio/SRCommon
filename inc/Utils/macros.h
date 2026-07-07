@@ -229,6 +229,9 @@
     #define VK_PROTOTYPES
 #endif
 
+#define SR_USE_IMGUI_NODE_EDITOR
+#define SR_USE_IMGUI
+
 #ifdef SR_USE_OPENGL
     #define IMGUI_IMPL_OPENGL_LOADER_GLFW
     //#define GL_GLEXT_PROTOTYPES

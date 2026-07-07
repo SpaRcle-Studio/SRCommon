@@ -804,12 +804,6 @@ namespace SR_MATH_NS {
         }
     };
 
-    extern template class Vector3<Unit>;
-    extern template class Vector3<uint16_t>;
-    extern template class Vector3<int32_t>;
-    extern template class Vector3<uint32_t>;
-    extern template class Vector3<bool>;
-
     typedef Vector3<Unit> FVector3;
     typedef Vector3<int32_t> IVector3;
     typedef Vector3<uint32_t> UVector3;

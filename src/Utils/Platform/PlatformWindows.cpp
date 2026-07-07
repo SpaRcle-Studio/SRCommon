@@ -1021,4 +1021,26 @@ namespace SR_UTILS_NS::Platform {
 
         return true;
     }
+
+    void ShowWindow(void* pHandle, ShowWindowActionType action) {
+        switch (action) {
+            case ShowWindowActionType::Show:
+                ::ShowWindow(static_cast<HWND>(pHandle), SW_SHOW);
+                break;
+            case ShowWindowActionType::Hide:
+                ::ShowWindow(static_cast<HWND>(pHandle), SW_HIDE);
+                break;
+            case ShowWindowActionType::Minimize:
+                ::ShowWindow(static_cast<HWND>(pHandle), SW_MINIMIZE);
+                break;
+            case ShowWindowActionType::Maximize:
+                ::ShowWindow(static_cast<HWND>(pHandle), SW_MAXIMIZE);
+                break;
+            case ShowWindowActionType::Restore:
+                ::ShowWindow(static_cast<HWND>(pHandle), SW_RESTORE);
+            default:
+                SRHalt("Platform::ShowWindow() : unknown action type!");
+                break;
+        }
+    }
 }

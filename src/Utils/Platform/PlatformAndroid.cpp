@@ -481,6 +481,10 @@ namespace SR_UTILS_NS::Platform {
         return PlatformType::Android;
     }
 
+    void ShowWindow(void* pHandle, ShowWindowActionType action) {
+
+    }
+
     void* LoadLibraryModule(const Path& path) {
         SRHaltOnce("Not implemented!");
         return nullptr;

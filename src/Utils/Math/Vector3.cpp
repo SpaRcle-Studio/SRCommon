@@ -9,12 +9,6 @@
 #include <glm/gtc/quaternion.hpp>
 
 namespace SR_MATH_NS {
-    template class Vector3<Unit>;
-    template class Vector3<uint16_t>;
-    template class Vector3<int32_t>;
-    template class Vector3<uint32_t>;
-    template class Vector3<bool>;
-
     SR_MATH_NS::FVector3 ProjectOnPlane(
         const FVector3& point,
         const FVector3& planeOrigin,

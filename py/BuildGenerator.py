@@ -123,6 +123,10 @@ if __name__ == "__main__":
     project_path = Path(args.project_path)
     config_file = project_path.joinpath("srinc.json")
 
+    if not config_file.exists():
+        print(f"BuildGenerator.py: config file {config_file} does not exist.")
+        raise FileNotFoundError(f"Config file {config_file} not found.")
+
     config = json.load(open(config_file, "r"))
     out_directory = Path(args.out).joinpath(config["module_name"])
 
