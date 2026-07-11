@@ -9,8 +9,6 @@
 #include <Utils/Types/StringAtom.h>
 #include <Utils/Types/Function.h>
 
-#include <mutex>
-
 template <typename EnumType> struct EnumSelector {};
 
 template<typename T> constexpr SR_UTILS_NS::EnumVariant GetEnumVariant(T) noexcept;
@@ -22,16 +20,14 @@ namespace SR_UTILS_NS {
 
     class EnumReflectorManager : public SR_UTILS_NS::Singleton<EnumReflectorManager> {
         SR_REGISTER_SINGLETON(EnumReflectorManager);
-        using Reflectors = SR_HTYPES_NS::FlatHashMap<uint64_t, EnumReflector*>;
+        using Reflectors = SR_HTYPES_NS::FlatHashMap<SR_UTILS_NS::StringAtom, EnumReflector*>;
     public:
-        SR_NODISCARD bool IsSingletonCanBeDestroyed() const override {
-            return false;
-        }
+        SR_NODISCARD bool IsSingletonCanBeDestroyed() const override { return false; }
 
-        bool RegisterReflector(EnumReflector* pReflector);
+        void RegisterReflector(EnumVariant enumVariant, const void* pData, uint64_t typeSize, uint64_t count, const char* name, const char* body);
+        void UnregisterReflector(const char* name);
 
-        SR_NODISCARD EnumReflector* GetReflector(const SR_UTILS_NS::StringAtom& name) const;
-        SR_NODISCARD EnumReflector* GetReflector(uint64_t hashName) const;
+        SR_NODISCARD EnumReflector* GetReflector(SR_UTILS_NS::StringAtom name) const;
         SR_NODISCARD const Reflectors& GetReflectors() const noexcept { return m_reflectors; }
 
     private:
@@ -58,7 +54,7 @@ namespace SR_UTILS_NS {
         };
 
     public:
-        template<typename Integral> EnumReflector(EnumVariant enumVariant, const Integral* values, size_t count, const char* name, const char* body);
+        EnumReflector(EnumVariant enumVariant, const void* pData, uint64_t typeSize, uint64_t count, SR_UTILS_NS::StringAtom name, const char* body);
         ~EnumReflector() override;
 
     public:
@@ -93,7 +89,6 @@ namespace SR_UTILS_NS {
         SR_MAYBE_UNUSED SR_NODISCARD const std::vector<SR_UTILS_NS::StringAtom>& GetNamesInternal() const;
         SR_MAYBE_UNUSED SR_NODISCARD const SR_UTILS_NS::StringAtom& GetNameInternal() const;
         SR_MAYBE_UNUSED SR_NODISCARD uint64_t GetIntegralTypeSizeInternal() const;
-        SR_MAYBE_UNUSED SR_NODISCARD uint64_t GetHashNameInternal() const;
         SR_MAYBE_UNUSED SR_NODISCARD int64_t ReadEnumValueFromPointerInternal(const void* pEnum) const;
         SR_MAYBE_UNUSED SR_NODISCARD EnumVariant GetEnumVariantInternal() const;
         SR_MAYBE_UNUSED void WriteEnumValueToPointerInternal(void* pEnum, int64_t value) const;
@@ -109,7 +104,6 @@ namespace SR_UTILS_NS {
             std::vector<Enumerator> values;
             std::vector<SR_UTILS_NS::StringAtom> names;
             SR_UTILS_NS::StringAtom enumName;
-            uint64_t hashName;
         }* m_data;
 
         uint64_t m_integralTypeSize = 0;
@@ -118,84 +112,6 @@ namespace SR_UTILS_NS {
 }
 
 namespace SR_UTILS_NS {
-    template<typename Integral> EnumReflector::EnumReflector(EnumVariant enumVariant, const Integral *values, size_t count, const char *name, const char *body)
-        : m_data(new Data())
-    {
-        m_enumVariant = enumVariant;
-        m_integralTypeSize = sizeof(Integral);
-
-        m_data->enumName = name;
-        m_data->hashName = EnumReflector::GetAndRegisterHash(name);
-        m_data->values.resize(count);
-        m_data->names.resize(count);
-
-        enum states
-        {
-            state_start, // Before identifier
-            state_ident, // In identifier
-            state_skip, // Looking for separator comma
-        } state = state_start;
-
-        assert(*body == '(');
-        ++body;
-        const char* ident_start = nullptr;
-        int value_index = 0;
-        int level = 0;
-        for (;;)
-        {
-            assert(*body);
-            switch (state)
-            {
-                case state_start:
-                    if (IsIdentChar(*body))
-                    {
-                        state = state_ident;
-                        ident_start = body;
-                    }
-                    ++body;
-                    break;
-                case state_ident:
-                    if (!IsIdentChar(*body))
-                    {
-                        state = state_skip;
-                        assert(value_index < count);
-
-                        m_data->values[value_index].name = std::string(ident_start, body - ident_start);
-                        m_data->values[value_index].value = static_cast<int64_t>(values[value_index]);
-                        m_data->values[value_index].hashName = m_data->values[value_index].name.GetHash();
-
-                        m_data->names[value_index] = m_data->values[value_index].name;
-
-                        ++value_index;
-                    }
-                    else
-                    {
-                        ++body;
-                    }
-                    break;
-                case state_skip:
-                    if (*body == '(')
-                    {
-                        ++level;
-                    }
-                    else if (*body == ')')
-                    {
-                        if (level == 0)
-                        {
-                            assert(value_index == count);
-                            return;
-                        }
-                        --level;
-                    }
-                    else if (level == 0 && *body == ',')
-                    {
-                        state = state_start;
-                    }
-                    ++body;
-            }
-        }
-    }
-
     template<typename EnumType> SR_UTILS_NS::StringAtom EnumReflector::ToStringAtom(EnumType value) {
         if (auto&& result = GetReflector<EnumType>()->ToStringInternal(static_cast<int64_t>(value)); result.has_value()) {
             return result.value();
@@ -268,9 +184,7 @@ namespace SR_UTILS_NS {
         if (auto&& result = GetReflector<EnumType>()->FromStringLowerCaseInternal(value); result.has_value()) {
             return static_cast<EnumType>(result.value());
         }
-
         ErrorInternal("EnumReflector::FromStringLowerCase() : unknown type! Value: " + value);
-
         return static_cast<EnumType>(0);
     }
 
@@ -282,9 +196,7 @@ namespace SR_UTILS_NS {
         if (auto&& result = GetReflector<EnumType>()->GetIndexInternal(value); result.has_value()) {
             return result.value();
         }
-
         ErrorInternal("EnumReflector::GetIndex() : unknown type! Value: " + std::to_string(static_cast<int64_t>(value)));
-
         return SR_ID_INVALID;
     }
 
@@ -296,9 +208,7 @@ namespace SR_UTILS_NS {
         if (auto&& result = GetReflector<EnumType>()->AtInternal(index); result.has_value()) {
             return result.value();
         }
-
         ErrorInternal("EnumReflector::At() : invalid index! Index: " + std::to_string(static_cast<int64_t>(index)));
-
         return 0;
     }
 
@@ -322,21 +232,6 @@ namespace SR_UTILS_NS {
     }
 
     template<typename EnumType> EnumReflector* EnumReflector::GetReflector() {
-        static std::once_flag s_registerOnce;
-        std::call_once(s_registerOnce, []() {
-            if constexpr (std::is_class_v<EnumType>) {
-                if constexpr (std::is_enum_v<EnumType>) {
-                    SR_CODEGEN_REGISTER_ENUM_REFLECTOR(EnumType());
-                }
-                else {
-                    SR_CODEGEN_REGISTER_ENUM_REFLECTOR(EnumType::TypeT());
-                }
-            }
-            else {
-                SR_CODEGEN_REGISTER_ENUM_REFLECTOR(EnumType());
-            }
-        });
-
         if constexpr (std::is_class_v<EnumType>) {
             if constexpr (std::is_enum_v<EnumType>) {
                 return EnumReflectorManager::Instance().GetReflector(SR_CODEGEN_GET_ENUM_HASH_NAME_BY_TYPE(EnumType()));
@@ -357,8 +252,7 @@ namespace SR_UTILS_NS {
 #define SR_ENUM_DETAIL_SPEC_class friend
 #define SR_ENUM_DETAIL_STR(x) #x
 #define SR_ENUM_DETAIL_MAKE(enumVariant, enumClass, spec, enumName, enumNameStr, integral, ...)                         \
-    enumClass enumName : integral                                                                                       \
-    {                                                                                                                   \
+    enumClass enumName : integral {                                                                                     \
         __VA_ARGS__, SR_MACRO_CONCAT(enumName, MAX)                                                                     \
     };                                                                                                                  \
     struct CODEGEN_ENUM_DETAILS_STRUCT_##enumName {                                                                     \
@@ -375,40 +269,9 @@ namespace SR_UTILS_NS {
     inline constexpr size_t GetEnumItemsCount(const enumName*) noexcept {                                               \
         return SR_COUNT_ARGS(__VA_ARGS__);                                                                              \
     }                                                                                                                   \
-    SR_ENUM_DETAIL_SPEC_##spec uint64_t SR_CODEGEN_GET_ENUM_HASH_NAME_BY_TYPE(enumName) {                               \
-        static const uint64_t enumHashName = SR_UTILS_NS::StringAtom(SR_EXPAND_AND_STRINGIFY(enumName)).GetHash();      \
-        return enumHashName;                                                                                            \
-    }                                                                                                                   \
-    SR_ENUM_DETAIL_SPEC_##spec SR_UTILS_NS::EnumReflector* SR_CODEGEN_ALLOCATE_ENUM_REFLECTOR(enumName) {               \
-        static integral _detail_sval;                                                                                   \
-        _detail_sval = 0;                                                                                               \
-        struct _detail_val_t                                                                                            \
-        {                                                                                                               \
-            _detail_val_t(const _detail_val_t& rhs) : _val(rhs) { _detail_sval = _val + 1; }                            \
-            _detail_val_t(integral val) /** NOLINT(google-explicit-constructor) */                                      \
-                : _val(val)                                                                                             \
-            { _detail_sval = _val + 1; }                                                                                \
-                                                                                                                        \
-            _detail_val_t() : _val(_detail_sval){ _detail_sval = _val + 1; }                                            \
-                                                                                                                        \
-            _detail_val_t& operator=(const _detail_val_t&) { return *this; }                                            \
-            _detail_val_t& operator=(integral) { return *this; }                                                        \
-            operator integral() const { return _val; }                                                                  \
-            integral _val;                                                                                              \
-        } __VA_ARGS__;                                                                                                  \
-        const integral _detail_vals[] = { __VA_ARGS__ };                                                                \
-        return new SR_UTILS_NS::EnumReflector(enumVariant, _detail_vals, sizeof(_detail_vals) / sizeof(integral),       \
-                enumNameStr, SR_ENUM_DETAIL_STR((__VA_ARGS__)));                                                        \
-    }                                                                                                                   \
-    SR_ENUM_DETAIL_SPEC_##spec bool SR_CODEGEN_REGISTER_ENUM_REFLECTOR(enumName) {                                      \
-        if (SR_UTILS_NS::EnumReflectorManager::Instance()                                                               \
-            .GetReflector(SR_CODEGEN_GET_ENUM_HASH_NAME_BY_TYPE(enumName())))                                           \
-        {                                                                                                               \
-            return false;                                                                                               \
-        }                                                                                                               \
-        SR_UTILS_NS::EnumReflectorManager::Instance()                                                                   \
-                .RegisterReflector(SR_CODEGEN_ALLOCATE_ENUM_REFLECTOR(enumName()));                                     \
-        return true;                                                                                                    \
+    SR_ENUM_DETAIL_SPEC_##spec SR_UTILS_NS::StringAtom SR_CODEGEN_GET_ENUM_HASH_NAME_BY_TYPE(enumName) {                \
+        static const auto name = SR_UTILS_NS::StringAtom(SR_EXPAND_AND_STRINGIFY(enumName));                            \
+        return name;                                                                                                    \
     }                                                                                                                   \
 
 #endif //SR_ENGINE_ENUMREFLECTOR_H

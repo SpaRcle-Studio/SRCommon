@@ -229,7 +229,6 @@
     #define VK_PROTOTYPES
 #endif
 
-#define SR_USE_IMGUI_NODE_EDITOR
 #define SR_USE_IMGUI
 
 #ifdef SR_USE_OPENGL

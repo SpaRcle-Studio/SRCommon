@@ -8,23 +8,105 @@
 #include <Utils/Debug.h>
 
 namespace SR_UTILS_NS {
-    bool EnumReflectorManager::RegisterReflector(EnumReflector* pReflector) {
-        if (m_reflectors.count(pReflector->GetHashNameInternal()) == 1) {
-            return true;
+    EnumReflector::EnumReflector(EnumVariant enumVariant, const void* pData, uint64_t typeSize, uint64_t count, SR_UTILS_NS::StringAtom name, const char* body)
+        : m_data(new Data())
+    {
+        m_enumVariant = enumVariant;
+        m_integralTypeSize = typeSize;
+
+        m_data->enumName = name;
+        m_data->values.resize(count);
+        m_data->names.resize(count);
+
+        enum states {
+            state_start, // Before identifier
+            state_ident, // In identifier
+            state_skip,  // Looking for separator comma
+        } state = state_start;
+
+        SRAssert(*body == '(');
+        ++body;
+        const char* ident_start = nullptr;
+        int value_index = 0;
+        int level = 0;
+        for (;;) {
+            SRAssert(*body);
+            switch (state) {
+                case state_start:
+                    if (IsIdentChar(*body)) {
+                        state = state_ident;
+                        ident_start = body;
+                    }
+                    ++body;
+                    break;
+                case state_ident:
+                    if (!IsIdentChar(*body)) {
+                        state = state_skip;
+                        SRAssert(value_index < count);
+                        m_data->values[value_index].name = std::string(ident_start, body - ident_start);
+
+                        switch (typeSize) {
+                            case 1: m_data->values[value_index].value = static_cast<int64_t>(static_cast<const int8_t*>(pData)[value_index]); break;
+                            case 2: m_data->values[value_index].value = static_cast<int64_t>(static_cast<const int16_t*>(pData)[value_index]); break;
+                            case 4: m_data->values[value_index].value = static_cast<int64_t>(static_cast<const int32_t*>(pData)[value_index]); break;
+                            case 8: m_data->values[value_index].value = static_cast<int64_t>(static_cast<const int64_t*>(pData)[value_index]); break;
+                            default:
+                                SRHalt("EnumReflector::EnumReflector() : unsupported enum size!");
+                                break;
+                        }
+
+                        m_data->values[value_index].hashName = m_data->values[value_index].name.GetHash();
+                        m_data->names[value_index] = m_data->values[value_index].name;
+                        ++value_index;
+                    }
+                    else {
+                        ++body;
+                    }
+                    break;
+                case state_skip:
+                    if (*body == '(') {
+                        ++level;
+                    }
+                    else if (*body == ')') {
+                        if (level == 0) {
+                            SRAssert(value_index == count);
+                            return;
+                        }
+                        --level;
+                    }
+                    else if (level == 0 && *body == ',') {
+                        state = state_start;
+                    }
+                    ++body;
+            }
         }
-        m_reflectors[pReflector->GetHashNameInternal()] = pReflector;
-        return false;
     }
 
-    EnumReflector* EnumReflectorManager::GetReflector(const SR_UTILS_NS::StringAtom& name) const {
-        return GetReflector(name.GetHash());
+    void EnumReflectorManager::RegisterReflector(EnumVariant enumVariant, const void* pData, uint64_t typeSize, uint64_t count, const char* name, const char* body) {
+        SR_UTILS_NS::StringAtom nameAtom(name);
+        if (m_reflectors.count(nameAtom) == 1) {
+            SRHalt("EnumReflectorManager::RegisterReflector() : reflector already registered! Name: {}", name);
+            return;
+        }
+        m_reflectors[nameAtom] = new EnumReflector(enumVariant, pData, typeSize, count, name, body);
     }
 
-    EnumReflector* EnumReflectorManager::GetReflector(uint64_t hashName) const {
-        if (auto&& pIt = m_reflectors.find(hashName); pIt != m_reflectors.end()) {
+    void EnumReflectorManager::UnregisterReflector(const char* name) {
+        SR_UTILS_NS::StringAtom nameAtom(name);
+        if (auto&& pIt = m_reflectors.find(nameAtom); pIt != m_reflectors.end()) {
+            SR_SAFE_DELETE_PTR(pIt->second)
+            m_reflectors.erase(pIt);
+        }
+        else {
+            SRHalt("EnumReflectorManager::UnregisterReflector() : reflector not found! Name: {}", name);
+        }
+    }
+
+    EnumReflector* EnumReflectorManager::GetReflector(SR_UTILS_NS::StringAtom name) const {
+        if (auto&& pIt = m_reflectors.find(name); pIt != m_reflectors.end()) {
             return pIt->second;
         }
-
+        SRHalt("EnumReflectorManager::GetReflector() : reflector not found! Name: {}", name);
         return nullptr;
     }
 
@@ -121,7 +203,6 @@ namespace SR_UTILS_NS {
     const std::vector<SR_UTILS_NS::StringAtom>& EnumReflector::GetNamesInternal() const { return m_data->names; }
     const SR_UTILS_NS::StringAtom& EnumReflector::GetNameInternal() const { return m_data->enumName; }
     uint64_t EnumReflector::GetIntegralTypeSizeInternal() const { return m_integralTypeSize; }
-    uint64_t EnumReflector::GetHashNameInternal() const { return m_data->hashName; }
     EnumVariant EnumReflector::GetEnumVariantInternal() const { return m_enumVariant; }
 
     std::optional<int64_t> EnumReflector::FromStringLowerCaseInternal(const std::string& value) const {

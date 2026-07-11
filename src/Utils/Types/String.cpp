@@ -133,6 +133,15 @@ namespace SR_UTILS_NS {
     String& String::operator+=(const StringView& rhs) { return *this += std::string_view(rhs.data(), rhs.size()); }
     String& String::operator+=(const char* rhs) { return *this += std::string_view(rhs); }
     String& String::operator+=(const std::string& rhs) { return *this += std::string_view(rhs); }
+    String& String::operator+=(const char rhs) {
+        if (m_size + 1 > m_capacity) {
+            reserve(SR_MAX(m_size + 1, m_capacity * 2));
+        }
+        m_data[m_size] = rhs;
+        m_size++;
+        m_data[m_size] = '\0';
+        return *this;
+    }
     String& String::operator+=(std::string_view rhs) {
         if (rhs.empty()) {
             return *this;

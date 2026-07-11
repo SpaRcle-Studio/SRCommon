@@ -44,6 +44,7 @@ namespace SR_UTILS_NS {
         String& operator+=(const String& rhs);
         String& operator+=(const StringView& rhs);
         String& operator+=(const char* rhs);
+        String& operator+=(char rhs);
         String& operator+=(const std::string& rhs);
         String& operator+=(std::string_view rhs);
 
