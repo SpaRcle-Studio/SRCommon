@@ -306,6 +306,7 @@
 #define SR_SRSL_NS SpaRcle::Graphics::SRSL2
 #define SR_GRAPH_UI_NS SpaRcle::Graphics::UI
 #define SR_GRAPH_GUI_NS SpaRcle::Graphics::GUI
+#define SR_IMMEDIATE_GUI_NS SpaRcle::Graphics::GUI::Immediate
 #define SR_ANIMATIONS_NS SpaRcle::Graphics::Animations
 #define SR_HTYPES_NS SR_UTILS_NS::Types
 #define SR_GTYPES_NS SR_GRAPH_NS::Types
