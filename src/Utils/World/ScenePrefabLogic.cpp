@@ -67,7 +67,7 @@ namespace SR_WORLD_NS {
             deserializer.EndObject();
         }
         else {
-            pSO.AutoFree([](auto&& pData, auto&& pControl) {
+            pSO.AutoFree([](SceneObject* pData, SR_HTYPES_NS::SharedPtrDynamicData*) {
                 pData->Destroy();
             });
             SRHalt("ScenePrefabLogic::LoadLogic() : failed to load data object!");

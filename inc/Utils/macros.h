@@ -382,10 +382,14 @@
     #define SR_CODEGEN_DLL_API_EXPORT SR_DLL_API_EXPORT
 #endif
 
-#ifdef SR_COMMON_DLL_EXPORTS
-    #define SR_COMMON_DLL_API SR_DLL_API_EXPORT
+#ifdef SR_COMMON_STATIC_LIBRARY
+    #define SR_COMMON_DLL_API
 #else
-    #define SR_COMMON_DLL_API SR_DLL_API_IMPORT
+    #ifdef SR_COMMON_DLL_EXPORTS
+        #define SR_COMMON_DLL_API SR_DLL_API_EXPORT
+    #else
+        #define SR_COMMON_DLL_API SR_DLL_API_IMPORT
+    #endif
 #endif
 
 #if defined(SR_MSVC)

@@ -12,6 +12,8 @@ namespace SR_HTYPES_NS {
 
     template<class T> class SharedPtr : public SharedPtrBase {
         friend class WeakPtr<T>;
+        /// dont use function, c-style function pointer is better for performance
+        using FreeFunctor = void(*)(T* pPtr, SharedPtrDynamicData* pControl);
     public:
         using Ptr = SharedPtr<T>;
         using SharedPointerType = T;
@@ -57,12 +59,12 @@ namespace SR_HTYPES_NS {
         void IncrementPointer() override;
         void DecrementPointer() override;
 
-        bool AutoFree(const SR_HTYPES_NS::Function<void(T* pPtr, SharedPtrDynamicData* pControl)>& freeFun);
+        bool AutoFree(FreeFunctor freeFun);
         bool AutoFree();
         void Reset() override;
 
     private:
-        bool FreeImpl(const SR_HTYPES_NS::Function<void(T* pPtr, SharedPtrDynamicData* pControl)>& freeFun);
+        bool FreeImpl(FreeFunctor freeFun);
 
     private:
         T* m_ptr = nullptr;
@@ -312,15 +314,15 @@ namespace SR_HTYPES_NS {
         }
     }
 
-    template<typename T> bool SharedPtr<T>::AutoFree(const SR_HTYPES_NS::Function<void(T* pPtr, SharedPtrDynamicData* pControl)> &freeFun) {
+    template<typename T> bool SharedPtr<T>::AutoFree(FreeFunctor freeFun) {
         return Valid() && FreeImpl(freeFun);
     }
 
     template<typename T> bool SharedPtr<T>::AutoFree() {
-        return Valid() && FreeImpl([](auto&& pPtr, SharedPtrDynamicData* pControl) { pControl->deleter(static_cast<void*>(pPtr)); });
+        return Valid() && FreeImpl([](T* pPtr, SharedPtrDynamicData* pControl) { pControl->deleter(static_cast<void*>(pPtr)); });
     }
 
-    template<typename T> bool SharedPtr<T>::FreeImpl(const SR_HTYPES_NS::Function<void(T* pPtr, SharedPtrDynamicData* pControl)> &freeFun) {
+    template<typename T> bool SharedPtr<T>::FreeImpl(FreeFunctor freeFun) {
         if (m_data) {
             const bool valid = m_data->valid;
             const auto pPtr = m_ptr;

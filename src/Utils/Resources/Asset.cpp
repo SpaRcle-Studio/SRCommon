@@ -14,8 +14,12 @@ namespace SR_UTILS_NS {
         SR_TRACY_ZONE_TEXT_C(rawPath.c_str());
         SR_GLOBAL_RECURSIVE_LOCK;
 
+        SR_SYSTEM_LOG("Asset::LoadImpl() : loading asset \"{}\", res folder: \"{}\"", rawPath, ResourceManager::Instance().GetResPath());
+
         auto&& resourceManager = ResourceManager::Instance();
-        SR_UTILS_NS::Path&& path = rawPath.RemoveSubPath(resourceManager.GetResPath());
+        SR_UTILS_NS::Path path = rawPath.RemoveSubPath(resourceManager.GetResPath());
+
+        SR_LOG("Asset::LoadImpl() : loading asset \"{}\"", path);
 
         Asset::Ptr pAsset = DynamicPointerCast<Asset>(resourceManager.FindAnyType(SR_UTILS_NS::StringAtom(path.View()), nullptr));
         if (pAsset) {

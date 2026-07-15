@@ -19,7 +19,7 @@ namespace SR_UTILS_NS {
     public:
         String();
 
-        String(const char* str, uint64_t size, IAllocator* pAllocator);
+        String(const char* str, SizeType size, IAllocator* pAllocator);
         String(StringView str, IAllocator* pAllocator);
         String(String str, IAllocator* pAllocator);
         String(const std::string& str, IAllocator* pAllocator);
@@ -68,8 +68,8 @@ namespace SR_UTILS_NS {
         SR_NODISCARD operator std::string_view() const; /// NOLINT
 
         SR_NODISCARD const char* c_str() const;
-        SR_NODISCARD uint64_t size() const;
-        SR_NODISCARD uint64_t capacity() const;
+        SR_NODISCARD SizeType size() const;
+        SR_NODISCARD SizeType capacity() const;
         SR_NODISCARD bool empty() const;
         SR_NODISCARD const char* data() const;
         SR_NODISCARD char* data();
@@ -81,15 +81,15 @@ namespace SR_UTILS_NS {
         SR_NODISCARD bool starts_with(std::string_view str) const;
         SR_NODISCARD bool ends_with(std::string_view str) const;
 
-        SR_NODISCARD String substr(uint64_t pos, uint64_t count = SR_UINT64_MAX) const;
+        SR_NODISCARD String substr(SizeType pos, SizeType count = npos) const;
         SR_NODISCARD String DetachAllocator() const;
         SR_NODISCARD bool HasAllocator() const;
 
-        SR_NODISCARD uint64_t find(const char* str, uint64_t pos = 0) const;
-        SR_NODISCARD uint64_t find(std::string_view str, uint64_t pos = 0) const;
-        SR_NODISCARD uint64_t find(const String& str, uint64_t pos = 0) const;
-        SR_NODISCARD uint64_t find(char c, uint64_t pos = 0) const;
-        SR_NODISCARD uint64_t rfind(char c, uint64_t pos = SR_UINT64_MAX) const;
+        SR_NODISCARD SizeType find(const char* str, SizeType pos = 0) const;
+        SR_NODISCARD SizeType find(std::string_view str, SizeType pos = 0) const;
+        SR_NODISCARD SizeType find(const String& str, SizeType pos = 0) const;
+        SR_NODISCARD SizeType find(char c, SizeType pos = 0) const;
+        SR_NODISCARD SizeType rfind(char c, SizeType pos = npos) const;
 
         SR_NODISCARD const char* begin() const;
         SR_NODISCARD const char* end() const;
@@ -105,22 +105,22 @@ namespace SR_UTILS_NS {
         void append(const std::string& str);
         void append(std::string_view str);
         void append(char c);
-        void append(const char* str, uint64_t count);
+        void append(const char* str, SizeType count);
 
         void push_back(char c);
-        void reserve(uint64_t newSize);
-        void resize(uint64_t newSize);
-        void resize(uint64_t newSize, char fillChar);
+        void reserve(SizeType newSize);
+        void resize(SizeType newSize);
+        void resize(SizeType newSize, char fillChar);
         void clear();
 
         void ToLowerInPlace();
         void ToUpperInPlace();
-        void SubStrInPlace(uint64_t pos, uint64_t count = SR_UINT64_MAX);
+        void SubStrInPlace(SizeType pos, SizeType count = npos);
 
     private:
         char* m_data = nullptr;
-        uint64_t m_size = 0;
-        uint64_t m_capacity = 0;
+        SizeType m_size = 0;
+        SizeType m_capacity = 0;
         IAllocator* m_allocator = nullptr;
 
     };
@@ -153,12 +153,12 @@ namespace SR_UTILS_NS {
 
         constexpr StringView(const std::string& str)
             : m_data(str.data())
-            , m_size(static_cast<uint64_t>(str.size()))
+            , m_size(static_cast<SizeType>(str.size()))
         { }
 
         constexpr StringView(std::string_view str)
             : m_data(str.data())
-            , m_size(static_cast<uint64_t>(str.size()))
+            , m_size(static_cast<SizeType>(str.size()))
         { }
 
         StringView(const String& str)
@@ -166,7 +166,7 @@ namespace SR_UTILS_NS {
             , m_size(str.size())
         { }
 
-        void remove_prefix(uint64_t n);
+        void remove_prefix(SizeType n);
 
         constexpr StringView& operator=(const StringView& other) = default;
         constexpr StringView& operator=(StringView&& other) noexcept = default;
@@ -174,23 +174,23 @@ namespace SR_UTILS_NS {
         SR_NODISCARD operator std::string_view() const; /// NOLINT
 
         SR_NODISCARD const char* c_str() const;
-        SR_NODISCARD uint64_t size() const;
+        SR_NODISCARD SizeType size() const;
         SR_NODISCARD bool empty() const;
         SR_NODISCARD const char* data() const;
         SR_NODISCARD char& back();
         SR_NODISCARD const char& back() const;
-        SR_NODISCARD StringView substr(uint64_t pos, uint64_t count = SR_UINT64_MAX) const;
+        SR_NODISCARD StringView substr(SizeType pos, SizeType count = npos) const;
 
         SR_NODISCARD char operator[](size_t index) const;
 
         SR_NODISCARD const char* begin() const;
         SR_NODISCARD const char* end() const;
 
-        SR_NODISCARD SizeType find(const char* str, uint64_t pos = 0) const;
-        SR_NODISCARD SizeType find(std::string_view str, uint64_t pos = 0) const;
-        SR_NODISCARD SizeType find(StringView str, uint64_t pos = 0) const;
-        SR_NODISCARD SizeType find(const String& str, uint64_t pos = 0) const;
-        SR_NODISCARD SizeType find(char c, uint64_t pos = 0) const;
+        SR_NODISCARD SizeType find(const char* str, SizeType pos = 0) const;
+        SR_NODISCARD SizeType find(std::string_view str, SizeType pos = 0) const;
+        SR_NODISCARD SizeType find(StringView str, SizeType pos = 0) const;
+        SR_NODISCARD SizeType find(const String& str, SizeType pos = 0) const;
+        SR_NODISCARD SizeType find(char c, SizeType pos = 0) const;
 
         SR_NODISCARD bool operator==(const StringView& rhs) const noexcept;
         SR_NODISCARD bool operator!=(const StringView& rhs) const noexcept;
@@ -207,7 +207,7 @@ namespace SR_UTILS_NS {
 
     private:
         const char* m_data = nullptr;
-        uint64_t m_size = 0;
+        SizeType m_size = 0;
 
     };
 }

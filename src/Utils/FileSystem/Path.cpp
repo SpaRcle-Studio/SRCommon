@@ -327,7 +327,7 @@ namespace SR_UTILS_NS {
         auto&& normalized = GetNormalized();
         auto&& index = normalized.find(subPath.ToStringRef());
 
-        if (index == std::string::npos) {
+        if (index == String::npos) {
             return *this;
         }
 

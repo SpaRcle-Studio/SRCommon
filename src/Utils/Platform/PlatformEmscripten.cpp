@@ -125,7 +125,11 @@ namespace SR_PLATFORM_NS {
     }
 
     void InitializePlatform() {
-        SR_PLATFORM_NS::WriteConsoleLog("Platform::InitializePlatform() : initializing Android platform...\n");
+        SR_PLATFORM_NS::WriteConsoleLog("Platform::InitializePlatform() : initializing Emscripten platform...\n");
+    }
+
+    void DeInitializePlatform() {
+
     }
 
     void ClearClipboard() {

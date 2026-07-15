@@ -125,19 +125,19 @@ namespace SR_UTILS_NS {
     /// buffered fallback for unsupported platforms
     MappedFile MappedFileImpl::Open(const Path& path, bool write) {
         MappedFile mappedFile;
-        mappedFile.m_pHandle = new std::string();
-        if (!FileSystem::ReadFile(path, *static_cast<std::string*>(mappedFile.m_pHandle))) {
+        mappedFile.m_pHandle = new String();
+        if (!FileSystem::ReadFile(path, *static_cast<String*>(mappedFile.m_pHandle))) {
             return MappedFile();
         }
 
-        mappedFile.m_pData = static_cast<char*>(static_cast<std::string*>(mappedFile.m_pHandle)->data());
-        mappedFile.m_size = static_cast<uint64_t>(static_cast<std::string*>(mappedFile.m_pHandle)->size());
+        mappedFile.m_pData = static_cast<char*>(static_cast<String*>(mappedFile.m_pHandle)->data());
+        mappedFile.m_size = static_cast<uint64_t>(static_cast<String*>(mappedFile.m_pHandle)->size());
         return mappedFile;
     }
 
     void MappedFileImpl::Close(MappedFile& mappedFile) {
         if (mappedFile.m_pHandle) {
-            delete static_cast<std::string*>(mappedFile.m_pHandle);
+            delete static_cast<String*>(mappedFile.m_pHandle);
         }
     }
 #endif

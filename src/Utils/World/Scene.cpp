@@ -134,7 +134,7 @@ namespace SR_WORLD_NS {
         }
 
         static auto&& destroySceneFn = [](Scene::Ptr& pScene) {
-            pScene.AutoFree([](SR_WORLD_NS::Scene* pScene, auto&& pControl) {
+            pScene.AutoFree([](SR_WORLD_NS::Scene* pScene, SR_HTYPES_NS::SharedPtrDynamicData* pControl) {
                 pScene->Destroy();
                 pControl->deleter(static_cast<void*>(pScene));
             });
@@ -185,7 +185,7 @@ namespace SR_WORLD_NS {
 
         RemoveComponents();
 
-        m_logic.AutoFree([](auto&& pLogic, auto&& pControl) {
+        m_logic.AutoFree([](SceneLogic* pLogic, SR_HTYPES_NS::SharedPtrDynamicData* pControl) {
             pLogic->Destroy();
             pControl->deleter(static_cast<void*>(pLogic));
         });
