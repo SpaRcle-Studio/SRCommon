@@ -82,7 +82,7 @@ namespace SR_UTILS_NS {
 
         void Remove(const IResource::Ptr& pResource);
         void GC();
-        void Thread();
+        bool Thread();
 
     private:
         std::vector<IResource::Ptr> m_destroyQueue;

@@ -21,7 +21,10 @@ namespace SR_HTYPES_NS {
     class Thread;
 
     struct ThreadImpl {
+    #ifdef SR_THREADS_ALLOWED
         std::thread thread;
+    #endif
+        SR_HTYPES_NS::Function<bool()> threadBody;
         std::atomic<bool> nameChanged = false;
         std::atomic<bool> isCreated = false;
         std::atomic<bool> isRan = false;
@@ -55,11 +58,7 @@ namespace SR_HTYPES_NS {
             SR_NODISCARD Ptr GetMainThread();
             SR_NODISCARD Ptr GetThisThread();
             SR_NODISCARD Ptr TryGetThisThread();
-            SR_DEPRECATED_EX("Not safe, use Create(Ptr& pThread, Functor&& fn, Args&&... args)") SR_NODISCARD Ptr Create(std::thread thread);
-            SR_DEPRECATED_EX("Not safe, use Create(Ptr& pThread, Functor&& fn, Args&&... args)") SR_NODISCARD Ptr Create(const std::function<void()>& fn);
             SR_NODISCARD uint32_t GetThreadsCount();
-
-            SR_NODISCARD Ptr CreateEmpty();
 
             template<class Functor, typename... Args> bool Create(Ptr& pThread, Functor&& fn, Args&&... args);
 
@@ -77,7 +76,9 @@ namespace SR_HTYPES_NS {
     private:
         Thread();
 
+    #ifdef SR_THREADS_ALLOWED
         explicit Thread(std::thread&& thread);
+    #endif
         explicit Thread(ThreadId id);
 
         ~Thread() override;
@@ -114,62 +115,47 @@ namespace SR_HTYPES_NS {
 
     template<class Functor, typename... Args>
     bool Thread::Factory::Create(Thread::Ptr& pThread, Functor&& fn, Args&&... args)  {
+    #ifdef SR_THREADS_ALLOWED
         SR_LOG("Thread::Factory::Create() : creating new thread...");
+    #else
+        SR_LOG("Thread::Factory::Create() : creating new fake thread...");
+    #endif
 
         SR_LOCK_GUARD;
 
         pThread = new Thread();
 
+    #ifdef SR_THREADS_ALLOWED
         std::thread thread([fn = std::forward<Functor>(fn), pThread, argsTuple = std::make_tuple(args...)]() mutable {
             while (!pThread->GetImpl().isCreated || !pThread->HasId()) {
                 pThread->m_id = SR_UTILS_NS::GetThreadId(pThread->GetImpl().thread);
             }
 
-            std::apply(fn, std::forward<decltype(argsTuple)>(argsTuple));
+            pThread->GetImpl().threadBody = [fn = std::forward<Functor>(fn), argsTuple]() mutable {
+                return std::apply(fn, std::forward<decltype(argsTuple)>(argsTuple));
+            };
+
+            while (pThread->GetImpl().threadBody());
         });
 
         while (!pThread->HasId()) {
             pThread->m_id = SR_UTILS_NS::GetThreadId(thread);
         }
+    #else
+        pThread->GetImpl().threadBody = [fn = std::forward<Functor>(fn), argsTuple = std::make_tuple(args...)]() mutable -> bool {
+            return std::apply(fn, std::forward<decltype(argsTuple)>(argsTuple));
+        };
+    #endif
 
         m_threads.insert(std::make_pair(pThread->GetId(), pThread));
 
+    #ifdef SR_THREADS_ALLOWED
         pThread->GetImpl().thread = std::move(thread);
+    #endif
         pThread->GetImpl().isRan = true;
         pThread->GetImpl().isCreated = true;
 
         SR_LOG("Thread::Factory::Create() : thread \"{}\" created.", pThread->m_id.c_str());
-
-        return true;
-    }
-
-    template<class Functor, typename... Args> bool Thread::Run(Functor &&fn)  {
-        if (Joinable()) {
-            SRHalt("Thread::Run() : thread is already running!");
-            return false;
-        }
-
-        Factory::LockSingleton();
-
-        auto&& thread = std::thread([function = std::forward<Functor>(fn), this]() {
-            while (!GetImpl().isCreated || m_id == "0" || m_id.empty()) {
-                m_id = SR_UTILS_NS::GetThreadId(GetImpl().thread);
-            }
-            Factory::Instance().m_threads.insert(std::make_pair(m_id, this));
-            SR_LOG("Thread::Run() : run thread \"{}\"",  m_id);
-            while (!GetImpl().isRan) {
-                SR_NOOP;
-            }
-            function();
-        });
-
-        GetImpl().thread = std::move(thread);
-        SR_LOG("Thread::Run() : thread is moved");
-        GetImpl().isCreated = true;
-
-        Factory::UnlockSingleton();
-
-        GetImpl().isRan = true;
 
         return true;
     }

@@ -17,6 +17,7 @@ namespace SR_HTYPES_NS {
         DeInitialize();
     }
 
+#ifdef SR_THREADS_ALLOWED
     Thread::Thread(std::thread&& thread) {
         GetImpl().thread = std::move(thread);
         GetImpl().isCreated = true;
@@ -24,6 +25,7 @@ namespace SR_HTYPES_NS {
         m_id = SR_UTILS_NS::GetThreadId(GetImpl().thread);
         m_context = new DataStorage();
     }
+#endif
 
     Thread::~Thread() {
         SRAssert(!Joinable());
@@ -36,13 +38,23 @@ namespace SR_HTYPES_NS {
     Thread::Thread(Thread::ThreadId id)
         : m_id(id)
     {
+    #ifdef SR_THREADS_ALLOWED
         GetImpl().thread = std::thread();
+    #endif
         m_context = new DataStorage();
     }
 
     Thread::Thread()
+    #ifdef SR_THREADS_ALLOWE
         : Thread(std::thread())
     { }
+    #else
+    {
+        GetImpl().isCreated = true;
+        GetImpl().isRan = true;
+        m_context = new DataStorage();
+    }
+    #endif
 
     void Thread::Sleep(uint64_t milliseconds) {
         SR_TRACY_ZONE;
@@ -50,29 +62,9 @@ namespace SR_HTYPES_NS {
     }
 
     void Thread::SetPriority(ThreadPriority priority) {
+    #ifdef SR_THREADS_ALLOWED
         Platform::SetThreadPriority(reinterpret_cast<void*>(GetImpl().thread.native_handle()), priority);
-    }
-
-    SR_NODISCARD Thread::Ptr Thread::Factory::CreateEmpty() {
-        SR_SCOPED_LOCK;
-        SR_LOG("Thread::Factory::CreateEmpty() : create empty thread...");
-        return new Thread();
-    }
-
-    Thread::Ptr Thread::Factory::Create(std::thread thread) {
-        SR_SCOPED_LOCK;
-
-        auto&& pThread = new Thread(std::move(thread));
-
-        SR_LOG("Thread::Factory::Create() : creating new \"{}\" thread...", pThread->m_id.c_str());
-
-        m_threads.insert(std::make_pair(pThread->GetId(), pThread));
-
-        return pThread;
-    }
-
-    Thread::Ptr Thread::Factory::Create(const std::function<void()> &fn) {
-        return Create(std::thread(fn));
+    #endif
     }
 
     bool Thread::TryJoin() {
@@ -210,15 +202,23 @@ namespace SR_HTYPES_NS {
     }
 
     void Thread::Detach() {
+    #ifdef SR_THREADS_ALLOWED
         GetImpl().thread.detach();
+    #endif
     }
 
     void Thread::Join() {
+    #ifdef SR_THREADS_ALLOWED
         GetImpl().thread.join();
+    #endif
     }
 
     bool Thread::Joinable() const {
+    #ifdef SR_THREADS_ALLOWED
         return GetImpl().thread.joinable();
+    #else
+        return false;
+    #endif
     }
 
     DataStorage *Thread::GetContext() {

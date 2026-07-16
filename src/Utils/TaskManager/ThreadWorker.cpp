@@ -158,35 +158,35 @@ namespace SR_UTILS_NS {
         }
     }
 
-    void ThreadWorker::Work() {
+    bool ThreadWorker::Work() {
         SR_TRACY_THREAD_NAME(m_name.c_str());
 
-        while (true) {
-            SR_TRACY_ZONE_S(m_name.c_str());
-            SR_TRACY_FRAME_MARK_N(m_name.c_str());
+        SR_TRACY_ZONE_S(m_name.c_str());
+        SR_TRACY_FRAME_MARK_N(m_name.c_str());
 
-            if (m_useThreads) {
-                m_thread->Synchronize();
-            }
-
-            if (!m_isActive) {
-                break;
-            }
-
-            if (!GetThreadsWorker()->IsAlive()) {
-                CheckFinalize();
-                if (!m_useThreads) {
-                    break;
-                }
-                continue;
-            }
-
-            Update();
-
-            if (!m_useThreads) {
-                break;
-            }
+        if (m_useThreads) {
+            m_thread->Synchronize();
         }
+
+        if (!m_isActive) {
+            return false;
+        }
+
+        if (!GetThreadsWorker()->IsAlive()) {
+            CheckFinalize();
+            if (!m_useThreads) {
+                return false;
+            }
+            return true;
+        }
+
+        Update();
+
+        if (!m_useThreads) {
+            return false;
+        }
+
+        return true;
     }
 
     void ThreadWorker::Update() {
@@ -288,7 +288,12 @@ namespace SR_UTILS_NS {
 
         for (const Details::ThreadWorkerThread& thread : settingsVariant.value().threads) {
             ThreadWorker::Ptr pThreadWorker = new ThreadWorker(thread.name);
+
+        #ifdef SR_THREADS_ALLOWED
             pThreadWorker->SetUseThreads(thread.useThreads);
+        #else
+            pThreadWorker->SetUseThreads(false);
+        #endif
 
             for (const Details::ThreadWorkerSettingsState& stateName : thread.states) {
                 auto&& pState = SR_UTILS_NS::Factory::Instance().Create<ThreadWorkerStateBase>(stateName.name);

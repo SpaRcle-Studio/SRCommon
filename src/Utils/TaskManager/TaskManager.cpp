@@ -15,6 +15,9 @@ namespace SR_UTILS_NS {
         , m_thread(nullptr)
         , m_priority(priority)
     {
+    #ifndef SR_THREADS_ALLOWED
+        m_createThread = false;
+    #endif
         m_state->store(State::Waiting);
     }
 
@@ -137,70 +140,72 @@ namespace SR_UTILS_NS {
 
         SR_INFO("TaskManager::InitSingleton() : run task manager thread...");
 
-        SR_HTYPES_NS::Thread::Factory::Instance().Create(m_thread, [this]() {
-            std::set<Task*> delayedTasks;
+        SR_HTYPES_NS::Thread::Factory::Instance().Create(m_thread, [this]() -> bool {
+            if (!m_isRun.load()) {
+                return false;
+            }
 
-            while (m_isRun.load()) {
-                SR_TRACY_ZONE_N("TaskManager");
+            SR_TRACY_ZONE_N("TaskManager");
 
-                bool isEmpty = false;
-                {
-                    SR_LOCK_GUARD;
-                    isEmpty = m_tasks.empty();
-                }
+            bool isEmpty = false;
+            {
+                SR_LOCK_GUARD;
+                isEmpty = m_tasks.empty();
+            }
 
-                if (isEmpty) {
-                    SR_TRACY_ZONE_COLOR(0x000088);
-                    delayedTasks.clear();
-                    SR_PLATFORM_NS::Sleep(5);
-                    continue;
-                }
+            if (isEmpty) {
+                SR_TRACY_ZONE_COLOR(0x000088);
+                m_delayedTasks.clear();
+                SR_PLATFORM_NS::Sleep(5);
+                return true;
+            }
 
-                SR_TRACY_ZONE_COLOR(0x008800);
+            SR_TRACY_ZONE_COLOR(0x008800);
 
-                TaskPriority highestPriority = TaskPriority::Unknown;
-                Task::Ptr pTaskWithHighestPriority = nullptr;
-                {
-                    SR_LOCK_GUARD;
+            TaskPriority highestPriority = TaskPriority::Unknown;
+            Task::Ptr pTaskWithHighestPriority = nullptr;
+            {
+                SR_LOCK_GUARD;
 
-                    for (auto&& pTask : m_tasks) {
-                        if (pTask->IsWaiting() && pTask->GetPriority() > highestPriority && !delayedTasks.count(pTask.get())) {
-                            highestPriority = pTask->GetPriority();
-                        }
-                    }
-
-                    if (highestPriority == TaskPriority::Unknown) {
-                        delayedTasks.clear();
-                        continue;
-                    }
-
-                    for (auto&& pTask : m_tasks) {
-                        if (pTask->IsWaiting() && pTask->GetPriority() == highestPriority) {
-                            pTaskWithHighestPriority = pTask;
-                            break;
-                        }
+                for (auto&& pTask : m_tasks) {
+                    if (pTask->IsWaiting() && pTask->GetPriority() > highestPriority && !m_delayedTasks.count(pTask.get())) {
+                        highestPriority = pTask->GetPriority();
                     }
                 }
 
-                if (pTaskWithHighestPriority) {
-                    pTaskWithHighestPriority->Run();
-                    if (pTaskWithHighestPriority->IsCompleted()) {
-                        SR_LOCK_GUARD;
-                        m_results.insert(std::make_pair(pTaskWithHighestPriority->GetId(), pTaskWithHighestPriority->GetResult()));
-                        m_ids.erase(pTaskWithHighestPriority->GetId());
-                        auto&& pIt = std::ranges::find(m_tasks, pTaskWithHighestPriority); /// удаляем задачу из списка задач, так как она уже завершилась
-                        if (pIt != m_tasks.end()) {
-                            m_tasks.erase(pIt);
-                        }
-                        else if (!pTaskWithHighestPriority->IsStopped()) {
-                            SRHalt("TaskManager::InitSingleton() : task is completed, but not found in the list of tasks!");
-                        }
-                    }
-                    else {
-                        delayedTasks.insert(pTaskWithHighestPriority.get());
+                if (highestPriority == TaskPriority::Unknown) {
+                    m_delayedTasks.clear();
+                    return true;
+                }
+
+                for (auto&& pTask : m_tasks) {
+                    if (pTask->IsWaiting() && pTask->GetPriority() == highestPriority) {
+                        pTaskWithHighestPriority = pTask;
+                        break;
                     }
                 }
             }
+
+            if (pTaskWithHighestPriority) {
+                pTaskWithHighestPriority->Run();
+                if (pTaskWithHighestPriority->IsCompleted()) {
+                    SR_LOCK_GUARD;
+                    m_results.insert(std::make_pair(pTaskWithHighestPriority->GetId(), pTaskWithHighestPriority->GetResult()));
+                    m_ids.erase(pTaskWithHighestPriority->GetId());
+                    auto&& pIt = std::ranges::find(m_tasks, pTaskWithHighestPriority); /// удаляем задачу из списка задач, так как она уже завершилась
+                    if (pIt != m_tasks.end()) {
+                        m_tasks.erase(pIt);
+                    }
+                    else if (!pTaskWithHighestPriority->IsStopped()) {
+                        SRHalt("TaskManager::InitSingleton() : task is completed, but not found in the list of tasks!");
+                    }
+                }
+                else {
+                    m_delayedTasks.insert(pTaskWithHighestPriority.get());
+                }
+            }
+
+            return true;
         });
 
         m_thread->SetName("Task manager");
@@ -220,6 +225,7 @@ namespace SR_UTILS_NS {
             if (pState->load() != Task::State::Stopped && pState->load() != Task::State::Failed) {
                 pState->store(Task::State::Completed);
             }
+            return false;
         }, false, priority);
 
         const uint64_t uniqueId = GetUniqueId();
@@ -238,6 +244,7 @@ namespace SR_UTILS_NS {
             if (pState->load() != Task::State::Stopped && pState->load() != Task::State::Failed) {
                 pState->store(Task::State::Completed);
             }
+            return false;
         }, true, priority);
 
         const uint64_t uniqueId = GetUniqueId();

@@ -79,7 +79,7 @@ namespace SR_UTILS_NS {
 
         void Start();
         void Stop();
-        void Work();
+        bool Work();
 
         SR_NODISCARD ThreadsWorker* GetThreadsWorker() const { return m_threadsWorker; }
         SR_NODISCARD const std::vector<ThreadWorkerStateBase::Ptr>& GetStates() const { return m_states; }

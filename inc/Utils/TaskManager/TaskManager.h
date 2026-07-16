@@ -26,7 +26,7 @@ namespace SR_UTILS_NS {
         using StatePtr = std::atomic<State>*;
         using AtomicState = std::atomic<State>;
 
-        using TaskFn = SR_HTYPES_NS::Function<void(StatePtr)>;
+        using TaskFn = SR_HTYPES_NS::Function<bool(StatePtr)>;
 
     public:
         explicit Task(TaskFn fn, bool createThread, TaskPriority priority);
@@ -89,6 +89,7 @@ namespace SR_UTILS_NS {
         /// и не будет надобности в unordered set/map
         std::set<TaskId> m_ids;
         mutable std::map<TaskId, Task::State> m_results;
+        std::set<Task*> m_delayedTasks;
 
     };
 }

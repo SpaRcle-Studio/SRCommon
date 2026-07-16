@@ -153,31 +153,27 @@ namespace SR_UTILS_NS {
         return m_folder;
     }
 
-    void ResourceManager::Thread() {
-        do {
-            SR_TRACY_ZONE;
+    bool ResourceManager::Thread() {
+        SR_TRACY_ZONE;
 
-            m_thread->Synchronize();
+        m_thread->Synchronize();
 
-            SR_PLATFORM_NS::Sleep(5);
+        SR_PLATFORM_NS::Sleep(5);
 
-            auto time = clock();
-            m_deltaTime = static_cast<uint64_t>(time - m_lastTime); /// miliseconds
-            m_lastTime = time;
+        auto time = clock();
+        m_deltaTime = static_cast<uint64_t>(time - m_lastTime); /// miliseconds
+        m_lastTime = time;
 
-            m_GCDt += m_deltaTime;
+        m_GCDt += m_deltaTime;
 
-            if (m_GCDt > (m_force ? 100 : 500) /** ms */) {
-                /** если какой-то ресурс больше не используется, то уничтожаем его.
-                 * все происходящее в GC должно быть потоко-безопасным, то есть при освобождении
-                 * ресурсов не должны блокироваться другие потоки, иначе будут проблемы. */
-                GC();
-                m_GCDt = 0;
-            }
+        if (m_GCDt > (m_force ? 100 : 500) /** ms */) {
+            /** если какой-то ресурс больше не используется, то уничтожаем его.
+             * все происходящее в GC должно быть потоко-безопасным, то есть при освобождении
+             * ресурсов не должны блокироваться другие потоки, иначе будут проблемы. */
+            GC();
+            m_GCDt = 0;
         }
-        while(m_isRun);
-
-        SR_INFO("ResourceManager::Thread() : exit from thread-function.");
+        return m_isRun;
     }
 
     void ResourceManager::GC() {
