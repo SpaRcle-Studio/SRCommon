@@ -252,4 +252,14 @@ template<> struct fmt::formatter<SR_UTILS_NS::String> {
     }
 };
 
+template<> struct fmt::formatter<SR_UTILS_NS::StringView> {
+    template<typename ParseContext>
+    constexpr auto parse(ParseContext& ctx) { return ctx.begin(); }
+
+    template<typename FormatContext>
+    auto format(SR_UTILS_NS::StringView const& str, FormatContext& ctx) const {
+        return fmt::format_to(ctx.out(), "{}", std::string_view(str));
+    }
+};
+
 #endif //SR_ENGINE_COMMON_TYPES_STRING_H

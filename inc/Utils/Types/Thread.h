@@ -135,7 +135,9 @@ namespace SR_HTYPES_NS {
                 return std::apply(fn, std::forward<decltype(argsTuple)>(argsTuple));
             };
 
-            while (pThread->GetImpl().threadBody());
+            while (pThread->GetImpl().threadBody()) {
+                SR_NOOP;
+            }
         });
 
         while (!pThread->HasId()) {

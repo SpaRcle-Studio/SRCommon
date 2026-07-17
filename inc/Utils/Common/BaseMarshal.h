@@ -168,42 +168,54 @@ namespace SR_UTILS_NS {
         }
 
         SR_MAYBE_UNUSED SR_INLINE_STATIC void SR_FASTCALL SaveString(SR_HTYPES_NS::Stream& stream, const std::string& str) {
-            const size_t size = str.size();
-            stream.write((const char*)&size, sizeof(size_t));
+            const uint64_t size = str.size();
+            stream.write((const char*)&size, sizeof(uint64_t));
             stream.write((const char*)&str[0], size * sizeof(char));
         }
 
+        SR_MAYBE_UNUSED SR_INLINE_STATIC void SR_FASTCALL SaveString(SR_HTYPES_NS::Stream& stream, const String& str) {
+            const uint64_t size = str.size();
+            stream.write((const char*)&size, sizeof(uint64_t));
+            stream.write(str.data(), size * sizeof(char));
+        }
+
+        SR_MAYBE_UNUSED SR_INLINE_STATIC void SR_FASTCALL SaveString(SR_HTYPES_NS::Stream& stream, StringView str) {
+            const uint64_t size = str.size();
+            stream.write((const char*)&size, sizeof(uint64_t));
+            stream.write(str.data(), size * sizeof(char));
+        }
+
         SR_MAYBE_UNUSED static void SR_FASTCALL SaveString(SR_HTYPES_NS::Stream& stream, const std::string_view& str) {
-            const size_t size = str.size();
-            stream.write((const char*)&size, sizeof(size_t));
+            const uint64_t size = str.size();
+            stream.write((const char*)&size, sizeof(uint64_t));
             stream.write((const char*)&str[0], size * sizeof(char));
         }
 
         SR_MAYBE_UNUSED static void SR_FASTCALL SaveString(SR_HTYPES_NS::Stream& stream, SR_UTILS_NS::StringAtom str) {
-            const size_t size = str.size();
-            stream.write((const char*)&size, sizeof(size_t));
+            const uint64_t size = str.size();
+            stream.write((const char*)&size, sizeof(uint64_t));
             stream.write((const char*)&str.c_str()[0], size * sizeof(char));
         }
 
         template<typename T> SR_INLINE_STATIC void SR_FASTCALL SaveStringVector(SR_HTYPES_NS::Stream& stream, const std::vector<T>& arr) {
-            const size_t size = arr.size();
-            stream.write((const char*)&size, sizeof(size_t));
+            const uint64_t size = arr.size();
+            stream.write((const char*)&size, sizeof(uint64_t));
             for (const auto& str : arr) {
                 SaveString(stream, str);
             }
         }
 
         template<typename T> SR_INLINE_STATIC void SR_FASTCALL SaveStringSet(SR_HTYPES_NS::Stream& stream, const std::set<T>& arr) {
-            const size_t size = arr.size();
-            stream.write((const char*)&size, sizeof(size_t));
+            const uint64_t size = arr.size();
+            stream.write((const char*)&size, sizeof(uint64_t));
             for (const auto& str : arr) {
                 SaveString(stream, str);
             }
         }
 
         template<typename T> SR_INLINE_STATIC void SR_FASTCALL SaveVector(SR_HTYPES_NS::Stream& stream, const std::vector<T>& vector) {
-            const size_t size = vector.size();
-            stream.write((const char*)&size, sizeof(size_t));
+            const uint64_t size = vector.size();
+            stream.write((const char*)&size, sizeof(uint64_t));
             if (size > 0) {
                 stream.write((const char *) vector.data(), size * sizeof(T));
             }
@@ -212,8 +224,8 @@ namespace SR_UTILS_NS {
         template<typename Vector> SR_INLINE_STATIC Vector SR_FASTCALL LoadVector(SR_HTYPES_NS::Stream& stream) {
             Vector vector;
 
-            size_t size;
-            stream.read((char*)&size, sizeof(size_t));
+            uint64_t size;
+            stream.read((char*)&size, sizeof(uint64_t));
 
             using T = typename std::decay<decltype(*vector.begin())>::type;
 
@@ -253,8 +265,8 @@ namespace SR_UTILS_NS {
 
         SR_MAYBE_UNUSED SR_INLINE_STATIC std::string SR_FASTCALL LoadStr(SR_HTYPES_NS::Stream& stream) {
             std::string str;
-            size_t size;
-            stream.read((char*)&size, sizeof(size_t));
+            uint64_t size;
+            stream.read((char*)&size, sizeof(uint64_t));
             SRAssert(size < SR_UINT16_MAX);
             if (size >= SR_UINT16_MAX) {
                 return std::string(); /// NOLINT

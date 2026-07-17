@@ -11,8 +11,8 @@
 namespace SR_HTYPES_NS {
     template<typename T, typename Predicate = std::less<T>> class SortedVector {
     public:
-        using Iterator = typename std::vector<T>::iterator;
-        using ConstIterator = typename std::vector<T>::const_iterator;
+        using Iterator = typename SR_UTILS_NS::Vector<T>::iterator;
+        using ConstIterator = typename SR_UTILS_NS::Vector<T>::const_iterator;
 
         SortedVector() = default;
         SortedVector(SortedVector&& other) noexcept
@@ -101,6 +101,18 @@ namespace SR_HTYPES_NS {
             m_data.insert(it, value);
         }
 
+        void insert(Iterator it, const T& value) {
+            m_data.insert(it, value);
+        }
+
+        bool insert(const T& value) {
+            return Add(value);
+        }
+
+        bool insert(T&& value) {
+            return Add(std::forward<T>(value));
+        }
+
         void Erase(Iterator it) {
             m_data.erase(it);
         }
@@ -136,26 +148,51 @@ namespace SR_HTYPES_NS {
             return const_cast<T*>(static_cast<const SortedVector&>(*this).Find(value));
         }
 
-        void Add(const T& value) {
+        SR_NODISCARD bool VerifyDuplicates() const {
+            if (m_data.empty()) {
+                return true;
+            }
+
+            for (auto it = m_data.begin(); it != m_data.end() - 1; ++it) {
+                if (*it == *(it + 1)) {
+                    return false; // Duplicate found
+                }
+            }
+            return true; // No duplicates
+        }
+
+        bool Add(const T& value) {
             SR_TRACY_ZONE;
             if (m_data.empty()) {
                 m_data.push_back(value);
-                return;
+                return true;
             }
 
             auto it = std::lower_bound(m_data.begin(), m_data.end(), value, m_predicate);
+
+            if (it != m_data.end() && !m_predicate(value, *it) && !m_predicate(*it, value)) {
+                return false; // Duplicate found, do not insert
+            }
+
             m_data.insert(it, value);
+            return true;
         }
 
-        void Add(T&& value) {
+        bool Add(T&& value) {
             SR_TRACY_ZONE;
             if (m_data.empty()) {
-                m_data.push_back(std::move(value));
-                return;
+                m_data.push_back(std::forward<T>(value));
+                return true;
             }
 
             auto it = std::lower_bound(m_data.begin(), m_data.end(), value, m_predicate);
-            m_data.insert(it, std::move(value));
+
+            if (it != m_data.end() && !m_predicate(value, *it) && !m_predicate(*it, value)) {
+                return false; // Duplicate found, do not insert
+            }
+
+            m_data.insert(it, std::forward<T>(value));
+            return true;
         }
 
         template<class Ty, typename CustomPred = Predicate> SR_NODISCARD Iterator GetOrCreate(const Ty& value, const CustomPred& predicate) {
@@ -203,8 +240,7 @@ namespace SR_HTYPES_NS {
 
     private:
         static constexpr Predicate m_predicate = Predicate();
-
-        std::vector<T> m_data;
+        SR_UTILS_NS::Vector<T> m_data;
 
     };
 }

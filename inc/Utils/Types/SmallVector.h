@@ -128,7 +128,7 @@ namespace SR_UTILS_NS {
         }
 
         if constexpr (std::is_trivially_copyable_v<T>) {
-            std::memcpy(pDst, pSrc, sizeof(T) * count);
+            std::memcpy((void*)pDst, (void*)pSrc, sizeof(T) * count);
         }
         else {
             for (SizeType i = 0; i < count; ++i) {
@@ -162,7 +162,7 @@ namespace SR_UTILS_NS {
     void SmallVector<T, InlineCapacity>::ConstructRange(T* pData, SizeType start, SizeType end, const T& value) {
         if constexpr (std::is_trivially_copy_constructible_v<T>) {
             for (SizeType i = start; i < end; ++i) {
-                std::memcpy(pData + i, &value, sizeof(T));
+                std::memcpy((void*)(pData + i), (void*)(&value), sizeof(T));
             }
             return;
         }
@@ -179,7 +179,7 @@ namespace SR_UTILS_NS {
                 T* pInline = InlineData();
 
                 if constexpr (std::is_trivially_copyable_v<T>) {
-                    std::memcpy(pInline, pOld, sizeof(T) * m_size);
+                    std::memcpy((void*)pInline, (void*)pOld, sizeof(T) * m_size);
                 }
                 else {
                     for (SizeType i = 0; i < m_size; ++i) {
@@ -200,7 +200,7 @@ namespace SR_UTILS_NS {
 
         if (pOld) {
             if constexpr (std::is_trivially_copyable_v<T>) {
-                std::memcpy(pNew, pOld, sizeof(T) * m_size);
+                std::memcpy((void*)pNew, (void*)pOld, sizeof(T) * m_size);
             }
             else {
                 for (SizeType i = 0; i < m_size; ++i) {
@@ -244,7 +244,7 @@ namespace SR_UTILS_NS {
     SR_CONSTEXPR SmallVector<T, InlineCapacity>::SmallVector(std::initializer_list<T> init) {
         reserve(static_cast<SizeType>(init.size()));
         if constexpr (std::is_trivially_copyable_v<T>) {
-            std::memcpy(m_data, init.begin(), sizeof(T) * init.size());
+            std::memcpy((void*)m_data, (void*)init.begin(), sizeof(T) * init.size());
         }
         else {
             for (SizeType i = 0; i < init.size(); ++i) {
@@ -258,7 +258,7 @@ namespace SR_UTILS_NS {
     SR_CONSTEXPR SmallVector<T, InlineCapacity>::SmallVector(const SmallVector& other) {
         reserve(other.m_size);
         if constexpr (std::is_trivially_copyable_v<T>) {
-            std::memcpy(m_data, other.m_data, sizeof(T) * other.m_size);
+            std::memcpy((void*)m_data, (void*)other.m_data, sizeof(T) * other.m_size);
         }
         else {
             for (SizeType i = 0; i < other.m_size; ++i) {
@@ -281,7 +281,7 @@ namespace SR_UTILS_NS {
         }
         else {
             if constexpr (std::is_trivially_copyable_v<T>) {
-                std::memcpy(m_data, other.m_data, sizeof(T) * other.m_size);
+                std::memcpy((void*)m_data, (void*)other.m_data, sizeof(T) * other.m_size);
             }
             else {
                 for (SizeType i = 0; i < other.m_size; ++i) {
@@ -332,7 +332,7 @@ namespace SR_UTILS_NS {
 
         DestructRange(m_data, 0, m_size);
         if constexpr (std::is_trivially_copyable_v<T>) {
-            std::memcpy(m_data, other.m_data, sizeof(T) * other.m_size);
+            std::memcpy((void*)m_data, (void*)other.m_data, sizeof(T) * other.m_size);
         }
         else {
             for (SizeType i = 0; i < other.m_size; ++i) {
@@ -374,7 +374,7 @@ namespace SR_UTILS_NS {
         DestructRange(m_data, 0, m_size);
 
         if constexpr (std::is_trivially_copyable_v<T>) {
-            std::memcpy(m_data, other.m_data, sizeof(T) * other.m_size);
+            std::memcpy((void*)m_data, (void*)other.m_data, sizeof(T) * other.m_size);
         }
         else {
             for (SizeType i = 0; i < other.m_size; ++i) {
@@ -399,7 +399,7 @@ namespace SR_UTILS_NS {
         DestructRange(m_data, 0, m_size);
 
         if constexpr (std::is_trivially_copyable_v<T>) {
-            std::memcpy(m_data, init.begin(), sizeof(T) * init.size());
+            std::memcpy((void*)m_data, (void*)init.begin(), sizeof(T) * init.size());
         }
         else {
             for (SizeType i = 0; i < init.size(); ++i) {
@@ -497,7 +497,7 @@ namespace SR_UTILS_NS {
         EnsureCapacityForGrowth(1);
 
         if constexpr (std::is_trivially_copyable_v<T>) {
-            std::memcpy(m_data + m_size, &value, sizeof(T));
+            std::memcpy((void*)(m_data + m_size), (void*)(&value), sizeof(T));
         }
         else {
             new (m_data + m_size) T(value);
@@ -510,7 +510,7 @@ namespace SR_UTILS_NS {
         EnsureCapacityForGrowth(1);
 
         if constexpr (std::is_trivially_copyable_v<T>) {
-            std::memcpy(m_data + m_size, &value, sizeof(T));
+            std::memcpy((void*)(m_data + m_size), (void*)(&value), sizeof(T));
         }
         else {
             new (m_data + m_size) T(std::move(value));
@@ -525,7 +525,7 @@ namespace SR_UTILS_NS {
 
         if constexpr (std::is_trivially_copyable_v<T>) {
             T temp(std::forward<ValueType>(value)...);
-            std::memcpy(m_data + m_size, &temp, sizeof(T));
+            std::memcpy((void*)(m_data + m_size), (void*)(&temp), sizeof(T));
         }
         else {
             new (m_data + m_size) T(std::forward<ValueType>(value)...);
@@ -626,7 +626,7 @@ namespace SR_UTILS_NS {
         if constexpr (std::is_trivially_copyable_v<T>) {
             std::memmove(m_data + index + 1, m_data + index, sizeof(T) * (m_size - index));
             T temp(std::forward<ValueType>(value)...);
-            std::memcpy(m_data + index, &temp, sizeof(T));
+            std::memcpy((void*)(m_data + index), (void*)(&temp), sizeof(T));
         }
         else {
             T temp(std::forward<ValueType>(value)...);

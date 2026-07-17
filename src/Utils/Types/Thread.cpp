@@ -28,7 +28,9 @@ namespace SR_HTYPES_NS {
 #endif
 
     Thread::~Thread() {
-        SRAssert(!Joinable());
+        if (Joinable()) {
+            SRHalt("Thread::~Thread() : thread is joinable! Thread: {}", m_id);
+        }
         if (m_context) {
             delete m_context;
             m_context = nullptr;

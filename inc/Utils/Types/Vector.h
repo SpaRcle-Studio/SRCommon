@@ -62,7 +62,9 @@ namespace SR_UTILS_NS {
         Iterator erase(ConstIterator first, ConstIterator last);
         template<typename Predicate> Iterator remove_if(Predicate&& predicate);
         template<typename Predicate> SizeType erase_if(Predicate&& predicate);
-        template <class... ValueType> Iterator insert(ConstIterator pos, ValueType&&... value);
+        template <typename ValueType> Iterator insert(ConstIterator pos, ValueType&& value);
+        template <typename ValueType> Iterator insert(ConstIterator pos, SizeType count, ValueType&& value);
+        template <typename InputIt> Iterator insert(ConstIterator pos, InputIt pFirst, InputIt pLast);
         SR_NODISCARD T& at(SizeType index);
         SR_NODISCARD const T& at(SizeType index) const { return const_cast<Vector*>(this)->at(index); }
 
@@ -112,6 +114,73 @@ namespace SR_UTILS_NS {
 
     };
 
+    template<typename T> template<typename ValueType> Vector<T>::Iterator Vector<T>::insert(ConstIterator pos, SizeType count, ValueType&& value) {
+        SizeType index = pos - begin();
+        if (count == 0) {
+            return begin() + index;
+        }
+
+        if (m_size + count > m_capacity) {
+            reserve(m_size + count);
+        }
+
+        T* data = static_cast<T*>(m_data);
+
+        if constexpr (std::is_trivially_copyable_v<T>) {
+            std::memmove(data + index + count, data + index, sizeof(T) * (m_size - index));
+            for (SizeType i = 0; i < count; ++i) {
+                std::memcpy((void*)(data + index + i), (void*)(&value), sizeof(T));
+            }
+        }
+        else {
+            for (SizeType i = m_size; i > index; --i) {
+                new (data + i + count - 1) T(std::move(data[i - 1]));
+                data[i - 1].~T();
+            }
+            for (SizeType i = 0; i < count; ++i) {
+                new (data + index + i) T(std::forward<ValueType>(value));
+            }
+        }
+
+        m_size += count;
+        return data + index;
+    }
+
+    template<typename T> template<typename InputIt> Vector<T>::Iterator Vector<T>::insert(ConstIterator pos, InputIt pFirst, InputIt pLast) {
+        SizeType index = pos - begin();
+        SizeType count = std::distance(pFirst, pLast);
+        if (count == 0) {
+            return begin() + index;
+        }
+
+        if (m_size + count > m_capacity) {
+            reserve(m_size + count);
+        }
+
+        T* data = static_cast<T*>(m_data);
+
+        if constexpr (std::is_trivially_copyable_v<T>) {
+            std::memmove(data + index + count, data + index, sizeof(T) * (m_size - index));
+            for (SizeType i = 0; i < count; ++i) {
+                std::memcpy((void*)(data + index + i), (void*)(&(*pFirst)), sizeof(T));
+                ++pFirst;
+            }
+        }
+        else {
+            for (SizeType i = m_size; i > index; --i) {
+                new (data + i + count - 1) T(std::move(data[i - 1]));
+                data[i - 1].~T();
+            }
+            for (SizeType i = 0; i < count; ++i) {
+                new (data + index + i) T(*pFirst);
+                ++pFirst;
+            }
+        }
+
+        m_size += count;
+        return data + index;
+    }
+
     template<typename T> void Vector<T>::FreeMemory(void *pData, SizeType size) const {
         if (m_allocator) {
             m_allocator->Free(pData, size);
@@ -132,7 +201,7 @@ namespace SR_UTILS_NS {
         Vector<T> newVector;
         newVector.reserve(m_size);
         if constexpr (std::is_trivially_copyable_v<T>) {
-            std::memcpy(newVector.m_data, m_data, sizeof(T) * m_size);
+            std::memcpy((void*)newVector.m_data, (void*)m_data, sizeof(T) * m_size);
         }
         else {
             for (SizeType i = 0; i < m_size; ++i) {
@@ -143,7 +212,7 @@ namespace SR_UTILS_NS {
         return newVector;
     }
 
-    template<typename T> template<class... ValueType> T& Vector<T>::emplace_back(ValueType &&... value) {
+    template<typename T> template<typename... ValueType> T& Vector<T>::emplace_back(ValueType &&... value) {
         if (m_size >= m_capacity) {
             reserve(m_capacity > 0 ? m_capacity * SR_VECTOR_REALLOCATE_MULTIPLIER : SR_VECTOR_INITIAL_CAPACITY);
         }
@@ -168,7 +237,7 @@ namespace SR_UTILS_NS {
             else {
                 DestructRange(0, m_size);
                 if (std::is_trivially_copyable_v<T>) {
-                    std::memcpy(m_data, other.m_data, sizeof(T) * other.m_size);
+                    std::memcpy((void*)m_data, (void*)other.m_data, sizeof(T) * other.m_size);
                 }
                 else {
                     for (size_t i = 0; i < other.m_size; ++i) {
@@ -265,7 +334,7 @@ namespace SR_UTILS_NS {
         return data + firstIndex;
     }
 
-    template<typename T> template<class... ValueType> Vector<T>::Iterator Vector<T>::insert(Vector::ConstIterator pos, ValueType&&... value) {
+    template<typename T> template<typename ValueType> Vector<T>::Iterator Vector<T>::insert(Vector::ConstIterator pos, ValueType&& value) {
         SizeType index = pos - begin();
 
         if (index > m_size) {
@@ -280,16 +349,14 @@ namespace SR_UTILS_NS {
 
         if constexpr (std::is_trivially_copyable_v<T>) {
             std::memmove(data + index + 1, data + index, sizeof(T) * (m_size - index));
-            T temp(std::forward<ValueType>(value)...);
-            std::memcpy(data + index, &temp, sizeof(T));
+            std::memcpy((void*)(data + index), (void*)(&value), sizeof(T));
         }
         else {
-            T temp(std::forward<ValueType>(value)...);
             for (SizeType i = m_size; i > index; --i) {
                 new (data + i) T(std::move(data[i - 1]));
                 data[i - 1].~T();
             }
-            new (data + index) T(std::move(temp));
+            new (data + index) T(std::forward<ValueType>(value));
         }
 
         ++m_size;
@@ -372,7 +439,7 @@ namespace SR_UTILS_NS {
         else {
             DestructRange(0, m_size);
             if (std::is_trivially_copyable_v<T>) {
-                std::memcpy(m_data, init.begin(), sizeof(T) * init.size());
+                std::memcpy((void*)m_data, (void*)init.begin(), sizeof(T) * init.size());
             }
             else {
                 for (size_t i = 0; i < init.size(); ++i) {
@@ -424,7 +491,7 @@ namespace SR_UTILS_NS {
         else {
             DestructRange(0, m_size);
             if (std::is_trivially_copyable_v<T>) {
-                std::memcpy(m_data, first, sizeof(T) * count);
+                std::memcpy((void*)m_data, (void*)first, sizeof(T) * count);
             }
             else {
                 for (SizeType i = 0; i < count; ++i) {
@@ -442,7 +509,7 @@ namespace SR_UTILS_NS {
         m_capacity = count;
 
         if (std::is_trivially_copyable_v<T>) {
-            std::memcpy(m_data, first, sizeof(T) * count);
+            std::memcpy((void*)m_data, (void*)first, sizeof(T) * count);
         }
         else {
             for (SizeType i = 0; i < count; ++i) {
@@ -457,7 +524,7 @@ namespace SR_UTILS_NS {
         m_capacity = init.size();
 
         if (std::is_trivially_copyable_v<T>) {
-            std::memcpy(m_data, init.begin(), sizeof(T) * init.size());
+            std::memcpy((void*)m_data, (void*)init.begin(), sizeof(T) * init.size());
         }
         else {
             for (size_t i = 0; i < init.size(); ++i) {
@@ -473,7 +540,7 @@ namespace SR_UTILS_NS {
         m_data = static_cast<T*>(AllocateMemory(sizeof(T) * other.m_size));
 
         if (std::is_trivially_copyable_v<T>) {
-            std::memcpy(m_data, other.m_data, sizeof(T) * other.m_size);
+            std::memcpy((void*)m_data, (void*)other.m_data, sizeof(T) * other.m_size);
         }
         else {
             for (size_t i = 0; i < other.m_size; ++i) {
@@ -553,7 +620,7 @@ namespace SR_UTILS_NS {
 
             if (pOldData) {
                 if (std::is_trivially_copyable_v<T>) {
-                    std::memcpy(m_data, pOldData, sizeof(T) * m_size);
+                    std::memcpy((void*)m_data, (void*)pOldData, sizeof(T) * m_size);
                 }
                 else {
                     for (SizeType i = 0; i < m_size; ++i) {
@@ -597,7 +664,7 @@ namespace SR_UTILS_NS {
 
             if (pOldData) {
                 if (std::is_trivially_copyable_v<T>) {
-                    std::memcpy(m_data, pOldData, sizeof(T) * m_size);
+                    std::memcpy((void*)m_data, (void*)pOldData, sizeof(T) * m_size);
                 }
                 else {
                     for (SizeType i = 0; i < m_size; ++i) {
@@ -614,6 +681,13 @@ namespace SR_UTILS_NS {
     extern template class Vector<int32_t>;
     extern template class Vector<uint32_t>;
     extern template class Vector<StringAtom>;
+}
+
+namespace std {
+    template <class T, class Predicate>
+    constexpr SR_UTILS_NS::Vector<T>::SizeType erase_if(SR_UTILS_NS::Vector<T>& container, Predicate predicate) {
+        return container.erase_if(std::forward<Predicate>(predicate));
+    }
 }
 
 #endif //SR_COMMON_VECTOR_H

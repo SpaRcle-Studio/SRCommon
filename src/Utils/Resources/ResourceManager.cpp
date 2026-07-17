@@ -158,7 +158,9 @@ namespace SR_UTILS_NS {
 
         m_thread->Synchronize();
 
+    #ifdef SR_THREADS_ALLOWED
         SR_PLATFORM_NS::Sleep(5);
+    #endif
 
         auto time = clock();
         m_deltaTime = static_cast<uint64_t>(time - m_lastTime); /// miliseconds
@@ -173,7 +175,12 @@ namespace SR_UTILS_NS {
             GC();
             m_GCDt = 0;
         }
-        return m_isRun;
+
+        if (m_isRun) {
+            return true;
+        }
+        SR_LOG("ResourceManager::Thread() : thread is stopped.");
+        return false;
     }
 
     void ResourceManager::GC() {

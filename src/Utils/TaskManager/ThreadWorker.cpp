@@ -169,6 +169,7 @@ namespace SR_UTILS_NS {
         }
 
         if (!m_isActive) {
+            SR_LOG("ThreadWorker::Work() : thread \"{}\" if finished because it is not active!", m_name);
             return false;
         }
 
@@ -183,6 +184,7 @@ namespace SR_UTILS_NS {
         Update();
 
         if (!m_useThreads) {
+            SR_LOG("ThreadWorker::Work() : thread \"{}\" is finished because it is not using threads!", m_name);
             return false;
         }
 
