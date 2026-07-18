@@ -295,14 +295,11 @@ namespace SR_UTILS_NS {
         return npos;
     }
     SizeType String::find(char c, SizeType pos) const {
-        if (pos >= m_size || empty()) {
+        if (pos >= m_size) {
             return npos;
         }
-        const char* found = static_cast<const char*>(memchr(m_data + pos, c, m_size - pos));
-        if (found) {
-            return static_cast<SizeType>(found - m_data);
-        }
-        return npos;
+        const auto* found = static_cast<const char*>(memchr(m_data + pos, c, m_size - pos));
+        return found ? static_cast<SizeType>(found - m_data) : npos;
     }
     SizeType String::rfind(char c, SizeType pos) const {
         if (empty()) {
