@@ -17,6 +17,10 @@ namespace SR_UTILS_NS {
         }
     }
 
+    String::String(IAllocator* pAllocator) {
+        m_allocator = pAllocator;
+    }
+
     String::String(StringView str, IAllocator* pAllocator)
         : String(str.data(), str.size(), pAllocator)
     { }

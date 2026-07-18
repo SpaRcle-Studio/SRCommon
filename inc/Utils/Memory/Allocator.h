@@ -14,6 +14,7 @@ namespace SR_UTILS_NS {
         SR_NODISCARD void* ReAllocate(void* pMemory, SR_UTILS_NS::SizeType size, SR_UTILS_NS::SizeType alignment) override;
         void Free(void* pMemory, SR_UTILS_NS::SizeType size, SR_UTILS_NS::SizeType alignment) override;
         void Free(void* pMemory) override;
+        void ResetMemory() override;
 
     };
 
@@ -23,6 +24,7 @@ namespace SR_UTILS_NS {
         SR_NODISCARD void* ReAllocate(void* pMemory, SR_UTILS_NS::SizeType size, SR_UTILS_NS::SizeType alignment) override;
         void Free(void* pMemory, SR_UTILS_NS::SizeType size, SR_UTILS_NS::SizeType alignment) override;
         void Free(void* pMemory) override;
+        void ResetMemory() override;
 
     private:
         std::pmr::unsynchronized_pool_resource m_poolResource;
@@ -45,6 +47,7 @@ namespace SR_UTILS_NS {
         SR_NODISCARD void* ReAllocate(void* pMemory, SR_UTILS_NS::SizeType size, SR_UTILS_NS::SizeType alignment) override;
         void Free(void* pMemory, SR_UTILS_NS::SizeType size, SR_UTILS_NS::SizeType alignment) override;
         void Free(void* pMemory) override;
+        void ResetMemory() override;
 
     private:
         void Grow(Chunk* pExpected, SizeType size);
@@ -74,6 +77,7 @@ namespace SR_UTILS_NS {
         SR_NODISCARD void* ReAllocate(void* pMemory, SR_UTILS_NS::SizeType size, SR_UTILS_NS::SizeType alignment) override;
         void Free(void* pMemory, SR_UTILS_NS::SizeType size, SR_UTILS_NS::SizeType alignment) override;
         void Free(void* pMemory) override;
+        void ResetMemory() override;
 
     private:
         void Grow(Chunk* pExpected, SizeType size);
@@ -96,6 +100,7 @@ namespace SR_UTILS_NS {
         SR_NODISCARD void* ReAllocate(void* pMemory, SR_UTILS_NS::SizeType size, SR_UTILS_NS::SizeType alignment) override;
         void Free(void* pMemory, SR_UTILS_NS::SizeType size, SR_UTILS_NS::SizeType alignment) override;
         void Free(void* pMemory) override;
+        void ResetMemory() override;
 
     private:
         std::pmr::synchronized_pool_resource m_poolResource;

@@ -40,6 +40,7 @@ namespace SR_UTILS_NS {
         ) = 0;
 
         virtual void Free(void* pMemory) = 0;
+        virtual void ResetMemory() = 0;
 
     };
 }

@@ -479,17 +479,7 @@ namespace SR_UTILS_NS {
         if (m_isNormalized) {
             return m_path;
         }
-        //m_path = FileSystem::NormalizePath(m_path);
         FileSystem::NormalizePathInPlace(m_path);
-
-        //SR_MAYBE_UNUSED auto&& original = m_path;
-
-        // заменяем все \ на / прямо в строке
-        //for (char& c : m_path) {
-        //    if (c == '\\') c = '/';
-        //}
-
-
         m_isNormalized = true;
         return m_path;
     }

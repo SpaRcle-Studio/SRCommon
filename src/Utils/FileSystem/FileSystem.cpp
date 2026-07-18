@@ -311,7 +311,8 @@ namespace SR_UTILS_NS {
         }
 
         // стек: индексы начала сегментов внутри path
-        SR_UTILS_NS::SmallStack<size_t, 256> segments;
+        SR_THREAD_LOCAL static SR_UTILS_NS::SmallStack<uint16_t, 256> segments;
+        segments.clear();
 
         while (read <= path.size()) {
             size_t start = read;

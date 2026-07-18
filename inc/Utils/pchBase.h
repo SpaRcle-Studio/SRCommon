@@ -235,6 +235,8 @@ namespace SR_UTILS_NS {
         SR_NODISCARD T& back() { return data[top - 1]; }
         SR_NODISCARD bool empty() const { return top == 0; }
 
+        void clear() { top = 0; }
+
     private:
         T data[N];
         size_t top = 0;

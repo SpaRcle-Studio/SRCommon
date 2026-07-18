@@ -21,6 +21,10 @@ namespace SR_UTILS_NS {
         SRFree(pMemory);
     }
 
+    void DefaultAllocator::ResetMemory() {
+        /// Default allocator does not support resetting memory.
+    }
+
     /// ================================================================================================================
 
     void* UnSynchronizedPoolAllocator::Allocate(SR_UTILS_NS::SizeType size, SR_UTILS_NS::SizeType alignment) {
@@ -38,6 +42,10 @@ namespace SR_UTILS_NS {
 
     void UnSynchronizedPoolAllocator::Free(void* pMemory) {
         SRHalt("UnSynchronizedPoolAllocator::Free() : not available for pool allocator!");
+    }
+
+    void UnSynchronizedPoolAllocator::ResetMemory() {
+        m_poolResource.release();
     }
 
     /// ================================================================================================================
@@ -66,6 +74,7 @@ namespace SR_UTILS_NS {
     }
 
     MonotonicAllocator::~MonotonicAllocator() {
+        SR_TRACY_ZONE;
         Chunk* current = m_current;
         while (current) {
             Chunk* next = current->next;
@@ -104,6 +113,8 @@ namespace SR_UTILS_NS {
     }
 
     MonotonicAllocator::Chunk* MonotonicAllocator::CreateChunk(SizeType size) {
+        SR_TRACY_ZONE;
+
         auto&& chunk = (Chunk*)SRMalloc(sizeof(Chunk));
         new (chunk) Chunk();
 
@@ -129,6 +140,13 @@ namespace SR_UTILS_NS {
         return chunk;
     }
 
+    void MonotonicAllocator::ResetMemory() {
+        Chunk* current = m_head;
+        while (current) {
+            current->offset = 0;
+            current = current->next;
+        }
+    }
 
     /// ================================================================================================================
 
@@ -221,6 +239,15 @@ namespace SR_UTILS_NS {
         return chunk;
     }
 
+    void SyncMonotonicAllocator::ResetMemory() {
+        std::lock_guard lock(m_mutex);
+        Chunk* current = m_head;
+        while (current) {
+            current->offset.store(0, std::memory_order_relaxed);
+            current = current->next;
+        }
+    }
+
     /// ================================================================================================================
 
     void* SynchronizedPoolAllocator::Allocate(SR_UTILS_NS::SizeType size, SR_UTILS_NS::SizeType alignment) {
@@ -247,4 +274,8 @@ namespace SR_UTILS_NS {
     SynchronizedPoolAllocator::SynchronizedPoolAllocator(bool deallocEnabled)
         : m_deallocEnabled(deallocEnabled)
     { }
+
+    void SynchronizedPoolAllocator::ResetMemory() {
+        m_poolResource.release();
+    }
 }
