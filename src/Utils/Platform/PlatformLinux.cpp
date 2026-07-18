@@ -34,6 +34,8 @@
 #include <sys/sendfile.h>
 #include <sys/wait.h>
 
+#include <filesystem>
+
 namespace SR_PLATFORM_NS {
     static Display* gLinuxPlatformDisplayPtr = nullptr;
 
@@ -532,43 +534,8 @@ namespace SR_PLATFORM_NS {
         return true;
     }
 
-    bool Delete(const Path& path) {
-        if (path.IsFile()) {
-            const bool result = std::remove(path.CStr()) == 0;
-
-            if (!result) {
-                SR_WARN("Platform::Delete() : failed to delete file!\n\tPath: {}", path.CStr());
-            }
-
-            return result;
-        }
-
-        if (!path.IsDir()) {
-            return false;
-        }
-
-        SR_UTILS_NS::Vector<Path> items;
-        GetInDirectory(path, Path::Type::Undefined, items);
-        for (auto&& item : items) {
-            if (Delete(item)) {
-                continue;
-            }
-
-            return false;
-        }
-
-        const bool result = rmdir(path.CStr()) == 0;
-
-        if (!result) {
-            SR_WARN("Platform::Delete() : failed to delete folder!\n\tPath: {}", path.CStr());
-        }
-
-        return result;
-    }
-
     Path GetApplicationPath() {
         return std::filesystem::canonical("/proc/self/exe").string();
-        // return std::filesystem::current_path().string();
     }
 
     Path GetApplicationDirectory() { return GetApplicationPath().GetFolder(); }

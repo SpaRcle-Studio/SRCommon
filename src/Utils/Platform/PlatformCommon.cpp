@@ -117,6 +117,46 @@ namespace SR_PLATFORM_NS {
         return true;
     }
 
+    bool Delete(const Path& path) { /// TODO: Обезопасить от безвозвратного удаления файлов
+        SR_TRACY_ZONE;
+
+        if (path.IsFile()) {
+            const bool result = std::remove(path.CStr()) == 0;
+
+            if (!result) {
+                SR_WARN("Platform::Delete() : failed to delete file!\n\tPath: {}", path.CStr());
+            }
+
+            return result;
+        }
+
+        if (!path.IsDir()) {
+            return false;
+        }
+
+        SR_UTILS_NS::Vector<Path> items;
+        GetInDirectory(path, Path::Type::Undefined, items);
+        for (auto&& item : items) {
+            if (Delete(item)) {
+                continue;
+            }
+
+            return false;
+        }
+
+    #ifdef SR_WIN32
+        const bool result = _rmdir(path.CStr()) == 0;
+    #else
+        const bool result = rmdir(path.CStr()) == 0;
+    #endif
+
+        if (!result) {
+            SR_WARN("Platform::Delete() : failed to delete folder!\n\tPath: {}", path.CStr());
+        }
+
+        return result;
+    }
+
 #ifndef SR_LINUX
     void CopyPermissions(const Path& from, const Path& to) {
         /// do nothing

@@ -609,42 +609,6 @@ namespace SR_UTILS_NS::Platform {
         return GetForegroundWindow() == GetCurrentProcess();
     }
 
-    bool Delete(const Path &path) { ///TODO: Обезопасить от безвозвратного удаления файлов
-        SR_TRACY_ZONE;
-
-        if (path.IsFile()) {
-            const bool result = std::remove(path.CStr()) == 0;
-
-            if (!result) {
-                SR_WARN("Platform::Delete() : failed to delete file!\n\tPath: {}", path.CStr());
-            }
-
-            return result;
-        }
-
-        if (!path.IsDir()) {
-            return false;
-        }
-
-        SR_UTILS_NS::Vector<Path> items;
-        GetInDirectory(path, Path::Type::Undefined, items);
-        for (auto&& item : items) {
-            if (Delete(item)) {
-                continue;
-            }
-
-            return false;
-        }
-
-        const bool result = _rmdir(path.CStr()) == 0;
-
-        if (!result) {
-            SR_WARN("Platform::Delete() : failed to delete folder!\n\tPath: {}", path.CStr());
-        }
-
-        return result;
-    }
-
     bool WaitAndDelete(const SR_UTILS_NS::Path& path) {
         if (!path.IsFile()) {
             SR_WARN("Platform::WaitAndDelete() : path is not a file. Path: '{}'", path.ToString());

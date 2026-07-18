@@ -158,11 +158,6 @@ namespace SR_PLATFORM_NS {
         return std::filesystem::create_directories(path);
     }
 
-    bool Delete(const Path& path) {
-        SRHaltOnce("Not implemented!");
-        return false;
-    }
-
     Path GetApplicationPath() {
         return Path();
     }

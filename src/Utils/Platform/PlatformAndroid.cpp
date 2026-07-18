@@ -258,38 +258,6 @@ namespace SR_UTILS_NS::Platform {
         return true;
     }
 
-    bool Delete(const Path& path) {
-        if (path.IsFile()) {
-            const bool result = std::remove(path.CStr()) == 0;
-
-            if (!result) {
-                SR_WARN("Platform::Delete() : failed to delete file!\n\tPath: {}", path.CStr());
-            }
-
-            return result;
-        }
-
-        if (!path.IsDir()) {
-            return false;
-        }
-
-        for (auto&& item : GetAllInDirectory(path)) {
-            if (Delete(item)) {
-                continue;
-            }
-
-            return false;
-        }
-
-        const bool result = rmdir(path.CStr()) == 0;
-
-        if (!result) {
-            SR_WARN("Platform::Delete() : failed to delete folder!\n\tPath: {}", path.CStr());
-        }
-
-        return result;
-    }
-
     Path GetApplicationResourcesPath() {
         return ":assets:";
     }
