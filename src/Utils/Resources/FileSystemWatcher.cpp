@@ -23,10 +23,13 @@ namespace SR_UTILS_NS {
         { }
 
     public:
-        void handleFileAction(efsw::WatchID watchId, const std::string& dir, const std::string& filename, efsw::Action action, std::string oldFilename) override {
+        void handleFileAction(efsw::WatchID watchId, const std::string& dir, const std::string& filename, efsw::Action action, const std::string& oldFilename) override {
             SR_TRACY_ZONE;
 
-            FileSystemWatcher::Event event;
+            m_pWatcher->Lock();
+
+            FileSystemWatcher::Event& event = m_pWatcher->AddEmptyEvent();
+            event.oldFilename = oldFilename;
             event.filename = filename;
             event.dir = dir;
 
@@ -42,14 +45,13 @@ namespace SR_UTILS_NS {
                     break;
                 case efsw::Actions::Moved:
                     event.type = FileSystemWatcher::EventType::Move;
-                    event.oldFilename = oldFilename;
                     break;
                 default:
                     SRHalt("FileSystemWatcher::handleFileAction() : unknown action!");
                     break;
             }
 
-            m_pWatcher->OnEvent(std::move(event));
+            m_pWatcher->Unlock();
         }
 
     private:
@@ -66,6 +68,7 @@ namespace SR_UTILS_NS {
         m_pImpl = new efsw::FileWatcher();
     #endif
         m_messageCache = new SR_UTILS_NS::SubscriptionMessage();
+        m_events.resize(64);
     }
 
     FileSystemWatcher::~FileSystemWatcher() {
@@ -93,16 +96,35 @@ namespace SR_UTILS_NS {
     #endif
     }
 
+    void FileSystemWatcher::Lock() {
+        SR_TRACY_ZONE;
+        m_mutex.lock();
+    }
+
+    void FileSystemWatcher::Unlock()  {
+        SR_TRACY_ZONE;
+        m_mutex.unlock();
+    }
+
     void FileSystemWatcher::WatchPull() {
         SR_TRACY_ZONE;
         SR_LOCK_GUARD;
 
-        m_messageCache->Reset();
+        for (size_t i = 0; i < m_usedEvents; ++i) {
+            auto&& event = m_events[i];
 
-        for (const Event& event : m_events) {
-            m_messageCache->SetPath(DIR_MSG_ID, event.dir);
-            m_messageCache->SetPath(FILE_MSG_ID, event.dir + event.filename);
-            m_messageCache->SetPath(OLD_FILE_MSG_ID, event.dir + event.oldFilename);
+            m_pathTmp = event.dir;
+            m_messageCache->SetPath(DIR_MSG_ID, m_pathTmp);
+
+            m_pathTmp.GetInternalUnsafeString() = event.dir;
+            m_pathTmp.GetInternalUnsafeString().append(event.filename);
+            m_pathTmp.Normalize();
+            m_messageCache->SetPath(FILE_MSG_ID, m_pathTmp);
+
+            m_pathTmp.GetInternalUnsafeString() = event.dir;
+            m_pathTmp.GetInternalUnsafeString().append(event.oldFilename);
+            m_pathTmp.Normalize();
+            m_messageCache->SetPath(OLD_FILE_MSG_ID, m_pathTmp);
 
             switch (event.type) {
                 case EventType::Add:
@@ -123,7 +145,7 @@ namespace SR_UTILS_NS {
             }
         }
 
-        m_events.clear();
+        m_usedEvents = 0;
     }
 
     void FileSystemWatcher::AddListener(const Path& path) {
@@ -141,6 +163,15 @@ namespace SR_UTILS_NS {
 
     void FileSystemWatcher::OnEvent(FileSystemWatcher::Event&& event) {
         SR_LOCK_GUARD;
-        m_events.emplace_back(std::move(event));
+        AddEmptyEvent() = std::move(event);
+    }
+
+    FileSystemWatcher::Event& FileSystemWatcher::AddEmptyEvent() {
+        SR_TRACY_ZONE;
+        SR_LOCK_GUARD;
+        if (m_usedEvents >= m_events.size()) {
+            m_events.emplace_back();
+        }
+        return m_events[m_usedEvents++];
     }
 }

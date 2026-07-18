@@ -4,11 +4,13 @@
 
 #include <Utils/Platform/Platform.h>
 #include <Utils/Input/KeyCodes.h>
-#include <Utils/Debug.h>
 #include <Utils/Common/CLIManager.h>
 #include <Utils/Profile/TracyContext.h>
+#include <Utils/FileSystem/FileSystem.h>
 
 #include <Enum/KeyCode.hpp>
+
+#include <filesystem>
 
 namespace SR_PLATFORM_NS {
     bool IsMobilePlatform() {
@@ -22,6 +24,17 @@ namespace SR_PLATFORM_NS {
         }
     }
 
+    bool RemoveAssetsPrefix(std::string_view& path) {
+        if (path.starts_with(":assets:")) {
+            path = path.substr(8); // length of ":assets:"
+            if (path.starts_with("/")) {
+                path = path.substr(1);
+            }
+            return true;
+        }
+        return false;
+    }
+
     BuildType GetBuildType() {
     #if defined(SR_DEBUG)
         return BuildType::Debug;
@@ -32,7 +45,83 @@ namespace SR_PLATFORM_NS {
     #endif
     }
 
+    void GetInDirectory(const Path& dir, Path::Type type, SR_UTILS_NS::Vector<Path>& out) {
+        SR_TRACY_ZONE;
+        out.clear();
+
+        uint32_t count = 0;
+
+        for (const auto& entry : std::filesystem::directory_iterator(dir.View())) {
+            const bool isDirectory = entry.is_directory();
+            const bool isFile = entry.is_regular_file();
+            if ((type == Path::Type::Folder && isDirectory) || (type == Path::Type::File && isFile) || type == Path::Type::Undefined) {
+                count++;
+            }
+        }
+
+        out.reserve(count);
+
+        for (const auto& entry : std::filesystem::directory_iterator(dir.View())) {
+            const bool isDirectory = entry.is_directory();
+            const bool isFile = entry.is_regular_file();
+            if ((type == Path::Type::Folder && isDirectory) || (type == Path::Type::File && isFile) || type == Path::Type::Undefined) {
+                out.emplace_back(entry.path());
+            }
+        }
+    }
+
+    bool Copy(const Path& from, const Path& to) {
+        SR_TRACY_ZONE;
+
+    #ifdef SR_ANDROID
+        std::string_view pathToView = to.ToStringView();
+        if (RemoveAssetsPrefix(pathToView)) {
+            SR_WARN("Platform::Copy() : can't write asset file!");
+            return false;
+        }
+    #endif
+
+        if (from.IsFile()) {
+            SR_UTILS_NS::String buffer;
+            if (!SR_UTILS_NS::FileSystem::ReadFile(from, buffer)) {
+                SR_WARN("Platform::Copy() : failed to read file!\n\tPath: {}", from.c_str());
+                return false;
+            }
+            std::ofstream file(to.CStr(), std::ios::binary);
+            if (!file.is_open()) {
+                SR_WARN("Platform::Copy() : failed to open file for writing!\n\tPath: {}", to.c_str());
+                return false;
+            }
+            file.write(buffer.data(), buffer.size());
+            CopyPermissions(from, to);
+            return true;
+        }
+
+        if (!from.IsDir()) {
+            SR_WARN("Platform::Copy() : \"{}\" is not a directory!", from.c_str());
+            return false;
+        }
+
+        CreateFolder(to.ToStringRef());
+
+        Vector<Path> items;
+        GetInDirectory(from, Path::Type::Undefined, items);
+        for (auto&& item : items) {
+            if (Copy(item, to.Concat(item.GetBaseNameAndExt()))) {
+                continue;
+            }
+
+            return false;
+        }
+
+        return true;
+    }
+
 #ifndef SR_LINUX
+    void CopyPermissions(const Path& from, const Path& to) {
+        /// do nothing
+    }
+
     void AccumulateMouseDelta(const SR_MATH_NS::FVector2& delta) {
         SRHalt("Platform::AccumulateMouseDelta() : not implemented!");
     }

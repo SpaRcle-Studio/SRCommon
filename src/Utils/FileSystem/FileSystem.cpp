@@ -132,7 +132,7 @@ namespace SR_UTILS_NS {
         }
     }
 
-    SR_COMMON_DLL_API uint64_t FileSystem::GetFolderHash(const Path& path, uint64_t deep) {
+    uint64_t FileSystem::GetFolderHash(const Path& path, uint64_t deep) {
         if (deep == 0) {
             return 0;
         }
@@ -141,7 +141,9 @@ namespace SR_UTILS_NS {
 
         uint64_t hash = 0;
 
-        for (auto&& subPath : Platform::GetInDirectory(path, Path::Type::Undefined)) {
+        Vector<Path> subPaths;
+        Platform::GetInDirectory(path, Path::Type::Undefined, subPaths);
+        for (auto&& subPath : subPaths) {
             if (subPath.IsHidden()) {
                 continue;
             }
@@ -208,20 +210,21 @@ namespace SR_UTILS_NS {
         return true;
     }
 
-    SR_COMMON_DLL_API void FileSystem::ForEachFileInFolder(const Path& path, bool recursive, const Types::Function<void(const Path&)>& func) {
+    void FileSystem::ForEachFileInFolder(const Path& path, bool recursive, const Types::Function<void(const Path&)>& func) {
         SR_TRACY_ZONE;
-        SR_TRACY_ZONE_TEXT(path.ToStringRef());
 
         /// scope for files
         {
-            auto&& files = path.GetFiles();
+            static SR_THREAD_LOCAL Vector<Path> files;
+            path.GetFiles(files);
             for (auto&& file : files) {
                 func(file);
             }
         }
 
         if (recursive) {
-            auto&& folders = path.GetFolders();
+            Vector<Path> folders;
+            path.GetFolders(folders);
             for (auto&& folder: folders) {
                 ForEachFileInFolder(folder, recursive, func);
             }
@@ -258,7 +261,9 @@ namespace SR_UTILS_NS {
         }
 
         hash = GetFileHash(appPath);
-        for (auto&& filePath : appPath.GetFolder().GetFiles()) {
+        Vector<Path> files;
+        appPath.GetFolder().GetFiles(files);
+        for (auto&& filePath : files) {
             if (filePath.GetExtensionView() == "dll" || filePath.GetExtensionView() == "so" || filePath.GetExtensionView() == "dylib") {
                 auto&& fileHash = GetFileHash(filePath);
                 if (fileHash != SR_UINT64_MAX) {

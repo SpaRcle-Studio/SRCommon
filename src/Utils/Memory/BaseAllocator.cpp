@@ -3,8 +3,10 @@
 //
 
 #include <Utils/Profile/TracyContext.h>
+#include <Utils/Memory/Allocator.h>
 
 bool g_TracyAllocatorInitialized = false;
+SR_THREAD_LOCAL SR_UTILS_NS::IAllocator* g_ThreadLocalAllocator = nullptr;
 
 namespace SR_UTILS_NS {
     static std::atomic<int64_t> g_heapAllocatedBytes = 0;
@@ -19,6 +21,14 @@ namespace SR_UTILS_NS {
 
     SR_UTILS_NS::SizeType GetApplicationHeapSize() {
         return g_heapAllocatedBytes.load();
+    }
+
+    void SetThreadLocalAllocator(SR_UTILS_NS::IAllocator* pAllocator) {
+        g_ThreadLocalAllocator = pAllocator;
+    }
+
+    SR_UTILS_NS::IAllocator* GetThreadLocalAllocator() {
+        return g_ThreadLocalAllocator;
     }
 }
 
@@ -59,17 +69,29 @@ void SRFree(void* pMemory) {
 }
 
 void* operator new(SR_UTILS_NS::SizeType size) {
+    if (g_ThreadLocalAllocator) {
+        return g_ThreadLocalAllocator->Allocate(size);
+    }
     return SRMalloc(size);
 }
 
 void operator delete(void* pMemory) noexcept {
+    if (g_ThreadLocalAllocator) {
+        return g_ThreadLocalAllocator->Free(pMemory);
+    }
     SRFree(pMemory);
 }
 
 void* operator new[](SR_UTILS_NS::SizeType size) {
+    if (g_ThreadLocalAllocator) {
+        return g_ThreadLocalAllocator->Allocate(size);
+    }
     return SRMalloc(size);
 }
 
 void operator delete[](void* pMemory) noexcept {
+    if (g_ThreadLocalAllocator) {
+        return g_ThreadLocalAllocator->Free(pMemory);
+    }
     SRFree(pMemory);
 }

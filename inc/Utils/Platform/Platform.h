@@ -78,6 +78,7 @@ namespace SR_UTILS_NS::Platform {
 
     extern std::mutex g_platformLogMutex;
 
+    SR_COMMON_DLL_API extern bool RemoveAssetsPrefix(std::string_view& path);
     SR_COMMON_DLL_API extern void SetOverriddenMouseState(const std::optional<MouseState>& mouseState);
     SR_COMMON_DLL_API extern std::optional<MouseState> GetOverriddenMouseState();
     SR_COMMON_DLL_API extern void SetOverriddenKeyboardState(const std::optional<KeyboardState>& keyboardState);
@@ -134,8 +135,7 @@ namespace SR_UTILS_NS::Platform {
     SR_COMMON_DLL_API extern Path GetApplicationPath();
     SR_COMMON_DLL_API extern Path GetApplicationDirectory();
     SR_COMMON_DLL_API extern Path GetApplicationName();
-    SR_COMMON_DLL_API extern std::list<Path> GetInDirectory(const Path& dir, Path::Type type);
-    SR_COMMON_DLL_API extern std::list<Path> GetAllInDirectory(const Path& dir);
+    SR_COMMON_DLL_API extern void GetInDirectory(const Path& dir, Path::Type type, SR_UTILS_NS::Vector<Path>& out);
     SR_COMMON_DLL_API extern FileMetadata GetFileMetadata(const Path& file);
     SR_COMMON_DLL_API extern SR_MATH_NS::UVector2 GetScreenResolution();
     SR_COMMON_DLL_API extern double_t GetScreenDPI();

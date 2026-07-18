@@ -9,6 +9,11 @@
 SR_COMMON_DLL_API extern bool g_TracyAllocatorInitialized;
 
 namespace SR_UTILS_NS {
+    class IAllocator;
+
+    SR_COMMON_DLL_API void SetThreadLocalAllocator(SR_UTILS_NS::IAllocator* pAllocator);
+    SR_COMMON_DLL_API SR_UTILS_NS::IAllocator* GetThreadLocalAllocator();
+
     SR_COMMON_DLL_API extern void OnMemoryAllocated(SR_UTILS_NS::SizeType size);
     SR_COMMON_DLL_API extern void OnMemoryFreed(SR_UTILS_NS::SizeType size);
     SR_COMMON_DLL_API extern SR_UTILS_NS::SizeType GetApplicationHeapSize();
@@ -33,6 +38,8 @@ namespace SR_UTILS_NS {
             SR_UTILS_NS::SizeType size,
             SR_UTILS_NS::SizeType alignment = alignof(MaxAlignT)
         ) = 0;
+
+        virtual void Free(void* pMemory) = 0;
 
     };
 }

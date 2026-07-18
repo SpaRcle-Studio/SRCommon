@@ -597,76 +597,6 @@ namespace SR_UTILS_NS::Platform {
 #endif
     }
 
-    bool Copy(const Path &from, const Path &to) {
-        SR_TRACY_ZONE;
-
-        if (from.IsFile()) {
-            SR_UTILS_NS::String buffer;
-            if (!SR_UTILS_NS::FileSystem::ReadFile(from, buffer)) {
-                SR_WARN("Platform::Copy() : failed to read file!\n\tPath: {}", from.c_str());
-                return false;
-            }
-            if (!to.CreateIfNotExists()) {
-                SR_WARN("Platform::Copy() : failed to create directory!\n\tPath: {}", to.c_str());
-                return false;
-            }
-            std::ofstream file(to.CStr(), std::ios::binary);
-            if (!file.is_open()) {
-                SR_WARN("Platform::Copy() : failed to open file for writing!\n\tPath: {}", to.c_str());
-                return false;
-            }
-            file.write(buffer.data(), buffer.size());
-            return true;
-        }
-
-        if (!from.IsDir()) {
-            SR_WARN("Platform::Copy() : \"{}\" is not directory!", from.c_str());
-            return false;
-        }
-
-        to.Create();
-
-        for (auto&& item : GetInDirectory(from, Path::Type::Undefined)) {
-            if (Copy(item, to.Concat(item.GetBaseNameAndExt()))) {
-                continue;
-            }
-
-            return false;
-        }
-
-        return true;
-    }
-
-    std::list<Path> GetInDirectory(const Path &dir, Path::Type type) {
-        std::list<Path> items;
-        SR_THREAD_LOCAL static std::string searchPath;
-        searchPath.clear();
-        searchPath += dir.ToStringRef();
-        searchPath += "/*.*";
-        WIN32_FIND_DATA fd;
-        HANDLE hFind = ::FindFirstFile(searchPath.c_str(), &fd);
-        if(hFind != INVALID_HANDLE_VALUE) {
-            do {
-                if ((fd.dwFileAttributes & static_cast<uint64_t>(FILE_ATTRIBUTE_DIRECTORY)) && type == Path::Type::File) {
-                    continue;
-                }
-
-                if (!(fd.dwFileAttributes & static_cast<uint64_t>(FILE_ATTRIBUTE_DIRECTORY)) && type == Path::Type::Folder) {
-                    continue;
-                }
-
-                const auto filename = std::string_view(fd.cFileName);
-                if (filename != "." && filename != ".." && !filename.empty()) {
-                    items.emplace_back("{}/{}"_format(dir, filename));
-                }
-            }
-            while(::FindNextFile(hFind, &fd));
-
-            ::FindClose(hFind);
-        }
-        return items;
-    }
-
     bool CreateFolder(const std::string& path) {
 #ifdef SR_MINGW
         return mkdir(path.c_str());
@@ -680,6 +610,8 @@ namespace SR_UTILS_NS::Platform {
     }
 
     bool Delete(const Path &path) { ///TODO: Обезопасить от безвозвратного удаления файлов
+        SR_TRACY_ZONE;
+
         if (path.IsFile()) {
             const bool result = std::remove(path.CStr()) == 0;
 
@@ -694,7 +626,9 @@ namespace SR_UTILS_NS::Platform {
             return false;
         }
 
-        for (auto&& item : GetInDirectory(path, Path::Type::Undefined)) {
+        SR_UTILS_NS::Vector<Path> items;
+        GetInDirectory(path, Path::Type::Undefined, items);
+        for (auto&& item : items) {
             if (Delete(item)) {
                 continue;
             }
@@ -744,23 +678,6 @@ namespace SR_UTILS_NS::Platform {
 
     std::optional<Path> GetApplicationLogPath() {
         return std::nullopt;
-    }
-
-    std::list<Path> GetAllInDirectory(const Path& dir) {
-        SR_TRACY_ZONE;
-        std::list<Path> result;
-
-        if (dir.GetType() == Path::Type::Undefined) {
-            return result;
-        }
-
-        for (const auto& entry : std::filesystem::directory_iterator(dir.View())) {
-            if (entry.is_directory() || entry.is_regular_file()) {
-                result.emplace_back(entry.path());
-            }
-        }
-
-        return result;
     }
 
     Path GetApplicationName() {

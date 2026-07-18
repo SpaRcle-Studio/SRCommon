@@ -53,6 +53,32 @@ namespace SR_UTILS_NS {
         return *this;
     }
 
+    Path& Path::operator=(const String& path) {
+        m_path = path;
+        m_isNormalized = false;
+        return *this;
+    }
+    Path& Path::operator=(const StringView& path) {
+        m_path = path;
+        m_isNormalized = false;
+        return *this;
+    }
+    Path& Path::operator=(const std::string& path) {
+        m_path = path;
+        m_isNormalized = false;
+        return *this;
+    }
+    Path& Path::operator=(const char* path) {
+        m_path = path;
+        m_isNormalized = false;
+        return *this;
+    }
+    Path& Path::operator=(std::string_view path) {
+        m_path = path;
+        m_isNormalized = false;
+        return *this;
+    }
+
     Path& Path::operator=(const Path& path) = default;
 
     std::string Path::ToString() const {
@@ -71,22 +97,22 @@ namespace SR_UTILS_NS {
         return GetType() == Type::Folder;
     }
 
-    SR_COMMON_DLL_API bool Path::IsFile() const {
+    bool Path::IsFile() const {
         return GetType() == Type::File;
     }
 
-    SR_COMMON_DLL_API std::list<Path> Path::GetFiles() const {
-        return SR_PLATFORM_NS::GetInDirectory(*this, Path::Type::File);
+    void Path::GetFiles(Vector<Path>& out) const {
+        return SR_PLATFORM_NS::GetInDirectory(*this, Path::Type::File, out);
     }
 
-    std::list<Path> Path::GetAll() const {
+    void Path::GetAll(Vector<Path>& out) const {
         SR_TRACY_ZONE;
-        return SR_PLATFORM_NS::GetAllInDirectory(*this);
+        return SR_PLATFORM_NS::GetInDirectory(*this, Path::Type::Undefined, out);
     }
 
-    std::list<Path> Path::GetFolders() const {
+    void Path::GetFolders(Vector<Path>& out) const {
         SR_TRACY_ZONE;
-        return SR_PLATFORM_NS::GetInDirectory(*this, Path::Type::Folder);
+        return SR_PLATFORM_NS::GetInDirectory(*this, Path::Type::Folder, out);
     }
 
     const char* Path::CStr() const {
@@ -355,10 +381,6 @@ namespace SR_UTILS_NS {
         return GetNormalized().empty();
     }
 
-    bool Path::IsDirEmpty() const {
-        return GetAll().empty();
-    }
-
     bool Path::Copy(const Path &destination) const {
         SR_TRACY_ZONE;
         return Platform::Copy(*this, destination);
@@ -518,5 +540,26 @@ namespace SR_UTILS_NS {
 
     Path::operator const String&() {
         return GetNormalized();
+    }
+
+    void Path::Normalize() {
+        if (!m_isNormalized) {
+            GetNormalized();
+        }
+    }
+
+    String& Path::GetInternalUnsafeString() {
+        return m_path;
+    }
+
+    bool Path::IsDirectoryEmpty() const {
+        SR_GLOBAL_LOCK;
+        static Vector<Path> files;
+        GetFiles(files);
+        if (!files.empty()) {
+            return false;
+        }
+        GetFolders(files);
+        return files.empty();
     }
 }

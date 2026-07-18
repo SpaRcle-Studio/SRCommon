@@ -24,8 +24,6 @@
 #include <dlfcn.h>
 #include <errno.h>
 
-#include <filesystem>
-
 #include <fcntl.h>
 #include <spawn.h>
 #include <termios.h>
@@ -519,74 +517,6 @@ namespace SR_PLATFORM_NS {
         return result;
     }
 
-    bool Copy(const Path& from, const Path& to) {
-        if (from.IsFile()) {
-            SR_UTILS_NS::String buffer;
-            if (!SR_UTILS_NS::FileSystem::ReadFile(from, buffer)) {
-                SR_WARN("Platform::Copy() : failed to read file!\n\tPath: {}", from.c_str());
-                return false;
-            }
-            std::ofstream file(to.CStr(), std::ios::binary);
-            if (!file.is_open()) {
-                SR_WARN("Platform::Copy() : failed to open file for writing!\n\tPath: {}", to.c_str());
-                return false;
-            }
-            file.write(buffer.data(), buffer.size());
-            CopyPermissions(from, to);
-            return true;
-        }
-
-        if (!from.IsDir()) {
-            SR_WARN("Platform::Copy() : \"{}\" is not a directory!", from.c_str());
-            return false;
-        }
-
-        CreateFolder(to.ToStringRef());
-
-        for (auto&& item : from.GetAll()) {
-            if (Copy(item, to.Concat(item.GetBaseNameAndExt()))) {
-                continue;
-            }
-
-            return false;
-        }
-
-        return true;
-    }
-
-    std::list<Path> GetInDirectory(const Path& dir, Path::Type type) {
-        std::list<Path> result;
-
-        if (dir.GetType() == Path::Type::Undefined) {
-            return result;
-        }
-
-        for (const auto& entry : std::filesystem::directory_iterator(dir.View())) {
-            if ((entry.is_directory() && type == Path::Type::Folder) ||
-                (entry.is_regular_file() && type == Path::Type::File)) {
-                result.emplace_back(entry.path());
-            }
-        }
-
-        return result;
-    }
-
-    std::list<Path> GetAllInDirectory(const Path& dir) {
-        std::list<Path> result;
-
-        if (dir.GetType() == Path::Type::Undefined) {
-            return result;
-        }
-
-        for (const auto& entry : std::filesystem::directory_iterator(dir.View())) {
-            if (entry.is_directory() || entry.is_regular_file()) {
-                result.emplace_back(entry.path());
-            }
-        }
-
-        return result;
-    }
-
     bool CreateFolder(const std::string& path) {
         if (path.empty()) {
             SR_WARN("Platform::CreateFolder() : path is empty!");
@@ -617,7 +547,9 @@ namespace SR_PLATFORM_NS {
             return false;
         }
 
-        for (auto&& item : GetAllInDirectory(path)) {
+        SR_UTILS_NS::Vector<Path> items;
+        GetInDirectory(path, Path::Type::Undefined, items);
+        for (auto&& item : items) {
             if (Delete(item)) {
                 continue;
             }

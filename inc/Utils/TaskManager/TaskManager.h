@@ -72,6 +72,7 @@ namespace SR_UTILS_NS {
 
         Task::State GetResult(TaskId taskId) const;
         bool IsActive(TaskId taskId) const;
+        void Wait(TaskId taskId) const;
 
         void WaitForIdle();
         void RemoveDiscardable();

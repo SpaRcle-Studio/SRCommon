@@ -6,6 +6,7 @@
 #include <Utils/Localization/Encoding.h>
 #include <Utils/Types/UnicodeString.h>
 #include <Utils/Memory/Allocator.h>
+#include <Utils/Memory/MemoryLiterals.h>
 
 namespace SR_UTILS_NS {
     IBaseSerialization::IBaseSerialization() {
@@ -17,8 +18,8 @@ namespace SR_UTILS_NS {
         m_walker.emplace_back(&m_root);
         m_stack.emplace_back(&m_root);
 
-        m_stringsPool = new MonotonicAllocator();
-        m_nodesPool = new MonotonicAllocator();
+        m_stringsPool = (IAllocator*)(new MonotonicAllocator(128_KB));
+        m_nodesPool = (IAllocator*)(new MonotonicAllocator(128_KB));
 
         m_root.children = Vector<SerializationNode>(GetNodesPool());
     }

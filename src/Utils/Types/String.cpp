@@ -75,6 +75,17 @@ namespace SR_UTILS_NS {
         }
     }
 
+    void String::Deallocate() {
+        if (m_data) {
+            if (m_allocator) {
+                m_allocator->Free(m_data, m_capacity + 1);
+            }
+            else {
+                SRFree(m_data);
+            }
+        }
+    }
+
     String& String::operator=(const char* str) {
         return *this = std::string_view(str);
     }
@@ -103,19 +114,20 @@ namespace SR_UTILS_NS {
         if (this == &other) {
             return *this;
         }
-        return *this = String(other.m_data, other.m_size, other.m_allocator);
+        if (m_allocator != other.m_allocator) {
+            Deallocate();
+            m_allocator = other.m_allocator;
+        }
+        resize(other.m_size);
+        if (m_data) {
+            memcpy(m_data, other.m_data, m_size);
+        }
+        return *this;
     }
 
     String& String::operator=(String&& other) noexcept {
         if (this != &other) {
-            if (m_data) {
-                if (m_allocator) {
-                    m_allocator->Free(m_data, m_capacity + 1);
-                }
-                else {
-                    SRFree(m_data);
-                }
-            }
+            Deallocate();
             m_data = other.m_data;
             m_size = other.m_size;
             m_capacity = other.m_capacity;

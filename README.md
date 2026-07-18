@@ -1,1 +1,1 @@
-SpaRcle Common C++ Lib. 
+SpaRcle Common C++ Lib.

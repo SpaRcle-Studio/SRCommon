@@ -6,6 +6,7 @@
 #define SR_ENGINE_UTILS_DIRECTORY_WATCHER_H
 
 #include <Utils/Types/SharedPtr.h>
+#include <Utils/FileSystem/Path.h>
 #include <Utils/Types/RawPointerHolder.h>
 #include <Utils/Common/SubscriptionHolder.h>
 
@@ -27,9 +28,9 @@ namespace SR_UTILS_NS {
         };
         struct Event {
             EventType type = EventType::None;
-            std::string dir;
-            std::string filename;
-            std::string oldFilename;
+            String dir;
+            String filename;
+            String oldFilename;
         };
 
     public:
@@ -40,9 +41,13 @@ namespace SR_UTILS_NS {
         void StartAsyncWatch();
         void WatchPull();
 
+        void Lock();
+        void Unlock();
+
         void AddListener(const Path& path);
 
         void OnEvent(Event&& event);
+        Event& AddEmptyEvent();
 
     private:
         SR_HTYPES_NS::RawPointerHolder<SubscriptionMessage> m_messageCache;
@@ -50,7 +55,9 @@ namespace SR_UTILS_NS {
         std::map<uint64_t, void*> m_listeners;
         bool m_isAsyncWatchingActive = false;
         std::recursive_mutex m_mutex;
-        std::vector<Event> m_events;
+        uint32_t m_usedEvents = 0;
+        Vector<Event> m_events;
+        SR_UTILS_NS::Path m_pathTmp;
 
     };
 }

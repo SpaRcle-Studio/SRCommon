@@ -385,4 +385,11 @@ namespace SR_UTILS_NS {
             }
         }
     }
+
+    void TaskManager::Wait(TaskManager::TaskId taskId) const {
+        SR_TRACY_ZONE;
+        while (IsActive(taskId)) {
+            SR_PLATFORM_NS::Sleep(5);
+        }
+    }
 }

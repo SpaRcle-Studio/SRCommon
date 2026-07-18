@@ -35,6 +35,11 @@ namespace SR_UTILS_NS {
         Path& operator=(Path&& path) noexcept;
         operator const String&(); /** NOLINT */
         Path& operator=(const Path& path);
+        Path& operator=(const String& path);
+        Path& operator=(const StringView& path);
+        Path& operator=(const std::string& path);
+        Path& operator=(const char* path);
+        Path& operator=(std::string_view path);
         bool operator==(const Path& path) const noexcept;
         char operator[](size_t index) const noexcept;
         bool operator<(const Path& path) const noexcept;
@@ -47,6 +52,8 @@ namespace SR_UTILS_NS {
         bool Make(Type type = Type::Undefined) const;
         bool Create() const;
         bool CreateIfNotExists() const;
+
+        void Normalize();
 
         void clear();
         void Clear();
@@ -67,6 +74,7 @@ namespace SR_UTILS_NS {
         SR_NODISCARD const char* CStr() const;
         SR_NODISCARD const char* c_str() const;
         SR_NODISCARD uint64_t size() const;
+        SR_NODISCARD String& GetInternalUnsafeString();
 
         SR_NODISCARD Path GetPrevious() const;
         SR_NODISCARD Path GetFolder() const;
@@ -97,11 +105,12 @@ namespace SR_UTILS_NS {
         SR_NODISCARD bool IsFile() const;
         SR_NODISCARD bool IsAbs() const;
         SR_NODISCARD bool IsEmpty() const;
-        SR_NODISCARD bool IsDirEmpty() const;
 
-        SR_NODISCARD std::list<Path> GetFiles() const;
-        SR_NODISCARD std::list<Path> GetFolders() const;
-        SR_NODISCARD std::list<Path> GetAll() const;
+        SR_NODISCARD bool IsDirectoryEmpty() const;
+
+        void GetFiles(Vector<Path>& out) const;
+        void GetFolders(Vector<Path>& out) const;
+        void GetAll(Vector<Path>& out) const;
 
         SR_NODISCARD std::string_view GetExtensionView() const;
         SR_NODISCARD std::string_view GetBaseNameView() const;

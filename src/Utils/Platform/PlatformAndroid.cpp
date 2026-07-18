@@ -23,17 +23,6 @@ extern "C" uint32_t android_getCpuCount() {
 }
 
 namespace SR_UTILS_NS::Platform {
-    bool RemoveAssetsPrefix(std::string_view& path) {
-        if (path.starts_with(":assets:")) {
-            path = path.substr(8); // length of ":assets:"
-            if (path.starts_with("/")) {
-                path = path.substr(1);
-            }
-            return true;
-        }
-        return false;
-    }
-
     static android_app* pAndroidInstance = nullptr;
 
     void InitSegmentationHandler() {
@@ -69,11 +58,6 @@ namespace SR_UTILS_NS::Platform {
     MouseState GetMouseState() {
         MouseState state;
         return state;
-    }
-
-    std::list<Path> GetAllInDirectory(const Path& dir) {
-        std::list<Path> result;
-        return result;
     }
 
     void Unzip(const SR_UTILS_NS::Path& source, const SR_UTILS_NS::Path& destination, bool replace) {
@@ -240,53 +224,6 @@ namespace SR_UTILS_NS::Platform {
 
     void OpenWithAssociatedApp(const Path &filepath) {
         SRHaltOnce("Not implemented!");
-    }
-
-    bool Copy(const Path& from, const Path& to) {
-        SR_TRACY_ZONE;
-
-        std::string_view pathToView = to.ToStringView();
-        if (RemoveAssetsPrefix(pathToView)) {
-            SR_WARN("Platform::Copy() : can't write asset file!");
-            return false;
-        }
-
-        if (from.IsFile()) {
-            SR_UTILS_NS::String buffer;
-            if (!SR_UTILS_NS::FileSystem::ReadFile(from, buffer)) {
-                SR_WARN("Platform::Copy() : failed to read file {}", from.CStr());
-                return false;
-            }
-
-            std::ofstream out(to.CStr(), std::ios::binary);
-            if (!out.is_open()) {
-                SR_WARN("Platform::Copy() : failed to open destination file {}", to.CStr());
-                return false;
-            }
-
-            out.write(buffer.data(), static_cast<std::streamsize>(buffer.size()));
-            return out.good();
-        }
-
-        if (!from.IsDir()) {
-            SR_WARN("Platform::Copy() : \"{}\" is not directory!", from.CStr());
-            return false;
-        }
-
-        to.Create();
-
-        for (auto&& item : GetInDirectory(from, Path::Type::Undefined)) {
-            if (Copy(item, to.Concat(item.GetBaseNameAndExt())))
-                continue;
-
-            return false;
-        }
-
-        return true;
-    }
-
-    std::list<Path> GetInDirectory(const Path &dir, Path::Type type) {
-        return {};
     }
 
     bool CreateFolder(const std::string& path) {

@@ -191,10 +191,11 @@ namespace SR_UTILS_NS {
     }
 
     template<typename T> void* Vector<T>::AllocateMemory(SizeType size) const {
-        if (m_allocator) {
-            return m_allocator->Allocate(size);
+        void* pMemory = m_allocator ? m_allocator->Allocate(size) : SRMalloc(size);
+        if (!pMemory) {
+            SRHalt("Vector::AllocateMemory() : failed to allocate memory! Size: {}", size);
         }
-        return SRMalloc(size);
+        return pMemory;
     }
 
     template<typename T> Vector<T> Vector<T>::DetachAllocator() const {

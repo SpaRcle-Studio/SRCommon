@@ -118,6 +118,9 @@ namespace SR_UTILS_NS {
         void SubStrInPlace(SizeType pos, SizeType count = npos);
 
     private:
+        void Deallocate();
+
+    private:
         char* m_data = nullptr;
         SizeType m_size = 0;
         SizeType m_capacity = 0;
