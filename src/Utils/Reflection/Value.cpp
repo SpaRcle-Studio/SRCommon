@@ -11,6 +11,14 @@
 #include <Utils/Debug.h>
 
 namespace SR_UTILS_NS::Reflection {
+    bool TypeInfo::operator==(const TypeInfo& other) const noexcept {
+        return type == other.type && detailedType == other.detailedType && detailedTypeEx == other.detailedTypeEx;
+    }
+
+    bool TypeInfo::operator!=(const TypeInfo& other) const noexcept {
+        return !(*this == other);
+    }
+
     Value ValueSequenceContainerIterator::operator*() const {
         return Value(m_iterator->as_ref());
     }
@@ -462,6 +470,46 @@ namespace SR_UTILS_NS::Reflection {
             return const_cast<SR_HTYPES_NS::OptionalBase*>(static_cast<const SR_HTYPES_NS::OptionalBase*>(Data()));
         }
         return nullptr;
+    }
+
+    ReflectionType Value::GetType() const {
+        SR_TRACY_ZONE;
+
+        if (IsSequenceContainer()) {
+            return ReflectionType::SequenceContainer;
+        }
+        else if (IsAssociativeContainer()) {
+            return ReflectionType::AssociativeContainer;
+        }
+        else if (IsBitMap()) {
+            return ReflectionType::BitMap;
+        }
+        else if (IsSmartPtr()) {
+            return ReflectionType::SmartPtr;
+        }
+        else if (IsPointer()) {
+            return ReflectionType::Pointer;
+        }
+        else if (IsOptional()) {
+            return ReflectionType::Optional;
+        }
+        else if (IsEntityRef()) {
+            return ReflectionType::EntityRef;
+        }
+        else if (IsResourceRef()) {
+            return ReflectionType::ResourceRef;
+        }
+        else if (GetSRClass()) {
+            return ReflectionType::Object;
+        }
+        else if (IsEnum()) {
+            return ReflectionType::Enum;
+        }
+        else if (IsArithmetic()) {
+            return ReflectionType::Arithmetic;
+        }
+
+        return ReflectionType::Unknown;
     }
 
     Value::~Value() = default;

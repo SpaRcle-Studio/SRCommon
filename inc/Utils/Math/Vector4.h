@@ -137,7 +137,11 @@ namespace SR_MATH_NS {
         FColor operator*(const FColor &p_v) const;
         FColor operator+(const FColor& v) const;
 
+        SR_NODISCARD float_t RelativeLuminance() const;
+
+        static FColor HSVtoRGB(float h, float s, float v);
         static FColor RGBFromHash(SRHashType hash);
+        static FColor PrettyRGBFromString(StringView str);
 
         static FColor Red();
         static FColor Green();

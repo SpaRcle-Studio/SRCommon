@@ -22,6 +22,50 @@ namespace SR_HTYPES_NS {
 }
 
 namespace SR_UTILS_NS::Reflection {
+    SR_ENUM_NS_CLASS_T(ReflectionType, uint8_t,
+        Unknown,
+        Object,
+        SequenceContainer,
+        AssociativeContainer,
+        BitMap,
+        SmartPtr,
+        Pointer,
+        String,
+        StringView,
+        StringAtom,
+        UnicodeString,
+        AABB,
+        Path,
+        Rect,
+        Color,
+        MathVector,
+        Quaternion,
+        MathSize,
+        Arithmetic,
+        Optional,
+        ResourceRef,
+        EntityRef,
+        Enum
+    );
+
+    struct SR_COMMON_DLL_API TypeInfo {
+        SR_UTILS_NS::Reflection::ReflectionType type = SR_UTILS_NS::Reflection::ReflectionType::Unknown;
+        /**
+         * For Object: SRClass meta name
+         * For SequenceContainer: contained type name
+         * For AssociativeContainer: key type name is detailedType and value type name is detailedTypeEx
+         * For SmartPtr, Pointer, EntityRef, ResourceRef, Optional: contained type name
+         * For MathVector, Rect, Arithmetic: math type name
+         * For Enum: enum type name
+         * For all other types: detailedType and detailedTypeEx are empty
+         */
+        SR_UTILS_NS::StringAtom detailedType;
+        SR_UTILS_NS::StringAtom detailedTypeEx;
+
+        bool operator==(const TypeInfo& other) const noexcept;
+        bool operator!=(const TypeInfo& other) const noexcept;
+    };
+
     class Value;
     class ValueSequenceContainer;
     class ValueAssociativeContainer;
@@ -190,6 +234,8 @@ namespace SR_UTILS_NS::Reflection {
 
         Value& Detach();
         Value& DetachIfConst();
+
+        SR_NODISCARD ReflectionType GetType() const;
 
         SR_NODISCARD ValueSequenceContainer AsSequenceContainer();
         SR_NODISCARD ValueSequenceContainer AsSequenceContainer() const;

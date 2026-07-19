@@ -44,6 +44,8 @@ namespace SR_UTILS_NS {
         Vector& operator=(std::initializer_list<T> init);
 
     public:
+        void delete_contents();
+
         void reserve(SizeType newCapacity);
         void resize(SizeType newSize);
         void resize(SizeType newSize, const T& value);
@@ -113,6 +115,24 @@ namespace SR_UTILS_NS {
         IAllocator* m_allocator = nullptr;
 
     };
+
+    template<typename T> void Vector<T>::delete_contents() {
+        if constexpr (!std::is_const_v<T>) {
+            if constexpr (std::is_trivially_destructible_v<T>) {
+                if constexpr (std::is_pointer_v<T> && !std::is_same_v<T, void*>) {
+                    for (SizeType i = 0; i < m_size; ++i) {
+                        delete static_cast<T*>(m_data)[i];
+                    }
+                }
+            }
+            else {
+                for (SizeType i = 0; i < m_size; ++i) {
+                    static_cast<T*>(m_data)[i].~T();
+                }
+                m_size = 0;
+            }
+        }
+    }
 
     template<typename T> template<typename ValueType> Vector<T>::Iterator Vector<T>::insert(ConstIterator pos, SizeType count, ValueType&& value) {
         SizeType index = pos - begin();

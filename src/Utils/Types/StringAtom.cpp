@@ -191,6 +191,14 @@ namespace SR_UTILS_NS {
         return m_info != nullptr && m_info->data == rhs;
     }
 
+    bool StringAtom::operator==(const String& rhs) const noexcept {
+        return m_info != nullptr && m_info->data == std::string_view(rhs);
+    }
+
+    bool StringAtom::operator==(StringView rhs) const noexcept {
+        return m_info != nullptr && m_info->data == std::string_view(rhs);
+    }
+
     void StringAtom::clear() {
         Clear();
     }

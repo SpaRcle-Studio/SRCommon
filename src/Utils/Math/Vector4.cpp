@@ -7,6 +7,50 @@
 #include <Utils/Common/StringAtomLiterals.h>
 
 namespace SR_MATH_NS {
+    uint64_t FNV1a64(StringView str) {
+        uint64_t hash = 14695981039346656037ull;
+
+        for (char c : str) {
+            hash ^= static_cast<uint8_t>(c);
+            hash *= 1099511628211ull;
+        }
+
+        return hash;
+    }
+
+    FColor FColor::HSVtoRGB(float h, float s, float v) {
+        h = std::fmod(h, 360.f);
+        if (h < 0.f)
+            h += 360.f;
+
+        float c = v * s;
+        float x = c * (1.f - std::fabs(std::fmod(h / 60.f, 2.f) - 1.f));
+        float m = v - c;
+
+        float r, g, b;
+
+        if (h < 60) {
+            r = c; g = x; b = 0;
+        }
+        else if (h < 120) {
+            r = x; g = c; b = 0;
+        }
+        else if (h < 180) {
+            r = 0; g = c; b = x;
+        }
+        else if (h < 240) {
+            r = 0; g = x; b = c;
+        }
+        else if (h < 300) {
+            r = x; g = 0; b = c;
+        }
+        else {
+            r = c; g = 0; b = x;
+        }
+
+        return { r + m, g + m, b + m, 1.f };
+    }
+
     std::unordered_map<SRHashType, FColor> SR_COLOR_PALETTE = {
         { "transparent"_atom_hash, FColor(0, 0, 0, 0) / 255.f },
         { "black"_atom_hash, FColor(0, 0, 0, 255) / 255.f },
@@ -231,6 +275,33 @@ namespace SR_MATH_NS {
         c.b = static_cast<float_t>((hash >> 16) & 0xFF);
         c.a = static_cast<float_t>(255);
         return c;
+    }
+
+    FColor FColor::PrettyRGBFromString(StringView str) {
+        SR_TRACY_ZONE;
+        uint64_t h = FNV1a64(str);
+        float hue = static_cast<float>(h % 360);
+        // 0.60 - 0.80
+        float saturation = 0.60f + ((h >> 10) & 0xFF) / 255.f * 0.20f;
+        // 0.75 - 0.90
+        float value = 0.75f + ((h >> 18) & 0xFF) / 255.f * 0.15f;
+        return HSVtoRGB(hue, saturation, value);
+    }
+
+    float ColorToLinear(float c) {
+        if (c <= 0.04045f)
+            return c / 12.92f;
+        return std::pow((c + 0.055f) / 1.055f, 2.4f);
+    }
+
+    float_t FColor::RelativeLuminance() const {
+        const float_t linearR = ColorToLinear(r);
+        const float_t linearG = ColorToLinear(g);
+        const float_t linearB = ColorToLinear(b);
+
+        return 0.2126f * linearR +
+               0.7152f * linearG +
+               0.0722f * linearB;
     }
 
     SR_NODISCARD Unit Ray::IntersectPlaneDistance(const SR_MATH_NS::FVector4& plane) const {
