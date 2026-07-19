@@ -52,8 +52,30 @@ option(SR_COMMON_STATIC_LIBRARY "" ON)
 option(SR_COMMON_EMBED_RESOURCES "" OFF)
 option(SR_COMMON_CI_BUILD "" OFF)
 option(SR_COMMON_USE_MINHOOK "" OFF)
+option(SR_COMMON_USE_NATIVE_WAYLAND "" ON)
+option(SR_COMMON_GLFW "" OFF)
 
 option(SR_USE_PCH "" ON)
+
+if (NOT ANDROID_NDK AND UNIX AND NOT APPLE AND NOT SR_EMSCRIPTEN AND NOT WIN32)
+    if (SR_COMMON_USE_NATIVE_WAYLAND)
+        include(cmake/wayland-protocols.cmake)
+
+        set(SR_COMMON_USE_NATIVE_WAYLAND_SUPPORTED OFF)
+        if (SR_WAYLAND_HAS_XDG_SHELL AND SR_WAYLAND_HAS_FRACTIONAL_SCALE AND SR_WAYLAND_HAS_XDG_DECORATION)
+            set(SR_COMMON_USE_NATIVE_WAYLAND_SUPPORTED ON)
+            message(STATUS "Native Wayland support is available and the backend is turned on.")
+        else()
+            message(WARNING "Native Wayland support is not fully available. Falling back to GLFW.")
+        endif()
+    endif()
+
+    if (NOT SR_COMMON_USE_NATIVE_WAYLAND_SUPPORTED)
+        set(SR_COMMON_USE_NATIVE_WAYLAND OFF)
+        set(SR_COMMON_GLFW ON)
+    endif()
+endif()
+
 
 if (SR_COMMON_GNS AND WIN32)
     include(cmake/InstallProtobuf.cmake)
@@ -421,6 +443,10 @@ set_target_properties(Utils PROPERTIES
     BUILD_RPATH "\$ORIGIN"
     INSTALL_RPATH "\$ORIGIN"
 )
+
+if (SR_COMMON_USE_NATIVE_WAYLAND)
+    target_compile_definitions(Utils PUBLIC SR_COMMON_USE_NATIVE_WAYLAND)
+endif()
 
 if (MSVC AND NOT SR_COMMON_USE_CLANG_EMULATION)
     target_compile_options(Utils PUBLIC /WX)
