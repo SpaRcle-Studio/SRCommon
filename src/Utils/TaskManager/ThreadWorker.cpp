@@ -183,11 +183,6 @@ namespace SR_UTILS_NS {
 
         Update();
 
-        if (!m_useThreads) {
-            SR_LOG("ThreadWorker::Work() : thread \"{}\" is finished because it is not using threads!", m_name);
-            return false;
-        }
-
         return true;
     }
 
