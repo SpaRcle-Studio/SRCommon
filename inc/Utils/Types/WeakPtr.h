@@ -11,6 +11,16 @@ namespace SR_HTYPES_NS {
     template<class T> class WeakPtr {
     public:
         WeakPtr() = default;
+
+        WeakPtr(const T* pData)
+            : m_ptr(const_cast<T*>(pData))
+        {
+            if (m_ptr) {
+                m_data = m_ptr->GetPtrData();
+                m_data->IncrementWeak();
+            }
+        }
+
         WeakPtr(const SharedPtr<T>& ptr) {
             if ((m_data = ptr.m_data)) {
                 m_data->IncrementWeak();
@@ -29,6 +39,43 @@ namespace SR_HTYPES_NS {
             : m_ptr(SR_UTILS_NS::Exchange(ptr.m_ptr, nullptr))
             , m_data(SR_UTILS_NS::Exchange(ptr.m_data, nullptr))
         { }
+
+        WeakPtr<T>& operator=(const SharedPtr<T>& ptr) {
+            if (m_data) {
+                SR_SAFE_PTR_ASSERT(m_data->weakCount != 0, "WeakPtr is corrupted!");
+                m_data->DecrementWeak();
+                if (m_data->strongCount == 0 && m_data->weakCount == 0) {
+                    delete m_data;
+                }
+            }
+
+            m_ptr = ptr.m_ptr;
+
+            if ((m_data = ptr.m_data)) {
+                m_data->IncrementWeak();
+            }
+
+            return *this;
+        }
+
+        WeakPtr<T>& operator=(const T* ptr) {
+            if (m_data) {
+                SR_SAFE_PTR_ASSERT(m_data->weakCount != 0, "WeakPtr is corrupted!");
+                m_data->DecrementWeak();
+                if (m_data->strongCount == 0 && m_data->weakCount == 0) {
+                    delete m_data;
+                }
+            }
+
+            m_ptr = const_cast<T*>(ptr);
+
+            if (m_ptr) {
+                m_data = m_ptr->GetPtrData();
+                m_data->IncrementWeak();
+            }
+
+            return *this;
+        }
 
         WeakPtr<T>& operator=(WeakPtr<T>&& ptr) noexcept {
             if (this == &ptr){
@@ -57,6 +104,10 @@ namespace SR_HTYPES_NS {
                     delete m_data;
                 }
             }
+        }
+
+        SR_NODISCARD operator bool() const noexcept {
+            return m_ptr && m_data && m_data->valid;
         }
 
         WeakPtr<T>& operator=(const WeakPtr<T>& ptr) {

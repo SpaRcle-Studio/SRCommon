@@ -4,7 +4,7 @@
 
 #include <Utils/CommandManager/CmdManager.h>
 #include <Utils/Profile/TracyContext.h>
-#include <Utils/Debug.h>
+#include <Utils/Events/Broadcaster.h>
 
 namespace SR_UTILS_NS {
     CmdManager::~CmdManager() {
@@ -19,10 +19,15 @@ namespace SR_UTILS_NS {
             /// например когда мы отменили действия, и пытаемся сделать что-то другое,
             /// то нум нужно затереть все отмененные изменения,
             /// это нельзя делать сразу, так как мы можем вернуть изменения без перезаписи
-            while(m_history.size() - 1 != m_historyPC) {
+            uint32_t deleted = 0;
+            while (m_history.size() - 1 != m_historyPC) {
                 auto&& pIt = std::prev(m_history.end());
                 delete *pIt;
                 m_history.erase(pIt);
+                deleted++;
+            }
+            if (deleted > 0) {
+                SR_LOG("CmdManager::Execute() : deleted {} commands from history...", deleted);
             }
         }
 
@@ -32,6 +37,7 @@ namespace SR_UTILS_NS {
         /// если происходит переполнение истории,
         /// то нужно удалить самый первый элемент
         if (m_historyPC >= m_maxHistorySize) {
+            SR_LOG("CmdManager::Execute() : history overflow, deleting the oldest command...");
             auto&& pIt = m_history.begin();
             delete *pIt;
             m_history.erase(pIt);
@@ -60,6 +66,7 @@ namespace SR_UTILS_NS {
                 auto&& pNextCmp = m_history[++m_historyPC];
                 m_lastCmdName = pNextCmp->GetName();
 
+                SR_UTILS_NS::Broadcaster::Instance().Broadcast(SR_UTILS_NS::Events::EVENT_ON_COMMAND_REDO_ID);
                 return pNextCmp->Redo();
             }
             case CmdType::Undo: {
@@ -78,6 +85,7 @@ namespace SR_UTILS_NS {
                 --m_historyPC;
                 m_lastCmdName = pPrevCmd->GetName();
 
+                SR_UTILS_NS::Broadcaster::Instance().Broadcast(SR_UTILS_NS::Events::EVENT_ON_COMMAND_UNDO_ID);
                 return pPrevCmd->Undo();
             }
             case CmdType::Execute: {

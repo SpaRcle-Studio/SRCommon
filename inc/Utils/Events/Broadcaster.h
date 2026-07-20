@@ -23,6 +23,8 @@ namespace SR_UTILS_NS {
         SR_INLINE_STATIC const SR_UTILS_NS::StringAtom EVENT_ON_RESOURCE_RELOADED_ID = "OnResourceReloaded";
         SR_INLINE_STATIC const SR_UTILS_NS::StringAtom EVENT_ON_FONT_RELOADED_ID = "OnFontReloaded";
         SR_INLINE_STATIC const SR_UTILS_NS::StringAtom EVENT_DO_INSPECT_ENTITY_ID = "DoInspectEntity";
+        SR_INLINE_STATIC const SR_UTILS_NS::StringAtom EVENT_ON_COMMAND_UNDO_ID = "OnCommandUndo";
+        SR_INLINE_STATIC const SR_UTILS_NS::StringAtom EVENT_ON_COMMAND_REDO_ID = "OnCommandRedo";
     }
 }
 
