@@ -432,4 +432,26 @@ namespace SR_UTILS_NS {
 
         return out;
     }
+
+    bool StringUtils::CheckSearchMatch(StringView searchBuffer, StringView text) {
+        for (uint64_t textStartPos = 0; textStartPos < text.size(); ++textStartPos) {
+            bool isMatch = true;
+            for (uint64_t searchPos = 0; searchPos < searchBuffer.size(); ++searchPos) {
+                if (textStartPos + searchPos >= text.size()) {
+                    isMatch = false;
+                    break;
+                }
+
+                if (std::tolower(searchBuffer[searchPos]) != std::tolower(text[textStartPos + searchPos])) {
+                    isMatch = false;
+                    break;
+                }
+            }
+
+            if (isMatch) {
+                return true;
+            }
+        }
+        return false;
+    }
 }
