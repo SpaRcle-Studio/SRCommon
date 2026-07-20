@@ -15,6 +15,8 @@ namespace SR_UTILS_NS {
     public:
         using value_type = char;
         static constexpr auto npos{static_cast<SizeType>(-1)};
+        using const_iterator = const char*;
+        using iterator = char*;
 
     public:
         String();
@@ -70,6 +72,7 @@ namespace SR_UTILS_NS {
 
         SR_NODISCARD const char* c_str() const;
         SR_NODISCARD SizeType size() const;
+        SR_NODISCARD SizeType length() const;
         SR_NODISCARD SizeType capacity() const;
         SR_NODISCARD bool empty() const;
         SR_NODISCARD const char* data() const;
@@ -107,6 +110,7 @@ namespace SR_UTILS_NS {
         void append(std::string_view str);
         void append(char c);
         void append(const char* str, SizeType count);
+        void append(const_iterator first, const_iterator last);
 
         void push_back(char c);
         void reserve(SizeType newSize);

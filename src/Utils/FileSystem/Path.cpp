@@ -81,7 +81,7 @@ namespace SR_UTILS_NS {
 
     Path& Path::operator=(const Path& path) = default;
 
-    std::string Path::ToString() const {
+    String Path::ToString() const {
         return GetNormalized();
     }
 
@@ -374,7 +374,7 @@ namespace SR_UTILS_NS {
 
     std::wstring Path::ToWinApiPath() const {
         auto&& wstring = ToUnicodeString();
-        return SR_UTILS_NS::StringUtils::ReplaceAll<std::wstring>(wstring, L"/", L"\\");
+        return SR_UTILS_NS::StringUtils::ReplaceAll<std::wstring>(wstring, L"/"sv, L"\\"sv);
     }
 
     bool Path::IsEmpty() const {

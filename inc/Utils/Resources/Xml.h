@@ -451,7 +451,7 @@ namespace SR_UTILS_NS::Xml {
         if (attrib.empty())
             return false;
 
-        if constexpr (std::is_same<T, std::string>() || std::is_same<T, SR_UTILS_NS::StringAtom>()) {
+        if constexpr (std::is_same<T, std::string>() || std::is_same<T, SR_UTILS_NS::StringAtom>() || std::is_same<T, String>()) {
             attrib.set_value(value.c_str());
         }
         else if constexpr (std::is_same<T, SR_UTILS_NS::Path>()) {

@@ -270,6 +270,7 @@ namespace SR_UTILS_NS {
     const char* String::c_str() const { return m_data ? m_data : nullptr; }
 
     SizeType String::size() const { return m_size; }
+    SizeType String::length() const { return m_size; }
     SizeType String::capacity() const { return m_capacity; }
 
     bool String::empty() const { return m_size == 0; }
@@ -491,6 +492,20 @@ namespace SR_UTILS_NS {
 
     bool String::HasAllocator() const {
         return m_allocator;
+    }
+
+    void String::append(String::const_iterator first, String::const_iterator last) {
+        SizeType count = static_cast<SizeType>(last - first);
+        if (count == 0) {
+            return;
+        }
+        SizeType newSize = m_size + count;
+        if (newSize > m_capacity) {
+            reserve(SR_MAX(newSize, m_capacity * 2));
+        }
+        memcpy(m_data + m_size, &(*first), count);
+        m_size = newSize;
+        m_data[newSize] = '\0';
     }
 
     void StringView::remove_prefix(SizeType n) {

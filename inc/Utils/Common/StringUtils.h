@@ -383,12 +383,12 @@ namespace SR_UTILS_NS {
 
         SR_NODISCARD static std::string ReplaceAllRecursive(const std::string& original, const std::vector<std::string>& fromList, const std::string& to) noexcept;
 
-        template<typename stringType> SR_NODISCARD static stringType ReplaceAll(stringType const& original, stringType const& from, stringType const& to) noexcept {
-            stringType results;
+        template<typename ST1, typename ST2, typename ST3> SR_NODISCARD static ST1 ReplaceAll(ST1 const& original, ST2 const& from, ST3 const& to) noexcept {
+            ST1 results;
             results.reserve(original.size());
-            typename stringType::const_iterator end = original.end();
-            typename stringType::const_iterator current = original.begin();
-            typename stringType::const_iterator next = std::search(current, end, from.begin(), from.end());
+            typename ST1::const_iterator end = original.end();
+            typename ST1::const_iterator current = original.begin();
+            typename ST1::const_iterator next = std::search(current, end, from.begin(), from.end());
             while (next != end) {
                 results.append(current, next);
                 results.append(to);
@@ -424,7 +424,7 @@ namespace SR_UTILS_NS {
         }
 
         SR_NODISCARD inline static std::string MakePath(const std::string& str, bool toLower = false) noexcept {
-            auto&& replaced = ReplaceAll<std::string>(str, "\\", "/");
+            auto&& replaced = ReplaceAll<std::string>(str, "\\"sv, "/"sv);
             if (toLower) replaced = ToLower(replaced);
             return replaced;
         }
