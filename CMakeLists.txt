@@ -63,7 +63,7 @@ if (NOT ANDROID_NDK AND UNIX AND NOT APPLE AND NOT SR_EMSCRIPTEN AND NOT WIN32)
 
         set(SR_COMMON_USE_NATIVE_WAYLAND_SUPPORTED OFF)
         if (SR_WAYLAND_HAS_XDG_SHELL AND SR_WAYLAND_HAS_FRACTIONAL_SCALE AND SR_WAYLAND_HAS_XDG_DECORATION)
-            set(SR_COMMON_USE_NATIVE_WAYLAND_SUPPORTED ON)
+            set(SR_COMMON_USE_NATIVE_WAYLAND_SUPPORTED ON CACHE INTERNAL "" FORCE)
             message(STATUS "Native Wayland support is available and the backend is turned on.")
         else()
             message(WARNING "Native Wayland support is not fully available. Falling back to GLFW.")
