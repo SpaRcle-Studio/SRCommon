@@ -20,8 +20,16 @@ namespace SR_UTILS_NS {
     }
 
     static SR_INLINE StringView SerializeInt(int64_t value, char* pBuffer, uint64_t bufferSize) {
-        const int32_t result = std::snprintf(pBuffer, bufferSize, "%lld", value);
-        return StringView(pBuffer, result);
+        if (bufferSize == 0) {
+            return {};
+        }
+
+        const int result = std::snprintf(pBuffer, bufferSize, "%" PRId64, value);
+        if (result < 0) {
+            return {};
+        }
+        const uint64_t length = std::min<uint64_t>(static_cast<uint64_t>(result), bufferSize - 1);
+        return StringView(pBuffer, length);
     }
 
     template<typename T> std::string ToString(const T& value) {
