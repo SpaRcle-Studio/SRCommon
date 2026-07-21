@@ -136,12 +136,7 @@ namespace SR_HTYPES_NS {
                 SR_NOOP;
             }
 
-            String threadId;
-            while (threadId.empty()) {
-                threadId = SR_UTILS_NS::GetThreadId(pThread->GetImpl().thread);
-            }
-
-            pThread->SetId(threadId);
+            pThread->SetId(SR_UTILS_NS::GetThisThreadId());
             pThread->GetImpl().threadBody = [fn = std::forward<Functor>(fn), argsTuple]() mutable {
                 return std::apply(fn, std::forward<decltype(argsTuple)>(argsTuple));
             };
