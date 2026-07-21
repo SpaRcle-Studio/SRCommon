@@ -127,7 +127,7 @@ namespace SR_HTYPES_NS {
         pThread = new Thread();
 
     #ifdef SR_THREADS_ALLOWED
-        pThread->GetImpl().thread = std::thread([fn = std::forward<Functor>(fn), pThread, argsTuple = std::make_tuple(args...)]() mutable {
+        pThread->GetImpl().thread = std::thread([fn = std::forward<Functor>(fn), pThread, argsTuple = std::make_tuple(std::forward<Args>(args)...)]() mutable {
             SR_TRACY_ZONE_N("Thread");
 
             while (!pThread->GetImpl().isCreated.load(std::memory_order_acquire)) {
@@ -151,7 +151,7 @@ namespace SR_HTYPES_NS {
             }
         });
 
-        pThread->GetImpl().isCreated.exchange(true, std::memory_order_release);
+        pThread->GetImpl().isCreated.store(true, std::memory_order_release);
 
         while (!pThread->HasId()) {
             SR_NOOP;
@@ -160,7 +160,7 @@ namespace SR_HTYPES_NS {
         static uint32_t threadCounter = 0;
         pThread->SetId("FakeThread_{}"_format(threadCounter++));
         pThread->GetImpl().isCreated = true;
-        pThread->GetImpl().threadBody = [fn = std::forward<Functor>(fn), argsTuple = std::make_tuple(args...)]() mutable -> bool {
+        pThread->GetImpl().threadBody = [fn = std::forward<Functor>(fn), argsTuple = std::make_tuple(std::forward<Args>(args)...)]() mutable -> bool {
             return std::apply(fn, std::forward<decltype(argsTuple)>(argsTuple));
         };
     #endif
@@ -170,7 +170,7 @@ namespace SR_HTYPES_NS {
         }
 
         m_threads[pThread->GetId()] = pThread;
-        pThread->GetImpl().isRan.exchange(true, std::memory_order_release);
+        pThread->GetImpl().isRan.store(true, std::memory_order_release);
 
         return true;
     }
