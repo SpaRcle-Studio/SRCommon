@@ -147,7 +147,7 @@ namespace SR_PLATFORM_NS {
     }
 
     void Terminate(bool isError) {
-        SRHaltOnce("Not implemented!");
+        std::exit(isError ? EXIT_FAILURE : EXIT_SUCCESS);
     }
 
     void OpenWithAssociatedApp(const Path &filepath) {

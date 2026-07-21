@@ -66,6 +66,7 @@ namespace SR_HTYPES_NS {
             void Remove(Thread* pThread);
 
         private:
+            uint32_t m_threadCreationCounter = 0;
             ThreadsMap m_threads = ThreadsMap();
             Thread* m_main = nullptr;
 
@@ -157,8 +158,7 @@ namespace SR_HTYPES_NS {
             SR_NOOP;
         }
     #else
-        static uint32_t threadCounter = 0;
-        pThread->SetId("FakeThread_{}"_format(threadCounter++));
+        pThread->SetId("FakeThread_{}"_format(m_threadCreationCounter++));
         pThread->GetImpl().isCreated = true;
         pThread->GetImpl().threadBody = [fn = std::forward<Functor>(fn), argsTuple = std::make_tuple(std::forward<Args>(args)...)]() mutable -> bool {
             return std::apply(fn, std::forward<decltype(argsTuple)>(argsTuple));
@@ -171,6 +171,7 @@ namespace SR_HTYPES_NS {
 
         m_threads[pThread->GetId()] = pThread;
         pThread->GetImpl().isRan.store(true, std::memory_order_release);
+        ++m_threadCreationCounter;
 
         return true;
     }
