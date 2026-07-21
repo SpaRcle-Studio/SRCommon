@@ -79,6 +79,7 @@ namespace SR_HTYPES_NS {
     }
 
     Thread::Ptr Thread::Factory::GetMainThread() {
+        SR_TRACY_ZONE;
         SR_LOCK_GUARD;
         SRAssert2(m_main, "Main thread isn't initialized!");
         return m_main;
@@ -119,6 +120,7 @@ namespace SR_HTYPES_NS {
     }
 
     Thread::ThreadId Thread::GetId() const {
+        std::lock_guard lock(GetImpl().mutex);
         return m_id;
     }
 
@@ -129,9 +131,8 @@ namespace SR_HTYPES_NS {
 
     void Thread::Synchronize() {
         SR_TRACY_ZONE;
-        std::lock_guard<std::shared_mutex> lock(GetImpl().mutex);
+        std::lock_guard lock(GetImpl().mutex);
 
-    #if defined(SR_DEBUG) && SR_THREAD_SAFE_CHECKS
         auto&& pThread = Thread::Factory::Instance().GetThisThread();
         if (!pThread) {
             SRHalt("Thread::Synchronize() : unknown thread!");
@@ -142,7 +143,6 @@ namespace SR_HTYPES_NS {
             SRHalt("Synchronization can only be performed by the owner thread!");
             return;
         }
-    #endif
 
         if (GetImpl().nameChanged) {
             SR_TRACY_THREAD_NAME(m_name.c_str());
@@ -168,7 +168,7 @@ namespace SR_HTYPES_NS {
 
         /// синхронно записываем
         {
-            std::lock_guard<std::shared_mutex> lock(GetImpl().mutex);
+            std::lock_guard lock(GetImpl().mutex);
             GetImpl().function = &function;
         }
 
@@ -181,13 +181,15 @@ namespace SR_HTYPES_NS {
         return GetImpl().executeResult;
     }
 
-    void Thread::SetName(const std::string& name) {
-        std::lock_guard<std::shared_mutex> lock(GetImpl().mutex);
+    void Thread::SetName(StringView name) {
+        std::lock_guard lock(GetImpl().mutex);
         m_name = name;
         GetImpl().nameChanged = true;
     }
 
     bool Thread::HasId() const {
+        std::lock_guard lock(GetImpl().mutex);
+
         if (m_id.empty()) {
             return false;
         }
@@ -223,7 +225,7 @@ namespace SR_HTYPES_NS {
     #endif
     }
 
-    DataStorage *Thread::GetContext() {
+    DataStorage* Thread::GetContext() {
         return m_context;
     }
 
@@ -239,9 +241,13 @@ namespace SR_HTYPES_NS {
         return *m_impl;
     }
 
+    void Thread::SetId(Thread::ThreadId id) {
+        std::lock_guard lock(GetImpl().mutex);
+        m_id = id;
+    }
+
     uint32_t Thread::Factory::GetThreadsCount() {
         SR_SCOPED_LOCK;
-
         return m_threads.size();
     }
 
@@ -254,7 +260,7 @@ namespace SR_HTYPES_NS {
 
         m_main = new Thread(SR_UTILS_NS::GetThisThreadId());
 
-        SR_LOG("Thread::Factory::SetMainThread() : main thread id: \"{}\"", m_main->GetId().c_str());
+        SR_LOG("Thread::Factory::SetMainThread() : main thread id: \"{}\"", m_main->GetId());
     }
 
     void Thread::Factory::PrintThreads() {
@@ -283,6 +289,7 @@ namespace SR_HTYPES_NS {
 
     Thread::Ptr Thread::Factory::TryGetThisThread() {
         SR_TRACY_ZONE;
+        SR_LOCK_GUARD;
 
         auto&& threadId = SR_UTILS_NS::GetThisThreadId();
 
@@ -290,16 +297,16 @@ namespace SR_HTYPES_NS {
             return pIt->second;
         }
 
-        auto&& main = GetMainThread();
-
-        if (main && threadId == main->m_id) {
-            return main;
+        auto&& pMain = GetMainThread();
+        if (pMain && threadId == pMain->GetId()) {
+            return pMain;
         }
 
         return nullptr;
     }
 
     void Thread::Factory::DeInitialize() {
+        SR_LOCK_GUARD;
         SRAssert(m_threads.empty() && "Thread::Factory::~Factory() : not all threads were freed!");
         if (m_main) {
             delete m_main;

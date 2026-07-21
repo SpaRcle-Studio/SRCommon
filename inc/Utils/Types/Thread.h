@@ -11,8 +11,6 @@
 #include <Utils/Types/LockGuard.h>
 #include <Utils/Types/String.h>
 
-#define SR_THREAD_SAFE_CHECKS 1
-
 /** Warning: этот метод очень медленный! */
 #define SR_THIS_THREAD (SR_HTYPES_NS::Thread::Factory::Instance().GetThisThread())
 
@@ -29,7 +27,7 @@ namespace SR_HTYPES_NS {
         std::atomic<bool> isCreated = false;
         std::atomic<bool> isRan = false;
 
-        mutable std::shared_mutex mutex;
+        mutable std::recursive_mutex mutex;
         mutable std::atomic<const SR_HTYPES_NS::Function<bool()>*> function = nullptr;
         mutable std::atomic<bool> executeResult = false;
     };
@@ -88,11 +86,9 @@ namespace SR_HTYPES_NS {
         SR_NODISCARD ThreadId GetId() const;
         SR_NODISCARD DataStorage* GetContext();
 
-        void SetName(const std::string& name);
+        void SetName(StringView name);
 
         void Synchronize();
-
-        template<class Functor, typename... Args> SR_NODISCARD bool Run(Functor&& fn);
 
         bool Execute(const SR_HTYPES_NS::Function<bool()>& function) const;
 
@@ -106,6 +102,9 @@ namespace SR_HTYPES_NS {
         static void Sleep(uint64_t milliseconds);
 
     private:
+        void SetId(ThreadId id);
+
+    private:
         ThreadId m_id;
         String m_name;
         DataStorage* m_context = nullptr;
@@ -115,6 +114,8 @@ namespace SR_HTYPES_NS {
 
     template<class Functor, typename... Args>
     bool Thread::Factory::Create(Thread::Ptr& pThread, Functor&& fn, Args&&... args)  {
+        SR_TRACY_ZONE;
+
     #ifdef SR_THREADS_ALLOWED
         SR_LOG("Thread::Factory::Create() : creating new thread...");
     #else
@@ -126,38 +127,50 @@ namespace SR_HTYPES_NS {
         pThread = new Thread();
 
     #ifdef SR_THREADS_ALLOWED
-        std::thread thread([fn = std::forward<Functor>(fn), pThread, argsTuple = std::make_tuple(args...)]() mutable {
-            while (!pThread->GetImpl().isCreated || !pThread->HasId()) {
-                pThread->m_id = SR_UTILS_NS::GetThreadId(pThread->GetImpl().thread);
+        pThread->GetImpl().thread = std::thread([fn = std::forward<Functor>(fn), pThread, argsTuple = std::make_tuple(args...)]() mutable {
+            SR_TRACY_ZONE_N("Thread");
+
+            while (!pThread->GetImpl().isCreated.load(std::memory_order_acquire)) {
+                SR_NOOP;
             }
 
+            pThread->SetId(SR_UTILS_NS::GetThreadId(pThread->GetImpl().thread));
             pThread->GetImpl().threadBody = [fn = std::forward<Functor>(fn), argsTuple]() mutable {
                 return std::apply(fn, std::forward<decltype(argsTuple)>(argsTuple));
             };
+
+            SR_LOG("Thread::Factory::Create() : thread \"{}\" created.", pThread->GetId());
+            SR_TRACY_ZONE_TEXT(pThread->GetId());
+
+            while (!pThread->GetImpl().isRan.load(std::memory_order_acquire)) {
+                SR_NOOP;
+            }
 
             while (pThread->GetImpl().threadBody()) {
                 SR_NOOP;
             }
         });
 
+        pThread->GetImpl().isCreated.exchange(true, std::memory_order_release);
+
         while (!pThread->HasId()) {
-            pThread->m_id = SR_UTILS_NS::GetThreadId(thread);
+            SR_NOOP;
         }
     #else
+        static uint32_t threadCounter = 0;
+        pThread->SetId("FakeThread_{}"_format(threadCounter++));
+        pThread->GetImpl().isCreated = true;
         pThread->GetImpl().threadBody = [fn = std::forward<Functor>(fn), argsTuple = std::make_tuple(args...)]() mutable -> bool {
             return std::apply(fn, std::forward<decltype(argsTuple)>(argsTuple));
         };
     #endif
 
-        m_threads.insert(std::make_pair(pThread->GetId(), pThread));
+        if (m_threads.find(pThread->GetId()) != m_threads.end()) {
+            SRHaltTerminate("Thread::Factory::Create() : thread with id \"{}\" already exists!", pThread->GetId());
+        }
 
-    #ifdef SR_THREADS_ALLOWED
-        pThread->GetImpl().thread = std::move(thread);
-    #endif
-        pThread->GetImpl().isRan = true;
-        pThread->GetImpl().isCreated = true;
-
-        SR_LOG("Thread::Factory::Create() : thread \"{}\" created.", pThread->m_id.c_str());
+        m_threads[pThread->GetId()] = pThread;
+        pThread->GetImpl().isRan.exchange(true, std::memory_order_release);
 
         return true;
     }
