@@ -24,7 +24,6 @@ namespace SR_HTYPES_NS {
     #endif
         SR_HTYPES_NS::Function<bool()> threadBody;
         std::atomic<bool> nameChanged = false;
-        std::atomic<bool> isCreated = false;
         std::atomic<bool> isRan = false;
 
         mutable std::recursive_mutex mutex;
@@ -75,9 +74,6 @@ namespace SR_HTYPES_NS {
     private:
         Thread();
 
-    #ifdef SR_THREADS_ALLOWED
-        explicit Thread(std::thread&& thread);
-    #endif
         explicit Thread(ThreadId id);
 
         ~Thread() override;
@@ -130,11 +126,6 @@ namespace SR_HTYPES_NS {
     #ifdef SR_THREADS_ALLOWED
         pThread->GetImpl().thread = std::thread([fn = std::forward<Functor>(fn), pThread, argsTuple = std::make_tuple(std::forward<Args>(args)...)]() mutable {
             SR_TRACY_ZONE_N("Thread");
-            SR_LOG("Thread::Factory::Create() : waiting for thread initialization...");
-
-            while (!pThread->GetImpl().isCreated.load(std::memory_order_acquire)) {
-                SR_NOOP;
-            }
 
             pThread->SetId(SR_UTILS_NS::GetThisThreadId());
             pThread->GetImpl().threadBody = [fn = std::forward<Functor>(fn), argsTuple]() mutable {
@@ -153,14 +144,13 @@ namespace SR_HTYPES_NS {
             }
         });
 
-        pThread->GetImpl().isCreated.store(true, std::memory_order_release);
+        SR_LOG("Thread::Factory::Create() : waiting for thread to be initialized...");
 
         while (!pThread->HasId()) {
             SR_NOOP;
         }
     #else
         pThread->SetId("FakeThread_{}"_format(m_threadCreationCounter++));
-        pThread->GetImpl().isCreated = true;
         pThread->GetImpl().threadBody = [fn = std::forward<Functor>(fn), argsTuple = std::make_tuple(std::forward<Args>(args)...)]() mutable -> bool {
             return std::apply(fn, std::forward<decltype(argsTuple)>(argsTuple));
         };
@@ -171,6 +161,7 @@ namespace SR_HTYPES_NS {
         }
 
         m_threads[pThread->GetId()] = pThread;
+        SR_LOG("Thread::Factory::Create() : thread \"{}\" registered.", pThread->GetId());
         pThread->GetImpl().isRan.store(true, std::memory_order_release);
         ++m_threadCreationCounter;
 

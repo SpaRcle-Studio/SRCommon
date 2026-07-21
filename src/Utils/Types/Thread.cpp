@@ -17,16 +17,6 @@ namespace SR_HTYPES_NS {
         DeInitialize();
     }
 
-#ifdef SR_THREADS_ALLOWED
-    Thread::Thread(std::thread&& thread) {
-        GetImpl().thread = std::move(thread);
-        GetImpl().isCreated = true;
-        GetImpl().isRan = true;
-        m_id = SR_UTILS_NS::GetThreadId(GetImpl().thread);
-        m_context = new DataStorage();
-    }
-#endif
-
     Thread::~Thread() {
         if (Joinable()) {
             SRHalt("Thread::~Thread() : thread is joinable! Thread: {}", m_id);
@@ -52,8 +42,7 @@ namespace SR_HTYPES_NS {
     { }
     #else
     {
-        GetImpl().isCreated = true;
-        GetImpl().isRan = true;
+        GetImpl().isRan = false;
         m_context = new DataStorage();
     }
     #endif
