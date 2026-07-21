@@ -22,6 +22,8 @@ namespace SR_UTILS_NS {
     public:
         virtual ~IAllocator() = default;
 
+        static IAllocator* GetDefaultAllocator();
+
         SR_NODISCARD virtual void* Allocate(
             SR_UTILS_NS::SizeType size,
             SR_UTILS_NS::SizeType alignment = alignof(MaxAlignT)

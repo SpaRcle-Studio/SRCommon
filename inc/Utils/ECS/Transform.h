@@ -57,9 +57,9 @@ namespace SR_UTILS_NS {
         virtual void RotateAround(const SR_MATH_NS::FVector3& point, const SR_MATH_NS::FVector3& eulers);
         virtual void RotateAroundParent(const SR_MATH_NS::FVector3& eulers);
 
-        virtual void SetMatrix(const SR_HTYPES_NS::Optional<SR_MATH_NS::FVector3>& translation,
-                               const SR_HTYPES_NS::Optional<SR_MATH_NS::Quaternion>& rotation,
-                               const SR_HTYPES_NS::Optional<SR_MATH_NS::FVector3>& scale);
+        virtual void SetMatrix(const SR_UTILS_NS::Optional<SR_MATH_NS::FVector3>& translation,
+                               const SR_UTILS_NS::Optional<SR_MATH_NS::Quaternion>& rotation,
+                               const SR_UTILS_NS::Optional<SR_MATH_NS::FVector3>& scale);
 
         virtual void SetGlobalTranslation(const SR_MATH_NS::FVector3& translation);
 

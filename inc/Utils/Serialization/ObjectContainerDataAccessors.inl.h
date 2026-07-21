@@ -109,15 +109,7 @@ public:
 	}
 };
 
-template<typename T, class... TOther>
-struct ObjectDataAccessor<std::vector<T, TOther...>> : ObjectDataAccessorVector<std::vector<T, TOther...>>
-{
-};
-
-template<typename T>
-struct ObjectDataAccessor<SR_UTILS_NS::Vector<T>> : ObjectDataAccessorVector<SR_UTILS_NS::Vector<T>>
-{
-};
+template<typename T> struct ObjectDataAccessor<SR_UTILS_NS::Vector<T>> : ObjectDataAccessorVector<SR_UTILS_NS::Vector<T>> { };
 
 template<typename T, size_t N> struct ObjectDataAccessor<std::array<T, N>> {
 	static void Save(ISerializer& serializer, const std::array<T, N>& value, const SerializationId& id) {
@@ -190,7 +182,7 @@ template<typename T, size_t N> struct ObjectDataAccessor<std::array<T, N>> {
 };
 
 template<typename MapType, typename T, typename U> struct ObjectDataAccessorMap {
-	static_assert(std::is_arithmetic_v<T> || IsSREnumV<T> || std::is_same_v<T, std::string> || std::is_same_v<T, SR_UTILS_NS::StringAtom>, "Custom types and structs are not supported as id of map");
+	static_assert(std::is_arithmetic_v<T> || IsSREnumV<T> || std::is_same_v<T, SR_UTILS_NS::String> || std::is_same_v<T, SR_UTILS_NS::StringAtom>, "Custom types and structs are not supported as id of map");
 
     static constexpr SerializationId itemId = SerializationId::Create("item");
     static constexpr SerializationId firstId = SerializationId::Create("first");
@@ -369,10 +361,10 @@ template<typename T, typename U> struct ObjectDataAccessor<std::pair<T, U>> {
 	}
 };
 
-template<typename T> struct ObjectDataAccessor<SR_HTYPES_NS::Optional<T>> {
+template<typename T> struct ObjectDataAccessor<SR_UTILS_NS::Optional<T>> {
     static constexpr SerializationId hasValueId = SerializationId::Create("has");
 
-    static void Save(ISerializer& serializer, const SR_HTYPES_NS::Optional<T>& value, const SerializationId& id) {
+    static void Save(ISerializer& serializer, const SR_UTILS_NS::Optional<T>& value, const SerializationId& id) {
         serializer.BeginObject(id);
         if (value.has_value()) {
             serializer.WriteBool(true, hasValueId);
@@ -384,7 +376,7 @@ template<typename T> struct ObjectDataAccessor<SR_HTYPES_NS::Optional<T>> {
         serializer.EndObject();
     }
 
-    static void Load(IDeserializer& deserializer, SR_HTYPES_NS::Optional<T>& value, const SerializationId& id) {
+    static void Load(IDeserializer& deserializer, SR_UTILS_NS::Optional<T>& value, const SerializationId& id) {
         if (!deserializer.BeginObject(id)) {
             return;
         }
@@ -411,7 +403,7 @@ template<typename T> struct ObjectDataAccessor<T, typename std::enable_if<IsSREn
     }
 
     static void Load(IDeserializer& deserializer, T& value, const SerializationId& id) {
-        std::string enumName;
+        SR_UTILS_NS::String enumName;
         deserializer.ReadString(enumName, id);
         if (enumName.empty()) {
             return; // Default value
@@ -460,7 +452,7 @@ struct ObjectDataAccessor<SR_HTYPES_NS::SharedPtr<T>, std::enable_if_t<Serializa
             return;
         }
 
-        std::string type;
+        SR_UTILS_NS::String type;
         deserializer.ReadString(type, TYPE_ID);
 
         if (deserializer.IsDefault(PTR_ID)) {

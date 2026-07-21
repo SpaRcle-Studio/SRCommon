@@ -7,7 +7,7 @@
 
 #include <Utils/Serialization/Serializable.h>
 #include <Utils/TypeTraits/Factory.h>
-#include <Utils/ECS/EntityController.h>
+#include <Utils/ECS/Entity.h>
 
 namespace SR_UTILS_NS {
     /// @inspector(EntityRefPropertyDrawer)

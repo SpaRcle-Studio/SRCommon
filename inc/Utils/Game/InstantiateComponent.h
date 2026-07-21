@@ -41,9 +41,9 @@ namespace SR_UTILS_NS {
         /// @property
         uint32_t m_count = 1;
         /// @property
-        SR_HTYPES_NS::Optional<bool> m_activityOnInstantiate;
+        SR_UTILS_NS::Optional<bool> m_activityOnInstantiate;
         /// @property
-        SR_HTYPES_NS::Optional<SR_UTILS_NS::StringAtom> m_instanceName;
+        SR_UTILS_NS::Optional<SR_UTILS_NS::StringAtom> m_instanceName;
         /// @property
         SR_UTILS_NS::EntityRef<SR_UTILS_NS::SceneObject> m_target;
 

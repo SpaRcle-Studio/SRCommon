@@ -5,9 +5,9 @@
 #ifndef SR_ENGINE_OBJECT_DATA_ACCESSORS_INL_H
 #define SR_ENGINE_OBJECT_DATA_ACCESSORS_INL_H
 
-template<> struct ObjectDataAccessor<std::string> {
-	static void Save(ISerializer& serializer, const std::string& value, const SerializationId& id);
-	static void Load(IDeserializer& deserializer, std::string& value, const SerializationId& id);
+template<> struct ObjectDataAccessor<SR_UTILS_NS::String> {
+	static void Save(ISerializer& serializer, const SR_UTILS_NS::String& value, const SerializationId& id);
+	static void Load(IDeserializer& deserializer, SR_UTILS_NS::String& value, const SerializationId& id);
 };
 
 template<> struct ObjectDataAccessor<SR_UTILS_NS::StringAtom> {

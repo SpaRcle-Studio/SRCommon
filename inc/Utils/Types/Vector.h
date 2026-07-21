@@ -27,6 +27,7 @@ namespace SR_UTILS_NS {
 
     public:
         Vector() noexcept = default;
+        Vector(std::nullptr_t) = delete;
         Vector(IAllocator* allocator) noexcept;
         Vector(const Vector& other);
         Vector(Vector&& other) noexcept;
@@ -82,6 +83,9 @@ namespace SR_UTILS_NS {
         SR_NODISCARD ConstIterator cbegin() const noexcept { return static_cast<const T*>(m_data); }
         SR_NODISCARD ConstIterator cend() const noexcept { return static_cast<const T*>(m_data) + m_size; }
 
+        SR_NODISCARD bool operator==(const Vector& other) const noexcept;
+        SR_NODISCARD bool operator!=(const Vector& other) const noexcept { return !(*this == other); }
+
         SR_NODISCARD T& operator[](SizeType index) noexcept {
             SRAssert2(index < m_size, "Index {} is out of bounds! Size is {}!", index, m_size);
             return static_cast<T*>(m_data)[index];
@@ -132,6 +136,25 @@ namespace SR_UTILS_NS {
                 m_size = 0;
             }
         }
+    }
+
+    template<typename T> bool Vector<T>::operator==(const Vector& other) const noexcept {
+        if (m_size != other.m_size) {
+            return false;
+        }
+
+        if constexpr (std::is_trivially_copyable_v<T>) {
+            return std::memcmp(m_data, other.m_data, sizeof(T) * m_size) == 0;
+        }
+        else {
+            for (SizeType i = 0; i < m_size; ++i) {
+                if (!(static_cast<const T*>(m_data)[i] == static_cast<const T*>(other.m_data)[i])) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
     }
 
     template<typename T> template<typename ValueType> Vector<T>::Iterator Vector<T>::insert(ConstIterator pos, SizeType count, ValueType&& value) {

@@ -50,7 +50,7 @@ namespace SR_UTILS_NS {
 
     private:
         /// @property
-        std::vector<ITestController::Ptr> m_tests;
+        Vector<ITestController::Ptr> m_tests;
 
     };
 
@@ -61,7 +61,7 @@ namespace SR_UTILS_NS {
 
     public:
         /// @property
-        std::vector<ITestController::Ptr> m_tests;
+        Vector<ITestController::Ptr> m_tests;
 
     };
 

@@ -7,7 +7,7 @@
 
 #include <Utils/Reflection/Value.h>
 
-namespace SR_HTYPES_NS {
+namespace SR_UTILS_NS {
     class OptionalBase {
     public:
         OptionalBase() = default;
@@ -46,7 +46,7 @@ namespace SR_HTYPES_NS {
             other.m_hasValue = false;
         }
 
-        ~Optional() = default;
+        ~Optional() override = default;
 
         Optional<T>& operator=(const Optional<T>& other) noexcept {
             m_hasValue = other.m_hasValue;
@@ -76,7 +76,7 @@ namespace SR_HTYPES_NS {
                 m_hasValue = true;
             }
             else {
-                SRHalt("SR_HTYPES_NS::Optional::SetValue() : value is not of the correct type!");
+                SRHalt("Optional::SetValue() : value is not of the correct type!");
             }
         }
 

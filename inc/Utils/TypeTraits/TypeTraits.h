@@ -225,9 +225,11 @@ namespace SR_UTILS_NS {
 	template <typename T> struct SupportsNullptrComparison<SR_MATH_NS::Vector6<T>> : std::false_type {};
 
     class Path;
-    template <> struct SupportsNullptrComparison<SR_UTILS_NS::Path> : std::false_type {};
 
-    template <> struct SupportsNullptrComparison<SR_UTILS_NS::StringAtom> : std::false_type {};
+    template<> struct SupportsNullptrComparison<SR_UTILS_NS::Path> : std::false_type {};
+    template<> struct SupportsNullptrComparison<SR_UTILS_NS::StringAtom> : std::false_type {};
+    template<> struct SupportsNullptrComparison<SR_UTILS_NS::String> : std::false_type {};
+    template<typename T> struct SupportsNullptrComparison<SR_UTILS_NS::Vector<T>> : std::false_type {};
 
 	template<class T>
 	inline constexpr bool SupportsNullptrComparisonV = SupportsNullptrComparison<T>::value;

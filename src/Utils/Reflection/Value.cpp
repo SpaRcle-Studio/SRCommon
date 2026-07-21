@@ -3,6 +3,7 @@
 //
 
 #include <Utils/Reflection/Value.h>
+#include <Utils/Reflection/ReflectedType.h>
 #include <Utils/Types/Optional.h>
 #include <Utils/ECS/EntityRef.h>
 #include <Utils/Resources/ResourceRef.h>
@@ -11,14 +12,6 @@
 #include <Utils/Debug.h>
 
 namespace SR_UTILS_NS::Reflection {
-    bool TypeInfo::operator==(const TypeInfo& other) const noexcept {
-        return type == other.type && detailedType == other.detailedType && detailedTypeEx == other.detailedTypeEx;
-    }
-
-    bool TypeInfo::operator!=(const TypeInfo& other) const noexcept {
-        return !(*this == other);
-    }
-
     Value ValueSequenceContainerIterator::operator*() const {
         return Value(m_iterator->as_ref());
     }
@@ -115,6 +108,8 @@ namespace SR_UTILS_NS::Reflection {
 
     Value::Value() = default;
 
+    Value::~Value() = default;
+
     Value::Value(const Value& other) {
         if (other.IsRef()) {
             m_storage = const_cast<entt::meta_any*>(&other.m_storage)->as_ref();
@@ -179,7 +174,7 @@ namespace SR_UTILS_NS::Reflection {
     }
 
     bool Value::IsBitMap() const {
-        static auto meta = entt::meta_any(std::vector<bool>());
+        static auto meta = entt::meta_any(SR_UTILS_NS::Vector<bool>());
         return GetTypeName() == meta.base().type().name();
     }
 
@@ -203,7 +198,7 @@ namespace SR_UTILS_NS::Reflection {
             return false;
         }
 
-        static const auto meta = entt::meta_any(std::string());
+        static const auto meta = entt::meta_any(String());
         static const std::string_view compare = meta.base().type().name();
         return GetTypeName() == compare;
     }
@@ -436,7 +431,7 @@ namespace SR_UTILS_NS::Reflection {
             return false;
         }
 
-        static auto meta = entt::meta_any(SR_HTYPES_NS::Optional<uint64_t>());
+        static auto meta = entt::meta_any(SR_UTILS_NS::Optional<uint64_t>());
         static const std::string_view compare = meta.base().type().name().substr(0, meta.base().type().name().find('<'));
 
         return GetTypeName().starts_with(compare);
@@ -465,52 +460,50 @@ namespace SR_UTILS_NS::Reflection {
         return GetTypeName().starts_with(compare);
     }
 
-    SR_HTYPES_NS::OptionalBase* Value::GetOptionalBase() const {
+    SR_UTILS_NS::OptionalBase* Value::GetOptionalBase() const {
         if (IsOptional()) {
-            return const_cast<SR_HTYPES_NS::OptionalBase*>(static_cast<const SR_HTYPES_NS::OptionalBase*>(Data()));
+            return const_cast<SR_UTILS_NS::OptionalBase*>(static_cast<const SR_UTILS_NS::OptionalBase*>(Data()));
         }
         return nullptr;
     }
 
-    ReflectionType Value::GetType() const {
+    ReflectedType Value::GetType() const {
         SR_TRACY_ZONE;
 
         if (IsSequenceContainer()) {
-            return ReflectionType::SequenceContainer;
+            return ReflectedType::SequenceContainer;
         }
         else if (IsAssociativeContainer()) {
-            return ReflectionType::AssociativeContainer;
+            return ReflectedType::AssociativeContainer;
         }
         else if (IsBitMap()) {
-            return ReflectionType::BitMap;
+            return ReflectedType::BitMap;
         }
         else if (IsSmartPtr()) {
-            return ReflectionType::SmartPtr;
+            return ReflectedType::SmartPtr;
         }
         else if (IsPointer()) {
-            return ReflectionType::Pointer;
+            return ReflectedType::Pointer;
         }
         else if (IsOptional()) {
-            return ReflectionType::Optional;
+            return ReflectedType::Optional;
         }
         else if (IsEntityRef()) {
-            return ReflectionType::EntityRef;
+            return ReflectedType::EntityRef;
         }
         else if (IsResourceRef()) {
-            return ReflectionType::ResourceRef;
+            return ReflectedType::ResourceRef;
         }
         else if (GetSRClass()) {
-            return ReflectionType::Object;
+            return ReflectedType::Object;
         }
         else if (IsEnum()) {
-            return ReflectionType::Enum;
+            return ReflectedType::Enum;
         }
         else if (IsArithmetic()) {
-            return ReflectionType::Arithmetic;
+            return ReflectedType::Arithmetic;
         }
 
-        return ReflectionType::Unknown;
+        return ReflectedType::Unknown;
     }
-
-    Value::~Value() = default;
 }

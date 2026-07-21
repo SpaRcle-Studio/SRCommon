@@ -81,10 +81,10 @@ struct DefaultObjectMaker<std::optional<T>>
 };
 
 template<>
-struct DefaultObjectMaker<std::string> {
+struct DefaultObjectMaker<SR_UTILS_NS::String> {
     static constexpr bool value = true;
 
-    static void MakeDefault(std::string& v) {
+    static void MakeDefault(SR_UTILS_NS::String& v) {
         v.clear();
     }
 };
@@ -98,11 +98,11 @@ struct DefaultObjectMaker<SR_UTILS_NS::StringAtom> {
     }
 };
 
-template<class T, class... TOther>
-struct DefaultObjectMaker<std::vector<T, TOther...>> {
+template<class T>
+struct DefaultObjectMaker<SR_UTILS_NS::Vector<T>> {
     static constexpr bool value = true;
 
-    static void MakeDefault(std::vector<T, TOther...>& v) {
+    static void MakeDefault(SR_UTILS_NS::Vector<T>& v) {
         v.clear();
     }
 };

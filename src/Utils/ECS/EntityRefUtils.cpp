@@ -98,7 +98,7 @@ namespace SR_UTILS_NS::EntityRefUtils {
                     return nullptr;
                 }
                 case Action::Action_Component: {
-                    const std::vector<Component::Ptr>& components = pEntity ? DynamicPointerCast<SceneObject>(pEntity)->GetComponents() : GetSceneFromOwner(owner)->GetComponents();
+                    const Vector<Component::Ptr>& components = pEntity ? DynamicPointerCast<SceneObject>(pEntity)->GetComponents() : GetSceneFromOwner(owner)->GetComponents();
 
                     if (components.empty()) {
                         return nullptr;

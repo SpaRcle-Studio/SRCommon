@@ -21,6 +21,7 @@ namespace SR_UTILS_NS {
     public:
         String();
 
+        String(std::nullptr_t) = delete;
         String(IAllocator* pAllocator);
         String(const char* str, SizeType size, IAllocator* pAllocator);
         String(StringView str, IAllocator* pAllocator);

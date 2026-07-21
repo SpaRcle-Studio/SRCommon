@@ -2,8 +2,9 @@
 // Created by Monika on 27.04.2025.
 //
 
-#include <Utils/Profile/TracyContext.h>
+#include <Utils/Memory/AllocatorManager.h>
 #include <Utils/Memory/Allocator.h>
+#include <Utils/Profile/TracyContext.h>
 
 bool g_TracyAllocatorInitialized = false;
 SR_THREAD_LOCAL SR_UTILS_NS::IAllocator* g_ThreadLocalAllocator = nullptr;
@@ -29,6 +30,16 @@ namespace SR_UTILS_NS {
 
     SR_UTILS_NS::IAllocator* GetThreadLocalAllocator() {
         return g_ThreadLocalAllocator;
+    }
+
+    IAllocator* IAllocator::GetDefaultAllocator() {
+        const static SR_UTILS_NS::StringAtom defaultAllocatorName = "DefaultAllocator";
+        auto&& manager = AllocatorManager::Instance();
+        if (auto&& pAllocator = manager.GetAllocator(defaultAllocatorName)) {
+            return pAllocator;
+        }
+        manager.RegisterAllocator(defaultAllocatorName, new DefaultAllocator());
+        return manager.GetAllocator(defaultAllocatorName);
     }
 }
 

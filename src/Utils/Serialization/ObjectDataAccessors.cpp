@@ -17,11 +17,11 @@
 namespace SR_UTILS_NS {
     #include <Utils/Serialization/ObjectDataAccessors.inl.h>
 
-    void ObjectDataAccessor<std::string>::Save(ISerializer& serializer, const std::string& value, const SerializationId& id) {
+    void ObjectDataAccessor<SR_UTILS_NS::String>::Save(ISerializer& serializer, const SR_UTILS_NS::String& value, const SerializationId& id) {
        serializer.WriteString(value, id);
     }
 
-    void ObjectDataAccessor<std::string>::Load(IDeserializer& deserializer, std::string& value, const SerializationId& id) {
+    void ObjectDataAccessor<SR_UTILS_NS::String>::Load(IDeserializer& deserializer, SR_UTILS_NS::String& value, const SerializationId& id) {
        deserializer.ReadString(value, id);
     }
 

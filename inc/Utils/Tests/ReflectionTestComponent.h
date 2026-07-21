@@ -16,13 +16,13 @@ namespace SR_UTILS_NS::Tests {
         /// @property
         std::map<SR_UTILS_NS::StringAtom, int> associativeMapAtom;
         /// @property
-        std::map<std::string, int> associativeMapString;
+        std::map<SR_UTILS_NS::String, int> associativeMapString;
         /// @property
-        std::map<int, std::string> associativeMap2;
+        std::map<int, SR_UTILS_NS::String> associativeMap2;
         /// @property
         std::map<SR_UTILS_NS::PlatformType, int> associativeMap33;
         /// @property
-        std::map<SR_UTILS_NS::PlatformType, std::string> associativeMap3;
+        std::map<SR_UTILS_NS::PlatformType, SR_UTILS_NS::String> associativeMap3;
         /// @property
         std::map<SR_UTILS_NS::PlatformType, SR_UTILS_NS::Path> associativeMap4;
 
@@ -46,7 +46,7 @@ namespace SR_UTILS_NS::Tests {
         /// @property
         int32_t m_width = 100;
         /// @property
-        std::vector<float> m_test;
+        SR_UTILS_NS::Vector<float> m_test;
     };
 
     class ReflectionTestComponentLogicBase : public SR_UTILS_NS::Serializable, public SR_HTYPES_NS::SharedPtr<ReflectionTestComponentLogicBase> {
@@ -77,13 +77,13 @@ namespace SR_UTILS_NS::Tests {
         SR_CLASS()
     private:
         /// @property
-        std::vector<int> m_complexInts;
+        SR_UTILS_NS::Vector<int> m_complexInts;
         /// @property
         SR_MATH_NS::FVector3 m_complexVector;
         /// @property
         ReflectionTestComponentLogicBase::Ptr m_other;
         /// @property
-        std::vector<ReflectionTestComponentLogicBase::Ptr> m_others;
+        SR_UTILS_NS::Vector<ReflectionTestComponentLogicBase::Ptr> m_others;
 
     };
 
@@ -93,7 +93,7 @@ namespace SR_UTILS_NS::Tests {
         SR_CLASS()
     public:
         SR_NODISCARD const bool& IsWidthChangeable() const { return m_isWidthChangeable; }
-        std::vector<float>& GetTest() { return m_test; }
+        SR_UTILS_NS::Vector<float>& GetTest() { return m_test; }
 
         void OnChanged() {
             m_hasChanged = true;
@@ -105,7 +105,7 @@ namespace SR_UTILS_NS::Tests {
         /// @property @onChanged(OnChanged)
         ReflectionTestComponentAssociative m_associative;
         /// @property @onChanged(OnChanged)
-        std::string m_string = "Hello world!";
+        SR_UTILS_NS::String m_string = "Hello world!";
         /// @property @onChanged(OnChanged)
         SR_UTILS_NS::PlatformType m_platformType = SR_UTILS_NS::PlatformType::Windows;
         /// @property
@@ -113,7 +113,7 @@ namespace SR_UTILS_NS::Tests {
         /// @property
         ReflectionTestComponentLogicBase::Ptr m_logic;
         /// @property
-        std::vector<ReflectionTestComponentData> m_datas;
+        SR_UTILS_NS::Vector<ReflectionTestComponentData> m_datas;
         /// @property @onChanged(OnChanged) @getter(IsWidthChangeable)
         bool m_isWidthChangeable = true;
         /// @property @onChanged(OnChanged)
@@ -141,25 +141,25 @@ namespace SR_UTILS_NS::Tests {
         /// @property @onChanged(OnChanged)
         SR_MATH_NS::FSize2 m_size2;
         /// @property @getter(GetTest)
-        std::vector<float> m_test;
+        SR_UTILS_NS::Vector<float> m_test;
         /// @property
-        std::vector<std::vector<int>> m_test2;
+        SR_UTILS_NS::Vector<SR_UTILS_NS::Vector<int>> m_test2;
         /// @property
-        std::vector<std::vector<std::vector<std::vector<std::vector<std::vector<float_t>>>>>> m_test4;
+        SR_UTILS_NS::Vector<SR_UTILS_NS::Vector<SR_UTILS_NS::Vector<SR_UTILS_NS::Vector<SR_UTILS_NS::Vector<SR_UTILS_NS::Vector<float_t>>>>>> m_test4;
         /// @property
-        std::vector<int> m_test3 = { 1, 2, 3 };
+        SR_UTILS_NS::Vector<int> m_test3 = { 1, 2, 3 };
         /// @property
-        std::vector<SR_MATH_NS::FVector3> m_testMathVector3;
+        SR_UTILS_NS::Vector<SR_MATH_NS::FVector3> m_testMathVector3;
         /// @property
-        std::vector<std::vector<SR_MATH_NS::FVector4>> m_testMathVector4;
+        SR_UTILS_NS::Vector<SR_UTILS_NS::Vector<SR_MATH_NS::FVector4>> m_testMathVector4;
         /// @property
-        std::vector<SR_UTILS_NS::PlatformType> m_testPlatformType;
+        SR_UTILS_NS::Vector<SR_UTILS_NS::PlatformType> m_testPlatformType;
         /// @property
-        std::vector<SR_MATH_NS::FSize> m_testSize;
+        SR_UTILS_NS::Vector<SR_MATH_NS::FSize> m_testSize;
         /// @property
-        std::vector<SR_MATH_NS::FSize2> m_testSize2;
+        SR_UTILS_NS::Vector<SR_MATH_NS::FSize2> m_testSize2;
         /// @property
-        std::vector<bool> m_bitSet;
+        SR_UTILS_NS::Vector<bool> m_bitSet;
 
     };
 }

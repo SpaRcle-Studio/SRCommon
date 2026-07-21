@@ -37,8 +37,8 @@ template<> struct DefaultChecker<SR_UTILS_NS::Path> {
     }
 };
 
-template<> struct DefaultChecker<std::string> {
-    static bool IsDefault(const std::string& value, const std::string* defaultValue) {
+template<> struct DefaultChecker<SR_UTILS_NS::String> {
+    static bool IsDefault(const SR_UTILS_NS::String& value, const SR_UTILS_NS::String* defaultValue) {
         if (defaultValue) {
             return value == *defaultValue;
         }
@@ -64,7 +64,7 @@ template<class T> struct DefaultChecker<std::optional<T>> {
     }
 };
 
-/// Specialization for types with "empty" method (std::vector, std::string, std::array, etc...)
+/// Specialization for types with "empty" method (std::vector, SR_UTILS_NS::String, std::array, etc...)
 template<class T>
 struct DefaultChecker<T, std::enable_if_t<SerializationTraits<T>::HasEmpty && !IsTypeFromStdArrayTemplateV<T>>> {
     static bool IsDefault(const T& value, const T* defaultValue) {
@@ -74,10 +74,9 @@ struct DefaultChecker<T, std::enable_if_t<SerializationTraits<T>::HasEmpty && !I
             }
 
             /// is std vector and not bitset
-            constexpr bool isStdVector = std::is_same_v<RemoveQualifiersT<T>, std::vector<typename T::value_type>>
-                || std::is_same_v<RemoveQualifiersT<T>, SR_UTILS_NS::Vector<typename T::value_type>>;
+            constexpr bool isVector = std::is_same_v<RemoveQualifiersT<T>, SR_UTILS_NS::Vector<typename T::value_type>>;
 
-            if constexpr (isStdVector && !std::is_same_v<typename T::value_type, bool>) {
+            if constexpr (isVector && !std::is_same_v<typename T::value_type, bool>) {
                 for (size_t i = 0; i < value.size(); ++i) {
                     if (!DefaultChecker<typename T::value_type>::IsDefault(value[i], &(*defaultValue)[i])) {
                         return false;

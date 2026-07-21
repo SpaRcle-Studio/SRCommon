@@ -5,7 +5,6 @@
 #ifndef SR_UTILS_TYPE_TRAITS_VALUE_H
 #define SR_UTILS_TYPE_TRAITS_VALUE_H
 
-#include <Utils/Reflection/ValueImpl.h>
 #include <Utils/Types/SharedPtr.h>
 #include <Utils/Types/Vector.h>
 
@@ -18,54 +17,15 @@ namespace entt {
 }
 
 namespace SR_HTYPES_NS {
+    class SharedPtrBase;
+}
+
+namespace SR_UTILS_NS {
     class OptionalBase;
 }
 
 namespace SR_UTILS_NS::Reflection {
-    SR_ENUM_NS_CLASS_T(ReflectionType, uint8_t,
-        Unknown,
-        Object,
-        SequenceContainer,
-        AssociativeContainer,
-        BitMap,
-        SmartPtr,
-        Pointer,
-        String,
-        StringView,
-        StringAtom,
-        UnicodeString,
-        AABB,
-        Path,
-        Rect,
-        Color,
-        MathVector,
-        Quaternion,
-        MathSize,
-        Arithmetic,
-        Optional,
-        ResourceRef,
-        EntityRef,
-        Enum
-    );
-
-    struct SR_COMMON_DLL_API TypeInfo {
-        SR_UTILS_NS::Reflection::ReflectionType type = SR_UTILS_NS::Reflection::ReflectionType::Unknown;
-        /**
-         * For Object: SRClass meta name
-         * For SequenceContainer: contained type name
-         * For AssociativeContainer: key type name is detailedType and value type name is detailedTypeEx
-         * For SmartPtr, Pointer, EntityRef, ResourceRef, Optional: contained type name
-         * For MathVector, Rect, Arithmetic: math type name
-         * For Enum: enum type name
-         * For all other types: detailedType and detailedTypeEx are empty
-         */
-        SR_UTILS_NS::StringAtom detailedType;
-        SR_UTILS_NS::StringAtom detailedTypeEx;
-
-        bool operator==(const TypeInfo& other) const noexcept;
-        bool operator!=(const TypeInfo& other) const noexcept;
-    };
-
+    enum class ReflectedType : uint8_t;
     class Value;
     class ValueSequenceContainer;
     class ValueAssociativeContainer;
@@ -235,7 +195,7 @@ namespace SR_UTILS_NS::Reflection {
         Value& Detach();
         Value& DetachIfConst();
 
-        SR_NODISCARD ReflectionType GetType() const;
+        SR_NODISCARD ReflectedType GetType() const;
 
         SR_NODISCARD ValueSequenceContainer AsSequenceContainer();
         SR_NODISCARD ValueSequenceContainer AsSequenceContainer() const;
@@ -285,8 +245,8 @@ namespace SR_UTILS_NS::Reflection {
         SR_NODISCARD const void* Data() const;
         SR_NODISCARD std::string_view GetEnumType() const;
         SR_NODISCARD SRClass* GetSRClass() const;
+        SR_NODISCARD OptionalBase* GetOptionalBase() const;
         SR_NODISCARD SR_HTYPES_NS::SharedPtrBase* GetSharedPtrBase() const;
-        SR_NODISCARD SR_HTYPES_NS::OptionalBase* GetOptionalBase() const;
 
         SR_NODISCARD operator bool() const noexcept; /// NOLINT
 

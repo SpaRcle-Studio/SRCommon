@@ -6,18 +6,19 @@
 #include <Utils/Reflection/Value.h>
 #include <Utils/Profile/TracyContext.h>
 #include <Utils/Common/StringUtils.h>
+#include <Utils/Types/StringAtom.h>
 
 namespace SR_UTILS_NS::Reflection {
-    SR_UTILS_NS::StringAtom MakeDisplayName(SR_UTILS_NS::StringAtom id) {
+    StringAtom MakeDisplayName(StringAtom id) {
         SR_TRACY_ZONE;
         SR_GLOBAL_LOCK;
 
-        static SR_HTYPES_NS::FlatHashMap<SR_UTILS_NS::StringAtom, SR_UTILS_NS::StringAtom> cache;
+        static SR_HTYPES_NS::FlatHashMap<StringAtom, StringAtom> cache;
         if (auto&& pIt = cache.find(id); pIt != cache.end()) {
             return pIt->second;
         }
 
-        const auto displayName = StringAtom(SR_UTILS_NS::StringUtils::MakeDisplayName(id));
+        const auto displayName = StringAtom(StringUtils::MakeDisplayName(id));
         cache[id] = displayName;
         return displayName;
     }

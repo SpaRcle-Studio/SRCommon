@@ -81,7 +81,7 @@ namespace SR_UTILS_NS {
         return static_cast<uint32_t>(m_components.size());
     }
 
-    const std::vector<IComponentable::ComponentPtr>& IComponentable::GetComponents() const noexcept {
+    const Vector<IComponentable::ComponentPtr>& IComponentable::GetComponents() const noexcept {
         return m_components;
     }
 

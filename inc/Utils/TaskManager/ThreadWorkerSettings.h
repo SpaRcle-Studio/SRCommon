@@ -29,11 +29,11 @@ namespace SR_UTILS_NS {
             /// @property
             StringAtom name;
             /// @property
-            std::vector<ThreadWorkerStateCondition> startConditions;
+            Vector<ThreadWorkerStateCondition> startConditions;
             /// @property
-            std::vector<ThreadWorkerStateCondition> skipConditions;
+            Vector<ThreadWorkerStateCondition> skipConditions;
             /// @property
-            std::vector<ThreadWorkerStateCondition> finishConditions;
+            Vector<ThreadWorkerStateCondition> finishConditions;
         };
 
         struct SR_COMMON_DLL_API ThreadWorkerThread : public Serializable {
@@ -44,7 +44,7 @@ namespace SR_UTILS_NS {
             /// @property
             bool useThreads = true;
             /// @property
-            std::vector<ThreadWorkerSettingsState> states;
+            Vector<ThreadWorkerSettingsState> states;
 
         };
 
@@ -52,13 +52,13 @@ namespace SR_UTILS_NS {
             SR_STRUCT()
 
             /// @property
-            std::string description;
+            String description;
             /// @property
             std::set<StringAtom> featuresCondition;
             /// @property
-            std::vector<ThreadWorkerThread> threads;
+            Vector<ThreadWorkerThread> threads;
             /// @property
-            std::vector<StringAtom> finalizeStates;
+            Vector<StringAtom> finalizeStates;
 
         };
     }
@@ -67,7 +67,7 @@ namespace SR_UTILS_NS {
         SR_STRUCT()
 
         /// @property
-        std::vector<Details::ThreadWorkerThreadsVariant> variants;
+        Vector<Details::ThreadWorkerThreadsVariant> variants;
 
     };
 }

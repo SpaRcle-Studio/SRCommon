@@ -53,7 +53,7 @@ namespace SR_UTILS_NS {
         SR_NODISCARD bool HasComponent(const ComponentPtr& pComponent) const;
         SR_NODISCARD int32_t GetComponentIndex(const ComponentPtr& pComponent) const;
         SR_NODISCARD uint32_t GetComponentsCount() const noexcept;
-        SR_NODISCARD const std::vector<ComponentPtr>& GetComponents() const noexcept;
+        SR_NODISCARD const Vector<ComponentPtr>& GetComponents() const noexcept;
 
         virtual bool AddComponent(const ComponentPtr& pComponent);
 
@@ -99,7 +99,7 @@ namespace SR_UTILS_NS {
     protected:
         /// @property @hidden @dontSaveTags(Inspector)
         /// @condition(!This.IsPrefab())
-        std::vector<ComponentPtr> m_components;
+        Vector<ComponentPtr> m_components;
 
     private:
         bool m_hasNotAttachedComponents = false;
