@@ -18,12 +18,12 @@ namespace SR_UTILS_NS {
           SR_THREAD_PRIORITY_TIME_CRITICAL
     );
 
-    SR_INLINE std::string GetThreadId(const std::thread& thread) {
+    SR_INLINE String GetThreadId(const std::thread& thread) {
         std::stringstream stream;
         stream << thread.get_id();
 
         if (stream.str() == "thread::id of a non-executing thread") {
-            return std::string();
+            return String();
         }
 
         return stream.str();

@@ -130,12 +130,18 @@ namespace SR_HTYPES_NS {
     #ifdef SR_THREADS_ALLOWED
         pThread->GetImpl().thread = std::thread([fn = std::forward<Functor>(fn), pThread, argsTuple = std::make_tuple(std::forward<Args>(args)...)]() mutable {
             SR_TRACY_ZONE_N("Thread");
+            SR_LOG("Thread::Factory::Create() : waiting for thread initialization...");
 
             while (!pThread->GetImpl().isCreated.load(std::memory_order_acquire)) {
                 SR_NOOP;
             }
 
-            pThread->SetId(SR_UTILS_NS::GetThreadId(pThread->GetImpl().thread));
+            String threadId;
+            while (threadId.empty()) {
+                threadId = SR_UTILS_NS::GetThreadId(pThread->GetImpl().thread);
+            }
+
+            pThread->SetId(threadId);
             pThread->GetImpl().threadBody = [fn = std::forward<Functor>(fn), argsTuple]() mutable {
                 return std::apply(fn, std::forward<decltype(argsTuple)>(argsTuple));
             };
