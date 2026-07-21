@@ -84,12 +84,13 @@ namespace SR_PLATFORM_NS {
         if (from.IsFile()) {
             SR_UTILS_NS::String buffer;
             if (!SR_UTILS_NS::FileSystem::ReadFile(from, buffer)) {
-                SR_WARN("Platform::Copy() : failed to read file!\n\tPath: {}", from.c_str());
+                SR_WARN("Platform::Copy() : failed to read file!\n\tPath: {}", from);
                 return false;
             }
-            std::ofstream file(to.CStr(), std::ios::binary);
+            to.Create();
+            std::ofstream file(to.c_str(), std::ios::binary);
             if (!file.is_open()) {
-                SR_WARN("Platform::Copy() : failed to open file for writing!\n\tPath: {}", to.c_str());
+                SR_WARN("Platform::Copy() : failed to open file for writing!\n\tPath: {}", to);
                 return false;
             }
             file.write(buffer.data(), buffer.size());
