@@ -21,6 +21,7 @@
 #endif
 
 #ifndef SR_ENGINE_CODEGEN_CLANG_PARSE_MODE
+    #include <system_error>
     #include <cfloat>
     #include <cinttypes>
     #include <span>

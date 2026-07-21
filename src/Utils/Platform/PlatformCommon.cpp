@@ -76,7 +76,7 @@ namespace SR_PLATFORM_NS {
     #ifdef SR_ANDROID
         std::string_view pathToView = to.ToStringView();
         if (RemoveAssetsPrefix(pathToView)) {
-            SR_WARN("Platform::Copy() : can't write asset file!");
+            SR_ERROR("Platform::Copy() : can't write asset file!");
             return false;
         }
     #endif
@@ -84,13 +84,15 @@ namespace SR_PLATFORM_NS {
         if (from.IsFile()) {
             SR_UTILS_NS::String buffer;
             if (!SR_UTILS_NS::FileSystem::ReadFile(from, buffer)) {
-                SR_WARN("Platform::Copy() : failed to read file!\n\tPath: {}", from);
+                SR_ERROR("Platform::Copy() : failed to read file!\n\tPath: {}", from);
                 return false;
             }
+
             to.Create();
+
             std::ofstream file(to.c_str(), std::ios::binary);
             if (!file.is_open()) {
-                SR_WARN("Platform::Copy() : failed to open file for writing!\n\tPath: {}", to);
+                SR_ERROR("Platform::Copy() : failed to open file for writing!\n\tPath: {}\n\tReason = {} ({})", to, errno, std::system_category().message(errno));
                 return false;
             }
             file.write(buffer.data(), buffer.size());
@@ -99,11 +101,11 @@ namespace SR_PLATFORM_NS {
         }
 
         if (!from.IsDir()) {
-            SR_WARN("Platform::Copy() : \"{}\" is not a directory!", from.c_str());
+            SR_ERROR("Platform::Copy() : \"{}\" is not a directory!", from);
             return false;
         }
 
-        CreateFolder(to.ToStringRef());
+        to.Create();
 
         Vector<Path> items;
         GetInDirectory(from, Path::Type::Undefined, items);
