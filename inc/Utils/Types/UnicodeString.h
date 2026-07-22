@@ -7,7 +7,7 @@
 
 #include <Utils/stdInclude.h>
 
-namespace SR_HTYPES_NS {
+namespace SR_UTILS_NS {
     class UnicodeString {
     public:
         using CharType = char32_t;
@@ -43,7 +43,9 @@ namespace SR_HTYPES_NS {
         SR_NODISCARD operator std::u32string_view() const noexcept { return m_internal; } /// NOLINT(google-explicit-constructor)
 
     public:
-        void resize(size_t size);
+        void resize(SizeType size);
+        void reserve(SizeType size);
+        void clear() noexcept;
 
         SR_NODISCARD bool empty() const noexcept { return m_internal.empty(); }
         SR_NODISCARD size_t size() const noexcept { return m_internal.size(); }

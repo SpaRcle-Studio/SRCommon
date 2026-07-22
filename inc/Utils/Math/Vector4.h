@@ -14,6 +14,7 @@ namespace SR_MATH_NS {
     template<typename T> struct Vector4 {
     public:
         using ValueType = T;
+        static inline constexpr SizeType Dimensions() { return 4; }
 
         union {
             struct {

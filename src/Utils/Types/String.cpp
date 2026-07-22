@@ -519,6 +519,11 @@ namespace SR_UTILS_NS {
         m_size -= n;
     }
 
+    void StringView::clear() {
+        m_data = nullptr;
+        m_size = 0;
+    }
+
     StringView::operator std::string_view() const {
         return std::string_view(m_data ? m_data : "", m_size);
     }

@@ -176,6 +176,7 @@ namespace SR_UTILS_NS {
         { }
 
         void remove_prefix(SizeType n);
+        void clear();
 
         constexpr StringView& operator=(const StringView& other) = default;
         constexpr StringView& operator=(StringView&& other) noexcept = default;

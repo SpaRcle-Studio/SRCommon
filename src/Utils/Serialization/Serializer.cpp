@@ -8,7 +8,8 @@
 
 namespace SR_UTILS_NS {
     void ISerializer::WriteAny(const std::any& value, const SerializationId& name) {
-        auto&& type = GetStandardType(value);
+        SRHalt("ISerializer::WriteAny() : not implemented!");
+        /*auto&& type = GetStandardType(value);
 
         BeginObject(name);
 
@@ -34,6 +35,6 @@ namespace SR_UTILS_NS {
                 break;
         }
 
-        EndObject();
+        EndObject();*/
     }
 }

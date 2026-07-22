@@ -33,11 +33,11 @@ namespace SR_UTILS_NS {
         deserializer.ReadString(value, id);
     }
 
-    void ObjectDataAccessor<SR_HTYPES_NS::UnicodeString>::Save(ISerializer& serializer, const SR_HTYPES_NS::UnicodeString& value, const SerializationId& id) {
+    void ObjectDataAccessor<UnicodeString>::Save(ISerializer& serializer, const UnicodeString& value, const SerializationId& id) {
         serializer.WriteString(value, id);
     }
 
-    void ObjectDataAccessor<SR_HTYPES_NS::UnicodeString>::Load(IDeserializer& deserializer, SR_HTYPES_NS::UnicodeString& value, const SerializationId& id) {
+    void ObjectDataAccessor<UnicodeString>::Load(IDeserializer& deserializer, UnicodeString& value, const SerializationId& id) {
         deserializer.ReadString(value, id);
     }
 

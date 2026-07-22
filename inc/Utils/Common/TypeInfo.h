@@ -129,10 +129,10 @@ namespace SR_UTILS_NS {
         else if constexpr (std::is_same<Type, std::string>() || std::is_same<Type, const char*>()) {
             return StandardType::String;
         }
-        else if constexpr (std::is_same<Type, SR_UTILS_NS::StringAtom>()) {
+        else if constexpr (std::is_same<Type, StringAtom>()) {
             return StandardType::StringAtom;
         }
-        else if constexpr (std::is_same<Type, SR_HTYPES_NS::UnicodeString>()) {
+        else if constexpr (std::is_same<Type, UnicodeString>()) {
             return StandardType::UnicodeString;
         }
         else if constexpr (std::is_same<Type, SR_MATH_NS::FVector2>() || std::is_same<Type, SR_MATH_NS::Vector2<float>>() || std::is_same<Type, SR_MATH_NS::Vector2<float_t>>()) {

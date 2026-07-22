@@ -12,6 +12,7 @@ namespace SR_MATH_NS {
     template<typename T> struct Vector2 {
     public:
         using ValueType = T;
+        static inline constexpr SizeType Dimensions() { return 2; }
 
         union {
             struct {
@@ -297,14 +298,15 @@ namespace SR_MATH_NS {
         }
     };
 
-    typedef Vector2<Unit> FVector2;
-    typedef Vector2<Unit> FPoint;
+    typedef Vector2<Unit>     FVector2;
+    typedef Vector2<Unit>     FPoint;
+    typedef Vector2<int16_t>  SVector2;
     typedef Vector2<uint16_t> USVector2;
-    typedef Vector2<int32_t> IVector2;
-    typedef Vector2<int32_t> IPoint;
+    typedef Vector2<int32_t>  IVector2;
+    typedef Vector2<int32_t>  IPoint;
     typedef Vector2<uint32_t> UVector2;
     typedef Vector2<uint32_t> UPoint;
-    typedef Vector2<bool> BVector2;
+    typedef Vector2<bool>     BVector2;
 
     SR_INLINE static const FVector2 InfinityFV2 = FVector2 { UnitMAX, UnitMAX };
 

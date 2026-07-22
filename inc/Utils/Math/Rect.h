@@ -11,6 +11,8 @@
 namespace SR_MATH_NS {
     template<typename T> struct Rect {
     public:
+        using ValueType = T;
+
         union {
             struct {
                 T x;

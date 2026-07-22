@@ -14,6 +14,9 @@ namespace SR_MATH_NS {
     );
 
     template<typename T> struct Size {
+        using ValueType = T;
+        static inline constexpr SizeType Dimensions() { return 1; }
+
         Size() noexcept
             : value(T())
         { }
@@ -48,6 +51,9 @@ namespace SR_MATH_NS {
     };
 
     template<typename T> struct Size2 {
+        using ValueType = T;
+        static inline constexpr SizeType Dimensions() { return 2; }
+
         Size2() noexcept
             : width(Size<T>())
             , height(Size<T>())

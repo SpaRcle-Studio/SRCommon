@@ -161,10 +161,10 @@ namespace SR_UTILS_NS {
             stream.write((const char*)&str[0], size * sizeof(char));
         }
 
-        SR_MAYBE_UNUSED SR_INLINE_STATIC void SR_FASTCALL SaveUnicodeString(SR_HTYPES_NS::Stream& stream, const SR_HTYPES_NS::UnicodeString& str) {
+        SR_MAYBE_UNUSED SR_INLINE_STATIC void SR_FASTCALL SaveUnicodeString(SR_HTYPES_NS::Stream& stream, const UnicodeString& str) {
             const int16_t size = static_cast<int16_t>(str.size());
             stream.write((const char*)&size, sizeof(int16_t));
-            stream.write((const char*)&str[0], size * sizeof(SR_HTYPES_NS::UnicodeString::CharType));
+            stream.write((const char*)&str[0], size * sizeof(UnicodeString::CharType));
         }
 
         SR_MAYBE_UNUSED SR_INLINE_STATIC void SR_FASTCALL SaveString(SR_HTYPES_NS::Stream& stream, const std::string& str) {
@@ -250,8 +250,8 @@ namespace SR_UTILS_NS {
             return str;
         }
 
-        SR_MAYBE_UNUSED SR_INLINE_STATIC SR_HTYPES_NS::UnicodeString SR_FASTCALL LoadUnicodeString(SR_HTYPES_NS::Stream& stream) {
-            SR_HTYPES_NS::UnicodeString str;
+        SR_MAYBE_UNUSED SR_INLINE_STATIC UnicodeString SR_FASTCALL LoadUnicodeString(SR_HTYPES_NS::Stream& stream) {
+            UnicodeString str;
             uint16_t size;
             stream.read((char*)&size, sizeof(uint16_t));
             SRAssert(size < SR_UINT16_MAX);
@@ -259,7 +259,7 @@ namespace SR_UTILS_NS {
                 return str;
             }
             str.resize(size);
-            stream.read((char*)&str[0], size * sizeof(SR_HTYPES_NS::UnicodeString::CharType));
+            stream.read((char*)&str[0], size * sizeof(UnicodeString::CharType));
             return str;
         }
 
@@ -297,8 +297,8 @@ namespace SR_UTILS_NS {
             return str;
         }
 
-        SR_MAYBE_UNUSED SR_INLINE_STATIC SR_HTYPES_NS::UnicodeString SR_FASTCALL TryLoadUnicodeString(SR_HTYPES_NS::Stream& stream) {
-            SR_HTYPES_NS::UnicodeString str;
+        SR_MAYBE_UNUSED SR_INLINE_STATIC UnicodeString SR_FASTCALL TryLoadUnicodeString(SR_HTYPES_NS::Stream& stream) {
+            UnicodeString str;
             uint16_t size;
             stream.TryRead((char*)&size, sizeof(uint16_t));
             SRAssert(size < SR_UINT16_MAX);
@@ -306,7 +306,7 @@ namespace SR_UTILS_NS {
                 return str;
             }
             str.resize(size);
-            stream.TryRead((char*)&str[0], size * sizeof(SR_HTYPES_NS::UnicodeString::CharType));
+            stream.TryRead((char*)&str[0], size * sizeof(UnicodeString::CharType));
             return str;
         }
     }

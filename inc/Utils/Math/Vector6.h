@@ -11,6 +11,9 @@
 namespace SR_MATH_NS {
     template<typename T> struct Vector6 {
     public:
+        using ValueType = T;
+        static inline constexpr SizeType Dimensions() { return 6; }
+
         union {
             struct {
                 T x;
@@ -111,8 +114,11 @@ namespace SR_MATH_NS {
     }
 
     typedef Vector6<Unit>     FVector6;
+    typedef Vector6<int16_t>  SVector6;
     typedef Vector6<int32_t>  IVector6;
     typedef Vector6<uint32_t> UVector6;
+    typedef Vector6<bool>     BVector6;
+    typedef Vector6<uint16_t> USVector6;
 }
 
 #endif //SR_ENGINE_VECTOR6_H

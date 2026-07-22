@@ -15,9 +15,9 @@ template<> struct ObjectDataAccessor<SR_UTILS_NS::StringAtom> {
 	static void Load(IDeserializer& deserializer, SR_UTILS_NS::StringAtom& value, const SerializationId& id);
 };
 
-template<> struct ObjectDataAccessor<SR_HTYPES_NS::UnicodeString> {
-	static void Save(ISerializer& serializer, const SR_HTYPES_NS::UnicodeString& value, const SerializationId& id);
-	static void Load(IDeserializer& deserializer, SR_HTYPES_NS::UnicodeString& value, const SerializationId& id);
+template<> struct ObjectDataAccessor<UnicodeString> {
+	static void Save(ISerializer& serializer, const UnicodeString& value, const SerializationId& id);
+	static void Load(IDeserializer& deserializer, UnicodeString& value, const SerializationId& id);
 };
 
 template<> struct ObjectDataAccessor<bool> {

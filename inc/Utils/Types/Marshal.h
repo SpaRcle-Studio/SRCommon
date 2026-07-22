@@ -84,7 +84,7 @@ namespace SR_HTYPES_NS {
         if constexpr (IsString<T>()) {
             return MarshalUtils::TryLoadShortStr(*this);
         }
-        else if constexpr (std::is_same_v<T, SR_HTYPES_NS::UnicodeString>) {
+        else if constexpr (std::is_same_v<T, UnicodeString>) {
             return MarshalUtils::TryLoadUnicodeString(*this);
         }
     }
@@ -93,7 +93,7 @@ namespace SR_HTYPES_NS {
         if constexpr (std::is_same_v<T, std::any>) {
             return MarshalUtils::LoadAny<std::any>(*this);
         }
-        else if constexpr (std::is_same_v<T, SR_HTYPES_NS::UnicodeString>) {
+        else if constexpr (std::is_same_v<T, UnicodeString>) {
             return MarshalUtils::LoadUnicodeString(*this);
         }
         else if constexpr (IsString<T>()) {
@@ -111,13 +111,13 @@ namespace SR_HTYPES_NS {
         if constexpr (std::is_same_v<T, std::any>) {
             MarshalUtils::SaveAny<std::any>(*this, value);
         }
-        else if constexpr (std::is_same_v<T, SR_UTILS_NS::StringAtom>) {
+        else if constexpr (std::is_same_v<T, StringAtom>) {
             MarshalUtils::SaveShortString(*this, value.ToStringRef());
         }
         else if constexpr (IsString<T>()) {
             MarshalUtils::SaveShortString(*this, value);  //нужно вызывать Write<std::string>()
         }
-        else if constexpr (std::is_same_v<T, SR_HTYPES_NS::UnicodeString>) {
+        else if constexpr (std::is_same_v<T, UnicodeString>) {
             MarshalUtils::SaveUnicodeString(*this, value);
         }
         else if constexpr (IsSTLVector<T>()) {

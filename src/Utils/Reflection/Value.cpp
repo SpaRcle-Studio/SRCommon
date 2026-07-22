@@ -228,7 +228,7 @@ namespace SR_UTILS_NS::Reflection {
             return false;
         }
 
-        static const auto meta = entt::meta_any(SR_HTYPES_NS::UnicodeString());
+        static const auto meta = entt::meta_any(UnicodeString());
         static const std::string_view compare = meta.base().type().name();
         return GetTypeName() == compare;
     }
@@ -467,10 +467,10 @@ namespace SR_UTILS_NS::Reflection {
         return nullptr;
     }
 
-    ReflectedType Value::GetType() const {
+    ReflectedCategoryType Value::GetType() const {
         SR_TRACY_ZONE;
 
-        if (IsSequenceContainer()) {
+        /*if (IsSequenceContainer()) {
             return ReflectedType::SequenceContainer;
         }
         else if (IsAssociativeContainer()) {
@@ -502,8 +502,8 @@ namespace SR_UTILS_NS::Reflection {
         }
         else if (IsArithmetic()) {
             return ReflectedType::Arithmetic;
-        }
+        }*/
 
-        return ReflectedType::Unknown;
+        return ReflectedCategoryType::Unknown;
     }
 }

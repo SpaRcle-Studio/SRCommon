@@ -51,7 +51,7 @@ namespace SR_UTILS_NS::Localization {
         }
     }
 
-    SR_HTYPES_NS::UnicodeString LocalizationFile::GetStringById(const StringAtom &id) {
+    UnicodeString LocalizationFile::GetStringById(const StringAtom &id) {
         return m_locStrings[id];
     }
 

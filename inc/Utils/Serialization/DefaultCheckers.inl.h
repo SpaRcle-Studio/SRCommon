@@ -46,8 +46,8 @@ template<> struct DefaultChecker<SR_UTILS_NS::String> {
     }
 };
 
-template<> struct DefaultChecker<SR_HTYPES_NS::UnicodeString> {
-    static bool IsDefault(const SR_HTYPES_NS::UnicodeString& value, const SR_HTYPES_NS::UnicodeString* defaultValue) {
+template<> struct DefaultChecker<UnicodeString> {
+    static bool IsDefault(const UnicodeString& value, const UnicodeString* defaultValue) {
         if (defaultValue) {
             return value == *defaultValue;
         }

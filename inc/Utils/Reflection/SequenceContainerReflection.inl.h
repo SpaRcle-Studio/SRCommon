@@ -34,7 +34,9 @@ namespace SR_UTILS_NS::Reflection {
     template<typename T> struct SR_MAYBE_UNUSED DetermineTypeInfoAccessor<Vector<T>> {
         static TypeInfo* Determine(IAllocator& allocator) {
             auto pTypeInfo = AllocateTypeInfo(allocator);
-            pTypeInfo->type = ReflectedType::SequenceContainer;
+            static const StringAtom detailedType = "Vector";
+            pTypeInfo->detailedType = detailedType;
+            pTypeInfo->category = ReflectedCategoryType::Container;
             pTypeInfo->pNext = DetermineTypeInfoAccessor<T>::Determine(allocator);
             pTypeInfo->vtable.pConstructor = &ReflectedTypeTemplateConstructor<Vector<T>>;
             pTypeInfo->vtable.pDestructor = &ReflectedTypeTemplateDestructor<Vector<T>>;

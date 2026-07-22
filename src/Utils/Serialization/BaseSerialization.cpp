@@ -244,7 +244,7 @@ namespace SR_UTILS_NS {
         GetImpl().m_walker.pop_back();
     }
 
-    void IBaseDeserializer::ReadString(SR_HTYPES_NS::UnicodeString& value, const SerializationId& name) {
+    void IBaseDeserializer::ReadString(UnicodeString& value, const SerializationId& name) {
         static SR_THREAD_LOCAL String tempUtf;
         static SR_THREAD_LOCAL std::u32string tempUnicode;
         tempUtf.clear();

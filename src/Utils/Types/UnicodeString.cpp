@@ -5,7 +5,7 @@
 #include <Utils/Types/UnicodeString.h>
 #include <Utils/Localization/Encoding.h>
 
-namespace SR_HTYPES_NS {
+namespace SR_UTILS_NS {
     UnicodeString::UnicodeString(const UnicodeString& other)
         : m_internal(other.m_internal)
     { }
@@ -54,7 +54,15 @@ namespace SR_HTYPES_NS {
         return m_internal[position];
     }
 
-    void UnicodeString::resize(size_t size) {
+    void UnicodeString::resize(SizeType size) {
         m_internal.resize(size);
+    }
+
+    void UnicodeString::reserve(SizeType size) {
+        m_internal.reserve(size);
+    }
+
+    void UnicodeString::clear() noexcept {
+        m_internal.clear();
     }
 }

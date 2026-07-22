@@ -25,7 +25,7 @@ namespace SR_UTILS_NS {
 }
 
 namespace SR_UTILS_NS::Reflection {
-    enum class ReflectedType : uint8_t;
+    enum class ReflectedCategoryType : uint8_t;
     class Value;
     class ValueSequenceContainer;
     class ValueAssociativeContainer;
@@ -195,7 +195,7 @@ namespace SR_UTILS_NS::Reflection {
         Value& Detach();
         Value& DetachIfConst();
 
-        SR_NODISCARD ReflectedType GetType() const;
+        SR_NODISCARD ReflectedCategoryType GetType() const;
 
         SR_NODISCARD ValueSequenceContainer AsSequenceContainer();
         SR_NODISCARD ValueSequenceContainer AsSequenceContainer() const;
