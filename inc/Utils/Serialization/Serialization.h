@@ -11,11 +11,17 @@
 #include <Utils/TypeTraits/Factory.h>
 #include <Utils/TypeTraits/SRClassMeta.h>
 #include <Utils/Types/SharedPtr.h>
-#include <Utils/Types/Optional.h>
-#include <Utils/Math/Rect.h>
-#include <Utils/Math/AABB.h>
 #include <Utils/Common/StringAtomLiterals.h>
 #include <Utils/Common/AssertFwd.h>
+
+namespace SR_MATH_NS {
+    class FColor;
+    class Quaternion;
+    class AABB;
+    class Matrix3x3;
+    class Matrix4x4;
+    template<typename T> struct Rect;
+}
 
 namespace SR_HTYPES_NS {
     class UnicodeString;
@@ -26,6 +32,7 @@ namespace SR_HTYPES_NS {
 #include <Utils/Serialization/SerializationLoadUtils.h>
 
 namespace SR_UTILS_NS {
+    template<typename T> class Optional;
 	/// Data accessors for objects serialization
 
 	#include <Utils/Serialization/ObjectDataAccessors.inl.h>

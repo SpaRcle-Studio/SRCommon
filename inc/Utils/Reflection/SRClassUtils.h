@@ -21,13 +21,13 @@ namespace SR_UTILS_NS::Reflection {
                 to = std::move(pClone);
             }
         }
-        else if constexpr (IsStdVectorV<T> && ContainsSRClassV<T>) {
+        else if constexpr (IsVectorV<T> && ContainsSRClassV<T>) {
             to.resize(from.size());
             for (size_t i = 0; i < from.size(); ++i) {
                 CloneTo(from[i], to[i]);
             }
         }
-        else if constexpr (IsStdSetV<T> && ContainsSRClassV<T>) {
+        else if constexpr (IsSetV<T> && ContainsSRClassV<T>) {
             to.clear();
             for (auto&& item : from) {
                 InnerTypeT<T> cloneValue;
@@ -35,7 +35,7 @@ namespace SR_UTILS_NS::Reflection {
                 to.insert(std::move(cloneValue));
             }
         }
-        else if constexpr (IsStdMapV<T> && ContainsSRClassV<T>) {
+        else if constexpr (IsMapV<T> && ContainsSRClassV<T>) {
             to.clear();
             for (auto&& [key, value] : from) {
                 InnerTypeT<T> cloneValue;
@@ -52,18 +52,18 @@ namespace SR_UTILS_NS::Reflection {
         if constexpr (IsSRClassV<T>) {
             func(object);
         }
-        else if constexpr ((IsStdVectorV<T> || IsStdSetV<T>)) {
+        else if constexpr ((IsVectorV<T> || IsSetV<T>)) {
             if constexpr (ContainsSRClassV<T>) {
                 for (auto&& item : object) {
                     ForEachSRClass(item, func);
                 }
             }
         }
-        //else if constexpr (IsStdMapV<T>) {
-        //    for (auto&& [key, value] : object) {
-        //        ForEachSRClass(value, func);
-        //    }
-        //}
+        else if constexpr (IsMapV<T>) {
+            for (auto&& [key, value] : object) {
+                ForEachSRClass(value, func);
+            }
+        }
         else if constexpr (IsSharedPointerV<T>) {
             if constexpr (IsSRClassV<typename RemoveQualifiersT<T>::SharedPointerType>) {
                 if (object) {

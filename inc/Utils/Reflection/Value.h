@@ -14,6 +14,14 @@ namespace entt {
     template<typename... Args>
     struct meta_sequence_container_traits<SR_UTILS_NS::Vector<Args...>>
         : basic_meta_sequence_container_traits<SR_UTILS_NS::Vector<Args...>> {};
+
+    template<typename... Args>
+    struct meta_associative_container_traits<SR_UTILS_NS::Map<Args...>>
+        : basic_meta_associative_container_traits<SR_UTILS_NS::Map<Args...>> {};
+
+    template<typename... Args>
+    struct meta_associative_container_traits<SR_UTILS_NS::Set<Args...>>
+        : basic_meta_associative_container_traits<SR_UTILS_NS::Set<Args...>> {};
 }
 
 namespace SR_HTYPES_NS {

@@ -26,6 +26,9 @@
 #include <Utils/Types/FlatHashMap.h>
 #include <Utils/Types/Function.h>
 #include <Utils/Types/String.h>
+#include <Utils/Types/Vector.h>
+#include <Utils/Types/Set.h>
+#include <Utils/Types/Map.h>
 
 #include <Utils/Reflection/Property.h>
 

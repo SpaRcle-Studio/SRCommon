@@ -256,7 +256,7 @@ namespace SR_UTILS_NS {
 
         std::optional<Details::ThreadWorkerThreadsVariant> settingsVariant;
         for (auto&& variant : pSettings->variants) {
-            bool isSuitable = std::ranges::all_of(variant.featuresCondition, [](const auto& featureCondition) {
+            bool isSuitable = variant.featuresCondition.all_of([](const auto& featureCondition) {
                 return SR_UTILS_NS::Features::Instance().Enabled(featureCondition, false);
             });
 

@@ -9,6 +9,7 @@
 #include <Utils/Serialization/Deserializer.h>
 #include <Utils/Localization/Encoding.h>
 #include <Utils/Types/FastMemoryArray.h>
+#include <Utils/Types/Vector.h>
 
 namespace SR_UTILS_NS {
     union SerializationTrivialDataType {

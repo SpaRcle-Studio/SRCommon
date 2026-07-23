@@ -9,6 +9,7 @@
 #include <Utils/Common/Hashes.h>
 #include <Utils/Common/StringAtomLiterals.h>
 #include <Utils/Profile/TracyContext.h>
+#include <Utils/Types/Vector.h>
 
 namespace SR_UTILS_NS {
     SR_COMMON_DLL_API std::vector<std::string_view> FileSystem::ReadAllTextAsStringViewVector(const Path& path, String& buffer) {

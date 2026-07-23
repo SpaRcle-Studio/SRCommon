@@ -47,14 +47,9 @@ SR_INLINE SR_UTILS_NS::Details::AtomFormatter operator"" _format_atom(const char
     return SR_UTILS_NS::Details::AtomFormatter(str);
 }
 
-/// TODO: constexpr StringAtom support
-/// SR_INLINE constexpr SR_UTILS_NS::StringAtom operator"" _atom_cexpr(const char* str, size_t) {
-///     return SR_UTILS_NS::StringAtom(str);
-/// }
-
-/*constexpr uint64_t operator"" _atom_hash(const char* str, size_t size) {
-    const auto strView = std::string_view(str, size);
-    return SR_HASH_CONSTEXPR_STR_VIEW_REGISTER(strView);
-}*/
+//template<size_t N>
+//SR_INLINE constexpr SR_UTILS_NS::ConstexprStringAtom operator"" _atom_cexpr(const char (&str)[N]) noexcept {
+//    return SR_UTILS_NS::ConstexprStringAtom(str);
+//}
 
 #endif //SR_COMMON_STRING_ATOM_LITERALS_H

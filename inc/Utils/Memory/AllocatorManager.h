@@ -6,6 +6,7 @@
 #define SR_ENGINE_COMMON_ALLOCATOR_MANAGER_H
 
 #include <Utils/Common/Singleton.h>
+#include <Utils/Types/Vector.h>
 
 namespace SR_UTILS_NS {
     class AllocatorManager : public Singleton<AllocatorManager> {
@@ -23,7 +24,7 @@ namespace SR_UTILS_NS {
         void UnregisterAllocator(SR_UTILS_NS::StringAtom name);
 
     private:
-        SR_UTILS_NS::Vector<AllocatorInfo> m_allocators;
+        Vector<AllocatorInfo> m_allocators;
         mutable std::recursive_mutex m_mutex;
 
     };

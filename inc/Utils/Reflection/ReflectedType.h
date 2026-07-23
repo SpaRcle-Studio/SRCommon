@@ -8,6 +8,9 @@
 #include <Utils/Common/Enumerations.h>
 
 namespace SR_UTILS_NS {
+    class EntityRefBase;
+    class OptionalBase;
+    class ResourceRefBase;
     template<typename T> class Vector;
     template<typename T> class Optional;
     template<typename T> class EntityRef;
@@ -29,6 +32,10 @@ namespace SR_MATH_NS {
     class Matrix3x3;
     class Matrix4x4;
     class FColor;
+}
+
+namespace SR_HTYPES_NS {
+    template<typename T> class SharedPtr;
 }
 
 namespace SR_UTILS_NS::Reflection {
@@ -72,23 +79,26 @@ namespace SR_UTILS_NS::Reflection {
         using CopyFn = void(*)(ReflectedValue, ReflectedValue);
         using MoveFn = void(*)(ReflectedValue, ReflectedValue);
 
-        /// container type functions
-        using SizeFn = SizeType(*)(ReflectedValue);
-        using ClearFn = void(*)(ReflectedValue);
-        using ReserveFn = void(*)(ReflectedValue, SizeType);
-        using ResizeFn = void(*)(ReflectedValue, SizeType);
-        using AccessFn = ReflectedValue(*)(ReflectedValue, ReflectedValue, SizeType);
-
         ConstructorFn pConstructor = nullptr;
         DestructorFn pDestructor = nullptr;
         CopyFn pCopy = nullptr;
         MoveFn pMove = nullptr;
 
+        /// common container type functions
+        using SizeFn = SizeType(*)(ReflectedValue);
+        using ClearFn = void(*)(ReflectedValue);
+        using ReserveFn = void(*)(ReflectedValue, SizeType);
+        using ResizeFn = void(*)(ReflectedValue, SizeType);
+
         SizeFn pSize = nullptr;
         ClearFn pClear = nullptr;
         ReserveFn pReserve = nullptr;
         ResizeFn pResize = nullptr;
-        AccessFn pAccess = nullptr;
+
+        /// for SRClass and other containers (except Vector, Map and Set)
+        using GetTypeController = void*(*)(ReflectedValue);
+
+        GetTypeController pGetTypeController = nullptr;
 
     };
 
@@ -112,159 +122,9 @@ namespace SR_UTILS_NS::Reflection {
     template<typename T> TypeInfo* DetermineTypeInfo(IAllocator& allocator, const T&) {
         return DetermineTypeInfoAccessor<T>::Determine(allocator);
     }
-
-    /// ================================================================================================================
-
-    template<typename T> TypeInfo* DetermineTypeInfoRegistered(IAllocator&);
-    extern template SR_COMMON_DLL_API TypeInfo* DetermineTypeInfoRegistered<int8_t>(IAllocator&);
-    extern template SR_COMMON_DLL_API TypeInfo* DetermineTypeInfoRegistered<int16_t>(IAllocator&);
-    extern template SR_COMMON_DLL_API TypeInfo* DetermineTypeInfoRegistered<int32_t>(IAllocator&);
-    extern template SR_COMMON_DLL_API TypeInfo* DetermineTypeInfoRegistered<int64_t>(IAllocator&);
-    extern template SR_COMMON_DLL_API TypeInfo* DetermineTypeInfoRegistered<uint8_t>(IAllocator&);
-    extern template SR_COMMON_DLL_API TypeInfo* DetermineTypeInfoRegistered<uint16_t>(IAllocator&);
-    extern template SR_COMMON_DLL_API TypeInfo* DetermineTypeInfoRegistered<uint32_t>(IAllocator&);
-    extern template SR_COMMON_DLL_API TypeInfo* DetermineTypeInfoRegistered<uint64_t>(IAllocator&);
-    extern template SR_COMMON_DLL_API TypeInfo* DetermineTypeInfoRegistered<float>(IAllocator&);
-    extern template SR_COMMON_DLL_API TypeInfo* DetermineTypeInfoRegistered<double>(IAllocator&);
-    extern template SR_COMMON_DLL_API TypeInfo* DetermineTypeInfoRegistered<bool>(IAllocator&);
-    extern template SR_COMMON_DLL_API TypeInfo* DetermineTypeInfoRegistered<Path>(IAllocator&);
-    extern template SR_COMMON_DLL_API TypeInfo* DetermineTypeInfoRegistered<String>(IAllocator&);
-    extern template SR_COMMON_DLL_API TypeInfo* DetermineTypeInfoRegistered<StringView>(IAllocator&);
-    extern template SR_COMMON_DLL_API TypeInfo* DetermineTypeInfoRegistered<StringAtom>(IAllocator&);
-    extern template SR_COMMON_DLL_API TypeInfo* DetermineTypeInfoRegistered<UnicodeString>(IAllocator&);
-    extern template SR_COMMON_DLL_API TypeInfo* DetermineTypeInfoRegistered<SR_MATH_NS::FColor>(IAllocator&);
-    extern template SR_COMMON_DLL_API TypeInfo* DetermineTypeInfoRegistered<SR_MATH_NS::Quaternion>(IAllocator&);
-    extern template SR_COMMON_DLL_API TypeInfo* DetermineTypeInfoRegistered<SR_MATH_NS::AABB>(IAllocator&);
-    extern template SR_COMMON_DLL_API TypeInfo* DetermineTypeInfoRegistered<SR_MATH_NS::Matrix3x3>(IAllocator&);
-    extern template SR_COMMON_DLL_API TypeInfo* DetermineTypeInfoRegistered<SR_MATH_NS::Matrix4x4>(IAllocator&);
-    extern template SR_COMMON_DLL_API TypeInfo* DetermineTypeInfoRegistered<SR_MATH_NS::FRect>(IAllocator&);
-    extern template SR_COMMON_DLL_API TypeInfo* DetermineTypeInfoRegistered<SR_MATH_NS::IRect>(IAllocator&);
-    extern template SR_COMMON_DLL_API TypeInfo* DetermineTypeInfoRegistered<SR_MATH_NS::URect>(IAllocator&);
-    extern template SR_COMMON_DLL_API TypeInfo* DetermineTypeInfoRegistered<SR_MATH_NS::USRect>(IAllocator&);
-    extern template SR_COMMON_DLL_API TypeInfo* DetermineTypeInfoRegistered<SR_MATH_NS::FSize>(IAllocator&);
-    extern template SR_COMMON_DLL_API TypeInfo* DetermineTypeInfoRegistered<SR_MATH_NS::USize>(IAllocator&);
-    extern template SR_COMMON_DLL_API TypeInfo* DetermineTypeInfoRegistered<SR_MATH_NS::ISize>(IAllocator&);
-    extern template SR_COMMON_DLL_API TypeInfo* DetermineTypeInfoRegistered<SR_MATH_NS::FSize2>(IAllocator&);
-    extern template SR_COMMON_DLL_API TypeInfo* DetermineTypeInfoRegistered<SR_MATH_NS::USize2>(IAllocator&);
-    extern template SR_COMMON_DLL_API TypeInfo* DetermineTypeInfoRegistered<SR_MATH_NS::ISize2>(IAllocator&);
-    extern template SR_COMMON_DLL_API TypeInfo* DetermineTypeInfoRegistered<SR_MATH_NS::FVector2>(IAllocator&);
-    extern template SR_COMMON_DLL_API TypeInfo* DetermineTypeInfoRegistered<SR_MATH_NS::FVector3>(IAllocator&);
-    extern template SR_COMMON_DLL_API TypeInfo* DetermineTypeInfoRegistered<SR_MATH_NS::FVector4>(IAllocator&);
-    extern template SR_COMMON_DLL_API TypeInfo* DetermineTypeInfoRegistered<SR_MATH_NS::FVector6>(IAllocator&);
-    extern template SR_COMMON_DLL_API TypeInfo* DetermineTypeInfoRegistered<SR_MATH_NS::IVector2>(IAllocator&);
-    extern template SR_COMMON_DLL_API TypeInfo* DetermineTypeInfoRegistered<SR_MATH_NS::IVector3>(IAllocator&);
-    extern template SR_COMMON_DLL_API TypeInfo* DetermineTypeInfoRegistered<SR_MATH_NS::IVector4>(IAllocator&);
-    extern template SR_COMMON_DLL_API TypeInfo* DetermineTypeInfoRegistered<SR_MATH_NS::IVector6>(IAllocator&);
-    extern template SR_COMMON_DLL_API TypeInfo* DetermineTypeInfoRegistered<SR_MATH_NS::UVector2>(IAllocator&);
-    extern template SR_COMMON_DLL_API TypeInfo* DetermineTypeInfoRegistered<SR_MATH_NS::UVector3>(IAllocator&);
-    extern template SR_COMMON_DLL_API TypeInfo* DetermineTypeInfoRegistered<SR_MATH_NS::UVector4>(IAllocator&);
-    extern template SR_COMMON_DLL_API TypeInfo* DetermineTypeInfoRegistered<SR_MATH_NS::UVector6>(IAllocator&);
-    extern template SR_COMMON_DLL_API TypeInfo* DetermineTypeInfoRegistered<SR_MATH_NS::BVector2>(IAllocator&);
-    extern template SR_COMMON_DLL_API TypeInfo* DetermineTypeInfoRegistered<SR_MATH_NS::BVector3>(IAllocator&);
-    extern template SR_COMMON_DLL_API TypeInfo* DetermineTypeInfoRegistered<SR_MATH_NS::BVector4>(IAllocator&);
-    extern template SR_COMMON_DLL_API TypeInfo* DetermineTypeInfoRegistered<SR_MATH_NS::BVector6>(IAllocator&);
-
-    /// ================================================================================================================
-
-    template<typename T> struct IsTypeMathVectorTemplate : std::false_type {};
-    template<typename T> struct IsTypeMathVectorTemplate<SR_MATH_NS::Vector2<T>> : std::true_type {};
-    template<typename T> struct IsTypeMathVectorTemplate<SR_MATH_NS::Vector3<T>> : std::true_type {};
-    template<typename T> struct IsTypeMathVectorTemplate<SR_MATH_NS::Vector4<T>> : std::true_type {};
-    template<typename T> struct IsTypeMathVectorTemplate<SR_MATH_NS::Vector6<T>> : std::true_type {};
-    template<typename T> constexpr bool IsTypeMathVectorTemplateV = IsTypeMathVectorTemplate<T>::value;
-
-    template<typename T> struct IsTypeMathRectTemplate : std::false_type {};
-    template<typename T> struct IsTypeMathRectTemplate<SR_MATH_NS::Rect<T>> : std::true_type {};
-    template<typename T> constexpr bool IsTypeMathRectTemplateV = IsTypeMathRectTemplate<T>::value;
-
-    template<typename T> struct IsTypeMathSizeTemplate : std::false_type {};
-    template<typename T> struct IsTypeMathSizeTemplate<SR_MATH_NS::Size<T>> : std::true_type {};
-    template<typename T> struct IsTypeMathSizeTemplate<SR_MATH_NS::Size2<T>> : std::true_type {};
-    template<typename T> constexpr bool IsTypeMathSizeTemplateV = IsTypeMathSizeTemplate<T>::value;
-
-    template<typename T> struct DetermineTypeInfoAccessor<T, std::enable_if_t<
-        std::is_arithmetic_v<T> || IsTypeMathVectorTemplateV<T> || IsTypeMathRectTemplateV<T> || IsTypeMathSizeTemplateV<T>
-    >> {
-        static TypeInfo* Determine(IAllocator& allocator) { return DetermineTypeInfoRegistered<T>(allocator); }
-    };
-
-    template<> struct DetermineTypeInfoAccessor<Path> { static TypeInfo* Determine(IAllocator& allocator) { return DetermineTypeInfoRegistered<Path>(allocator); } };
-    template<> struct DetermineTypeInfoAccessor<String> { static TypeInfo* Determine(IAllocator& allocator) { return DetermineTypeInfoRegistered<String>(allocator); } };
-    template<> struct DetermineTypeInfoAccessor<StringView> { static TypeInfo* Determine(IAllocator& allocator) { return DetermineTypeInfoRegistered<StringView>(allocator); } };
-    template<> struct DetermineTypeInfoAccessor<StringAtom> { static TypeInfo* Determine(IAllocator& allocator) { return DetermineTypeInfoRegistered<StringAtom>(allocator); } };
-    template<> struct DetermineTypeInfoAccessor<UnicodeString> { static TypeInfo* Determine(IAllocator& allocator) { return DetermineTypeInfoRegistered<UnicodeString>(allocator); } };
-    template<> struct DetermineTypeInfoAccessor<SR_MATH_NS::AABB> { static TypeInfo* Determine(IAllocator& allocator) { return DetermineTypeInfoRegistered<SR_MATH_NS::AABB>(allocator); } };
-    template<> struct DetermineTypeInfoAccessor<SR_MATH_NS::FColor> { static TypeInfo* Determine(IAllocator& allocator) { return DetermineTypeInfoRegistered<SR_MATH_NS::FColor>(allocator); } };
-    template<> struct DetermineTypeInfoAccessor<SR_MATH_NS::Quaternion> { static TypeInfo* Determine(IAllocator& allocator) { return DetermineTypeInfoRegistered<SR_MATH_NS::Quaternion>(allocator); } };
-    template<> struct DetermineTypeInfoAccessor<SR_MATH_NS::Matrix3x3> { static TypeInfo* Determine(IAllocator& allocator) { return DetermineTypeInfoRegistered<SR_MATH_NS::Matrix3x3>(allocator); } };
-    template<> struct DetermineTypeInfoAccessor<SR_MATH_NS::Matrix4x4> { static TypeInfo* Determine(IAllocator& allocator) { return DetermineTypeInfoRegistered<SR_MATH_NS::Matrix4x4>(allocator); } };
-
-    template<typename T> ReflectedValue ReflectedTypeTemplateConstructor(IAllocator& allocator) {
-        auto pValue = static_cast<T*>(allocator.Allocate(sizeof(T), alignof(T)));
-        new (pValue) T();
-        return ReflectedValue{ pValue, ReflectedValueStorageType::Embedded };
-    }
-
-    template<typename T> void ReflectedTypeTemplateDestructor(IAllocator& allocator, ReflectedValue value) {
-        auto pContainer = static_cast<T*>(value.pData);
-        pContainer->~T();
-        allocator.Free(pContainer, sizeof(T), alignof(T));
-    }
-
-    template<typename T> void ReflectedTypeTemplateCopy(ReflectedValue from, ReflectedValue to) {
-        auto pFrom = static_cast<T*>(from.pData);
-        auto pTo = static_cast<T*>(to.pData);
-        *pTo = *pFrom;
-    }
-
-    template<typename T> void ReflectedTypeTemplateMove(ReflectedValue from, ReflectedValue to) {
-        auto pFrom = static_cast<T*>(from.pData);
-        auto pTo = static_cast<T*>(to.pData);
-        *pTo = std::move(*pFrom);
-    }
-
-    template<typename T> struct DetermineTypeInfoAccessor<Optional<T>> {
-        static TypeInfo* Determine(IAllocator& allocator) {
-            auto pTypeInfo = AllocateTypeInfo(allocator);
-            static const StringAtom detailedType = "Optional";
-            pTypeInfo->detailedType = detailedType;
-            pTypeInfo->category = ReflectedCategoryType::Container;
-            pTypeInfo->pNext = DetermineTypeInfoAccessor<T>::Determine(allocator);
-            return pTypeInfo;
-        }
-    };
-
-    template<typename T> struct DetermineTypeInfoAccessor<EntityRef<T>> {
-        static TypeInfo* Determine(IAllocator& allocator) {
-            auto pTypeInfo = AllocateTypeInfo(allocator);
-            static const StringAtom detailedType = "EntityRef";
-            pTypeInfo->detailedType = detailedType;
-            pTypeInfo->category = ReflectedCategoryType::Container;
-            pTypeInfo->detailedType = T::GetClassStaticName();
-            pTypeInfo->vtable.pConstructor = &ReflectedTypeTemplateConstructor<EntityRef<T>>;
-            pTypeInfo->vtable.pDestructor = &ReflectedTypeTemplateDestructor<EntityRef<T>>;
-            pTypeInfo->vtable.pCopy = &ReflectedTypeTemplateCopy<EntityRef<T>>;
-            pTypeInfo->vtable.pMove = &ReflectedTypeTemplateMove<EntityRef<T>>;
-            return pTypeInfo;
-        }
-    };
-
-    template<typename T> struct DetermineTypeInfoAccessor<ResourceRef<T>> {
-        static TypeInfo* Determine(IAllocator& allocator) {
-            auto pTypeInfo = AllocateTypeInfo(allocator);
-            static const StringAtom detailedType = "ResourceRef";
-            pTypeInfo->detailedType = detailedType;
-            pTypeInfo->category = ReflectedCategoryType::Container;
-            pTypeInfo->detailedType = T::GetClassStaticName();
-            pTypeInfo->vtable.pConstructor = &ReflectedTypeTemplateConstructor<ResourceRef<T>>;
-            pTypeInfo->vtable.pDestructor = &ReflectedTypeTemplateDestructor<ResourceRef<T>>;
-            pTypeInfo->vtable.pCopy = &ReflectedTypeTemplateCopy<ResourceRef<T>>;
-            pTypeInfo->vtable.pMove = &ReflectedTypeTemplateMove<ResourceRef<T>>;
-            return pTypeInfo;
-        }
-    };
 }
 
-#include <Utils/Reflection/SequenceContainerReflection.inl.h>
+#include <Utils/Reflection/CommonReflection.inl.h>
+#include <Utils/Reflection/VectorReflection.inl.h>
 
 #endif //SR_ENGINE_COMMON_REFLECTION_REFLECTED_TYPE_H

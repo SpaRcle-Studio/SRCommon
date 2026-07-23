@@ -243,10 +243,7 @@ namespace SR_UTILS_NS::Reflection {
             pTypeInfo->vtable.pClear = &ReflectedTypeClear<T>;
         }
         else {
-            pTypeInfo->vtable.pConstructor = &ReflectedTypeConstructor<T>;
-            pTypeInfo->vtable.pDestructor = &ReflectedTypeDestructor<T>;
-            pTypeInfo->vtable.pCopy = &ReflectedTypeCopy<T>;
-            pTypeInfo->vtable.pMove = &ReflectedTypeMove<T>;
+            static_assert(AlwaysFalseV<T>, "Type is not registered for reflection");
         }
         return pTypeInfo;
     }
@@ -307,7 +304,7 @@ namespace SR_UTILS_NS::Reflection {
             SR_UTILS_NS::Reflection::ReflectedValueStorageType::Reference
         };
         SR_UTILS_NS::IAllocator* pAllocator = SR_UTILS_NS::IAllocator::GetDefaultAllocator();
-        TypeInfo* types[16] {
+        TypeInfo* types[17] {
             SR_UTILS_NS::Reflection::DetermineTypeInfo(*pAllocator, values),
             SR_UTILS_NS::Reflection::DetermineTypeInfo(*pAllocator, optionalValue),
             SR_UTILS_NS::Reflection::DetermineTypeInfo(*pAllocator, 2),
@@ -322,6 +319,9 @@ namespace SR_UTILS_NS::Reflection {
             SR_UTILS_NS::Reflection::DetermineTypeInfo(*pAllocator, SR_MATH_NS::Quaternion()),
             SR_UTILS_NS::Reflection::DetermineTypeInfo(*pAllocator, SR_MATH_NS::Matrix4x4()),
             SR_UTILS_NS::Reflection::DetermineTypeInfo(*pAllocator, SR_MATH_NS::UVector6()),
+            SR_UTILS_NS::Reflection::DetermineTypeInfo(*pAllocator, ReflectedCategoryType()),
+            SR_UTILS_NS::Reflection::DetermineTypeInfo(*pAllocator, Serializable()),
+            SR_UTILS_NS::Reflection::DetermineTypeInfo(*pAllocator, SRClass()),
         };
         types[0]->vtable.pResize(valuesRef, 4);
         return true;

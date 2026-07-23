@@ -7,6 +7,8 @@
 
 #include <Utils/Resources/Asset.h>
 #include <Utils/Common/Enumerations.h>
+#include <Utils/Types/Set.h>
+#include <Utils/Types/Vector.h>
 
 namespace SR_UTILS_NS {
     SR_ENUM_NS_CLASS_T(ThreadWorkerState, uint8_t,
@@ -54,7 +56,7 @@ namespace SR_UTILS_NS {
             /// @property
             String description;
             /// @property
-            std::set<StringAtom> featuresCondition;
+            Set<StringAtom> featuresCondition;
             /// @property
             Vector<ThreadWorkerThread> threads;
             /// @property

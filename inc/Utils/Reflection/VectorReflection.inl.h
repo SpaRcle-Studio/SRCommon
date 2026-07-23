@@ -31,7 +31,7 @@ namespace SR_UTILS_NS::Reflection {
         };
     }
 
-    template<typename T> struct SR_MAYBE_UNUSED DetermineTypeInfoAccessor<Vector<T>> {
+    template<typename T> struct DetermineTypeInfoAccessor<Vector<T>> {
         static TypeInfo* Determine(IAllocator& allocator) {
             auto pTypeInfo = AllocateTypeInfo(allocator);
             static const StringAtom detailedType = "Vector";
@@ -46,7 +46,7 @@ namespace SR_UTILS_NS::Reflection {
             pTypeInfo->vtable.pReserve = &ReflectedTypeVectorReserve<T>;
             pTypeInfo->vtable.pClear = &ReflectedTypeVectorClear<T>;
             pTypeInfo->vtable.pSize = &ReflectedTypeVectorSize<T>;
-            pTypeInfo->vtable.pAccess = &ReflectedTypeVectorAccess<T>;
+            //pTypeInfo->vtable.pAccess = &ReflectedTypeVectorAccess<T>;
             return pTypeInfo;
         }
     };

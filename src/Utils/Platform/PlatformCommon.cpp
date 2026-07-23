@@ -7,6 +7,7 @@
 #include <Utils/Common/CLIManager.h>
 #include <Utils/Profile/TracyContext.h>
 #include <Utils/FileSystem/FileSystem.h>
+#include <Utils/Types/Vector.h>
 
 #include <Enum/KeyCode.hpp>
 

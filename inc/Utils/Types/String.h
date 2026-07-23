@@ -2,7 +2,7 @@
 // Created by Monika on 02.05.2026.
 //
 
-#ifndef SR_ENGINE_COMMON_TYPES_STRING_H
+#if !defined(SR_ENGINE_COMMON_TYPES_STRING_H) && defined(SR_ENGINE_COMMON_PCH_FOR_BASE_CODE)
 #define SR_ENGINE_COMMON_TYPES_STRING_H
 
 #include <Utils/stdInclude.h>

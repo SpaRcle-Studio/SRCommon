@@ -2,7 +2,7 @@
 // Created by Monika on 10.10.2024.
 //
 
-#ifndef SR_COMMON_VECTOR_H
+#if !defined(SR_COMMON_VECTOR_H) && defined(SR_ENGINE_COMMON_PCH_FOR_BASE_CODE)
 #define SR_COMMON_VECTOR_H
 
 #include <Utils/Common/AssertFwd.h>

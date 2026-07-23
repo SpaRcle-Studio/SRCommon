@@ -107,29 +107,38 @@ struct DefaultObjectMaker<SR_UTILS_NS::Vector<T>> {
     }
 };
 
-template<typename T, typename U, typename Compare, typename Allocator>
-struct DefaultObjectMaker<std::map<T, U, Compare, Allocator>> {
+template<typename T, typename U, typename Compare>
+struct DefaultObjectMaker<SR_UTILS_NS::Map<T, U, Compare>> {
     static constexpr bool value = true;
 
-    static void MakeDefault(std::map<T, U, Compare, Allocator>& v) {
+    static void MakeDefault(SR_UTILS_NS::Map<T, U, Compare>& v) {
         v.clear();
     }
 };
 
-template<typename T, typename Less, typename Allocator>
-struct DefaultObjectMaker<std::set<T, Less, Allocator>> {
+template<typename T, typename U>
+struct DefaultObjectMaker<SR_HTYPES_NS::FlatHashMap<T, U>> {
     static constexpr bool value = true;
 
-    static void MakeDefault(std::set<T, Less, Allocator>& v) {
+    static void MakeDefault(SR_HTYPES_NS::FlatHashMap<T, U>& v) {
         v.clear();
     }
 };
 
-template<typename T, typename U, typename Hash, typename KeyEqual, typename Allocator>
-struct DefaultObjectMaker<std::unordered_map<T, U, Hash, KeyEqual, Allocator>> {
+template<typename T>
+struct DefaultObjectMaker<SR_HTYPES_NS::FlatHashSet<T>> {
     static constexpr bool value = true;
 
-    static void MakeDefault(std::unordered_map<T, U, Hash, KeyEqual, Allocator>& v) {
+    static void MakeDefault(SR_HTYPES_NS::FlatHashSet<T>& v) {
+        v.clear();
+    }
+};
+
+template<typename T, typename Less>
+struct DefaultObjectMaker<SR_UTILS_NS::Set<T, Less>> {
+    static constexpr bool value = true;
+
+    static void MakeDefault(SR_UTILS_NS::Set<T, Less>& v) {
         v.clear();
     }
 };

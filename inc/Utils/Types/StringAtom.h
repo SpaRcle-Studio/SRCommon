@@ -5,8 +5,8 @@
 #if !defined(SR_ENGINE_STRING_ATOM_H) && defined(SR_ENGINE_COMMON_PCH_FOR_BASE_CODE)
 #define SR_ENGINE_STRING_ATOM_H
 
-#include <Utils/stdInclude.h>
 #include <Utils/Types/String.h>
+//#include <Utils/Common/Hashes.h>
 
 namespace SR_UTILS_NS {
     struct StringHashInfo;
@@ -21,7 +21,6 @@ namespace SR_UTILS_NS {
         StringAtom(const StringAtom& other) = default;
 
         StringAtom(StringHashInfo* pInfo); /// NOLINT
-        /// @constructor
         StringAtom(const char* str); /// NOLINT
         StringAtom(const std::string& str); /// NOLINT
         StringAtom(std::string_view str); /// NOLINT
@@ -82,6 +81,39 @@ namespace SR_UTILS_NS {
         StringHashInfo* m_info = nullptr;
 
     };
+
+    /*class ConstexprStringAtom {
+    public:
+        constexpr ConstexprStringAtom() noexcept = default;
+
+        template<size_t N> constexpr ConstexprStringAtom(const char (&str)[N]) noexcept
+            : m_str(str)
+            , m_hash(ComputeHash(str))
+        { }
+
+        constexpr ConstexprStringAtom(const char* str, uint64_t hash) noexcept
+            : m_str(str)
+            , m_hash(hash)
+        { }
+
+        SR_NODISCARD constexpr uint64_t GetHash()  const noexcept { return m_hash; }
+        SR_NODISCARD constexpr const char* c_str() const noexcept { return m_str; }
+        SR_NODISCARD constexpr bool Empty()        const noexcept { return !m_str || m_hash == 0; }
+
+        constexpr bool operator==(const ConstexprStringAtom& rhs) const noexcept { return m_hash == rhs.m_hash; }
+        constexpr bool operator!=(const ConstexprStringAtom& rhs) const noexcept { return m_hash != rhs.m_hash; }
+        constexpr bool operator< (const ConstexprStringAtom& rhs) const noexcept { return m_hash <  rhs.m_hash; }
+        SR_NODISCARD constexpr explicit operator uint64_t() const noexcept { return m_hash; }
+
+        bool operator==(const StringAtom& rhs) const noexcept { return m_hash == rhs.GetHash(); }
+        bool operator!=(const StringAtom& rhs) const noexcept { return m_hash != rhs.GetHash(); }
+
+        SR_NODISCARD StringAtom ToStringAtom() const;
+
+    private:
+        const char* m_str  = nullptr;
+        uint64_t    m_hash = 0;
+    };*/
 
     template<typename T> constexpr bool IsString() {
         if (!IsVolatile<T>()) {

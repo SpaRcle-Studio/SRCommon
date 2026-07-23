@@ -10,10 +10,8 @@
 #include <Utils/Types/Function.h>
 
 template <typename EnumType> struct EnumSelector {};
-
 template<typename T> constexpr SR_UTILS_NS::EnumVariant GetEnumVariant(T) noexcept;
-
-template<typename T> constexpr size_t GetEnumItemsCount(T) noexcept;
+template<typename T> constexpr SR_UTILS_NS::SizeType GetEnumItemsCount(T) noexcept;
 
 namespace SR_UTILS_NS {
     class EnumReflector;
@@ -42,7 +40,7 @@ namespace SR_UTILS_NS {
         using EnumSelectorType = typename std::conditional_t<IsDeclaredInNamespace, const EnumResultType*, EnumSelector<EnumType>>;
         static constexpr bool IsEnum = GetEnumVariant(EnumSelectorType{}) != EnumVariant::Undefined;
         static constexpr bool IsFlags = GetEnumVariant(EnumSelectorType{}) == EnumVariant::Flags;
-        static constexpr size_t NumItems = GetEnumItemsCount(EnumSelectorType{});
+        static constexpr SizeType NumItems = GetEnumItemsCount(EnumSelectorType{});
     };
 
     class SR_COMMON_DLL_API EnumReflector : public NonCopyable {
@@ -234,14 +232,14 @@ namespace SR_UTILS_NS {
     template<typename EnumType> EnumReflector* EnumReflector::GetReflector() {
         if constexpr (std::is_class_v<EnumType>) {
             if constexpr (std::is_enum_v<EnumType>) {
-                return EnumReflectorManager::Instance().GetReflector(SR_CODEGEN_GET_ENUM_HASH_NAME_BY_TYPE(EnumType()));
+                return EnumReflectorManager::Instance().GetReflector(GetEnumName(EnumType()));
             }
             else {
-                return EnumReflectorManager::Instance().GetReflector(SR_CODEGEN_GET_ENUM_HASH_NAME_BY_TYPE(EnumType::TypeT()));
+                return EnumReflectorManager::Instance().GetReflector(GetEnumName(EnumType::TypeT()));
             }
         }
         else {
-            return EnumReflectorManager::Instance().GetReflector(SR_CODEGEN_GET_ENUM_HASH_NAME_BY_TYPE(EnumType()));
+            return EnumReflectorManager::Instance().GetReflector(GetEnumName(EnumType()));
         }
     }
 }
@@ -266,11 +264,11 @@ namespace SR_UTILS_NS {
     inline constexpr SR_UTILS_NS::EnumVariant GetEnumVariant(const enumName*) noexcept {                                \
         return enumVariant;                                                                                             \
     }                                                                                                                   \
-    inline constexpr size_t GetEnumItemsCount(const enumName*) noexcept {                                               \
+    inline constexpr SR_UTILS_NS::SizeType GetEnumItemsCount(const enumName*) noexcept {                                \
         return SR_COUNT_ARGS(__VA_ARGS__);                                                                              \
     }                                                                                                                   \
-    SR_ENUM_DETAIL_SPEC_##spec SR_UTILS_NS::StringAtom SR_CODEGEN_GET_ENUM_HASH_NAME_BY_TYPE(enumName) {                \
-        static const auto name = SR_UTILS_NS::StringAtom(SR_EXPAND_AND_STRINGIFY(enumName));                            \
+    SR_ENUM_DETAIL_SPEC_##spec SR_UTILS_NS::StringAtom GetEnumName(enumName) noexcept {                                 \
+        static const SR_UTILS_NS::StringAtom name(SR_EXPAND_AND_STRINGIFY(enumName));                                   \
         return name;                                                                                                    \
     }                                                                                                                   \
 

@@ -270,23 +270,20 @@ template<typename MapType, typename T, typename U> struct ObjectDataAccessorMap 
 	}
 };
 
-template<typename T, typename U, typename Compare, typename Allocator>
-struct ObjectDataAccessor<std::map<T, U, Compare, Allocator>> : public ObjectDataAccessorMap<std::map<T, U, Compare, Allocator>, T, U> { };
-
-template<typename T, typename U, typename Compare, typename Allocator>
-struct ObjectDataAccessor<std::unordered_map<T, U, Compare, Allocator>> : public ObjectDataAccessorMap<std::unordered_map<T, U, Compare, Allocator>, T, U> { };
+template<typename T, typename U, typename Compare>
+struct ObjectDataAccessor<Map<T, U, Compare>> : public ObjectDataAccessorMap<Map<T, U, Compare>, T, U> { };
 
 template<typename T, typename U>
 struct ObjectDataAccessor<SR_HTYPES_NS::FlatHashMap<T, U>> : public ObjectDataAccessorMap<SR_HTYPES_NS::FlatHashMap<T, U>, T, U> { };
 
-template<typename T, typename Less, typename Allocator>
-struct ObjectDataAccessor<std::set<T, Less, Allocator>> {
+template<typename T, typename Less>
+struct ObjectDataAccessor<Set<T, Less>> {
 private:
     SR_CONSTEXPR static SerializationId itemId = SerializationId::Create("i");
     SR_CONSTEXPR static SerializationId dataId = SerializationId::Create("d");
 
 public:
-	using SetType = std::set<T, Less, Allocator>;
+	using SetType = Set<T, Less>;
 
     static void Save(ISerializer& serializer, const SetType& value, const SerializationId& id) {
         uint64_t count = 0;

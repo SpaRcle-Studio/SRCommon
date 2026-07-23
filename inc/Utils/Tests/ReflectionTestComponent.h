@@ -8,23 +8,24 @@
 #include <Utils/ECS/Component.h>
 #include <Utils/FileSystem/Path.h>
 #include <Utils/Platform/PlatformType.h>
+#include <Utils/Types/Vector.h>
 
 namespace SR_UTILS_NS::Tests {
     struct ReflectionTestComponentAssociative : public SR_UTILS_NS::Serializable {
         SR_STRUCT()
 
         /// @property
-        std::map<SR_UTILS_NS::StringAtom, int> associativeMapAtom;
+        Map<SR_UTILS_NS::StringAtom, int> associativeMapAtom;
         /// @property
-        std::map<SR_UTILS_NS::String, int> associativeMapString;
+        Map<SR_UTILS_NS::String, int> associativeMapString;
         /// @property
-        std::map<int, SR_UTILS_NS::String> associativeMap2;
+        Map<int, SR_UTILS_NS::String> associativeMap2;
         /// @property
-        std::map<SR_UTILS_NS::PlatformType, int> associativeMap33;
+        Map<SR_UTILS_NS::PlatformType, int> associativeMap33;
         /// @property
-        std::map<SR_UTILS_NS::PlatformType, SR_UTILS_NS::String> associativeMap3;
+        Map<SR_UTILS_NS::PlatformType, SR_UTILS_NS::String> associativeMap3;
         /// @property
-        std::map<SR_UTILS_NS::PlatformType, SR_UTILS_NS::Path> associativeMap4;
+        Map<SR_UTILS_NS::PlatformType, SR_UTILS_NS::Path> associativeMap4;
 
     };
 

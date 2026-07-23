@@ -206,4 +206,11 @@ namespace SR_UTILS_NS {
     StringAtom::operator uint64_t() const noexcept {
         return GetHash();
     }
+
+    //StringAtom ConstexprStringAtom::ToStringAtom() const {
+    //    if (!m_str) {
+    //        return StringAtom{};
+    //    }
+    //    return StringAtom(m_str);
+    //}
 }

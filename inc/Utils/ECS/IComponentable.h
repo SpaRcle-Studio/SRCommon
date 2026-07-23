@@ -6,6 +6,7 @@
 #define SR_ENGINE_I_COMPONENTABLE_H
 
 #include <Utils/ECS/Entity.h>
+#include <Utils/Types/Vector.h>
 
 namespace SR_WORLD_NS {
     class Scene;
