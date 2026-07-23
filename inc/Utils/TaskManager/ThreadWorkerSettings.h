@@ -23,6 +23,14 @@ namespace SR_UTILS_NS {
             StringAtom name;
             /// @property
             ThreadWorkerState state = ThreadWorkerState::Idle;
+
+            bool operator==(const ThreadWorkerStateCondition& other) const noexcept {
+                return name == other.name && state == other.state;
+            }
+
+            bool operator!=(const ThreadWorkerStateCondition& other) const noexcept {
+                return !(*this == other);
+            }
         };
 
         struct SR_COMMON_DLL_API ThreadWorkerSettingsState : public Serializable {
@@ -36,6 +44,15 @@ namespace SR_UTILS_NS {
             Vector<ThreadWorkerStateCondition> skipConditions;
             /// @property
             Vector<ThreadWorkerStateCondition> finishConditions;
+
+            bool operator==(const ThreadWorkerSettingsState& other) const noexcept {
+                return name == other.name && startConditions == other.startConditions &&
+                    skipConditions == other.skipConditions && finishConditions == other.finishConditions;
+            }
+
+            bool operator!=(const ThreadWorkerSettingsState& other) const noexcept {
+                return !(*this == other);
+            }
         };
 
         struct SR_COMMON_DLL_API ThreadWorkerThread : public Serializable {
@@ -48,6 +65,13 @@ namespace SR_UTILS_NS {
             /// @property
             Vector<ThreadWorkerSettingsState> states;
 
+            bool operator==(const ThreadWorkerThread& other) const noexcept {
+                return name == other.name && useThreads == other.useThreads && states == other.states;
+            }
+
+            bool operator!=(const ThreadWorkerThread& other) const noexcept {
+                return !(*this == other);
+            }
         };
 
         struct SR_COMMON_DLL_API ThreadWorkerThreadsVariant : public Serializable {
@@ -62,6 +86,14 @@ namespace SR_UTILS_NS {
             /// @property
             Vector<StringAtom> finalizeStates;
 
+            bool operator==(const ThreadWorkerThreadsVariant& other) const noexcept {
+                return description == other.description && featuresCondition == other.featuresCondition &&
+                    threads == other.threads && finalizeStates == other.finalizeStates;
+            }
+
+            bool operator!=(const ThreadWorkerThreadsVariant& other) const noexcept {
+                return !(*this == other);
+            }
         };
     }
 

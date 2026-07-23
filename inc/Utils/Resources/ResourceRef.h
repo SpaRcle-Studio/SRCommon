@@ -58,6 +58,13 @@ namespace SR_UTILS_NS {
             return nullptr;
         }
 
+        bool operator==(const ResourceRef<T>& other) const noexcept {
+            return m_id == other.m_id && GetResourceType() == other.GetResourceType();
+        }
+
+        bool operator!=(const ResourceRef<T>& other) const noexcept {
+            return !(*this == other);
+        }
     };
 
     template<class T> StringAtom ResourceRef<T>::GetResourceType() const noexcept {

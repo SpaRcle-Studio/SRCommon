@@ -55,6 +55,7 @@ namespace SR_UTILS_NS {
             using value_type        = T;
             using reference         = const T&;
             using pointer           = const T*;
+            using difference_type = std::ptrdiff_t;
 
             Iterator() noexcept = default;
             Iterator(Node* p, Node* nil) noexcept : m_p(p), m_nil(nil) { }
@@ -97,6 +98,12 @@ namespace SR_UTILS_NS {
         Set& operator=(const Set& other);
         Set& operator=(Set&& other) noexcept;
         Set& operator=(std::initializer_list<T> init);
+
+        bool operator==(const Set& other) const noexcept {
+            return m_size == other.m_size && std::equal(begin(), end(), other.begin());
+        }
+
+        bool operator!=(const Set& other) const noexcept { return !(*this == other); }
 
     public:
         // lookup

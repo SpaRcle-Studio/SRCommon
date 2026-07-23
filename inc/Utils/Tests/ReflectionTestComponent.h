@@ -48,6 +48,18 @@ namespace SR_UTILS_NS::Tests {
         int32_t m_width = 100;
         /// @property
         SR_UTILS_NS::Vector<float> m_test;
+
+        bool operator==(const ReflectionTestComponentData& other) const {
+            return baseField == other.baseField &&
+                   testField == other.testField &&
+                   vector == other.vector &&
+                   m_width == other.m_width &&
+                   m_test == other.m_test;
+        }
+
+        bool operator!=(const ReflectionTestComponentData& other) const {
+            return !(*this == other);
+        }
     };
 
     class ReflectionTestComponentLogicBase : public SR_UTILS_NS::Serializable, public SR_HTYPES_NS::SharedPtr<ReflectionTestComponentLogicBase> {

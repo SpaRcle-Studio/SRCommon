@@ -24,6 +24,9 @@ namespace SR_UTILS_NS {
 
         using iterator = Iterator;
         using const_iterator = ConstIterator;
+        using pointer = Iterator;
+        using difference_type = std::ptrdiff_t;
+        using iterator_category = std::forward_iterator_tag;
 
     public:
         Vector() noexcept = default;
@@ -148,7 +151,10 @@ namespace SR_UTILS_NS {
         }
         else {
             for (SizeType i = 0; i < m_size; ++i) {
-                if (!(static_cast<const T*>(m_data)[i] == static_cast<const T*>(other.m_data)[i])) {
+                T& left = static_cast<T*>(m_data)[i];
+                T& right = static_cast<T*>(other.m_data)[i];
+
+                if (!(left == right)) {
                     return false;
                 }
             }

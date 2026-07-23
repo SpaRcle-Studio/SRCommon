@@ -44,6 +44,14 @@ namespace SR_UTILS_NS {
                 frustumCulling == other.frustumCulling &&
                 clearDepth == other.clearDepth;
         }
+
+        bool operator==(const RenderLayerInfo& other) const noexcept {
+            return name == other.name && CompareParams(other);
+        }
+
+        bool operator!=(const RenderLayerInfo& other) const noexcept {
+            return !(*this == other);
+        }
     };
 
     class LayerManagerSettings final : public SR_UTILS_NS::Asset {
