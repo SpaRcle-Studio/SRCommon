@@ -88,9 +88,9 @@ namespace SR_UTILS_NS {
         std::vector<Task::Ptr> m_tasks;
         /// Предполагается, что задач не будет слишком много,
         /// и не будет надобности в unordered set/map
-        std::set<TaskId> m_ids;
-        mutable std::map<TaskId, Task::State> m_results;
-        std::set<Task*> m_delayedTasks;
+        Set<TaskId> m_ids;
+        mutable Map<TaskId, Task::State> m_results;
+        Set<Task*> m_delayedTasks;
 
     };
 }

@@ -51,18 +51,6 @@ namespace SR_SRLM_NS {
         void Clear();
 
     private:
-        std::vector<LogicalNode*> m_nodes;
-
-        struct ActiveNodeInfo {
-            LogicalNode* pNode = nullptr;
-            LogicalNode::NodePin* pFromPin = nullptr;
-        };
-
-        std::vector<ActiveNodeInfo> m_active;
-
-        uint32_t m_currentNode = 0;
-
-        std::map<std::string, LogicalNode*> m_entryPoints;
 
     };
 

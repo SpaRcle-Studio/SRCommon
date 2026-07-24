@@ -48,7 +48,7 @@ namespace SR_UTILS_NS {
     struct ResourcesStorage : public NonCopyable {
         SR_UTILS_NS::StringAtom id;
         SR_UTILS_NS::StringAtom path;
-        std::map<uint64_t, std::vector<IResource::Ptr>> variants;
+        Map<uint64_t, Vector<IResource::Ptr>> variants;
 
         SR_NODISCARD bool IsLast() const;
         SR_NODISCARD IResource::Ptr Find(const IResourceVariant* pVariant) const;

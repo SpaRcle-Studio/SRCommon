@@ -54,6 +54,15 @@ namespace SR_UTILS_NS {
                 : kv(std::forward<K>(k), std::forward<V>(v))
             { }
 
+            template<typename K>
+            Node(K&& key)
+                : kv(
+                std::piecewise_construct,
+                std::forward_as_tuple(std::forward<K>(key)),
+                std::forward_as_tuple()
+            )
+            { }
+
             template<typename... Args>
             explicit Node(Args&&... args)
                 : kv(std::forward<Args>(args)...)
@@ -147,8 +156,8 @@ namespace SR_UTILS_NS {
 
     public:
         // element access
-        SR_NODISCARD Value& operator[](const Key& key);
-        SR_NODISCARD Value& operator[](Key&& key);
+        Value& operator[](const Key& key);
+        Value& operator[](Key&& key);
         SR_NODISCARD Value& at(const Key& key);
         SR_NODISCARD const Value& at(const Key& key) const { return const_cast<Map*>(this)->at(key); }
 
@@ -189,6 +198,8 @@ namespace SR_UTILS_NS {
 
         void clear() noexcept;
         void swap(Map& other) noexcept;
+
+        template<typename Predicate> void erase_if(Predicate pred) noexcept;
 
         SR_NODISCARD Map DetachAllocator() const;
 
@@ -282,6 +293,17 @@ namespace SR_UTILS_NS {
     // =========================================================================
     // Implementation
     // =========================================================================
+
+    template<typename Key, typename Value, typename Compare> template<typename Predicate> void Map<Key, Value, Compare>::erase_if(Predicate pred) noexcept {
+        for (auto it = begin(); it != end(); ) {
+            if (pred(*it)) {
+                it = erase(it);
+            }
+            else {
+                ++it;
+            }
+        }
+    }
 
     // ---- memory -------------------------------------------------------------
 
@@ -545,7 +567,7 @@ namespace SR_UTILS_NS {
             else                           return x->kv.second;
         }
         Node* z = NewNode();
-        new (z) Node(key, V{});
+        new (z) Node(key);
         z->pLeft = z->pRight = m_nil; z->color = Color::Red;
         if (parent == m_nil)                     SetRoot(z);
         else if (m_cmp(z->key(), parent->key())) parent->pLeft  = z;

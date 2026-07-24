@@ -123,8 +123,12 @@ namespace SR_UTILS_NS {
         return
             std::is_same_v<T, volatile std::string> ||
             std::is_same_v<T, volatile std::string_view> ||
+            std::is_same_v<T, volatile String> ||
+            std::is_same_v<T, volatile StringView> ||
             std::is_same_v<T, volatile StringAtom>;
     }
+
+    template<typename T> constexpr bool IsStringV = IsString<T>();
 }
 
 namespace std {

@@ -69,8 +69,8 @@ namespace SR_HTYPES_NS {
         template<typename T> bool RemoveValue(uint64_t hashCode);
 
     private:
-        std::map<uint64_t, void*> m_pointers;
-        std::map<uint64_t, std::any> m_values;
+        Map<uint64_t, void*> m_pointers;
+        Map<uint64_t, std::any> m_values;
 
     };
 

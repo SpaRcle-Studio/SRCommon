@@ -97,20 +97,12 @@ namespace SR_UTILS_NS::Web {
         }
 
         SR_NODISCARD CSSStyle* GetOrCreateStyle(std::string_view token, bool isClass) {
-            SRAssert2(!token.empty(), "Token is empty!");
-            if (token == "*") { return &m_globalStyle; }
-            const auto pIt = std::ranges::find_if(m_styles, [token, isClass](const auto& pair) {
-                return pair.first.first == token && pair.first.second == isClass;
-            });
-            if (pIt != m_styles.end()) {
-                return &pIt->second;
-            }
-            return &m_styles.emplace(std::make_pair(token, isClass), m_globalStyle).first->second;
+            return nullptr;
         }
 
     private:
         CSSStyle m_globalStyle;
-        std::map<std::pair<std::string, bool /** is class */>, CSSStyle> m_styles;
+        Map<std::pair<String, bool /** is class */>, CSSStyle> m_styles;
 
     };
 }

@@ -9,6 +9,7 @@
 #include <Utils/Common/AssertFwd.h>
 #include <Utils/Types/SafePtrLockGuard.h>
 #include <Utils/Types/FlatHashMap.h>
+#include <Utils/Types/Map.h>
 
 #define SR_REGISTER_SINGLETON(className)                                                                                \
     private:                                                                                                            \
@@ -64,7 +65,7 @@ namespace SR_UTILS_NS {
         };
         SR_HTYPES_NS::FlatHashMap<uint64_t, SingletonInfo> m_singletons;
         mutable std::recursive_mutex m_mutex;
-        std::map<uint64_t, std::recursive_mutex> m_creationMutexes;
+        Map<uint64_t, std::recursive_mutex> m_creationMutexes;
 
     };
 

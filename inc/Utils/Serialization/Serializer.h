@@ -56,13 +56,13 @@ namespace SR_UTILS_NS {
         virtual void BeginArray(uint64_t size, const SerializationId& id) = 0;
         virtual void EndArray() = 0;
 
-        SR_NODISCARD const std::set<StringAtom>& GetDontSaveTags() const noexcept { return m_dontSaveTags; }
+        SR_NODISCARD const Set<StringAtom>& GetDontSaveTags() const noexcept { return m_dontSaveTags; }
 
         void AddDontSaveTag(const StringAtom& tag) {
             m_dontSaveTags.insert(tag);
         }
 
-        SR_NODISCARD bool CanSaveByTags(const std::set<StringAtom>& tags) const {
+        SR_NODISCARD bool CanSaveByTags(const Set<StringAtom>& tags) const {
             for (const auto& tag : m_dontSaveTags) {
                 if (tags.find(tag) != tags.end()) {
                     return false;
@@ -74,7 +74,7 @@ namespace SR_UTILS_NS {
         SR_NODISCARD virtual bool SaveToFile(const SR_UTILS_NS::Path& /* path */) const { return false; }
 
     private:
-        std::set<StringAtom> m_dontSaveTags;
+        Set<StringAtom> m_dontSaveTags;
         bool m_isAllowEmptyElementsInArray = true;
         bool m_isNeedWriteDefaults = false;
         bool m_isEditorAllowed = false;

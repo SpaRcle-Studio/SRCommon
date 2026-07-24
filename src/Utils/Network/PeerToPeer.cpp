@@ -7,9 +7,9 @@
 #include <Utils/Debug.h>
 
 namespace SR_NETWORK_NS {
-    PeerToPeer::PeerToPeer(SocketType type, Context::Ptr pContext, std::string address, uint16_t port)
+    PeerToPeer::PeerToPeer(SocketType type, Context::Ptr pContext, StringView address, uint16_t port)
         : Super(this, SR_UTILS_NS::SharedPtrPolicy::Automatic)
-        , m_address(std::move(address))
+        , m_address(address)
         , m_port(port)
         , m_type(type)
         , m_context(std::move(pContext))
@@ -74,11 +74,11 @@ namespace SR_NETWORK_NS {
         m_newPeers.clear();
     }
 
-    bool PeerToPeer::Connect(const std::string& address, uint16_t port) {
+    bool PeerToPeer::Connect(StringView address, uint16_t port) {
         return ConnectInternal(address, port, true);
     }
 
-    bool PeerToPeer::ConnectInternal(const std::string& address, uint16_t port, bool share) {
+    bool PeerToPeer::ConnectInternal(StringView address, uint16_t port, bool share) {
         if (!m_acceptor) {
             SR_ERROR("PeerToPeer::Connect() : acceptor is not running!");
             return false;

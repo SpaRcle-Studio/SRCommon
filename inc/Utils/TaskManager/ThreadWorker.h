@@ -60,9 +60,9 @@ namespace SR_UTILS_NS {
     private:
         ThreadWorker* m_threadWorker = nullptr;
         std::atomic<ThreadWorkerState> m_state;
-        std::map<SR_UTILS_NS::StringAtom, ThreadWorkerState> m_skipConditions;
-        std::map<SR_UTILS_NS::StringAtom, ThreadWorkerState> m_startConditions;
-        std::map<SR_UTILS_NS::StringAtom, ThreadWorkerState> m_finishConditions;
+        SR_UTILS_NS::Map<SR_UTILS_NS::StringAtom, ThreadWorkerState> m_skipConditions;
+        SR_UTILS_NS::Map<SR_UTILS_NS::StringAtom, ThreadWorkerState> m_startConditions;
+        SR_UTILS_NS::Map<SR_UTILS_NS::StringAtom, ThreadWorkerState> m_finishConditions;
 
     };
 
@@ -124,9 +124,9 @@ namespace SR_UTILS_NS {
         SR_NODISCARD bool CheckFinalize(SR_UTILS_NS::StringAtom name);
 
     private:
-        std::map<SR_UTILS_NS::StringAtom, ThreadWorkerStateBase::Ptr> m_states;
+        Map<SR_UTILS_NS::StringAtom, ThreadWorkerStateBase::Ptr> m_states;
         std::list<SR_UTILS_NS::StringAtom> m_finalize;
-        std::vector<ThreadWorker::Ptr> m_threadWorkers;
+        Vector<ThreadWorker::Ptr> m_threadWorkers;
         bool m_isActive = false;
         std::atomic<bool> m_isAlive = true;
         SR_HTYPES_NS::RawPointerHolder<SR_HTYPES_NS::DataStorage> m_context;

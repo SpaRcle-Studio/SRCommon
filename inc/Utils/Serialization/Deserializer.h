@@ -79,11 +79,11 @@ namespace SR_UTILS_NS {
             m_dontLoadTags.insert(tag);
         }
 
-        void SetDontLoadTags(const std::set<StringAtom>& tags) {
+        void SetDontLoadTags(const Set<StringAtom>& tags) {
             m_dontLoadTags = tags;
         }
 
-        SR_NODISCARD bool CanLoadByTags(const std::set<StringAtom>& tags) const {
+        SR_NODISCARD bool CanLoadByTags(const Set<StringAtom>& tags) const {
             for (const auto& tag : m_dontLoadTags) {
                 if (tags.find(tag) != tags.end()) {
                     return false;
@@ -93,7 +93,7 @@ namespace SR_UTILS_NS {
         }
 
     private:
-        std::set<StringAtom> m_dontLoadTags;
+        Set<StringAtom> m_dontLoadTags;
 
     };
 }

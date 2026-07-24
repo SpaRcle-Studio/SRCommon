@@ -171,7 +171,7 @@ namespace SR_UTILS_NS {
         std::recursive_mutex m_mutex;
         void* m_currentSwitcher = nullptr;
         Callbacks* m_currentCallbacks = nullptr;
-        std::map<void*, Callbacks> m_callbacks;
+        Map<void*, Callbacks> m_callbacks;
 
     };
 

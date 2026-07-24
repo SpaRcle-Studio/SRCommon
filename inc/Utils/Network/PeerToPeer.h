@@ -16,7 +16,7 @@ namespace SR_NETWORK_NS {
         using Super = SR_HTYPES_NS::SharedPtr<PeerToPeer>;
         using Callback = std::function<void(const PeerToPeer::Ptr& pP2P, const Socket::Ptr&)>;
     private:
-        PeerToPeer(SocketType type, Context::Ptr pContext, std::string address, uint16_t port);
+        PeerToPeer(SocketType type, Context::Ptr pContext, StringView address, uint16_t port);
 
     public:
         virtual ~PeerToPeer() = default;
@@ -25,7 +25,7 @@ namespace SR_NETWORK_NS {
         bool Run();
         void Close();
 
-        bool Connect(const std::string& address, uint16_t port);
+        bool Connect(StringView address, uint16_t port);
 
         void SetOnAcceptCallback(Callback&& callback) { m_onAccept = std::move(callback); }
 
@@ -43,7 +43,7 @@ namespace SR_NETWORK_NS {
 
         bool RegisterSocket(Socket::Ptr pSocket, uint32_t address, uint16_t port);
 
-        bool ConnectInternal(const std::string& address, uint16_t port, bool share);
+        bool ConnectInternal(StringView address, uint16_t port, bool share);
 
         void ProcessMessage(const Socket::Ptr& pSocket, const DataPackage::Ptr& pData);
 
@@ -52,7 +52,7 @@ namespace SR_NETWORK_NS {
         bool ListerPeer(const Socket::Ptr& pSocket);
 
     private:
-        std::string m_address;
+        String m_address;
         uint16_t m_port = 0;
 
         const SocketType m_type = SocketType::Unknown;
@@ -66,9 +66,9 @@ namespace SR_NETWORK_NS {
             uint16_t port;
         };
 
-        std::map<Socket::Ptr, Connection> m_connections;
+        Map<Socket::Ptr, Connection> m_connections;
 
-        std::set<Socket::Ptr> m_newPeers;
+        Set<Socket::Ptr> m_newPeers;
 
         Callback m_onAccept;
 

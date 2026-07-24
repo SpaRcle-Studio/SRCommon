@@ -7,21 +7,22 @@
 
 #include <Utils/Common/Enumerations.h>
 #include <Utils/TypeTraits/SRClassMacro.h>
+#include <Utils/Types/Set.h>
 
 namespace SR_UTILS_NS {
     class SRClassMeta;
 
     struct SerializableVerifyContext {
     public:
-        void AddError(const std::string& error) noexcept { errors.insert(error); }
-        void AddWarning(const std::string& warning) noexcept { warnings.insert(warning); }
+        void AddError(StringView error) noexcept { errors.insert(std::move(String(error))); }
+        void AddWarning(StringView warning) noexcept { warnings.insert(std::move(String(warning))); }
 
-        SR_NODISCARD const std::set<std::string>& GetErrors() const noexcept { return errors; }
-        SR_NODISCARD const std::set<std::string>& GetWarnings() const noexcept { return warnings; }
+        SR_NODISCARD const Set<String>& GetErrors() const noexcept { return errors; }
+        SR_NODISCARD const Set<String>& GetWarnings() const noexcept { return warnings; }
 
     private:
-        std::set<std::string> errors;
-        std::set<std::string> warnings;
+        Set<String> errors;
+        Set<String> warnings;
     };
 
     class SR_COMMON_DLL_API SRClass {

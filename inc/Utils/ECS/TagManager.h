@@ -33,7 +33,7 @@ namespace SR_UTILS_NS {
         SR_NODISCARD StringAtom GetTagByIndex(uint16_t index) const;
         SR_NODISCARD static StringAtom GetDefaultTag();
         SR_NODISCARD uint16_t GetTagIndex(StringAtom tag) const;
-        SR_NODISCARD const std::vector<StringAtom>& GetTags() const { return m_tags; }
+        SR_NODISCARD const Vector<StringAtom>& GetTags() const { return m_tags; }
 
         SR_NODISCARD SR_UTILS_NS::Path GetSettingsPath() const override;
 
@@ -46,8 +46,8 @@ namespace SR_UTILS_NS {
 
     private:
         TagMap m_tagMap;
-        std::map<StringAtom, uint16_t> m_indices;
-        std::vector<StringAtom> m_tags;
+        Map<StringAtom, uint16_t> m_indices;
+        Vector<StringAtom> m_tags;
 
     };
 }

@@ -25,10 +25,10 @@ namespace SR_UTILS_NS::AssimpTools {
 
         struct VertexBoneWeights {
             float_t mTotalWeight = 0.f;
-            std::vector<BoneWeight> mBoneWeights;
+            Vector<BoneWeight> mBoneWeights;
         };
 
-        std::map<uint32_t, VertexBoneWeights> map;
+        Map<uint32_t, VertexBoneWeights> map;
 
         for (uint32_t b = 0; b < pMesh->mNumBones; b++)
         {
@@ -40,7 +40,7 @@ namespace SR_UTILS_NS::AssimpTools {
                 auto key = vertexWeight->mVertexId;
 
                 if (map.find(key) == map.end()) {
-                    map.insert(std::map<uint32_t, VertexBoneWeights>::value_type(key, VertexBoneWeights()));
+                    map.insert(Map<uint32_t, VertexBoneWeights>::value_type(key, VertexBoneWeights()));
                 }
 
                 auto& vertex_BoneWeights = map[key];

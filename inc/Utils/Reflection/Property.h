@@ -157,31 +157,6 @@ namespace SR_UTILS_NS::Reflection {
         bool m_hasExplicitSetter = false;
     };
 
-    template<typename T> SR_UTILS_NS::StringAtom GetPropertyInspector() {
-        using Type = SR_UTILS_NS::RemoveQualifiersT<T>;
-
-        if constexpr (SR_MATH_NS::IsBool<Type>()) {
-            return "Bool"_atom;
-        }
-        if constexpr (SR_MATH_NS::IsNumber<Type>()) {
-            return "Numeric"_atom;
-        }
-        if constexpr (SR_UTILS_NS::IsMathVector<Type>()) {
-            return "MathVector"_atom;
-        }
-        if constexpr (SR_UTILS_NS::IsMathSize<Type>()) {
-            return "Size"_atom;
-        }
-        if constexpr (SR_UTILS_NS::IsSREnumV<Type>) {
-            return "Enum"_atom;
-        }
-        if constexpr (SR_UTILS_NS::IsSTLVectorV<Type>) {
-            return "Vector"_atom;
-        }
-
-        return SR_UTILS_NS::StringAtom();
-    }
-
     std::string_view MakeSerializePropertyName(std::string_view name);
     SR_UTILS_NS::StringAtom MakeDisplayName(SR_UTILS_NS::StringAtom name);
 }

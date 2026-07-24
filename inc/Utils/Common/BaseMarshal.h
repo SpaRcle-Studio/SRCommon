@@ -79,7 +79,7 @@ namespace SR_UTILS_NS {
                 stream.write((const char *) &value, sizeof(T));
             }
             else {
-                SRHalt("Unsupported type!");
+                static_assert(AlwaysFalseV<T>, "Unsupported type!");
             }
         }
 
@@ -149,7 +149,7 @@ namespace SR_UTILS_NS {
                 stream.read((char*)&value, sizeof(T));
             }
             else {
-                SRHalt("Unsupported type!");
+                static_assert(AlwaysFalseV<T>, "Unsupported type!");
             }
 
             return value;
@@ -197,23 +197,7 @@ namespace SR_UTILS_NS {
             stream.write((const char*)&str.c_str()[0], size * sizeof(char));
         }
 
-        template<typename T> SR_INLINE_STATIC void SR_FASTCALL SaveStringVector(SR_HTYPES_NS::Stream& stream, const std::vector<T>& arr) {
-            const uint64_t size = arr.size();
-            stream.write((const char*)&size, sizeof(uint64_t));
-            for (const auto& str : arr) {
-                SaveString(stream, str);
-            }
-        }
-
-        template<typename T> SR_INLINE_STATIC void SR_FASTCALL SaveStringSet(SR_HTYPES_NS::Stream& stream, const std::set<T>& arr) {
-            const uint64_t size = arr.size();
-            stream.write((const char*)&size, sizeof(uint64_t));
-            for (const auto& str : arr) {
-                SaveString(stream, str);
-            }
-        }
-
-        template<typename T> SR_INLINE_STATIC void SR_FASTCALL SaveVector(SR_HTYPES_NS::Stream& stream, const std::vector<T>& vector) {
+        template<typename T> SR_INLINE_STATIC void SR_FASTCALL SaveVector(SR_HTYPES_NS::Stream& stream, const Vector<T>& vector) {
             const uint64_t size = vector.size();
             stream.write((const char*)&size, sizeof(uint64_t));
             if (size > 0) {

@@ -31,7 +31,7 @@ namespace SR_UTILS_NS {
         using Super = SR_UTILS_NS::Singleton<TracyContextManager>;
         using TracyContextPtr = void*;
         using IdentifierPtr = void*;
-        using ContextMap = std::map<IdentifierPtr, TracyContextPtr>;
+        using ContextMap = Map<IdentifierPtr, TracyContextPtr>;
     public:
         TracyContextManager();
 

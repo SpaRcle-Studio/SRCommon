@@ -66,6 +66,7 @@ namespace SR_UTILS_NS::StoreUtils {
             ValueHolder& operator=(ValueHolder&& other) noexcept;
             ~ValueHolder();
         };
+        using ValueMap = SR_HTYPES_NS::FlatHashMap<SR_UTILS_NS::StringAtom, ValueHolder>;
     public:
         void Clear() { m_storage.clear(); }
         void Save();
@@ -82,7 +83,7 @@ namespace SR_UTILS_NS::StoreUtils {
         void SetImpl(StorageType storageTepe, ValueType valueType, SR_UTILS_NS::StringAtom key, Value value);
 
     private:
-        std::map<StorageType, std::unordered_map<SR_UTILS_NS::StringAtom, ValueHolder>> m_storage;
+        Map<StorageType, ValueMap> m_storage;
 
     };
 

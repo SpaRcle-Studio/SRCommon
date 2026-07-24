@@ -39,12 +39,7 @@ namespace SR_SRLM_NS {
     }
 
     void DataTypeManager::Clear() {
-        SR_LOCK_GUARD;
 
-        for (auto&& [hash, pData] : m_structs) {
-            delete pData;
-        }
-        m_structs.clear();
     }
 
     void DataTypeManager::ReloadSettings() {

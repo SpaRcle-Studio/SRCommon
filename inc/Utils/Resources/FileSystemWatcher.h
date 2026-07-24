@@ -52,7 +52,7 @@ namespace SR_UTILS_NS {
     private:
         SR_HTYPES_NS::RawPointerHolder<SubscriptionMessage> m_messageCache;
         void* m_pImpl = nullptr;
-        std::map<uint64_t, void*> m_listeners;
+        Map<uint64_t, void*> m_listeners;
         bool m_isAsyncWatchingActive = false;
         std::recursive_mutex m_mutex;
         uint32_t m_usedEvents = 0;

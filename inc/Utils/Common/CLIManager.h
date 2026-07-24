@@ -35,8 +35,8 @@ namespace SR_UTILS_NS {
 
         SR_NODISCARD bool IsFlagPresent(CLIFlags flag) const;
         SR_NODISCARD bool IsHeadlessMode() const;
-        SR_NODISCARD std::optional<std::string> GetOptionValue(CLIOptions option);
-        SR_NODISCARD const std::map<CLIOptions, std::optional<std::string>>& GetOptions() const { return m_options; }
+        SR_NODISCARD std::optional<String> GetOptionValue(CLIOptions option);
+        SR_NODISCARD const Map<CLIOptions, std::optional<String>>& GetOptions() const { return m_options; }
         SR_NODISCARD CLIFlags GetFlags() const { return m_flags; }
         SR_NODISCARD const std::optional<Path>& GetProjectPath() const { return m_projectPath; }
 
@@ -44,7 +44,7 @@ namespace SR_UTILS_NS {
         bool IsSingletonCanBeDestroyed() const override { return false; }
 
     private:
-        std::map<CLIOptions, std::optional<std::string>> m_options;
+        Map<CLIOptions, std::optional<String>> m_options;
         CLIFlags m_flags = CLIFlags::None;
         std::optional<Path> m_projectPath;
     };

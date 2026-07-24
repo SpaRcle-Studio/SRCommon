@@ -136,6 +136,7 @@ namespace SR_UTILS_NS {
         // modifiers
         std::pair<Iterator, bool> insert(const T& value);
         std::pair<Iterator, bool> insert(T&& value);
+        void insert(Iterator first, Iterator last);
 
         template<typename... Args>
         std::pair<Iterator, bool> emplace(Args&&... args);
@@ -217,6 +218,12 @@ namespace SR_UTILS_NS {
     // =========================================================================
     // Implementation
     // =========================================================================
+
+    template<typename T, typename Compare> void Set<T, Compare>::insert(Set::Iterator first, Set::Iterator last) {
+        for (auto it = first; it != last; ++it) {
+            insert(*it);
+        }
+    }
 
     template<typename T, typename Compare> template<typename Predicate> bool Set<T, Compare>::none_of(Predicate&& pred) const {
         for (const auto& value : *this) {

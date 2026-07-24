@@ -127,7 +127,7 @@ namespace SR_HTYPES_NS {
         std::mutex m_mtx;
         std::thread::id m_exclusive_thread_id;
         size_t m_exclusive_count = 0;
-        std::map<std::thread::id, size_t> m_shared_locks;
+        Map<std::thread::id, size_t> m_shared_locks;
         std::condition_variable m_cond_var;
 
     };

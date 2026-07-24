@@ -142,7 +142,9 @@ namespace SR_UTILS_NS::StoreUtils {
             pIt->second[key] = { value, valueType };
         }
         else {
-            m_storage[storageTepe] = { { key, { value, valueType } } };
+            m_storage[storageTepe].clear();
+            m_storage[storageTepe].reserve(1);
+            m_storage[storageTepe].emplace(key, ValueHolder(value, valueType));
         }
     }
 

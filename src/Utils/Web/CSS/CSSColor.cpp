@@ -37,7 +37,7 @@ namespace SR_UTILS_NS::Web {
             return {};
         }
 
-        static std::map<SRHashType, CSSDirection::Type> directions = {
+        static Map<SRHashType, CSSDirection::Type> directions = {
             { "to top"_atom_hash, CSSDirection::Type::Top },
             { "to right"_atom_hash, CSSDirection::Type::Right },
             { "to bottom"_atom_hash, CSSDirection::Type::Bottom },

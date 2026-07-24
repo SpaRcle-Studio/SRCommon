@@ -85,10 +85,10 @@ namespace SR_UTILS_NS {
         bool Thread();
 
     private:
-        std::vector<IResource::Ptr> m_destroyQueue;
+        Vector<IResource::Ptr> m_destroyQueue;
         ResourcesTypes m_resources;
 
-        std::map<StringAtom, ResourceLoaderFn> m_resourceLoaders;
+        Map<StringAtom, ResourceLoaderFn> m_resourceLoaders;
         SR_HTYPES_NS::RawPointerHolder<IResourceReloader> m_defaultReloader;
 
         FileSystemWatcher::Ptr m_fileSystemWatcher;

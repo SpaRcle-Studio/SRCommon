@@ -17,8 +17,8 @@ namespace SR_UTILS_NS {
         auto&& rawOptions = SR_UTILS_NS::EnumReflector::GetNames<CLIOptions>();
         auto&& rawFlags = SR_UTILS_NS::EnumReflector::GetNames<CLIFlags>();
 
-        std::map<std::string, CLIOptions> options;
-        std::map<std::string, CLIFlags> flags;
+        Map<String, CLIOptions> options;
+        Map<String, CLIFlags> flags;
 
         for (auto&& option : rawOptions) {
             options[std::string("--" + SR_UTILS_NS::StringUtils::ToKebabCase(option))] = SR_UTILS_NS::EnumReflector::FromString<CLIOptions>(option);
@@ -76,7 +76,7 @@ namespace SR_UTILS_NS {
         }
     }
 
-    std::optional<std::string> CLIManager::GetOptionValue(CLIOptions option) {
+    std::optional<String> CLIManager::GetOptionValue(CLIOptions option) {
         auto&& it = m_options.find(option);
         if (it != m_options.end()) {
             return it->second;

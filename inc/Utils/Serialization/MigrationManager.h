@@ -32,7 +32,7 @@ namespace SR_UTILS_NS {
 
     private:
         bool m_isInitialized = false;
-        std::map<StringAtom, std::vector<MigrationInfo>> m_migrations;
+        Map<StringAtom, Vector<MigrationInfo>> m_migrations;
 
     };
 }
