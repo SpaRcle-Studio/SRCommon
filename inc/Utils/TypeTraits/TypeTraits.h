@@ -39,7 +39,7 @@ namespace SR_UTILS_NS {
 		}
 
 		static SerializationId CreateFromCStr(const char* text) noexcept;
-		static SerializationId CreateFromString(std::string_view text) noexcept;
+		static SerializationId CreateFromString(StringView text) noexcept;
 
 		SR_NODISCARD uint64_t GetSize() const noexcept { return sizeof(name); }
 		SR_NODISCARD const char* GetName() const noexcept { return name; }

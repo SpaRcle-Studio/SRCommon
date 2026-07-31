@@ -5,7 +5,7 @@
 #if !defined(SR_COMMON_MAP_H) && defined(SR_ENGINE_COMMON_PCH_FOR_BASE_CODE)
 #define SR_COMMON_MAP_H
 
-#include <Utils/Common/AssertFwd.h>
+#include <Utils/Types/Pair.h>
 
 namespace SR_UTILS_NS {
     // =========================================================================
@@ -33,8 +33,8 @@ namespace SR_UTILS_NS {
         using SizeType   = size_t;
         using KeyType    = Key;
         using MappedType = Value;
-        using ValueType  = std::pair<const Key, Value>;
-        using value_type = std::pair<const Key, Value>;
+        using ValueType  = Pair<const Key, Value>;
+        using value_type = Pair<const Key, Value>;
         using key_type  = Key;
         using mapped_type = Value;
         static constexpr bool key_only = false;
@@ -85,6 +85,10 @@ namespace SR_UTILS_NS {
             Iterator next() const noexcept { return Iterator(Next(m_p, m_nil), m_nil); }
 
             Iterator() noexcept = default;
+            Iterator(const Iterator&) noexcept = default;
+            Iterator(Iterator&&) noexcept = default;
+            Iterator& operator=(const Iterator&) noexcept = default;
+            Iterator& operator=(Iterator&&) noexcept = default;
             Iterator(Node* p, Node* nil) noexcept : m_p(p), m_nil(nil) { }
 
             SR_NODISCARD ValueType& operator*()  const noexcept { return m_p->kv; }
@@ -185,13 +189,13 @@ namespace SR_UTILS_NS {
         SR_NODISCARD ConstIterator cend()   const noexcept { return end(); }
 
         // modifiers
-        std::pair<Iterator, bool> insert(const ValueType& kv);
-        std::pair<Iterator, bool> insert(ValueType&& kv);
-        std::pair<Iterator, bool> insert(const Key& key, const Value& value) { return insert(ValueType{ key, value }); }
-        std::pair<Iterator, bool> insert(Key&& key, Value&& value)           { return insert(ValueType{ std::move(key), std::move(value) }); }
+        Pair<Iterator, bool> insert(const ValueType& kv);
+        Pair<Iterator, bool> insert(ValueType&& kv);
+        Pair<Iterator, bool> insert(const Key& key, const Value& value) { return insert(ValueType{ key, value }); }
+        Pair<Iterator, bool> insert(Key&& key, Value&& value)           { return insert(ValueType{ std::move(key), std::move(value) }); }
 
         template<typename... Args>
-        std::pair<Iterator, bool> emplace(Args&&... args);
+        Pair<Iterator, bool> emplace(Args&&... args);
 
         bool     erase(const Key& key) noexcept;
         Iterator erase(Iterator pos)   noexcept;
@@ -229,7 +233,7 @@ namespace SR_UTILS_NS {
         SR_NODISCARD Node* LB(const Key& key) const noexcept;
 
         // Core insert — returns {existingOrNew, inserted}
-        std::pair<Node*, bool> InsertAt(Node* z) noexcept;
+        Pair<Node*, bool> InsertAt(Node* z) noexcept;
 
         // Subtree copy / destroy
         Node* CloneSubtree(Node* src, Node* srcNil, Node* parent);
@@ -500,14 +504,14 @@ namespace SR_UTILS_NS {
     // ---- InsertAt -----------------------------------------------------------
 
     template<typename K, typename V, typename C>
-    std::pair<typename Map<K,V,C>::Node*, bool> Map<K,V,C>::InsertAt(Node* z) noexcept {
+    Pair<typename Map<K,V,C>::Node*, bool> Map<K,V,C>::InsertAt(Node* z) noexcept {
         Node* parent = m_nil;
         Node* x      = Root();
         while (x != m_nil) {
             parent = x;
             if      (m_cmp(z->key(), x->key())) x = x->pLeft;
             else if (m_cmp(x->key(), z->key())) x = x->pRight;
-            else                                 return { x, false };   // duplicate
+            else                                 return Pair<Node*, bool>(x, false);   // duplicate
         }
         z->pLeft = z->pRight = m_nil;
         z->color = Color::Red;
@@ -518,40 +522,40 @@ namespace SR_UTILS_NS {
         InsertFixup(z);
         ++m_size;
         if (m_pMin == m_nil || m_cmp(z->key(), m_pMin->key())) m_pMin = z;
-        return { z, true };
+        return Pair<Node*, bool>(z, true);
     }
 
     // ---- public insert ------------------------------------------------------
 
     template<typename K, typename V, typename C>
-    std::pair<typename Map<K,V,C>::Iterator, bool>
+    Pair<typename Map<K,V,C>::Iterator, bool>
     Map<K,V,C>::insert(const ValueType& kv) {
         Node* z = NewNode();
         new (z) Node(kv.first, kv.second);
         auto [n, ok] = InsertAt(z);
         if (!ok) { z->~Node(); DelNode(z); }
-        return { { n, m_nil }, ok };
+        return Pair<Iterator, bool>(Iterator(n, m_nil), ok);
     }
 
     template<typename K, typename V, typename C>
-    std::pair<typename Map<K,V,C>::Iterator, bool>
+    Pair<typename Map<K,V,C>::Iterator, bool>
     Map<K,V,C>::insert(ValueType&& kv) {
         Node* z = NewNode();
         new (z) Node(std::move(const_cast<K&>(kv.first)), std::move(kv.second));
         auto [n, ok] = InsertAt(z);
         if (!ok) { z->~Node(); DelNode(z); }
-        return { { n, m_nil }, ok };
+        return Pair<Iterator, bool>(Iterator(n, m_nil), ok);
     }
 
     template<typename K, typename V, typename C>
     template<typename... Args>
-    std::pair<typename Map<K,V,C>::Iterator, bool>
+    Pair<typename Map<K,V,C>::Iterator, bool>
     Map<K,V,C>::emplace(Args&&... args) {
         Node* z = NewNode();
         new (z) Node(std::forward<Args>(args)...);
         auto [n, ok] = InsertAt(z);
         if (!ok) { z->~Node(); DelNode(z); }
-        return { { n, m_nil }, ok };
+        return Pair<Iterator, bool>(Iterator(n, m_nil), ok);
     }
 
     // ---- operator[] — inlined insert path for speed -------------------------

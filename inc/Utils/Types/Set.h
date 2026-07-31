@@ -27,6 +27,7 @@ namespace SR_UTILS_NS {
     public:
         using SizeType  = size_t;
         using ValueType = T;
+        using KeyType = T;
         using value_type = T;
         using key_type = T;
         static constexpr bool key_only = true;
@@ -58,6 +59,10 @@ namespace SR_UTILS_NS {
             using difference_type = std::ptrdiff_t;
 
             Iterator() noexcept = default;
+            Iterator(const Iterator&) noexcept = default;
+            Iterator(Iterator&&) noexcept = default;
+            Iterator& operator=(const Iterator&) noexcept = default;
+            Iterator& operator=(Iterator&&) noexcept = default;
             Iterator(Node* p, Node* nil) noexcept : m_p(p), m_nil(nil) { }
 
             SR_NODISCARD const T& operator*()  const noexcept { return m_p->value; }

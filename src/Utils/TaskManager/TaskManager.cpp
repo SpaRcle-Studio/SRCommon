@@ -190,7 +190,7 @@ namespace SR_UTILS_NS {
                 pTaskWithHighestPriority->Run();
                 if (pTaskWithHighestPriority->IsCompleted()) {
                     SR_LOCK_GUARD;
-                    m_results.insert(std::make_pair(pTaskWithHighestPriority->GetId(), pTaskWithHighestPriority->GetResult()));
+                    m_results.insert(SR_UTILS_NS::MakePair(pTaskWithHighestPriority->GetId(), pTaskWithHighestPriority->GetResult()));
                     m_ids.erase(pTaskWithHighestPriority->GetId());
                     auto&& pIt = std::ranges::find(m_tasks, pTaskWithHighestPriority); /// удаляем задачу из списка задач, так как она уже завершилась
                     if (pIt != m_tasks.end()) {
@@ -330,7 +330,7 @@ namespace SR_UTILS_NS {
             pCriticalTask->Run();
             if (pCriticalTask->IsCompleted()) {
                 SR_LOCK_GUARD;
-                m_results.insert(std::make_pair(pCriticalTask->GetId(), pCriticalTask->GetResult()));
+                m_results.insert(SR_UTILS_NS::MakePair(pCriticalTask->GetId(), pCriticalTask->GetResult()));
                 m_ids.erase(pCriticalTask->GetId());
             }
             else {

@@ -14,7 +14,7 @@ namespace SR_UTILS_NS {
         return id;
     }
 
-    SerializationId SerializationId::CreateFromString(const std::string_view text) noexcept {
+    SerializationId SerializationId::CreateFromString(const StringView text) noexcept {
         SerializationId id;
         SR_STRNCPY(id.name, text.data(), SR_MIN(text.size(), MaxNameLength - 1));
         id.name[MaxNameLength - 1] = '\0';
