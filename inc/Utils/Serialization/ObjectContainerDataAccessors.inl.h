@@ -258,7 +258,7 @@ template<typename MapType, typename T, typename U> struct ObjectDataAccessorMap 
                 Serialization::Load(deserializer, pair.second, secondId);
 
                 if (SR_UTILS_NS::Serialization::IsValidValue(pair.first) && SR_UTILS_NS::Serialization::IsValidValue(pair.second)) {
-                    value.insert(std::move(pair));
+                    value.insert(std::make_pair(std::move(pair.first), std::move(pair.second)));
                 }
             }
 
