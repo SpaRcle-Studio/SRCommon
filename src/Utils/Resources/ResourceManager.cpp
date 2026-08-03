@@ -332,8 +332,6 @@ namespace SR_UTILS_NS {
             return pFound;
         }
 
-        SR_DEBUG("ResourceManager::LoadResource() : loading \"{}\" resource with id \"{}\"", typeName, id);
-
         if (auto&& pIt = m_resourceLoaders.find(typeName); pIt != m_resourceLoaders.end()) {
             return pIt->second(id);
         }
