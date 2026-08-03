@@ -9,121 +9,168 @@
 #include <Utils/Resources/ResourceRef.h>
 #include <Utils/Math/Rect.h>
 #include <Utils/Math/AABB.h>
-#include <Utils/Debug.h>
 
 namespace SR_UTILS_NS::Reflection {
-    Value ValueSequenceContainerIterator::operator*() const {
-        return Value(m_iterator->as_ref());
-    }
-
-    InputIteratorPointer<Value> ValueSequenceContainerIterator::operator->() const {
-        return operator*();
-    }
-
-    void ValueSequenceContainer::Clear() {
-        m_storage.clear();
-    }
-
-    void ValueSequenceContainer::Resize(uint64_t size) {
-        if (static_cast<int64_t>(size) < 0) {
-            SR_ERROR("ValueSequenceContainer::Resize() : size is negative!");
-            return;
-        }
-        m_storage.resize(size);
-    }
-
-    void ValueSequenceContainer::Reserve(uint64_t size) {
-        if (static_cast<int64_t>(size) < 0) {
-            SR_ERROR("ValueSequenceContainer::Reserve() : size is negative!");
-            return;
-        }
-        m_storage.reserve(size);
-    }
-
-    ValueSequenceContainerIterator ValueSequenceContainer::Insert(ValueSequenceContainerIterator it, Value value) {
-        return ValueSequenceContainerIterator(m_storage.insert(it.m_iterator, value.m_storage));
-    }
-
-    ValueSequenceContainerIterator ValueSequenceContainer::Back() {
-        if (Empty()) {
-            return end();
-        }
-        auto it = end();
-        --it;
-        return it;
-    }
-
-    ValueSequenceContainerIterator ValueSequenceContainer::PushBack(Value value) {
-        return ValueSequenceContainerIterator(m_storage.insert(m_storage.end(), value.m_storage));
-    }
-
-    ValueSequenceContainerIterator ValueSequenceContainer::PushFront(Value value) {
-        return ValueSequenceContainerIterator(m_storage.insert(m_storage.begin(), value.m_storage));
-    }
-
+    ReflectedValue STUB_STORAGE;
 
     /// ----------------------------------------------------------------------------------------------------------------
 
-    Value ValueAssociativeContainerIterator::First() const {
-        return Value(m_iterator->first.as_ref());
-    }
-
-    Value ValueAssociativeContainerIterator::Second() const {
-        return Value(m_iterator->second.as_ref());
-    }
-
-    void ValueAssociativeContainer::Clear() {
-        m_storage.clear();
-    }
-
-    void ValueAssociativeContainer::Reserve(uint64_t size) {
-        m_storage.reserve(size);
-    }
-
-    Value ValueAssociativeContainer::GetValueType() const {
-        return Value(m_storage.value_type().construct());
-    }
-
-    Value ValueAssociativeContainer::GetMappedType() const {
-        return Value(m_storage.mapped_type().construct());
-    }
-
-    Value ValueAssociativeContainer::GetKeyType() const {
-        return Value(m_storage.key_type().construct());
-    }
-
-    bool ValueAssociativeContainer::Insert(const Value& key, const Value& value) {
-        return m_storage.insert(key.m_storage, value.m_storage);
-    }
-
-    void ValueAssociativeContainer::Erase(const Value& key) {
-        m_storage.erase(key.m_storage);
-    }
-
-    /// ----------------------------------------------------------------------------------------------------------------
-
-    Value::Value(entt::meta_any&& storage)
-        : m_storage(std::move(storage))
+    BaseContainerValueRef::BaseContainerValueRef(Value* pValue)
+        : m_value(pValue)
     { }
 
-    Value::Value() = default;
+    SizeType BaseContainerValueRef::Size() const {
+        auto&& vtable = m_value->GetTypeInfo().vtable.containerVTable;
+        return vtable.pSize(m_value->GetStorage());
+    }
 
-    Value::~Value() = default;
+    bool BaseContainerValueRef::Empty() const {
+        return Size() == 0;
+    }
+
+    void BaseContainerValueRef::Clear() {
+        auto&& vtable = m_value->GetTypeInfo().vtable.containerVTable;
+        vtable.pClear(m_value->GetStorage());
+    }
+
+    ReflectedContainerIterator BaseContainerValueRef::Begin() const {
+        auto&& vtable = m_value->GetTypeInfo().vtable.containerVTable;
+        ReflectedContainerIterator pIt = vtable.pBegin(m_value->GetStorage());
+        pIt.pContainer = m_value;
+        return pIt;
+    }
+
+    ReflectedContainerIterator BaseContainerValueRef::End() const {
+        auto&& vtable = m_value->GetTypeInfo().vtable.containerVTable;
+        ReflectedContainerIterator pIt = vtable.pEnd(m_value->GetStorage());
+        pIt.pContainer = m_value;
+        return pIt;
+    }
+
+    ReflectedContainerIterator BaseContainerValueRef::Erase(ReflectedContainerIterator pIt) {
+        auto&& vtable = m_value->GetTypeInfo().vtable.containerVTable;
+        auto newIt = vtable.pErase(m_value->GetStorage(), pIt);
+        newIt.pContainer = m_value;
+        return newIt;
+    }
+
+    /// ----------------------------------------------------------------------------------------------------------------
+
+    SequenceContainerValueRef::SequenceContainerValueRef(Value* pValue)
+        : BaseContainerValueRef(pValue)
+    { }
+
+    void SequenceContainerValueRef::Resize(SizeType newSize) {
+        auto&& vtable = m_value->GetTypeInfo().vtable.containerVTable;
+        vtable.pResize(m_value->GetStorage(), newSize, false);
+    }
+
+    Value SequenceContainerValueRef::Back() {
+        if (Size() == 0) {
+            SRHalt("SequenceContainerValueRef::Back() : container is empty!");
+            return Value();
+        }
+        auto&& vtable = m_value->GetTypeInfo().vtable.containerVTable;
+        auto&& iteratorVTable = m_value->GetTypeInfo().vtable.iteratorVTable;
+        auto pIt = vtable.pEnd(m_value->GetStorage());
+        iteratorVTable.pOffset(pIt, -1);
+        auto storage = iteratorVTable.pGetValue(m_value->GetStorage(), pIt);
+        Value value;
+        value.m_storage = storage;
+        value.m_typeInfo = CopyTypeInfo(m_value->GetTypeInfo().pNext[0]);
+        value.m_allocator = m_value->GetAllocator();
+        return value;
+    }
+
+    ReflectedContainerIterator SequenceContainerValueRef::Insert(ReflectedContainerIterator pIt, const Value& value) {
+        auto&& vtable = m_value->GetTypeInfo().vtable.containerVTable;
+        auto newIt = vtable.pInsert(m_value->GetStorage(), pIt, value.GetStorage(), STUB_STORAGE);
+        newIt.pContainer = m_value;
+        return newIt;
+    }
+
+    void SequenceContainerValueRef::PushBack(const Value& value) {
+        auto&& vtable = m_value->GetTypeInfo().vtable.containerVTable;
+        auto pIt = vtable.pEnd(m_value->GetStorage());
+        vtable.pInsert(m_value->GetStorage(), pIt, value.GetStorage(), STUB_STORAGE);
+    }
+
+    void SequenceContainerValueRef::PushFront(const Value& value) {
+        auto&& vtable = m_value->GetTypeInfo().vtable.containerVTable;
+        auto pIt = vtable.pBegin(m_value->GetStorage());
+        vtable.pInsert(m_value->GetStorage(), pIt, value.GetStorage(), STUB_STORAGE);
+    }
+
+    /// ----------------------------------------------------------------------------------------------------------------
+
+    AssociativeContainerValueRef::AssociativeContainerValueRef(Value* pValue)
+        : BaseContainerValueRef(pValue)
+    { }
+
+    ReflectedContainerIterator AssociativeContainerValueRef::Insert(const Value& key, const Value& value) {
+        auto&& vtable = m_value->GetTypeInfo().vtable.containerVTable;
+        auto newIt = vtable.pInsert(m_value->GetStorage(), ReflectedContainerIterator(), key.GetStorage(), value.GetStorage());
+        newIt.pContainer = m_value;
+        return newIt;
+    }
+
+    /// ----------------------------------------------------------------------------------------------------------------
+
+    Value::Value() {
+        m_allocator = IAllocator::GetDefaultAllocator();
+    }
+
+    Value::~Value() {
+        Destroy();
+    }
+
+    SequenceContainerValueRef Value::AsSequenceContainer() {
+        return SequenceContainerValueRef(this);
+    }
+
+    AssociativeContainerValueRef Value::AsAssociativeContainer() {
+        return AssociativeContainerValueRef(this);
+    }
+
+    void Value::Destroy() {
+        if (m_typeInfo) {
+            if (m_storage.storageType == ReflectedValueStorageType::Dynamic || m_storage.storageType == ReflectedValueStorageType::Embedded) {
+                if (auto&& pDestructor = m_typeInfo->vtable.pDestructor) {
+                    pDestructor(*m_allocator, m_storage);
+                }
+            }
+        }
+        FreeTypeInfo(m_typeInfo);
+        m_storage = {};
+        m_typeInfo = nullptr;
+        m_allocator = nullptr;
+    }
 
     Value::Value(const Value& other) {
-        if (other.IsRef()) {
-            m_storage = const_cast<entt::meta_any*>(&other.m_storage)->as_ref();
-        } else {
-            m_storage = other.m_storage;
-        }
+        *this = other;
+    }
+
+    Value::Value(Value&& other) noexcept {
+        *this = std::move(other);
     }
 
     Value& Value::operator=(const Value& other) noexcept {
         if (this != &other) {
+            Destroy();
+            m_typeInfo = CopyTypeInfo(other.m_typeInfo);
+            m_allocator = other.m_allocator;
+
             if (other.IsRef()) {
-                m_storage = const_cast<entt::meta_any*>(&other.m_storage)->as_ref();
-            } else {
                 m_storage = other.m_storage;
+            }
+            else if (m_typeInfo) {
+                m_storage = m_typeInfo->vtable.pConstructor(*m_allocator);
+                if (auto&& pCopy = other.GetTypeInfo().vtable.pCopy) {
+                    pCopy(other.m_storage, m_storage);
+                }
+            }
+            else {
+                m_storage = {};
             }
         }
         return *this;
@@ -131,379 +178,172 @@ namespace SR_UTILS_NS::Reflection {
 
     Value& Value::operator=(Value&& other) noexcept {
         if (this != &other) {
-            m_storage = other.IsRef() ? other.m_storage.as_ref() : other.m_storage;
+            Destroy();
+            m_storage = other.m_storage;
+            m_typeInfo = other.m_typeInfo;
+            m_allocator = other.m_allocator;
+            other.m_storage = {};
+            other.m_typeInfo = nullptr;
+            other.m_allocator = nullptr;
         }
         return *this;
-    }
-
-
-    Value Value::Ref() {
-        return Value(m_storage.as_ref());
     }
 
     Value Value::Copy() const {
         Value result;
-        result.m_storage = m_storage;
+        result.m_allocator = m_allocator;
+        result.m_typeInfo = CopyTypeInfo(m_typeInfo);
+        if (IsEmbedded()) {
+            result.m_storage = m_storage;
+        }
+        else {
+            result.m_storage = GetTypeInfo().vtable.pConstructor(*m_allocator);
+            if (auto&& pCopy = GetTypeInfo().vtable.pCopy) {
+                pCopy(m_storage, result.m_storage);
+            }
+        }
         return result;
     }
 
-    Value& Value::Detach() {
-        if (IsRef()) {
-            m_storage = entt::meta_any(m_storage);
-        }
-        return *this;
-    }
-
-    Value& Value::DetachIfConst() {
-        if (IsConst()) {
-            return Detach();
-        }
-        return *this;
-    }
-
     bool Value::IsRef() const {
-        return m_storage.base().policy() == entt::any_policy::cref || m_storage.base().policy() == entt::any_policy::ref;
-    }
-
-    bool Value::IsSequenceContainer() const {
-        return m_storage.type().is_sequence_container();
-    }
-
-    bool Value::IsAssociativeContainer() const {
-        return m_storage.type().is_associative_container();
-    }
-
-    bool Value::IsBitMap() const {
-        static auto meta = entt::meta_any(SR_UTILS_NS::Vector<bool>());
-        return GetTypeName() == meta.base().type().name();
-    }
-
-    bool Value::IsSmartPtr() const {
-        if (!IsClass() || !IsTemplate()) {
-            return false;
-        }
-
-        static auto meta = entt::meta_any(SR_HTYPES_NS::SharedPtr<uint64_t>());
-        static const std::string_view compare = meta.base().type().name().substr(0, meta.base().type().name().find('<'));
-
-        return GetTypeName().starts_with(compare);
-    }
-
-    bool Value::IsPointer() const {
-        return m_storage.type().is_pointer();
-    }
-
-    bool Value::IsString() const {
-        if (!IsClass()) {
-            return false;
-        }
-
-        static const auto meta = entt::meta_any(String());
-        static const std::string_view compare = meta.base().type().name();
-        return GetTypeName() == compare;
-    }
-
-    bool Value::IsStringView() const {
-        if (!IsClass()) {
-            return false;
-        }
-
-        static const auto meta = entt::meta_any(std::string_view());
-        static const std::string_view compare = meta.base().type().name();
-        return GetTypeName() == compare;
-    }
-
-    bool Value::IsStringAtom() const {
-        if (!IsClass()) {
-            return false;
-        }
-
-        static const auto meta = entt::meta_any(SR_UTILS_NS::StringAtom());
-        static const std::string_view compare = meta.base().type().name();
-        return GetTypeName() == compare;
-    }
-
-    bool Value::IsUnicodeString() const {
-        if (!IsClass()) {
-            return false;
-        }
-
-        static const auto meta = entt::meta_any(UnicodeString());
-        static const std::string_view compare = meta.base().type().name();
-        return GetTypeName() == compare;
-    }
-
-    bool Value::IsAABB() const {
-        if (!IsClass()) {
-            return false;
-        }
-
-        static const auto meta = entt::meta_any(SR_MATH_NS::AABB());
-        static const std::string_view compare = meta.base().type().name();
-        return GetTypeName() == compare;
-    }
-
-    bool Value::IsPath() const {
-        if (!IsClass()) {
-            return false;
-        }
-
-        static const auto meta = entt::meta_any(SR_UTILS_NS::Path());
-        static const std::string_view compare = meta.base().type().name();
-        return GetTypeName() == compare;
-    }
-
-    bool Value::IsRect() const {
-        if (!IsClass() || !IsTemplate()) {
-            return false;
-        }
-
-        static const auto meta = entt::meta_any(SR_MATH_NS::FRect());
-        static const std::string_view compare = meta.base().type().name().substr(0, meta.base().type().name().find('<') - 1);
-
-        return GetTypeName().starts_with(compare);
-    }
-
-    bool Value::IsQuaternion() const {
-        if (!IsClass() || IsTemplate()){
-            return false;
-        }
-
-        static const auto meta = entt::meta_any(SR_MATH_NS::Quaternion());
-        return GetTypeName() == meta.base().type().name();
-    }
-
-    bool Value::IsMathVector() const {
-        if (!IsClass() || !IsTemplate()) {
-            return false;
-        }
-
-        static const auto meta = entt::meta_any(SR_MATH_NS::FVector3());
-        static const std::string_view compare = meta.base().type().name().substr(0, meta.base().type().name().find('<') - 1);
-
-        return GetTypeName().starts_with(compare);
-    }
-
-    bool Value::IsFColor() const {
-        if (!IsClass() || IsTemplate()) {
-            return false;
-        }
-
-        static const auto meta = entt::meta_any(SR_MATH_NS::FColor());
-        static const std::string_view compare = meta.base().type().name();
-        return GetTypeName().starts_with(compare);
-    }
-
-    bool Value::IsMathSize() const {
-        if (!IsClass() || !IsTemplate()) {
-            return false;
-        }
-
-        static const auto meta = entt::meta_any(SR_MATH_NS::FSize2());
-        static const std::string_view compare = meta.base().type().name().substr(0, meta.base().type().name().find('<') - 1);
-
-        return GetTypeName().starts_with(compare);
-    }
-
-    bool Value::IsBool() const {
-        return m_storage.type().is_arithmetic() && GetTypeName() == "bool";
-    }
-
-    bool Value::IsArithmetic() const {
-        return m_storage.type().is_arithmetic();
-    }
-
-    bool Value::IsClass() const {
-        return m_storage.type().is_class();
-    }
-
-    bool Value::IsTemplate() const {
-        return m_storage.type().is_template_specialization();
+        return m_storage.storageType == ReflectedValueStorageType::Reference || m_storage.storageType == ReflectedValueStorageType::ConstReference;
     }
 
     bool Value::IsConst() const {
-        return m_storage.base().policy() == entt::any_policy::cref;
-    }
-
-    bool Value::IsEmbedded() const {
-        return m_storage.base().policy() == entt::any_policy::embedded;
+        return m_storage.storageType == ReflectedValueStorageType::ConstReference;
     }
 
     bool Value::IsDynamic() const {
-        return m_storage.base().policy() == entt::any_policy::dynamic;
+        return m_storage.storageType == ReflectedValueStorageType::Dynamic;
     }
 
-    std::string_view Value::GetTypeName() const {
-        return m_storage.base().type().name();
+    bool Value::IsEmbedded() const {
+        return m_storage.storageType == ReflectedValueStorageType::Embedded;
     }
 
-    std::string_view Value::GetSharedPtrType() const {
-        SRAssert2(IsSmartPtr(), "Value::GetSharedPtrType() : value is not a smart pointer!");
+    ReflectedValue& Value::GetStorage() {
+        return m_storage;
+    }
 
-        std::string_view type = GetTypeName();
-
-        const uint64_t start = type.find('<');
-        const uint64_t end = type.rfind('>');
-
-        if (start == std::string_view::npos || end == std::string_view::npos) {
-            SRHalt("Value::GetSharedPtrType() : failed to find type!");
-            return {};
-        }
-
-        return type.substr(start + 1, end - start - 1);
+    const ReflectedValue& Value::GetStorage() const {
+        return m_storage;
     }
 
     Value::operator bool() const noexcept {
-        return static_cast<bool>(m_storage);
+        return m_typeInfo;
     }
 
-    uint64_t Value::SizeOf() const {
-        return m_storage.type().size_of();
-    }
-
-    const void* Value::Data() const {
-        return m_storage.base().data();
-    }
-
-    void* Value::Data() {
-        return m_storage.base().data();
+    SizeType Value::SizeOf() const {
+        if (!m_typeInfo) {
+            return 0;
+        }
+        return GetTypeInfo().vtable.pSizeOfAlign().first;
     }
 
     bool Value::IsSigned() const {
-        return m_storage.type().is_signed();
-    }
-
-    bool Value::IsEnum() const {
-        return m_storage.type().is_enum();
+        return IsReflectedTypeSigned(GetTypeInfo().detailedType);
     }
 
     bool Value::IsIntegral() const {
-        return m_storage.type().is_integral();
+        return IsReflectedTypeIntegral(GetTypeInfo().detailedType);
     }
 
-    std::string_view Value::GetEnumType() const {
-        std::string_view type = GetTypeName();
+    bool Value::IsSharedPtr() const {
+        auto&& typeInfo = GetTypeInfo();
+        return typeInfo.category == ReflectedCategoryType::Container && typeInfo.detailedType == "SharedPtr";
+    }
 
-        /// format is: enum Namespace::second_namespace::EnumName or enum EnumName
+    const void* Value::Data() const {
+        return m_storage.GetData();
+    }
 
-        auto pos = type.rfind(':');
-        if (pos == std::string_view::npos) {
-            pos = type.find(' ');
-        }
-        if (pos == std::string_view::npos) {
-            return {};
-        }
-        return type.substr(pos + 1, type.size() - pos - 1);
+    void* Value::Data() {
+        return m_storage.GetData();
     }
 
     SRClass* Value::GetSRClass() const {
         if (SR_HTYPES_NS::SharedPtrBase* pShared = GetSharedPtrBase()) {
             return pShared->GetSRClass();
         }
-        return const_cast<SRClass*>(static_cast<const SRClass*>(Data()));
+        auto&& typeInfo = GetTypeInfo();
+        if (typeInfo.category == ReflectedCategoryType::Container) {
+            if (typeInfo.detailedType == "EntityRef") {
+                auto&& pController = GetTypeInfo().vtable.pGetTypeController(const_cast<ReflectedValue&>(m_storage));
+                return static_cast<EntityRefBase*>(pController);
+            }
+            if (typeInfo.detailedType == "ResourceRef") {
+                auto&& pController = GetTypeInfo().vtable.pGetTypeController(const_cast<ReflectedValue&>(m_storage));
+                return static_cast<ResourceRefBase*>(pController);
+            }
+        }
+        if (typeInfo.category != ReflectedCategoryType::Object) {
+            return nullptr;
+        }
+        auto&& pController = GetTypeInfo().vtable.pGetTypeController(const_cast<ReflectedValue&>(m_storage));
+        return static_cast<SRClass*>(pController);
+    }
+
+    StringAtom Value::GetEnumType() const {
+        return GetTypeInfo().detailedType;
     }
 
     SR_HTYPES_NS::SharedPtrBase* Value::GetSharedPtrBase() const {
-        if (IsSmartPtr()) {
-            return const_cast<SR_HTYPES_NS::SharedPtrBase*>(static_cast<const SR_HTYPES_NS::SharedPtrBase*>(Data()));
+        auto&& typeInfo = GetTypeInfo();
+        if (typeInfo.category != ReflectedCategoryType::Container || typeInfo.detailedType != "SharedPtr") {
+            return nullptr;
         }
-        return nullptr;
-    }
-
-    ValueSequenceContainer Value::AsSequenceContainer() {
-        return ValueSequenceContainer(m_storage.as_sequence_container());
-    }
-
-    ValueSequenceContainer Value::AsSequenceContainer() const {
-        return ValueSequenceContainer(m_storage.as_sequence_container());
-    }
-
-    ValueAssociativeContainer Value::AsAssociativeContainer() {
-        return ValueAssociativeContainer(m_storage.as_associative_container());
-    }
-
-    ValueAssociativeContainer Value::AsAssociativeContainer() const {
-        return ValueAssociativeContainer(m_storage.as_associative_container());
-    }
-
-    bool Value::IsOptional() const {
-        if (!IsClass() || !IsTemplate()) {
-            return false;
-        }
-
-        static auto meta = entt::meta_any(SR_UTILS_NS::Optional<uint64_t>());
-        static const std::string_view compare = meta.base().type().name().substr(0, meta.base().type().name().find('<'));
-
-        return GetTypeName().starts_with(compare);
-    }
-
-    bool Value::IsEntityRef() const {
-        if (!IsClass() || !IsTemplate()) {
-            return false;
-        }
-
-        static const auto meta = entt::meta_any(SR_UTILS_NS::EntityRef<void>());
-        static const std::string_view compare = meta.base().type().name().substr(0, meta.base().type().name().find('<') - 1);
-
-        return GetTypeName().starts_with(compare);
-    }
-
-
-    bool Value::IsResourceRef() const {
-        if (!IsClass() || !IsTemplate()) {
-            return false;
-        }
-
-        static const auto meta = entt::meta_any(SR_UTILS_NS::ResourceRef<void>());
-        static const std::string_view compare = meta.base().type().name().substr(0, meta.base().type().name().find('<') - 1);
-
-        return GetTypeName().starts_with(compare);
+        auto&& pController = GetTypeInfo().vtable.pGetTypeController(const_cast<ReflectedValue&>(m_storage));
+        return static_cast<SR_HTYPES_NS::SharedPtrBase*>(pController);
     }
 
     SR_UTILS_NS::OptionalBase* Value::GetOptionalBase() const {
-        if (IsOptional()) {
-            return const_cast<SR_UTILS_NS::OptionalBase*>(static_cast<const SR_UTILS_NS::OptionalBase*>(Data()));
+        auto&& typeInfo = GetTypeInfo();
+        if (typeInfo.category != ReflectedCategoryType::Container || typeInfo.detailedType != "Optional") {
+            return nullptr;
         }
-        return nullptr;
+        auto&& pController = GetTypeInfo().vtable.pGetTypeController(const_cast<ReflectedValue&>(m_storage));
+        return static_cast<SR_UTILS_NS::OptionalBase*>(pController);
+    }
+
+    const TypeInfo& Value::GetTypeInfo() const {
+        static TypeInfo unknownTypeInfo;
+        return m_typeInfo ? *m_typeInfo : unknownTypeInfo;
     }
 
     ReflectedCategoryType Value::GetType() const {
         SR_TRACY_ZONE;
+        return m_typeInfo ? m_typeInfo->category : ReflectedCategoryType::Unknown;
+    }
 
-        /*if (IsSequenceContainer()) {
-            return ReflectedType::SequenceContainer;
-        }
-        else if (IsAssociativeContainer()) {
-            return ReflectedType::AssociativeContainer;
-        }
-        else if (IsBitMap()) {
-            return ReflectedType::BitMap;
-        }
-        else if (IsSmartPtr()) {
-            return ReflectedType::SmartPtr;
-        }
-        else if (IsPointer()) {
-            return ReflectedType::Pointer;
-        }
-        else if (IsOptional()) {
-            return ReflectedType::Optional;
-        }
-        else if (IsEntityRef()) {
-            return ReflectedType::EntityRef;
-        }
-        else if (IsResourceRef()) {
-            return ReflectedType::ResourceRef;
-        }
-        else if (GetSRClass()) {
-            return ReflectedType::Object;
-        }
-        else if (IsEnum()) {
-            return ReflectedType::Enum;
-        }
-        else if (IsArithmetic()) {
-            return ReflectedType::Arithmetic;
-        }*/
+    bool Value::IsValid() const {
+        return m_typeInfo && m_typeInfo->category != ReflectedCategoryType::Unknown;
+    }
 
-        return ReflectedCategoryType::Unknown;
+    IAllocator* Value::GetAllocator() const {
+        return m_allocator;
+    }
+
+    Value Value::CreateDefault(TypeInfo* pTypeInfo) {
+        Value value;
+        value.m_allocator = IAllocator::GetDefaultAllocator();
+        value.m_typeInfo = CopyTypeInfo(pTypeInfo);
+        if (pTypeInfo) {
+            value.m_storage = pTypeInfo->vtable.pConstructor(*value.m_allocator);
+        }
+        return value;
+    }
+
+    Value Value::Ref() const {
+        Value value;
+        value.m_allocator = m_allocator;
+        value.m_typeInfo = CopyTypeInfo(m_typeInfo);
+        if (IsRef()) {
+            value.m_storage = m_storage;
+        }
+        else {
+            value.m_storage.SetData(const_cast<void*>(m_storage.GetData()));
+            value.m_storage.storageType = IsConst() ? ReflectedValueStorageType::ConstReference : ReflectedValueStorageType::Reference;
+        }
+        return value;
     }
 }

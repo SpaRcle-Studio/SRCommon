@@ -38,8 +38,9 @@ namespace SR_UTILS_NS::Reflection {
             static const StringAtom detailedType = "Vector";
             pTypeInfo->detailedType = detailedType;
             pTypeInfo->category = ReflectedCategoryType::Container;
-            pTypeInfo->pNext = AllocateTypeInfo(allocator, 1);
-            DetermineTypeInfoAccessor<T>::Determine(allocator, pTypeInfo->pNext);
+            pTypeInfo->pNext[0] = AllocateTypeInfo();
+            DetermineTypeInfoAccessor<T>::Determine(allocator, pTypeInfo->pNext[0]);
+            pTypeInfo->vtable.pSizeOfAlign = &ReflectedTypeTemplateSizeOfAlign<Vector<T>>;
             pTypeInfo->vtable.pConstructor = &ReflectedTypeTemplateConstructor<Vector<T>>;
             pTypeInfo->vtable.pDestructor = &ReflectedTypeTemplateDestructor<Vector<T>>;
             pTypeInfo->vtable.pCopy = &ReflectedTypeTemplateCopy<Vector<T>>;
@@ -48,11 +49,12 @@ namespace SR_UTILS_NS::Reflection {
             pTypeInfo->vtable.containerVTable.pSize = &ReflectedTypeContainerSize<Vector<T>>;
             pTypeInfo->vtable.containerVTable.pBegin = &ReflectedTypeContainerBegin<Vector<T>>;
             pTypeInfo->vtable.containerVTable.pEnd = &ReflectedTypeContainerEnd<Vector<T>>;
-            pTypeInfo->vtable.containerVTable.pGetValue = &ReflectedTypeContainerIteratorGetValue<Vector<T>>;
             pTypeInfo->vtable.containerVTable.pResize = &ReflectedTypeVectorResize<T>;
             pTypeInfo->vtable.containerVTable.pInsert = &ReflectedTypeVectorInsert<T>;
             pTypeInfo->vtable.containerVTable.pErase = &ReflectedTypeContainerErase<Vector<T>>;
             pTypeInfo->vtable.containerVTable.pFind = &ReflectedTypeVectorFind<T>;
+            pTypeInfo->vtable.iteratorVTable.pGetValue = &ReflectedTypeContainerIteratorGetValue<Vector<T>>;
+            pTypeInfo->vtable.iteratorVTable.pOffset = &ReflectedTypeContainerIteratorOffset<Vector<T>>;
         }
     };
 }

@@ -48,6 +48,14 @@ namespace SR_MATH_NS {
             }
             return (v / 100.f) * parentSize;
         }
+
+        bool operator==(const Size<T>& other) const noexcept {
+            return v == other.v && metric == other.metric;
+        }
+
+        bool operator!=(const Size<T>& other) const noexcept {
+            return !(*this == other);
+        }
     };
 
     template<typename T> struct Size2 {
@@ -85,6 +93,15 @@ namespace SR_MATH_NS {
             height.v = size.y;
             width.metric = SizeMetric::Px;
             height.metric = SizeMetric::Px;
+        }
+
+        bool operator==(const Size2<T>& other) const noexcept {
+            return width.v == other.width.v && width.metric == other.width.metric &&
+                   height.v == other.height.v && height.metric == other.height.metric;
+        }
+
+        bool operator!=(const Size2<T>& other) const noexcept {
+            return !(*this == other);
         }
     };
 

@@ -5,7 +5,7 @@
 #ifndef SR_ENGINE_COMMON_FLAT_HASH_MAP_H
 #define SR_ENGINE_COMMON_FLAT_HASH_MAP_H
 
-#include <Utils/stdInclude.h>
+#include <Utils/Types/Pair.h>
 
 namespace SR_HTYPES_NS {
     template<typename Key, typename Value> class FlatHashMap {
@@ -18,6 +18,9 @@ namespace SR_HTYPES_NS {
         using Iterator = typename Impl::iterator;
         using ConstIterator = typename Impl::const_iterator;
         using value_type = typename std::pair<const Key, Value>;
+        using ValueType = typename std::pair<const Key, Value>;
+        using KeyType = Key;
+        using MappedType = Value;
 
     public:
         void clear() { m_map.clear(); }
@@ -40,20 +43,23 @@ namespace SR_HTYPES_NS {
         Iterator erase(ConstIterator first, ConstIterator last) { return m_map.erase(first, last); }
         void reserve(size_t new_capacity) { m_map.reserve(new_capacity); }
 
-        template<typename... Args> std::pair<Iterator, bool> emplace(Args&&... args) {
-            return m_map.emplace(std::forward<Args>(args)...);
+        template<typename... Args> Pair<Iterator, bool> emplace(Args&&... args) {
+            auto&& v = m_map.emplace(std::forward<Args>(args)...);
+            return { v.first, v.second };
         }
 
         template<typename... Args> Iterator emplace_hint(ConstIterator hint, Args&&... args) {
             return m_map.emplace_hint(hint, std::forward<Args>(args)...);
         }
 
-        template<typename... Args> std::pair<Iterator, bool> try_emplace(const Key& key, Args&&... args) {
-            return m_map.try_emplace(key, std::forward<Args>(args)...);
+        template<typename... Args> Pair<Iterator, bool> try_emplace(const Key& key, Args&&... args) {
+            auto&& v = m_map.try_emplace(key, std::forward<Args>(args)...);
+            return { v.first, v.second };
         }
 
-        template<typename... Args> std::pair<Iterator, bool> try_emplace(Key&& key, Args&&... args) {
-            return m_map.try_emplace(std::move(key), std::forward<Args>(args)...);
+        template<typename... Args> Pair<Iterator, bool> try_emplace(Key&& key, Args&&... args) {
+            auto&& v = m_map.try_emplace(std::move(key), std::forward<Args>(args)...);
+            return { v.first, v.second };
         }
 
         template<typename... Args> Iterator try_emplace_hint(ConstIterator hint, const Key& key, Args&&... args) {
@@ -64,8 +70,14 @@ namespace SR_HTYPES_NS {
             return m_map.try_emplace_hint(hint, std::move(key), std::forward<Args>(args)...);
         }
 
-        template<typename... Args> std::pair<Iterator, bool> insert(Args&&... args) {
-            return m_map.insert(std::forward<Args>(args)...);
+        template<typename... Args> Pair<Iterator, bool> insert(Args&&... args) {
+            auto&& v = m_map.insert(std::forward<Args>(args)...);
+            return { v.first, v.second };
+        }
+
+        template<typename... Args> Pair<Iterator, bool> insert(Key&& key, Args&&... args) {
+            auto&& v = m_map.insert(std::forward<Key>(key), std::forward<Args>(args)...);
+            return { v.first, v.second };
         }
 
         template<typename... Args> Iterator insert(ConstIterator hint, Args&&... args) {

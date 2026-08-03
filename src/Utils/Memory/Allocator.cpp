@@ -113,8 +113,6 @@ namespace SR_UTILS_NS {
     }
 
     MonotonicAllocator::Chunk* MonotonicAllocator::CreateChunk(SizeType size) {
-        SR_TRACY_ZONE;
-
         auto&& chunk = (Chunk*)SRMalloc(sizeof(Chunk));
         new (chunk) Chunk();
 

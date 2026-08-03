@@ -157,7 +157,6 @@ namespace SR_UTILS_NS {
         return std::span<const SR_UTILS_NS::Reflection::Property>();
     }
 
-
     std::span<const SR_UTILS_NS::Reflection::Method> SRClassMeta::GetMethods() const noexcept {
         return std::span<const SR_UTILS_NS::Reflection::Method>();
     }

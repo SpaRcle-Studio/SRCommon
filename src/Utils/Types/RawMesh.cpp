@@ -146,7 +146,7 @@ namespace SR_HTYPES_NS {
         return m_sceneStructure.GetMeshes().size();
     }
 
-    std::string_view RawMesh::GetGeometryName(uint32_t id) const {
+    StringView RawMesh::GetGeometryName(uint32_t id) const {
         if (GetResourceLoadState() == IResource::LoadState::Error) {
             return {};
         }
@@ -156,7 +156,7 @@ namespace SR_HTYPES_NS {
             return m_scene->mMeshes[id]->mName.C_Str();
         }
     #endif
-        return std::string_view();
+        return StringView();
     }
 
     const SR_UTILS_NS::Vector<SR_MATH_NS::Matrix4x4>& RawMesh::GetBoneOffsetMatrices(uint32_t id) const {

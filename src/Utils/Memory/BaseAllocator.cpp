@@ -33,13 +33,8 @@ namespace SR_UTILS_NS {
     }
 
     IAllocator* IAllocator::GetDefaultAllocator() {
-        const static SR_UTILS_NS::StringAtom defaultAllocatorName = "DefaultAllocator";
-        auto&& manager = AllocatorManager::Instance();
-        if (auto&& pAllocator = manager.GetAllocator(defaultAllocatorName)) {
-            return pAllocator;
-        }
-        manager.RegisterAllocator(defaultAllocatorName, new DefaultAllocator());
-        return manager.GetAllocator(defaultAllocatorName);
+        static DefaultAllocator defaultAllocator;
+        return &defaultAllocator;
     }
 }
 

@@ -7,11 +7,139 @@
 #include <Utils/Types/Optional.h>
 #include <Utils/Types/UnicodeString.h>
 #include <Utils/FileSystem/Path.h>
+#include <Utils/Memory/Allocator.h>
+#include <Utils/Platform/Platform.h>
 
 namespace SR_UTILS_NS::Reflection {
+    Value ReflectedContainerIterator::operator*() const {
+        auto pNonConstContainer = const_cast<Value*>(pContainer);
+        ReflectedValue reflectedValue = pContainer->GetTypeInfo().vtable.iteratorVTable.pGetValue(pNonConstContainer->GetStorage(), *this);
+        Value value;
+        value.m_storage = reflectedValue;
+        value.m_typeInfo = CopyTypeInfo(pContainer->GetTypeInfo().pNext[0]);
+        return value;
+    }
+
+    Value ReflectedContainerIterator::operator->() const {
+        return **this;
+    }
+
+    ReflectedContainerIterator ReflectedContainerIterator::operator+(int64_t offset) const {
+        ReflectedContainerIterator pIt = pContainer->GetTypeInfo().vtable.iteratorVTable.pOffset(*this, offset);
+        pIt.pContainer = pContainer;
+        return pIt;
+    }
+
+    ReflectedContainerIterator& ReflectedContainerIterator::operator++() {
+        *this = *this + 1;
+        return *this;
+    }
+
+    ReflectedContainerIterator ReflectedContainerIterator::operator-(int64_t offset) const {
+        ReflectedContainerIterator pIt = pContainer->GetTypeInfo().vtable.iteratorVTable.pOffset(*this, -offset);
+        pIt.pContainer = pContainer;
+        return pIt;
+    }
+
+    ReflectedContainerIterator& ReflectedContainerIterator::operator--() {
+        *this = *this - 1;
+        return *this;
+    }
+
+    bool ReflectedContainerIterator::operator==(const ReflectedContainerIterator& other) const noexcept {
+        return memcmp(data, other.data, sizeof(data)) == 0;
+    }
+
+    bool ReflectedContainerIterator::operator!=(const ReflectedContainerIterator& other) const noexcept {
+        return !(*this == other);
+    }
+
+    Value ReflectedContainerIterator::First() const {
+        if (!IsMapIterator()) {
+            return **this;
+        }
+        auto&& iteratorValue = (**this);
+        auto&& pairVTable = pContainer->GetTypeInfo().pNext[0]->vtable.pairVTable;
+        ReflectedValue reflectedValue = pairVTable.pGetPairValue(iteratorValue.GetStorage(), true);
+        Value value;
+        value.m_storage = reflectedValue;
+        value.m_typeInfo = CopyTypeInfo(pContainer->GetTypeInfo().pNext[0]->pNext[0]);
+        return value;
+    }
+
+    Value ReflectedContainerIterator::Second() const {
+        if (!IsMapIterator()) {
+            SRHalt("ReflectedContainerIterator::Second() : not a map iterator!");
+            return Value();
+        }
+        auto&& iteratorValue = (**this);
+        auto&& pairVTable = pContainer->GetTypeInfo().pNext[0]->vtable.pairVTable;
+        ReflectedValue reflectedValue = pairVTable.pGetPairValue(iteratorValue.GetStorage(), false);
+        Value value;
+        value.m_storage = reflectedValue;
+        value.m_typeInfo = CopyTypeInfo(pContainer->GetTypeInfo().pNext[0]->pNext[1]);
+        return value;
+    }
+
+    bool ReflectedContainerIterator::IsMapIterator() const {
+        return pContainer && pContainer->GetTypeInfo().category == ReflectedCategoryType::Container &&
+               (pContainer->GetTypeInfo().detailedType == "Map" || pContainer->GetTypeInfo().detailedType == "FlatHashMap");
+    }
+
+    bool IsReflectedTypeSigned(StringView type) {
+        return type == "int8" || type == "int16" || type == "int32" || type == "int64";
+    }
+
+    bool IsReflectedTypeIntegral(StringView type) {
+        return type == "int8" || type == "int16" || type == "int32" || type == "int64" ||
+               type == "uint8" || type == "uint16" || type == "uint32" || type == "uint64";
+    }
+
+    SizeType GetReflectedTypeSize(StringView type) {
+        if (type == "int8" || type == "uint8") {
+            return sizeof(uint8_t);
+        }
+        else if (type == "int16" || type == "uint16") {
+            return sizeof(uint16_t);
+        }
+        else if (type == "int32" || type == "uint32") {
+            return sizeof(uint32_t);
+        }
+        else if (type == "int64" || type == "uint64") {
+            return sizeof(uint64_t);
+        }
+        else if (type == "float") {
+            return sizeof(float);
+        }
+        else if (type == "double") {
+            return sizeof(double);
+        }
+        else if (type == "bool") {
+            return sizeof(bool);
+        }
+        else if (type == "Path") {
+            return sizeof(Path);
+        }
+        else if (type == "String") {
+            return sizeof(String);
+        }
+        else if (type == "StringView") {
+            return sizeof(StringView);
+        }
+        else if (type == "StringAtom") {
+            return sizeof(StringAtom);
+        }
+        else if (type == "UnicodeString") {
+            return sizeof(UnicodeString);
+        }
+
+        SRHalt("GetReflectedTypeSize() : unknown reflected type: {}", type);
+        return 0;
+    }
+
     ReflectedValue ReflectedValue::MakeFromPointer(void* pData, ReflectedValueStorageType storageType) {
         ReflectedValue value;
-        value.GetData() = pData;
+        value.SetData(pData);
         value.storageType = storageType;
         return value;
     }
@@ -34,22 +162,38 @@ namespace SR_UTILS_NS::Reflection {
         return *std::launder(reinterpret_cast<int64_t*>(storage.data));
     }
 
-    void*& ReflectedValue::GetData() {
-        return *std::launder(reinterpret_cast<void**>(storage.data));
+    int64_t ReflectedValue::GetNumeric() const {
+        return *std::launder(reinterpret_cast<const int64_t*>(storage.data));
     }
 
     const void* ReflectedValue::GetData() const {
-        return *std::launder(reinterpret_cast<void* const*>(storage.data));
+        if (storageType == ReflectedValueStorageType::Dynamic || storageType == ReflectedValueStorageType::Reference || storageType == ReflectedValueStorageType::ConstReference) {
+            return *std::launder(reinterpret_cast<void* const*>(storage.data));
+        }
+        return &storage.data[0];
+    }
+
+    void* ReflectedValue::GetData() {
+        if (storageType == ReflectedValueStorageType::Dynamic || storageType == ReflectedValueStorageType::Reference || storageType == ReflectedValueStorageType::ConstReference) {
+            return *std::launder(reinterpret_cast<void**>(storage.data));
+        }
+        return &storage.data[0];
+    }
+
+    void ReflectedValue::SetData(void* pData) {
+        *std::launder(reinterpret_cast<void**>(storage.data)) = pData;
     }
 
     bool TypeInfo::operator==(const TypeInfo& other) const noexcept {
         if (category != other.category || detailedType != other.detailedType && detailedSize != other.detailedSize) {
             return false;
         }
-        if (pNext && other.pNext) {
-            return *pNext == *other.pNext;
+        for (size_t i = 0; i < 2; ++i) {
+            if (pNext[i] != other.pNext[i]) {
+                return false;
+            }
         }
-        return pNext == other.pNext;
+        return true;
     }
 
     bool TypeInfo::operator!=(const TypeInfo& other) const noexcept {
@@ -108,48 +252,103 @@ namespace SR_UTILS_NS::Reflection {
     template<> struct DetermineTypeName<SR_MATH_NS::BVector4> { static StringAtom Get() { static StringAtom name = "bool"; return name; } };
     template<> struct DetermineTypeName<SR_MATH_NS::BVector6> { static StringAtom Get() { static StringAtom name = "bool"; return name; } };
 
-    TypeInfo* AllocateTypeInfo(IAllocator& allocator, uint16_t count) {
-        auto pTypeInfo = static_cast<TypeInfo*>(allocator.Allocate(sizeof(TypeInfo) * count, alignof(TypeInfo)));
-        for (uint16_t i = 0; i < count; ++i) {
-            new (&pTypeInfo[i]) TypeInfo();
+    struct TypeInfoPool {
+        SR_UTILS_NS::MonotonicAllocator allocator;
+        Vector<TypeInfo*> available;
+        uint64_t allocatedCount = 0;
+        std::mutex mutex;
+        TypeInfoPool()
+            : allocator(sizeof(TypeInfo) * 1024)
+            , available()
+        { }
+        ~TypeInfoPool() = default;
+    };
+
+    TypeInfoPool* g_typeInfoPool = nullptr;
+
+    TypeInfo* AllocateTypeInfo() {
+        if (!g_typeInfoPool) SR_UNLIKELY_ATTRIBUTE {
+            g_typeInfoPool = new TypeInfoPool();
         }
-        return pTypeInfo;
+
+        std::lock_guard<std::mutex> lock(g_typeInfoPool->mutex);
+
+        if (g_typeInfoPool->available.empty()) {
+            g_typeInfoPool->allocatedCount++;
+            auto pTypeInfo = g_typeInfoPool->allocator.Allocate(sizeof(TypeInfo), alignof(TypeInfo));
+            new (pTypeInfo) TypeInfo();
+            return reinterpret_cast<TypeInfo*>(pTypeInfo);
+        }
+        else {
+            auto pTypeInfo = g_typeInfoPool->available.back();
+            memset(pTypeInfo, 0, sizeof(TypeInfo));
+            g_typeInfoPool->available.pop_back();
+            return pTypeInfo;
+        }
     }
 
-    template<typename T> ReflectedValue ReflectedTypeInlineConstructor(IAllocator&) {
-        ReflectedValue reflectedValue;
-        new (&reflectedValue.storage.data) T();
-        reflectedValue.storageType = ReflectedValueStorageType::Embedded;
-        return reflectedValue;
+    void FreeTypeInfo(TypeInfo* pTypeInfo) {
+        if (!pTypeInfo) {
+            return;
+        }
+        if (!g_typeInfoPool) SR_UNLIKELY_ATTRIBUTE {
+            SR_PLATFORM_NS::WriteConsoleError("FreeTypeInfo() : TypeInfoPool is not initialized!");
+            SR_PLATFORM_NS::Terminate(true);
+        }
+        FreeTypeInfo(pTypeInfo->pNext[0]);
+        FreeTypeInfo(pTypeInfo->pNext[1]);
+        std::lock_guard<std::mutex> lock(g_typeInfoPool->mutex);
+        g_typeInfoPool->available.push_back(pTypeInfo);
     }
 
-    template<typename T> void ReflectedTypeInlineDestructor(IAllocator&, ReflectedValue& value) {
-        auto pValue = reinterpret_cast<T*>(&value.GetData());
-        pValue->~T();
+    TypeInfo* CopyTypeInfo(TypeInfo* pTypeInfo) {
+        if (!pTypeInfo) {
+            return nullptr;
+        }
+        auto pNewTypeInfo = AllocateTypeInfo();
+        *pNewTypeInfo = *pTypeInfo;
+        pNewTypeInfo->pNext[0] = CopyTypeInfo(pTypeInfo->pNext[0]);
+        pNewTypeInfo->pNext[1] = CopyTypeInfo(pTypeInfo->pNext[1]);
+        return pNewTypeInfo;
     }
 
-    template<typename T> void ReflectedTypeInlineCopy(ReflectedValue& from, ReflectedValue& to) {
-        auto pFrom = reinterpret_cast<T*>(&from.GetData());
-        auto pTo = reinterpret_cast<T*>(&to.GetData());
+    void DestroyTypeInfoPool() {
+        if (!g_typeInfoPool) {
+            return;
+        }
+        delete g_typeInfoPool;
+        g_typeInfoPool = nullptr;
+    }
+
+    template<typename T> void ReflectedTypeInlineCopy(const ReflectedValue& from, ReflectedValue& to) {
+        auto pFrom = reinterpret_cast<const T*>(from.GetData());
+        auto pTo = reinterpret_cast<T*>(to.GetData());
         *pTo = *pFrom;
     }
 
     template<typename T> void ReflectedTypeInlineMove(ReflectedValue& from, ReflectedValue& to) {
-        auto pFrom = reinterpret_cast<T*>(&from.GetData());
-        auto pTo = reinterpret_cast<T*>(&to.GetData());
+        auto pFrom = reinterpret_cast<T*>(from.GetData());
+        auto pTo = reinterpret_cast<T*>(to.GetData());
         *pTo = std::move(*pFrom);
     }
 
     template<typename T> ReflectedValue ReflectedTypeConstructor(IAllocator& allocator) {
+        if constexpr (sizeof(T) <= ReflectedValueStorageSize) {
+            ReflectedValue reflectedValue;
+            new(&reflectedValue.storage.data) T();
+            return ReflectedValue::MakeFromInlineData(reflectedValue.storage, ReflectedValueStorageType::Embedded);
+        }
         auto pValue = static_cast<T*>(allocator.Allocate(sizeof(T), alignof(T)));
         new (pValue) T();
-        return ReflectedValue::MakeFromPointer(pValue, ReflectedValueStorageType::Embedded);
+        return ReflectedValue::MakeFromPointer(pValue, ReflectedValueStorageType::Dynamic);
     }
 
     template<typename T> void ReflectedTypeDestructor(IAllocator& allocator, ReflectedValue& value) {
         auto pValue = static_cast<T*>(value.GetData());
         pValue->~T();
-        allocator.Free(pValue, sizeof(T), alignof(T));
+        if constexpr (sizeof(T) > ReflectedValueStorageSize) {
+            allocator.Free(pValue, sizeof(T), alignof(T));
+        }
     }
 
     template<typename T> void ReflectedTypeCopy(ReflectedValue& from, ReflectedValue& to) {
@@ -188,16 +387,22 @@ namespace SR_UTILS_NS::Reflection {
         return ReflectedValue::MakeFromNumeric(uint64_t(), ReflectedValueStorageType::Embedded);
     }
 
-    void ArithmeticTypeCopy(ReflectedValue& from, ReflectedValue& to) {
-        to.GetNumeric() = from.GetNumeric();
+    void ArithmeticTypeCopy(const ReflectedValue& from, ReflectedValue& to) {
+        void* pFrom = const_cast<void*>(from.GetData());
+        void* pTo = to.GetData();
+        memcpy(pTo, pFrom, sizeof(uint64_t));
     }
 
     void ArithmeticTypeMove(ReflectedValue& from, ReflectedValue& to) {
-        to.GetNumeric() = from.GetNumeric();
-        from.GetNumeric() = uint64_t();
+        void* pFrom = from.GetData();
+        void* pTo = to.GetData();
+        memcpy(pTo, pFrom, sizeof(uint64_t));
+        memset(pFrom, 0, sizeof(uint64_t));
     }
 
     template<typename T> void DetermineTypeInfoRegistered(IAllocator& allocator, TypeInfo* pTypeInfo) {
+        pTypeInfo->vtable.pSizeOfAlign = &ReflectedTypeTemplateSizeOfAlign<T>;
+
         if constexpr (std::is_integral_v<T> || std::is_floating_point_v<T> || std::is_same_v<T, bool>) {
             pTypeInfo->category = ReflectedCategoryType::Arithmetic;
             pTypeInfo->detailedType = DetermineTypeName<T>::Get();
@@ -210,16 +415,16 @@ namespace SR_UTILS_NS::Reflection {
         ) {
             pTypeInfo->category = ReflectedCategoryType::MathObject;
             pTypeInfo->detailedType = DetermineTypeName<T>::Get();
-            pTypeInfo->vtable.pConstructor = &ReflectedTypeInlineConstructor<T>;
-            pTypeInfo->vtable.pDestructor = &ReflectedTypeInlineDestructor<T>;
+            pTypeInfo->vtable.pConstructor = &ReflectedTypeConstructor<T>;
+            pTypeInfo->vtable.pDestructor = &ReflectedTypeDestructor<T>;
             pTypeInfo->vtable.pCopy = &ReflectedTypeInlineCopy<T>;
             pTypeInfo->vtable.pMove = &ReflectedTypeInlineMove<T>;
         }
         else if constexpr (IsTypeMathRectTemplateV<T>) {
             pTypeInfo->category = ReflectedCategoryType::MathRect;
             pTypeInfo->detailedType = DetermineTypeName<typename T::ValueType>::Get();
-            pTypeInfo->vtable.pConstructor = &ReflectedTypeInlineConstructor<T>;
-            pTypeInfo->vtable.pDestructor = &ReflectedTypeInlineDestructor<T>;
+            pTypeInfo->vtable.pConstructor = &ReflectedTypeConstructor<T>;
+            pTypeInfo->vtable.pDestructor = &ReflectedTypeDestructor<T>;
             pTypeInfo->vtable.pCopy = &ReflectedTypeInlineCopy<T>;
             pTypeInfo->vtable.pMove = &ReflectedTypeInlineMove<T>;
         }
@@ -227,8 +432,8 @@ namespace SR_UTILS_NS::Reflection {
             pTypeInfo->category = ReflectedCategoryType::MathSize;
             pTypeInfo->detailedType = DetermineTypeName<typename T::ValueType>::Get();
             pTypeInfo->detailedSize = T::Dimensions();
-            pTypeInfo->vtable.pConstructor = &ReflectedTypeInlineConstructor<T>;
-            pTypeInfo->vtable.pDestructor = &ReflectedTypeInlineDestructor<T>;
+            pTypeInfo->vtable.pConstructor = &ReflectedTypeConstructor<T>;
+            pTypeInfo->vtable.pDestructor = &ReflectedTypeDestructor<T>;
             pTypeInfo->vtable.pCopy = &ReflectedTypeInlineCopy<T>;
             pTypeInfo->vtable.pMove = &ReflectedTypeInlineMove<T>;
         }
@@ -236,16 +441,16 @@ namespace SR_UTILS_NS::Reflection {
             pTypeInfo->category = ReflectedCategoryType::MathVector;
             pTypeInfo->detailedType = DetermineTypeName<typename T::ValueType>::Get();
             pTypeInfo->detailedSize = T::Dimensions();
-            pTypeInfo->vtable.pConstructor = &ReflectedTypeInlineConstructor<T>;
-            pTypeInfo->vtable.pDestructor = &ReflectedTypeInlineDestructor<T>;
+            pTypeInfo->vtable.pConstructor = &ReflectedTypeConstructor<T>;
+            pTypeInfo->vtable.pDestructor = &ReflectedTypeDestructor<T>;
             pTypeInfo->vtable.pCopy = &ReflectedTypeInlineCopy<T>;
             pTypeInfo->vtable.pMove = &ReflectedTypeInlineMove<T>;
         }
         else if constexpr (std::is_same_v<T, String> || std::is_same_v<T, StringView> || std::is_same_v<T, StringAtom> || std::is_same_v<T, Path> || std::is_same_v<T, UnicodeString>) {
             pTypeInfo->category = ReflectedCategoryType::String;
             pTypeInfo->detailedType = DetermineTypeName<T>::Get();
-            pTypeInfo->vtable.pConstructor = &ReflectedTypeInlineConstructor<T>;
-            pTypeInfo->vtable.pDestructor = &ReflectedTypeInlineDestructor<T>;
+            pTypeInfo->vtable.pConstructor = &ReflectedTypeConstructor<T>;
+            pTypeInfo->vtable.pDestructor = &ReflectedTypeDestructor<T>;
             pTypeInfo->vtable.pCopy = &ReflectedTypeInlineCopy<T>;
             pTypeInfo->vtable.pMove = &ReflectedTypeInlineMove<T>;
             pTypeInfo->vtable.containerVTable.pSize = &ReflectedTypeSize<T>;
@@ -294,11 +499,13 @@ namespace SR_UTILS_NS::Reflection {
     template void DetermineTypeInfoRegistered<SR_MATH_NS::FVector3>(IAllocator&, TypeInfo* pTypeInfo);
     template void DetermineTypeInfoRegistered<SR_MATH_NS::FVector4>(IAllocator&, TypeInfo* pTypeInfo);
     template void DetermineTypeInfoRegistered<SR_MATH_NS::FVector6>(IAllocator&, TypeInfo* pTypeInfo);
+    template void DetermineTypeInfoRegistered<SR_MATH_NS::SVector2>(IAllocator&, TypeInfo* pTypeInfo);
     template void DetermineTypeInfoRegistered<SR_MATH_NS::IVector2>(IAllocator&, TypeInfo* pTypeInfo);
     template void DetermineTypeInfoRegistered<SR_MATH_NS::IVector3>(IAllocator&, TypeInfo* pTypeInfo);
     template void DetermineTypeInfoRegistered<SR_MATH_NS::IVector4>(IAllocator&, TypeInfo* pTypeInfo);
     template void DetermineTypeInfoRegistered<SR_MATH_NS::IVector6>(IAllocator&, TypeInfo* pTypeInfo);
     template void DetermineTypeInfoRegistered<SR_MATH_NS::UVector2>(IAllocator&, TypeInfo* pTypeInfo);
+    template void DetermineTypeInfoRegistered<SR_MATH_NS::USVector2>(IAllocator&, TypeInfo* pTypeInfo);
     template void DetermineTypeInfoRegistered<SR_MATH_NS::UVector3>(IAllocator&, TypeInfo* pTypeInfo);
     template void DetermineTypeInfoRegistered<SR_MATH_NS::UVector4>(IAllocator&, TypeInfo* pTypeInfo);
     template void DetermineTypeInfoRegistered<SR_MATH_NS::UVector6>(IAllocator&, TypeInfo* pTypeInfo);
@@ -314,6 +521,10 @@ namespace SR_UTILS_NS::Reflection {
             &values,
             Reflection::ReflectedValueStorageType::Reference
         );
+
+        auto valueRef = Reflection::Value::CreateRef(values);
+        Vector<uint32_t>* pValues2 = valueRef.Cast<Vector<uint32_t>>();
+
         Set<String> stringSet = { "Hello", "World", "!" };
         Map<String, int> stringMap = { {"One", 1}, {"Two", 2}, {"Three", 3} };
         auto mapRef = Reflection::ReflectedValue::MakeFromPointer(
@@ -345,11 +556,24 @@ namespace SR_UTILS_NS::Reflection {
             DetermineTypeInfoAlloc(*pAllocator, stringSet),
             DetermineTypeInfoAlloc(*pAllocator, stringMap)
         };
+
+        Vector<uint32_t>* pValues = reinterpret_cast<Vector<uint32_t>*>(valuesRef.GetData());
         types[0]->vtable.containerVTable.pResize(valuesRef, 4, false);
         ReflectedContainerIterator mapIt = types[18]->vtable.containerVTable.pFind(mapRef, ReflectedValue::MakeFromPointer(&string, ReflectedValueStorageType::Reference));
-        ReflectedValue mapValue = types[18]->vtable.containerVTable.pGetValue(mapRef, mapIt);
+        ReflectedValue mapValue = types[18]->vtable.iteratorVTable.pGetValue(mapRef, mapIt);
         auto value = *static_cast<Pair<String, int>*>(mapValue.GetData());
+
+        Value vectorVal = Value::Create(Vector<int32_t>{ 1, 2, 3, 4, 5 });
+        Value vectorValCopy = vectorVal;
+        auto* vec = vectorVal.Cast<Vector<int32_t>>();
+        vectorVal = {};
+        auto* vecCopy = vectorValCopy.Cast<Vector<int32_t>>();
+
+        Value bigTypeVal = Value::Create(SR_MATH_NS::Matrix4x4());
+        auto* bigType = bigTypeVal.Cast<SR_MATH_NS::Matrix4x4>();
+        bigTypeVal = {};
+
         return true;
     }
-    bool b = Test();
+    //bool b = Test();
 }

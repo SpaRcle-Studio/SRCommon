@@ -5,9 +5,11 @@
 #if !defined(SR_ENGINE_ENUM_REFLECTOR_H) && defined(SR_ENGINE_COMMON_PCH_FOR_BASE_CODE)
 #define SR_ENGINE_ENUM_REFLECTOR_H
 
-#include <Utils/Common/Singleton.h>
 #include <Utils/Types/StringAtom.h>
 #include <Utils/Types/Function.h>
+#include <Utils/Types/Vector.h>
+#include <Utils/Types/FlatHashMap.h>
+#include <Utils/Common/NonCopyable.h>
 
 template <typename EnumType> struct EnumSelector {};
 template<typename T> constexpr SR_UTILS_NS::EnumVariant GetEnumVariant(T) noexcept;
@@ -16,11 +18,12 @@ template<typename T> constexpr SR_UTILS_NS::SizeType GetEnumItemsCount(T) noexce
 namespace SR_UTILS_NS {
     class EnumReflector;
 
-    class EnumReflectorManager : public SR_UTILS_NS::Singleton<EnumReflectorManager> {
-        SR_REGISTER_SINGLETON(EnumReflectorManager);
+    class EnumReflectorManager : public SR_UTILS_NS::NonCopyable {
         using Reflectors = SR_HTYPES_NS::FlatHashMap<SR_UTILS_NS::StringAtom, EnumReflector*>;
     public:
-        SR_NODISCARD bool IsSingletonCanBeDestroyed() const override { return false; }
+        EnumReflectorManager() = default;
+
+        static EnumReflectorManager& Instance();
 
         void RegisterReflector(EnumVariant enumVariant, const void* pData, uint64_t typeSize, uint64_t count, const char* name, const char* body);
         void UnregisterReflector(const char* name);
@@ -67,25 +70,25 @@ namespace SR_UTILS_NS {
         template<typename EnumType> SR_NODISCARD static EnumType FromStringLowerCase(const std::string& value);
         template<typename EnumType> SR_NODISCARD static uint64_t GetIntegralTypeSize();
 
-        template<typename EnumType> SR_NODISCARD static const std::vector<SR_UTILS_NS::StringAtom>& GetNames();
-        template<typename EnumType> SR_NODISCARD static const std::vector<Enumerator>& GetValues();
-        template<typename EnumType> SR_NODISCARD static std::vector<SR_UTILS_NS::StringAtom> GetNamesFilter(const SR_HTYPES_NS::Function<bool(EnumType)>& filter);
+        template<typename EnumType> SR_NODISCARD static const Vector<StringAtom>& GetNames();
+        template<typename EnumType> SR_NODISCARD static const Vector<Enumerator>& GetValues();
+        template<typename EnumType> SR_NODISCARD static Vector<StringAtom> GetNamesFilter(const SR_HTYPES_NS::Function<bool(EnumType)>& filter);
 
         template<typename EnumType> SR_NODISCARD static int64_t GetIndex(EnumType value);
         template<typename EnumType> SR_NODISCARD static int64_t GetIndex(int64_t value);
         template<typename EnumType> SR_NODISCARD static EnumType At(uint64_t index);
         template<typename EnumType> SR_NODISCARD static int64_t AtAsInt(uint64_t index);
         template<typename EnumType> SR_NODISCARD static int64_t AsInt(EnumType value);
-        template<typename EnumType> SR_NODISCARD static SR_UTILS_NS::StringAtom GetName();
+        template<typename EnumType> SR_NODISCARD static StringAtom GetName();
         template<typename EnumType> SR_NODISCARD static EnumVariant GetEnumVariant();
 
-        SR_MAYBE_UNUSED SR_NODISCARD std::optional<SR_UTILS_NS::StringAtom> ToStringInternal(int64_t value) const;
-        SR_MAYBE_UNUSED SR_NODISCARD std::optional<int64_t> FromStringInternal(const SR_UTILS_NS::StringAtom& name) const;
+        SR_MAYBE_UNUSED SR_NODISCARD std::optional<StringAtom> ToStringInternal(int64_t value) const;
+        SR_MAYBE_UNUSED SR_NODISCARD std::optional<int64_t> FromStringInternal(const StringAtom& name) const;
         SR_MAYBE_UNUSED SR_NODISCARD std::optional<int64_t> FromStringLowerCaseInternal(const std::string& value) const;
         SR_MAYBE_UNUSED SR_NODISCARD std::optional<int64_t> GetIndexInternal(int64_t value) const;
         SR_MAYBE_UNUSED SR_NODISCARD std::optional<int64_t> AtInternal(uint64_t index) const;
-        SR_MAYBE_UNUSED SR_NODISCARD const std::vector<SR_UTILS_NS::StringAtom>& GetNamesInternal() const;
-        SR_MAYBE_UNUSED SR_NODISCARD const SR_UTILS_NS::StringAtom& GetNameInternal() const;
+        SR_MAYBE_UNUSED SR_NODISCARD const Vector<StringAtom>& GetNamesInternal() const;
+        SR_MAYBE_UNUSED SR_NODISCARD const StringAtom& GetNameInternal() const;
         SR_MAYBE_UNUSED SR_NODISCARD uint64_t GetIntegralTypeSizeInternal() const;
         SR_MAYBE_UNUSED SR_NODISCARD int64_t ReadEnumValueFromPointerInternal(const void* pEnum) const;
         SR_MAYBE_UNUSED SR_NODISCARD EnumVariant GetEnumVariantInternal() const;
@@ -99,9 +102,9 @@ namespace SR_UTILS_NS {
     private:
         struct Data
         {
-            std::vector<Enumerator> values;
-            std::vector<SR_UTILS_NS::StringAtom> names;
-            SR_UTILS_NS::StringAtom enumName;
+            Vector<Enumerator> values;
+            Vector<StringAtom> names;
+            StringAtom enumName;
         }* m_data;
 
         uint64_t m_integralTypeSize = 0;
@@ -148,16 +151,16 @@ namespace SR_UTILS_NS {
         return false;
     }
 
-    template<typename EnumType> const std::vector<SR_UTILS_NS::StringAtom>& EnumReflector::GetNames() {
+    template<typename EnumType> const Vector<StringAtom>& EnumReflector::GetNames() {
         return GetReflector<EnumType>()->m_data->names;
     }
 
-    template<typename EnumType> const std::vector<SR_UTILS_NS::EnumReflector::Enumerator>& EnumReflector::GetValues() {
+    template<typename EnumType> const Vector<EnumReflector::Enumerator>& EnumReflector::GetValues() {
         return GetReflector<EnumType>()->m_data->values;
     }
 
-    template<typename EnumType> std::vector<SR_UTILS_NS::StringAtom> EnumReflector::GetNamesFilter(const SR_HTYPES_NS::Function<bool(EnumType)> &filter) {
-        std::vector<SR_UTILS_NS::StringAtom> names;
+    template<typename EnumType> Vector<StringAtom> EnumReflector::GetNamesFilter(const SR_HTYPES_NS::Function<bool(EnumType)> &filter) {
+        Vector<StringAtom> names;
 
         auto&& data = GetReflector<EnumType>()->m_data;
 

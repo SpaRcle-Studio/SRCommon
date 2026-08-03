@@ -25,10 +25,10 @@ namespace SR_UTILS_NS::Reflection {
     extern template SR_COMMON_DLL_API void DetermineTypeInfoRegistered<SR_MATH_NS::AABB>(IAllocator&, TypeInfo* pTypeInfo);
     extern template SR_COMMON_DLL_API void DetermineTypeInfoRegistered<SR_MATH_NS::Matrix3x3>(IAllocator&, TypeInfo* pTypeInfo);
     extern template SR_COMMON_DLL_API void DetermineTypeInfoRegistered<SR_MATH_NS::Matrix4x4>(IAllocator&, TypeInfo* pTypeInfo);
-    extern template SR_COMMON_DLL_API void DetermineTypeInfoRegistered<SR_MATH_NS::FRect>(IAllocator&, TypeInfo* pTypeInfo);
-    extern template SR_COMMON_DLL_API void DetermineTypeInfoRegistered<SR_MATH_NS::IRect>(IAllocator&, TypeInfo* pTypeInfo);
-    extern template SR_COMMON_DLL_API void DetermineTypeInfoRegistered<SR_MATH_NS::URect>(IAllocator&, TypeInfo* pTypeInfo);
-    extern template SR_COMMON_DLL_API void DetermineTypeInfoRegistered<SR_MATH_NS::USRect>(IAllocator&, TypeInfo* pTypeInfo);
+    extern template SR_COMMON_DLL_API void DetermineTypeInfoRegistered<SR_MATH_NS::Rect<SR_MATH_NS::Unit>>(IAllocator&, TypeInfo* pTypeInfo);
+    extern template SR_COMMON_DLL_API void DetermineTypeInfoRegistered<SR_MATH_NS::Rect<int32_t>>(IAllocator&, TypeInfo* pTypeInfo);
+    extern template SR_COMMON_DLL_API void DetermineTypeInfoRegistered<SR_MATH_NS::Rect<uint32_t>>(IAllocator&, TypeInfo* pTypeInfo);
+    extern template SR_COMMON_DLL_API void DetermineTypeInfoRegistered<SR_MATH_NS::Rect<uint16_t>>(IAllocator&, TypeInfo* pTypeInfo);
     extern template SR_COMMON_DLL_API void DetermineTypeInfoRegistered<SR_MATH_NS::FSize>(IAllocator&, TypeInfo* pTypeInfo);
     extern template SR_COMMON_DLL_API void DetermineTypeInfoRegistered<SR_MATH_NS::USize>(IAllocator&, TypeInfo* pTypeInfo);
     extern template SR_COMMON_DLL_API void DetermineTypeInfoRegistered<SR_MATH_NS::ISize>(IAllocator&, TypeInfo* pTypeInfo);
@@ -39,11 +39,13 @@ namespace SR_UTILS_NS::Reflection {
     extern template SR_COMMON_DLL_API void DetermineTypeInfoRegistered<SR_MATH_NS::FVector3>(IAllocator&, TypeInfo* pTypeInfo);
     extern template SR_COMMON_DLL_API void DetermineTypeInfoRegistered<SR_MATH_NS::FVector4>(IAllocator&, TypeInfo* pTypeInfo);
     extern template SR_COMMON_DLL_API void DetermineTypeInfoRegistered<SR_MATH_NS::FVector6>(IAllocator&, TypeInfo* pTypeInfo);
+    extern template SR_COMMON_DLL_API void DetermineTypeInfoRegistered<SR_MATH_NS::SVector2>(IAllocator&, TypeInfo* pTypeInfo);
     extern template SR_COMMON_DLL_API void DetermineTypeInfoRegistered<SR_MATH_NS::IVector2>(IAllocator&, TypeInfo* pTypeInfo);
     extern template SR_COMMON_DLL_API void DetermineTypeInfoRegistered<SR_MATH_NS::IVector3>(IAllocator&, TypeInfo* pTypeInfo);
     extern template SR_COMMON_DLL_API void DetermineTypeInfoRegistered<SR_MATH_NS::IVector4>(IAllocator&, TypeInfo* pTypeInfo);
     extern template SR_COMMON_DLL_API void DetermineTypeInfoRegistered<SR_MATH_NS::IVector6>(IAllocator&, TypeInfo* pTypeInfo);
     extern template SR_COMMON_DLL_API void DetermineTypeInfoRegistered<SR_MATH_NS::UVector2>(IAllocator&, TypeInfo* pTypeInfo);
+    extern template SR_COMMON_DLL_API void DetermineTypeInfoRegistered<SR_MATH_NS::USVector2>(IAllocator&, TypeInfo* pTypeInfo);
     extern template SR_COMMON_DLL_API void DetermineTypeInfoRegistered<SR_MATH_NS::UVector3>(IAllocator&, TypeInfo* pTypeInfo);
     extern template SR_COMMON_DLL_API void DetermineTypeInfoRegistered<SR_MATH_NS::UVector4>(IAllocator&, TypeInfo* pTypeInfo);
     extern template SR_COMMON_DLL_API void DetermineTypeInfoRegistered<SR_MATH_NS::UVector6>(IAllocator&, TypeInfo* pTypeInfo);
@@ -73,19 +75,27 @@ namespace SR_UTILS_NS::Reflection {
     /// ================================================================================================================
 
     template<typename T> ReflectedValue ReflectedTypeTemplateConstructor(IAllocator& allocator) {
+        if constexpr (sizeof(T) <= ReflectedValueStorageSize) {
+            ReflectedValue reflectedValue;
+            new (&reflectedValue.storage.data) T();
+            reflectedValue.storageType = ReflectedValueStorageType::Embedded;
+            return reflectedValue;
+        }
         auto pValue = static_cast<T*>(allocator.Allocate(sizeof(T), alignof(T)));
         new (pValue) T();
-        return ReflectedValue::MakeFromPointer(pValue, ReflectedValueStorageType::Embedded);
+        return ReflectedValue::MakeFromPointer(pValue, ReflectedValueStorageType::Dynamic);
     }
 
     template<typename T> void ReflectedTypeTemplateDestructor(IAllocator& allocator, ReflectedValue& value) {
         auto pContainer = static_cast<T*>(value.GetData());
         pContainer->~T();
-        allocator.Free(pContainer, sizeof(T), alignof(T));
+        if constexpr (sizeof(T) > ReflectedValueStorageSize) {
+            allocator.Free(pContainer, sizeof(T), alignof(T));
+        }
     }
 
-    template<typename T> void ReflectedTypeTemplateCopy(ReflectedValue& from, ReflectedValue& to) {
-        auto pFrom = static_cast<T*>(from.GetData());
+    template<typename T> void ReflectedTypeTemplateCopy(const ReflectedValue& from, ReflectedValue& to) {
+        auto pFrom = static_cast<const T*>(from.GetData());
         auto pTo = static_cast<T*>(to.GetData());
         *pTo = *pFrom;
     }
@@ -98,28 +108,62 @@ namespace SR_UTILS_NS::Reflection {
 
     /// ================================================================================================================
 
+    template<typename T> ReflectedValue ReflectedTypePairGetValue(ReflectedValue& value, bool first) {
+        auto pPair = static_cast<T*>(value.GetData());
+        ReflectedValue reflectedValue;
+        if (first) {
+            reflectedValue.SetData((void*)(&pPair->first));
+        }
+        else {
+            reflectedValue.SetData((void*)(&pPair->second));
+        }
+        reflectedValue.storageType = value.storageType == ReflectedValueStorageType::ConstReference ?
+            ReflectedValueStorageType::ConstReference :
+            ReflectedValueStorageType::Reference;
+        return reflectedValue;
+    }
+
+    /// ================================================================================================================
+
     extern SR_COMMON_DLL_API ReflectedValue ArithmeticTypeConstructor(IAllocator&);
-    extern SR_COMMON_DLL_API void ArithmeticTypeCopy(ReflectedValue& from, ReflectedValue& to);
+    extern SR_COMMON_DLL_API void ArithmeticTypeCopy(const ReflectedValue& from, ReflectedValue& to);
     extern SR_COMMON_DLL_API void ArithmeticTypeMove(ReflectedValue& from, ReflectedValue& to);
+
+    template<typename T> ReflectedValue EnumTypeConstructor(IAllocator& allocator) {
+        ReflectedValue value;
+        new (&value.storage.data) T();
+        value.storageType = ReflectedValueStorageType::Embedded;
+        return value;
+    }
 
     template<typename T> struct DetermineTypeInfoAccessor<T, std::enable_if_t<IsSREnumV<T>>> {
         static void Determine(IAllocator& allocator, TypeInfo* pTypeInfo) {
             pTypeInfo->detailedType = GetEnumName(T());
             pTypeInfo->category = ReflectedCategoryType::Enum;
-            pTypeInfo->vtable.pConstructor = &ArithmeticTypeConstructor;
+            pTypeInfo->vtable.pSizeOfAlign = &ReflectedTypeTemplateSizeOfAlign<T>;
+            pTypeInfo->vtable.pConstructor = &EnumTypeConstructor<T>;
             pTypeInfo->vtable.pCopy = &ArithmeticTypeCopy;
             pTypeInfo->vtable.pMove = &ArithmeticTypeMove;
         }
     };
 
-    template<typename T> struct DetermineTypeInfoAccessor<T, std::enable_if_t<IsSRClassV<T>>> {
+    template<typename T> struct DetermineTypeInfoAccessor<T, std::enable_if_t<
+        IsSRClassV<T> &&
+        !IsEntityRefV<T> &&
+        !IsResourceRefV<T>>>
+    {
         static void Determine(IAllocator& allocator, TypeInfo* pTypeInfo) {
             pTypeInfo->detailedType = T::GetClassStaticName();
             pTypeInfo->category = ReflectedCategoryType::Object;
+            pTypeInfo->vtable.pSizeOfAlign = &ReflectedTypeTemplateSizeOfAlign<T>;
             pTypeInfo->vtable.pConstructor = &ReflectedTypeTemplateConstructor<T>;
             pTypeInfo->vtable.pDestructor = &ReflectedTypeTemplateDestructor<T>;
-            pTypeInfo->vtable.pCopy = &ReflectedTypeTemplateCopy<T>;
-            pTypeInfo->vtable.pMove = &ReflectedTypeTemplateMove<T>;
+            if constexpr (std::is_copy_constructible_v<T>) {
+                pTypeInfo->vtable.pCopy = &ReflectedTypeTemplateCopy<T>;
+            }
+            if constexpr (std::is_move_constructible_v<T>) {
+                pTypeInfo->vtable.pMove = &ReflectedTypeTemplateMove<T>;
+            }
             pTypeInfo->vtable.pGetTypeController = &ReflectedTypeGetControllerSRClass<T>;
         }
     };
@@ -164,8 +208,9 @@ namespace SR_UTILS_NS::Reflection {
             static const StringAtom detailedType = "Optional";
             pTypeInfo->detailedType = detailedType;
             pTypeInfo->category = ReflectedCategoryType::Container;
-            pTypeInfo->pNext = AllocateTypeInfo(allocator, 1);
-            DetermineTypeInfoAccessor<T>::Determine(allocator, pTypeInfo->pNext);
+            pTypeInfo->pNext[0] = AllocateTypeInfo();
+            DetermineTypeInfoAccessor<T>::Determine(allocator, pTypeInfo->pNext[0]);
+            pTypeInfo->vtable.pSizeOfAlign = &ReflectedTypeTemplateSizeOfAlign<Optional<T>>;
             pTypeInfo->vtable.pConstructor = &ReflectedTypeTemplateConstructor<Optional<T>>;
             pTypeInfo->vtable.pDestructor = &ReflectedTypeTemplateDestructor<Optional<T>>;
             pTypeInfo->vtable.pCopy = &ReflectedTypeTemplateCopy<Optional<T>>;
@@ -179,8 +224,9 @@ namespace SR_UTILS_NS::Reflection {
             static const StringAtom detailedType = "EntityRef";
             pTypeInfo->detailedType = detailedType;
             pTypeInfo->category = ReflectedCategoryType::Container;
-            pTypeInfo->pNext = AllocateTypeInfo(allocator, 1);
-            DetermineTypeInfoAccessor<T>::Determine(allocator, pTypeInfo->pNext);
+            pTypeInfo->pNext[0] = AllocateTypeInfo();
+            DetermineTypeInfoAccessor<T>::Determine(allocator, pTypeInfo->pNext[0]);
+            pTypeInfo->vtable.pSizeOfAlign = &ReflectedTypeTemplateSizeOfAlign<EntityRef<T>>;
             pTypeInfo->vtable.pConstructor = &ReflectedTypeTemplateConstructor<EntityRef<T>>;
             pTypeInfo->vtable.pDestructor = &ReflectedTypeTemplateDestructor<EntityRef<T>>;
             pTypeInfo->vtable.pCopy = &ReflectedTypeTemplateCopy<EntityRef<T>>;
@@ -190,12 +236,13 @@ namespace SR_UTILS_NS::Reflection {
     };
 
     template<typename T> struct DetermineTypeInfoAccessor<ResourceRef<T>> {
-        static TypeInfo* Determine(IAllocator& allocator, TypeInfo* pTypeInfo) {
+        static void Determine(IAllocator& allocator, TypeInfo* pTypeInfo) {
             static const StringAtom detailedType = "ResourceRef";
             pTypeInfo->detailedType = detailedType;
             pTypeInfo->category = ReflectedCategoryType::Container;
-            pTypeInfo->pNext = AllocateTypeInfo(allocator, 1);
-            DetermineTypeInfoAccessor<T>::Determine(allocator, pTypeInfo->pNext);
+            pTypeInfo->pNext[0] = AllocateTypeInfo();
+            DetermineTypeInfoAccessor<T>::Determine(allocator, pTypeInfo->pNext[0]);
+            pTypeInfo->vtable.pSizeOfAlign = &ReflectedTypeTemplateSizeOfAlign<ResourceRef<T>>;
             pTypeInfo->vtable.pConstructor = &ReflectedTypeTemplateConstructor<ResourceRef<T>>;
             pTypeInfo->vtable.pDestructor = &ReflectedTypeTemplateDestructor<ResourceRef<T>>;
             pTypeInfo->vtable.pCopy = &ReflectedTypeTemplateCopy<ResourceRef<T>>;
@@ -205,33 +252,36 @@ namespace SR_UTILS_NS::Reflection {
     };
 
     template<typename T> struct DetermineTypeInfoAccessor<SR_HTYPES_NS::SharedPtr<T>> {
-        static TypeInfo* Determine(IAllocator& allocator, TypeInfo* pTypeInfo) {
+        static void Determine(IAllocator& allocator, TypeInfo* pTypeInfo) {
             static const StringAtom detailedType = "SharedPtr";
             pTypeInfo->detailedType = detailedType;
             pTypeInfo->category = ReflectedCategoryType::Container;
-            pTypeInfo->pNext = AllocateTypeInfo(allocator, 1);
-            DetermineTypeInfoAccessor<T>::Determine(allocator, pTypeInfo->pNext);
+            pTypeInfo->pNext[0] = AllocateTypeInfo();
+            DetermineTypeInfoAccessor<T>::Determine(allocator, pTypeInfo->pNext[0]);
+            pTypeInfo->vtable.pSizeOfAlign = &ReflectedTypeTemplateSizeOfAlign<SR_HTYPES_NS::SharedPtr<T>>;
             pTypeInfo->vtable.pConstructor = &ReflectedTypeTemplateConstructor<SR_HTYPES_NS::SharedPtr<T>>;
             pTypeInfo->vtable.pDestructor = &ReflectedTypeTemplateDestructor<SR_HTYPES_NS::SharedPtr<T>>;
             pTypeInfo->vtable.pCopy = &ReflectedTypeTemplateCopy<SR_HTYPES_NS::SharedPtr<T>>;
             pTypeInfo->vtable.pMove = &ReflectedTypeTemplateMove<SR_HTYPES_NS::SharedPtr<T>>;
             pTypeInfo->vtable.pGetTypeController = &ReflectedTypeGetControllerSharedPtr<T>;
-            return pTypeInfo;
         }
     };
 
     template<typename T1, typename T2> struct DetermineTypeInfoAccessor<Pair<T1, T2>> {
-        static TypeInfo* Determine(IAllocator& allocator, TypeInfo* pTypeInfo) {
+        static void Determine(IAllocator& allocator, TypeInfo* pTypeInfo) {
             static const StringAtom detailedType = "Pair";
             pTypeInfo->detailedType = detailedType;
             pTypeInfo->category = ReflectedCategoryType::Container;
-            pTypeInfo->pNext = AllocateTypeInfo(allocator, 2);
-            DetermineTypeInfoAccessor<T1>::Determine(allocator, &pTypeInfo->pNext[0]);
-            DetermineTypeInfoAccessor<T2>::Determine(allocator, &pTypeInfo->pNext[1]);
+            pTypeInfo->pNext[0] = AllocateTypeInfo();
+            pTypeInfo->pNext[1] = AllocateTypeInfo();
+            DetermineTypeInfoAccessor<T1>::Determine(allocator, pTypeInfo->pNext[0]);
+            DetermineTypeInfoAccessor<T2>::Determine(allocator, pTypeInfo->pNext[1]);
+            pTypeInfo->vtable.pSizeOfAlign = &ReflectedTypeTemplateSizeOfAlign<Pair<T1, T2>>;
             pTypeInfo->vtable.pConstructor = &ReflectedTypeTemplateConstructor<Pair<T1, T2>>;
             pTypeInfo->vtable.pDestructor = &ReflectedTypeTemplateDestructor<Pair<T1, T2>>;
             pTypeInfo->vtable.pCopy = &ReflectedTypeTemplateCopy<Pair<T1, T2>>;
             pTypeInfo->vtable.pMove = &ReflectedTypeTemplateMove<Pair<T1, T2>>;
+            pTypeInfo->vtable.pairVTable.pGetPairValue = &ReflectedTypePairGetValue<Pair<T1, T2>>;
         }
     };
 }

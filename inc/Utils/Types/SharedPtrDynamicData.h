@@ -52,10 +52,11 @@ namespace SR_HTYPES_NS {
 
     };
 
-    class SharedPtrDynamicDataCounter : public Singleton<SharedPtrDynamicDataCounter> {
-        SR_REGISTER_SINGLETON(SharedPtrDynamicDataCounter);
+    class SharedPtrDynamicDataCounter : public SR_UTILS_NS::NonCopyable {
     public:
         SR_NODISCARD uint64_t GetCount() const;
+
+        static SharedPtrDynamicDataCounter& Instance();
 
         void Increment(SharedPtrDynamicData* pData);
         void Decrement(SharedPtrDynamicData* pData);
@@ -63,7 +64,6 @@ namespace SR_HTYPES_NS {
         SR_MAYBE_UNUSED static bool CheckMemoryLeaks();
 
     public:
-        SR_NODISCARD bool IsSingletonCanBeDestroyed() const override;
         SR_NODISCARD const std::unordered_set<SharedPtrDynamicData*>& GetData() const;
 
     private:

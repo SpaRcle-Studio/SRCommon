@@ -27,23 +27,49 @@ namespace SR_UTILS_NS::Reflection {
     template<typename Key, typename Value, typename Compare> struct DetermineTypeInfoAccessor<Map<Key, Value, Compare>> {
         static void Determine(IAllocator& allocator, TypeInfo* pTypeInfo) {
             static const StringAtom detailedType = "Map";
+            using Type = Map<Key, Value, Compare>;
             pTypeInfo->detailedType = detailedType;
             pTypeInfo->category = ReflectedCategoryType::Container;
-            pTypeInfo->pNext = AllocateTypeInfo(allocator, 2);
-            DetermineTypeInfoAccessor<Key>::Determine(allocator, &pTypeInfo->pNext[0]);
-            DetermineTypeInfoAccessor<Value>::Determine(allocator, &pTypeInfo->pNext[1]);
-            pTypeInfo->vtable.pConstructor = &ReflectedTypeTemplateConstructor<Map<Key, Value, Compare>>;
-            pTypeInfo->vtable.pDestructor = &ReflectedTypeTemplateDestructor<Map<Key, Value, Compare>>;
-            pTypeInfo->vtable.pCopy = &ReflectedTypeTemplateCopy<Map<Key, Value, Compare>>;
-            pTypeInfo->vtable.pMove = &ReflectedTypeTemplateMove<Map<Key, Value, Compare>>;
-            pTypeInfo->vtable.containerVTable.pClear = &ReflectedTypeContainerClear<Map<Key, Value, Compare>>;
-            pTypeInfo->vtable.containerVTable.pSize = &ReflectedTypeContainerSize<Map<Key, Value, Compare>>;
-            pTypeInfo->vtable.containerVTable.pBegin = &ReflectedTypeContainerBegin<Map<Key, Value, Compare>>;
-            pTypeInfo->vtable.containerVTable.pEnd = &ReflectedTypeContainerEnd<Map<Key, Value, Compare>>;
-            pTypeInfo->vtable.containerVTable.pGetValue = &ReflectedTypeContainerIteratorGetValue<Map<Key, Value, Compare>>;
-            pTypeInfo->vtable.containerVTable.pInsert = &ReflectedTypeMapInsert<Map<Key, Value, Compare>>;
-            pTypeInfo->vtable.containerVTable.pErase = &ReflectedTypeContainerErase<Map<Key, Value, Compare>>;
-            pTypeInfo->vtable.containerVTable.pFind = &ReflectedTypeMapFind<Map<Key, Value, Compare>>;
+            pTypeInfo->pNext[0] = AllocateTypeInfo();
+            DetermineTypeInfoAccessor<Pair<Key, Value>>::Determine(allocator, pTypeInfo->pNext[0]);
+            pTypeInfo->vtable.pConstructor = &ReflectedTypeTemplateConstructor<Type>;
+            pTypeInfo->vtable.pDestructor = &ReflectedTypeTemplateDestructor<Type>;
+            pTypeInfo->vtable.pCopy = &ReflectedTypeTemplateCopy<Type>;
+            pTypeInfo->vtable.pMove = &ReflectedTypeTemplateMove<Type>;
+            pTypeInfo->vtable.containerVTable.pClear = &ReflectedTypeContainerClear<Type>;
+            pTypeInfo->vtable.containerVTable.pSize = &ReflectedTypeContainerSize<Type>;
+            pTypeInfo->vtable.containerVTable.pBegin = &ReflectedTypeContainerBegin<Type>;
+            pTypeInfo->vtable.containerVTable.pEnd = &ReflectedTypeContainerEnd<Type>;
+            pTypeInfo->vtable.containerVTable.pInsert = &ReflectedTypeMapInsert<Type>;
+            pTypeInfo->vtable.containerVTable.pErase = &ReflectedTypeContainerErase<Type>;
+            pTypeInfo->vtable.containerVTable.pFind = &ReflectedTypeMapFind<Type>;
+            pTypeInfo->vtable.iteratorVTable.pGetValue = &ReflectedTypeContainerIteratorGetValue<Type>;
+            pTypeInfo->vtable.iteratorVTable.pOffset = &ReflectedTypeContainerIteratorOffset<Type>;
+        }
+    };
+
+    template<typename Key, typename Value> struct DetermineTypeInfoAccessor<SR_HTYPES_NS::FlatHashMap<Key, Value>> {
+        static void Determine(IAllocator& allocator, TypeInfo* pTypeInfo) {
+            static const StringAtom detailedType = "FlatHashMap";
+            using Type = SR_HTYPES_NS::FlatHashMap<Key, Value>;
+            pTypeInfo->detailedType = detailedType;
+            pTypeInfo->category = ReflectedCategoryType::Container;
+            pTypeInfo->pNext[0] = AllocateTypeInfo();
+            DetermineTypeInfoAccessor<Pair<Key, Value>>::Determine(allocator, pTypeInfo->pNext[0]);
+            pTypeInfo->vtable.pSizeOfAlign = &ReflectedTypeTemplateSizeOfAlign<Type>;
+            pTypeInfo->vtable.pConstructor = &ReflectedTypeTemplateConstructor<Type>;
+            pTypeInfo->vtable.pDestructor = &ReflectedTypeTemplateDestructor<Type>;
+            pTypeInfo->vtable.pCopy = &ReflectedTypeTemplateCopy<Type>;
+            pTypeInfo->vtable.pMove = &ReflectedTypeTemplateMove<Type>;
+            pTypeInfo->vtable.containerVTable.pClear = &ReflectedTypeContainerClear<Type>;
+            pTypeInfo->vtable.containerVTable.pSize = &ReflectedTypeContainerSize<Type>;
+            pTypeInfo->vtable.containerVTable.pBegin = &ReflectedTypeContainerBegin<Type>;
+            pTypeInfo->vtable.containerVTable.pEnd = &ReflectedTypeContainerEnd<Type>;
+            pTypeInfo->vtable.containerVTable.pInsert = &ReflectedTypeMapInsert<Type>;
+            pTypeInfo->vtable.containerVTable.pErase = &ReflectedTypeContainerErase<Type>;
+            pTypeInfo->vtable.containerVTable.pFind = &ReflectedTypeMapFind<Type>;
+            pTypeInfo->vtable.iteratorVTable.pGetValue = &ReflectedTypeContainerIteratorGetValue<Type>;
+            pTypeInfo->vtable.iteratorVTable.pOffset = &ReflectedTypeContainerIteratorOffset<Type>;
         }
     };
 
@@ -70,22 +96,50 @@ namespace SR_UTILS_NS::Reflection {
     template<typename T, typename Compare> struct DetermineTypeInfoAccessor<Set<T, Compare>> {
         static void Determine(IAllocator& allocator, TypeInfo* pTypeInfo) {
             static const StringAtom detailedType = "Set";
+            using Type = Set<T, Compare>;
             pTypeInfo->detailedType = detailedType;
             pTypeInfo->category = ReflectedCategoryType::Container;
-            pTypeInfo->pNext = AllocateTypeInfo(allocator, 1);
-            DetermineTypeInfoAccessor<T>::Determine(allocator, pTypeInfo->pNext);
-            pTypeInfo->vtable.pConstructor = &ReflectedTypeTemplateConstructor<Set<T, Compare>>;
-            pTypeInfo->vtable.pDestructor = &ReflectedTypeTemplateDestructor<Set<T, Compare>>;
-            pTypeInfo->vtable.pCopy = &ReflectedTypeTemplateCopy<Set<T, Compare>>;
-            pTypeInfo->vtable.pMove = &ReflectedTypeTemplateMove<Set<T, Compare>>;
-            pTypeInfo->vtable.containerVTable.pClear = &ReflectedTypeContainerClear<Set<T, Compare>>;
-            pTypeInfo->vtable.containerVTable.pSize = &ReflectedTypeContainerSize<Set<T, Compare>>;
-            pTypeInfo->vtable.containerVTable.pBegin = &ReflectedTypeContainerBegin<Set<T, Compare>>;
-            pTypeInfo->vtable.containerVTable.pEnd = &ReflectedTypeContainerEnd<Set<T, Compare>>;
-            pTypeInfo->vtable.containerVTable.pGetValue = &ReflectedTypeContainerIteratorGetValue<Set<T, Compare>>;
-            pTypeInfo->vtable.containerVTable.pInsert = &ReflectedTypeSetInsert<Set<T, Compare>>;
-            pTypeInfo->vtable.containerVTable.pErase = &ReflectedTypeContainerErase<Set<T, Compare>>;
-            pTypeInfo->vtable.containerVTable.pFind = &ReflectedTypeSetFind<Set<T, Compare>>;
+            pTypeInfo->pNext[0] = AllocateTypeInfo();
+            DetermineTypeInfoAccessor<T>::Determine(allocator, pTypeInfo->pNext[0]);
+            pTypeInfo->vtable.pSizeOfAlign = &ReflectedTypeTemplateSizeOfAlign<Type>;
+            pTypeInfo->vtable.pConstructor = &ReflectedTypeTemplateConstructor<Type>;
+            pTypeInfo->vtable.pDestructor = &ReflectedTypeTemplateDestructor<Type>;
+            pTypeInfo->vtable.pCopy = &ReflectedTypeTemplateCopy<Type>;
+            pTypeInfo->vtable.pMove = &ReflectedTypeTemplateMove<Type>;
+            pTypeInfo->vtable.containerVTable.pClear = &ReflectedTypeContainerClear<Type>;
+            pTypeInfo->vtable.containerVTable.pSize = &ReflectedTypeContainerSize<Type>;
+            pTypeInfo->vtable.containerVTable.pBegin = &ReflectedTypeContainerBegin<Type>;
+            pTypeInfo->vtable.containerVTable.pEnd = &ReflectedTypeContainerEnd<Type>;
+            pTypeInfo->vtable.containerVTable.pInsert = &ReflectedTypeSetInsert<Type>;
+            pTypeInfo->vtable.containerVTable.pErase = &ReflectedTypeContainerErase<Type>;
+            pTypeInfo->vtable.containerVTable.pFind = &ReflectedTypeSetFind<Type>;
+            pTypeInfo->vtable.iteratorVTable.pGetValue = &ReflectedTypeContainerIteratorGetValue<Type>;
+            pTypeInfo->vtable.iteratorVTable.pOffset = &ReflectedTypeContainerIteratorOffset<Type>;
+        }
+    };
+
+    template<typename T> struct DetermineTypeInfoAccessor<SR_HTYPES_NS::FlatHashSet<T>> {
+        static void Determine(IAllocator& allocator, TypeInfo* pTypeInfo) {
+            static const StringAtom detailedType = "FlatHashSet";
+            using Type = SR_HTYPES_NS::FlatHashSet<T>;
+            pTypeInfo->detailedType = detailedType;
+            pTypeInfo->category = ReflectedCategoryType::Container;
+            pTypeInfo->pNext[0] = AllocateTypeInfo();
+            DetermineTypeInfoAccessor<T>::Determine(allocator, pTypeInfo->pNext[0]);
+            pTypeInfo->vtable.pSizeOfAlign = &ReflectedTypeTemplateSizeOfAlign<Type>;
+            pTypeInfo->vtable.pConstructor = &ReflectedTypeTemplateConstructor<Type>;
+            pTypeInfo->vtable.pDestructor = &ReflectedTypeTemplateDestructor<Type>;
+            pTypeInfo->vtable.pCopy = &ReflectedTypeTemplateCopy<Type>;
+            pTypeInfo->vtable.pMove = &ReflectedTypeTemplateMove<Type>;
+            pTypeInfo->vtable.containerVTable.pClear = &ReflectedTypeContainerClear<Type>;
+            pTypeInfo->vtable.containerVTable.pSize = &ReflectedTypeContainerSize<Type>;
+            pTypeInfo->vtable.containerVTable.pBegin = &ReflectedTypeContainerBegin<Type>;
+            pTypeInfo->vtable.containerVTable.pEnd = &ReflectedTypeContainerEnd<Type>;
+            pTypeInfo->vtable.containerVTable.pInsert = &ReflectedTypeSetInsert<Type>;
+            pTypeInfo->vtable.containerVTable.pErase = &ReflectedTypeContainerErase<Type>;
+            pTypeInfo->vtable.containerVTable.pFind = &ReflectedTypeSetFind<Type>;
+            pTypeInfo->vtable.iteratorVTable.pGetValue = &ReflectedTypeContainerIteratorGetValue<Type>;
+            pTypeInfo->vtable.iteratorVTable.pOffset = &ReflectedTypeContainerIteratorOffset<Type>;
         }
     };
 }

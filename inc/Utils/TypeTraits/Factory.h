@@ -86,7 +86,7 @@ namespace SR_UTILS_NS {
         }
 
         SR_NODISCARD SRClass* CreateBase(SR_UTILS_NS::StringAtom name) const noexcept;
-        SR_NODISCARD std::vector<SR_UTILS_NS::StringAtom> GetInheritances(SR_UTILS_NS::StringAtom baseClass) const noexcept;
+        SR_NODISCARD Vector<SR_UTILS_NS::StringAtom> GetInheritances(SR_UTILS_NS::StringAtom baseClass) const noexcept;
         SR_NODISCARD bool HasBaseClass(StringAtom name, StringAtom baseClass) const noexcept;
         SR_NODISCARD bool IsAbstract(SR_UTILS_NS::StringAtom name) const noexcept;
         SR_NODISCARD const SRClassMeta* GetType(SR_UTILS_NS::StringAtom name) const noexcept override;

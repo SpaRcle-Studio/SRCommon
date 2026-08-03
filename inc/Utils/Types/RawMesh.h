@@ -47,7 +47,7 @@ namespace SR_HTYPES_NS {
         void SetVariant(const IResourceVariant& variant) override;
 
         SR_NODISCARD uint32_t GetMeshesCount() const;
-        SR_NODISCARD std::string_view GetGeometryName(uint32_t id) const;
+        SR_NODISCARD StringView GetGeometryName(uint32_t id) const;
 
         SR_NODISCARD const VertexDataBuffer& GetVertexBuffer(uint32_t id, const VertexLayoutDescription& layout) const;
         SR_NODISCARD const SR_HTYPES_NS::FastMemoryArray<uint32_t>& GetIndices(uint32_t id) const;

@@ -71,13 +71,8 @@ namespace SR_UTILS_NS {
         }
 
         void SetValue(const Reflection::Value& value) override {
-            if (auto&& pValue = value.TryCast<T>()) {
-                m_value = *pValue;
-                m_hasValue = true;
-            }
-            else {
-                SRHalt("Optional::SetValue() : value is not of the correct type!");
-            }
+            m_value = *value.Cast<T>();
+            m_hasValue = true;
         }
 
         SR_NODISCARD bool HasValue() const noexcept override { return m_hasValue; }

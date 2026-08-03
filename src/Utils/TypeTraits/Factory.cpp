@@ -38,8 +38,8 @@ namespace SR_UTILS_NS {
         return {};
     }
 
-    std::vector<SR_UTILS_NS::StringAtom> Factory::GetInheritances(SR_UTILS_NS::StringAtom baseClass) const noexcept {
-        std::vector<SR_UTILS_NS::StringAtom> result;
+    Vector<SR_UTILS_NS::StringAtom> Factory::GetInheritances(SR_UTILS_NS::StringAtom baseClass) const noexcept {
+        Vector<SR_UTILS_NS::StringAtom> result;
         for (auto&& [name, info] : m_types) {
             if (auto&& pMeta = info.metaGetter()) {
                 if (pMeta->IsInherited(baseClass)) {

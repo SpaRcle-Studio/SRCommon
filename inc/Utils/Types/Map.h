@@ -204,6 +204,7 @@ namespace SR_UTILS_NS {
         void swap(Map& other) noexcept;
 
         template<typename Predicate> void erase_if(Predicate pred) noexcept;
+        template<typename Predicate> bool any_of(Predicate pred) const noexcept;
 
         SR_NODISCARD Map DetachAllocator() const;
 
@@ -297,6 +298,15 @@ namespace SR_UTILS_NS {
     // =========================================================================
     // Implementation
     // =========================================================================
+
+    template<typename Key, typename Value, typename Compare> template<typename Predicate> bool Map<Key, Value, Compare>::any_of(Predicate pred) const noexcept {
+        for (auto it = begin(); it != end(); ++it) {
+            if (pred(*it)) {
+                return true;
+            }
+        }
+        return false;
+    }
 
     template<typename Key, typename Value, typename Compare> template<typename Predicate> void Map<Key, Value, Compare>::erase_if(Predicate pred) noexcept {
         for (auto it = begin(); it != end(); ) {

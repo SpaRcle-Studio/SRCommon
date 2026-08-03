@@ -37,11 +37,13 @@ namespace SR_UTILS_NS::Reflection {
 
     Property& Property::SetDefaultValue(Value&& value) noexcept {
         m_defaultValue = new Value(value);
+        SRAssert(m_defaultValue->IsValid());
         return *this;
     }
 
     Property& Property::SetResetValue(Value&& value) noexcept {
         m_resetValue = new Value(value);
+        SRAssert(m_resetValue->IsValid());
         return *this;
     }
 

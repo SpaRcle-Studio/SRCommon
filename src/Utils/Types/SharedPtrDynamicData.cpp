@@ -40,12 +40,13 @@ namespace SR_HTYPES_NS {
         --m_count;
     }
 
-    bool SharedPtrDynamicDataCounter::IsSingletonCanBeDestroyed() const {
-        return false;
-    }
-
     const std::unordered_set<SharedPtrDynamicData *> &SharedPtrDynamicDataCounter::GetData() const {
         return m_data;
+    }
+
+    SharedPtrDynamicDataCounter& SharedPtrDynamicDataCounter::Instance() {
+        static SharedPtrDynamicDataCounter instance;
+        return instance;
     }
 
     SharedPtrDynamicData::SharedPtrDynamicData(uint64_t strongCount, uint64_t weakCount, bool valid, SR_UTILS_NS::SharedPtrPolicy policy)

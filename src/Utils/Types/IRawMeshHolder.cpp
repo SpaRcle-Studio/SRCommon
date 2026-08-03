@@ -144,8 +144,8 @@ namespace SR_HTYPES_NS {
     //    return defaultVertices;
     //}
 
-    std::string_view IRawMeshHolder::GetGeometryName() const noexcept {
-        return GetRawMesh() ? GetRawMesh()->GetGeometryName(GetMeshId()) : std::string_view();
+    StringView IRawMeshHolder::GetGeometryName() const noexcept {
+        return GetRawMesh() ? GetRawMesh()->GetGeometryName(GetMeshId()) : StringView();
     }
 
     void IRawMeshHolder::SetRawMesh(const SR_UTILS_NS::Path& path) {

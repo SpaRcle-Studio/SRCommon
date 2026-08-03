@@ -318,6 +318,11 @@ namespace SR_UTILS_NS {
         SR_TRACY_ZONE;
         SR_SCOPED_LOCK;
 
+        if (typeName.empty()) {
+            SRHalt("ResourceManager::LoadResource() : resource type is empty!");
+            return nullptr;
+        }
+
         if (id.empty()) {
             SRHalt("ResourceManager::LoadResource() : resource id is empty!");
             return nullptr;
@@ -326,6 +331,8 @@ namespace SR_UTILS_NS {
         if (auto&& pFound = Find(id, typeName, pVariant)) {
             return pFound;
         }
+
+        SR_DEBUG("ResourceManager::LoadResource() : loading \"{}\" resource with id \"{}\"", typeName, id);
 
         if (auto&& pIt = m_resourceLoaders.find(typeName); pIt != m_resourceLoaders.end()) {
             return pIt->second(id);

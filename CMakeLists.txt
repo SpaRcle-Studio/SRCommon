@@ -248,7 +248,6 @@ if (SR_TRACY_ENABLE)
 endif()
 
 add_subdirectory(libs/rapidyaml)
-add_subdirectory(libs/entt)
 
 include("${PROJECT_SOURCE_DIR}/cmake/BuildGenerator.cmake")
 SR_COMMON_GENERATE_BUILD_SOURCES(${PROJECT_SOURCE_DIR})
@@ -411,7 +410,7 @@ else()
     target_link_libraries(Utils fmt::fmt)
 endif()
 
-target_link_libraries(Utils ryml::ryml EnTT)
+target_link_libraries(Utils ryml::ryml)
 
 if (SR_COMMON_CPPTRACE_ENABLED)
     target_link_libraries(Utils cpptrace::cpptrace)

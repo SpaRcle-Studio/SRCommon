@@ -110,6 +110,11 @@ namespace SR_UTILS_NS {
         return nullptr;
     }
 
+    EnumReflectorManager& EnumReflectorManager::Instance() {
+        static EnumReflectorManager instance;
+        return instance;
+    }
+
     EnumReflector::~EnumReflector() {
         SR_SAFE_DELETE_PTR(m_data)
     }
@@ -200,8 +205,8 @@ namespace SR_UTILS_NS {
         return std::nullopt;
     }
 
-    const std::vector<SR_UTILS_NS::StringAtom>& EnumReflector::GetNamesInternal() const { return m_data->names; }
-    const SR_UTILS_NS::StringAtom& EnumReflector::GetNameInternal() const { return m_data->enumName; }
+    const Vector<StringAtom>& EnumReflector::GetNamesInternal() const { return m_data->names; }
+    const StringAtom& EnumReflector::GetNameInternal() const { return m_data->enumName; }
     uint64_t EnumReflector::GetIntegralTypeSizeInternal() const { return m_integralTypeSize; }
     EnumVariant EnumReflector::GetEnumVariantInternal() const { return m_enumVariant; }
 

@@ -15,6 +15,12 @@ namespace SR_UTILS_NS::Tests {
         SR_STRUCT()
 
         /// @property
+        Set<PlatformType> associativeSetPlatformType;
+        /// @property
+        Set<int> associativeIntSet;
+        /// @property
+        Set<SR_UTILS_NS::StringAtom> associativeSetAtom;
+        /// @property
         Map<SR_UTILS_NS::StringAtom, int> associativeMapAtom;
         /// @property
         Map<SR_UTILS_NS::String, int> associativeMapString;

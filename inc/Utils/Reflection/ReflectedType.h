@@ -18,6 +18,18 @@ namespace SR_UTILS_NS {
     template<typename T1, typename T2> struct Pair;
     class UnicodeString;
     class Path;
+
+    template<typename>
+    inline constexpr bool IsEntityRefV = false;
+
+    template<typename U>
+    inline constexpr bool IsEntityRefV<EntityRef<U>> = true;
+
+    template<typename>
+    inline constexpr bool IsResourceRefV = false;
+
+    template<typename U>
+    inline constexpr bool IsResourceRefV<ResourceRef<U>> = true;
 }
 
 namespace SR_MATH_NS {
@@ -37,6 +49,8 @@ namespace SR_MATH_NS {
 
 namespace SR_HTYPES_NS {
     template<typename T> class SharedPtr;
+    template<typename Key> class FlatHashSet;
+    template<typename Key, typename Value> class FlatHashMap;
 }
 
 namespace SR_UTILS_NS::Reflection {
@@ -57,25 +71,61 @@ namespace SR_UTILS_NS::Reflection {
     );
 
     enum class ReflectedValueStorageType : uint8_t {
-        Embedded, Reference, ConstReference,
+        Embedded, Dynamic, Reference, ConstReference,
     };
 
+    extern SR_COMMON_DLL_API bool IsReflectedTypeSigned(StringView type);
+    extern SR_COMMON_DLL_API bool IsReflectedTypeIntegral(StringView type);
+    extern SR_COMMON_DLL_API SizeType GetReflectedTypeSize(StringView type);
+
+    constexpr inline SizeType ReflectedValueStorageSize = 64;
+
     struct SR_COMMON_DLL_API ReflectedValue {
-        struct Storage { alignas(std::max_align_t) std::byte data[64]; };
+        struct Storage { alignas(std::max_align_t) std::byte data[ReflectedValueStorageSize]; };
         static ReflectedValue MakeFromPointer(void* pData, ReflectedValueStorageType storageType);
         static ReflectedValue MakeFromNumeric(uint64_t numeric, ReflectedValueStorageType storageType);
         static ReflectedValue MakeFromInlineData(const Storage& inlineData, ReflectedValueStorageType storageType);
 
         SR_NODISCARD int64_t& GetNumeric();
-        SR_NODISCARD void*& GetData();
+        SR_NODISCARD int64_t GetNumeric() const;
         SR_NODISCARD const void* GetData() const;
+        SR_NODISCARD void* GetData();
+
+        void SetData(void* pData);
 
         Storage storage = {};
         ReflectedValueStorageType storageType = ReflectedValueStorageType::Embedded;
     };
 
+    struct ReflectedContainerIterator;
+    struct IteratorVTable {
+        using GetValueFn = ReflectedValue(*)(ReflectedValue&, ReflectedContainerIterator);
+        using OffsetFn = ReflectedContainerIterator(*)(ReflectedContainerIterator, int64_t);
+
+        OffsetFn pOffset = nullptr;
+        GetValueFn pGetValue = nullptr;
+    };
+
+    class Value;
     struct SR_COMMON_DLL_API ReflectedContainerIterator {
         char data[16] = {}; /// с запасом под итераторы Map/Set, где хранится 2 указателя
+        Value* pContainer = nullptr;
+
+        SR_NODISCARD Value operator*() const;
+        SR_NODISCARD Value operator->() const;
+
+        SR_NODISCARD Value First() const;
+        SR_NODISCARD Value Second() const;
+
+        ReflectedContainerIterator operator+(int64_t offset) const;
+        ReflectedContainerIterator& operator++();
+        ReflectedContainerIterator operator-(int64_t offset) const;
+        ReflectedContainerIterator& operator--();
+
+        SR_NODISCARD bool IsMapIterator() const;
+
+        SR_NODISCARD bool operator==(const ReflectedContainerIterator& other) const noexcept;
+        SR_NODISCARD bool operator!=(const ReflectedContainerIterator& other) const noexcept;
     };
 
     struct SR_COMMON_DLL_API ContainerVTable {
@@ -84,10 +134,6 @@ namespace SR_UTILS_NS::Reflection {
         using FindFn = ReflectedContainerIterator(*)(ReflectedValue&, const ReflectedValue&);
         using InsertFn = ReflectedContainerIterator(*)(ReflectedValue&, ReflectedContainerIterator, const ReflectedValue&, const ReflectedValue&);
         using EraseFn = ReflectedContainerIterator(*)(ReflectedValue&, ReflectedContainerIterator);
-        using GetValueFn = ReflectedValue(*)(ReflectedValue&, ReflectedContainerIterator);
-
-        using IteratorOffsetFn = ReflectedContainerIterator(*)(ReflectedContainerIterator, int64_t);
-        using IteratorDistanceFn = int64_t(*)(ReflectedContainerIterator, ReflectedContainerIterator);
 
         using SizeFn = SizeType(*)(ReflectedValue&);
         using ClearFn = void(*)(ReflectedValue&);
@@ -97,7 +143,6 @@ namespace SR_UTILS_NS::Reflection {
         EndFn pEnd = nullptr;
         InsertFn pInsert = nullptr;
         EraseFn pErase = nullptr;
-        GetValueFn pGetValue = nullptr;
         FindFn pFind = nullptr;
 
         SizeFn pSize = nullptr;
@@ -106,24 +151,36 @@ namespace SR_UTILS_NS::Reflection {
 
     };
 
+    struct SR_COMMON_DLL_API PairVTable {
+        using GetPairValue = ReflectedValue(*)(ReflectedValue&, bool isFirst);
+        GetPairValue pGetPairValue = nullptr;
+    };
+
     struct SR_COMMON_DLL_API TypeInfoVTable {
         /// any type functions
         using ConstructorFn = ReflectedValue(*)(IAllocator&);
         using DestructorFn = void(*)(IAllocator&, ReflectedValue&);
-        using CopyFn = void(*)(ReflectedValue&, ReflectedValue&);
+        using CopyFn = void(*)(const ReflectedValue&, ReflectedValue&);
         using MoveFn = void(*)(ReflectedValue&, ReflectedValue&);
+        using SizeOfAlignFn = Pair<SizeType, SizeType>(*)();
 
         ConstructorFn pConstructor = nullptr;
         DestructorFn pDestructor = nullptr;
         CopyFn pCopy = nullptr;
         MoveFn pMove = nullptr;
+        SizeOfAlignFn pSizeOfAlign = nullptr;
 
         /// for SRClass and other containers (except Vector, Map and Set)
         using GetTypeController = void*(*)(ReflectedValue&);
 
-        GetTypeController pGetTypeController = nullptr;
-
-        ContainerVTable containerVTable;
+        union {
+            struct {
+                ContainerVTable containerVTable;
+                IteratorVTable iteratorVTable;
+            };
+            PairVTable pairVTable;
+            GetTypeController pGetTypeController = nullptr;
+        };
 
     };
 
@@ -131,27 +188,35 @@ namespace SR_UTILS_NS::Reflection {
         ReflectedCategoryType category = ReflectedCategoryType::Unknown;
         uint8_t detailedSize = 0;
         StringAtom detailedType;
-        TypeInfo* pNext = nullptr;
+        TypeInfo* pNext[2] = { nullptr, nullptr };
         TypeInfoVTable vtable;
 
         bool operator==(const TypeInfo& other) const noexcept;
         bool operator!=(const TypeInfo& other) const noexcept;
     };
 
-    extern SR_COMMON_DLL_API TypeInfo* AllocateTypeInfo(IAllocator& allocator, uint16_t count);
+    extern SR_COMMON_DLL_API TypeInfo* AllocateTypeInfo();
+    extern SR_COMMON_DLL_API TypeInfo* CopyTypeInfo(TypeInfo* pTypeInfo);
+    extern SR_COMMON_DLL_API void FreeTypeInfo(TypeInfo* pTypeInfo);
+    extern SR_COMMON_DLL_API void DestroyTypeInfoPool();
 
     template<typename T, typename Enable = void> struct DetermineTypeInfoAccessor {
         static void Determine(IAllocator&, TypeInfo*) { static_assert(AlwaysFalseV<T>, "Unable to determine type info for type!"); }
     };
 
     template<typename T> void DetermineTypeInfo(IAllocator& allocator, TypeInfo* pTypeInfo, const T&) {
-        DetermineTypeInfoAccessor<T>::Determine(allocator, pTypeInfo);
+        using Type = std::remove_cv_t<std::remove_reference_t<T>>;
+        DetermineTypeInfoAccessor<Type>::Determine(allocator, pTypeInfo);
     }
 
     template<typename T> TypeInfo* DetermineTypeInfoAlloc(IAllocator& allocator, const T& t) {
-        auto&& pTypeInfo = AllocateTypeInfo(allocator, 1);
+        auto&& pTypeInfo = AllocateTypeInfo();
         DetermineTypeInfo(allocator, pTypeInfo, t);
         return pTypeInfo;
+    }
+
+    template<typename T> Pair<SizeType, SizeType> ReflectedTypeTemplateSizeOfAlign() {
+        return { sizeof(T), alignof(T) };
     }
 
     template<typename T> void ReflectedTypeContainerClear(ReflectedValue& value) {
@@ -185,7 +250,7 @@ namespace SR_UTILS_NS::Reflection {
         memcpy(&it, &iterator.data, sizeof(typename T::Iterator));
         ReflectedValue reflectedValue;
         auto& itValue = *it;
-        reflectedValue.GetData() = (void*)(&itValue);
+        reflectedValue.SetData((void*)(&itValue));
         reflectedValue.storageType = value.storageType == ReflectedValueStorageType::ConstReference ?
             ReflectedValueStorageType::ConstReference :
             ReflectedValueStorageType::Reference;
@@ -199,6 +264,15 @@ namespace SR_UTILS_NS::Reflection {
         auto newIt = pContainer->erase(it);
         ReflectedContainerIterator newIterator;
         memcpy(&newIterator.data, &newIt, sizeof(typename T::Iterator));
+        return newIterator;
+    }
+
+    template<typename T> ReflectedContainerIterator ReflectedTypeContainerIteratorOffset(ReflectedContainerIterator iterator, int64_t offset) {
+        typename T::Iterator it;
+        memcpy(&it, &iterator.data, sizeof(typename T::Iterator));
+        std::advance(it, offset);
+        ReflectedContainerIterator newIterator;
+        memcpy(&newIterator.data, &it, sizeof(typename T::Iterator));
         return newIterator;
     }
 }
