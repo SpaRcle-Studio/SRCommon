@@ -102,8 +102,8 @@ namespace SR_UTILS_NS::Reflection {
         using GetValueFn = ReflectedValue(*)(ReflectedValue&, ReflectedContainerIterator);
         using OffsetFn = ReflectedContainerIterator(*)(ReflectedContainerIterator, int64_t);
 
-        OffsetFn pOffset = nullptr;
-        GetValueFn pGetValue = nullptr;
+        OffsetFn pOffset;
+        GetValueFn pGetValue;
     };
 
     class Value;
@@ -139,21 +139,21 @@ namespace SR_UTILS_NS::Reflection {
         using ClearFn = void(*)(ReflectedValue&);
         using ResizeFn = void(*)(ReflectedValue&, SizeType, bool reserve);
 
-        BeginFn pBegin = nullptr;
-        EndFn pEnd = nullptr;
-        InsertFn pInsert = nullptr;
-        EraseFn pErase = nullptr;
-        FindFn pFind = nullptr;
+        BeginFn pBegin;
+        EndFn pEnd;
+        InsertFn pInsert;
+        EraseFn pErase;
+        FindFn pFind;
 
-        SizeFn pSize = nullptr;
-        ClearFn pClear = nullptr;
-        ResizeFn pResize = nullptr;
+        SizeFn pSize;
+        ClearFn pClear;
+        ResizeFn pResize;
 
     };
 
     struct SR_COMMON_DLL_API PairVTable {
         using GetPairValue = ReflectedValue(*)(ReflectedValue&, bool isFirst);
-        GetPairValue pGetPairValue = nullptr;
+        GetPairValue pGetPairValue;
     };
 
     struct SR_COMMON_DLL_API TypeInfoVTable {
@@ -179,7 +179,7 @@ namespace SR_UTILS_NS::Reflection {
                 IteratorVTable iteratorVTable;
             };
             PairVTable pairVTable;
-            GetTypeController pGetTypeController = nullptr;
+            GetTypeController pGetTypeController;
         };
 
     };
@@ -270,7 +270,7 @@ namespace SR_UTILS_NS::Reflection {
     template<typename T> ReflectedContainerIterator ReflectedTypeContainerIteratorOffset(ReflectedContainerIterator iterator, int64_t offset) {
         typename T::Iterator it;
         memcpy(&it, &iterator.data, sizeof(typename T::Iterator));
-        std::advance(it, offset);
+        AdvanceIterator(it, offset);
         ReflectedContainerIterator newIterator;
         memcpy(&newIterator.data, &it, sizeof(typename T::Iterator));
         return newIterator;

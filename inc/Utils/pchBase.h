@@ -356,6 +356,20 @@ namespace SR_UTILS_NS {
         return offset;
     }
 
+    template<typename Iterator> void AdvanceIterator(Iterator& it, int64_t offset) {
+        if (offset >= 0) {
+            while (offset--) {
+                ++it;
+            }
+        }
+        else {
+            while (offset++) {
+                --it;
+            }
+        }
+    }
+
+
     template<template<class> class T, class U>
     struct IsDerivedFrom {
     private:
