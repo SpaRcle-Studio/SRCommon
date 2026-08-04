@@ -52,6 +52,10 @@ namespace SR_PLATFORM_NS {
 
         uint32_t count = 0;
 
+        if (!dir.IsDir()) {
+            return;
+        }
+
         for (const auto& entry : std::filesystem::directory_iterator(dir.View())) {
             const bool isDirectory = entry.is_directory();
             const bool isFile = entry.is_regular_file();
