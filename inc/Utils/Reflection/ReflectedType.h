@@ -6,6 +6,8 @@
 #define SR_ENGINE_COMMON_REFLECTION_REFLECTED_TYPE_H
 
 #include <Utils/Common/Enumerations.h>
+#include <Utils/TypeTraits/SRClass.h>
+#include <Utils/TypeTraits/SRClassMeta.h>
 
 namespace SR_UTILS_NS {
     class EntityRefBase;

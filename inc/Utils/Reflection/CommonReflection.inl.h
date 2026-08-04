@@ -57,7 +57,8 @@ namespace SR_UTILS_NS::Reflection {
     /// ================================================================================================================
 
     template<typename T> void* ReflectedTypeGetControllerSRClass(ReflectedValue& value) {
-        return static_cast<SRClass*>(static_cast<T*>(value.GetData()));
+        T* pValue = static_cast<T*>(value.GetData());
+        return static_cast<SR_UTILS_NS::SRClass*>(pValue);
     }
     template<typename T> void* ReflectedTypeGetControllerSharedPtr(ReflectedValue& value) {
         return static_cast<SR_HTYPES_NS::SharedPtrBase*>(static_cast<SR_HTYPES_NS::SharedPtr<T>*>(value.GetData()));

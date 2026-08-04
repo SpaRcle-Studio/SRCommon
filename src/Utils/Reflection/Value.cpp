@@ -279,7 +279,7 @@ namespace SR_UTILS_NS::Reflection {
         if (typeInfo.category != ReflectedCategoryType::Object) {
             return nullptr;
         }
-        auto&& pController = GetTypeInfo().vtable.pGetTypeController(const_cast<ReflectedValue&>(m_storage));
+        void* pController = GetTypeInfo().vtable.pGetTypeController(const_cast<ReflectedValue&>(m_storage));
         return static_cast<SRClass*>(pController);
     }
 
