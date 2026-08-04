@@ -88,7 +88,8 @@ namespace SR_UTILS_NS {
 
     bool Asset::Unload() {
         GetMeta()->ForEachProperty([&](auto&& property, uint64_t index) {
-            property.Set(this, property.GetDefaultValue());
+            auto&& defaultValue = property.GetDefaultValue().Ref();
+            property.Set(this, defaultValue);
         });
 
         OnAssetUnloaded();

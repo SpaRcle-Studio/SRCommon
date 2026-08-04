@@ -25,6 +25,10 @@ namespace SR_PLATFORM_NS {
         }
     }
 
+    bool IsSupportThreads() {
+        return GetType() != PlatformType::Emscripten;
+    }
+
     bool RemoveAssetsPrefix(std::string_view& path) {
         if (path.starts_with(":assets:")) {
             path = path.substr(8); // length of ":assets:"

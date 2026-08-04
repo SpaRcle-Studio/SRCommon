@@ -95,6 +95,7 @@ namespace SR_UTILS_NS::Platform {
     SR_COMMON_DLL_API extern PlatformType GetType();
     SR_COMMON_DLL_API extern WindowProtocolType GetWindowProtocolType();
     SR_COMMON_DLL_API extern bool IsMobilePlatform();
+    SR_COMMON_DLL_API extern bool IsSupportThreads();
     SR_COMMON_DLL_API extern void ShowWindow(void* pHandle, ShowWindowActionType action);
 
     SR_COMMON_DLL_API extern std::string ExecuteCommand(const std::string& command, const std::vector<std::string>& env = {});

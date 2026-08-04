@@ -19,8 +19,8 @@ namespace SR_UTILS_NS {
         SR_REGISTER_SINGLETON(ResourceManager)
         using Hash = uint64_t;
         using ResourceLoaderFn = SR_HTYPES_NS::Function<IResource::Ptr(const StringAtom&)>;
-        using ResourcesTypes = SR_HTYPES_NS::FlatHashMap<SR_UTILS_NS::StringAtom, ResourceType*>;
     public:
+        using ResourcesTypes = SR_HTYPES_NS::FlatHashMap<SR_UTILS_NS::StringAtom, ResourceType*>;
         static const uint64_t ResourceLifeTime;
 
     public:

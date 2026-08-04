@@ -51,6 +51,7 @@ namespace SR_HTYPES_NS {
             void SetMainThread();
             void PrintThreads();
             void DeInitialize();
+            void ManuallyUpdateThreads();
 
             SR_NODISCARD Ptr GetMainThread();
             SR_NODISCARD Ptr GetThisThread();

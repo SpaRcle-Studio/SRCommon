@@ -128,10 +128,12 @@ namespace SR_HTYPES_NS {
             return;
         }
 
+    #ifdef SR_THREADS_ALLOWED
         if (GetId() != pThread->GetId()) {
             SRHalt("Synchronization can only be performed by the owner thread!");
             return;
         }
+    #endif
 
         if (GetImpl().nameChanged) {
             SR_TRACY_THREAD_NAME(m_name.c_str());
@@ -210,7 +212,7 @@ namespace SR_HTYPES_NS {
     #ifdef SR_THREADS_ALLOWED
         return GetImpl().thread.joinable();
     #else
-        return false;
+        return true;
     #endif
     }
 
@@ -300,6 +302,20 @@ namespace SR_HTYPES_NS {
         if (m_main) {
             delete m_main;
             m_main = nullptr;
+        }
+    }
+
+    void Thread::Factory::ManuallyUpdateThreads() {
+        SR_LOCK_GUARD;
+
+        for (auto&& [id, pThread] : m_threads) {
+            if (!pThread || GetMainThread() == pThread) {
+                continue;
+            }
+
+            if (auto&& executor = pThread->GetImpl().threadBody) {
+                executor();
+            }
         }
     }
 }

@@ -60,7 +60,7 @@ namespace SR_UTILS_NS {
 
     bool Task::Run() {
         if (m_state->load() != State::Waiting || !m_function || (m_thread && m_thread->Joinable())) {
-            SRAssert(false);
+            SRHalt("Task::Run() : task is already running or completed!");
             return false;
         }
 
@@ -389,7 +389,12 @@ namespace SR_UTILS_NS {
     void TaskManager::Wait(TaskManager::TaskId taskId) const {
         SR_TRACY_ZONE;
         while (IsActive(taskId)) {
-            SR_PLATFORM_NS::Sleep(5);
+            if (SR_PLATFORM_NS::IsSupportThreads()) {
+                SR_PLATFORM_NS::Sleep(5);
+            }
+            else {
+                SR_HTYPES_NS::Thread::Factory::Instance().ManuallyUpdateThreads();
+            }
         }
     }
 }
