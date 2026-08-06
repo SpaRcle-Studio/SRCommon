@@ -10,6 +10,8 @@
 #include <Utils/Math/Rect.h>
 #include <Utils/Math/AABB.h>
 
+#include <Enum/ReflectedCategoryType.hpp>
+
 namespace SR_UTILS_NS::Reflection {
     ReflectedValue STUB_STORAGE;
 

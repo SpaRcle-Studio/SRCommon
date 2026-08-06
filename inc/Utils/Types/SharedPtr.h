@@ -243,6 +243,17 @@ namespace SR_HTYPES_NS {
     }
 
     template<class T> SRClass* SharedPtr<T>::GetSRClass() const {
+        if (!m_ptr) {
+            return nullptr;
+        }
+        if constexpr (SR_UTILS_NS::IsCompleteTypeV<T>) {
+            if constexpr (std::is_base_of_v<SR_UTILS_NS::SRClass, T>) {
+                return static_cast<SR_UTILS_NS::SRClass*>(m_ptr);
+            }
+            else if constexpr (std::is_polymorphic_v<T>) {
+                return dynamic_cast<SR_UTILS_NS::SRClass*>(m_ptr);
+            }
+        }
         return (m_data && m_data->classGetter) ? m_data->classGetter(m_ptr) : nullptr;
     }
 
