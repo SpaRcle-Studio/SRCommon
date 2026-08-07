@@ -81,9 +81,9 @@ namespace SR_UTILS_NS {
         mutable SR_MATH_NS::FVector3 m_rotation = SR_MATH_NS::FVector3::Zero();
         /// @property @setter(SetRotation) @hidden
         SR_MATH_NS::Quaternion m_quaternion = SR_MATH_NS::Quaternion::Identity();
-        /// @property @setter(SetScale) @defaultValue(SR_MATH_NS::FVector3::One()) @drag(0.01f) @resetValue(SR_MATH_NS::FVector3::One())
+        /// @property @setter(SetScale) @defaultValue(SR_MATH_NS::FVector3::One()) @drag(0.01f)
         SR_MATH_NS::FVector3 m_scale = SR_MATH_NS::FVector3::One();
-        /// @property @setter(SetSkew) @defaultValue(SR_MATH_NS::FVector3::One()) @drag(0.01f) @resetValue(SR_MATH_NS::FVector3::One()) @hidden
+        /// @property @setter(SetSkew) @defaultValue(SR_MATH_NS::FVector3::One()) @drag(0.01f) @hidden
         SR_MATH_NS::FVector3 m_skew = SR_MATH_NS::FVector3::One();
         /// @property @setter(SetAABB) @defaultValue(SR_MATH_NS::AABB::UnitCube()) @hidden
         SR_MATH_NS::AABB m_aabb = SR_MATH_NS::AABB::UnitCube();

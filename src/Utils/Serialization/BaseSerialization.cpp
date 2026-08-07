@@ -158,6 +158,15 @@ namespace SR_UTILS_NS {
         : Super()
     { }
 
+    bool IBaseDeserializer::HasKey(const SerializationId& name) const noexcept {
+        for (auto&& child : GetImpl().GetWalkNode().children) {
+            if (child.id.GetHash() == name.GetHash()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     bool IBaseDeserializer::IsDefault(const SerializationId& name) const noexcept {
         for (auto&& child : GetImpl().GetWalkNode().children) {
             if (child.id.GetHash() == name.GetHash()) {

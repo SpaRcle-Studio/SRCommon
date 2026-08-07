@@ -122,6 +122,8 @@ namespace SR_MATH_NS {
         FColor(float_t _x, float_t _y, float_t _z, float_t _w = 1.f);
         FColor(int32_t _x, int32_t _y, int32_t _z, int32_t _w = 1);
 
+        SR_NODISCARD FVector3 RGB() const noexcept;
+
         FColor& operator=(const FColor& color);
         FColor& operator=(FColor&& color);
 
@@ -187,6 +189,8 @@ namespace SR_MATH_NS {
         FVector3 direction;
     };
 
+    FColor KelvinToRGB(float_t K);
+    FColor Mix(const FColor& color1, const FColor& color2, float_t factor);
     FVector4 BuildPlan(const FVector3& point, const FVector3& normal);
     FVector4 BuildPlan(const FVector4& point, const FVector4& p_normal);
     uint32_t RGBToHEX(const IVector3& color);

@@ -181,6 +181,7 @@ namespace SR_UTILS_NS {
         SR_NODISCARD bool SaveToFile(const SR_UTILS_NS::Path& path) const override { return GetImpl().SaveToFileImpl(path); }
 
         SR_NODISCARD bool IsDefault(const SerializationId& name) const noexcept override;
+        SR_NODISCARD bool HasKey(const SerializationId& name) const noexcept override;
 
         void ResetWalker() override { GetImpl().m_walker.resize(1); }
 

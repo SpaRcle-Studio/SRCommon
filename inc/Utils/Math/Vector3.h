@@ -884,7 +884,6 @@ namespace SR_MATH_NS {
 
     FVector3 ProjectOnPlane(const FVector3& v, const FVector3& planeNormal /* must be normalized */);
 
-    FVector3 KelvinToRGB(float_t K);
     FVector3 Mix(const FVector3& a, const FVector3& b, float_t t);
 }
 

@@ -137,7 +137,7 @@ namespace SR_UTILS_NS {
 
         /// @property @setter(SetTranslation)
         SR_MATH_NS::FVector3 m_translation = SR_MATH_NS::FVector3::Zero();
-        /// @property @setter(SetSize) @resetValue(SR_MATH_NS::FVector2(100.0f, 100.0f))
+        /// @property @setter(SetSize)
         SR_MATH_NS::FVector2 m_size = SR_MATH_NS::FVector2(100.0f, 100.0f);
 
         /// @property @setter(SetOffsetMin) @onChanged(UpdateTree)
@@ -147,7 +147,7 @@ namespace SR_UTILS_NS {
 
         /// @property @onChanged(UpdateTree) @setter(SetAnchors)
         RectAnchors m_anchors;
-        /// @property @resetValue(SR_MATH_NS::FVector2(0.5f, 0.5f)) @setter(SetPivot)
+        /// @property @setter(SetPivot)
         SR_MATH_NS::FVector2 m_pivot = SR_MATH_NS::FVector2(0.5f, 0.5f);
 
         /// @property @setter(SetRotation) @dontSave
@@ -155,9 +155,9 @@ namespace SR_UTILS_NS {
         /// @property @setter(SetRotation) @hidden
         SR_MATH_NS::Quaternion m_quaternion = SR_MATH_NS::Quaternion::Identity();
 
-        /// @property @setter(SetScale) @resetValue(SR_MATH_NS::FVector3::One())
+        /// @property @setter(SetScale)
         SR_MATH_NS::FVector3 m_scale = SR_MATH_NS::FVector3::One();
-        /// @property @setter(SetSkew) @resetValue(SR_MATH_NS::FVector3::One()) @hidden
+        /// @property @setter(SetSkew) @hidden
         SR_MATH_NS::FVector3 m_skew = SR_MATH_NS::FVector3::One();
 
         /// @property @setter(SetLocalPriority)

@@ -37,6 +37,7 @@ namespace SR_UTILS_NS {
         SR_NODISCARD virtual std::string ToString() const noexcept { return ""; }
 
         SR_NODISCARD virtual bool IsDefault(const SerializationId& name) const noexcept = 0;
+        SR_NODISCARD virtual bool HasKey(const SerializationId& name) const noexcept = 0;
         SR_NODISCARD virtual bool ShouldSetDefaults(const SerializationId& name) const noexcept = 0;
         SR_NODISCARD virtual bool ShouldSetDefaults() const noexcept = 0;
         SR_NODISCARD virtual bool AllowNewMapKeys() const noexcept = 0;

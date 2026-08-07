@@ -198,10 +198,18 @@ namespace SR_UTILS_NS {
         if (!deserializer.BeginObject(id)) {
             return;
         }
-        Serialization::Load(deserializer, value.r, SerializationId::Create("r"));
-        Serialization::Load(deserializer, value.g, SerializationId::Create("g"));
-        Serialization::Load(deserializer, value.b, SerializationId::Create("b"));
-        Serialization::Load(deserializer, value.a, SerializationId::Create("a"));
+        if (deserializer.HasKey(SerializationId::Create("x")) || deserializer.HasKey(SerializationId::Create("y")) || deserializer.HasKey(SerializationId::Create("z")) || deserializer.HasKey(SerializationId::Create("w"))) {
+            Serialization::Load(deserializer, value.r, SerializationId::Create("x"));
+            Serialization::Load(deserializer, value.g, SerializationId::Create("y"));
+            Serialization::Load(deserializer, value.b, SerializationId::Create("z"));
+            Serialization::Load(deserializer, value.a, SerializationId::Create("w"));
+        }
+        else {
+            Serialization::Load(deserializer, value.r, SerializationId::Create("r"));
+            Serialization::Load(deserializer, value.g, SerializationId::Create("g"));
+            Serialization::Load(deserializer, value.b, SerializationId::Create("b"));
+            Serialization::Load(deserializer, value.a, SerializationId::Create("a"));
+        }
         deserializer.EndObject();
     }
 
