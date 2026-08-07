@@ -98,8 +98,10 @@ namespace SR_PLATFORM_NS {
         std::cerr << msg << std::endl;
     }
 
+    SR_UTILS_NS::String CLIPBOARD_BUFFER;
+
     void TextToClipboard(const std::string &text) {
-        SRHaltOnce("Not implemented!");
+        CLIPBOARD_BUFFER = text;
     }
 
     void CopyFilesToClipboard(std::list<SR_UTILS_NS::Path> paths) {
@@ -115,8 +117,7 @@ namespace SR_PLATFORM_NS {
     }
 
     std::string GetClipboardText() {
-        SRHaltOnce("Not implemented!");
-        return std::string();
+        return CLIPBOARD_BUFFER;
     }
 
     void InitializePlatform() {
@@ -128,7 +129,7 @@ namespace SR_PLATFORM_NS {
     }
 
     void ClearClipboard() {
-        SRHaltOnce("Not implemented!");
+        CLIPBOARD_BUFFER.clear();
     }
 
     SR_MATH_NS::FVector2 GetMousePos() {
