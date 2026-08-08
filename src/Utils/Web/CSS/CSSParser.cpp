@@ -6,7 +6,7 @@
 #include <Utils/Resources/ResourceManager.h>
 #include <Utils/FileSystem/FileSystem.h>
 
-#include <cssparser/cssparser/CSSParser.h>
+//#include <cssparser/cssparser/CSSParser.h>
 
 namespace SR_UTILS_NS::Web {
     CSS::Ptr CSSParser::Parse(const Path& path, const CSSParserContext& context) {
@@ -17,7 +17,7 @@ namespace SR_UTILS_NS::Web {
     }
 
     CSS::Ptr CSSParser::Parse(const std::string& data, const CSSParserContext& context) {
-        if (data.empty()) {
+        /*if (data.empty()) {
             SRHalt("CSSParser::Parse() : empty data");
             return {};
         }
@@ -58,7 +58,7 @@ namespace SR_UTILS_NS::Web {
                 continue;
             }
 
-            /** propery value */
+            /// propery value
 
             if (!propertyName.empty()) {
                 pStyle = m_pCSS->GetOrCreateStyle(styleName, isClass);
@@ -86,7 +86,7 @@ namespace SR_UTILS_NS::Web {
                 continue;
             }
 
-            /** media requests */
+            /// media requests
 
             if (token.type == ::CSSParser::AT_START) {
                 if (!EvaluateMedia(token.data, context)) {
@@ -102,7 +102,7 @@ namespace SR_UTILS_NS::Web {
                 continue;
             }
 
-            /** styles */
+            /// styles
 
             if (token.type == ::CSSParser::SEL_START) {
                 styleName.clear();
@@ -125,7 +125,7 @@ namespace SR_UTILS_NS::Web {
                 continue;
             }
 
-            /** properties */
+            /// properties
 
             if (token.type == ::CSSParser::PROPERTY) {
                 propertyName = token.data;
@@ -134,7 +134,7 @@ namespace SR_UTILS_NS::Web {
             }
 
             token = parser.get_next_token();
-        }
+        }*/
 
         return SR_EXCHANGE(m_pCSS, {});
     }
