@@ -138,6 +138,7 @@ namespace SR_UTILS_NS::Reflection {
     }
 
     template<typename T> struct DetermineTypeInfoAccessor<T, std::enable_if_t<IsSREnumV<T>>> {
+        static constexpr bool Supported = true;
         static void Determine(IAllocator& allocator, TypeInfo* pTypeInfo) {
             pTypeInfo->detailedType = GetEnumName(T());
             pTypeInfo->category = ReflectedCategoryType::Enum;
@@ -153,6 +154,7 @@ namespace SR_UTILS_NS::Reflection {
         !IsEntityRefV<T> &&
         !IsResourceRefV<T>>>
     {
+        static constexpr bool Supported = true;
         static void Determine(IAllocator& allocator, TypeInfo* pTypeInfo) {
             pTypeInfo->detailedType = T::GetClassStaticName();
             pTypeInfo->category = ReflectedCategoryType::Object;
@@ -190,21 +192,43 @@ namespace SR_UTILS_NS::Reflection {
     template<typename T> struct DetermineTypeInfoAccessor<T, std::enable_if_t<
         std::is_arithmetic_v<T> || IsTypeMathVectorTemplateV<T> || IsTypeMathRectTemplateV<T> || IsTypeMathSizeTemplateV<T>
     >> {
+        static constexpr bool Supported = true;
         static void Determine(IAllocator& allocator, TypeInfo* pTypeInfo) { DetermineTypeInfoRegistered<T>(allocator, pTypeInfo); }
     };
 
-    template<> struct DetermineTypeInfoAccessor<Path> { static void Determine(IAllocator& allocator, TypeInfo* pTypeInfo) { return DetermineTypeInfoRegistered<Path>(allocator, pTypeInfo); } };
-    template<> struct DetermineTypeInfoAccessor<String> { static void Determine(IAllocator& allocator, TypeInfo* pTypeInfo) { return DetermineTypeInfoRegistered<String>(allocator, pTypeInfo); } };
-    template<> struct DetermineTypeInfoAccessor<StringView> { static void Determine(IAllocator& allocator, TypeInfo* pTypeInfo) { return DetermineTypeInfoRegistered<StringView>(allocator, pTypeInfo); } };
-    template<> struct DetermineTypeInfoAccessor<StringAtom> { static void Determine(IAllocator& allocator, TypeInfo* pTypeInfo) { return DetermineTypeInfoRegistered<StringAtom>(allocator, pTypeInfo); } };
-    template<> struct DetermineTypeInfoAccessor<UnicodeString> { static void Determine(IAllocator& allocator, TypeInfo* pTypeInfo) { return DetermineTypeInfoRegistered<UnicodeString>(allocator, pTypeInfo); } };
-    template<> struct DetermineTypeInfoAccessor<SR_MATH_NS::AABB> { static void Determine(IAllocator& allocator, TypeInfo* pTypeInfo) { return DetermineTypeInfoRegistered<SR_MATH_NS::AABB>(allocator, pTypeInfo); } };
-    template<> struct DetermineTypeInfoAccessor<SR_MATH_NS::FColor> { static void Determine(IAllocator& allocator, TypeInfo* pTypeInfo) { return DetermineTypeInfoRegistered<SR_MATH_NS::FColor>(allocator, pTypeInfo); } };
-    template<> struct DetermineTypeInfoAccessor<SR_MATH_NS::Quaternion> { static void Determine(IAllocator& allocator, TypeInfo* pTypeInfo) { return DetermineTypeInfoRegistered<SR_MATH_NS::Quaternion>(allocator, pTypeInfo); } };
-    template<> struct DetermineTypeInfoAccessor<SR_MATH_NS::Matrix3x3> { static void Determine(IAllocator& allocator, TypeInfo* pTypeInfo) { return DetermineTypeInfoRegistered<SR_MATH_NS::Matrix3x3>(allocator, pTypeInfo); } };
-    template<> struct DetermineTypeInfoAccessor<SR_MATH_NS::Matrix4x4> { static void Determine(IAllocator& allocator, TypeInfo* pTypeInfo) { return DetermineTypeInfoRegistered<SR_MATH_NS::Matrix4x4>(allocator, pTypeInfo); } };
+    template<> struct DetermineTypeInfoAccessor<Path> {
+        static constexpr bool Supported = true;
+        static void Determine(IAllocator& allocator, TypeInfo* pTypeInfo) { return DetermineTypeInfoRegistered<Path>(allocator, pTypeInfo); } };
+    template<> struct DetermineTypeInfoAccessor<String> {
+        static constexpr bool Supported = true;
+        static void Determine(IAllocator& allocator, TypeInfo* pTypeInfo) { return DetermineTypeInfoRegistered<String>(allocator, pTypeInfo); } };
+    template<> struct DetermineTypeInfoAccessor<StringView> {
+        static constexpr bool Supported = true;
+        static void Determine(IAllocator& allocator, TypeInfo* pTypeInfo) { return DetermineTypeInfoRegistered<StringView>(allocator, pTypeInfo); } };
+    template<> struct DetermineTypeInfoAccessor<StringAtom> {
+        static constexpr bool Supported = true;
+        static void Determine(IAllocator& allocator, TypeInfo* pTypeInfo) { return DetermineTypeInfoRegistered<StringAtom>(allocator, pTypeInfo); } };
+    template<> struct DetermineTypeInfoAccessor<UnicodeString> {
+        static constexpr bool Supported = true;
+        static void Determine(IAllocator& allocator, TypeInfo* pTypeInfo) { return DetermineTypeInfoRegistered<UnicodeString>(allocator, pTypeInfo); } };
+    template<> struct DetermineTypeInfoAccessor<SR_MATH_NS::AABB> {
+        static constexpr bool Supported = true;
+        static void Determine(IAllocator& allocator, TypeInfo* pTypeInfo) { return DetermineTypeInfoRegistered<SR_MATH_NS::AABB>(allocator, pTypeInfo); } };
+    template<> struct DetermineTypeInfoAccessor<SR_MATH_NS::FColor> {
+        static constexpr bool Supported = true;
+        static void Determine(IAllocator& allocator, TypeInfo* pTypeInfo) { return DetermineTypeInfoRegistered<SR_MATH_NS::FColor>(allocator, pTypeInfo); } };
+    template<> struct DetermineTypeInfoAccessor<SR_MATH_NS::Quaternion> {
+        static constexpr bool Supported = true;
+        static void Determine(IAllocator& allocator, TypeInfo* pTypeInfo) { return DetermineTypeInfoRegistered<SR_MATH_NS::Quaternion>(allocator, pTypeInfo); } };
+    template<> struct DetermineTypeInfoAccessor<SR_MATH_NS::Matrix3x3> {
+        static constexpr bool Supported = true;
+        static void Determine(IAllocator& allocator, TypeInfo* pTypeInfo) { return DetermineTypeInfoRegistered<SR_MATH_NS::Matrix3x3>(allocator, pTypeInfo); } };
+    template<> struct DetermineTypeInfoAccessor<SR_MATH_NS::Matrix4x4> {
+        static constexpr bool Supported = true;
+        static void Determine(IAllocator& allocator, TypeInfo* pTypeInfo) { return DetermineTypeInfoRegistered<SR_MATH_NS::Matrix4x4>(allocator, pTypeInfo); } };
 
     template<typename T> struct DetermineTypeInfoAccessor<Optional<T>> {
+        static constexpr bool Supported = true;
         static void Determine(IAllocator& allocator, TypeInfo* pTypeInfo) {
             static const StringAtom detailedType = "Optional";
             pTypeInfo->detailedType = detailedType;
@@ -221,6 +245,7 @@ namespace SR_UTILS_NS::Reflection {
     };
 
     template<typename T> struct DetermineTypeInfoAccessor<EntityRef<T>> {
+        static constexpr bool Supported = true;
         static void Determine(IAllocator& allocator, TypeInfo* pTypeInfo) {
             static const StringAtom detailedType = "EntityRef";
             pTypeInfo->detailedType = detailedType;
@@ -237,6 +262,7 @@ namespace SR_UTILS_NS::Reflection {
     };
 
     template<typename T> struct DetermineTypeInfoAccessor<ResourceRef<T>> {
+        static constexpr bool Supported = true;
         static void Determine(IAllocator& allocator, TypeInfo* pTypeInfo) {
             static const StringAtom detailedType = "ResourceRef";
             pTypeInfo->detailedType = detailedType;
@@ -253,6 +279,7 @@ namespace SR_UTILS_NS::Reflection {
     };
 
     template<typename T> struct DetermineTypeInfoAccessor<SR_HTYPES_NS::SharedPtr<T>> {
+        static constexpr bool Supported = true;
         static void Determine(IAllocator& allocator, TypeInfo* pTypeInfo) {
             static const StringAtom detailedType = "SharedPtr";
             pTypeInfo->detailedType = detailedType;
@@ -269,6 +296,7 @@ namespace SR_UTILS_NS::Reflection {
     };
 
     template<typename T1, typename T2> struct DetermineTypeInfoAccessor<Pair<T1, T2>> {
+        static constexpr bool Supported = true;
         static void Determine(IAllocator& allocator, TypeInfo* pTypeInfo) {
             static const StringAtom detailedType = "Pair";
             pTypeInfo->detailedType = detailedType;

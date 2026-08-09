@@ -236,6 +236,10 @@ namespace SR_PLATFORM_NS {
     bool ReadFileOriginal(const Path& path, String& buffer) {
         SR_TRACY_ZONE;
 
+        if (!path.Exists(Path::Type::File)) {
+            return false;
+        }
+
         // Открываем файл в бинарном режиме и сразу получаем размер
         std::ifstream file(path.c_str(), std::ios::binary | std::ios::ate);
         if (!file) {

@@ -63,11 +63,14 @@ namespace SR_UTILS_NS {
 
     public:
         SR_NODISCARD Reflection::Value GetReflectionValue() const noexcept override {
-            if (m_hasValue) {
-                return Reflection::Value::CreateRef(const_cast<T&>(m_value));
+            if constexpr (Reflection::IsDetermineTypeInfoSupportedV<T>) {
+                if (m_hasValue) {
+                    return Reflection::Value::CreateRef(const_cast<T &>(m_value));
+                }
+                static const T defaultValue{};
+                return Reflection::Value::CreateCRef(defaultValue);
             }
-            static const T defaultValue{};
-            return Reflection::Value::CreateCRef(defaultValue);
+            return Reflection::Value();
         }
 
         void SetValue(const Reflection::Value& value) override {

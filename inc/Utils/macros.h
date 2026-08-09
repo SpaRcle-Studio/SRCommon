@@ -315,6 +315,7 @@
 #define SR_CORE_GUI_NS SpaRcle::Core::GUI
 #define SR_SCRIPTING_NS SpaRcle::Scripting
 #define SR_AUDIO_NS SpaRcle::Audio
+#define SR_FLUX_NS SpaRcle::Utils::Flux
 #define SR_UTILS_GUI_NS SR_UTILS_NS::GUI
 
 #define SR_COUNT_ARGS_IMPL2(                                                                                            \

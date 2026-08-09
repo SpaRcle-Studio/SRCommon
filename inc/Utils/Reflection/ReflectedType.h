@@ -203,8 +203,11 @@ namespace SR_UTILS_NS::Reflection {
     extern SR_COMMON_DLL_API void DestroyTypeInfoPool();
 
     template<typename T, typename Enable = void> struct DetermineTypeInfoAccessor {
+        static constexpr bool Supported = false;
         static void Determine(IAllocator&, TypeInfo*) { static_assert(AlwaysFalseV<T>, "Unable to determine type info for type!"); }
     };
+
+    template<typename T> constexpr bool IsDetermineTypeInfoSupportedV = DetermineTypeInfoAccessor<T>::Supported;
 
     template<typename T> void DetermineTypeInfo(IAllocator& allocator, TypeInfo* pTypeInfo, const T&) {
         using Type = std::remove_cv_t<std::remove_reference_t<T>>;

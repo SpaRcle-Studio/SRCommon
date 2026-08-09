@@ -34,6 +34,7 @@ namespace SR_UTILS_NS::Reflection {
     }
 
     template<typename T> struct DetermineTypeInfoAccessor<Vector<T>> {
+        static constexpr bool Supported = true;
         static void Determine(IAllocator& allocator, TypeInfo* pTypeInfo) {
             static const StringAtom detailedType = "Vector";
             pTypeInfo->detailedType = detailedType;
