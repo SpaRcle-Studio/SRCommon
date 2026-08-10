@@ -5,14 +5,14 @@
 #ifndef SR_ENGINE_COMMON_FLUX_RUNTIME_H
 #define SR_ENGINE_COMMON_FLUX_RUNTIME_H
 
-#include <Utils/Flux/IR/FluxProgram.h>
-#include <Utils/Reflection/Value.h>
+#include <Utils/Flux/Runtime/FluxExecution.h>
 
 namespace SR_FLUX_NS {
-    struct FluxExecution {
-        Vector<Reflection::Value> registers;
-        Vector<Reflection::Value> stack;
-        uint32_t instructionPointer = 0;
+    enum class RegisterType : uint8_t {
+        Invalid,
+        Constant,
+        Storage,
+        Register,
     };
 
     class FluxRuntime : public NonCopyable {
@@ -20,21 +20,34 @@ namespace SR_FLUX_NS {
         FluxRuntime() = default;
         explicit FluxRuntime(FluxProgram* pProgram);
 
-        void Emit(StringView functionName, const Vector<Reflection::Value>& args);
+        void Emit(StringView labelName, const Vector<Reflection::Value>& args);
         void Update(float_t dt);
 
+    private:
+        bool Initialize();
+        uint32_t Execute(FluxExecution& execution, uint32_t budget);
+        bool ExecuteInstruction(FluxExecution& execution, const FluxInstruction& instruction);
+        bool ValidateInstruction(FluxExecution& execution, const FluxInstruction& instruction) const;
+        SR_NODISCARD RegisterType GetRegisterType(FluxExecution& execution, FluxRegisterId registerId) const;
+        SR_NODISCARD Reflection::Value& GetRegister(FluxExecution& execution, FluxRegisterId registerId, RegisterType type);
+
     public:
+        uint32_t m_maxRegisters = 32;
+        uint32_t m_maxExecutions = 256;
         uint32_t m_budgetPerTick = 1024;
-        float_t m_tickDuration = 0.016f; // 60 FPS
+        float_t m_tickDuration = 0.016f; // 1 / 60 FPS
 
         float_t m_timeAccumulator = 0.0f;
 
         Vector<FluxExecution> m_executions;
 
+        bool m_initialized = false;
+        bool m_validation = true;
+
         FluxProgram* m_program = nullptr;
 
-        Vector<Reflection::Value> constants;
-        Vector<Reflection::Value> storage;
+        Vector<Reflection::Value> m_constants;
+        Vector<Reflection::Value> m_storage;
 
     };
 }

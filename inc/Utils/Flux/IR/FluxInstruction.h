@@ -14,6 +14,7 @@ namespace SR_FLUX_NS {
     };
 
     using FluxRegisterId = uint32_t;
+    using FluxInstructionId = uint32_t;
 
     struct FluxInstruction {
         FluxOpcode opcode = FluxOpcode::Unknown;

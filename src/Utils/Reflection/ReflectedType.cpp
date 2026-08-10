@@ -200,6 +200,18 @@ namespace SR_UTILS_NS::Reflection {
         return !(*this == other);
     }
 
+    SRHashType TypeInfo::GetHash() const noexcept {
+        SRHashType hash = static_cast<SRHashType>(category);
+        hash = HashCombine(hash, detailedSize);
+        hash = HashCombine(hash, detailedType);
+        for (size_t i = 0; i < 2; ++i) {
+            if (pNext[i]) {
+                hash = HashCombine(hash, pNext[i]->GetHash());
+            }
+        }
+        return hash;
+    }
+
     template<typename T, typename Enable = void> struct DetermineTypeName {
         static StringAtom Get() { return StringAtom(); }
     };
@@ -318,6 +330,45 @@ namespace SR_UTILS_NS::Reflection {
         }
         delete g_typeInfoPool;
         g_typeInfoPool = nullptr;
+    }
+
+    struct TypeInfoVTableCounter {
+        TypeInfoVTable vtable;
+        uint32_t count = 0;
+    };
+    SR_HTYPES_NS::FlatHashMap<SRHashType, TypeInfoVTableCounter> g_typeInfoVTableMap;
+
+    void RegisterVTable(TypeInfo& typeInfo) {
+        const auto hash = typeInfo.GetHash();
+        auto&& table = g_typeInfoVTableMap[hash];
+        if (table.count == 0) {
+            table.vtable = typeInfo.vtable;
+        }
+        table.count++;
+    }
+
+    void UnregisterVTable(TypeInfo& typeInfo) {
+        const auto hash = typeInfo.GetHash();
+        auto&& pIt = g_typeInfoVTableMap.find(hash);
+        if (pIt == g_typeInfoVTableMap.end()) {
+            SRHalt("UnregisterVTable() : TypeInfoVTable for type '{}' is not registered!", typeInfo.detailedType);
+            return;
+        }
+        auto&& table = pIt->second;
+        if (--table.count == 0) {
+            g_typeInfoVTableMap.erase(pIt);
+        }
+    }
+
+    bool FindVTable(TypeInfo& typeInfo) {
+        const auto hash = typeInfo.GetHash();
+        auto pIt = g_typeInfoVTableMap.find(hash);
+        if (pIt == g_typeInfoVTableMap.end()) {
+            SRHalt("FindVTable() : TypeInfoVTable for type '{}' is not registered!", typeInfo.detailedType);
+            return false;
+        }
+        typeInfo.vtable = pIt->second.vtable;
+        return true;
     }
 
     template<typename T> void ReflectedTypeInlineCopy(const ReflectedValue& from, ReflectedValue& to) {

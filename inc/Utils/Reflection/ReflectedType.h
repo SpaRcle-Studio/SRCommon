@@ -175,15 +175,10 @@ namespace SR_UTILS_NS::Reflection {
         /// for SRClass and other containers (except Vector, Map and Set)
         using GetTypeController = void*(*)(ReflectedValue&);
 
-        union {
-            struct {
-                ContainerVTable containerVTable;
-                IteratorVTable iteratorVTable;
-            };
-            PairVTable pairVTable;
-            GetTypeController pGetTypeController;
-        };
-
+        ContainerVTable containerVTable;
+        IteratorVTable iteratorVTable;
+        PairVTable pairVTable;
+        GetTypeController pGetTypeController;
     };
 
     struct SR_COMMON_DLL_API TypeInfo {
@@ -193,6 +188,8 @@ namespace SR_UTILS_NS::Reflection {
         TypeInfo* pNext[2] = { nullptr, nullptr };
         TypeInfoVTable vtable;
 
+        SR_NODISCARD SRHashType GetHash() const noexcept;
+
         bool operator==(const TypeInfo& other) const noexcept;
         bool operator!=(const TypeInfo& other) const noexcept;
     };
@@ -201,6 +198,10 @@ namespace SR_UTILS_NS::Reflection {
     extern SR_COMMON_DLL_API TypeInfo* CopyTypeInfo(TypeInfo* pTypeInfo);
     extern SR_COMMON_DLL_API void FreeTypeInfo(TypeInfo* pTypeInfo);
     extern SR_COMMON_DLL_API void DestroyTypeInfoPool();
+
+    extern SR_COMMON_DLL_API void RegisterVTable(TypeInfo& typeInfo);
+    extern SR_COMMON_DLL_API void UnregisterVTable(TypeInfo& typeInfo);
+    extern SR_COMMON_DLL_API bool FindVTable(TypeInfo& typeInfo);
 
     template<typename T, typename Enable = void> struct DetermineTypeInfoAccessor {
         static constexpr bool Supported = false;

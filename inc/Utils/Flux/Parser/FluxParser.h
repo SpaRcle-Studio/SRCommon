@@ -23,13 +23,13 @@ namespace SR_FLUX_NS {
         SR_NODISCARD bool Parse(StringView source, FluxProgram& program);
 
     private:
-        bool ParseFunction();
+        bool ParseInstruction();
         bool ParseConstantsOrStorage(bool isStorage);
 
         SR_NODISCARD FluxOpcode ParseOpcode();
 
+        const SR_UTILS_NS::LexerDetails::Lexem& Advance();
         SR_NODISCARD const SR_UTILS_NS::LexerDetails::Lexem& Current() const;
-        SR_NODISCARD const SR_UTILS_NS::LexerDetails::Lexem& Advance();
         SR_NODISCARD bool IsEnd() const;
         SR_NODISCARD bool ExpectIdentifier(StringView expected) const;
         SR_NODISCARD uint32_t ParseInteger(bool& isLineEnd);

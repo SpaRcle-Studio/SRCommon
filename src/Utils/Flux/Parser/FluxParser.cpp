@@ -38,11 +38,13 @@ namespace SR_FLUX_NS {
 
         program.constants = Vector<FluxVariable>(program.allocator.Get());
         program.storage   = Vector<FluxVariable>(program.allocator.Get());
-        program.functions = Vector<FluxFunction>(program.allocator.Get());
+        program.instructions = Vector<FluxInstruction>(program.allocator.Get());
+        program.labels = Vector<FluxLabel>(program.allocator.Get());
 
         program.constants.reserve(16);
         program.storage.reserve(16);
-        program.functions.reserve(16);
+        program.instructions.reserve(256);
+        program.labels.reserve(16);
 
         m_program = &program;
         m_currentLexem = 0;
@@ -52,7 +54,7 @@ namespace SR_FLUX_NS {
         ParseConstantsOrStorage(true);
 
         while (!IsEnd()) {
-            if (!ParseFunction()) {
+            if (!ParseInstruction()) {
                 SR_ERROR("FluxParser::Parse() : failed to parse function!");
                 return false;
             }
@@ -61,72 +63,69 @@ namespace SR_FLUX_NS {
         return true;
     }
 
-    bool FluxParser::ParseFunction() {
-        if (!ExpectIdentifier("func")) {
-            SR_ERROR("FluxParser::ParseFunction() : expected \"func\" keyword! But got \"{}\"!", Current().value);
+    bool FluxParser::ParseInstruction() {
+        auto&& labelPossible = Current();
+        if (labelPossible.kind == LexerDetails::LexemKind::Identifier && m_currentLexem + 1 < m_lexems.size()) {
+            auto&& nextLexem = m_lexems[m_currentLexem + 1];
+            if (nextLexem.kind == LexerDetails::LexemKind::Colon) {
+                auto&& label = m_program->labels.emplace_back();
+                label.name = labelPossible.value;
+                label.instructionPointer = m_program->instructions.size();
+                Advance(); /// label name
+                Advance(); /// ':'
+            }
+        }
+
+        auto&& instruction = m_program->instructions.emplace_back();
+        instruction.opcode = ParseOpcode();
+        if (instruction.opcode == FluxOpcode::Unknown) {
+            SR_ERROR("FluxParser::ParseFunction() : unknown opcode \"{}\"!", Current().value);
             return false;
         }
+        instruction.operands = Vector<FluxRegisterId>(m_program->allocator.Get());
 
-        [[maybe_unused]] auto funcKeyword = Advance();
+        bool hasOperands =
+            instruction.opcode == FluxOpcode::Branch ||
+            instruction.opcode == FluxOpcode::Push ||
+            instruction.opcode == FluxOpcode::Pop;
 
-        FluxFunction& function = m_program->functions.emplace_back();
-        function.name = Advance().value;
-        function.instructions = Vector<FluxInstruction>(m_program->allocator.Get());
-        function.instructions.reserve(256);
+        if (instruction.opcode == FluxOpcode::Call) {
+            instruction.operands.reserve(8);
+            hasOperands = true;
+            instruction.callable.object = Advance().value;
+            [[maybe_unused]] auto dot = Advance();
+            instruction.callable.function = Advance().value;
+        }
 
-        while (!ExpectIdentifier("endfunc")) {
-            auto&& instruction = function.instructions.emplace_back();
-            instruction.opcode = ParseOpcode();
-            if (instruction.opcode == FluxOpcode::Unknown) {
-                SR_ERROR("FluxParser::ParseFunction() : unknown opcode \"{}\"!", Current().value);
-                return false;
+        static constexpr FluxOpcode opcodesWithTwoOperands[4] = {
+            FluxOpcode::Copy, FluxOpcode::Move, FluxOpcode::Swap, FluxOpcode::Ref
+        };
+
+        if (std::ranges::find(opcodesWithTwoOperands, instruction.opcode) != std::end(opcodesWithTwoOperands)) {
+            instruction.operands.reserve(2);
+            hasOperands = true;
+        }
+
+        while (hasOperands) {
+            auto&& operandTypeLexem = Advance();
+            const bool isConstant = operandTypeLexem.value == "$";
+            const bool isStorage = operandTypeLexem.value == "@";
+            const bool isRegister = operandTypeLexem.value == "%";
+            if (!isConstant && !isStorage && !isRegister) {
+                Back();
+                break;
             }
-            instruction.operands = Vector<FluxRegisterId>(m_program->allocator.Get());
+            bool isLineEnd = false;
+            const auto index = ParseInteger(isLineEnd);
 
-            bool hasOperands =
-                instruction.opcode == FluxOpcode::Branch ||
-                instruction.opcode == FluxOpcode::Push ||
-                instruction.opcode == FluxOpcode::Pop;
+            const uint32_t offset = isRegister ? (m_program->constants.size() + m_program->storage.size()) :
+                (isStorage ? m_program->constants.size() : 0);
 
-            if (instruction.opcode == FluxOpcode::Call) {
-                instruction.operands.reserve(8);
-                hasOperands = true;
-                instruction.callable.object = Advance().value;
-                [[maybe_unused]] auto dot = Advance();
-                instruction.callable.function = Advance().value;
-            }
-
-            static constexpr FluxOpcode opcodesWithTwoOperands[4] = {
-                FluxOpcode::Copy, FluxOpcode::Move, FluxOpcode::Swap, FluxOpcode::Ref
-            };
-
-            if (std::ranges::find(opcodesWithTwoOperands, instruction.opcode) != std::end(opcodesWithTwoOperands)) {
-                instruction.operands.reserve(2);
-                hasOperands = true;
-            }
-
-            while (hasOperands) {
-                auto&& operandTypeLexem = Advance();
-                const bool isConstant = operandTypeLexem.value == "$";
-                const bool isStorage = operandTypeLexem.value == "@";
-                const bool isRegister = operandTypeLexem.value == "%";
-                if (!isConstant && !isStorage && !isRegister) {
-                    Back();
-                    break;
-                }
-                bool isLineEnd = false;
-                const auto index = ParseInteger(isLineEnd);
-
-                const uint32_t offset = isRegister ? (m_program->constants.size() + m_program->storage.size()) :
-                    (isStorage ? m_program->constants.size() : 0);
-
-                instruction.operands.emplace_back(index + offset);
-                if (isLineEnd) {
-                    break;
-                }
+            instruction.operands.emplace_back(index + offset);
+            if (isLineEnd) {
+                break;
             }
         }
-        [[maybe_unused]] auto endFuncKeyword = Advance();
         return true;
     }
 
@@ -135,20 +134,23 @@ namespace SR_FLUX_NS {
             return true;
         }
 
-        [[maybe_unused]] auto constsKeyword = Advance();
+        Advance(); /// skip 'consts' or 'storage'
 
         while (!ExpectIdentifier(isStorage ? "endstorage" : "endconsts")) {
             FluxVariable& constant = isStorage ? m_program->storage.emplace_back() : m_program->constants.emplace_back();
             constant.type = String(m_program->allocator.Get());
             constant.value = String(m_program->allocator.Get());
             constant.type.reserve(8);
-            constant.value.reserve(8);
 
             /// syntax: <type> = <value>
             while (Current().kind != LexerDetails::LexemKind::Assign) {
                 constant.type += Advance().value;
             }
             auto lexem = Advance(); /// skip '='
+            if (lexem.isLineEnd) {
+                continue; /// no value assigned, default value
+            }
+            constant.value.reserve(8);
             do {
                 lexem = Advance();
                 constant.value += lexem.value;
@@ -156,7 +158,7 @@ namespace SR_FLUX_NS {
             while (!lexem.isLineEnd && !IsEnd());
         }
 
-        [[maybe_unused]] auto endConstsKeyword = Advance();
+        Advance(); /// skip 'endconsts' or 'endstorage'
 
         return true;
     }

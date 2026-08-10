@@ -5,6 +5,7 @@
 #include <Utils/Flux/Runtime/FluxIRExecutor.h>
 #include <Utils/Flux/IR/FluxProgram.h>
 #include <Utils/Flux/Parser/FluxParser.h>
+#include <Utils/Flux/Runtime/FluxRuntime.h>
 #include <Utils/FileSystem/PathDataAccessor.h>
 #include <Utils/FileSystem/FileSystem.h>
 #include <Utils/Resources/ResourceManager.h>
@@ -13,6 +14,8 @@
 
 namespace SR_FLUX_NS {
     void FluxIRExecutor::OnAttached() {
+        SR_TRACY_ZONE;
+
         FluxProgram program;
         String buffer;
 
@@ -22,6 +25,10 @@ namespace SR_FLUX_NS {
             Super::OnAttached();
             return;
         }
+
+        FluxRuntime runtime(&program);
+        runtime.Emit("Main", {});
+        runtime.Update(60.f);
 
         Super::OnAttached();
     }

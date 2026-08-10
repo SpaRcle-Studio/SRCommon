@@ -8,21 +8,22 @@
 #include <Utils/Flux/IR/FluxInstruction.h>
 
 namespace SR_FLUX_NS {
-    struct FluxFunction {
-        StringAtom name;
-        Vector<FluxInstruction> instructions;
-    };
-
     struct FluxVariable {
         String type;
         String value;
     };
 
+    struct FluxLabel {
+        String name;
+        uint32_t instructionPointer = 0;
+    };
+
     struct FluxProgram {
         SR_HTYPES_NS::RawPointerHolder<IAllocator> allocator;
-        Vector<FluxFunction> functions;
+        Vector<FluxInstruction> instructions;
         Vector<FluxVariable> constants;
         Vector<FluxVariable> storage;
+        Vector<FluxLabel> labels;
     };
 }
 
