@@ -239,7 +239,7 @@ namespace SR_UTILS_NS::Reflection {
         if (!m_typeInfo) {
             return 0;
         }
-        return GetTypeInfo().vtable.pSizeOfAlign().first;
+        return GetTypeInfo().vtable.pSizeOfAlign(GetTypeInfo()).first;
     }
 
     bool Value::IsSigned() const {

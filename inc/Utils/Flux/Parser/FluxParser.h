@@ -25,6 +25,7 @@ namespace SR_FLUX_NS {
     private:
         bool ParseInstruction();
         bool ParseConstantsOrStorage(bool isStorage);
+        bool ResolveLabels();
 
         SR_NODISCARD FluxOpcode ParseOpcode();
 
@@ -42,6 +43,7 @@ namespace SR_FLUX_NS {
         uint32_t m_currentLexem = 0;
         Vector<LexerDetails::Lexem> m_lexems;
         State m_state = State::None;
+        Vector<StringAtom> m_labels;
 
     };
 }

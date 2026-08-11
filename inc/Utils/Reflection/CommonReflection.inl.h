@@ -3,56 +3,56 @@
 //
 
 namespace SR_UTILS_NS::Reflection {
-    template<typename T> void DetermineTypeInfoRegistered(IAllocator&, TypeInfo* pTypeInfo);
-    extern template SR_COMMON_DLL_API void DetermineTypeInfoRegistered<int8_t>(IAllocator&, TypeInfo* pTypeInfo);
-    extern template SR_COMMON_DLL_API void DetermineTypeInfoRegistered<int16_t>(IAllocator&, TypeInfo* pTypeInfo);
-    extern template SR_COMMON_DLL_API void DetermineTypeInfoRegistered<int32_t>(IAllocator&, TypeInfo* pTypeInfo);
-    extern template SR_COMMON_DLL_API void DetermineTypeInfoRegistered<int64_t>(IAllocator&, TypeInfo* pTypeInfo);
-    extern template SR_COMMON_DLL_API void DetermineTypeInfoRegistered<uint8_t>(IAllocator&, TypeInfo* pTypeInfo);
-    extern template SR_COMMON_DLL_API void DetermineTypeInfoRegistered<uint16_t>(IAllocator&, TypeInfo* pTypeInfo);
-    extern template SR_COMMON_DLL_API void DetermineTypeInfoRegistered<uint32_t>(IAllocator&, TypeInfo* pTypeInfo);
-    extern template SR_COMMON_DLL_API void DetermineTypeInfoRegistered<uint64_t>(IAllocator&, TypeInfo* pTypeInfo);
-    extern template SR_COMMON_DLL_API void DetermineTypeInfoRegistered<float>(IAllocator&, TypeInfo* pTypeInfo);
-    extern template SR_COMMON_DLL_API void DetermineTypeInfoRegistered<double>(IAllocator&, TypeInfo* pTypeInfo);
-    extern template SR_COMMON_DLL_API void DetermineTypeInfoRegistered<bool>(IAllocator&, TypeInfo* pTypeInfo);
-    extern template SR_COMMON_DLL_API void DetermineTypeInfoRegistered<Path>(IAllocator&, TypeInfo* pTypeInfo);
-    extern template SR_COMMON_DLL_API void DetermineTypeInfoRegistered<String>(IAllocator&, TypeInfo* pTypeInfo);
-    extern template SR_COMMON_DLL_API void DetermineTypeInfoRegistered<StringView>(IAllocator&, TypeInfo* pTypeInfo);
-    extern template SR_COMMON_DLL_API void DetermineTypeInfoRegistered<StringAtom>(IAllocator&, TypeInfo* pTypeInfo);
-    extern template SR_COMMON_DLL_API void DetermineTypeInfoRegistered<UnicodeString>(IAllocator&, TypeInfo* pTypeInfo);
-    extern template SR_COMMON_DLL_API void DetermineTypeInfoRegistered<SR_MATH_NS::FColor>(IAllocator&, TypeInfo* pTypeInfo);
-    extern template SR_COMMON_DLL_API void DetermineTypeInfoRegistered<SR_MATH_NS::Quaternion>(IAllocator&, TypeInfo* pTypeInfo);
-    extern template SR_COMMON_DLL_API void DetermineTypeInfoRegistered<SR_MATH_NS::AABB>(IAllocator&, TypeInfo* pTypeInfo);
-    extern template SR_COMMON_DLL_API void DetermineTypeInfoRegistered<SR_MATH_NS::Matrix3x3>(IAllocator&, TypeInfo* pTypeInfo);
-    extern template SR_COMMON_DLL_API void DetermineTypeInfoRegistered<SR_MATH_NS::Matrix4x4>(IAllocator&, TypeInfo* pTypeInfo);
-    extern template SR_COMMON_DLL_API void DetermineTypeInfoRegistered<SR_MATH_NS::Rect<SR_MATH_NS::Unit>>(IAllocator&, TypeInfo* pTypeInfo);
-    extern template SR_COMMON_DLL_API void DetermineTypeInfoRegistered<SR_MATH_NS::Rect<int32_t>>(IAllocator&, TypeInfo* pTypeInfo);
-    extern template SR_COMMON_DLL_API void DetermineTypeInfoRegistered<SR_MATH_NS::Rect<uint32_t>>(IAllocator&, TypeInfo* pTypeInfo);
-    extern template SR_COMMON_DLL_API void DetermineTypeInfoRegistered<SR_MATH_NS::Rect<uint16_t>>(IAllocator&, TypeInfo* pTypeInfo);
-    extern template SR_COMMON_DLL_API void DetermineTypeInfoRegistered<SR_MATH_NS::FSize>(IAllocator&, TypeInfo* pTypeInfo);
-    extern template SR_COMMON_DLL_API void DetermineTypeInfoRegistered<SR_MATH_NS::USize>(IAllocator&, TypeInfo* pTypeInfo);
-    extern template SR_COMMON_DLL_API void DetermineTypeInfoRegistered<SR_MATH_NS::ISize>(IAllocator&, TypeInfo* pTypeInfo);
-    extern template SR_COMMON_DLL_API void DetermineTypeInfoRegistered<SR_MATH_NS::FSize2>(IAllocator&, TypeInfo* pTypeInfo);
-    extern template SR_COMMON_DLL_API void DetermineTypeInfoRegistered<SR_MATH_NS::USize2>(IAllocator&, TypeInfo* pTypeInfo);
-    extern template SR_COMMON_DLL_API void DetermineTypeInfoRegistered<SR_MATH_NS::ISize2>(IAllocator&, TypeInfo* pTypeInfo);
-    extern template SR_COMMON_DLL_API void DetermineTypeInfoRegistered<SR_MATH_NS::FVector2>(IAllocator&, TypeInfo* pTypeInfo);
-    extern template SR_COMMON_DLL_API void DetermineTypeInfoRegistered<SR_MATH_NS::FVector3>(IAllocator&, TypeInfo* pTypeInfo);
-    extern template SR_COMMON_DLL_API void DetermineTypeInfoRegistered<SR_MATH_NS::FVector4>(IAllocator&, TypeInfo* pTypeInfo);
-    extern template SR_COMMON_DLL_API void DetermineTypeInfoRegistered<SR_MATH_NS::FVector6>(IAllocator&, TypeInfo* pTypeInfo);
-    extern template SR_COMMON_DLL_API void DetermineTypeInfoRegistered<SR_MATH_NS::SVector2>(IAllocator&, TypeInfo* pTypeInfo);
-    extern template SR_COMMON_DLL_API void DetermineTypeInfoRegistered<SR_MATH_NS::IVector2>(IAllocator&, TypeInfo* pTypeInfo);
-    extern template SR_COMMON_DLL_API void DetermineTypeInfoRegistered<SR_MATH_NS::IVector3>(IAllocator&, TypeInfo* pTypeInfo);
-    extern template SR_COMMON_DLL_API void DetermineTypeInfoRegistered<SR_MATH_NS::IVector4>(IAllocator&, TypeInfo* pTypeInfo);
-    extern template SR_COMMON_DLL_API void DetermineTypeInfoRegistered<SR_MATH_NS::IVector6>(IAllocator&, TypeInfo* pTypeInfo);
-    extern template SR_COMMON_DLL_API void DetermineTypeInfoRegistered<SR_MATH_NS::UVector2>(IAllocator&, TypeInfo* pTypeInfo);
-    extern template SR_COMMON_DLL_API void DetermineTypeInfoRegistered<SR_MATH_NS::USVector2>(IAllocator&, TypeInfo* pTypeInfo);
-    extern template SR_COMMON_DLL_API void DetermineTypeInfoRegistered<SR_MATH_NS::UVector3>(IAllocator&, TypeInfo* pTypeInfo);
-    extern template SR_COMMON_DLL_API void DetermineTypeInfoRegistered<SR_MATH_NS::UVector4>(IAllocator&, TypeInfo* pTypeInfo);
-    extern template SR_COMMON_DLL_API void DetermineTypeInfoRegistered<SR_MATH_NS::UVector6>(IAllocator&, TypeInfo* pTypeInfo);
-    extern template SR_COMMON_DLL_API void DetermineTypeInfoRegistered<SR_MATH_NS::BVector2>(IAllocator&, TypeInfo* pTypeInfo);
-    extern template SR_COMMON_DLL_API void DetermineTypeInfoRegistered<SR_MATH_NS::BVector3>(IAllocator&, TypeInfo* pTypeInfo);
-    extern template SR_COMMON_DLL_API void DetermineTypeInfoRegistered<SR_MATH_NS::BVector4>(IAllocator&, TypeInfo* pTypeInfo);
-    extern template SR_COMMON_DLL_API void DetermineTypeInfoRegistered<SR_MATH_NS::BVector6>(IAllocator&, TypeInfo* pTypeInfo);
+    template<typename T> void DetermineTypeInfoRegistered(TypeInfo* pTypeInfo);
+    extern template SR_COMMON_DLL_API void DetermineTypeInfoRegistered<int8_t>(TypeInfo* pTypeInfo);
+    extern template SR_COMMON_DLL_API void DetermineTypeInfoRegistered<int16_t>(TypeInfo* pTypeInfo);
+    extern template SR_COMMON_DLL_API void DetermineTypeInfoRegistered<int32_t>(TypeInfo* pTypeInfo);
+    extern template SR_COMMON_DLL_API void DetermineTypeInfoRegistered<int64_t>(TypeInfo* pTypeInfo);
+    extern template SR_COMMON_DLL_API void DetermineTypeInfoRegistered<uint8_t>(TypeInfo* pTypeInfo);
+    extern template SR_COMMON_DLL_API void DetermineTypeInfoRegistered<uint16_t>(TypeInfo* pTypeInfo);
+    extern template SR_COMMON_DLL_API void DetermineTypeInfoRegistered<uint32_t>(TypeInfo* pTypeInfo);
+    extern template SR_COMMON_DLL_API void DetermineTypeInfoRegistered<uint64_t>(TypeInfo* pTypeInfo);
+    extern template SR_COMMON_DLL_API void DetermineTypeInfoRegistered<float>(TypeInfo* pTypeInfo);
+    extern template SR_COMMON_DLL_API void DetermineTypeInfoRegistered<double>(TypeInfo* pTypeInfo);
+    extern template SR_COMMON_DLL_API void DetermineTypeInfoRegistered<bool>(TypeInfo* pTypeInfo);
+    extern template SR_COMMON_DLL_API void DetermineTypeInfoRegistered<Path>(TypeInfo* pTypeInfo);
+    extern template SR_COMMON_DLL_API void DetermineTypeInfoRegistered<String>(TypeInfo* pTypeInfo);
+    extern template SR_COMMON_DLL_API void DetermineTypeInfoRegistered<StringView>(TypeInfo* pTypeInfo);
+    extern template SR_COMMON_DLL_API void DetermineTypeInfoRegistered<StringAtom>(TypeInfo* pTypeInfo);
+    extern template SR_COMMON_DLL_API void DetermineTypeInfoRegistered<UnicodeString>(TypeInfo* pTypeInfo);
+    extern template SR_COMMON_DLL_API void DetermineTypeInfoRegistered<SR_MATH_NS::FColor>(TypeInfo* pTypeInfo);
+    extern template SR_COMMON_DLL_API void DetermineTypeInfoRegistered<SR_MATH_NS::Quaternion>(TypeInfo* pTypeInfo);
+    extern template SR_COMMON_DLL_API void DetermineTypeInfoRegistered<SR_MATH_NS::AABB>(TypeInfo* pTypeInfo);
+    extern template SR_COMMON_DLL_API void DetermineTypeInfoRegistered<SR_MATH_NS::Matrix3x3>(TypeInfo* pTypeInfo);
+    extern template SR_COMMON_DLL_API void DetermineTypeInfoRegistered<SR_MATH_NS::Matrix4x4>(TypeInfo* pTypeInfo);
+    extern template SR_COMMON_DLL_API void DetermineTypeInfoRegistered<SR_MATH_NS::Rect<SR_MATH_NS::Unit>>(TypeInfo* pTypeInfo);
+    extern template SR_COMMON_DLL_API void DetermineTypeInfoRegistered<SR_MATH_NS::Rect<int32_t>>(TypeInfo* pTypeInfo);
+    extern template SR_COMMON_DLL_API void DetermineTypeInfoRegistered<SR_MATH_NS::Rect<uint32_t>>(TypeInfo* pTypeInfo);
+    extern template SR_COMMON_DLL_API void DetermineTypeInfoRegistered<SR_MATH_NS::Rect<uint16_t>>(TypeInfo* pTypeInfo);
+    extern template SR_COMMON_DLL_API void DetermineTypeInfoRegistered<SR_MATH_NS::FSize>(TypeInfo* pTypeInfo);
+    extern template SR_COMMON_DLL_API void DetermineTypeInfoRegistered<SR_MATH_NS::USize>(TypeInfo* pTypeInfo);
+    extern template SR_COMMON_DLL_API void DetermineTypeInfoRegistered<SR_MATH_NS::ISize>(TypeInfo* pTypeInfo);
+    extern template SR_COMMON_DLL_API void DetermineTypeInfoRegistered<SR_MATH_NS::FSize2>(TypeInfo* pTypeInfo);
+    extern template SR_COMMON_DLL_API void DetermineTypeInfoRegistered<SR_MATH_NS::USize2>(TypeInfo* pTypeInfo);
+    extern template SR_COMMON_DLL_API void DetermineTypeInfoRegistered<SR_MATH_NS::ISize2>(TypeInfo* pTypeInfo);
+    extern template SR_COMMON_DLL_API void DetermineTypeInfoRegistered<SR_MATH_NS::FVector2>(TypeInfo* pTypeInfo);
+    extern template SR_COMMON_DLL_API void DetermineTypeInfoRegistered<SR_MATH_NS::FVector3>(TypeInfo* pTypeInfo);
+    extern template SR_COMMON_DLL_API void DetermineTypeInfoRegistered<SR_MATH_NS::FVector4>(TypeInfo* pTypeInfo);
+    extern template SR_COMMON_DLL_API void DetermineTypeInfoRegistered<SR_MATH_NS::FVector6>(TypeInfo* pTypeInfo);
+    extern template SR_COMMON_DLL_API void DetermineTypeInfoRegistered<SR_MATH_NS::SVector2>(TypeInfo* pTypeInfo);
+    extern template SR_COMMON_DLL_API void DetermineTypeInfoRegistered<SR_MATH_NS::IVector2>(TypeInfo* pTypeInfo);
+    extern template SR_COMMON_DLL_API void DetermineTypeInfoRegistered<SR_MATH_NS::IVector3>(TypeInfo* pTypeInfo);
+    extern template SR_COMMON_DLL_API void DetermineTypeInfoRegistered<SR_MATH_NS::IVector4>(TypeInfo* pTypeInfo);
+    extern template SR_COMMON_DLL_API void DetermineTypeInfoRegistered<SR_MATH_NS::IVector6>(TypeInfo* pTypeInfo);
+    extern template SR_COMMON_DLL_API void DetermineTypeInfoRegistered<SR_MATH_NS::UVector2>(TypeInfo* pTypeInfo);
+    extern template SR_COMMON_DLL_API void DetermineTypeInfoRegistered<SR_MATH_NS::USVector2>(TypeInfo* pTypeInfo);
+    extern template SR_COMMON_DLL_API void DetermineTypeInfoRegistered<SR_MATH_NS::UVector3>(TypeInfo* pTypeInfo);
+    extern template SR_COMMON_DLL_API void DetermineTypeInfoRegistered<SR_MATH_NS::UVector4>(TypeInfo* pTypeInfo);
+    extern template SR_COMMON_DLL_API void DetermineTypeInfoRegistered<SR_MATH_NS::UVector6>(TypeInfo* pTypeInfo);
+    extern template SR_COMMON_DLL_API void DetermineTypeInfoRegistered<SR_MATH_NS::BVector2>(TypeInfo* pTypeInfo);
+    extern template SR_COMMON_DLL_API void DetermineTypeInfoRegistered<SR_MATH_NS::BVector3>(TypeInfo* pTypeInfo);
+    extern template SR_COMMON_DLL_API void DetermineTypeInfoRegistered<SR_MATH_NS::BVector4>(TypeInfo* pTypeInfo);
+    extern template SR_COMMON_DLL_API void DetermineTypeInfoRegistered<SR_MATH_NS::BVector6>(TypeInfo* pTypeInfo);
 
     /// ================================================================================================================
 
@@ -130,20 +130,12 @@ namespace SR_UTILS_NS::Reflection {
     extern SR_COMMON_DLL_API void ArithmeticTypeCopy(const ReflectedValue& from, ReflectedValue& to);
     extern SR_COMMON_DLL_API void ArithmeticTypeMove(ReflectedValue& from, ReflectedValue& to);
 
-    template<typename T> ReflectedValue EnumTypeConstructor(IAllocator& allocator) {
-        ReflectedValue value;
-        new (&value.storage.data) T();
-        value.storageType = ReflectedValueStorageType::Embedded;
-        return value;
-    }
-
     template<typename T> struct DetermineTypeInfoAccessor<T, std::enable_if_t<IsSREnumV<T>>> {
         static constexpr bool Supported = true;
-        static void Determine(IAllocator& allocator, TypeInfo* pTypeInfo) {
+        static void Determine(TypeInfo* pTypeInfo) {
             pTypeInfo->detailedType = GetEnumName(T());
             pTypeInfo->category = ReflectedCategoryType::Enum;
-            pTypeInfo->vtable.pSizeOfAlign = &ReflectedTypeTemplateSizeOfAlign<T>;
-            pTypeInfo->vtable.pConstructor = &EnumTypeConstructor<T>;
+            pTypeInfo->vtable.pConstructor = &ArithmeticTypeConstructor;
             pTypeInfo->vtable.pCopy = &ArithmeticTypeCopy;
             pTypeInfo->vtable.pMove = &ArithmeticTypeMove;
         }
@@ -155,7 +147,7 @@ namespace SR_UTILS_NS::Reflection {
         !IsResourceRefV<T>>>
     {
         static constexpr bool Supported = true;
-        static void Determine(IAllocator& allocator, TypeInfo* pTypeInfo) {
+        static void Determine(TypeInfo* pTypeInfo) {
             pTypeInfo->detailedType = T::GetClassStaticName();
             pTypeInfo->category = ReflectedCategoryType::Object;
             pTypeInfo->vtable.pSizeOfAlign = &ReflectedTypeTemplateSizeOfAlign<T>;
@@ -193,48 +185,48 @@ namespace SR_UTILS_NS::Reflection {
         std::is_arithmetic_v<T> || IsTypeMathVectorTemplateV<T> || IsTypeMathRectTemplateV<T> || IsTypeMathSizeTemplateV<T>
     >> {
         static constexpr bool Supported = true;
-        static void Determine(IAllocator& allocator, TypeInfo* pTypeInfo) { DetermineTypeInfoRegistered<T>(allocator, pTypeInfo); }
+        static void Determine(TypeInfo* pTypeInfo) { DetermineTypeInfoRegistered<T>(pTypeInfo); }
     };
 
     template<> struct DetermineTypeInfoAccessor<Path> {
         static constexpr bool Supported = true;
-        static void Determine(IAllocator& allocator, TypeInfo* pTypeInfo) { return DetermineTypeInfoRegistered<Path>(allocator, pTypeInfo); } };
+        static void Determine(TypeInfo* pTypeInfo) { return DetermineTypeInfoRegistered<Path>(pTypeInfo); } };
     template<> struct DetermineTypeInfoAccessor<String> {
         static constexpr bool Supported = true;
-        static void Determine(IAllocator& allocator, TypeInfo* pTypeInfo) { return DetermineTypeInfoRegistered<String>(allocator, pTypeInfo); } };
+        static void Determine(TypeInfo* pTypeInfo) { return DetermineTypeInfoRegistered<String>(pTypeInfo); } };
     template<> struct DetermineTypeInfoAccessor<StringView> {
         static constexpr bool Supported = true;
-        static void Determine(IAllocator& allocator, TypeInfo* pTypeInfo) { return DetermineTypeInfoRegistered<StringView>(allocator, pTypeInfo); } };
+        static void Determine(TypeInfo* pTypeInfo) { return DetermineTypeInfoRegistered<StringView>(pTypeInfo); } };
     template<> struct DetermineTypeInfoAccessor<StringAtom> {
         static constexpr bool Supported = true;
-        static void Determine(IAllocator& allocator, TypeInfo* pTypeInfo) { return DetermineTypeInfoRegistered<StringAtom>(allocator, pTypeInfo); } };
+        static void Determine(TypeInfo* pTypeInfo) { return DetermineTypeInfoRegistered<StringAtom>(pTypeInfo); } };
     template<> struct DetermineTypeInfoAccessor<UnicodeString> {
         static constexpr bool Supported = true;
-        static void Determine(IAllocator& allocator, TypeInfo* pTypeInfo) { return DetermineTypeInfoRegistered<UnicodeString>(allocator, pTypeInfo); } };
+        static void Determine(TypeInfo* pTypeInfo) { return DetermineTypeInfoRegistered<UnicodeString>(pTypeInfo); } };
     template<> struct DetermineTypeInfoAccessor<SR_MATH_NS::AABB> {
         static constexpr bool Supported = true;
-        static void Determine(IAllocator& allocator, TypeInfo* pTypeInfo) { return DetermineTypeInfoRegistered<SR_MATH_NS::AABB>(allocator, pTypeInfo); } };
+        static void Determine(TypeInfo* pTypeInfo) { return DetermineTypeInfoRegistered<SR_MATH_NS::AABB>(pTypeInfo); } };
     template<> struct DetermineTypeInfoAccessor<SR_MATH_NS::FColor> {
         static constexpr bool Supported = true;
-        static void Determine(IAllocator& allocator, TypeInfo* pTypeInfo) { return DetermineTypeInfoRegistered<SR_MATH_NS::FColor>(allocator, pTypeInfo); } };
+        static void Determine(TypeInfo* pTypeInfo) { return DetermineTypeInfoRegistered<SR_MATH_NS::FColor>(pTypeInfo); } };
     template<> struct DetermineTypeInfoAccessor<SR_MATH_NS::Quaternion> {
         static constexpr bool Supported = true;
-        static void Determine(IAllocator& allocator, TypeInfo* pTypeInfo) { return DetermineTypeInfoRegistered<SR_MATH_NS::Quaternion>(allocator, pTypeInfo); } };
+        static void Determine(TypeInfo* pTypeInfo) { return DetermineTypeInfoRegistered<SR_MATH_NS::Quaternion>(pTypeInfo); } };
     template<> struct DetermineTypeInfoAccessor<SR_MATH_NS::Matrix3x3> {
         static constexpr bool Supported = true;
-        static void Determine(IAllocator& allocator, TypeInfo* pTypeInfo) { return DetermineTypeInfoRegistered<SR_MATH_NS::Matrix3x3>(allocator, pTypeInfo); } };
+        static void Determine(TypeInfo* pTypeInfo) { return DetermineTypeInfoRegistered<SR_MATH_NS::Matrix3x3>(pTypeInfo); } };
     template<> struct DetermineTypeInfoAccessor<SR_MATH_NS::Matrix4x4> {
         static constexpr bool Supported = true;
-        static void Determine(IAllocator& allocator, TypeInfo* pTypeInfo) { return DetermineTypeInfoRegistered<SR_MATH_NS::Matrix4x4>(allocator, pTypeInfo); } };
+        static void Determine(TypeInfo* pTypeInfo) { return DetermineTypeInfoRegistered<SR_MATH_NS::Matrix4x4>(pTypeInfo); } };
 
     template<typename T> struct DetermineTypeInfoAccessor<Optional<T>> {
         static constexpr bool Supported = true;
-        static void Determine(IAllocator& allocator, TypeInfo* pTypeInfo) {
+        static void Determine(TypeInfo* pTypeInfo) {
             static const StringAtom detailedType = "Optional";
             pTypeInfo->detailedType = detailedType;
             pTypeInfo->category = ReflectedCategoryType::Container;
             pTypeInfo->pNext[0] = AllocateTypeInfo();
-            DetermineTypeInfoAccessor<T>::Determine(allocator, pTypeInfo->pNext[0]);
+            DetermineTypeInfoAccessor<T>::Determine(pTypeInfo->pNext[0]);
             pTypeInfo->vtable.pSizeOfAlign = &ReflectedTypeTemplateSizeOfAlign<Optional<T>>;
             pTypeInfo->vtable.pConstructor = &ReflectedTypeTemplateConstructor<Optional<T>>;
             pTypeInfo->vtable.pDestructor = &ReflectedTypeTemplateDestructor<Optional<T>>;
@@ -246,12 +238,12 @@ namespace SR_UTILS_NS::Reflection {
 
     template<typename T> struct DetermineTypeInfoAccessor<EntityRef<T>> {
         static constexpr bool Supported = true;
-        static void Determine(IAllocator& allocator, TypeInfo* pTypeInfo) {
+        static void Determine(TypeInfo* pTypeInfo) {
             static const StringAtom detailedType = "EntityRef";
             pTypeInfo->detailedType = detailedType;
             pTypeInfo->category = ReflectedCategoryType::Container;
             pTypeInfo->pNext[0] = AllocateTypeInfo();
-            DetermineTypeInfoAccessor<T>::Determine(allocator, pTypeInfo->pNext[0]);
+            DetermineTypeInfoAccessor<T>::Determine(pTypeInfo->pNext[0]);
             pTypeInfo->vtable.pSizeOfAlign = &ReflectedTypeTemplateSizeOfAlign<EntityRef<T>>;
             pTypeInfo->vtable.pConstructor = &ReflectedTypeTemplateConstructor<EntityRef<T>>;
             pTypeInfo->vtable.pDestructor = &ReflectedTypeTemplateDestructor<EntityRef<T>>;
@@ -263,12 +255,12 @@ namespace SR_UTILS_NS::Reflection {
 
     template<typename T> struct DetermineTypeInfoAccessor<ResourceRef<T>> {
         static constexpr bool Supported = true;
-        static void Determine(IAllocator& allocator, TypeInfo* pTypeInfo) {
+        static void Determine(TypeInfo* pTypeInfo) {
             static const StringAtom detailedType = "ResourceRef";
             pTypeInfo->detailedType = detailedType;
             pTypeInfo->category = ReflectedCategoryType::Container;
             pTypeInfo->pNext[0] = AllocateTypeInfo();
-            DetermineTypeInfoAccessor<T>::Determine(allocator, pTypeInfo->pNext[0]);
+            DetermineTypeInfoAccessor<T>::Determine(pTypeInfo->pNext[0]);
             pTypeInfo->vtable.pSizeOfAlign = &ReflectedTypeTemplateSizeOfAlign<ResourceRef<T>>;
             pTypeInfo->vtable.pConstructor = &ReflectedTypeTemplateConstructor<ResourceRef<T>>;
             pTypeInfo->vtable.pDestructor = &ReflectedTypeTemplateDestructor<ResourceRef<T>>;
@@ -280,12 +272,12 @@ namespace SR_UTILS_NS::Reflection {
 
     template<typename T> struct DetermineTypeInfoAccessor<SR_HTYPES_NS::SharedPtr<T>> {
         static constexpr bool Supported = true;
-        static void Determine(IAllocator& allocator, TypeInfo* pTypeInfo) {
+        static void Determine(TypeInfo* pTypeInfo) {
             static const StringAtom detailedType = "SharedPtr";
             pTypeInfo->detailedType = detailedType;
             pTypeInfo->category = ReflectedCategoryType::Container;
             pTypeInfo->pNext[0] = AllocateTypeInfo();
-            DetermineTypeInfoAccessor<T>::Determine(allocator, pTypeInfo->pNext[0]);
+            DetermineTypeInfoAccessor<T>::Determine(pTypeInfo->pNext[0]);
             pTypeInfo->vtable.pSizeOfAlign = &ReflectedTypeTemplateSizeOfAlign<SR_HTYPES_NS::SharedPtr<T>>;
             pTypeInfo->vtable.pConstructor = &ReflectedTypeTemplateConstructor<SR_HTYPES_NS::SharedPtr<T>>;
             pTypeInfo->vtable.pDestructor = &ReflectedTypeTemplateDestructor<SR_HTYPES_NS::SharedPtr<T>>;
@@ -297,14 +289,14 @@ namespace SR_UTILS_NS::Reflection {
 
     template<typename T1, typename T2> struct DetermineTypeInfoAccessor<Pair<T1, T2>> {
         static constexpr bool Supported = true;
-        static void Determine(IAllocator& allocator, TypeInfo* pTypeInfo) {
+        static void Determine(TypeInfo* pTypeInfo) {
             static const StringAtom detailedType = "Pair";
             pTypeInfo->detailedType = detailedType;
             pTypeInfo->category = ReflectedCategoryType::Container;
             pTypeInfo->pNext[0] = AllocateTypeInfo();
             pTypeInfo->pNext[1] = AllocateTypeInfo();
-            DetermineTypeInfoAccessor<T1>::Determine(allocator, pTypeInfo->pNext[0]);
-            DetermineTypeInfoAccessor<T2>::Determine(allocator, pTypeInfo->pNext[1]);
+            DetermineTypeInfoAccessor<T1>::Determine(pTypeInfo->pNext[0]);
+            DetermineTypeInfoAccessor<T2>::Determine(pTypeInfo->pNext[1]);
             pTypeInfo->vtable.pSizeOfAlign = &ReflectedTypeTemplateSizeOfAlign<Pair<T1, T2>>;
             pTypeInfo->vtable.pConstructor = &ReflectedTypeTemplateConstructor<Pair<T1, T2>>;
             pTypeInfo->vtable.pDestructor = &ReflectedTypeTemplateDestructor<Pair<T1, T2>>;

@@ -35,12 +35,12 @@ namespace SR_UTILS_NS::Reflection {
 
     template<typename T> struct DetermineTypeInfoAccessor<Vector<T>> {
         static constexpr bool Supported = true;
-        static void Determine(IAllocator& allocator, TypeInfo* pTypeInfo) {
+        static void Determine(TypeInfo* pTypeInfo) {
             static const StringAtom detailedType = "Vector";
             pTypeInfo->detailedType = detailedType;
             pTypeInfo->category = ReflectedCategoryType::Container;
             pTypeInfo->pNext[0] = AllocateTypeInfo();
-            DetermineTypeInfoAccessor<T>::Determine(allocator, pTypeInfo->pNext[0]);
+            DetermineTypeInfoAccessor<T>::Determine(pTypeInfo->pNext[0]);
             pTypeInfo->vtable.pSizeOfAlign = &ReflectedTypeTemplateSizeOfAlign<Vector<T>>;
             pTypeInfo->vtable.pConstructor = &ReflectedTypeTemplateConstructor<Vector<T>>;
             pTypeInfo->vtable.pDestructor = &ReflectedTypeTemplateDestructor<Vector<T>>;

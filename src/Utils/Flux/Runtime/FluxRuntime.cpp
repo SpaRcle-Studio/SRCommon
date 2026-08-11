@@ -25,7 +25,7 @@ namespace SR_FLUX_NS {
         }
         auto&& execution = m_executions.emplace_back();
         execution.instructionPointer = pIt->instructionPointer;
-        execution.registers.reserve(m_maxRegisters);
+        execution.registers.resize(m_maxRegisters);
         for (auto&& arg : args) {
             execution.valueStack.emplace_back(arg);
         }
@@ -98,22 +98,95 @@ namespace SR_FLUX_NS {
     bool FluxRuntime::ExecuteInstruction(FluxExecution& execution, const FluxInstruction& instruction) {
         SR_TRACY_ZONE;
 
-        if (!ValidateInstruction(execution, instruction)) {
+        if (!ValidateInstruction(execution, instruction)) SR_UNLIKELY_ATTRIBUTE {
             return false;
         }
 
         switch (instruction.opcode) {
-            case FluxOpcode::Copy:
+            case FluxOpcode::Copy: {
+                auto&& srcType = GetRegisterType(execution, instruction.operands[0]);
+                auto&& dstType = GetRegisterType(execution, instruction.operands[1]);
+                auto&& src = GetRegister(execution, instruction.operands[0], srcType, RegisterOperation::Read);
+                auto&& dst = GetRegister(execution, instruction.operands[1], dstType, RegisterOperation::Write);
+                dst = src.Copy();
                 break;
-            case FluxOpcode::Move:
-            case FluxOpcode::Swap:
-            case FluxOpcode::Ref:
+            }
+            case FluxOpcode::Move: {
+                auto&& srcType = GetRegisterType(execution, instruction.operands[0]);
+                auto&& dstType = GetRegisterType(execution, instruction.operands[1]);
+                auto&& src = GetRegister(execution, instruction.operands[0], srcType, RegisterOperation::Write);
+                auto&& dst = GetRegister(execution, instruction.operands[1], dstType, RegisterOperation::Write);
+                dst = std::move(src);
+                break;
+            }
+            case FluxOpcode::Swap: {
+                auto&& srcType = GetRegisterType(execution, instruction.operands[0]);
+                auto&& dstType = GetRegisterType(execution, instruction.operands[1]);
+                auto&& src = GetRegister(execution, instruction.operands[0], srcType, RegisterOperation::Write);
+                auto&& dst = GetRegister(execution, instruction.operands[1], dstType, RegisterOperation::Write);
+                std::swap(src, dst);
+                break;
+            }
+            case FluxOpcode::Ref: {
+                auto&& srcType = GetRegisterType(execution, instruction.operands[0]);
+                auto&& dstType = GetRegisterType(execution, instruction.operands[1]);
+                auto&& src = GetRegister(execution, instruction.operands[0], srcType, RegisterOperation::Read);
+                auto&& dst = GetRegister(execution, instruction.operands[1], dstType, RegisterOperation::Write);
+                dst = src.Ref();
+                break;
+            }
+            case FluxOpcode::Return: {
+                if (execution.callStack.empty()) {
+                    execution.state = FluxExecutionState::Finished;
+                    return false;
+                }
+                execution.instructionPointer = execution.callStack.back() - 1; // -1 because we will increment it after this instruction
+                execution.callStack.pop_back();
+                break;
+            }
+            case FluxOpcode::Push: {
+                auto&& srcType = GetRegisterType(execution, instruction.operands[0]);
+                auto&& src = GetRegister(execution, instruction.operands[0], srcType, RegisterOperation::Read);
+                execution.valueStack.emplace_back(src.Copy());
+                break;
+            }
+            case FluxOpcode::Pop: {
+                if (m_validation && execution.valueStack.empty()) SR_UNLIKELY_ATTRIBUTE {
+                    SR_ERROR("FluxRuntime::ExecuteInstruction() : value stack is empty!");
+                    execution.state = FluxExecutionState::Error;
+                    return false;
+                }
+                auto&& dstType = GetRegisterType(execution, instruction.operands[0]);
+                auto&& dst = GetRegister(execution, instruction.operands[0], dstType, RegisterOperation::Write);
+                dst = std::move(execution.valueStack.back());
+                execution.valueStack.pop_back();
+                break;
+            }
+            case FluxOpcode::Jump: {
+                auto&& labelId = instruction.operands[0];
+                execution.instructionPointer = m_program->labels[labelId].instructionPointer - 1;
+                break;
+            }
+            case FluxOpcode::Branch: {
+                auto&& labelId = instruction.operands[0];
+                auto&& conditionValue = GetResultRegister(execution);
+                auto&& type = conditionValue.GetTypeInfo();
+                if (m_validation) SR_UNLIKELY_ATTRIBUTE {
+                    if (type.category != Reflection::ReflectedCategoryType::Arithmetic || type.detailedType != "bool") {
+                        SR_ERROR("FluxRuntime::ExecuteInstruction() : branch condition must be a boolean type!");
+                        execution.state = FluxExecutionState::Error;
+                        return false;
+                    }
+                }
+                const bool condition = *conditionValue.Cast<bool>();
+                if (condition) {
+                    execution.instructionPointer = m_program->labels[labelId].instructionPointer - 1;
+                }
+                break;
+            }
             case FluxOpcode::Call:
-            case FluxOpcode::Return:
-            case FluxOpcode::Jump:
-            case FluxOpcode::Branch:
-            case FluxOpcode::Push:
-            case FluxOpcode::Pop:
+                GetResultRegister(execution) = Reflection::Value::Create(false);
+                break;
             default:
                 SR_ERROR("FluxRuntime::ExecuteInstruction() : unhandled opcode!");
                 execution.state = FluxExecutionState::Error;
@@ -143,8 +216,20 @@ namespace SR_FLUX_NS {
                 return false;
             }
         }
-
-        if (instruction.opcode >= FluxOpcode::Push && instruction.opcode <= FluxOpcode::Pop || instruction.opcode == FluxOpcode::Branch) {
+        else if (instruction.opcode == FluxOpcode::Jump || instruction.opcode == FluxOpcode::Branch) {
+            if (instruction.operands.size() != 1) {
+                SR_ERROR("FluxRuntime::ValidateInstruction() : invalid number of operands for opcode {}!", static_cast<uint32_t>(instruction.opcode));
+                execution.state = FluxExecutionState::Error;
+                return false;
+            }
+            auto&& labelId = instruction.operands[0];
+            if (labelId >= m_program->labels.size()) {
+                SR_ERROR("FluxRuntime::ValidateInstruction() : invalid label id {}!", labelId);
+                execution.state = FluxExecutionState::Error;
+                return false;
+            }
+        }
+        else if (instruction.opcode >= FluxOpcode::Push && instruction.opcode <= FluxOpcode::Pop || instruction.opcode == FluxOpcode::Branch) {
             if (instruction.operands.size() != 1) {
                 SR_ERROR("FluxRuntime::ValidateInstruction() : invalid number of operands for opcode {}!", static_cast<uint32_t>(instruction.opcode));
                 execution.state = FluxExecutionState::Error;
@@ -152,9 +237,11 @@ namespace SR_FLUX_NS {
             }
         }
 
-        for (auto&& operand : instruction.operands) {
-            if (GetRegisterType(execution, operand) == RegisterType::Invalid) {
-                return false;
+        if (instruction.opcode != FluxOpcode::Jump && instruction.opcode != FluxOpcode::Branch) {
+            for (auto&& operand : instruction.operands) {
+                if (GetRegisterType(execution, operand) == RegisterType::Invalid) {
+                    return false;
+                }
             }
         }
 
@@ -186,11 +273,16 @@ namespace SR_FLUX_NS {
         return RegisterType::Invalid;
     }
 
-    Reflection::Value& FluxRuntime::GetRegister(FluxExecution& execution, FluxRegisterId registerId, RegisterType type) {
+    Reflection::Value& FluxRuntime::GetRegister(FluxExecution& execution, FluxRegisterId registerId, RegisterType type, RegisterOperation operation) {
         static Reflection::Value dummy;
 
         switch (type) {
             case RegisterType::Constant: {
+                if (operation == RegisterOperation::Write) {
+                    SR_ERROR("FluxRuntime::GetRegister() : cannot write to constant register {}!", registerId);
+                    execution.state = FluxExecutionState::Error;
+                    return dummy;
+                }
                 return m_constants[registerId];
             }
             case RegisterType::Storage:
@@ -215,30 +307,49 @@ namespace SR_FLUX_NS {
         if (m_initialized) {
             return true;
         }
+
+        SR_TRACY_ZONE;
+
         m_constants.clear();
         m_storage.clear();
+        m_constants.resize(m_program->constants.size());
+        m_storage.resize(m_program->storage.size());
 
-        for (auto&& constant : m_program->constants) {
+        for (SizeType i = 0; i < m_program->constants.size(); ++i) {
+            auto&& constant = m_program->constants[i];
             Reflection::TypeInfo* pTypeInfo = Reflection::LoadTypeInfo(constant.type);
-            if (!pTypeInfo) {
+            if (!pTypeInfo || !Reflection::FindVTable(*pTypeInfo)) {
                 SR_ERROR("FluxRuntime::Initialize() : failed to load type info for constant \"{}\"!", constant.type);
+                Reflection::FreeTypeInfo(pTypeInfo);
                 return false;
             }
-
+            m_constants[i] = Reflection::Value::CreateDefault(pTypeInfo);
             Reflection::FreeTypeInfo(pTypeInfo);
         }
 
-        for (auto&& storage : m_program->storage) {
+        for (SizeType i = 0; i < m_program->storage.size(); ++i) {
+            auto&& storage = m_program->storage[i];
             Reflection::TypeInfo* pTypeInfo = Reflection::LoadTypeInfo(storage.type);
-            if (!pTypeInfo) {
+            if (!pTypeInfo || !Reflection::FindVTable(*pTypeInfo)) {
                 SR_ERROR("FluxRuntime::Initialize() : failed to load type info for storage \"{}\"!", storage.type);
+                Reflection::FreeTypeInfo(pTypeInfo);
                 return false;
             }
-
+            m_storage[i] = Reflection::Value::CreateDefault(pTypeInfo);
             Reflection::FreeTypeInfo(pTypeInfo);
         }
 
         m_initialized = true;
         return true;
+    }
+
+    Reflection::Value& FluxRuntime::GetResultRegister(FluxExecution& execution) {
+        if (execution.registers.empty()) {
+            SR_ERROR("FluxRuntime::GetResultRegister() : no registers available!");
+            execution.state = FluxExecutionState::Error;
+            static Reflection::Value dummy;
+            return dummy;
+        }
+        return execution.registers.front();
     }
 }

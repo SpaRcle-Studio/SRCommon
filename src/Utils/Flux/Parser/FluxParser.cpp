@@ -60,6 +60,11 @@ namespace SR_FLUX_NS {
             }
         }
 
+        if (!ResolveLabels()) {
+            SR_ERROR("FluxParser::Parse() : failed to resolve labels!");
+            return false;
+        }
+
         return true;
     }
 
@@ -79,10 +84,28 @@ namespace SR_FLUX_NS {
         auto&& instruction = m_program->instructions.emplace_back();
         instruction.opcode = ParseOpcode();
         if (instruction.opcode == FluxOpcode::Unknown) {
-            SR_ERROR("FluxParser::ParseFunction() : unknown opcode \"{}\"!", Current().value);
+            Back();
+            SR_ERROR("FluxParser::ParseInstruction() : unknown opcode \"{}\"!", Current().value);
             return false;
         }
         instruction.operands = Vector<FluxRegisterId>(m_program->allocator.Get());
+
+        if (instruction.opcode == FluxOpcode::Jump || instruction.opcode == FluxOpcode::Branch) {
+            instruction.operands.reserve(1);
+            auto&& labelNameLexem = Advance();
+            if (labelNameLexem.kind != LexerDetails::LexemKind::Identifier) {
+                SR_ERROR("FluxParser::ParseInstruction() : expected label name after jump opcode!");
+                return false;
+            }
+            auto&& labelName = StringAtom(labelNameLexem.value);
+            auto&& pLabelIt = m_labels.find(labelName);
+            if (pLabelIt == m_labels.end()) {
+                m_labels.emplace_back(labelName);
+                pLabelIt = std::prev(m_labels.end());
+            }
+            instruction.operands.emplace_back(static_cast<FluxRegisterId>(m_labels.distance(pLabelIt)));
+            return true;
+        }
 
         bool hasOperands =
             instruction.opcode == FluxOpcode::Branch ||
@@ -236,5 +259,22 @@ namespace SR_FLUX_NS {
         else {
             SRHalt("FluxParser::Back() : cannot go back, already at the beginning!");
         }
+    }
+
+    bool FluxParser::ResolveLabels() {
+        for (auto&& instruction : m_program->instructions) {
+            if (instruction.opcode == FluxOpcode::Jump || instruction.opcode == FluxOpcode::Branch) {
+                auto&& labelId = instruction.operands[0];
+                auto&& labelName = m_labels[labelId];
+                auto&& pLabelIt = m_program->labels.find_if([&labelName](const FluxLabel& label) { return label.name == labelName; });
+                if (pLabelIt == m_program->labels.end()) {
+                    SR_ERROR("FluxParser::ResolveLabels() : label \"{}\" not found!", labelName);
+                    return false;
+                }
+                instruction.operands[0] = static_cast<FluxRegisterId>(m_program->labels.distance(pLabelIt));
+            }
+        }
+
+        return true;
     }
 }

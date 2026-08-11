@@ -6,6 +6,7 @@
 #define SR_ENGINE_COMMON_REFLECTION_REFLECTED_TYPE_H
 
 #include <Utils/Common/Enumerations.h>
+#include <Utils/Reflection/VTable.h>
 #include <Utils/TypeTraits/SRClass.h>
 #include <Utils/TypeTraits/SRClassMeta.h>
 
@@ -99,15 +100,6 @@ namespace SR_UTILS_NS::Reflection {
         ReflectedValueStorageType storageType = ReflectedValueStorageType::Embedded;
     };
 
-    struct ReflectedContainerIterator;
-    struct IteratorVTable {
-        using GetValueFn = ReflectedValue(*)(ReflectedValue&, ReflectedContainerIterator);
-        using OffsetFn = ReflectedContainerIterator(*)(ReflectedContainerIterator, int64_t);
-
-        OffsetFn pOffset;
-        GetValueFn pGetValue;
-    };
-
     class Value;
     struct SR_COMMON_DLL_API ReflectedContainerIterator {
         char data[16] = {}; /// с запасом под итераторы Map/Set, где хранится 2 указателя
@@ -130,57 +122,6 @@ namespace SR_UTILS_NS::Reflection {
         SR_NODISCARD bool operator!=(const ReflectedContainerIterator& other) const noexcept;
     };
 
-    struct SR_COMMON_DLL_API ContainerVTable {
-        using BeginFn = ReflectedContainerIterator(*)(ReflectedValue&);
-        using EndFn = ReflectedContainerIterator(*)(ReflectedValue&);
-        using FindFn = ReflectedContainerIterator(*)(ReflectedValue&, const ReflectedValue&);
-        using InsertFn = ReflectedContainerIterator(*)(ReflectedValue&, ReflectedContainerIterator, const ReflectedValue&, const ReflectedValue&);
-        using EraseFn = ReflectedContainerIterator(*)(ReflectedValue&, ReflectedContainerIterator);
-
-        using SizeFn = SizeType(*)(ReflectedValue&);
-        using ClearFn = void(*)(ReflectedValue&);
-        using ResizeFn = void(*)(ReflectedValue&, SizeType, bool reserve);
-
-        BeginFn pBegin;
-        EndFn pEnd;
-        InsertFn pInsert;
-        EraseFn pErase;
-        FindFn pFind;
-
-        SizeFn pSize;
-        ClearFn pClear;
-        ResizeFn pResize;
-
-    };
-
-    struct SR_COMMON_DLL_API PairVTable {
-        using GetPairValue = ReflectedValue(*)(ReflectedValue&, bool isFirst);
-        GetPairValue pGetPairValue;
-    };
-
-    struct SR_COMMON_DLL_API TypeInfoVTable {
-        /// any type functions
-        using ConstructorFn = ReflectedValue(*)(IAllocator&);
-        using DestructorFn = void(*)(IAllocator&, ReflectedValue&);
-        using CopyFn = void(*)(const ReflectedValue&, ReflectedValue&);
-        using MoveFn = void(*)(ReflectedValue&, ReflectedValue&);
-        using SizeOfAlignFn = Pair<SizeType, SizeType>(*)();
-
-        ConstructorFn pConstructor = nullptr;
-        DestructorFn pDestructor = nullptr;
-        CopyFn pCopy = nullptr;
-        MoveFn pMove = nullptr;
-        SizeOfAlignFn pSizeOfAlign = nullptr;
-
-        /// for SRClass and other containers (except Vector, Map and Set)
-        using GetTypeController = void*(*)(ReflectedValue&);
-
-        ContainerVTable containerVTable;
-        IteratorVTable iteratorVTable;
-        PairVTable pairVTable;
-        GetTypeController pGetTypeController;
-    };
-
     struct SR_COMMON_DLL_API TypeInfo {
         ReflectedCategoryType category = ReflectedCategoryType::Unknown;
         uint8_t detailedSize = 0;
@@ -197,31 +138,45 @@ namespace SR_UTILS_NS::Reflection {
     extern SR_COMMON_DLL_API TypeInfo* AllocateTypeInfo();
     extern SR_COMMON_DLL_API TypeInfo* CopyTypeInfo(TypeInfo* pTypeInfo);
     extern SR_COMMON_DLL_API void FreeTypeInfo(TypeInfo* pTypeInfo);
-    extern SR_COMMON_DLL_API void DestroyTypeInfoPool();
-
-    extern SR_COMMON_DLL_API void RegisterVTable(TypeInfo& typeInfo);
-    extern SR_COMMON_DLL_API void UnregisterVTable(TypeInfo& typeInfo);
-    extern SR_COMMON_DLL_API bool FindVTable(TypeInfo& typeInfo);
+    extern SR_COMMON_DLL_API void InitReflection();
+    extern SR_COMMON_DLL_API void DeInitReflection();
 
     template<typename T, typename Enable = void> struct DetermineTypeInfoAccessor {
         static constexpr bool Supported = false;
-        static void Determine(IAllocator&, TypeInfo*) { static_assert(AlwaysFalseV<T>, "Unable to determine type info for type!"); }
+        static void Determine(TypeInfo*) { static_assert(AlwaysFalseV<T>, "Unable to determine type info for type!"); }
     };
 
     template<typename T> constexpr bool IsDetermineTypeInfoSupportedV = DetermineTypeInfoAccessor<T>::Supported;
 
-    template<typename T> void DetermineTypeInfo(IAllocator& allocator, TypeInfo* pTypeInfo, const T&) {
+    template<typename T> void DetermineTypeInfo(TypeInfo* pTypeInfo) {
         using Type = std::remove_cv_t<std::remove_reference_t<T>>;
-        DetermineTypeInfoAccessor<Type>::Determine(allocator, pTypeInfo);
+        DetermineTypeInfoAccessor<Type>::Determine(pTypeInfo);
     }
 
-    template<typename T> TypeInfo* DetermineTypeInfoAlloc(IAllocator& allocator, const T& t) {
+    template<typename T> TypeInfo* DetermineTypeInfoAlloc() {
         auto&& pTypeInfo = AllocateTypeInfo();
-        DetermineTypeInfo(allocator, pTypeInfo, t);
+        DetermineTypeInfo<T>(pTypeInfo);
         return pTypeInfo;
     }
 
-    template<typename T> Pair<SizeType, SizeType> ReflectedTypeTemplateSizeOfAlign() {
+    template<typename T> TypeInfo* DetermineTypeInfoAlloc(const T&) {
+        auto&& pTypeInfo = AllocateTypeInfo();
+        DetermineTypeInfo<T>(pTypeInfo);
+        return pTypeInfo;
+    }
+
+    template<typename T> void SwitchTypeRegister(bool reg) {
+        auto&& pTypeInfo = DetermineTypeInfoAlloc<T>();
+        if (reg) {
+            RegisterVTable(*pTypeInfo);
+        }
+        else {
+            UnregisterVTable(*pTypeInfo);
+        }
+        FreeTypeInfo(pTypeInfo);
+    }
+
+    template<typename T> Pair<SizeType, SizeType> ReflectedTypeTemplateSizeOfAlign(const TypeInfo&) {
         return { sizeof(T), alignof(T) };
     }
 

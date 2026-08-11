@@ -144,15 +144,15 @@ namespace SR_UTILS_NS::Reflection {
     /// ----------------------------------------------------------------------------------------------------------------
 
     template<typename T> Value Value::Create(T&& value) {
-        return Create(std::forward<T>(value), DetermineTypeInfoAlloc(*SR_UTILS_NS::IAllocator::GetDefaultAllocator(), value));
+        return Create(std::forward<T>(value), DetermineTypeInfoAlloc<T>());
     }
 
     template<typename T> Value Value::CreateRef(T& value) {
-        return CreateRef(value, DetermineTypeInfoAlloc(*SR_UTILS_NS::IAllocator::GetDefaultAllocator(), value));
+        return CreateRef(value, DetermineTypeInfoAlloc<T>());
     }
 
     template<typename T> Value Value::CreateCRef(const T& value) {
-        return CreateCRef(value, DetermineTypeInfoAlloc(*SR_UTILS_NS::IAllocator::GetDefaultAllocator(), value));
+        return CreateCRef(value, DetermineTypeInfoAlloc<T>());
     }
 
     template<typename T> Value Value::Create(T&& value, TypeInfo* pTypeInfo) {

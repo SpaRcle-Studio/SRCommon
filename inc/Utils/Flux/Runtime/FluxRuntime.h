@@ -15,6 +15,11 @@ namespace SR_FLUX_NS {
         Register,
     };
 
+    enum class RegisterOperation : uint8_t {
+        Read,
+        Write,
+    };
+
     class FluxRuntime : public NonCopyable {
     public:
         FluxRuntime() = default;
@@ -29,10 +34,11 @@ namespace SR_FLUX_NS {
         bool ExecuteInstruction(FluxExecution& execution, const FluxInstruction& instruction);
         bool ValidateInstruction(FluxExecution& execution, const FluxInstruction& instruction) const;
         SR_NODISCARD RegisterType GetRegisterType(FluxExecution& execution, FluxRegisterId registerId) const;
-        SR_NODISCARD Reflection::Value& GetRegister(FluxExecution& execution, FluxRegisterId registerId, RegisterType type);
+        SR_NODISCARD Reflection::Value& GetRegister(FluxExecution& execution, FluxRegisterId registerId, RegisterType type, RegisterOperation operation);
+        SR_NODISCARD Reflection::Value& GetResultRegister(FluxExecution& execution);
 
     public:
-        uint32_t m_maxRegisters = 32;
+        uint32_t m_maxRegisters = 16;
         uint32_t m_maxExecutions = 256;
         uint32_t m_budgetPerTick = 1024;
         float_t m_tickDuration = 0.016f; // 1 / 60 FPS

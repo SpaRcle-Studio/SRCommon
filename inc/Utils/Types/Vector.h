@@ -50,6 +50,9 @@ namespace SR_UTILS_NS {
     public:
         void delete_contents();
 
+        SR_NODISCARD SizeType distance(ConstIterator pIt) const noexcept;
+        SR_NODISCARD SizeType distance(Iterator pIt) const noexcept;
+
         void reserve(SizeType newCapacity);
         void resize(SizeType newSize);
         void resize(SizeType newSize, const T& value);
@@ -64,6 +67,8 @@ namespace SR_UTILS_NS {
         template <class... ValueType> T& emplace_back(ValueType&&... value);
         SR_NODISCARD ConstIterator find(const T& value) const noexcept;
         SR_NODISCARD Iterator find(const T& value) noexcept;
+        template<typename Predicate> SR_NODISCARD ConstIterator find_if(Predicate&& predicate) const noexcept;
+        template<typename Predicate> SR_NODISCARD Iterator find_if(Predicate&& predicate) noexcept;
         Iterator erase(ConstIterator pos);
         Iterator erase(ConstIterator first, ConstIterator last);
         template<typename Predicate> Iterator remove_if(Predicate&& predicate);
@@ -122,6 +127,14 @@ namespace SR_UTILS_NS {
         IAllocator* m_allocator = nullptr;
 
     };
+
+    template<typename T> SizeType Vector<T>::distance(ConstIterator pIt) const noexcept {
+        return static_cast<SizeType>(pIt - begin());
+    }
+
+    template<typename T> SizeType Vector<T>::distance(Iterator pIt) const noexcept {
+        return static_cast<SizeType>(pIt - begin());
+    }
 
     template<typename T> void Vector<T>::delete_contents() {
         if constexpr (!std::is_const_v<T>) {
@@ -425,6 +438,19 @@ namespace SR_UTILS_NS {
 
     template<typename T> Vector<T>::Iterator Vector<T>::find(const T& value) noexcept {
         return const_cast<Iterator>(static_cast<const Vector*>(this)->find(value));
+    }
+
+    template<typename T> template<typename Predicate> Vector<T>::ConstIterator Vector<T>::find_if(Predicate&& predicate) const noexcept {
+        for (SizeType i = 0; i < m_size; ++i) {
+            if (predicate(static_cast<T*>(m_data)[i])) {
+                return begin() + i;
+            }
+        }
+        return end();
+    }
+
+    template<typename T> template<typename Predicate> Vector<T>::Iterator Vector<T>::find_if(Predicate&& predicate) noexcept {
+        return const_cast<Iterator>(static_cast<const Vector*>(this)->find_if(std::forward<Predicate>(predicate)));
     }
 
     template<typename T> void Vector<T>::push_back(const T& value) {

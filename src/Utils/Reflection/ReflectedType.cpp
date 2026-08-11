@@ -279,10 +279,6 @@ namespace SR_UTILS_NS::Reflection {
     TypeInfoPool* g_typeInfoPool = nullptr;
 
     TypeInfo* AllocateTypeInfo() {
-        if (!g_typeInfoPool) SR_UNLIKELY_ATTRIBUTE {
-            g_typeInfoPool = new TypeInfoPool();
-        }
-
         std::lock_guard<std::mutex> lock(g_typeInfoPool->mutex);
 
         if (g_typeInfoPool->available.empty()) {
@@ -324,51 +320,75 @@ namespace SR_UTILS_NS::Reflection {
         return pNewTypeInfo;
     }
 
-    void DestroyTypeInfoPool() {
+    using SwithTypeRegisterFunc = void(*)(bool);
+    SwithTypeRegisterFunc g_switchTypeRegisterFuncs[] = {
+        &SwitchTypeRegister<Path>,
+        &SwitchTypeRegister<String>,
+        &SwitchTypeRegister<StringView>,
+        &SwitchTypeRegister<StringAtom>,
+        &SwitchTypeRegister<UnicodeString>,
+        &SwitchTypeRegister<SR_MATH_NS::FColor>,
+        &SwitchTypeRegister<SR_MATH_NS::Quaternion>,
+        &SwitchTypeRegister<SR_MATH_NS::AABB>,
+        &SwitchTypeRegister<SR_MATH_NS::Matrix3x3>,
+        &SwitchTypeRegister<SR_MATH_NS::Matrix4x4>,
+        &SwitchTypeRegister<SR_MATH_NS::FRect>,
+        &SwitchTypeRegister<SR_MATH_NS::IRect>,
+        &SwitchTypeRegister<SR_MATH_NS::URect>,
+        &SwitchTypeRegister<SR_MATH_NS::USRect>,
+        &SwitchTypeRegister<SR_MATH_NS::FSize>,
+        &SwitchTypeRegister<SR_MATH_NS::USize>,
+        &SwitchTypeRegister<SR_MATH_NS::ISize>,
+        &SwitchTypeRegister<SR_MATH_NS::FSize2>,
+        &SwitchTypeRegister<SR_MATH_NS::USize2>,
+        &SwitchTypeRegister<SR_MATH_NS::ISize2>,
+        &SwitchTypeRegister<SR_MATH_NS::FVector2>,
+        &SwitchTypeRegister<SR_MATH_NS::FVector3>,
+        &SwitchTypeRegister<SR_MATH_NS::FVector4>,
+        &SwitchTypeRegister<SR_MATH_NS::FVector6>,
+        &SwitchTypeRegister<SR_MATH_NS::IVector2>,
+        &SwitchTypeRegister<SR_MATH_NS::IVector3>,
+        &SwitchTypeRegister<SR_MATH_NS::IVector4>,
+        &SwitchTypeRegister<SR_MATH_NS::IVector6>,
+        &SwitchTypeRegister<SR_MATH_NS::UVector2>,
+        &SwitchTypeRegister<SR_MATH_NS::UVector3>,
+        &SwitchTypeRegister<SR_MATH_NS::UVector4>,
+        &SwitchTypeRegister<SR_MATH_NS::UVector6>,
+        &SwitchTypeRegister<SR_MATH_NS::BVector2>,
+        &SwitchTypeRegister<SR_MATH_NS::BVector3>,
+        &SwitchTypeRegister<SR_MATH_NS::BVector4>,
+        &SwitchTypeRegister<SR_MATH_NS::BVector6>
+    };
+
+    void InitReflection() {
+        SR_TRACY_ZONE;
+
+        if (!g_typeInfoPool) SR_UNLIKELY_ATTRIBUTE {
+            g_typeInfoPool = new TypeInfoPool();
+        }
+
+        for (auto&& func : g_switchTypeRegisterFuncs) {
+            func(true);
+        }
+    }
+
+    void DeInitReflection() {
+        SR_TRACY_ZONE;
+
         if (!g_typeInfoPool) {
             return;
         }
+
+        for (auto&& func : g_switchTypeRegisterFuncs) {
+            func(false);
+        }
+
+        if (auto&& size = GetVTableSize(); size > 0) {
+            SR_PLATFORM_NS::WriteConsoleError("DeInitReflection() : TypeInfoVTable is not empty! Count: {}"_format(size));
+        }
+
         delete g_typeInfoPool;
         g_typeInfoPool = nullptr;
-    }
-
-    struct TypeInfoVTableCounter {
-        TypeInfoVTable vtable;
-        uint32_t count = 0;
-    };
-    SR_HTYPES_NS::FlatHashMap<SRHashType, TypeInfoVTableCounter> g_typeInfoVTableMap;
-
-    void RegisterVTable(TypeInfo& typeInfo) {
-        const auto hash = typeInfo.GetHash();
-        auto&& table = g_typeInfoVTableMap[hash];
-        if (table.count == 0) {
-            table.vtable = typeInfo.vtable;
-        }
-        table.count++;
-    }
-
-    void UnregisterVTable(TypeInfo& typeInfo) {
-        const auto hash = typeInfo.GetHash();
-        auto&& pIt = g_typeInfoVTableMap.find(hash);
-        if (pIt == g_typeInfoVTableMap.end()) {
-            SRHalt("UnregisterVTable() : TypeInfoVTable for type '{}' is not registered!", typeInfo.detailedType);
-            return;
-        }
-        auto&& table = pIt->second;
-        if (--table.count == 0) {
-            g_typeInfoVTableMap.erase(pIt);
-        }
-    }
-
-    bool FindVTable(TypeInfo& typeInfo) {
-        const auto hash = typeInfo.GetHash();
-        auto pIt = g_typeInfoVTableMap.find(hash);
-        if (pIt == g_typeInfoVTableMap.end()) {
-            SRHalt("FindVTable() : TypeInfoVTable for type '{}' is not registered!", typeInfo.detailedType);
-            return false;
-        }
-        typeInfo.vtable = pIt->second.vtable;
-        return true;
     }
 
     template<typename T> void ReflectedTypeInlineCopy(const ReflectedValue& from, ReflectedValue& to) {
@@ -451,7 +471,7 @@ namespace SR_UTILS_NS::Reflection {
         memset(pFrom, 0, sizeof(uint64_t));
     }
 
-    template<typename T> void DetermineTypeInfoRegistered(IAllocator& allocator, TypeInfo* pTypeInfo) {
+    template<typename T> void DetermineTypeInfoRegistered(TypeInfo* pTypeInfo) {
         pTypeInfo->vtable.pSizeOfAlign = &ReflectedTypeTemplateSizeOfAlign<T>;
 
         if constexpr (std::is_integral_v<T> || std::is_floating_point_v<T> || std::is_same_v<T, bool>) {
@@ -515,55 +535,55 @@ namespace SR_UTILS_NS::Reflection {
         }
     }
 
-    template void DetermineTypeInfoRegistered<int8_t>(IAllocator&, TypeInfo* pTypeInfo);
-    template void DetermineTypeInfoRegistered<int16_t>(IAllocator&, TypeInfo* pTypeInfo);
-    template void DetermineTypeInfoRegistered<int32_t>(IAllocator&, TypeInfo* pTypeInfo);
-    template void DetermineTypeInfoRegistered<int64_t>(IAllocator&, TypeInfo* pTypeInfo);
-    template void DetermineTypeInfoRegistered<uint8_t>(IAllocator&, TypeInfo* pTypeInfo);
-    template void DetermineTypeInfoRegistered<uint16_t>(IAllocator&, TypeInfo* pTypeInfo);
-    template void DetermineTypeInfoRegistered<uint32_t>(IAllocator&, TypeInfo* pTypeInfo);
-    template void DetermineTypeInfoRegistered<uint64_t>(IAllocator&, TypeInfo* pTypeInfo);
-    template void DetermineTypeInfoRegistered<float>(IAllocator&, TypeInfo* pTypeInfo);
-    template void DetermineTypeInfoRegistered<double>(IAllocator&, TypeInfo* pTypeInfo);
-    template void DetermineTypeInfoRegistered<bool>(IAllocator&, TypeInfo* pTypeInfo);
-    template void DetermineTypeInfoRegistered<Path>(IAllocator&, TypeInfo* pTypeInfo);
-    template void DetermineTypeInfoRegistered<String>(IAllocator&, TypeInfo* pTypeInfo);
-    template void DetermineTypeInfoRegistered<StringView>(IAllocator&, TypeInfo* pTypeInfo);
-    template void DetermineTypeInfoRegistered<StringAtom>(IAllocator&, TypeInfo* pTypeInfo);
-    template void DetermineTypeInfoRegistered<UnicodeString>(IAllocator&, TypeInfo* pTypeInfo);
-    template void DetermineTypeInfoRegistered<SR_MATH_NS::FColor>(IAllocator&, TypeInfo* pTypeInfo);
-    template void DetermineTypeInfoRegistered<SR_MATH_NS::Quaternion>(IAllocator&, TypeInfo* pTypeInfo);
-    template void DetermineTypeInfoRegistered<SR_MATH_NS::AABB>(IAllocator&, TypeInfo* pTypeInfo);
-    template void DetermineTypeInfoRegistered<SR_MATH_NS::Matrix3x3>(IAllocator&, TypeInfo* pTypeInfo);
-    template void DetermineTypeInfoRegistered<SR_MATH_NS::Matrix4x4>(IAllocator&, TypeInfo* pTypeInfo);
-    template void DetermineTypeInfoRegistered<SR_MATH_NS::FRect>(IAllocator&, TypeInfo* pTypeInfo);
-    template void DetermineTypeInfoRegistered<SR_MATH_NS::IRect>(IAllocator&, TypeInfo* pTypeInfo);
-    template void DetermineTypeInfoRegistered<SR_MATH_NS::URect>(IAllocator&, TypeInfo* pTypeInfo);
-    template void DetermineTypeInfoRegistered<SR_MATH_NS::USRect>(IAllocator&, TypeInfo* pTypeInfo);
-    template void DetermineTypeInfoRegistered<SR_MATH_NS::FSize>(IAllocator&, TypeInfo* pTypeInfo);
-    template void DetermineTypeInfoRegistered<SR_MATH_NS::USize>(IAllocator&, TypeInfo* pTypeInfo);
-    template void DetermineTypeInfoRegistered<SR_MATH_NS::ISize>(IAllocator&, TypeInfo* pTypeInfo);
-    template void DetermineTypeInfoRegistered<SR_MATH_NS::FSize2>(IAllocator&, TypeInfo* pTypeInfo);
-    template void DetermineTypeInfoRegistered<SR_MATH_NS::USize2>(IAllocator&, TypeInfo* pTypeInfo);
-    template void DetermineTypeInfoRegistered<SR_MATH_NS::ISize2>(IAllocator&, TypeInfo* pTypeInfo);
-    template void DetermineTypeInfoRegistered<SR_MATH_NS::FVector2>(IAllocator&, TypeInfo* pTypeInfo);
-    template void DetermineTypeInfoRegistered<SR_MATH_NS::FVector3>(IAllocator&, TypeInfo* pTypeInfo);
-    template void DetermineTypeInfoRegistered<SR_MATH_NS::FVector4>(IAllocator&, TypeInfo* pTypeInfo);
-    template void DetermineTypeInfoRegistered<SR_MATH_NS::FVector6>(IAllocator&, TypeInfo* pTypeInfo);
-    template void DetermineTypeInfoRegistered<SR_MATH_NS::SVector2>(IAllocator&, TypeInfo* pTypeInfo);
-    template void DetermineTypeInfoRegistered<SR_MATH_NS::IVector2>(IAllocator&, TypeInfo* pTypeInfo);
-    template void DetermineTypeInfoRegistered<SR_MATH_NS::IVector3>(IAllocator&, TypeInfo* pTypeInfo);
-    template void DetermineTypeInfoRegistered<SR_MATH_NS::IVector4>(IAllocator&, TypeInfo* pTypeInfo);
-    template void DetermineTypeInfoRegistered<SR_MATH_NS::IVector6>(IAllocator&, TypeInfo* pTypeInfo);
-    template void DetermineTypeInfoRegistered<SR_MATH_NS::UVector2>(IAllocator&, TypeInfo* pTypeInfo);
-    template void DetermineTypeInfoRegistered<SR_MATH_NS::USVector2>(IAllocator&, TypeInfo* pTypeInfo);
-    template void DetermineTypeInfoRegistered<SR_MATH_NS::UVector3>(IAllocator&, TypeInfo* pTypeInfo);
-    template void DetermineTypeInfoRegistered<SR_MATH_NS::UVector4>(IAllocator&, TypeInfo* pTypeInfo);
-    template void DetermineTypeInfoRegistered<SR_MATH_NS::UVector6>(IAllocator&, TypeInfo* pTypeInfo);
-    template void DetermineTypeInfoRegistered<SR_MATH_NS::BVector2>(IAllocator&, TypeInfo* pTypeInfo);
-    template void DetermineTypeInfoRegistered<SR_MATH_NS::BVector3>(IAllocator&, TypeInfo* pTypeInfo);
-    template void DetermineTypeInfoRegistered<SR_MATH_NS::BVector4>(IAllocator&, TypeInfo* pTypeInfo);
-    template void DetermineTypeInfoRegistered<SR_MATH_NS::BVector6>(IAllocator&, TypeInfo* pTypeInfo);
+    template void DetermineTypeInfoRegistered<int8_t>(TypeInfo* pTypeInfo);
+    template void DetermineTypeInfoRegistered<int16_t>(TypeInfo* pTypeInfo);
+    template void DetermineTypeInfoRegistered<int32_t>(TypeInfo* pTypeInfo);
+    template void DetermineTypeInfoRegistered<int64_t>(TypeInfo* pTypeInfo);
+    template void DetermineTypeInfoRegistered<uint8_t>(TypeInfo* pTypeInfo);
+    template void DetermineTypeInfoRegistered<uint16_t>(TypeInfo* pTypeInfo);
+    template void DetermineTypeInfoRegistered<uint32_t>(TypeInfo* pTypeInfo);
+    template void DetermineTypeInfoRegistered<uint64_t>(TypeInfo* pTypeInfo);
+    template void DetermineTypeInfoRegistered<float>(TypeInfo* pTypeInfo);
+    template void DetermineTypeInfoRegistered<double>(TypeInfo* pTypeInfo);
+    template void DetermineTypeInfoRegistered<bool>(TypeInfo* pTypeInfo);
+    template void DetermineTypeInfoRegistered<Path>(TypeInfo* pTypeInfo);
+    template void DetermineTypeInfoRegistered<String>(TypeInfo* pTypeInfo);
+    template void DetermineTypeInfoRegistered<StringView>(TypeInfo* pTypeInfo);
+    template void DetermineTypeInfoRegistered<StringAtom>(TypeInfo* pTypeInfo);
+    template void DetermineTypeInfoRegistered<UnicodeString>(TypeInfo* pTypeInfo);
+    template void DetermineTypeInfoRegistered<SR_MATH_NS::FColor>(TypeInfo* pTypeInfo);
+    template void DetermineTypeInfoRegistered<SR_MATH_NS::Quaternion>(TypeInfo* pTypeInfo);
+    template void DetermineTypeInfoRegistered<SR_MATH_NS::AABB>(TypeInfo* pTypeInfo);
+    template void DetermineTypeInfoRegistered<SR_MATH_NS::Matrix3x3>(TypeInfo* pTypeInfo);
+    template void DetermineTypeInfoRegistered<SR_MATH_NS::Matrix4x4>(TypeInfo* pTypeInfo);
+    template void DetermineTypeInfoRegistered<SR_MATH_NS::FRect>(TypeInfo* pTypeInfo);
+    template void DetermineTypeInfoRegistered<SR_MATH_NS::IRect>(TypeInfo* pTypeInfo);
+    template void DetermineTypeInfoRegistered<SR_MATH_NS::URect>(TypeInfo* pTypeInfo);
+    template void DetermineTypeInfoRegistered<SR_MATH_NS::USRect>(TypeInfo* pTypeInfo);
+    template void DetermineTypeInfoRegistered<SR_MATH_NS::FSize>(TypeInfo* pTypeInfo);
+    template void DetermineTypeInfoRegistered<SR_MATH_NS::USize>(TypeInfo* pTypeInfo);
+    template void DetermineTypeInfoRegistered<SR_MATH_NS::ISize>(TypeInfo* pTypeInfo);
+    template void DetermineTypeInfoRegistered<SR_MATH_NS::FSize2>(TypeInfo* pTypeInfo);
+    template void DetermineTypeInfoRegistered<SR_MATH_NS::USize2>(TypeInfo* pTypeInfo);
+    template void DetermineTypeInfoRegistered<SR_MATH_NS::ISize2>(TypeInfo* pTypeInfo);
+    template void DetermineTypeInfoRegistered<SR_MATH_NS::FVector2>(TypeInfo* pTypeInfo);
+    template void DetermineTypeInfoRegistered<SR_MATH_NS::FVector3>(TypeInfo* pTypeInfo);
+    template void DetermineTypeInfoRegistered<SR_MATH_NS::FVector4>(TypeInfo* pTypeInfo);
+    template void DetermineTypeInfoRegistered<SR_MATH_NS::FVector6>(TypeInfo* pTypeInfo);
+    template void DetermineTypeInfoRegistered<SR_MATH_NS::SVector2>(TypeInfo* pTypeInfo);
+    template void DetermineTypeInfoRegistered<SR_MATH_NS::IVector2>(TypeInfo* pTypeInfo);
+    template void DetermineTypeInfoRegistered<SR_MATH_NS::IVector3>(TypeInfo* pTypeInfo);
+    template void DetermineTypeInfoRegistered<SR_MATH_NS::IVector4>(TypeInfo* pTypeInfo);
+    template void DetermineTypeInfoRegistered<SR_MATH_NS::IVector6>(TypeInfo* pTypeInfo);
+    template void DetermineTypeInfoRegistered<SR_MATH_NS::UVector2>(TypeInfo* pTypeInfo);
+    template void DetermineTypeInfoRegistered<SR_MATH_NS::USVector2>(TypeInfo* pTypeInfo);
+    template void DetermineTypeInfoRegistered<SR_MATH_NS::UVector3>(TypeInfo* pTypeInfo);
+    template void DetermineTypeInfoRegistered<SR_MATH_NS::UVector4>(TypeInfo* pTypeInfo);
+    template void DetermineTypeInfoRegistered<SR_MATH_NS::UVector6>(TypeInfo* pTypeInfo);
+    template void DetermineTypeInfoRegistered<SR_MATH_NS::BVector2>(TypeInfo* pTypeInfo);
+    template void DetermineTypeInfoRegistered<SR_MATH_NS::BVector3>(TypeInfo* pTypeInfo);
+    template void DetermineTypeInfoRegistered<SR_MATH_NS::BVector4>(TypeInfo* pTypeInfo);
+    template void DetermineTypeInfoRegistered<SR_MATH_NS::BVector6>(TypeInfo* pTypeInfo);
 
     bool Test() {
         Vector<uint32_t> values = { 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024 };
@@ -587,25 +607,25 @@ namespace SR_UTILS_NS::Reflection {
 
         IAllocator* pAllocator = IAllocator::GetDefaultAllocator();
         TypeInfo* types[19] {
-            DetermineTypeInfoAlloc(*pAllocator, values),
-            DetermineTypeInfoAlloc(*pAllocator, optionalValue),
-            DetermineTypeInfoAlloc(*pAllocator, 2),
-            DetermineTypeInfoAlloc(*pAllocator, true),
-            DetermineTypeInfoAlloc(*pAllocator, String()),
-            DetermineTypeInfoAlloc(*pAllocator, StringView()),
-            DetermineTypeInfoAlloc(*pAllocator, StringAtom()),
-            DetermineTypeInfoAlloc(*pAllocator, UnicodeString()),
-            DetermineTypeInfoAlloc(*pAllocator, Path()),
-            DetermineTypeInfoAlloc(*pAllocator, SR_MATH_NS::FSize2()),
-            DetermineTypeInfoAlloc(*pAllocator, SR_MATH_NS::FRect()),
-            DetermineTypeInfoAlloc(*pAllocator, SR_MATH_NS::Quaternion()),
-            DetermineTypeInfoAlloc(*pAllocator, SR_MATH_NS::Matrix4x4()),
-            DetermineTypeInfoAlloc(*pAllocator, SR_MATH_NS::UVector6()),
-            DetermineTypeInfoAlloc(*pAllocator, ReflectedCategoryType()),
-            DetermineTypeInfoAlloc(*pAllocator, Serializable()),
-            DetermineTypeInfoAlloc(*pAllocator, SRClass()),
-            DetermineTypeInfoAlloc(*pAllocator, stringSet),
-            DetermineTypeInfoAlloc(*pAllocator, stringMap)
+            DetermineTypeInfoAlloc(values),
+            DetermineTypeInfoAlloc(optionalValue),
+            DetermineTypeInfoAlloc(2),
+            DetermineTypeInfoAlloc(true),
+            DetermineTypeInfoAlloc(String()),
+            DetermineTypeInfoAlloc(StringView()),
+            DetermineTypeInfoAlloc(StringAtom()),
+            DetermineTypeInfoAlloc(UnicodeString()),
+            DetermineTypeInfoAlloc(Path()),
+            DetermineTypeInfoAlloc(SR_MATH_NS::FSize2()),
+            DetermineTypeInfoAlloc(SR_MATH_NS::FRect()),
+            DetermineTypeInfoAlloc(SR_MATH_NS::Quaternion()),
+            DetermineTypeInfoAlloc(SR_MATH_NS::Matrix4x4()),
+            DetermineTypeInfoAlloc(SR_MATH_NS::UVector6()),
+            DetermineTypeInfoAlloc(ReflectedCategoryType()),
+            DetermineTypeInfoAlloc(Serializable()),
+            DetermineTypeInfoAlloc(SRClass()),
+            DetermineTypeInfoAlloc(stringSet),
+            DetermineTypeInfoAlloc(stringMap)
         };
 
         Vector<uint32_t>* pValues = reinterpret_cast<Vector<uint32_t>*>(valuesRef.GetData());

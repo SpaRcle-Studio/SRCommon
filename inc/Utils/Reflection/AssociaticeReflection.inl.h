@@ -26,13 +26,13 @@ namespace SR_UTILS_NS::Reflection {
 
     template<typename Key, typename Value, typename Compare> struct DetermineTypeInfoAccessor<Map<Key, Value, Compare>> {
         static constexpr bool Supported = true;
-        static void Determine(IAllocator& allocator, TypeInfo* pTypeInfo) {
+        static void Determine(TypeInfo* pTypeInfo) {
             static const StringAtom detailedType = "Map";
             using Type = Map<Key, Value, Compare>;
             pTypeInfo->detailedType = detailedType;
             pTypeInfo->category = ReflectedCategoryType::Container;
             pTypeInfo->pNext[0] = AllocateTypeInfo();
-            DetermineTypeInfoAccessor<Pair<Key, Value>>::Determine(allocator, pTypeInfo->pNext[0]);
+            DetermineTypeInfoAccessor<Pair<Key, Value>>::Determine(pTypeInfo->pNext[0]);
             pTypeInfo->vtable.pConstructor = &ReflectedTypeTemplateConstructor<Type>;
             pTypeInfo->vtable.pDestructor = &ReflectedTypeTemplateDestructor<Type>;
             pTypeInfo->vtable.pCopy = &ReflectedTypeTemplateCopy<Type>;
@@ -51,13 +51,13 @@ namespace SR_UTILS_NS::Reflection {
 
     template<typename Key, typename Value> struct DetermineTypeInfoAccessor<SR_HTYPES_NS::FlatHashMap<Key, Value>> {
         static constexpr bool Supported = true;
-        static void Determine(IAllocator& allocator, TypeInfo* pTypeInfo) {
+        static void Determine(TypeInfo* pTypeInfo) {
             static const StringAtom detailedType = "FlatHashMap";
             using Type = SR_HTYPES_NS::FlatHashMap<Key, Value>;
             pTypeInfo->detailedType = detailedType;
             pTypeInfo->category = ReflectedCategoryType::Container;
             pTypeInfo->pNext[0] = AllocateTypeInfo();
-            DetermineTypeInfoAccessor<Pair<Key, Value>>::Determine(allocator, pTypeInfo->pNext[0]);
+            DetermineTypeInfoAccessor<Pair<Key, Value>>::Determine(pTypeInfo->pNext[0]);
             pTypeInfo->vtable.pSizeOfAlign = &ReflectedTypeTemplateSizeOfAlign<Type>;
             pTypeInfo->vtable.pConstructor = &ReflectedTypeTemplateConstructor<Type>;
             pTypeInfo->vtable.pDestructor = &ReflectedTypeTemplateDestructor<Type>;
@@ -97,13 +97,13 @@ namespace SR_UTILS_NS::Reflection {
 
     template<typename T, typename Compare> struct DetermineTypeInfoAccessor<Set<T, Compare>> {
         static constexpr bool Supported = true;
-        static void Determine(IAllocator& allocator, TypeInfo* pTypeInfo) {
+        static void Determine(TypeInfo* pTypeInfo) {
             static const StringAtom detailedType = "Set";
             using Type = Set<T, Compare>;
             pTypeInfo->detailedType = detailedType;
             pTypeInfo->category = ReflectedCategoryType::Container;
             pTypeInfo->pNext[0] = AllocateTypeInfo();
-            DetermineTypeInfoAccessor<T>::Determine(allocator, pTypeInfo->pNext[0]);
+            DetermineTypeInfoAccessor<T>::Determine(pTypeInfo->pNext[0]);
             pTypeInfo->vtable.pSizeOfAlign = &ReflectedTypeTemplateSizeOfAlign<Type>;
             pTypeInfo->vtable.pConstructor = &ReflectedTypeTemplateConstructor<Type>;
             pTypeInfo->vtable.pDestructor = &ReflectedTypeTemplateDestructor<Type>;
@@ -123,13 +123,13 @@ namespace SR_UTILS_NS::Reflection {
 
     template<typename T> struct DetermineTypeInfoAccessor<SR_HTYPES_NS::FlatHashSet<T>> {
         static constexpr bool Supported = true;
-        static void Determine(IAllocator& allocator, TypeInfo* pTypeInfo) {
+        static void Determine(TypeInfo* pTypeInfo) {
             static const StringAtom detailedType = "FlatHashSet";
             using Type = SR_HTYPES_NS::FlatHashSet<T>;
             pTypeInfo->detailedType = detailedType;
             pTypeInfo->category = ReflectedCategoryType::Container;
             pTypeInfo->pNext[0] = AllocateTypeInfo();
-            DetermineTypeInfoAccessor<T>::Determine(allocator, pTypeInfo->pNext[0]);
+            DetermineTypeInfoAccessor<T>::Determine(pTypeInfo->pNext[0]);
             pTypeInfo->vtable.pSizeOfAlign = &ReflectedTypeTemplateSizeOfAlign<Type>;
             pTypeInfo->vtable.pConstructor = &ReflectedTypeTemplateConstructor<Type>;
             pTypeInfo->vtable.pDestructor = &ReflectedTypeTemplateDestructor<Type>;
