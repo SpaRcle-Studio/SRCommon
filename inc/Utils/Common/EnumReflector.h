@@ -84,7 +84,7 @@ namespace SR_UTILS_NS {
 
         SR_MAYBE_UNUSED SR_NODISCARD std::optional<StringAtom> ToStringInternal(int64_t value) const;
         SR_MAYBE_UNUSED SR_NODISCARD std::optional<int64_t> FromStringInternal(const StringAtom& name) const;
-        SR_MAYBE_UNUSED SR_NODISCARD std::optional<int64_t> FromStringLowerCaseInternal(const std::string& value) const;
+        SR_MAYBE_UNUSED SR_NODISCARD std::optional<int64_t> FromStringLowerCaseInternal(String value) const;
         SR_MAYBE_UNUSED SR_NODISCARD std::optional<int64_t> GetIndexInternal(int64_t value) const;
         SR_MAYBE_UNUSED SR_NODISCARD std::optional<int64_t> AtInternal(uint64_t index) const;
         SR_MAYBE_UNUSED SR_NODISCARD const Vector<StringAtom>& GetNamesInternal() const;

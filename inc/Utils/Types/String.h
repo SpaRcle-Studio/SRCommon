@@ -117,6 +117,9 @@ namespace SR_UTILS_NS {
         String& append(const char* str, SizeType count);
         String& append(const_iterator first, const_iterator last);
 
+        String& erase(SizeType pos, SizeType count = npos);
+        String erase(SizeType pos, SizeType count = npos) const;
+
         template<class Elem, class Traits> friend std::basic_ostream<Elem, Traits>& operator<<(std::basic_ostream<Elem, Traits>& os, const String& str) {
             return os << str.c_str();
         }

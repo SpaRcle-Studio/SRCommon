@@ -195,14 +195,9 @@ namespace SR_UTILS_NS::Reflection {
         Value result;
         result.m_allocator = m_allocator;
         result.m_typeInfo = CopyTypeInfo(m_typeInfo);
-        if (IsEmbedded()) {
-            result.m_storage = m_storage;
-        }
-        else {
-            result.m_storage = GetTypeInfo().vtable.pConstructor(*m_allocator);
-            if (auto&& pCopy = GetTypeInfo().vtable.pCopy) {
-                pCopy(m_storage, result.m_storage);
-            }
+        result.m_storage = GetTypeInfo().vtable.pConstructor(*m_allocator);
+        if (auto&& pCopy = GetTypeInfo().vtable.pCopy) {
+            pCopy(m_storage, result.m_storage);
         }
         return result;
     }

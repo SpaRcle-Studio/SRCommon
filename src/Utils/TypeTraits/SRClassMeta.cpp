@@ -94,18 +94,19 @@ namespace SR_UTILS_NS {
     	return {};
     }
 
-    bool SRClassMeta::HasExtension(SR_UTILS_NS::StringAtom extension) const noexcept {
+    bool SRClassMeta::HasExtension(StringAtom extension) const noexcept {
         auto&& extensions = GetExtensions();
         return std::ranges::any_of(extensions, [extension](auto&& ext) { return ext == extension; });
     }
 
-    bool SRClassMeta::HasExtension(std::string_view extension) const noexcept {
+    bool SRClassMeta::HasExtension(StringView extension) const noexcept {
         auto&& extensions = GetExtensions();
         return std::ranges::any_of(extensions, [extension](auto&& ext) { return ext == extension; });
     }
 
-    bool SRClassMeta::HasExtension(const std::string& extension) const noexcept {
-        return HasExtension(std::string_view(extension));
+    bool SRClassMeta::HasExtension(const String& extension) const noexcept {
+        auto&& extensions = GetExtensions();
+        return std::ranges::any_of(extensions, [extension](auto&& ext) { return ext == extension; });
     }
 
     SR_UTILS_NS::StringAtom SRClassMeta::GetExtension() const noexcept {

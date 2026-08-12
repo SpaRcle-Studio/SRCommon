@@ -38,9 +38,9 @@ namespace SR_UTILS_NS {
 
         SR_NODISCARD uint64_t GetVersion() const noexcept;
         SR_NODISCARD SR_UTILS_NS::StringAtom GetExtension() const noexcept;
-        SR_NODISCARD bool HasExtension(SR_UTILS_NS::StringAtom extension) const noexcept;
-        SR_NODISCARD bool HasExtension(std::string_view extension) const noexcept;
-        SR_NODISCARD bool HasExtension(const std::string& extension) const noexcept;
+        SR_NODISCARD bool HasExtension(StringAtom extension) const noexcept;
+        SR_NODISCARD bool HasExtension(StringView extension) const noexcept;
+        SR_NODISCARD bool HasExtension(const String& extension) const noexcept;
 
         SR_NODISCARD const SR_UTILS_NS::Reflection::Method* FindMethod(SR_UTILS_NS::StringAtom name) const noexcept;
 

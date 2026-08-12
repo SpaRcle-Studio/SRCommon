@@ -17,7 +17,7 @@ namespace SR_HTYPES_NS {
         Stream();
         Stream(const MappedFile& mappedFile);  /** NOLINT */
         Stream(std::ifstream& ifs);  /** NOLINT */
-        Stream(const std::string& str);  /** NOLINT */
+        Stream(StringView str);  /** NOLINT */
         Stream(const char* pData, uint64_t size, bool copy = true);
 
         Stream(const Stream& other) noexcept;
@@ -40,9 +40,9 @@ namespace SR_HTYPES_NS {
 
         std::pair<char*, uint64_t> SR_FASTCALL Detach() noexcept;
 
-        SR_NODISCARD std::string ToString() const noexcept;
-        SR_NODISCARD std::string_view ToStringView() const noexcept;
-        SR_NODISCARD std::string ToBase64() const noexcept;
+        SR_NODISCARD StringView ToStringView() const noexcept;
+        SR_NODISCARD String ToString() const noexcept;
+        SR_NODISCARD String ToBase64() const noexcept;
 
         SR_NODISCARD uint64_t GetPosition() const noexcept;
         SR_NODISCARD uint64_t Size() const noexcept;

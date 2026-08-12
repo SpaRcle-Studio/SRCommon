@@ -23,7 +23,6 @@ namespace SR_UTILS_NS {
         static bool IsPathSeparator(char c);
 
         static bool WriteToFile(const Path& path, const std::string_view& text);
-        static std::string NormalizePath(const std::string& path);
         static void NormalizePathInPlace(String& path);
         static std::vector<std::string> ReadAllLines(const SR_UTILS_NS::Path& path);
 

@@ -535,6 +535,27 @@ namespace SR_UTILS_NS {
         return StringView(m_data, m_size);
     }
 
+    String& String::erase(SizeType pos, SizeType count) {
+        const size_t eraseCount = std::min(count, m_size - pos);
+
+        std::memmove(
+            m_data + pos,
+            m_data + pos + eraseCount,
+            m_size - pos - eraseCount
+        );
+
+        m_size -= eraseCount;
+        m_data[m_size] = '\0';
+
+        return *this;
+    }
+
+    String String::erase(SizeType pos, SizeType count) const {
+        String result(*this);
+        result.erase(pos, count);
+        return result;
+    }
+
     void StringView::remove_prefix(SizeType n) {
         if (n > m_size) {
             SRHalt("StringView::remove_prefix() : prefix size exceeds string size!");

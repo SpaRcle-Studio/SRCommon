@@ -24,7 +24,7 @@ namespace SR_HTYPES_NS {
         Marshal();
         Marshal(const MappedFile& mappedFile);
         Marshal(std::ifstream& ifs); /** NOLINT */
-        Marshal(const std::string& str); /** NOLINT */
+        Marshal(StringView str); /** NOLINT */
         Marshal(const char* pData, uint64_t size, bool copy = true);
         ~Marshal();
 
@@ -37,8 +37,8 @@ namespace SR_HTYPES_NS {
 
         static Marshal Load(const Path& path);
         static Marshal::Ptr LoadPtr(const Path& path);
-        static Marshal LoadFromMemory(const std::string& data);
-        static Marshal LoadFromBase64(const std::string& base64);
+        static Marshal LoadFromMemory(StringView data);
+        static Marshal LoadFromBase64(StringView base64);
 
         void Append(Marshal&& marshal);
         void Append(std::unique_ptr<Marshal>&& pMarshal);

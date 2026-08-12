@@ -84,26 +84,6 @@ namespace SR_UTILS_NS {
         return path.IsFile();
     }
 
-    SR_COMMON_DLL_API std::string FileSystem::NormalizePath(const std::string &path) {
-        SR_TRACY_ZONE;
-
-        auto newPath = StringUtils::MakePath(path);
-
-        do {
-            auto pos = newPath.find("/..");
-            if (pos == std::string::npos)
-                break;
-
-            auto splash = newPath.rfind('/', pos - 1);
-            if (splash == std::string::npos)
-                break;
-
-            newPath = newPath.erase(splash + 1, (pos - splash) + 3);
-        } while(true);
-
-        return newPath;
-    }
-
     SR_COMMON_DLL_API bool FileSystem::WriteToFile(const Path& path, const std::string_view& text) {
         SR_TRACY_ZONE;
         std::ofstream stream(path.c_str());

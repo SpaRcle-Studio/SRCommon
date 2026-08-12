@@ -5,18 +5,16 @@
 #include <Utils/Common/StringUtils.h>
 #include <Utils/Profile/TracyContext.h>
 
+#include <Codegen/StringUtils.generated.hpp>
+
 namespace SR_UTILS_NS {
-    std::string StringUtils::Reverse(const std::string& str) {
-        std::string result;
-        result.resize(str.size());
+    const char* base64_chars =
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+        "abcdefghijklmnopqrstuvwxyz"
+        "0123456789+/";
 
-        size_t i = 0;
-
-        for (size_t t = str.size(); t > 0; --t, ++i) {
-            result[i] += str[t - 1];
-        }
-
-        return result;
+    bool IsBase64(unsigned char c) {
+        return (isalnum(c) || (c == '+') || (c == '/'));
     }
 
     std::string StringUtils::ToKebabCase(std::string_view str) {
@@ -141,11 +139,27 @@ namespace SR_UTILS_NS {
         return code;
     }
 
-    std::string StringUtils::Base64Encode(const std::string &data) {
-        int in_len = static_cast<int>(data.size());
-        char* bytes_to_encode = (char*)(data.data());
+    void StringUtils::Reverse(String& str) {
+        std::reverse(str.begin(), str.end());
+    }
 
-        std::string ret;
+    void StringUtils::ToLower(String& str) {
+        for (char& t : str) {
+            t = static_cast<char>(tolower(static_cast<char>(t)));
+        }
+    }
+
+    void StringUtils::ToUpper(String& str) {
+        for (char& t : str) {
+            t = static_cast<char>(toupper(static_cast<char>(t)));
+        }
+    }
+
+    void StringUtils::Base64Encode(StringView source, String& base64) {
+        int in_len = static_cast<int>(source.size());
+        char* bytes_to_encode = (char*)(source.data());
+
+        base64.clear();
         int i = 0;
         int j = 0;
         unsigned char char_array_3[3];
@@ -160,7 +174,7 @@ namespace SR_UTILS_NS {
                 char_array_4[3] = char_array_3[2] & 0x3f;
 
                 for(i = 0; (i <4) ; i++)
-                    ret += base64_chars[char_array_4[i]];
+                    base64 += base64_chars[char_array_4[i]];
                 i = 0;
             }
         }
@@ -176,17 +190,14 @@ namespace SR_UTILS_NS {
             char_array_4[3] = char_array_3[2] & 0x3f;
 
             for (j = 0; (j < i + 1); j++)
-                ret += base64_chars[char_array_4[j]];
+                base64 += base64_chars[char_array_4[j]];
 
             while((i++ < 3))
-                ret += '=';
-
+                base64 += '=';
         }
-
-        return ret;
     }
 
-    std::string StringUtils::Base64Decode(const std::string & base64) {
+    void StringUtils::Base64Decode(StringView base64, String& result) {
         SR_TRACY_ZONE;
 
         int in_len = static_cast<int>(base64.size());
@@ -194,9 +205,9 @@ namespace SR_UTILS_NS {
         int j = 0;
         int in_ = 0;
         unsigned char char_array_4[4], char_array_3[3];
-        std::string ret;
+        result.clear();
 
-        while (in_len-- && (base64[in_] != '=') && is_base64(base64[in_])) {
+        while (in_len-- && (base64[in_] != '=') && IsBase64(base64[in_])) {
             char_array_4[i++] = base64[in_]; in_++;
             if (i ==4) {
                 for (i = 0; i <4; i++)
@@ -207,7 +218,7 @@ namespace SR_UTILS_NS {
                 char_array_3[2] = ((char_array_4[2] & 0x3) << 6) + char_array_4[3];
 
                 for (i = 0; (i < 3); i++)
-                    ret += char_array_3[i];
+                    result += char_array_3[i];
                 i = 0;
             }
         }
@@ -223,10 +234,8 @@ namespace SR_UTILS_NS {
             char_array_3[1] = ((char_array_4[1] & 0xf) << 4) + ((char_array_4[2] & 0x3c) >> 2);
             char_array_3[2] = ((char_array_4[2] & 0x3) << 6) + char_array_4[3];
 
-            for (j = 0; (j < i - 1); j++) ret += char_array_3[j];
+            for (j = 0; (j < i - 1); j++) result += char_array_3[j];
         }
-
-        return ret;
     }
 
     std::string StringUtils::Remove(const String& source, uint64_t count) {
@@ -453,5 +462,41 @@ namespace SR_UTILS_NS {
             }
         }
         return false;
+    }
+
+    String StringUtils::MakePath(StringView str, bool toLower) noexcept {
+        auto&& replaced = ReplaceAll<String>(str, "\\"sv, "/"sv);
+        if (toLower) {
+            ToLower(replaced);
+        }
+        return replaced;
+    }
+
+    String GetErrorString(int err) {
+        char buf[256]{};
+    #ifdef _WIN32
+        strerror_s(buf, sizeof(buf), err);
+        return buf;
+    #else
+        const char* msg = strerror(err);
+        return msg ? msg : "unknown error";
+    #endif
+    }
+
+    std::wstring s2ws(StringView str) {
+        if (str.empty())
+            return L"";
+
+        using convert_typeX = std::codecvt_utf8<wchar_t>;
+        std::wstring_convert<convert_typeX, wchar_t> converterX;
+        //std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converterX; //осталось с безуспешной попытки вывести utf-16 символ в ImGui
+
+        return converterX.from_bytes(str.data(), str.data() + str.size());
+    }
+
+    String ws2s(const std::wstring &wstr) {
+        using convert_typeX = std::codecvt_utf8<wchar_t>;
+        std::wstring_convert<convert_typeX, wchar_t> converterX;
+        return converterX.to_bytes(wstr);
     }
 }

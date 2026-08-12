@@ -12,6 +12,13 @@ namespace SR_FLUX_NS {
         : m_program(pProgram)
     { }
 
+    FluxRuntime::~FluxRuntime() {
+        m_constants.clear();
+        m_storage.clear();
+        m_executions.clear();
+        m_callArguments.clear();
+    }
+
     void FluxRuntime::Emit(StringView labelName, const Vector<Reflection::Value>& args) {
         SR_TRACY_ZONE;
         auto&& pIt = std::find_if(m_program->labels.begin(), m_program->labels.end(), [&](const FluxLabel& label) {

@@ -12,7 +12,7 @@ namespace SR_HTYPES_NS {
         : Super(ifs)
     { }
 
-    Marshal::Marshal(const std::string& str)
+    Marshal::Marshal(StringView str)
         : Super(str)
     { }
 
@@ -118,12 +118,14 @@ namespace SR_HTYPES_NS {
         return new Marshal(*this);
     }
 
-    Marshal Marshal::LoadFromMemory(const std::string& data) {
+    Marshal Marshal::LoadFromMemory(StringView data) {
         return Marshal(data);
     }
 
-    Marshal Marshal::LoadFromBase64(const std::string& base64) {
-        return LoadFromMemory(SR_UTILS_NS::StringUtils::Base64Decode(base64));
+    Marshal Marshal::LoadFromBase64(StringView base64) {
+        String decoded;
+        StringUtils::Instance().Base64Decode(base64, decoded);
+        return LoadFromMemory(decoded);
     }
 
     Marshal Marshal::ReadBytes(uint64_t count) noexcept {

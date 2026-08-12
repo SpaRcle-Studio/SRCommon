@@ -2,75 +2,40 @@
 // Created by Nikita on 17.11.2020.
 //
 
-#ifndef SR_ENGINE_STRINGUTILS_H
-#define SR_ENGINE_STRINGUTILS_H
+#ifndef SR_ENGINE_COMMON_STRING_UTILS_H
+#define SR_ENGINE_COMMON_STRING_UTILS_H
 
 #include <Utils/Math/Mathematics.h>
 #include <Utils/Profile/TracyContext.h>
 #include <Utils/Types/String.h>
 
 namespace SR_UTILS_NS {
-    SR_MAYBE_UNUSED static std::string GetErrorString(int err) {
-        char buf[256]{};
-    #ifdef _WIN32
-        strerror_s(buf, sizeof(buf), err);
-        return buf;
-    #else
-        const char* msg = strerror(err);
-        return msg ? msg : "unknown error";
-    #endif
-    }
-
     class StringAtom;
 
-    SR_MAYBE_UNUSED static std::wstring s2ws(const std::string& str)
-    {
-        if (str.empty())
-            return L"";
-
-        using convert_typeX = std::codecvt_utf8<wchar_t>;
-        std::wstring_convert<convert_typeX, wchar_t> converterX;
-        //std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converterX; //осталось с безуспешной попытки вывести utf-16 символ в ImGui
-
-        return converterX.from_bytes(str);
-    }
-
-    SR_MAYBE_UNUSED static std::string ws2s(const std::wstring& wstr)
-    {
-        using convert_typeX = std::codecvt_utf8<wchar_t>;
-        std::wstring_convert<convert_typeX, wchar_t> converterX;
-
-        return converterX.to_bytes(wstr);
-    }
+    SR_COMMON_DLL_API String GetErrorString(int err);
+    SR_COMMON_DLL_API std::wstring s2ws(StringView str);
+    SR_COMMON_DLL_API String ws2s(const std::wstring& wstr);
 
     #define SR_S2WS(str) s2ws(str)
     #define SR_WS2S(wstr) ws2s(wstr)
 
-    class SR_COMMON_DLL_API StringUtils {
+    class SR_COMMON_DLL_API StringUtils : public SR_UTILS_NS::Singleton<StringUtils>, public SRClass {
+        SR_REGISTER_SINGLETON(StringUtils);
+        SR_CLASS()
     public:
-        StringUtils() = delete;
-        StringUtils(StringUtils&) = delete;
-        ~StringUtils() = delete;
-    public:
-        inline static const char* base64_chars =
-                "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-                "abcdefghijklmnopqrstuvwxyz"
-                "0123456789+/";
+        /// @method
+        void Reverse(String& str);
+        /// @method
+        void ToLower(String& str);
+        /// @method
+        void ToUpper(String& str);
 
-        static inline bool is_base64(unsigned char c) {
-            return (isalnum(c) || (c == '+') || (c == '/'));
-        }
-
-        static inline bool IsBase64(unsigned char c) {
-            return (isalnum(c) || (c == '+') || (c == '/'));
-        }
+        void Base64Decode(StringView source, String& base64);
+        void Base64Encode(StringView base64, String& result);
 
         static bool CheckSearchMatch(StringView searchBuffer, StringView text);
 
         static String MakeDisplayName(StringView name);
-
-        static std::string Base64Decode(const std::string& base64);
-        static std::string Base64Encode(const std::string& data);
 
         inline static glm::vec3 IntToColor(size_t index) noexcept {
             unsigned char r = ((index >> 16) & 0xFF);  // Extract the RR byte
@@ -258,8 +223,6 @@ namespace SR_UTILS_NS {
             return std::string();
         }
 
-        static std::string Reverse(const std::string& str);
-
         static std::string ToKebabCase(std::string_view str);
 
         inline static unsigned long FastStrLen(const char* str) noexcept {
@@ -401,52 +364,11 @@ namespace SR_UTILS_NS {
             return results;
         }
 
-        SR_NODISCARD SR_INLINE_STATIC std::string ToLower(std::string str) noexcept {
-            for (char& t : str) {
-                t = static_cast<char>(tolower(static_cast<char>(t)));
-            }
-            return str;
-        }
+        SR_NODISCARD String MakePath(StringView str, bool toLower = false) noexcept;
 
-        SR_NODISCARD SR_INLINE_STATIC std::string ToLower(std::string_view str) noexcept {
-            SR_TRACY_ZONE;
-            return ToLower(std::string(str));
-        }
-
-        SR_INLINE_STATIC void ToLowerRef(std::string_view str) noexcept {
-            for (auto t = const_cast<char*>(str.data()); *t != '\0'; t++) {
-                *t = static_cast<char>(tolower(static_cast<char>(*t)));
-            }
-        }
-
-        SR_INLINE_STATIC void ToUpperRef(std::string_view str) noexcept {
-            for (auto t = const_cast<char*>(str.data()); *t != '\0'; t++) {
-                *t = static_cast<char>(toupper(static_cast<char>(*t)));
-            }
-        }
-
-        SR_NODISCARD inline static std::string MakePath(const std::string& str, bool toLower = false) noexcept {
-            auto&& replaced = ReplaceAll<std::string>(str, "\\"sv, "/"sv);
-            if (toLower) replaced = ToLower(replaced);
-            return replaced;
-        }
         SR_NODISCARD inline static std::string FromCharVector(const std::vector<char>& vs) noexcept {
             std::string result(begin(vs), end(vs));
             return result;
-        }
-
-        // convert UTF-8 string to wstring
-        SR_NODISCARD static std::wstring utf8_to_wstring (const std::string& str)
-        {
-            std::wstring_convert<std::codecvt_utf8<wchar_t>> myconv;
-            return myconv.from_bytes(str);
-        }
-
-        // convert wstring to UTF-8 string
-        SR_NODISCARD static std::string wstring_to_utf8 (const std::wstring& str)
-        {
-            std::wstring_convert<std::codecvt_utf8<wchar_t>> myconv;
-            return myconv.to_bytes(str);
         }
 
         // Cut string (file name) to output it
@@ -461,4 +383,4 @@ namespace SR_UTILS_NS {
     };
 }
 
-#endif //SR_ENGINE_STRINGUTILS_H
+#endif //SR_ENGINE_COMMON_STRING_UTILS_H

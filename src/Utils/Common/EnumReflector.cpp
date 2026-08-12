@@ -210,16 +210,19 @@ namespace SR_UTILS_NS {
     uint64_t EnumReflector::GetIntegralTypeSizeInternal() const { return m_integralTypeSize; }
     EnumVariant EnumReflector::GetEnumVariantInternal() const { return m_enumVariant; }
 
-    std::optional<int64_t> EnumReflector::FromStringLowerCaseInternal(const std::string& value) const {
+    std::optional<int64_t> EnumReflector::FromStringLowerCaseInternal(String value) const {
         if (!m_data) {
             std::cerr << "EnumReflector::FromStringLowerCaseInternal() : reflector is empty!\n";
             return std::nullopt;
         }
 
-        const std::string lower = SR_UTILS_NS::StringUtils::ToLower(value);
+        SR_UTILS_NS::StringUtils::Instance().ToLower(value);
 
+        String tmp;
         for (auto&& enumerator : m_data->values) {
-            if (SR_UTILS_NS::StringUtils::ToLower(enumerator.name.ToStringRef()) == lower) {
+            tmp = enumerator.name.ToStringView();
+            SR_UTILS_NS::StringUtils::Instance().ToLower(tmp);
+            if (tmp == value) {
                 return enumerator.value;
             }
         }

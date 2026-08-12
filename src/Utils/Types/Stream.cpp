@@ -47,7 +47,7 @@ namespace SR_HTYPES_NS {
         ifs.read(m_data, fileSize);
     }
 
-    Stream::Stream(const std::string& str)
+    Stream::Stream(StringView str)
         : m_pos(0)
     {
         m_size = m_capacity = str.size();
@@ -194,22 +194,21 @@ namespace SR_HTYPES_NS {
         SRFree(pData);
     }
 
-    std::string Stream::ToString() const noexcept {
-        if (!m_data) {
-            return std::string();
-        }
-        return std::string(m_data, m_size);
+    String Stream::ToString() const noexcept {
+        return String(ToStringView());
     }
 
-    std::string_view Stream::ToStringView() const noexcept {
+    StringView Stream::ToStringView() const noexcept {
         if (!m_data) {
-            return std::string_view();
+            return StringView();
         }
-        return std::string_view(m_data, m_size);
+        return StringView(m_data, m_size);
     }
 
-    std::string Stream::ToBase64() const noexcept {
-        return SR_UTILS_NS::StringUtils::Base64Encode(ToString());
+    String Stream::ToBase64() const noexcept {
+        String base64;
+        StringUtils::Instance().Base64Encode(ToStringView(), base64);
+        return base64;
     }
 
     void Stream::SetData(const char* pData, uint64_t size) {

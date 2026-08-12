@@ -24,6 +24,7 @@ namespace SR_FLUX_NS {
     public:
         FluxRuntime() = default;
         explicit FluxRuntime(FluxProgram* pProgram);
+        ~FluxRuntime() override;
 
         void Emit(StringView labelName, const Vector<Reflection::Value>& args);
         void Update(float_t dt);
