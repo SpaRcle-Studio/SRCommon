@@ -5,6 +5,7 @@
 #include <Utils/Flux/Runtime/FluxRuntime.h>
 #include <Utils/Reflection/TypeInfoSerialization.h>
 #include <Utils/Reflection/Method.h>
+#include <Utils/Serialization/JsonSerialization.h>
 
 namespace SR_FLUX_NS {
     FluxRuntime::FluxRuntime(FluxProgram* pProgram)
@@ -415,6 +416,17 @@ namespace SR_FLUX_NS {
         }
         Reflection::Value value = Reflection::Value::CreateDefault(pTypeInfo);
         Reflection::FreeTypeInfo(pTypeInfo);
+        if (!variable.value.empty()) {
+            JsonDeserializer deserializer;
+            if (!deserializer.LoadFromStringView(variable.value)) {
+                SR_ERROR("FluxRuntime::LoadFluxVariable() : failed to load value for \"{}\"! Value: {}", variable.type, variable.value);
+                return Reflection::Value();
+            }
+            if (!Reflection::DeserializeValue(value, deserializer)) {
+                SR_ERROR("FluxRuntime::LoadFluxVariable() : failed to deserialize value for \"{}\"! Value: {}", variable.type, variable.value);
+                return Reflection::Value();
+            }
+        }
         return value;
     }
 }

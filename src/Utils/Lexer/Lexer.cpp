@@ -120,7 +120,7 @@ namespace SR_UTILS_NS {
                 m_macroLine = true;
                 return LexerDetails::Lexem(m_offset++, 1, LexerDetails::LexemKind::Macro, "#", m_fileIndex, m_line, m_position++);
 
-            case '"': return LexerDetails::Lexem(m_offset++, 1, LexerDetails::LexemKind::String, "\"", m_fileIndex, m_line, m_position++);
+            case '"': return ProcessString();
 
             default:
                 break;
@@ -134,6 +134,76 @@ namespace SR_UTILS_NS {
         const uint64_t length = identifier.size();
 
         return LexerDetails::Lexem(offset, length, LexerDetails::LexemKind::Identifier, identifier, m_fileIndex, m_line, position);
+    }
+
+    Lexer::ProcessedLexem Lexer::ProcessString() {
+        const uint64_t offset = m_offset;
+        const uint64_t line = m_line;
+        const uint64_t position = m_position;
+
+        ++m_offset; /// skip opening '"'
+        ++m_position;
+
+        const uint64_t contentOffset = m_offset;
+        uint64_t contentLength = 0;
+        bool isTerminated = false;
+
+        while (InBounds()) {
+            const char stringChar = m_source[m_offset];
+
+            /// any character after the '\' is a part of the string, even '"' or '\' itself
+            if (stringChar == '\\') {
+                ++m_offset;
+                ++m_position;
+                ++contentLength;
+
+                if (InBounds()) {
+                    if (m_source[m_offset] == '\n') {
+                        ++m_line;
+                        m_position = 0;
+                    }
+                    else {
+                        ++m_position;
+                    }
+                    ++m_offset;
+                    ++contentLength;
+                }
+
+                continue;
+            }
+
+            if (stringChar == '"') {
+                ++m_offset; /// skip closing '"'
+                ++m_position;
+                isTerminated = true;
+                break;
+            }
+
+            /// all other characters are taken as is, spaces and comments are not processed inside of the string
+            if (stringChar == '\n') {
+                ++m_line;
+                m_position = 0;
+            }
+            else {
+                ++m_position;
+            }
+
+            ++m_offset;
+            ++contentLength;
+        }
+
+        if (!isTerminated) {
+            SR_ERROR("Lexer::ProcessString() : unterminated string!"
+                 " \n\tLine: {}"
+                 " \n\tPosition: {}", line, position
+            );
+        }
+
+        /// the value doesn't contain quotes, but escape sequences are kept as is, use LexerDetails::UnescapeString() to decode them
+        const std::string_view value = contentLength > 0 ? std::string_view(m_source.data() + contentOffset, contentLength) : std::string_view();
+
+        /// the length contains quotes to make the location point to the whole string
+        return LexerDetails::Lexem(offset, m_offset - offset, LexerDetails::LexemKind::String, value, m_fileIndex, line, position);
     }
 
     std::string_view Lexer::ProcessIdentifier() {

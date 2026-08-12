@@ -134,7 +134,7 @@ namespace SR_UTILS_NS {
     class IBaseSerializer : public ISerializer {
     public:
         SR_NODISCARD bool SaveToFile(const SR_UTILS_NS::Path& path) const override { return GetImpl().SaveToFileImpl(path); }
-        SR_NODISCARD std::string ToString() const noexcept override { return GetImpl().ToStringBase(); }
+        SR_NODISCARD String ToString() const noexcept override { return GetImpl().ToStringBase(); }
 
         void WriteString(std::string_view value, const SerializationId& name) override;
         void WriteString(std::u32string_view value, const SerializationId& name) override;

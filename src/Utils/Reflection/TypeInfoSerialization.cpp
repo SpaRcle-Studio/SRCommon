@@ -4,6 +4,11 @@
 
 #include <Utils/Reflection/TypeInfoSerialization.h>
 #include <Utils/Reflection/ReflectedType.h>
+#include <Utils/Reflection/Value.h>
+#include <Utils/Serialization/Serializer.h>
+#include <Utils/Serialization/Deserializer.h>
+
+#include <Enum/ReflectedCategoryType.hpp>
 
 namespace SR_UTILS_NS::Reflection {
     struct TypeParser {
@@ -151,5 +156,117 @@ namespace SR_UTILS_NS::Reflection {
         type.clear();
         type.reserve(64);
         SaveTypeInfoInternal(type, pTypeInfo);
+    }
+
+    void SerializeValue(const Value& value, ISerializer& serializer) {
+        auto&& typeInfo = value.GetTypeInfo();
+        switch (typeInfo.category) {
+            case ReflectedCategoryType::Enum: {
+                auto&& pReflector = EnumReflectorManager::Instance().GetReflector(typeInfo.detailedType);
+                if (!pReflector) {
+                    SRHalt("SerializeValue() : unknown enum type: {}", typeInfo.detailedType);
+                }
+                serializer.WriteString(pReflector->ToStringInternal(*value.Cast<int64_t>()).value(), SerializationId::Create("enum"));
+                break;
+            }
+            case ReflectedCategoryType::String: {
+                if (typeInfo.detailedType == "Path") {
+                    serializer.WriteString(value.Cast<Path>()->View(), SerializationId::Create("path"));
+                }
+                else if (typeInfo.detailedType == "StringView") {
+                    serializer.WriteString(*value.Cast<StringView>(), SerializationId::Create("view"));
+                }
+                else if (typeInfo.detailedType == "StringAtom") {
+                    serializer.WriteString(*value.Cast<StringAtom>(), SerializationId::Create("atom"));
+                }
+                else if (typeInfo.detailedType == "UnicodeString") {
+                    serializer.WriteString(*value.Cast<UnicodeString>(), SerializationId::Create("unicode"));
+                }
+                else if (typeInfo.detailedType == "String") {
+                    serializer.WriteString(*value.Cast<String>(), SerializationId::Create("string"));
+                }
+                else {
+                    SRHalt("SerializeValue() : unknown string type: {}", typeInfo.detailedType);
+                }
+                break;
+            }
+            case ReflectedCategoryType::Arithmetic:
+                if (typeInfo.detailedType == "bool") {
+                    serializer.WriteBool(*value.Cast<bool>(), SerializationId::Create("bool"));
+                }
+                else if (typeInfo.detailedType == "float") {
+                    serializer.WriteFloat(*value.Cast<float>(), SerializationId::Create("float"));
+                }
+                else if (typeInfo.detailedType == "double") {
+                    serializer.WriteDouble(*value.Cast<double>(), SerializationId::Create("double"));
+                }
+                else {
+                    serializer.WriteInt(*value.Cast<int64_t>(), SerializationId::Create("int"));
+                }
+                break;
+            default:
+                SRHalt("SerializeValue() : unknown reflected type: {}", typeInfo.category);
+        }
+    }
+
+    bool DeserializeValue(Value& value, IDeserializer& deserializer) {
+        auto&& typeInfo = value.GetTypeInfo();
+        switch (typeInfo.category) {
+            case ReflectedCategoryType::Enum: {
+                auto&& pReflector = EnumReflectorManager::Instance().GetReflector(typeInfo.detailedType);
+                if (!pReflector) {
+                    SRHalt("DeserializeValue() : unknown enum type: {}", typeInfo.detailedType);
+                }
+                String enumStr;
+                deserializer.ReadString(enumStr, SerializationId::Create("enum"));
+                *value.Cast<int64_t>() = pReflector->FromStringInternal(enumStr).value_or(0);
+                return true;
+            }
+            case ReflectedCategoryType::String: {
+                if (typeInfo.detailedType == "Path") {
+                    Path& path = *value.Cast<Path>();
+                    deserializer.ReadString(path, SerializationId::Create("path"));
+                }
+                else if (typeInfo.detailedType == "StringView") {
+                    String& str = *value.Cast<String>();
+                    deserializer.ReadString(str, SerializationId::Create("view"));
+                }
+                else if (typeInfo.detailedType == "StringAtom") {
+                    String& str = *value.Cast<String>();
+                    deserializer.ReadString(str, SerializationId::Create("atom"));
+                }
+                else if (typeInfo.detailedType == "UnicodeString") {
+                    UnicodeString& str = *value.Cast<UnicodeString>();
+                    deserializer.ReadString(str, SerializationId::Create("unicode"));
+                }
+                else if (typeInfo.detailedType == "String") {
+                    String& str = *value.Cast<String>();
+                    deserializer.ReadString(str, SerializationId::Create("string"));
+                }
+                else {
+                    SRHalt("DeserializeValue() : unknown string type: {}", typeInfo.detailedType);
+                }
+                return true;
+            }
+            case ReflectedCategoryType::Arithmetic: {
+                if (typeInfo.detailedType == "bool") {
+                    deserializer.ReadBool(*value.Cast<bool>(), SerializationId::Create("bool"));
+                }
+                else if (typeInfo.detailedType == "float") {
+                    deserializer.ReadFloat(*value.Cast<float>(), SerializationId::Create("float"));
+                }
+                else if (typeInfo.detailedType == "double") {
+                    deserializer.ReadDouble(*value.Cast<double>(), SerializationId::Create("double"));
+                }
+                else {
+                    deserializer.ReadInt(*value.Cast<int64_t>(), SerializationId::Create("int"));
+                }
+                return true;
+            }
+            default:
+                break;
+        }
+        SRHalt("DeserializeValue() : unknown reflected type: {}", typeInfo.category);
+        return false;
     }
 }

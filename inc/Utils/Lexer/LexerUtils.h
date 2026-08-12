@@ -49,6 +49,9 @@ namespace SR_UTILS_NS::LexerDetails {
     bool IsIdentifier(SR_UTILS_NS::StringView token) noexcept;
     bool IsOperator(SR_UTILS_NS::StringView operation) noexcept;
 
+    /// decodes escape sequences ('\n', '\t', '\"', '\\', '\xFF' and etc.) of the raw string lexem value
+    SR_NODISCARD SR_UTILS_NS::String UnescapeString(SR_UTILS_NS::StringView rawValue);
+
     SR_ENUM_NS_CLASS_T(LexemKind, uint8_t,
         Unknown,
 
@@ -90,7 +93,7 @@ namespace SR_UTILS_NS::LexerDetails {
         Macro,                /// #
         MacroEnd,             /// \n
 
-        String,               /// "
+        String,               /// "some text", the value is stored without quotes and without decoding of escape sequences
 
         Identifier            /// _az_AZ_19_
     );
@@ -262,7 +265,15 @@ namespace SR_UTILS_NS::LexerDetails {
             if (lexem.kind == previously && previously == LexemKind::Identifier) {
                 code += " ";
             }
-            code += lexem.value;
+            if (lexem.kind == LexemKind::String) {
+                /// the value is stored without quotes, but escape sequences are not decoded, so the string is restored as is
+                code += "\"";
+                code += lexem.value;
+                code += "\"";
+            }
+            else {
+                code += lexem.value;
+            }
             previously = lexem.kind;
         }
 

@@ -176,7 +176,15 @@ namespace SR_FLUX_NS {
             constant.value.reserve(8);
             do {
                 lexem = Advance();
-                constant.value += lexem.value;
+                if (lexem.kind == LexerDetails::LexemKind::String) {
+                    /// the lexer cuts quotes off, but the value is used as a json literal, so they have to be restored
+                    constant.value += '"';
+                    constant.value += lexem.value;
+                    constant.value += '"';
+                }
+                else {
+                    constant.value += lexem.value;
+                }
             }
             while (!lexem.isLineEnd && !IsEnd());
         }

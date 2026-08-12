@@ -24,6 +24,7 @@ namespace SR_UTILS_NS {
     private:
         SR_NODISCARD bool InBounds() const noexcept;
         SR_NODISCARD ProcessedLexem ProcessLexem();
+        SR_NODISCARD ProcessedLexem ProcessString();
         SR_NODISCARD std::string_view ProcessIdentifier();
 
         SR_NODISCARD Lexems ParseInternal(SR_UTILS_NS::IAllocator* pAllocator, uint32_t lexemsReserve, std::string_view code, uint16_t fileIndex);
