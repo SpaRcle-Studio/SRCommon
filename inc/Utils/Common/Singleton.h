@@ -21,6 +21,7 @@
         uint64_t GetSingletonHashName() const noexcept final { return GetStaticSingletonHashName(); };                  \
 
 namespace SR_UTILS_NS {
+    class SRClass;
     class SingletonManager;
     template<typename T> class Singleton;
 
@@ -46,6 +47,7 @@ namespace SR_UTILS_NS {
     class SR_COMMON_DLL_API SingletonManager : public NonCopyable {
     public:
         void* GetSingleton(uint64_t hashName) noexcept;
+        SRClass* GetSingletonMeta(uint64_t hashName) noexcept;
         std::recursive_mutex& GetCreationMutex(uint64_t hashName);
         void DestroyAll();
         void Remove(uint64_t hashName);
@@ -61,6 +63,7 @@ namespace SR_UTILS_NS {
         struct SingletonInfo {
             uint64_t hashName = 0;
             void* pSingleton = nullptr;
+            SRClass* pMeta = nullptr;
             SingletonBase* pSingletonBase = nullptr;
         };
         SR_HTYPES_NS::FlatHashMap<uint64_t, SingletonInfo> m_singletons;
@@ -163,7 +166,7 @@ namespace SR_UTILS_NS {
         }
     }
 
-    template<typename T> void SingletonManager::Register(Singleton<T> *pSingleton) {
+    template<typename T> void SingletonManager::Register(Singleton<T>* pSingleton) {
         std::lock_guard lock(m_mutex);
         RegisterInternal(pSingleton->GetSingletonHashName(), (void*)pSingleton, dynamic_cast<SingletonBase*>(pSingleton));
     }

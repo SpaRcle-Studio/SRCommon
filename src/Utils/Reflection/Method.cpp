@@ -32,7 +32,7 @@ namespace SR_UTILS_NS::Reflection {
     }
 
     void Method::InvokeVoid(Owner& owner) const {
-        if (m_noReturnNoParams) {
+        if (!m_hasReturn && m_paramsCount == 0) {
             m_noReturnNoParams(owner);
         }
         else {
@@ -41,7 +41,7 @@ namespace SR_UTILS_NS::Reflection {
     }
 
     void Method::InvokeVoid(Owner& owner, const Params& params) const {
-        if (m_noReturnWithParams) {
+        if (!m_hasReturn && m_paramsCount > 0) {
             m_noReturnWithParams(owner, params);
         }
         else {
@@ -50,7 +50,7 @@ namespace SR_UTILS_NS::Reflection {
     }
 
     Value Method::Invoke(Owner& owner, const Params& params) const {
-        if (m_withReturnWithParams) {
+        if (m_hasReturn && m_paramsCount == 0) {
             return m_withReturnWithParams(owner, params);
         }
         else {
@@ -60,7 +60,7 @@ namespace SR_UTILS_NS::Reflection {
     }
 
     Value Method::Invoke(Owner& owner) const {
-        if (m_withReturnNoParams) {
+        if (m_hasReturn && m_paramsCount == 0) {
             return m_withReturnNoParams(owner);
         }
         else {

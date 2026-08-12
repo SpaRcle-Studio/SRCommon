@@ -33,9 +33,11 @@ namespace SR_FLUX_NS {
         uint32_t Execute(FluxExecution& execution, uint32_t budget);
         bool ExecuteInstruction(FluxExecution& execution, const FluxInstruction& instruction);
         bool ValidateInstruction(FluxExecution& execution, const FluxInstruction& instruction) const;
+        bool CallMethod(FluxExecution& execution, const FluxInstruction& instruction);
         SR_NODISCARD RegisterType GetRegisterType(FluxExecution& execution, FluxRegisterId registerId) const;
         SR_NODISCARD Reflection::Value& GetRegister(FluxExecution& execution, FluxRegisterId registerId, RegisterType type, RegisterOperation operation);
         SR_NODISCARD Reflection::Value& GetResultRegister(FluxExecution& execution);
+        SR_NODISCARD Reflection::Value LoadFluxVariable(const FluxVariable& variable);
 
     public:
         uint32_t m_maxRegisters = 16;
@@ -46,9 +48,11 @@ namespace SR_FLUX_NS {
         float_t m_timeAccumulator = 0.0f;
 
         Vector<FluxExecution> m_executions;
+        Vector<Reflection::Value*> m_callArguments;
 
         bool m_initialized = false;
         bool m_validation = true;
+        bool m_continueOnError = true;
 
         FluxProgram* m_program = nullptr;
 

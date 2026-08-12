@@ -54,6 +54,25 @@ namespace SR_UTILS_NS {
 		char name[MaxNameLength]{};
 	};
 
+    template<size_t I, typename... Args> struct TypeAt;
+
+    template<typename First, typename... Rest> struct TypeAt<0, First, Rest...> {
+        using Type = First;
+    };
+
+    template<size_t I, typename First, typename... Rest> struct TypeAt<I, First, Rest...> : TypeAt<I - 1, Rest...> {};
+
+    template<typename...> struct TypeList {};
+
+    template<typename T> struct MemberFunctionTraits;
+
+    template<typename R, typename C, typename... Args> struct MemberFunctionTraits<R(C::*)(Args...)> {
+        using ReturnType = R;
+        using Arguments = TypeList<Args...>;
+        template<size_t I>
+        using Arg = typename TypeAt<I, Args...>::Type;
+    };
+
     template <typename T, typename = void>
 	struct IsCompleteType : std::false_type {};
 

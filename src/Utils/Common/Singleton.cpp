@@ -69,12 +69,23 @@ namespace SR_UTILS_NS {
 
     void SingletonManager::RegisterInternal(uint64_t hashName, void* pSingleton, SingletonBase* pSingletonBase) {
         m_singletons[hashName].pSingleton = pSingleton;
+        m_singletons[hashName].pMeta = dynamic_cast<SRClass*>(pSingletonBase);
         m_singletons[hashName].pSingletonBase = pSingletonBase;
         m_singletons[hashName].hashName = hashName;
     }
 
     uint64_t SingletonManager::GetOrAddSingletonHashName(const char* name) {
         return SR_UTILS_NS::HashManager::Instance().AddHash(name);
+    }
+
+    SRClass* SingletonManager::GetSingletonMeta(uint64_t hashName) noexcept {
+        std::lock_guard lock(m_mutex);
+
+        if (auto&& pIt = m_singletons.find(hashName); pIt != m_singletons.end()) {
+            return pIt->second.pMeta;
+        }
+
+        return nullptr;
     }
 
     void SingletonBase::OnSingletonDestroy() {

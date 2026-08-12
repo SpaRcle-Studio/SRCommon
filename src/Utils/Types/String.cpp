@@ -203,6 +203,18 @@ namespace SR_UTILS_NS {
 
         return memcmp(m_data, rhs.m_data, m_size) == 0;
     }
+    bool String::operator==(const StringView& rhs) const noexcept {
+        if (m_size != rhs.size()) {
+            return false;
+        }
+
+        if (m_size == 0) {
+            return true;
+        }
+
+        return memcmp(m_data, rhs.data(), m_size) == 0;
+    }
+    bool String::operator!=(const StringView& rhs) const noexcept { return !(*this == rhs); }
     bool String::operator!=(const String& rhs) const noexcept { return !(*this == rhs); }
     bool String::operator==(const char* rhs) const noexcept {
         if (!rhs) {
@@ -375,22 +387,22 @@ namespace SR_UTILS_NS {
         m_capacity = newSize;
     }
 
-    void String::append(const String& str) {
-        append(std::string_view(str.m_data, str.m_size));
+    String& String::append(const String& str) {
+        return append(std::string_view(str.m_data, str.m_size));
     }
-    void String::append(const StringView& str) {
-        append(std::string_view(str.data(), str.size()));
+    String& String::append(const StringView& str) {
+        return append(std::string_view(str.data(), str.size()));
     }
-    void String::append(const char* str) {
-        append(std::string_view(str));
+    String& String::append(const char* str) {
+        return append(std::string_view(str));
     }
-    void String::append(const std::string& str) {
-        append(std::string_view(str));
+    String& String::append(const std::string& str) {
+        return append(std::string_view(str));
     }
 
-    void String::append(std::string_view str) {
+    String& String::append(std::string_view str) {
         if (str.empty()) {
-            return;
+            return *this;
         }
         SizeType newSize = m_size + static_cast<SizeType>(str.size());
         if (newSize > m_capacity) {
@@ -399,20 +411,22 @@ namespace SR_UTILS_NS {
         memcpy(m_data + m_size, str.data(), str.size());
         m_size = newSize;
         m_data[newSize] = '\0';
+        return *this;
     }
 
-    void String::append(char c) {
+    String& String::append(char c) {
         if (m_size + 1 > m_capacity) {
             reserve(m_capacity > 0 ? m_capacity * 2 : 8);
         }
         m_data[m_size] = c;
         m_size++;
         m_data[m_size] = '\0';
+        return *this;
     }
 
-    void String::append(const char* str, SizeType count) {
+    String& String::append(const char* str, SizeType count) {
         if (count == 0) {
-            return;
+            return *this;
         }
         SizeType newSize = m_size + count;
         if (newSize > m_capacity) {
@@ -421,6 +435,7 @@ namespace SR_UTILS_NS {
         memcpy(m_data + m_size, str, count);
         m_size = newSize;
         m_data[newSize] = '\0';
+        return *this;
     }
 
     void String::push_back(char c) {
@@ -494,10 +509,10 @@ namespace SR_UTILS_NS {
         return m_allocator;
     }
 
-    void String::append(String::const_iterator first, String::const_iterator last) {
+    String& String::append(String::const_iterator first, String::const_iterator last) {
         SizeType count = static_cast<SizeType>(last - first);
         if (count == 0) {
-            return;
+            return *this;
         }
         SizeType newSize = m_size + count;
         if (newSize > m_capacity) {
@@ -506,6 +521,18 @@ namespace SR_UTILS_NS {
         memcpy(m_data + m_size, &(*first), count);
         m_size = newSize;
         m_data[newSize] = '\0';
+        return *this;
+    }
+
+    String::String(StringView str) {
+        resize(str.size());
+        if (m_data) {
+            memcpy(m_data, str.data(), m_size);
+        }
+    }
+
+    String::operator StringView() const {
+        return StringView(m_data, m_size);
     }
 
     void StringView::remove_prefix(SizeType n) {
@@ -633,6 +660,10 @@ namespace SR_UTILS_NS {
         return cmp < 0;
     }
     bool StringView::operator>(const StringView& other) const noexcept { return other < *this; }
+
+    StringView::operator String() const {
+        return String(std::string_view(m_data ? m_data : "", m_size));
+    }
 }
 
 SR_UTILS_NS::String operator+(const char* lhs, const SR_UTILS_NS::String& rhs) {

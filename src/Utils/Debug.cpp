@@ -13,14 +13,15 @@
     #include <git.h>
 #endif
 
+#include <Codegen/Debug.generated.hpp>
+
 namespace SR_UTILS_NS {
-    void Debug::Print(std::string msg, DebugLogType type) {
+    void Debug::Print(StringView rawMsg, DebugLogType type) {
         SR_LOCK_GUARD;
         SR_TRACY_ZONE;
-        //SR_TRACY_TEXT_N("Text", msg);
 
         if (!m_isInit) {
-            SR_PLATFORM_NS::WriteConsoleError("Debug::Print() : debugger isn't initialized!\n\tMessage: " + msg + "\n" + SR_UTILS_NS::GetStacktrace());
+            SR_PLATFORM_NS::WriteConsoleError("Debug::Print() : debugger isn't initialized!\n\tMessage: {}{}{}"_format(rawMsg, "\n", SR_UTILS_NS::GetStacktrace()));
             Breakpoint();
             return;
         }
@@ -37,6 +38,8 @@ namespace SR_UTILS_NS {
             default:
                 break;
         }
+
+        String msg = rawMsg;
 
     #ifndef SR_EMSCRIPTEN
         if (type == DebugLogType::Assert) {
@@ -126,7 +129,7 @@ namespace SR_UTILS_NS {
             SR_PLATFORM_NS::WriteConsoleError("Debug::Init() : failed to open log file!\n\tLog path: " + m_logPath.ToString());
         }
 
-        Print("Debugger has been initialized. \n\tLog path: " + m_logPath.ToString(), DebugLogType::Debug);
+        Print("Debugger has been initialized. \n\tLog path: {}"_format(m_logPath), DebugLogType::Debug);
     #endif
 
     #ifdef SR_COMMON_GIT_METADATA
@@ -144,22 +147,21 @@ namespace SR_UTILS_NS {
     #endif
     }
 
-    void Debug::Log(const std::string& msg) { Print(msg, DebugLogType::Log); }
-    void Debug::Success(const std::string& msg) { Print(msg, DebugLogType::Success); }
-    void Debug::VulkanLog(const std::string& msg) { Print(msg, DebugLogType::VulkanLog); }
-    void Debug::Info(const std::string& msg) { Print(msg, DebugLogType::Info); }
-    void Debug::Graph(const std::string& msg) { Print(msg, DebugLogType::Graph); }
-    void Debug::Vulkan(const std::string& msg) { Print(msg, DebugLogType::Vulkan); }
-    void Debug::Shader(const std::string& msg) { Print(msg, DebugLogType::Shader); }
-    void Debug::Script(const std::string& msg) { Print(msg, DebugLogType::Script); }
-    void Debug::System(const std::string& msg) { Print(msg, DebugLogType::System); }
-    void Debug::Warn(const std::string& msg) { Print(msg, DebugLogType::Warn);}
-    void Debug::Error(const std::string& msg) { Print(msg, DebugLogType::Error); }
-    void Debug::VulkanError(const std::string& msg) { Print(msg, DebugLogType::VulkanError); }
-    bool Debug::Assert(const std::string& msg) { Print(msg, DebugLogType::Assert); return false; }
-
-    void Debug::ScriptLog(const std::string& msg) { Print(msg, DebugLogType::ScriptLog); }
-    void Debug::ScriptError(const std::string& msg) { Print(msg, DebugLogType::ScriptError); }
+    void Debug::Log(StringView msg) { Print(msg, DebugLogType::Log); }
+    void Debug::Success(StringView msg) { Print(msg, DebugLogType::Success); }
+    void Debug::VulkanLog(StringView msg) { Print(msg, DebugLogType::VulkanLog); }
+    void Debug::Info(StringView msg) { Print(msg, DebugLogType::Info); }
+    void Debug::Graph(StringView msg) { Print(msg, DebugLogType::Graph); }
+    void Debug::Vulkan(StringView msg) { Print(msg, DebugLogType::Vulkan); }
+    void Debug::Shader(StringView msg) { Print(msg, DebugLogType::Shader); }
+    void Debug::Script(StringView msg) { Print(msg, DebugLogType::Script); }
+    void Debug::System(StringView msg) { Print(msg, DebugLogType::System); }
+    void Debug::Warn(StringView msg) { Print(msg, DebugLogType::Warn);}
+    void Debug::Error(StringView msg) { Print(msg, DebugLogType::Error); }
+    void Debug::VulkanError(StringView msg) { Print(msg, DebugLogType::VulkanError); }
+    bool Debug::Assert(StringView msg) { Print(msg, DebugLogType::Assert); return false; }
+    void Debug::ScriptLog(StringView msg) { Print(msg, DebugLogType::ScriptLog); }
+    void Debug::ScriptError(StringView msg) { Print(msg, DebugLogType::ScriptError); }
 
     void Debug::DeInitialize() {
         SR_LOCK_GUARD;
@@ -205,13 +207,15 @@ namespace SR_UTILS_NS {
         m_ColorThemeIsEnabled = true;
     }
 
-    bool Debug::AssertOnceCheck(const std::string &msg) {
+    bool Debug::AssertOnceCheck(StringView msg) {
+        SR_TRACY_ZONE;
         SR_SCOPED_LOCK;
 
-        static std::unordered_set<std::string> asserts;
+        String message(msg);
+        static SR_HTYPES_NS::FlatHashSet<String> asserts;
 
-        if (asserts.count(msg) == 0) {
-            asserts.insert(msg);
+        if (asserts.count(message) == 0) {
+            asserts.insert(message);
             return false;
         }
 

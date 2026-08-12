@@ -14,10 +14,10 @@ namespace SR_UTILS_NS::Reflection {
     public:
         using Owner = SRClass;
         using Params = std::span<Value*>;
-        using FunctorNoReturnNoParams = SR_HTYPES_NS::Function<void(Owner&)>;
-        using FunctorNoReturnWithParams = SR_HTYPES_NS::Function<void(Owner&, const Params&)>;
-        using FunctorWithReturnNoParams = SR_HTYPES_NS::Function<Value(Owner&)>;
-        using FunctorWithReturnWithParams = SR_HTYPES_NS::Function<Value(Owner&, const Params&)>;
+        using FunctorNoReturnNoParams = void(*)(Owner&);
+        using FunctorNoReturnWithParams = void(*)(Owner&, const Params&);
+        using FunctorWithReturnNoParams = Value(*)(Owner&);
+        using FunctorWithReturnWithParams = Value(*)(Owner&, const Params&);
         using MethodActiveCallbackFn = bool(*)(SRClass* pOwner);
     public:
         SR_NODISCARD StringAtom GetName() const;
@@ -43,10 +43,12 @@ namespace SR_UTILS_NS::Reflection {
         Method& SetCondition(MethodActiveCallbackFn condition);
 
     private:
-        FunctorNoReturnNoParams m_noReturnNoParams;
-        FunctorNoReturnWithParams m_noReturnWithParams;
-        FunctorWithReturnNoParams m_withReturnNoParams;
-        FunctorWithReturnWithParams m_withReturnWithParams;
+        union {
+            FunctorNoReturnNoParams m_noReturnNoParams;
+            FunctorNoReturnWithParams m_noReturnWithParams;
+            FunctorWithReturnNoParams m_withReturnNoParams;
+            FunctorWithReturnWithParams m_withReturnWithParams;
+        };
         MethodActiveCallbackFn m_methodActiveCallback = nullptr;
 
         StringAtom m_name;

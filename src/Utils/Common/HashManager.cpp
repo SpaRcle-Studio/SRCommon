@@ -89,6 +89,10 @@ namespace SR_UTILS_NS {
         return GetOrAddInfo(std::string_view(str));
     }
 
+    StringHashInfo* HashManager::GetOrAddInfo(StringView str) {
+        return GetOrAddInfo(std::string_view(str));
+    }
+
     StringHashInfo* HashManager::GetOrAddInfo(const std::string_view& str) {
         if (g_TracyAllocatorInitialized) {
             SR_TRACY_ZONE;

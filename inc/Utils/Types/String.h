@@ -34,6 +34,7 @@ namespace SR_UTILS_NS {
         String(std::string_view str); /// NOLINT
         String(const String& other); /// NOLINT
         String(String&& other) noexcept;
+        explicit String(StringView str); /// NOLINT
 
         ~String();
 
@@ -59,6 +60,8 @@ namespace SR_UTILS_NS {
 
         SR_NODISCARD bool operator==(const String& rhs) const noexcept;
         SR_NODISCARD bool operator!=(const String& rhs) const noexcept;
+        SR_NODISCARD bool operator==(const StringView& rhs) const noexcept;
+        SR_NODISCARD bool operator!=(const StringView& rhs) const noexcept;
         SR_NODISCARD bool operator==(const char* rhs) const noexcept;
         SR_NODISCARD bool operator!=(const char* rhs) const noexcept;
         SR_NODISCARD bool operator==(const std::string& rhs) const noexcept;
@@ -70,6 +73,7 @@ namespace SR_UTILS_NS {
 
         SR_NODISCARD operator std::string() const; /// NOLINT
         SR_NODISCARD operator std::string_view() const; /// NOLINT
+        SR_NODISCARD operator StringView() const; /// NOLINT
 
         SR_NODISCARD const char* c_str() const;
         SR_NODISCARD SizeType size() const;
@@ -104,14 +108,18 @@ namespace SR_UTILS_NS {
         char operator[](size_t index) const;
         char& operator[](size_t index);
 
-        void append(const String& str);
-        void append(const StringView& str);
-        void append(const char* str);
-        void append(const std::string& str);
-        void append(std::string_view str);
-        void append(char c);
-        void append(const char* str, SizeType count);
-        void append(const_iterator first, const_iterator last);
+        String& append(const String& str);
+        String& append(const StringView& str);
+        String& append(const char* str);
+        String& append(const std::string& str);
+        String& append(std::string_view str);
+        String& append(char c);
+        String& append(const char* str, SizeType count);
+        String& append(const_iterator first, const_iterator last);
+
+        template<class Elem, class Traits> friend std::basic_ostream<Elem, Traits>& operator<<(std::basic_ostream<Elem, Traits>& os, const String& str) {
+            return os << str.c_str();
+        }
 
         void push_back(char c);
         void reserve(SizeType newSize);
@@ -170,7 +178,7 @@ namespace SR_UTILS_NS {
             , m_size(static_cast<SizeType>(str.size()))
         { }
 
-        StringView(const String& str)
+        explicit StringView(const String& str)
             : m_data(str.data())
             , m_size(str.size())
         { }
@@ -182,6 +190,7 @@ namespace SR_UTILS_NS {
         constexpr StringView& operator=(StringView&& other) noexcept = default;
 
         SR_NODISCARD operator std::string_view() const; /// NOLINT
+        SR_NODISCARD operator String() const; /// NOLINT
 
         SR_NODISCARD const char* c_str() const;
         SR_NODISCARD SizeType size() const;

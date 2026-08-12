@@ -4,6 +4,7 @@
 
 #include <Utils/Flux/Runtime/FluxRuntime.h>
 #include <Utils/Reflection/TypeInfoSerialization.h>
+#include <Utils/Reflection/Method.h>
 
 namespace SR_FLUX_NS {
     FluxRuntime::FluxRuntime(FluxProgram* pProgram)
@@ -174,8 +175,11 @@ namespace SR_FLUX_NS {
                 if (m_validation) SR_UNLIKELY_ATTRIBUTE {
                     if (type.category != Reflection::ReflectedCategoryType::Arithmetic || type.detailedType != "bool") {
                         SR_ERROR("FluxRuntime::ExecuteInstruction() : branch condition must be a boolean type!");
-                        execution.state = FluxExecutionState::Error;
-                        return false;
+                        if (!m_continueOnError) {
+                            execution.state = FluxExecutionState::Error;
+                            return false;
+                        }
+                        return true;
                     }
                 }
                 const bool condition = *conditionValue.Cast<bool>();
@@ -185,7 +189,9 @@ namespace SR_FLUX_NS {
                 break;
             }
             case FluxOpcode::Call:
-                GetResultRegister(execution) = Reflection::Value::Create(false);
+                if (!CallMethod(execution, instruction)) {
+                    return false;
+                }
                 break;
             default:
                 SR_ERROR("FluxRuntime::ExecuteInstruction() : unhandled opcode!");
@@ -197,7 +203,7 @@ namespace SR_FLUX_NS {
     }
 
     bool FluxRuntime::ValidateInstruction(FluxExecution& execution, const FluxInstruction& instruction) const {
-        if (!m_validation) {
+        if (m_validation) {
             return true;
         }
 
@@ -316,27 +322,17 @@ namespace SR_FLUX_NS {
         m_storage.resize(m_program->storage.size());
 
         for (SizeType i = 0; i < m_program->constants.size(); ++i) {
-            auto&& constant = m_program->constants[i];
-            Reflection::TypeInfo* pTypeInfo = Reflection::LoadTypeInfo(constant.type);
-            if (!pTypeInfo || !Reflection::FindVTable(*pTypeInfo)) {
-                SR_ERROR("FluxRuntime::Initialize() : failed to load type info for constant \"{}\"!", constant.type);
-                Reflection::FreeTypeInfo(pTypeInfo);
+            if (m_constants[i] = LoadFluxVariable(m_program->constants[i]); !m_constants[i].IsValid()) {
+                SR_ERROR("FluxRuntime::Initialize() : failed to load constant variable {}!", m_program->constants[i].type);
                 return false;
             }
-            m_constants[i] = Reflection::Value::CreateDefault(pTypeInfo);
-            Reflection::FreeTypeInfo(pTypeInfo);
         }
 
         for (SizeType i = 0; i < m_program->storage.size(); ++i) {
-            auto&& storage = m_program->storage[i];
-            Reflection::TypeInfo* pTypeInfo = Reflection::LoadTypeInfo(storage.type);
-            if (!pTypeInfo || !Reflection::FindVTable(*pTypeInfo)) {
-                SR_ERROR("FluxRuntime::Initialize() : failed to load type info for storage \"{}\"!", storage.type);
-                Reflection::FreeTypeInfo(pTypeInfo);
+            if (m_storage[i] = LoadFluxVariable(m_program->storage[i]); !m_storage[i].IsValid()) {
+                SR_ERROR("FluxRuntime::Initialize() : failed to load storage variable {}!", m_program->storage[i].type);
                 return false;
             }
-            m_storage[i] = Reflection::Value::CreateDefault(pTypeInfo);
-            Reflection::FreeTypeInfo(pTypeInfo);
         }
 
         m_initialized = true;
@@ -351,5 +347,74 @@ namespace SR_FLUX_NS {
             return dummy;
         }
         return execution.registers.front();
+    }
+
+    bool FluxRuntime::CallMethod(FluxExecution& execution, const FluxInstruction& instruction) {
+        SR_TRACY_ZONE;
+
+        m_callArguments.clear();
+
+        auto&& callableType = GetRegisterType(execution, instruction.operands[0]);
+
+        SRClass* pCallable = SR_UTILS_NS::GetSingletonManager()->GetSingletonMeta(instruction.callable.object.GetHash());
+        const bool isSingleton = pCallable;
+
+        for (auto&& operand : instruction.operands | std::views::drop(isSingleton ? 0 : 1)) {
+            auto&& argType = GetRegisterType(execution, operand);
+            auto&& pArgValue = GetRegister(execution, operand, argType, RegisterOperation::Read);
+            m_callArguments.emplace_back(&pArgValue);
+        }
+
+        if (!pCallable) {
+            Reflection::Value& callable = GetRegister(execution, instruction.operands[0], callableType, RegisterOperation::Read);
+            pCallable = (SRClass*)callable.GetTypeInfo().vtable.pGetTypeController(callable.GetStorage());
+        }
+
+        if (!pCallable) {
+            SR_ERROR("FluxRuntime::CallMethod() : failed to get callable type!");
+            execution.state = FluxExecutionState::Error;
+            return false;
+        }
+
+        auto&& pFunction = pCallable->GetMeta()->FindMethod(instruction.callable.function);
+        if (!pFunction) {
+            SR_ERROR("FluxRuntime::CallMethod() : method \"{}\" not found in class \"{}\"!", instruction.callable.function, pCallable->GetMeta()->GetFactoryName());
+            execution.state = FluxExecutionState::Error;
+            return false;
+        }
+
+        const bool hasReturn = pFunction->HasReturn();
+        const auto paramsCount = pFunction->GetParamsCount();
+
+        if (m_callArguments.size() != paramsCount) {
+            SR_ERROR("FluxRuntime::CallMethod() : method \"{}\" expects {} arguments, but {} were provided!", instruction.callable.function, paramsCount, m_callArguments.size());
+            execution.state = FluxExecutionState::Error;
+            return false;
+        }
+
+        if (hasReturn) {
+            GetResultRegister(execution) = paramsCount > 0 ?
+                pFunction->Invoke(*pCallable, m_callArguments) :
+                pFunction->Invoke(*pCallable);
+        }
+        else {
+            paramsCount > 0 ?
+                pFunction->InvokeVoid(*pCallable, m_callArguments) :
+                pFunction->InvokeVoid(*pCallable);
+        }
+
+        return true;
+    }
+
+    Reflection::Value FluxRuntime::LoadFluxVariable(const FluxVariable& variable) {
+        Reflection::TypeInfo* pTypeInfo = Reflection::LoadTypeInfo(variable.type);
+        if (!pTypeInfo || !Reflection::FindVTable(*pTypeInfo)) {
+            SR_ERROR("FluxRuntime::LoadFluxVariable() : failed to load type info for \"{}\"!", variable.type);
+            Reflection::FreeTypeInfo(pTypeInfo);
+            return Reflection::Value();
+        }
+        Reflection::Value value = Reflection::Value::CreateDefault(pTypeInfo);
+        Reflection::FreeTypeInfo(pTypeInfo);
+        return value;
     }
 }

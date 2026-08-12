@@ -23,8 +23,9 @@ namespace SR_UTILS_NS {
 
     static fmt::text_style GetTextStyleColorByLogType(DebugLogType type);
 
-    class Debug : public Singleton<Debug> {
+    class Debug : public Singleton<Debug>, public SRClass {
         SR_REGISTER_SINGLETON(Debug);
+        SR_CLASS()
     public:
         enum class Level {
             None = 0, Low = 1, Medium = 2, High = 3, Full = 4
@@ -56,25 +57,29 @@ namespace SR_UTILS_NS {
         bool IsSingletonCanBeDestroyed() const override { return false; }
 
     public:
-        void Log(const std::string& msg);
-        void Success(const std::string& msg);
-        void VulkanLog(const std::string& msg);
-        void Info(const std::string& msg);
-        void Graph(const std::string& msg);
-        void Vulkan(const std::string& msg);
-        void Shader(const std::string& msg);
-        void Script(const std::string& msg);
-        void System(const std::string& msg);
-        void Warn(const std::string& msg);
-        void Error(const std::string& msg);
-        void VulkanError(const std::string& msg);
-        bool Assert(const std::string& msg);
-        bool AssertOnceCheck(const std::string& msg);
+        /// @method
+        void Print(StringView msg, DebugLogType type);
+        /// @method
+        void Log(StringView msg);
+        /// @method
+        void Info(StringView msg);
+        /// @method
+        void Warn(StringView msg);
+        /// @method
+        void Error(StringView msg);
 
-        void ScriptLog(const std::string& msg);
-        void ScriptError(const std::string& msg);
-
-        void Print(std::string msg, DebugLogType type);
+        void Success(StringView msg);
+        void VulkanLog(StringView msg);
+        void Graph(StringView msg);
+        void Vulkan(StringView msg);
+        void Shader(StringView msg);
+        void Script(StringView msg);
+        void System(StringView msg);
+        void VulkanError(StringView msg);
+        bool Assert(StringView msg);
+        bool AssertOnceCheck(StringView msg);
+        void ScriptLog(StringView msg);
+        void ScriptError(StringView msg);
 
     private:
         bool m_showUseMemory = false;
