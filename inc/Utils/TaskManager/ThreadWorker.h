@@ -26,7 +26,7 @@ namespace SR_UTILS_NS {
     class ThreadsWorker;
     class ThreadWorker;
 
-    /// @abstract
+    /// @abstract @noCopyable @noMovable
     class ThreadWorkerStateBase : public SR_HTYPES_NS::SharedPtr<ThreadWorkerStateBase>, public SR_UTILS_NS::Serializable {
         using Super = SR_HTYPES_NS::SharedPtr<ThreadWorkerStateBase>;
         SR_CLASS()

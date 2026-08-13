@@ -22,7 +22,7 @@ namespace SR_UTILS_NS {
         SR_NODISCARD virtual SRHashType GetHash() const = 0;
     };
 
-    /// @abstract
+    /// @abstract @noCopyable @noMovable
     class SR_COMMON_DLL_API IResource : public ResourceContainer, public SubscriptionHolder, public Serializable {
         SR_CLASS()
         friend class ResourceType;

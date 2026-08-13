@@ -86,6 +86,9 @@ namespace SR_UTILS_NS {
 
         bool Load(IDeserializer& deserializer) override;
 
+        /// @method
+        void SetEnabled(bool value);
+
         bool MoveToTree(const SceneObject::Ptr& destination);
         void RemoveChild(const SceneObject::Ptr& pChild);
         bool AddChild(const SceneObject::Ptr& pChild);
@@ -95,7 +98,6 @@ namespace SR_UTILS_NS {
         void SetName(ObjectNameT name);
         void SetTag(SR_UTILS_NS::StringAtom tag);
         bool Contains(const SceneObject::Ptr& pChild);
-        void SetEnabled(bool value);
         void SetLayer(StringAtom layer);
         void SetIdInScene(uint64_t id);
         void SetScene(ScenePtr pScene);

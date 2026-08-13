@@ -4,6 +4,7 @@
 
 #include <Utils/Reflection/VTable.h>
 #include <Utils/Reflection/ReflectedType.h>
+#include <Utils/TypeTraits/Factory.h>
 
 namespace SR_UTILS_NS::Reflection {
     struct TypeInfoVTableCounter {
@@ -94,6 +95,10 @@ namespace SR_UTILS_NS::Reflection {
                 }
             }
             typeInfo.vtable = table;
+            return true;
+        }
+        if (typeInfo.category == ReflectedCategoryType::Object) {
+            typeInfo.vtable = Factory::Instance().GetType(typeInfo.detailedType)->GetVTable();
             return true;
         }
         if (typeInfo.category == ReflectedCategoryType::String) {

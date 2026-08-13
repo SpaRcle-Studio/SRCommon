@@ -6,6 +6,7 @@
 #define SR_COMMON_TYPE_TRAITS_SR_CLASS_META_H
 
 #include <Utils/Types/Function.h>
+#include <Utils/Reflection/VTable.h>
 
 namespace SR_UTILS_NS {
     class SRClass;
@@ -46,6 +47,7 @@ namespace SR_UTILS_NS {
 
         SR_NODISCARD virtual std::span<const SR_UTILS_NS::StringAtom> GetCategory() const noexcept;
         SR_NODISCARD virtual std::span<const SR_UTILS_NS::StringAtom> GetExtensions() const noexcept;
+        SR_NODISCARD virtual Reflection::TypeInfoVTable GetVTable() const noexcept;
         SR_NODISCARD virtual bool IsAbstract() const noexcept;
         SR_NODISCARD virtual bool IsHidden() const noexcept;
         SR_NODISCARD virtual bool IsEditorOnly() const noexcept;

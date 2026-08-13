@@ -23,6 +23,7 @@ namespace SR_UTILS_NS {
         Hidden     = 1 << 4
     )
 
+    /// @noCopyable @noMovable
     class SR_COMMON_DLL_API Entity : public Serializable, public SR_HTYPES_NS::SharedPtr<Entity> {
         SR_CLASS()
         using Super = Serializable;

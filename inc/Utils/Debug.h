@@ -23,6 +23,7 @@ namespace SR_UTILS_NS {
 
     static fmt::text_style GetTextStyleColorByLogType(DebugLogType type);
 
+    /// @noCopyable @noMovable
     class Debug : public Singleton<Debug>, public SRClass {
         SR_REGISTER_SINGLETON(Debug);
         SR_CLASS()

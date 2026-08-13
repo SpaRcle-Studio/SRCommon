@@ -19,13 +19,18 @@ namespace SR_FLUX_NS {
         m_callArguments.clear();
     }
 
-    void FluxRuntime::Emit(StringView labelName, const Vector<Reflection::Value>& args) {
+    void FluxRuntime::Emit(StringView labelName, const Vector<Reflection::Value>& args, bool ignoreExisting) {
         SR_TRACY_ZONE;
+        if (m_hasErrors) {
+            return;
+        }
         auto&& pIt = std::find_if(m_program->labels.begin(), m_program->labels.end(), [&](const FluxLabel& label) {
             return label.name == labelName;
         });
         if (pIt == m_program->labels.end()) {
-            SR_ERROR("FluxRuntime::Emit() : label \"{}\" not found!", labelName);
+            if (!ignoreExisting) {
+                SR_ERROR("FluxRuntime::Emit() : label \"{}\" not found!", labelName);
+            }
             return;
         }
         if (m_executions.size() >= m_maxExecutions) {
@@ -43,7 +48,8 @@ namespace SR_FLUX_NS {
     void FluxRuntime::Update(float_t dt) {
         SR_TRACY_ZONE;
 
-        if (!Initialize()) {
+        if (m_hasErrors || !Initialize()) {
+            m_hasErrors = true;
             return;
         }
 
@@ -80,6 +86,11 @@ namespace SR_FLUX_NS {
             hasAvailable = true;
 
             budget -= Execute(execution, budgetPerExecution);
+
+            if (execution.state == FluxExecutionState::Error && !m_continueOnError) {
+                m_hasErrors = true;
+                break;
+            }
         }
 
         m_executions.erase_if([](const FluxExecution& execution) {
@@ -362,8 +373,6 @@ namespace SR_FLUX_NS {
 
         m_callArguments.clear();
 
-        auto&& callableType = GetRegisterType(execution, instruction.operands[0]);
-
         SRClass* pCallable = SR_UTILS_NS::GetSingletonManager()->GetSingletonMeta(instruction.callable.object.GetHash());
         const bool isSingleton = pCallable;
 
@@ -374,8 +383,22 @@ namespace SR_FLUX_NS {
         }
 
         if (!pCallable) {
+            auto&& callableType = GetRegisterType(execution, instruction.operands[0]);
             Reflection::Value& callable = GetRegister(execution, instruction.operands[0], callableType, RegisterOperation::Read);
-            pCallable = (SRClass*)callable.GetTypeInfo().vtable.pGetTypeController(callable.GetStorage());
+
+            auto&& typeInfo = callable.GetTypeInfo();
+            if (typeInfo.category == Reflection::ReflectedCategoryType::Object) {
+                pCallable = (SRClass*)typeInfo.vtable.pGetTypeController(callable.GetStorage());
+            }
+            else if (typeInfo.category == Reflection::ReflectedCategoryType::Container && typeInfo.detailedType == "SharedPtr") {
+                auto&& pBase = (SR_HTYPES_NS::SharedPtrBase*)typeInfo.vtable.pGetTypeController(callable.GetStorage());
+                pCallable = pBase->GetSRClass();
+                if (!pCallable) {
+                    SR_ERROR("FluxRuntime::CallMethod() : failed to get callable type from SharedPtr!");
+                    execution.state = FluxExecutionState::Error;
+                    return false;
+                }
+            }
         }
 
         if (!pCallable) {
@@ -435,5 +458,13 @@ namespace SR_FLUX_NS {
             }
         }
         return value;
+    }
+
+    void FluxRuntime::SetStorage(uint32_t index, const Reflection::Value& value) {
+        if (index >= m_storage.size()) {
+            SR_ERROR("FluxRuntime::SetStorage() : index {} out of bounds!", index);
+            return;
+        }
+        m_storage[index] = value.Copy();
     }
 }

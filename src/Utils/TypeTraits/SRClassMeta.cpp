@@ -215,4 +215,8 @@ namespace SR_UTILS_NS {
         }
         return nullptr;
     }
+
+    Reflection::TypeInfoVTable SRClassMeta::GetVTable() const noexcept {
+        return Reflection::TypeInfoVTable();
+    }
 }

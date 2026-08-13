@@ -33,10 +33,14 @@ namespace SR_UTILS_NS {
 
     public:
         SR_NODISCARD SceneObjectType GetSceneObjectType() const noexcept override { return SceneObjectType::GameObject; }
-        SR_NODISCARD const SR_HTYPES_NS::SharedPtr<Transform>& GetTransform() const noexcept;
-        SR_NODISCARD const SR_HTYPES_NS::SharedPtr<Transform>& GetParentTransform() const noexcept;
 
+        /// @method
+        SR_NODISCARD const SR_HTYPES_NS::SharedPtr<Transform>& GetTransform() const noexcept;
+        /// @method
+        SR_NODISCARD const SR_HTYPES_NS::SharedPtr<Transform>& GetParentTransform() const noexcept;
+        /// @method
         SR_NODISCARD GameObject::Ptr CreateChild(StringAtom name);
+        /// @method
         SR_NODISCARD GameObject::Ptr GetOrCreateChild(StringAtom name);
 
         void OnAttachedToParent() override;

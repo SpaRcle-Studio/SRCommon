@@ -19,6 +19,7 @@ namespace SR_UTILS_NS {
     #define SR_S2WS(str) s2ws(str)
     #define SR_WS2S(wstr) ws2s(wstr)
 
+    /// @noCopyable @noMovable
     class SR_COMMON_DLL_API StringUtils : public SR_UTILS_NS::Singleton<StringUtils>, public SRClass {
         SR_REGISTER_SINGLETON(StringUtils);
         SR_CLASS()

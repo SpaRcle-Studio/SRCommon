@@ -19,7 +19,7 @@ namespace SR_UTILS_NS {
         Count
     );
 
-    /// @abstract
+    /// @abstract @noCopyable @noMovable
     class ITestController : public SR_UTILS_NS::Serializable, public SR_HTYPES_NS::SharedPtr<ITestController> {
         SR_CLASS()
     public:

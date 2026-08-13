@@ -26,11 +26,12 @@ namespace SR_FLUX_NS {
         explicit FluxRuntime(FluxProgram* pProgram);
         ~FluxRuntime() override;
 
-        void Emit(StringView labelName, const Vector<Reflection::Value>& args);
+        void Emit(StringView labelName, const Vector<Reflection::Value>& args, bool ignoreExisting = true);
         void Update(float_t dt);
+        void SetStorage(uint32_t index, const Reflection::Value& value);
+        bool Initialize();
 
     private:
-        bool Initialize();
         uint32_t Execute(FluxExecution& execution, uint32_t budget);
         bool ExecuteInstruction(FluxExecution& execution, const FluxInstruction& instruction);
         bool ValidateInstruction(FluxExecution& execution, const FluxInstruction& instruction) const;
@@ -53,7 +54,8 @@ namespace SR_FLUX_NS {
 
         bool m_initialized = false;
         bool m_validation = true;
-        bool m_continueOnError = true;
+        bool m_continueOnError = false;
+        bool m_hasErrors = false;
 
         FluxProgram* m_program = nullptr;
 

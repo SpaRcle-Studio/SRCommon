@@ -15,21 +15,58 @@
 namespace SR_FLUX_NS {
     void FluxIRExecutor::OnAttached() {
         SR_TRACY_ZONE;
+        ReloadProgram();
+        Super::OnAttached();
+    }
 
-        FluxProgram program;
-        String buffer;
+    void FluxIRExecutor::Awake() {
+        if (m_runtime) {
+            m_runtime->Emit("Awake", {});
+        }
+        Super::Awake();
+    }
 
-        auto&& filePath = ResourceManager::Instance().GetResPath().Concat(m_programPath);
-        if (!FileSystem::ReadFile(filePath, buffer) || !FluxParser::Instance().Parse(buffer, program)) {
-            SR_ERROR("FluxIRExecutor::OnAttached() : failed to parse program: {}", m_programPath);
-            Super::OnAttached();
+    void FluxIRExecutor::Start() {
+        if (m_runtime) {
+            m_runtime->Emit("Start", {});
+        }
+        Super::Start();
+    }
+
+    void FluxIRExecutor::Update(float_t dt) {
+        if (m_runtime) {
+            m_runtime->Emit("Update", {});
+            m_runtime->Update(dt);
+        }
+        Super::Update(dt);
+    }
+
+    void FluxIRExecutor::ReloadProgram() {
+        m_program = new FluxProgram();
+        m_runtime.Reset();
+
+        if (m_programPath.empty()) {
+            m_programWatcher.AutoFree();
             return;
         }
 
-        FluxRuntime runtime(&program);
-        runtime.Emit("Main", {});
-        runtime.Update(60.f);
+        String buffer;
 
-        Super::OnAttached();
+        auto&& filePath = ResourceManager::Instance().GetResPath().Concat(m_programPath);
+        if (!FileSystem::ReadFile(filePath, buffer) || !FluxParser::Instance().Parse(buffer, *m_program)) {
+            SR_ERROR("FluxIRExecutor::ReloadProgram() : failed to parse program: {}", m_programPath);
+            return;
+        }
+
+        m_programWatcher = new FileWatcher(filePath);
+        m_programWatcher->SetCallBack([&](auto&&) {
+            ReloadProgram();
+        });
+
+        m_runtime = new FluxRuntime(m_program.Get());
+        m_runtime->Initialize();
+
+        auto&& pComponent = GetEntity().StaticCast<Component>();
+        m_runtime->SetStorage(0, Reflection::Value::Create(pComponent));
     }
 }

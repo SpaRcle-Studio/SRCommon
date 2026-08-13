@@ -57,7 +57,7 @@ namespace SR_UTILS_NS {
     void Transform::RotateAround(const SR_MATH_NS::FVector3& point, const SR_MATH_NS::FVector3& eulers) { }
     void Transform::RotateAroundParent(const SR_MATH_NS::FVector3& eulers) { }
 
-    void Transform::Rotate(Math::Unit x, Math::Unit y, Math::Unit z) {
+    void Transform::RotateXYZ(Math::Unit x, Math::Unit y, Math::Unit z) {
         Rotate(Math::FVector3(x, y, z));
     }
 
@@ -81,7 +81,7 @@ namespace SR_UTILS_NS {
         SetSkew(Math::FVector3(x, y, z));
     }
 
-    void Transform::Translate(Math::Unit x, Math::Unit y, Math::Unit z) {
+    void Transform::TranslateXYZ(Math::Unit x, Math::Unit y, Math::Unit z) {
         Translate(Math::FVector3(x, y, z));
     }
 
@@ -90,7 +90,7 @@ namespace SR_UTILS_NS {
     void Transform::Rotate(const SR_MATH_NS::Quaternion& q) { }
     void Transform::Scale(const SR_MATH_NS::FVector3& scale) { }
 
-    void Transform::Scale(Math::Unit x, Math::Unit y, Math::Unit z) {
+    void Transform::ScaleXYZ(Math::Unit x, Math::Unit y, Math::Unit z) {
         Scale(Math::FVector3(x, y, z));
     }
 

@@ -82,7 +82,9 @@ namespace SR_UTILS_NS {
 
         void Detach();
 
+        /// @method
         void SetEnabled(bool value);
+
         void SetIndexIdSceneUpdater(int32_t index);
 
         SR_NODISCARD bool IsComponentValid() const noexcept;
@@ -103,6 +105,13 @@ namespace SR_UTILS_NS {
         /// На паузе ли сцена (если запущена)
         SR_NODISCARD bool IsPausedMode() const;
 
+        /// @method
+        SR_NODISCARD GameObjectPtr GetGameObject() const;
+        /// @method
+        SR_NODISCARD SceneObjectPtr GetSceneObject() const;
+        /// @method
+        SR_NODISCARD SceneObjectPtr GetRoot() const;
+
         SR_NODISCARD virtual bool ExecuteInEditMode() const;
         SR_NODISCARD virtual SR_MATH_NS::FVector3 GetBarycenter() const;
         SR_NODISCARD Component* BaseComponent() noexcept;
@@ -110,10 +119,7 @@ namespace SR_UTILS_NS {
         SR_NODISCARD IComponentable* TryGetParent() const;
         SR_NODISCARD SR_WORLD_NS::Scene* GetScene() const;
         SR_NODISCARD bool HasScene() const;
-        SR_NODISCARD GameObjectPtr GetGameObject() const;
-        SR_NODISCARD SceneObjectPtr GetSceneObject() const;
         SR_NODISCARD SR_WORLD_NS::Scene* TryGetScene() const;
-        SR_NODISCARD SceneObjectPtr GetRoot() const;
         SR_NODISCARD Transform* GetTransform() const noexcept;
         SR_NODISCARD int32_t GetIndexInSceneUpdater() const noexcept;
         SR_NODISCARD bool HasParent() const;

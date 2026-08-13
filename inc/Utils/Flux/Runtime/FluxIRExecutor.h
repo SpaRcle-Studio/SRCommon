@@ -7,21 +7,35 @@
 
 #include <Utils/ECS/Component.h>
 #include <Utils/FileSystem/Path.h>
+#include <Utils/Resources/FileWatcher.h>
 
 namespace SR_FLUX_NS {
+    struct FluxProgram;
+    class FluxRuntime;
+
     /// @category(Scripting)
     class FluxIRExecutor : public SR_UTILS_NS::Component {
         using Super = Component;
         SR_CLASS()
 
     public:
+        void Awake() override;
+        void Start() override;
         void OnAttached() override;
+        void Update(float_t dt) override;
 
     private:
-        /// @property
+        void ReloadProgram();
+
+    private:
+        /// @property @onChanged(ReloadProgram)
         /// @customArgs(pick: enabled, filter name: Flux IR, relative: resources)
         /// @customArg(filter value: fluxir)
         SR_UTILS_NS::Path m_programPath;
+
+        FileWatcher::Ptr m_programWatcher;
+        SR_HTYPES_NS::RawPointerHolder<FluxProgram> m_program;
+        SR_HTYPES_NS::RawPointerHolder<FluxRuntime> m_runtime;
 
     };
 }

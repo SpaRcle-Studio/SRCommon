@@ -150,16 +150,7 @@ namespace SR_UTILS_NS::Reflection {
         static void Determine(TypeInfo* pTypeInfo) {
             pTypeInfo->detailedType = T::GetClassStaticName();
             pTypeInfo->category = ReflectedCategoryType::Object;
-            pTypeInfo->vtable.pSizeOfAlign = &ReflectedTypeTemplateSizeOfAlign<T>;
-            pTypeInfo->vtable.pConstructor = &ReflectedTypeTemplateConstructor<T>;
-            pTypeInfo->vtable.pDestructor = &ReflectedTypeTemplateDestructor<T>;
-            if constexpr (std::is_copy_constructible_v<T>) {
-                pTypeInfo->vtable.pCopy = &ReflectedTypeTemplateCopy<T>;
-            }
-            if constexpr (std::is_move_constructible_v<T>) {
-                pTypeInfo->vtable.pMove = &ReflectedTypeTemplateMove<T>;
-            }
-            pTypeInfo->vtable.pGetTypeController = &ReflectedTypeGetControllerSRClass<T>;
+            pTypeInfo->vtable = T::GetMetaStatic()->GetVTable();
         }
     };
 

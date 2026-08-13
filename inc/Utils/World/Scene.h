@@ -30,6 +30,7 @@ namespace SR_WORLD_NS {
     class SceneLogic;
     class SceneUpdater;
 
+    /// @noCopyable @noMovable
     class SR_COMMON_DLL_API Scene : public SR_UTILS_NS::IComponentable {
         SR_CLASS()
     public:

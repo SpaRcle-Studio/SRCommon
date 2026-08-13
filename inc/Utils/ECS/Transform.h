@@ -39,13 +39,17 @@ namespace SR_UTILS_NS {
     public:
         void SetGameObject(GameObject* pGameObject);
 
+        /// @method
+        void TranslateXYZ(SR_MATH_NS::Unit x, SR_MATH_NS::Unit y, SR_MATH_NS::Unit z);
+        /// @method
+        void RotateXYZ(SR_MATH_NS::Unit x, SR_MATH_NS::Unit y, SR_MATH_NS::Unit z);
+        /// @method
+        void ScaleXYZ(SR_MATH_NS::Unit x, SR_MATH_NS::Unit y, SR_MATH_NS::Unit z);
+
         virtual void Translate(const SR_MATH_NS::FVector3& translation);
-        virtual void Translate(SR_MATH_NS::Unit x, SR_MATH_NS::Unit y, SR_MATH_NS::Unit z);
         virtual void Rotate(const SR_MATH_NS::FVector3& eulers);
         virtual void Rotate(const SR_MATH_NS::Quaternion& q);
-        virtual void Rotate(SR_MATH_NS::Unit x, SR_MATH_NS::Unit y, SR_MATH_NS::Unit z);
         virtual void Scale(const SR_MATH_NS::FVector3& scale);
-        virtual void Scale(SR_MATH_NS::Unit x, SR_MATH_NS::Unit y, SR_MATH_NS::Unit z);
 
         virtual void GlobalTranslate(const SR_MATH_NS::FVector3& translation);
         virtual void GlobalRotate(const SR_MATH_NS::FVector3& eulers);

@@ -156,21 +156,29 @@ namespace SR_UTILS_NS::Reflection {
     }
 
     template<typename T> Value Value::Create(T&& value, TypeInfo* pTypeInfo) {
-        Value v;
-        v.m_allocator = SR_UTILS_NS::IAllocator::GetDefaultAllocator();
-        using Type = std::remove_cv_t<std::remove_reference_t<T>>;
-        if (sizeof(Type) <= ReflectedValueStorageSize) {
-            ReflectedValue::Storage inlineData{};
-            new (&inlineData) Type(std::forward<Type>(value));
-            v.m_storage = ReflectedValue::MakeFromInlineData(inlineData, ReflectedValueStorageType::Embedded);
+        if constexpr (std::is_lvalue_reference_v<T> && std::is_const_v<std::remove_reference_t<T>>) {
+            return CreateCRef(value, pTypeInfo);
+        }
+        else if constexpr (std::is_lvalue_reference_v<T>) {
+            return CreateRef(value, pTypeInfo);
         }
         else {
-            char* buffer = static_cast<char*>(v.m_allocator->Allocate(sizeof(Type), alignof(Type)));
-            new (buffer) Type(std::forward<Type>(value));
-            v.m_storage = ReflectedValue::MakeFromPointer(buffer, ReflectedValueStorageType::Dynamic);
+            Value v;
+            v.m_allocator = SR_UTILS_NS::IAllocator::GetDefaultAllocator();
+            using Type = std::remove_cv_t<std::remove_reference_t<T>>;
+            if (sizeof(Type) <= ReflectedValueStorageSize) {
+                ReflectedValue::Storage inlineData{};
+                new (&inlineData) Type(std::forward<Type>(value));
+                v.m_storage = ReflectedValue::MakeFromInlineData(inlineData, ReflectedValueStorageType::Embedded);
+            }
+            else {
+                char* buffer = static_cast<char*>(v.m_allocator->Allocate(sizeof(Type), alignof(Type)));
+                new (buffer) Type(std::forward<Type>(value));
+                v.m_storage = ReflectedValue::MakeFromPointer(buffer, ReflectedValueStorageType::Dynamic);
+            }
+            v.m_typeInfo = pTypeInfo;
+            return v;
         }
-        v.m_typeInfo = pTypeInfo;
-        return v;
     }
 
     template<typename T> Value Value::CreateRef(T& value, TypeInfo* pTypeInfo) {

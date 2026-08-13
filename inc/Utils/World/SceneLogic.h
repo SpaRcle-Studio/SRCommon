@@ -17,7 +17,7 @@ namespace SR_UTILS_NS {
 namespace SR_WORLD_NS {
     class Scene;
 
-    /// @abstract
+    /// @abstract @noCopyable @noMovable
     class SceneLogic : public SR_UTILS_NS::Serializable, public SR_HTYPES_NS::SharedPtr<SceneLogic> {
         SR_CLASS()
         using Super = SR_HTYPES_NS::SharedPtr<SceneLogic>;
