@@ -20,6 +20,7 @@ namespace SR_FLUX_NS {
         FluxOpcode opcode = FluxOpcode::Unknown;
         Vector<FluxRegisterId> operands;
         FluxCallable callable;
+        uint32_t debugId = 0;
     };
 }
 

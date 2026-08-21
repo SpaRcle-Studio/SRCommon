@@ -19,11 +19,15 @@ namespace SR_FLUX_NS {
     };
 
     struct FluxProgram {
-        SR_HTYPES_NS::RawPointerHolder<IAllocator> allocator;
+        RawPointerHolder<IAllocator> allocator;
         Vector<FluxInstruction> instructions;
         Vector<FluxVariable> constants;
         Vector<FluxVariable> storage;
         Vector<FluxLabel> labels;
+        uint32_t requiredRegisters = 0;
+
+        void SaveToString(String& out) const;
+
     };
 }
 

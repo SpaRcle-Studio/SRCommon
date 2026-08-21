@@ -50,6 +50,20 @@ namespace SR_FLUX_NS {
         m_currentLexem = 0;
         m_state = State::None;
 
+        /// parse registers count
+        if (ExpectIdentifier("registers")) {
+            Advance(); /// skip 'registers'
+            bool isLineEnd = false;
+            const auto count = ParseInteger(isLineEnd);
+            if (isLineEnd) {
+                program.requiredRegisters = count;
+            }
+            else {
+                SR_ERROR("FluxParser::Parse() : expected line end after registers count!");
+                return false;
+            }
+        }
+
         ParseConstantsOrStorage(false);
         ParseConstantsOrStorage(true);
 
@@ -215,23 +229,7 @@ namespace SR_FLUX_NS {
 
     FluxOpcode FluxParser::ParseOpcode() {
         auto&& lexem = Advance();
-        struct OpcodeMapping {
-            StringView name;
-            FluxOpcode opcode;
-        };
-        static constexpr OpcodeMapping opcodeMappings[] = {
-            { "cp", FluxOpcode::Copy },
-            { "mv", FluxOpcode::Move },
-            { "swap", FluxOpcode::Swap },
-            { "ref", FluxOpcode::Ref },
-            { "call", FluxOpcode::Call },
-            { "ret", FluxOpcode::Return },
-            { "jmp", FluxOpcode::Jump },
-            { "br", FluxOpcode::Branch },
-            { "push", FluxOpcode::Push },
-            { "pop", FluxOpcode::Pop },
-        };
-        for (const auto& mapping : opcodeMappings) {
+        for (const auto& mapping : OPCODE_MAPPINGS) {
             if (lexem.value == mapping.name) {
                 return mapping.opcode;
             }

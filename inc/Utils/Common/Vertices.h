@@ -180,7 +180,7 @@ namespace SR_UTILS_NS {
     constexpr uint64_t VERTEX_LAYOUT_DESCRIPTION_SIZE = sizeof(VertexLayoutDescription);
 
     struct VertexDataBuffer : public NonCopyable {
-        using Ptr = SR_HTYPES_NS::RawPointerHolder<VertexDataBuffer>;
+        using Ptr = SR_UTILS_NS::RawPointerHolder<VertexDataBuffer>;
         using GetBoneIndexFn = SR_HTYPES_NS::Function<uint32_t(SR_UTILS_NS::StringAtom)>;
 
         VertexDataBuffer() = default;

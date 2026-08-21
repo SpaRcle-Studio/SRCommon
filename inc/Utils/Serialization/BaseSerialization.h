@@ -126,8 +126,8 @@ namespace SR_UTILS_NS {
         SerializationNode m_root;
         SR_HTYPES_NS::FastMemoryArray<SerializationNode*> m_stack;
         SR_HTYPES_NS::FastMemoryArray<SerializationNode*> m_walker;
-        SR_HTYPES_NS::RawPointerHolder<IAllocator> m_stringsPool;
-        SR_HTYPES_NS::RawPointerHolder<IAllocator> m_nodesPool;
+        RawPointerHolder<IAllocator> m_stringsPool;
+        RawPointerHolder<IAllocator> m_nodesPool;
 
     };
 

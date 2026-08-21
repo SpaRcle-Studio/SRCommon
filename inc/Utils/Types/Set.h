@@ -87,12 +87,12 @@ namespace SR_UTILS_NS {
         using const_iterator = ConstIterator;
 
     public:
-        Set() { AllocNil(); }
+        Set() { }
         Set(std::nullptr_t) = delete;
 
         explicit Set(IAllocator* pAllocator)
             : m_allocator(pAllocator)
-        { AllocNil(); }
+        { }
 
         Set(std::initializer_list<T> init);
         Set(const Set& other);
@@ -283,8 +283,10 @@ namespace SR_UTILS_NS {
 
     template<typename T, typename C>
     void Set<T,C>::FreeNil() {
-        RawFree(m_nil, sizeof(Node));
-        m_nil = nullptr;
+        if (m_nil) {
+            RawFree(m_nil, sizeof(Node));
+            m_nil = nullptr;
+        }
     }
 
     // ---- rotations ----------------------------------------------------------
@@ -441,6 +443,9 @@ namespace SR_UTILS_NS {
 
     template<typename T, typename C>
     std::pair<typename Set<T,C>::Node*, bool> Set<T,C>::InsertAt(Node* z) noexcept {
+        if (!m_nil) SR_UNLIKELY_ATTRIBUTE {
+            AllocNil();
+        }
         Node* parent = m_nil, *x = Root();
         while (x != m_nil) {
             parent = x;
@@ -494,34 +499,52 @@ namespace SR_UTILS_NS {
 
     template<typename T, typename C>
     typename Set<T,C>::Iterator Set<T,C>::find(const T& value) noexcept {
+        if (!m_nil) SR_UNLIKELY_ATTRIBUTE {
+            return end();
+        }
         Node* x = LB(value);
         return (x != m_nil && !m_cmp(value, x->value)) ? Iterator{ x, m_nil } : end();
     }
 
     template<typename T, typename C>
     typename Set<T,C>::ConstIterator Set<T,C>::find(const T& value) const noexcept {
+        if (!m_nil) SR_UNLIKELY_ATTRIBUTE {
+            return end();
+        }
         Node* x = LB(value);
         return (x != m_nil && !m_cmp(value, x->value)) ? ConstIterator{ x, m_nil } : end();
     }
 
     template<typename T, typename C>
     bool Set<T,C>::contains(const T& value) const noexcept {
+        if (!m_nil) SR_UNLIKELY_ATTRIBUTE {
+            return false;
+        }
         Node* x = LB(value);
         return x != m_nil && !m_cmp(value, x->value);
     }
 
     template<typename T, typename C>
     typename Set<T,C>::Iterator Set<T,C>::lower_bound(const T& value) noexcept {
+        if (!m_nil) SR_UNLIKELY_ATTRIBUTE {
+            return end();
+        }
         return { LB(value), m_nil };
     }
 
     template<typename T, typename C>
     typename Set<T,C>::ConstIterator Set<T,C>::lower_bound(const T& value) const noexcept {
+        if (!m_nil) SR_UNLIKELY_ATTRIBUTE {
+            return end();
+        }
         return { LB(value), m_nil };
     }
 
     template<typename T, typename C>
     typename Set<T,C>::Iterator Set<T,C>::upper_bound(const T& value) noexcept {
+        if (!m_nil) SR_UNLIKELY_ATTRIBUTE {
+            return end();
+        }
         Node* x = Root(), *ub = m_nil;
         while (x != m_nil) {
             if (m_cmp(value, x->value)) { ub = x; x = x->pLeft; }
@@ -532,6 +555,9 @@ namespace SR_UTILS_NS {
 
     template<typename T, typename C>
     typename Set<T,C>::ConstIterator Set<T,C>::upper_bound(const T& value) const noexcept {
+        if (!m_nil) SR_UNLIKELY_ATTRIBUTE {
+            return end();
+        }
         Node* x = Root(), *ub = m_nil;
         while (x != m_nil) {
             if (m_cmp(value, x->value)) { ub = x; x = x->pLeft; }
@@ -544,6 +570,9 @@ namespace SR_UTILS_NS {
 
     template<typename T, typename C>
     bool Set<T,C>::erase(const T& value) noexcept {
+        if (!m_nil) SR_UNLIKELY_ATTRIBUTE {
+            return false;
+        }
         Node* z = LB(value);
         if (z == m_nil || m_cmp(value, z->value)) return false;
 
@@ -590,6 +619,9 @@ namespace SR_UTILS_NS {
 
     template<typename T, typename C>
     typename Set<T,C>::Iterator Set<T,C>::erase(Iterator pos) noexcept {
+        if (!m_nil) SR_UNLIKELY_ATTRIBUTE {
+            return end();
+        }
         Node* node = pos.GetNode();
         if (node == m_nil) return end();
         Iterator nxt = pos; ++nxt;
@@ -612,6 +644,9 @@ namespace SR_UTILS_NS {
 
     template<typename T, typename C>
     void Set<T,C>::clear() noexcept {
+        if (!m_nil) SR_UNLIKELY_ATTRIBUTE {
+            return;
+        }
         FreeSubtree(Root());
         m_nil->pParent = m_nil;
         m_pMin = m_nil;
@@ -645,15 +680,14 @@ namespace SR_UTILS_NS {
 
     template<typename T, typename C>
     Set<T,C>::Set(std::initializer_list<T> init) {
-        AllocNil();
         for (auto& v : init) insert(v);
     }
 
     template<typename T, typename C>
     Set<T,C>::Set(const Set& other) {
         m_allocator = other.m_allocator;
-        AllocNil();
         if (other.m_size > 0) {
+            AllocNil();
             Node* root = CloneSubtree(other.Root(), other.m_nil, m_nil);
             m_nil->pParent = root;
             m_pMin = TreeMin(root, m_nil);
@@ -670,7 +704,6 @@ namespace SR_UTILS_NS {
         m_cmp       = std::move(other.m_cmp);
 
         other.m_nil = nullptr;
-        other.AllocNil();
         other.m_pMin = other.m_nil;
         other.m_size = 0;
         other.m_allocator = nullptr;

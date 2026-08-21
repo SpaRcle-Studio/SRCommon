@@ -101,7 +101,7 @@ namespace SR_UTILS_NS {
         return marshal.Save(path);
     }
 
-    aiScene* AssimpCache::Load(const Path& path, SR_HTYPES_NS::RawPointerHolder<SR_UTILS_NS::MappedFile>& cache) const {
+    aiScene* AssimpCache::Load(const Path& path, RawPointerHolder<SR_UTILS_NS::MappedFile>& cache) const {
         SR_TRACY_ZONE;
         SR_TRACY_ZONE_TEXT(path.ToStringRef());
 

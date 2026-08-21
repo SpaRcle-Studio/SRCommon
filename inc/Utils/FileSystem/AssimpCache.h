@@ -39,7 +39,7 @@ namespace SR_UTILS_NS {
         using MeshMap = std::pair<std::vector<aiMesh*>, std::unordered_map<aiMesh*, MeshIndex>>;
     public:
         bool Save(const SR_UTILS_NS::Path& path, const aiScene* pScene) const;
-        aiScene* Load(const SR_UTILS_NS::Path& path, SR_HTYPES_NS::RawPointerHolder<SR_UTILS_NS::MappedFile>& cache) const;
+        aiScene* Load(const SR_UTILS_NS::Path& path, SR_UTILS_NS::RawPointerHolder<SR_UTILS_NS::MappedFile>& cache) const;
 
     private:
         SR_NODISCARD NodeMap BuildNodeMap(const aiScene* pScene) const;

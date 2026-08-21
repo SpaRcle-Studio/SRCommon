@@ -31,11 +31,11 @@ namespace SR_FLUX_NS {
         /// @property @onChanged(ReloadProgram)
         /// @customArgs(pick: enabled, filter name: Flux IR, relative: resources)
         /// @customArg(filter value: fluxir)
-        SR_UTILS_NS::Path m_programPath;
+        Path m_programPath;
 
         FileWatcher::Ptr m_programWatcher;
-        SR_HTYPES_NS::RawPointerHolder<FluxProgram> m_program;
-        SR_HTYPES_NS::RawPointerHolder<FluxRuntime> m_runtime;
+        RawPointerHolder<FluxProgram> m_program;
+        RawPointerHolder<FluxRuntime> m_runtime;
 
     };
 }

@@ -26,6 +26,24 @@ namespace SR_FLUX_NS {
 
         Return,
     };
+
+    struct OpcodeMapping {
+        StringView name;
+        FluxOpcode opcode;
+    };
+
+    static constexpr OpcodeMapping OPCODE_MAPPINGS[] = {
+        { "cp", FluxOpcode::Copy },
+        { "mv", FluxOpcode::Move },
+        { "swap", FluxOpcode::Swap },
+        { "ref", FluxOpcode::Ref },
+        { "call", FluxOpcode::Call },
+        { "ret", FluxOpcode::Return },
+        { "jmp", FluxOpcode::Jump },
+        { "br", FluxOpcode::Branch },
+        { "push", FluxOpcode::Push },
+        { "pop", FluxOpcode::Pop },
+    };
 }
 
 #endif //SR_ENGINE_COMMON_FLUX_OPCODE_H

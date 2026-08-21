@@ -50,14 +50,14 @@ namespace SR_UTILS_NS {
         Event& AddEmptyEvent();
 
     private:
-        SR_HTYPES_NS::RawPointerHolder<SubscriptionMessage> m_messageCache;
+        RawPointerHolder<SubscriptionMessage> m_messageCache;
         void* m_pImpl = nullptr;
         Map<uint64_t, void*> m_listeners;
         bool m_isAsyncWatchingActive = false;
         std::recursive_mutex m_mutex;
         uint32_t m_usedEvents = 0;
         Vector<Event> m_events;
-        SR_UTILS_NS::Path m_pathTmp;
+        Path m_pathTmp;
 
     };
 }

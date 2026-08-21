@@ -89,7 +89,7 @@ namespace SR_UTILS_NS {
         ResourcesTypes m_resources;
 
         Map<StringAtom, ResourceLoaderFn> m_resourceLoaders;
-        SR_HTYPES_NS::RawPointerHolder<IResourceReloader> m_defaultReloader;
+        RawPointerHolder<IResourceReloader> m_defaultReloader;
 
         FileSystemWatcher::Ptr m_fileSystemWatcher;
 

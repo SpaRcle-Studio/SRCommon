@@ -129,7 +129,7 @@ namespace SR_UTILS_NS {
         Vector<ThreadWorker::Ptr> m_threadWorkers;
         bool m_isActive = false;
         std::atomic<bool> m_isAlive = true;
-        SR_HTYPES_NS::RawPointerHolder<SR_HTYPES_NS::DataStorage> m_context;
+        RawPointerHolder<SR_HTYPES_NS::DataStorage> m_context;
         std::recursive_mutex m_mutex;
 
     };

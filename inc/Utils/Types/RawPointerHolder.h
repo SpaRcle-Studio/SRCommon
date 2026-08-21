@@ -8,7 +8,7 @@
 #include <Utils/Common/AssertFwd.h>
 #include <Utils/TypeTraits/TypeTraits.h>
 
-namespace SR_HTYPES_NS {
+namespace SR_UTILS_NS {
     template<typename T> class RawPointerHolder {
         using DeleterFn = void(*)(T*);
         using CopyFn = T*(*)(const T&);

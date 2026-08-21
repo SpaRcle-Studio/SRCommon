@@ -38,7 +38,7 @@ namespace SR_FLUX_NS {
         void Back();
 
     private:
-        SR_HTYPES_NS::RawPointerHolder<IAllocator> m_allocator;
+        RawPointerHolder<IAllocator> m_allocator;
         FluxProgram* m_program = nullptr;
         uint32_t m_currentLexem = 0;
         Vector<LexerDetails::Lexem> m_lexems;

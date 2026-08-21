@@ -141,12 +141,12 @@ namespace SR_UTILS_NS {
         using const_iterator = ConstIterator;
 
     public:
-        Map() { AllocNil(); }
+        Map() { }
         Map(std::nullptr_t) = delete;
 
         explicit Map(IAllocator* pAllocator)
             : m_allocator(pAllocator)
-        { AllocNil(); }
+        { }
 
         Map(std::initializer_list<ValueType> init);
         Map(const Map& other);
@@ -515,6 +515,9 @@ namespace SR_UTILS_NS {
 
     template<typename K, typename V, typename C>
     Pair<typename Map<K,V,C>::Node*, bool> Map<K,V,C>::InsertAt(Node* z) noexcept {
+        if (!m_nil) SR_UNLIKELY_ATTRIBUTE {
+            AllocNil();
+        }
         Node* parent = m_nil;
         Node* x      = Root();
         while (x != m_nil) {
@@ -572,6 +575,9 @@ namespace SR_UTILS_NS {
 
     template<typename K, typename V, typename C>
     V& Map<K,V,C>::operator[](const K& key) {
+        if (!m_nil) SR_UNLIKELY_ATTRIBUTE {
+            AllocNil();
+        }
         Node* parent = m_nil;
         Node* x      = Root();
         while (x != m_nil) {
@@ -595,6 +601,9 @@ namespace SR_UTILS_NS {
 
     template<typename K, typename V, typename C>
     V& Map<K,V,C>::operator[](K&& key) {
+        if (!m_nil) SR_UNLIKELY_ATTRIBUTE {
+            AllocNil();
+        }
         Node* parent = m_nil;
         Node* x      = Root();
         while (x != m_nil) {
@@ -620,6 +629,11 @@ namespace SR_UTILS_NS {
 
     template<typename K, typename V, typename C>
     V& Map<K,V,C>::at(const K& key) {
+        if (!m_nil) SR_UNLIKELY_ATTRIBUTE {
+            SRHalt("Map::at() : map is empty!");
+            static V dummy{};
+            return dummy;
+        }
         Node* x = LB(key);
         if (x == m_nil || m_cmp(key, x->key())) {
             SRHalt("Map::at() : key not found!");
@@ -633,34 +647,52 @@ namespace SR_UTILS_NS {
 
     template<typename K, typename V, typename C>
     typename Map<K,V,C>::Iterator Map<K,V,C>::find(const K& key) noexcept {
+        if (!m_nil) SR_UNLIKELY_ATTRIBUTE {
+            return end();
+        }
         Node* x = LB(key);
         return (x != m_nil && !m_cmp(key, x->key())) ? Iterator{ x, m_nil } : end();
     }
 
     template<typename K, typename V, typename C>
     typename Map<K,V,C>::ConstIterator Map<K,V,C>::find(const K& key) const noexcept {
+        if (!m_nil) SR_UNLIKELY_ATTRIBUTE {
+            return end();
+        }
         Node* x = LB(key);
         return (x != m_nil && !m_cmp(key, x->key())) ? ConstIterator{ x, m_nil } : end();
     }
 
     template<typename K, typename V, typename C>
     bool Map<K,V,C>::contains(const K& key) const noexcept {
+        if (!m_nil) SR_UNLIKELY_ATTRIBUTE {
+            return false;
+        }
         Node* x = LB(key);
         return x != m_nil && !m_cmp(key, x->key());
     }
 
     template<typename K, typename V, typename C>
     typename Map<K,V,C>::Iterator Map<K,V,C>::lower_bound(const K& key) noexcept {
+        if (!m_nil) SR_UNLIKELY_ATTRIBUTE {
+            return end();
+        }
         return { LB(key), m_nil };
     }
 
     template<typename K, typename V, typename C>
     typename Map<K,V,C>::ConstIterator Map<K,V,C>::lower_bound(const K& key) const noexcept {
+        if (!m_nil) SR_UNLIKELY_ATTRIBUTE {
+            return end();
+        }
         return { LB(key), m_nil };
     }
 
     template<typename K, typename V, typename C>
     typename Map<K,V,C>::Iterator Map<K,V,C>::upper_bound(const K& key) noexcept {
+        if (!m_nil) SR_UNLIKELY_ATTRIBUTE {
+            return end();
+        }
         Node* x = Root(), *ub = m_nil;
         while (x != m_nil) {
             if (m_cmp(key, x->key())) { ub = x; x = x->pLeft; }
@@ -671,6 +703,9 @@ namespace SR_UTILS_NS {
 
     template<typename K, typename V, typename C>
     typename Map<K,V,C>::ConstIterator Map<K,V,C>::upper_bound(const K& key) const noexcept {
+        if (!m_nil) SR_UNLIKELY_ATTRIBUTE {
+            return end();
+        }
         Node* x = Root(), *ub = m_nil;
         while (x != m_nil) {
             if (m_cmp(key, x->key())) { ub = x; x = x->pLeft; }
@@ -683,6 +718,9 @@ namespace SR_UTILS_NS {
 
     template<typename K, typename V, typename C>
     bool Map<K,V,C>::erase(const K& key) noexcept {
+        if (!m_nil) SR_UNLIKELY_ATTRIBUTE {
+            return false;
+        }
         Node* z = LB(key);
         if (z == m_nil || m_cmp(key, z->key())) return false;
 
@@ -730,6 +768,9 @@ namespace SR_UTILS_NS {
 
     template<typename K, typename V, typename C>
     typename Map<K,V,C>::Iterator Map<K,V,C>::erase(Iterator pos) noexcept {
+        if (!m_nil) SR_UNLIKELY_ATTRIBUTE {
+            return end();
+        }
         Node* node = pos.GetNode();
         if (node == m_nil) return end();
         Iterator nxt = pos; ++nxt;
@@ -753,6 +794,9 @@ namespace SR_UTILS_NS {
 
     template<typename K, typename V, typename C>
     void Map<K,V,C>::clear() noexcept {
+        if (!m_nil) SR_UNLIKELY_ATTRIBUTE {
+            return;
+        }
         FreeSubtree(Root());
         m_nil->pParent = m_nil;
         m_pMin = m_nil;
@@ -786,15 +830,14 @@ namespace SR_UTILS_NS {
 
     template<typename K, typename V, typename C>
     Map<K,V,C>::Map(std::initializer_list<ValueType> init) {
-        AllocNil();
         for (auto& kv : init) insert(kv);
     }
 
     template<typename K, typename V, typename C>
     Map<K,V,C>::Map(const Map& other) {
         m_allocator = other.m_allocator;
-        AllocNil();
         if (other.m_size > 0) {
+            AllocNil();
             Node* root = CloneSubtree(other.Root(), other.m_nil, m_nil);
             m_nil->pParent = root;
             m_pMin = TreeMin(root, m_nil);
@@ -813,7 +856,6 @@ namespace SR_UTILS_NS {
 
         // leave other in a valid empty state
         other.m_nil = nullptr;
-        other.AllocNil();
         other.m_pMin = other.m_nil;
         other.m_size = 0;
         other.m_allocator = nullptr;

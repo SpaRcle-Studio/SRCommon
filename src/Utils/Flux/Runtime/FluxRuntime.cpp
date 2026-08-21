@@ -10,7 +10,9 @@
 namespace SR_FLUX_NS {
     FluxRuntime::FluxRuntime(FluxProgram* pProgram)
         : m_program(pProgram)
-    { }
+    {
+        m_maxRegisters = m_program->requiredRegisters;
+    }
 
     FluxRuntime::~FluxRuntime() {
         m_constants.clear();

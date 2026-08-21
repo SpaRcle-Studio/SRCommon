@@ -144,11 +144,11 @@ namespace SR_UTILS_NS::Reflection {
 
     private:
         EditorPropertyParams m_editorParams;
-        mutable SR_HTYPES_NS::RawPointerHolder<Reflection::Value> m_defaultValue;
-        mutable SR_HTYPES_NS::RawPointerHolder<Reflection::Value> m_resetValue;
-        SR_UTILS_NS::StringAtom m_name;
-        SR_UTILS_NS::StringAtom m_serializeName;
-        mutable SR_UTILS_NS::StringAtom m_displayName;
+        mutable RawPointerHolder<Reflection::Value> m_defaultValue;
+        mutable RawPointerHolder<Reflection::Value> m_resetValue;
+        StringAtom m_name;
+        StringAtom m_serializeName;
+        mutable StringAtom m_displayName;
         PropertyPublicity m_publicity = PropertyPublicity::Public;
         SetCallbackFn m_setCallback = nullptr;
         GetCallbackFn m_getCallback = nullptr;

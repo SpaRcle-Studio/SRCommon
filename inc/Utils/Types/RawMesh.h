@@ -77,7 +77,7 @@ namespace SR_HTYPES_NS {
         bool Load() override;
 
     private:
-        SR_HTYPES_NS::RawPointerHolder<MappedFile> m_pMappedFileCache;
+        RawPointerHolder<MappedFile> m_pMappedFileCache;
         mutable MeshSceneStructure m_sceneStructure;
         RawMeshParams m_params;
         bool m_fromCache = false;
