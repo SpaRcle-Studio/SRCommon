@@ -150,6 +150,7 @@ namespace SR_UTILS_NS {
 
         Map(std::initializer_list<ValueType> init);
         Map(const Map& other);
+        Map(IAllocator* pAllocator, const Map& other);
         Map(Map&& other) noexcept;
         ~Map();
 
@@ -852,6 +853,18 @@ namespace SR_UTILS_NS {
     template<typename K, typename V, typename C>
     Map<K,V,C>::Map(const Map& other) {
         m_allocator = other.m_allocator;
+        if (other.m_size > 0) {
+            AllocNil();
+            Node* root = CloneSubtree(other.Root(), other.m_nil, m_nil);
+            m_nil->pParent = root;
+            m_pMin = TreeMin(root, m_nil);
+        }
+        m_size = other.m_size;
+    }
+
+    template<typename K, typename V, typename C>
+    Map<K,V,C>::Map(IAllocator* pAllocator, const Map& other) {
+        m_allocator = pAllocator;
         if (other.m_size > 0) {
             AllocNil();
             Node* root = CloneSubtree(other.Root(), other.m_nil, m_nil);

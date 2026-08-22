@@ -9,6 +9,7 @@
 #include <Utils/Serialization/SerializationSaveUtils.h>
 #include <Utils/Serialization/SerializationLoadUtils.h>
 #include <Utils/Reflection/TypeInfoSerialization.h>
+#include <Utils/Reflection/Value.h>
 #include <Utils/Types/UnicodeString.h>
 #include <Utils/Types/SharedPtr.h>
 #include <Utils/Math/Rect.h>
@@ -26,15 +27,31 @@ namespace SR_UTILS_NS {
        deserializer.ReadString(value, id);
     }
 
+    static const auto gTypeInfoId = SerializationId::Create("typeInfo");
+
     void ObjectDataAccessor<SR_UTILS_NS::Reflection::Value>::Save(ISerializer& serializer, const SR_UTILS_NS::Reflection::Value& value, const SerializationId& id) {
+        if (!value.IsValid()) {
+            return;
+        }
         serializer.BeginObject(id);
+        static SR_THREAD_LOCAL String typeInfo;
+        Reflection::SaveTypeInfo(typeInfo, &value.GetTypeInfo());
+        serializer.WriteString(typeInfo, gTypeInfoId);
         Reflection::SerializeValue(value, serializer);
         serializer.EndObject();
     }
 
     void ObjectDataAccessor<SR_UTILS_NS::Reflection::Value>::Load(IDeserializer& deserializer, SR_UTILS_NS::Reflection::Value& value, const SerializationId& id) {
         if (deserializer.BeginObject(id)) {
-            Reflection::DeserializeValue(value, deserializer);
+            static SR_THREAD_LOCAL String typeInfo;
+            deserializer.ReadString(typeInfo, gTypeInfoId);
+            if (auto&& pTypeInfo = Reflection::LoadTypeInfo(typeInfo)) {
+                if (Reflection::FindVTable(*pTypeInfo)) {
+                    value = Reflection::Value::CreateDefault(pTypeInfo);
+                    Reflection::DeserializeValue(value, deserializer);
+                }
+                Reflection::FreeTypeInfo(pTypeInfo);
+            }
             deserializer.EndObject();
         }
     }

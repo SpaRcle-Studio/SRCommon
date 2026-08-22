@@ -19,6 +19,13 @@ namespace SR_FLUX_NS {
     };
 
     struct FluxProgram {
+        FluxProgram() = default;
+        FluxProgram(const FluxProgram& other);
+        FluxProgram(FluxProgram&& other) noexcept;
+        FluxProgram& operator=(const FluxProgram& other);
+        FluxProgram& operator=(FluxProgram&& other) noexcept;
+        ~FluxProgram();
+
         RawPointerHolder<IAllocator> allocator;
         Vector<FluxInstruction> instructions;
         Vector<FluxVariable> constants;
@@ -27,7 +34,7 @@ namespace SR_FLUX_NS {
         uint32_t requiredRegisters = 0;
 
         void SaveToString(String& out) const;
-        FluxProgram Clone() const;
+        void CloneTo(FluxProgram& clone) const;
 
     };
 }

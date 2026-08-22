@@ -7,10 +7,16 @@
 
 #include <Utils/Flux/IR/FluxOpcode.h>
 
+namespace SR_UTILS_NS::Reflection {
+    class Method;
+}
+
 namespace SR_FLUX_NS {
     struct FluxCallable {
         StringAtom object;
         StringAtom function;
+
+        SR_NODISCARD const Reflection::Method* FindMethodMeta() const;
     };
 
     using FluxRegisterId = uint32_t;

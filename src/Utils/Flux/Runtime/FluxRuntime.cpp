@@ -386,6 +386,12 @@ namespace SR_FLUX_NS {
         }
 
         if (!pCallable) {
+            if (instruction.operands.empty()) SR_UNLIKELY_ATTRIBUTE {
+                SR_ERROR("FluxRuntime::CallMethod() : no callable provided!");
+                execution.state = FluxExecutionState::Error;
+                return false;
+            }
+
             auto&& callableType = GetRegisterType(execution, instruction.operands[0]);
             Reflection::Value& callable = GetRegister(execution, instruction.operands[0], callableType, RegisterOperation::Read);
 

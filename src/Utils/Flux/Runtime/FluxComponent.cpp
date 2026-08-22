@@ -12,6 +12,7 @@
 namespace SR_FLUX_NS {
     void FluxComponent::Update(float_t dt) {
         if (!m_runtime) {
+            m_isStartCalled = false;
             if (auto&& pGraph = m_graph.GetResource()) {
                 if (auto&& pProgram = pGraph->Compile()) {
                     m_runtime = new FluxRuntime(pProgram);
@@ -22,7 +23,11 @@ namespace SR_FLUX_NS {
         }
 
         if (m_runtime) {
-            if (!m_runtime->IsEmitted("Update")) {
+            if (!m_isStartCalled) {
+                m_isStartCalled = true;
+                m_runtime->Emit("Start", {});
+            }
+            else if (!m_runtime->IsEmitted("Update") && !m_runtime->IsEmitted("Start")) {
                 m_callArguments.resize(1);
                 m_callArguments[0] = Reflection::Value::Create(dt);
                 m_runtime->Emit("Update", m_callArguments);

@@ -20,6 +20,13 @@ namespace SR_FLUX_NS {
     public:
         SR_NODISCARD const FluxProgram* Compile() const;
 
+        SR_NODISCARD const FluxGraph& GetGraph() const { return m_graph; }
+
+        /// граф помечается как изменённый, следующий Compile() пересоберёт программу
+        SR_NODISCARD FluxGraph& GetGraphMutable() { m_compiled = false; return m_graph; }
+
+        void Invalidate() { m_compiled = false; }
+
     private:
         /// @property
         FluxGraph m_graph;

@@ -34,11 +34,7 @@ namespace SR_FLUX_NS {
         void SetTargetPin(uint32_t targetPin) { m_targetPin = targetPin; }
         void SetUserData(void* userData) { m_userData = userData; }
 
-        SR_NODISCARD auto operator==(const FluxGraphLink& other) const {
-            return std::tie(m_sourceNode, m_targetNode, m_sourcePin, m_targetPin) ==
-                std::tie(other.m_sourceNode, other.m_targetNode, other.m_sourcePin, other.m_targetPin);
-        }
-
+        SR_NODISCARD bool operator==(const FluxGraphLink& other) const;
         SR_NODISCARD auto operator!=(const FluxGraphLink& other) const { return !(*this == other); }
 
     private:
@@ -98,6 +94,7 @@ namespace SR_FLUX_NS {
         SR_NODISCARD FluxCallable GetCallable() const;
         SR_NODISCARD StringAtom GetName() const { return m_name; }
         SR_NODISCARD const Reflection::Value& GetConstant() const { return m_constant; }
+        SR_NODISCARD Reflection::Value& GetConstantMutable() { return m_constant; }
         SR_NODISCARD SR_MATH_NS::FVector2 GetPosition() const { return m_position; }
         SR_NODISCARD void* GetUserData() const { return m_userData; }
 
@@ -108,10 +105,7 @@ namespace SR_FLUX_NS {
         void SetPosition(const SR_MATH_NS::FVector2& position) { m_position = position; }
         void SetUserData(void* userData) { m_userData = userData; }
 
-        SR_NODISCARD auto operator==(const FluxGraphNode& other) const {
-            return std::tie(m_type, m_name, m_position, m_constant, m_callableObject, m_callableFunction) ==
-                std::tie(other.m_type, other.m_name, other.m_position, other.m_constant, other.m_callableObject, other.m_callableFunction);
-        }
+        SR_NODISCARD bool operator==(const FluxGraphNode& other) const;
 
     private:
         /// @property
@@ -137,11 +131,37 @@ namespace SR_FLUX_NS {
         FluxGraph();
         ~FluxGraph() override;
 
+        FluxGraph(const FluxGraph& other);
+        FluxGraph& operator=(const FluxGraph& other);
+
     public:
-        void AddNode(const FluxGraphNode& node);
+        /// @return индекс добавленного узла
+        uint32_t AddNode(const FluxGraphNode& node);
         void AddLink(const FluxGraphLink& link);
 
+        /// удаляет узел вместе со связями, индексы оставшихся узлов сдвигаются
+        void RemoveNode(uint32_t nodeIndex);
+        void RemoveLink(uint32_t sourceNode, uint32_t sourcePin, uint32_t targetNode, uint32_t targetPin);
+        void RemoveInputLink(uint32_t nodeIndex, uint32_t pinIndex);
+        void RemoveOutputLink(uint32_t nodeIndex, uint32_t pinIndex);
+
         SR_NODISCARD FluxProgram Compile() const;
+
+        SR_NODISCARD uint32_t GetNodeCount() const { return static_cast<uint32_t>(m_nodes.size()); }
+        SR_NODISCARD FluxGraphNode* GetNode(uint32_t nodeIndex);
+        SR_NODISCARD const FluxGraphNode* GetNode(uint32_t nodeIndex) const;
+
+        SR_NODISCARD const Vector<FluxGraphNode>& GetNodes() const { return m_nodes; }
+        SR_NODISCARD Vector<FluxGraphNode>& GetNodes() { return m_nodes; }
+        SR_NODISCARD const Vector<FluxGraphLink>& GetLinks() const { return m_links; }
+        SR_NODISCARD Vector<FluxGraphLink>& GetLinks() { return m_links; }
+        SR_NODISCARD const Map<StringAtom, Reflection::Value>& GetVariables() const { return m_variables; }
+        SR_NODISCARD Map<StringAtom, Reflection::Value>& GetVariables() { return m_variables; }
+
+        SR_NODISCARD const FluxGraphLink* FindInputLink(uint32_t nodeIndex, uint32_t pinIndex) const;
+        SR_NODISCARD const FluxGraphLink* FindOutputLink(uint32_t nodeIndex, uint32_t pinIndex) const;
+        SR_NODISCARD uint32_t GetMaxInputPin(uint32_t nodeIndex) const;
+        SR_NODISCARD uint32_t GetMaxOutputPin(uint32_t nodeIndex) const;
 
     private:
         /// подготовительные проходы, выполняются до генерации инструкций, так как адресное
@@ -169,11 +189,7 @@ namespace SR_FLUX_NS {
         void PushLoopScope(FluxGraphCompileContext& context) const;
         void PopLoopScope(FluxGraphCompileContext& context) const;
 
-        SR_NODISCARD const FluxGraphLink* FindInputLink(uint32_t nodeIndex, uint32_t pinIndex) const;
-        SR_NODISCARD const FluxGraphLink* FindOutputLink(uint32_t nodeIndex, uint32_t pinIndex) const;
         SR_NODISCARD uint32_t GetFlowTarget(uint32_t nodeIndex, uint32_t pinIndex) const;
-        SR_NODISCARD uint32_t GetMaxInputPin(uint32_t nodeIndex) const;
-        SR_NODISCARD uint32_t GetMaxOutputPin(uint32_t nodeIndex) const;
         SR_NODISCARD static uint32_t GetUseCount(const FluxGraphCompileContext& context, uint64_t key);
         SR_NODISCARD static uint32_t GetFlowInputCount(const FluxGraphCompileContext& context, uint32_t nodeIndex);
 

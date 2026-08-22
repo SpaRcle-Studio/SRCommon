@@ -61,6 +61,32 @@ namespace SR_FLUX_NS {
         std::exchange(m_variables, {});
     }
 
+    FluxGraph::FluxGraph(const FluxGraph& other)
+        : Serializable(other)
+        , m_allocator(new UnSynchronizedPoolAllocator())
+        , m_arithmeticObject(other.m_arithmeticObject)
+        , m_addFunction(other.m_addFunction)
+        , m_lessFunction(other.m_lessFunction)
+    {
+        m_nodes = Vector<FluxGraphNode>(m_allocator.Get(), other.m_nodes.begin(), other.m_nodes.end());
+        m_links = Vector<FluxGraphLink>(m_allocator.Get(), other.m_links.begin(), other.m_links.end());
+        m_variables = Map<StringAtom, Reflection::Value>(m_allocator.Get(), other.m_variables);
+    }
+
+    FluxGraph& FluxGraph::operator=(const FluxGraph& other) {
+        if (this != &other) {
+            auto&& pNewAllocator = (IAllocator*)(new UnSynchronizedPoolAllocator());
+            m_nodes = Vector<FluxGraphNode>(pNewAllocator, other.m_nodes.begin(), other.m_nodes.end());
+            m_links = Vector<FluxGraphLink>(pNewAllocator, other.m_links.begin(), other.m_links.end());
+            m_variables = Map<StringAtom, Reflection::Value>(pNewAllocator, other.m_variables);
+            m_arithmeticObject = other.m_arithmeticObject;
+            m_addFunction = other.m_addFunction;
+            m_lessFunction = other.m_lessFunction;
+            m_allocator = pNewAllocator;
+        }
+        return *this;
+    }
+
     FluxProgram FluxGraph::Compile() const {
         SR_TRACY_ZONE;
 
@@ -184,11 +210,11 @@ namespace SR_FLUX_NS {
             FluxLabel& label = program.labels.emplace_back();
             label.instructionPointer = static_cast<uint32_t>(program.instructions.size());
             label.name = String(program.allocator.Get());
-            if (!node.GetCallable().function.empty()) {
-                label.name += node.GetCallable().function.ToStringView();
+            if (!node.GetName().empty()) {
+                label.name += node.GetName().ToStringView();
             }
             else {
-                FormatTo(label.name, "Event_{}", node.GetName());
+                FormatTo(label.name, "UnnamedEvent_Label_{}", program.labels.size() - 1);
             }
         }
 
@@ -873,12 +899,66 @@ namespace SR_FLUX_NS {
         return static_cast<uint32_t>(variables.size() - 1);
     }
 
-    void FluxGraph::AddNode(const FluxGraphNode& node) {
+    uint32_t FluxGraph::AddNode(const FluxGraphNode& node) {
         m_nodes.emplace_back(node);
+        return static_cast<uint32_t>(m_nodes.size() - 1);
     }
 
     void FluxGraph::AddLink(const FluxGraphLink& link) {
         m_links.emplace_back(link);
+    }
+
+    void FluxGraph::RemoveNode(const uint32_t nodeIndex) {
+        if (nodeIndex >= m_nodes.size()) {
+            SRHalt("FluxGraph::RemoveNode() : node index {} is out of range!", nodeIndex);
+            return;
+        }
+
+        /// связи хранят индексы узлов, поэтому после удаления узла их нужно пересчитать
+        for (auto pIt = m_links.begin(); pIt != m_links.end();) {
+            if (pIt->GetSourceNode() == nodeIndex || pIt->GetTargetNode() == nodeIndex) {
+                pIt = m_links.erase(pIt);
+                continue;
+            }
+
+            if (pIt->GetSourceNode() > nodeIndex) {
+                pIt->SetSourceNode(pIt->GetSourceNode() - 1);
+            }
+            if (pIt->GetTargetNode() > nodeIndex) {
+                pIt->SetTargetNode(pIt->GetTargetNode() - 1);
+            }
+
+            ++pIt;
+        }
+
+        m_nodes.erase(m_nodes.begin() + nodeIndex);
+    }
+
+    void FluxGraph::RemoveLink(const uint32_t sourceNode, const uint32_t sourcePin, const uint32_t targetNode, const uint32_t targetPin) {
+        std::erase_if(m_links, [&](const FluxGraphLink& link) {
+            return link.GetSourceNode() == sourceNode && link.GetSourcePin() == sourcePin &&
+                link.GetTargetNode() == targetNode && link.GetTargetPin() == targetPin;
+        });
+    }
+
+    void FluxGraph::RemoveInputLink(const uint32_t nodeIndex, const uint32_t pinIndex) {
+        std::erase_if(m_links, [&](const FluxGraphLink& link) {
+            return link.GetTargetNode() == nodeIndex && link.GetTargetPin() == pinIndex;
+        });
+    }
+
+    void FluxGraph::RemoveOutputLink(const uint32_t nodeIndex, const uint32_t pinIndex) {
+        std::erase_if(m_links, [&](const FluxGraphLink& link) {
+            return link.GetSourceNode() == nodeIndex && link.GetSourcePin() == pinIndex;
+        });
+    }
+
+    FluxGraphNode* FluxGraph::GetNode(const uint32_t nodeIndex) {
+        return nodeIndex < m_nodes.size() ? &m_nodes[nodeIndex] : nullptr;
+    }
+
+    const FluxGraphNode* FluxGraph::GetNode(const uint32_t nodeIndex) const {
+        return nodeIndex < m_nodes.size() ? &m_nodes[nodeIndex] : nullptr;
     }
 
     void FluxGraphNode::SetCallable(const FluxCallable& callable) {
@@ -888,5 +968,15 @@ namespace SR_FLUX_NS {
 
     FluxCallable FluxGraphNode::GetCallable() const {
         return { m_callableObject, m_callableFunction };
+    }
+
+    bool FluxGraphNode::operator==(const FluxGraphNode &other) const {
+        return std::tie(m_type, m_name, m_position, m_constant, m_callableObject, m_callableFunction) ==
+               std::tie(other.m_type, other.m_name, other.m_position, other.m_constant, other.m_callableObject, other.m_callableFunction);
+    }
+
+    bool FluxGraphLink::operator==(const FluxGraphLink &other) const {
+        return std::tie(m_sourceNode, m_targetNode, m_sourcePin, m_targetPin) ==
+               std::tie(other.m_sourceNode, other.m_targetNode, other.m_sourcePin, other.m_targetPin);
     }
 }

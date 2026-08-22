@@ -66,15 +66,28 @@ namespace SR_FLUX_NS {
                 out += " ";
             }
 
-            for (const auto& operand : instruction.operands) {
-                if (operand < constants.size()) {
-                    out += "@" + std::to_string(operand) + " ";
+            if (instruction.opcode == FluxOpcode::Branch || instruction.opcode == FluxOpcode::Jump) {
+                if (!instruction.operands.empty()) {
+                    const auto labelIndex = instruction.operands[0];
+                    if (labelIndex < labels.size()) {
+                        out += labels[labelIndex].name;
+                    }
+                    else {
+                        out += "error_invalid_label";
+                    }
                 }
-                else if (operand < constants.size() + storage.size()) {
-                    out += "$" + std::to_string(operand - constants.size()) + " ";
-                }
-                else {
-                    out += "%" + std::to_string(operand - constants.size() - storage.size()) + " ";
+            }
+            else {
+                for (const auto& operand : instruction.operands) {
+                    if (operand < constants.size()) {
+                        out += "@" + std::to_string(operand) + " ";
+                    }
+                    else if (operand < constants.size() + storage.size()) {
+                        out += "$" + std::to_string(operand - constants.size()) + " ";
+                    }
+                    else {
+                        out += "%" + std::to_string(operand - constants.size() - storage.size()) + " ";
+                    }
                 }
             }
             out += "\n";
@@ -82,8 +95,12 @@ namespace SR_FLUX_NS {
         }
     }
 
-    FluxProgram FluxProgram::Clone() const {
-        FluxProgram clone;
+    void FluxProgram::CloneTo(FluxProgram& clone) const {
+        std::exchange(clone.constants, {});
+        std::exchange(clone.storage, {});
+        std::exchange(clone.instructions, {});
+        std::exchange(clone.labels, {});
+
         clone.allocator = (IAllocator*)new MonotonicAllocator(allocator->GetUsedMemory());
         clone.requiredRegisters = requiredRegisters;
 
@@ -124,7 +141,44 @@ namespace SR_FLUX_NS {
             newLabel.name = String(label.name, clone.allocator.Get());
             newLabel.instructionPointer = label.instructionPointer;
         }
+    }
 
-        return clone;
+    FluxProgram::~FluxProgram() {
+        std::exchange(instructions, {});
+        std::exchange(constants, {});
+        std::exchange(storage, {});
+        std::exchange(labels, {});
+    }
+
+    FluxProgram::FluxProgram(const FluxProgram& other) {
+        other.CloneTo(*this);
+    }
+
+    FluxProgram& FluxProgram::operator=(const FluxProgram& other) {
+        if (this != &other) {
+            other.CloneTo(*this);
+        }
+        return *this;
+    }
+
+    FluxProgram::FluxProgram(FluxProgram&& other) noexcept {
+        requiredRegisters = std::move(other.requiredRegisters);
+        instructions = std::move(other.instructions);
+        constants = std::move(other.constants);
+        storage = std::move(other.storage);
+        labels = std::move(other.labels);
+        allocator = std::move(other.allocator);
+    }
+
+    FluxProgram& FluxProgram::operator=(FluxProgram&& other) noexcept {
+        if (this != &other) {
+            requiredRegisters = std::move(other.requiredRegisters);
+            instructions = std::move(other.instructions);
+            constants = std::move(other.constants);
+            storage = std::move(other.storage);
+            labels = std::move(other.labels);
+            allocator = std::move(other.allocator);
+        }
+        return *this;
     }
 }
