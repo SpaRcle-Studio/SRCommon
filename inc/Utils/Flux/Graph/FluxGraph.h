@@ -5,22 +5,22 @@
 #ifndef SR_ENGINE_COMMON_FLUX_GRAPH_H
 #define SR_ENGINE_COMMON_FLUX_GRAPH_H
 
-#include <Utils/Flux/IR/FluxInstruction.h>
 #include <Utils/Reflection/Value.h>
+#include <Utils/Flux/IR/FluxInstruction.h>
 
 namespace SR_FLUX_NS {
+    struct FluxGraphCompileContext;
+    struct FluxValueRef;
     struct FluxProgram;
     class FluxGraphNode;
-
-    static constexpr uint32_t FluxInvalidNode = SR_UINT32_MAX;
-    static constexpr uint32_t FluxInvalidLabel = SR_UINT32_MAX;
 
     /// Ключ значения, которое производит выходной пин узла графа
     SR_MAYBE_UNUSED static constexpr uint64_t MakeFluxValueKey(uint32_t nodeIndex, uint32_t pinIndex) noexcept {
         return (static_cast<uint64_t>(nodeIndex) << 32u) | static_cast<uint64_t>(pinIndex);
     }
 
-    class FluxGraphLink {
+    class FluxGraphLink : public Serializable {
+        SR_CLASS()
     public:
         SR_NODISCARD uint32_t GetSourceNode() const { return m_sourceNode; }
         SR_NODISCARD uint32_t GetTargetNode() const { return m_targetNode; }
@@ -34,15 +34,27 @@ namespace SR_FLUX_NS {
         void SetTargetPin(uint32_t targetPin) { m_targetPin = targetPin; }
         void SetUserData(void* userData) { m_userData = userData; }
 
+        SR_NODISCARD auto operator==(const FluxGraphLink& other) const {
+            return std::tie(m_sourceNode, m_targetNode, m_sourcePin, m_targetPin) ==
+                std::tie(other.m_sourceNode, other.m_targetNode, other.m_sourcePin, other.m_targetPin);
+        }
+
+        SR_NODISCARD auto operator!=(const FluxGraphLink& other) const { return !(*this == other); }
+
     private:
+        /// @property
         uint32_t m_sourceNode = 0;
+        /// @property
         uint32_t m_targetNode = 0;
+        /// @property
         uint32_t m_sourcePin = 0;
+        /// @property
         uint32_t m_targetPin = 0;
+
         void* m_userData = nullptr;
     };
 
-    enum class FluxGraphNodeType : uint8_t {
+    SR_ENUM_NS_CLASS_T(FluxGraphNodeType, uint8_t,
         Unknown,
 
         Event,
@@ -56,12 +68,12 @@ namespace SR_FLUX_NS {
 
         Branch,
         For,
-        While,
+        While
 
         /// TODO:
         /// Sequence,
         /// Synchronize,
-    };
+    )
 
     /// Раскладка пинов узлов. Flow-пин всегда имеет индекс 0 (и на входе, и на выходе).
     /// Узлы Evaluate / Constant / ReadVariable являются чистыми - они не участвуют в потоке
@@ -79,98 +91,48 @@ namespace SR_FLUX_NS {
     ///   While         | in:  0 - flow, 1 - условие           | out: 0 - flow (тело), 1 - flow (после цикла)
     ///   For           | in:  0 - flow, 1 - начало, 2 - конец, 3 - шаг (опционально)
     ///                 | out: 0 - flow (тело), 1 - flow (после цикла), 2 - текущий индекс
-    class FluxGraphNode {
+    class FluxGraphNode : public Serializable {
+        SR_CLASS()
     public:
         SR_NODISCARD FluxGraphNodeType GetType() const { return m_type; }
-        SR_NODISCARD const FluxCallable& GetCallable() const { return m_callable; }
+        SR_NODISCARD FluxCallable GetCallable() const;
         SR_NODISCARD StringAtom GetName() const { return m_name; }
         SR_NODISCARD const Reflection::Value& GetConstant() const { return m_constant; }
-        SR_NODISCARD const String& GetUid() const { return m_uid; }
         SR_NODISCARD SR_MATH_NS::FVector2 GetPosition() const { return m_position; }
         SR_NODISCARD void* GetUserData() const { return m_userData; }
 
         void SetType(FluxGraphNodeType type) { m_type = type; }
-        void SetCallable(const FluxCallable& callable) { m_callable = callable; }
+        void SetCallable(const FluxCallable& callable);
         void SetName(const StringAtom& name) { m_name = name; }
         void SetConstant(const Reflection::Value& constant) { m_constant = constant; }
-        void SetUid(const String& uid) { m_uid = uid; }
         void SetPosition(const SR_MATH_NS::FVector2& position) { m_position = position; }
         void SetUserData(void* userData) { m_userData = userData; }
 
+        SR_NODISCARD auto operator==(const FluxGraphNode& other) const {
+            return std::tie(m_type, m_name, m_position, m_constant, m_callableObject, m_callableFunction) ==
+                std::tie(other.m_type, other.m_name, other.m_position, other.m_constant, other.m_callableObject, other.m_callableFunction);
+        }
+
     private:
+        /// @property
         FluxGraphNodeType m_type = FluxGraphNodeType::Unknown;
-        FluxCallable m_callable;
-        StringAtom m_name; /// ReadVariable / WriteVariable / Event
-        Reflection::Value m_constant; /// Constant
-        String m_uid;
+        /// @property @tooltip(for ReadVariable / WriteVariable / Event)
+        StringAtom m_name;
+        /// @property
         SR_MATH_NS::FVector2 m_position;
+        /// @property
+        Reflection::Value m_constant;
+        /// @property
+        StringAtom m_callableObject;
+        /// @property
+        StringAtom m_callableFunction;
+
         void* m_userData = nullptr;
 
     };
 
-    /// Ссылка на значение, произведённое выходным пином узла графа
-    struct FluxValueRef {
-        FluxRegisterId operand = 0; /// идентификатор операнда в адресном пространстве программы
-        uint32_t sourceNode = FluxInvalidNode;
-        uint32_t sourcePin = 0;
-        uint32_t registerIndex = 0; /// индекс регистра (если значение лежит в регистре)
-        uint32_t loopDepth = 0; /// глубина цикла, на которой значение было материализовано
-        bool isRegister = false; /// значение занимает регистр и требует освобождения
-
-        SR_NODISCARD bool IsValid() const noexcept { return sourceNode != FluxInvalidNode; }
-    };
-
-    /// Состояние распределителя регистров, снимаемое на время компиляции ветви
-    struct FluxRegisterSnapshot {
-        Vector<bool> availableRegisters;
-        Map<uint64_t, FluxValueRef> materialized;
-        Map<uint64_t, uint32_t> pendingUses;
-        uint32_t deferredReleaseCount = 0;
-    };
-
-    struct FluxGraphCompileContext {
-        FluxProgram* program = nullptr;
-        uint32_t nodeIndex = 0;
-
-        /// true - регистр свободен. Нулевой регистр зарезервирован средой исполнения под результат
-        /// вызова и условие ветвления, поэтому он никогда не выделяется под значения графа
-        Vector<bool> availableRegisters;
-
-        uint32_t registerBase = 0; /// constants.size() + storage.size()
-        uint32_t requiredRegisters = 1; /// максимум регистров, понадобившийся за всю компиляцию
-        uint32_t loopDepth = 0;
-        uint32_t labelCounter = 0;
-        uint32_t terminatorLabel = FluxInvalidLabel; /// чем завершать текущую цепочку потока
-        bool flowTerminated = false;
-        bool hasErrors = false;
-
-        Map<StringAtom, uint32_t> storageIndices; /// имя переменной -> индекс в storage
-        Map<uint64_t, uint32_t> constantIndices; /// ключ значения -> индекс в constants
-        Map<uint64_t, uint32_t> dataUseCount; /// ключ значения -> количество потребителей
-        Map<uint32_t, uint32_t> flowInputCount; /// узел -> количество входящих flow-связей
-        Map<uint32_t, uint32_t> emittedLabels; /// узел слияния потоков -> индекс метки
-        Map<uint64_t, FluxValueRef> materialized; /// ключ значения -> уже вычисленное значение
-        Map<uint64_t, uint32_t> pendingUses; /// ключ значения -> сколько использований осталось
-
-        Vector<FluxValueRef> deferredReleases; /// освобождения, отложенные до выхода из цикла
-        Vector<uint32_t> loopScopeStarts;
-        Vector<uint64_t> evaluationStack; /// защита от циклов среди чистых узлов
-
-        SR_NODISCARD uint32_t AllocateRegister();
-        void FreeRegister(uint32_t index);
-
-        SR_NODISCARD FluxRegisterId ToOperand(uint32_t registerIndex) const noexcept {
-            return static_cast<FluxRegisterId>(registerBase + registerIndex);
-        }
-
-        SR_NODISCARD FluxRegisterSnapshot SaveState() const;
-        void RestoreState(const FluxRegisterSnapshot& snapshot);
-
-        void ResetExecutionState();
-    };
-
-    class FluxGraph : public NonCopyable {
-        using Super = NonCopyable;
+    class FluxGraph : public Serializable {
+        SR_CLASS()
     public:
         FluxGraph();
         ~FluxGraph() override;
@@ -224,15 +186,19 @@ namespace SR_FLUX_NS {
         SR_NODISCARD uint32_t AddVariable(FluxGraphCompileContext& context, const Reflection::Value& value, bool isStorage) const;
 
     private:
+        /// @property
+        Vector<FluxGraphNode> m_nodes;
+        /// @property
+        Vector<FluxGraphLink> m_links;
+        /// @property
+        Map<StringAtom, Reflection::Value> m_variables;
+
         /// объект, предоставляющий арифметику для узла For. Разрешается средой исполнения по имени,
         /// поэтому может быть переопределён без перекомпиляции
         StringAtom m_arithmeticObject;
         StringAtom m_addFunction;
         StringAtom m_lessFunction;
 
-        Map<StringAtom, Reflection::Value> m_variables;
-        Vector<FluxGraphNode> m_nodes;
-        Vector<FluxGraphLink> m_links;
         RawPointerHolder<IAllocator> m_allocator;
 
     };

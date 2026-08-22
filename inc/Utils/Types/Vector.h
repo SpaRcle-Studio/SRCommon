@@ -35,7 +35,8 @@ namespace SR_UTILS_NS {
         Vector(const Vector& other);
         Vector(Vector&& other) noexcept;
         Vector(std::initializer_list<T> init);
-        Vector(Iterator first, Iterator last);
+        Vector(ConstIterator first, ConstIterator last);
+        Vector(IAllocator* pAllocator, ConstIterator first, ConstIterator last);
 
         explicit Vector(SizeType count);
         Vector(SizeType count, const T& value);
@@ -60,7 +61,7 @@ namespace SR_UTILS_NS {
         void clear() noexcept;
         void swap(Vector& other) noexcept;
         void assign(SizeType count, const T& value);
-        void assign(Iterator first, Iterator last);
+        void assign(ConstIterator first, ConstIterator last);
         void pop_back();
         void push_back(const T& value);
         void push_back(T&& value);
@@ -78,6 +79,8 @@ namespace SR_UTILS_NS {
         template <typename InputIt> Iterator insert(ConstIterator pos, InputIt pFirst, InputIt pLast);
         SR_NODISCARD T& at(SizeType index);
         SR_NODISCARD const T& at(SizeType index) const { return const_cast<Vector*>(this)->at(index); }
+
+        SR_NODISCARD auto operator<=>(const Vector& other) const noexcept;
 
         SR_NODISCARD bool empty() const noexcept { return m_size == 0; }
         SR_NODISCARD SizeType size() const noexcept { return m_size; }
@@ -127,6 +130,29 @@ namespace SR_UTILS_NS {
         IAllocator* m_allocator = nullptr;
 
     };
+
+    template<typename T> auto Vector<T>::operator<=>(const Vector &other) const noexcept {
+        if (m_size != other.m_size) {
+            return m_size <=> other.m_size;
+        }
+
+        if constexpr (std::is_trivially_copyable_v<T>) {
+            int cmp = std::memcmp(m_data, other.m_data, sizeof(T) * m_size);
+            return cmp <=> 0;
+        }
+        else {
+            for (SizeType i = 0; i < m_size; ++i) {
+                T& left = static_cast<T*>(m_data)[i];
+                T& right = static_cast<T*>(other.m_data)[i];
+
+                if (left != right) {
+                    return left <=> right;
+                }
+            }
+        }
+
+        return std::strong_ordering::equal;
+    }
 
     template<typename T> SizeType Vector<T>::distance(ConstIterator pIt) const noexcept {
         return static_cast<SizeType>(pIt - begin());
@@ -558,10 +584,10 @@ namespace SR_UTILS_NS {
         m_allocator = pAllocator;
     }
 
-    template<typename T> void Vector<T>::assign(Vector::Iterator first, Vector::Iterator last) {
+    template<typename T> void Vector<T>::assign(Vector::ConstIterator first, Vector::ConstIterator last) {
         SizeType count = last - first;
         if (count > m_capacity) {
-            Vector temp(first, last);
+            Vector temp(m_allocator, first, last);
             swap(temp);
         }
         else {
@@ -578,8 +604,13 @@ namespace SR_UTILS_NS {
         }
     }
 
-    template<typename T> Vector<T>::Vector(Vector::Iterator first, Vector::Iterator last) {
+    template<typename T> Vector<T>::Vector(Vector::ConstIterator first, Vector::ConstIterator last)
+        : Vector(nullptr, first, last)
+    { }
+
+    template<typename T> Vector<T>::Vector(IAllocator* pAllocator, Vector::ConstIterator first, Vector::ConstIterator last) {
         SizeType count = last - first;
+        m_allocator = pAllocator;
         m_data = static_cast<T*>(AllocateMemory(sizeof(T) * count));
         m_size = count;
         m_capacity = count;

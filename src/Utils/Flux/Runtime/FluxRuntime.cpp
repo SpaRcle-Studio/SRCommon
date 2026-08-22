@@ -8,7 +8,7 @@
 #include <Utils/Serialization/JsonSerialization.h>
 
 namespace SR_FLUX_NS {
-    FluxRuntime::FluxRuntime(FluxProgram* pProgram)
+    FluxRuntime::FluxRuntime(const FluxProgram* pProgram)
         : m_program(pProgram)
     {
         m_maxRegisters = m_program->requiredRegisters;
@@ -42,6 +42,7 @@ namespace SR_FLUX_NS {
         auto&& execution = m_executions.emplace_back();
         execution.instructionPointer = pIt->instructionPointer;
         execution.registers.resize(m_maxRegisters);
+        execution.emittedLabel = pIt->name;
         for (auto&& arg : args) {
             execution.valueStack.emplace_back(arg);
         }
@@ -468,5 +469,12 @@ namespace SR_FLUX_NS {
             return;
         }
         m_storage[index] = value.Copy();
+    }
+
+    bool FluxRuntime::IsEmitted(StringView labelName) const {
+        auto&& pIt = m_executions.find_if([labelName](const FluxExecution& execution) {
+            return execution.emittedLabel == labelName;
+        });
+        return pIt != m_executions.end();
     }
 }

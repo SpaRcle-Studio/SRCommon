@@ -27,6 +27,7 @@ namespace SR_FLUX_NS {
         uint32_t requiredRegisters = 0;
 
         void SaveToString(String& out) const;
+        FluxProgram Clone() const;
 
     };
 }

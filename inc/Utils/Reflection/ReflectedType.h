@@ -60,6 +60,8 @@ namespace SR_UTILS_NS::Reflection {
     SR_ENUM_NS_CLASS_T(ReflectedCategoryType, uint8_t,
         Unknown,
 
+        Value,
+
         Object,
         String,
         Arithmetic,

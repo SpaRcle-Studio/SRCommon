@@ -10,6 +10,11 @@ template<> struct ObjectDataAccessor<SR_UTILS_NS::String> {
 	static void Load(IDeserializer& deserializer, SR_UTILS_NS::String& value, const SerializationId& id);
 };
 
+template<> struct ObjectDataAccessor<SR_UTILS_NS::Reflection::Value> {
+	static void Save(ISerializer& serializer, const SR_UTILS_NS::Reflection::Value& value, const SerializationId& id);
+	static void Load(IDeserializer& deserializer, SR_UTILS_NS::Reflection::Value& value, const SerializationId& id);
+};
+
 template<> struct ObjectDataAccessor<SR_UTILS_NS::StringAtom> {
 	static void Save(ISerializer& serializer, const SR_UTILS_NS::StringAtom& value, const SerializationId& id) ;
 	static void Load(IDeserializer& deserializer, SR_UTILS_NS::StringAtom& value, const SerializationId& id);

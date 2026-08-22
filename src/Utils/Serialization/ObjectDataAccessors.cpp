@@ -5,14 +5,15 @@
 #include <Utils/Serialization/Serializer.h>
 #include <Utils/Serialization/Deserializer.h>
 #include <Utils/Serialization/ObjectDataAccessor.h>
+#include <Utils/Serialization/SerializationTraits.h>
+#include <Utils/Serialization/SerializationSaveUtils.h>
+#include <Utils/Serialization/SerializationLoadUtils.h>
+#include <Utils/Reflection/TypeInfoSerialization.h>
 #include <Utils/Types/UnicodeString.h>
 #include <Utils/Types/SharedPtr.h>
 #include <Utils/Math/Rect.h>
 #include <Utils/Math/Vector4.h>
 #include <Utils/Math/AABB.h>
-#include <Utils/Serialization/SerializationTraits.h>
-#include <Utils/Serialization/SerializationSaveUtils.h>
-#include <Utils/Serialization/SerializationLoadUtils.h>
 
 namespace SR_UTILS_NS {
     #include <Utils/Serialization/ObjectDataAccessors.inl.h>
@@ -23,6 +24,19 @@ namespace SR_UTILS_NS {
 
     void ObjectDataAccessor<SR_UTILS_NS::String>::Load(IDeserializer& deserializer, SR_UTILS_NS::String& value, const SerializationId& id) {
        deserializer.ReadString(value, id);
+    }
+
+    void ObjectDataAccessor<SR_UTILS_NS::Reflection::Value>::Save(ISerializer& serializer, const SR_UTILS_NS::Reflection::Value& value, const SerializationId& id) {
+        serializer.BeginObject(id);
+        Reflection::SerializeValue(value, serializer);
+        serializer.EndObject();
+    }
+
+    void ObjectDataAccessor<SR_UTILS_NS::Reflection::Value>::Load(IDeserializer& deserializer, SR_UTILS_NS::Reflection::Value& value, const SerializationId& id) {
+        if (deserializer.BeginObject(id)) {
+            Reflection::DeserializeValue(value, deserializer);
+            deserializer.EndObject();
+        }
     }
 
     void ObjectDataAccessor<SR_UTILS_NS::StringAtom>::Save(ISerializer& serializer, const SR_UTILS_NS::StringAtom& value, const SerializationId& id) {

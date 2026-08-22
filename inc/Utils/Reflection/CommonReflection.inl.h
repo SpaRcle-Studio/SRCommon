@@ -4,6 +4,7 @@
 
 namespace SR_UTILS_NS::Reflection {
     template<typename T> void DetermineTypeInfoRegistered(TypeInfo* pTypeInfo);
+    extern template SR_COMMON_DLL_API void DetermineTypeInfoRegistered<Value>(TypeInfo* pTypeInfo);
     extern template SR_COMMON_DLL_API void DetermineTypeInfoRegistered<int8_t>(TypeInfo* pTypeInfo);
     extern template SR_COMMON_DLL_API void DetermineTypeInfoRegistered<int16_t>(TypeInfo* pTypeInfo);
     extern template SR_COMMON_DLL_API void DetermineTypeInfoRegistered<int32_t>(TypeInfo* pTypeInfo);
@@ -209,6 +210,9 @@ namespace SR_UTILS_NS::Reflection {
     template<> struct DetermineTypeInfoAccessor<SR_MATH_NS::Matrix4x4> {
         static constexpr bool Supported = true;
         static void Determine(TypeInfo* pTypeInfo) { return DetermineTypeInfoRegistered<SR_MATH_NS::Matrix4x4>(pTypeInfo); } };
+    template<> struct DetermineTypeInfoAccessor<Value> {
+        static constexpr bool Supported = true;
+        static void Determine(TypeInfo* pTypeInfo) { return DetermineTypeInfoRegistered<Value>(pTypeInfo); } };
 
     template<typename T> struct DetermineTypeInfoAccessor<Optional<T>> {
         static constexpr bool Supported = true;

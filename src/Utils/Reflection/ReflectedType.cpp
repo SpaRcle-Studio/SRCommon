@@ -471,10 +471,30 @@ namespace SR_UTILS_NS::Reflection {
         memset(pFrom, 0, sizeof(uint64_t));
     }
 
+    void ValueCopy(const ReflectedValue& from, ReflectedValue& to) {
+        auto pFrom = static_cast<const Value*>(from.GetData());
+        auto pTo = static_cast<Value*>(to.GetData());
+        *pTo = *pFrom;
+    }
+
+    void ValueMove(ReflectedValue& from, ReflectedValue& to) {
+        auto pFrom = static_cast<Value*>(from.GetData());
+        auto pTo = static_cast<Value*>(to.GetData());
+        *pTo = std::move(*pFrom);
+    }
+
     template<typename T> void DetermineTypeInfoRegistered(TypeInfo* pTypeInfo) {
         pTypeInfo->vtable.pSizeOfAlign = &ReflectedTypeTemplateSizeOfAlign<T>;
 
-        if constexpr (std::is_integral_v<T> || std::is_floating_point_v<T> || std::is_same_v<T, bool>) {
+        if constexpr (std::is_same_v<T, Value>) {
+            pTypeInfo->category = ReflectedCategoryType::Value;
+            pTypeInfo->detailedType = DetermineTypeName<T>::Get();
+            pTypeInfo->vtable.pConstructor = &ReflectedTypeConstructor<T>;
+            pTypeInfo->vtable.pDestructor = &ReflectedTypeDestructor<T>;
+            pTypeInfo->vtable.pCopy = &ValueCopy;
+            pTypeInfo->vtable.pMove = &ValueMove;
+        }
+        else if constexpr (std::is_integral_v<T> || std::is_floating_point_v<T> || std::is_same_v<T, bool>) {
             pTypeInfo->category = ReflectedCategoryType::Arithmetic;
             pTypeInfo->detailedType = DetermineTypeName<T>::Get();
             pTypeInfo->vtable.pConstructor = &ArithmeticTypeConstructor;
@@ -535,6 +555,7 @@ namespace SR_UTILS_NS::Reflection {
         }
     }
 
+    template void DetermineTypeInfoRegistered<Value>(TypeInfo* pTypeInfo);
     template void DetermineTypeInfoRegistered<int8_t>(TypeInfo* pTypeInfo);
     template void DetermineTypeInfoRegistered<int16_t>(TypeInfo* pTypeInfo);
     template void DetermineTypeInfoRegistered<int32_t>(TypeInfo* pTypeInfo);

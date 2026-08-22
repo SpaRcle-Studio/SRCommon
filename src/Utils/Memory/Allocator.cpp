@@ -146,6 +146,16 @@ namespace SR_UTILS_NS {
         }
     }
 
+    SizeType MonotonicAllocator::GetUsedMemory() const {
+        SizeType usedMemory = 0;
+        Chunk* current = m_head;
+        while (current) {
+            usedMemory += current->offset;
+            current = current->next;
+        }
+        return usedMemory;
+    }
+
     /// ================================================================================================================
 
     void* SyncMonotonicAllocator::Chunk::TryAllocate(size_t size, size_t alignment) {

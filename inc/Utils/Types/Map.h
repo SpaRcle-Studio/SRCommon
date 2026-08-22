@@ -165,6 +165,8 @@ namespace SR_UTILS_NS {
         SR_NODISCARD Value& at(const Key& key);
         SR_NODISCARD const Value& at(const Key& key) const { return const_cast<Map*>(this)->at(key); }
 
+        SR_NODISCARD auto operator<=>(const Map& other) const noexcept;
+
         // lookup  — all in O(log n)
         SR_NODISCARD Iterator      find(const Key& key)        noexcept;
         SR_NODISCARD ConstIterator find(const Key& key)  const noexcept;
@@ -298,6 +300,20 @@ namespace SR_UTILS_NS {
     // =========================================================================
     // Implementation
     // =========================================================================
+
+    template<typename Key, typename Value, typename Compare> auto Map<Key, Value, Compare>::operator<=>(const Map &other) const noexcept {
+        auto it1 = begin();
+        auto it2 = other.begin();
+        while (it1 != end() && it2 != other.end()) {
+            if (*it1 < *it2) return std::strong_ordering::less;
+            if (*it1 > *it2) return std::strong_ordering::greater;
+            ++it1;
+            ++it2;
+        }
+        if (it1 == end() && it2 == other.end()) return std::strong_ordering::equal;
+        if (it1 == end()) return std::strong_ordering::less;
+        return std::strong_ordering::greater;
+    }
 
     template<typename Key, typename Value, typename Compare> template<typename Predicate> bool Map<Key, Value, Compare>::any_of(Predicate pred) const noexcept {
         for (auto it = begin(); it != end(); ++it) {

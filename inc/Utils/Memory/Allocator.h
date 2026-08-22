@@ -43,6 +43,7 @@ namespace SR_UTILS_NS {
         explicit MonotonicAllocator(SR_UTILS_NS::SizeType chunkSize = 1024 * 1024);
         ~MonotonicAllocator() override;
 
+        SR_NODISCARD SizeType GetUsedMemory() const override;
         SR_NODISCARD void* Allocate(SR_UTILS_NS::SizeType size, SR_UTILS_NS::SizeType alignment) override;
         SR_NODISCARD void* ReAllocate(void* pMemory, SR_UTILS_NS::SizeType size, SR_UTILS_NS::SizeType alignment) override;
         void Free(void* pMemory, SR_UTILS_NS::SizeType size, SR_UTILS_NS::SizeType alignment) override;

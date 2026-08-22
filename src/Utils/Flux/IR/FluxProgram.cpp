@@ -4,6 +4,7 @@
 
 #include <Utils/Flux/IR/FluxProgram.h>
 #include <Utils/Serialization/JsonSerialization.h>
+#include <Utils/Memory/Allocator.h>
 
 namespace SR_FLUX_NS {
     void FluxProgram::SaveToString(String& out) const {
@@ -79,5 +80,51 @@ namespace SR_FLUX_NS {
             out += "\n";
             ++instructionIndex;
         }
+    }
+
+    FluxProgram FluxProgram::Clone() const {
+        FluxProgram clone;
+        clone.allocator = (IAllocator*)new MonotonicAllocator(allocator->GetUsedMemory());
+        clone.requiredRegisters = requiredRegisters;
+
+        clone.instructions = Vector<FluxInstruction>(clone.allocator.Get());
+        clone.instructions.reserve(instructions.size());
+
+        clone.constants = Vector<FluxVariable>(clone.allocator.Get());
+        clone.constants.reserve(constants.size());
+
+        clone.storage = Vector<FluxVariable>(clone.allocator.Get());
+        clone.storage.reserve(storage.size());
+
+        clone.labels = Vector<FluxLabel>(clone.allocator.Get());
+        clone.labels.reserve(labels.size());
+
+        for (const auto& instruction : instructions) {
+            auto&& newInstruction = clone.instructions.emplace_back();
+            newInstruction.opcode = instruction.opcode;
+            newInstruction.operands = Vector<FluxRegisterId>(clone.allocator.Get(), instruction.operands.begin(), instruction.operands.end());
+            newInstruction.callable = instruction.callable;
+            newInstruction.debugId = instruction.debugId;
+        }
+
+        for (const auto& constant : constants) {
+            auto&& newConstant = clone.constants.emplace_back();
+            newConstant.type = String(constant.type, clone.allocator.Get());
+            newConstant.value = String(constant.value, clone.allocator.Get());
+        }
+
+        for (const auto& storageVar : storage) {
+            auto&& newStorageVar = clone.storage.emplace_back();
+            newStorageVar.type = String(storageVar.type, clone.allocator.Get());
+            newStorageVar.value = String(storageVar.value, clone.allocator.Get());
+        }
+
+        for (const auto& label : labels) {
+            auto&& newLabel = clone.labels.emplace_back();
+            newLabel.name = String(label.name, clone.allocator.Get());
+            newLabel.instructionPointer = label.instructionPointer;
+        }
+
+        return clone;
     }
 }

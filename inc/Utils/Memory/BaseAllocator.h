@@ -44,6 +44,8 @@ namespace SR_UTILS_NS {
         virtual void Free(void* pMemory) = 0;
         virtual void ResetMemory() = 0;
 
+        SR_NODISCARD virtual SizeType GetUsedMemory() const { return 0; }
+
     };
 }
 

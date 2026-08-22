@@ -29,6 +29,7 @@ namespace SR_FLUX_NS {
         Vector<FluxInstructionId> callStack;
         FluxInstructionId instructionPointer = 0;
         FluxExecutionState state = FluxExecutionState::None;
+        StringView emittedLabel;
 
         SR_NODISCARD bool IsFinished() const;
         SR_NODISCARD bool CanBeExecuted() const;

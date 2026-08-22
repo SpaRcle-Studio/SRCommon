@@ -23,13 +23,15 @@ namespace SR_FLUX_NS {
     class FluxRuntime : public NonCopyable {
     public:
         FluxRuntime() = default;
-        explicit FluxRuntime(FluxProgram* pProgram);
+        explicit FluxRuntime(const FluxProgram* pProgram);
         ~FluxRuntime() override;
 
         void Emit(StringView labelName, const Vector<Reflection::Value>& args, bool ignoreExisting = true);
         void Update(float_t dt);
         void SetStorage(uint32_t index, const Reflection::Value& value);
         bool Initialize();
+
+        SR_NODISCARD bool IsEmitted(StringView labelName) const;
 
     private:
         uint32_t Execute(FluxExecution& execution, uint32_t budget);
@@ -57,7 +59,7 @@ namespace SR_FLUX_NS {
         bool m_continueOnError = false;
         bool m_hasErrors = false;
 
-        FluxProgram* m_program = nullptr;
+        const FluxProgram* m_program = nullptr;
 
         Vector<Reflection::Value> m_constants;
         Vector<Reflection::Value> m_storage;
