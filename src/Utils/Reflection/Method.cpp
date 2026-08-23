@@ -7,16 +7,60 @@
 #include <Utils/Profile/TracyContext.h>
 
 namespace SR_UTILS_NS::Reflection {
+    Method::Method(const Method& other)
+        : m_name(other.m_name)
+        , m_displayName(other.m_displayName)
+        , m_isEditorButton(other.m_isEditorButton)
+        , m_isEvaluate(other.m_isEvaluate)
+        , m_methodActiveCallback(other.m_methodActiveCallback)
+        , m_noReturnNoParams(other.m_noReturnNoParams)
+    {
+        m_params.reserve(other.m_params.size());
+        for (auto&& param : other.m_params) {
+            m_params.emplace_back(Parameter{ param.name, CopyTypeInfo(param.pTypeInfo) });
+        }
+        m_pReturnTypeInfo = CopyTypeInfo(other.m_pReturnTypeInfo);
+    }
+
+    Method& Method::operator=(const Method& other) {
+        if (this != &other) {
+            m_name = other.m_name;
+            m_displayName = other.m_displayName;
+            m_pReturnTypeInfo = CopyTypeInfo(other.m_pReturnTypeInfo);
+            m_isEditorButton = other.m_isEditorButton;
+            m_isEvaluate = other.m_isEvaluate;
+            m_methodActiveCallback = other.m_methodActiveCallback;
+            m_noReturnNoParams = other.m_noReturnNoParams;
+
+            for (auto&& param : m_params) {
+                FreeTypeInfo(param.pTypeInfo);
+            }
+            m_params.clear();
+
+            m_params.reserve(other.m_params.size());
+            for (auto&& param : other.m_params) {
+                m_params.emplace_back(Parameter{ param.name, CopyTypeInfo(param.pTypeInfo) });
+            }
+        }
+        return *this;
+    }
+
+    Method::~Method() {
+        for (auto&& param : m_params) {
+            FreeTypeInfo(param.pTypeInfo);
+        }
+    }
+
     StringAtom Method::GetName() const {
         return m_name;
     }
 
     uint32_t Method::GetParamsCount() const {
-        return m_paramsCount;
+        return m_params.size();
     }
 
     bool Method::HasReturn() const {
-        return m_hasReturn;
+        return m_pReturnTypeInfo;
     }
 
     bool Method::IsEditorButton() const {
@@ -32,7 +76,7 @@ namespace SR_UTILS_NS::Reflection {
     }
 
     void Method::InvokeVoid(Owner& owner) const {
-        if (!m_hasReturn && m_paramsCount == 0) {
+        if (!m_pReturnTypeInfo && GetParamsCount() == 0) {
             m_noReturnNoParams(owner);
         }
         else {
@@ -41,7 +85,7 @@ namespace SR_UTILS_NS::Reflection {
     }
 
     void Method::InvokeVoid(Owner& owner, const Params& params) const {
-        if (!m_hasReturn && m_paramsCount > 0) {
+        if (!m_pReturnTypeInfo && GetParamsCount() > 0) {
             m_noReturnWithParams(owner, params);
         }
         else {
@@ -50,7 +94,7 @@ namespace SR_UTILS_NS::Reflection {
     }
 
     Value Method::Invoke(Owner& owner, const Params& params) const {
-        if (m_hasReturn && m_paramsCount == 0) {
+        if (m_pReturnTypeInfo && GetParamsCount() == 0) {
             return m_withReturnWithParams(owner, params);
         }
         else {
@@ -60,7 +104,7 @@ namespace SR_UTILS_NS::Reflection {
     }
 
     Value Method::Invoke(Owner& owner) const {
-        if (m_hasReturn && m_paramsCount == 0) {
+        if (m_pReturnTypeInfo && GetParamsCount() == 0) {
             return m_withReturnNoParams(owner);
         }
         else {
@@ -95,16 +139,6 @@ namespace SR_UTILS_NS::Reflection {
         return *this;
     }
 
-    Method& Method::SetParamsCount(uint32_t count) {
-        m_paramsCount = count;
-        return *this;
-    }
-
-    Method& Method::SetHasReturn(bool hasReturn) {
-        m_hasReturn = hasReturn;
-        return *this;
-    }
-
     Method& Method::SetEditorButton() {
         m_isEditorButton = true;
         return *this;
@@ -120,6 +154,38 @@ namespace SR_UTILS_NS::Reflection {
             return m_methodActiveCallback(&owner);
         }
         return true;
+    }
+
+    Method& Method::AddParam(StringAtom name, TypeInfo* pTypeInfo) {
+        m_params.emplace_back(Parameter{ name, pTypeInfo });
+        return *this;
+    }
+
+    const Method::Parameter& Method::GetParam(uint32_t index) const {
+        if (index >= m_params.size()) {
+            SRHalt("Method::GetParam() : index {} is out of range! Method: {}", index, m_name);
+            static Parameter emptyParam;
+            return emptyParam;
+        }
+        return m_params[index];
+    }
+
+    Method& Method::SetEvaluate() {
+        m_isEvaluate = true;
+        return *this;
+    }
+
+    bool Method::IsEvaluate() const {
+        return m_isEvaluate;
+    }
+
+    Method& Method::SetReturnType(TypeInfo* pReturnTypeInfo) {
+        m_pReturnTypeInfo = pReturnTypeInfo;
+        return *this;
+    }
+
+    const TypeInfo* Method::GetReturnType() const {
+        return m_pReturnTypeInfo;
     }
 
     void InvokeMethodVoid(Method::Owner& owner, StringAtom name) {

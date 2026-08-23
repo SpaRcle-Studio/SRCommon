@@ -288,8 +288,8 @@ namespace SR_FLUX_NS {
             return RegisterType::Storage;
         }
         else if (registerId < constantCount + storageCount + registerCount) {
-            if (registerId >= m_maxRegisters) {
-                SR_ERROR("FluxRuntime::GetRegisterType() : register id {} exceeds max registers {}!", registerId, m_maxRegisters);
+            if (registerId >= (m_maxRegisters + constantCount + storageCount)) {
+                SR_ERROR("FluxRuntime::GetRegisterType() : register id {} exceeds max registers {}!", registerId, (m_maxRegisters + constantCount + storageCount));
                 execution.state = FluxExecutionState::Error;
                 return RegisterType::Invalid;
             }

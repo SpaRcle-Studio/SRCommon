@@ -4,6 +4,7 @@
 
 #include <Utils/Flux/Runtime/FluxComponent.h>
 #include <Utils/Flux/Runtime/FluxRuntime.h>
+#include <Utils/Flux/Runtime/FluxUtils.h>
 #include <Utils/Common/SubscriptionMessage.h>
 #include <Utils/Events/Broadcaster.h>
 
@@ -13,16 +14,20 @@ namespace SR_FLUX_NS {
     void FluxComponent::Update(float_t dt) {
         if (!m_runtime) {
             m_isStartCalled = false;
+            m_onReloadedSubscription.Reset();
             if (auto&& pGraph = m_graph.GetResource()) {
                 if (auto&& pProgram = pGraph->Compile()) {
                     m_runtime = new FluxRuntime(pProgram);
-                    auto&& pComponent = GetEntity().StaticCast<Component>();
-                    m_runtime->SetStorage(0, Reflection::Value::Create(pComponent));
                 }
+                m_onReloadedSubscription = pGraph->Subscribe(IResource::RELOAD_DONE_EVENT, [this](auto&&) {
+                    m_isStartCalled = false;
+                    m_runtime.Reset();
+                });
             }
         }
 
         if (m_runtime) {
+            FluxUtils::Instance().SetActiveFluxComponent(GetThis().StaticCast<Component>());
             if (!m_isStartCalled) {
                 m_isStartCalled = true;
                 m_runtime->Emit("Start", {});
@@ -33,6 +38,7 @@ namespace SR_FLUX_NS {
                 m_runtime->Emit("Update", m_callArguments);
             }
             m_runtime->Update(dt);
+            FluxUtils::Instance().SetActiveFluxComponent(nullptr);
         }
 
         Super::Update(dt);

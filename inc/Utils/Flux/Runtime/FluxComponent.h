@@ -33,6 +33,7 @@ namespace SR_FLUX_NS {
     private:
         Vector<Reflection::Value> m_callArguments;
         RawPointerHolder<FluxRuntime> m_runtime;
+        Subscription m_onReloadedSubscription;
         bool m_isStartCalled = false;
 
     };

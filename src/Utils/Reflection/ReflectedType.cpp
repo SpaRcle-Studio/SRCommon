@@ -185,7 +185,7 @@ namespace SR_UTILS_NS::Reflection {
     }
 
     bool TypeInfo::operator==(const TypeInfo& other) const noexcept {
-        if (category != other.category || detailedType != other.detailedType && detailedSize != other.detailedSize) {
+        if (category != other.category || detailedType != other.detailedType || detailedSize != other.detailedSize) {
             return false;
         }
         for (size_t i = 0; i < 2; ++i) {

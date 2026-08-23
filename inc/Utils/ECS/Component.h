@@ -105,12 +105,12 @@ namespace SR_UTILS_NS {
         /// На паузе ли сцена (если запущена)
         SR_NODISCARD bool IsPausedMode() const;
 
-        /// @method
-        SR_NODISCARD GameObjectPtr GetGameObject() const;
-        /// @method
-        SR_NODISCARD SceneObjectPtr GetSceneObject() const;
-        /// @method
-        SR_NODISCARD SceneObjectPtr GetRoot() const;
+        /// @method @evaluate
+        SR_NODISCARD SR_HTYPES_NS::SharedPtr<GameObject> GetGameObject() const;
+        /// @method @evaluate
+        SR_NODISCARD SR_HTYPES_NS::SharedPtr<SceneObject> GetSceneObject() const;
+        /// @method @evaluate
+        SR_NODISCARD SR_HTYPES_NS::SharedPtr<SceneObject> GetRoot() const;
 
         SR_NODISCARD virtual bool ExecuteInEditMode() const;
         SR_NODISCARD virtual SR_MATH_NS::FVector3 GetBarycenter() const;

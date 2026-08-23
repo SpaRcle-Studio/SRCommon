@@ -9,7 +9,7 @@
 #include <Utils/ECS/Component.h>
 
 namespace SR_UTILS_NS {
-    /// @category(Game) @nonMovable @noCopyable
+    /// @category(Game) @onMovable @noCopyable
     class CameraFlyMover : public Component {
         SR_CLASS()
         using Super = Component;

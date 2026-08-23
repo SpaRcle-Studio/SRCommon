@@ -11,6 +11,10 @@
 
 namespace SR_UTILS_NS::Reflection {
     class Method {
+        struct Parameter {
+            StringAtom name;
+            TypeInfo* pTypeInfo = nullptr;
+        };
     public:
         using Owner = SRClass;
         using Params = std::span<Value*>;
@@ -20,12 +24,22 @@ namespace SR_UTILS_NS::Reflection {
         using FunctorWithReturnWithParams = Value(*)(Owner&, const Params&);
         using MethodActiveCallbackFn = bool(*)(SRClass* pOwner);
     public:
+        Method() = default;
+        Method(const Method& other);
+        Method(Method&& other) noexcept = default;
+        Method& operator=(const Method& other);
+        Method& operator=(Method&& other) noexcept = default;
+        ~Method();
+
+        SR_NODISCARD const Parameter& GetParam(uint32_t index) const;
         SR_NODISCARD StringAtom GetName() const;
         SR_NODISCARD StringAtom GetDisplayName() const;
         SR_NODISCARD uint32_t GetParamsCount() const;
         SR_NODISCARD bool HasReturn() const;
         SR_NODISCARD bool IsEditorButton() const;
         SR_NODISCARD bool IsActive(Owner& owner) const;
+        SR_NODISCARD bool IsEvaluate() const;
+        SR_NODISCARD const TypeInfo* GetReturnType() const;
 
         void InvokeVoid(Owner& owner) const;
         void InvokeVoid(Owner& owner, const Params& params) const;
@@ -37,10 +51,11 @@ namespace SR_UTILS_NS::Reflection {
         Method& SetWithReturnNoParams(const FunctorWithReturnNoParams& func);
         Method& SetWithReturnWithParams(const FunctorWithReturnWithParams& func);
         Method& SetName(StringAtom name);
-        Method& SetParamsCount(uint32_t count);
-        Method& SetHasReturn(bool hasReturn);
+        Method& SetReturnType(TypeInfo* pReturnTypeInfo);
         Method& SetEditorButton();
         Method& SetCondition(MethodActiveCallbackFn condition);
+        Method& AddParam(StringAtom name, TypeInfo* pTypeInfo);
+        Method& SetEvaluate();
 
     private:
         union {
@@ -52,10 +67,11 @@ namespace SR_UTILS_NS::Reflection {
         MethodActiveCallbackFn m_methodActiveCallback = nullptr;
 
         StringAtom m_name;
+        Vector<Parameter> m_params;
         mutable StringAtom m_displayName;
-        uint32_t m_paramsCount = 0;
-        bool m_hasReturn = false;
+        TypeInfo* m_pReturnTypeInfo = nullptr;
         bool m_isEditorButton = false;
+        bool m_isEvaluate = false;
 
     };
 
