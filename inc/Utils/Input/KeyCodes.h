@@ -28,14 +28,14 @@ namespace SR_UTILS_NS {
         None, Down, Up, Press
     };
 
-    enum class MouseCode : uint8_t {
+    SR_ENUM_NS_CLASS_T(MouseCode, uint8_t,
         MouseLeft = 0,
         MouseRight = 1,
         MouseMiddle = 2,
         MouseButton4 = 3,
         MouseButton5 = 4,
         None = std::numeric_limits<uint8_t>::max() - 1
-    };
+    )
 
     const MouseCode MouseCodes[] = {
         MouseCode::MouseLeft,

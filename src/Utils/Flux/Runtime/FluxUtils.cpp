@@ -16,4 +16,12 @@ namespace SR_FLUX_NS {
     Component::Ptr FluxUtils::GetActiveFluxComponent() const {
         return m_activeFluxComponent;
     }
+
+    Reflection::Value FluxUtils::Cast(const Reflection::Value& value, StringAtom target) const {
+        if (!value.IsValid()) {
+            return Reflection::Value();
+        }
+        auto&& pTargetMeta = Factory::Instance().GetType(target);
+        return pTargetMeta ? pTargetMeta->Cast(value) : Reflection::Value();
+    }
 }

@@ -28,6 +28,7 @@ namespace SR_FLUX_NS {
                 case FluxGraphNodeType::Invoke:
                     return pinIndex == 1;
                 case FluxGraphNodeType::For:
+                case FluxGraphNodeType::Cast:
                     return pinIndex == 2;
                 case FluxGraphNodeType::Evaluate:
                 case FluxGraphNodeType::Constant:
@@ -303,6 +304,8 @@ namespace SR_FLUX_NS {
                 return CompileForNode(context, nodeIndex);
             case FluxGraphNodeType::While:
                 return CompileWhileNode(context, nodeIndex);
+            case FluxGraphNodeType::Cast:
+                return CompileCastNode(context, nodeIndex);
             case FluxGraphNodeType::Evaluate:
             case FluxGraphNodeType::Constant:
             case FluxGraphNodeType::ReadVariable:
@@ -532,6 +535,80 @@ namespace SR_FLUX_NS {
         context.flowTerminated = false;
 
         return GetFlowTarget(nodeIndex, 1);
+    }
+
+    uint32_t FluxGraph::CompileCastNode(FluxGraphCompileContext& context, const uint32_t nodeIndex) const {
+        auto&& node = m_nodes[nodeIndex];
+
+        if (node.GetName().empty()) {
+            SR_ERROR("FluxGraph::CompileCastNode() : target type of node {} is not specified!", nodeIndex);
+            context.hasErrors = true;
+            return FluxInvalidNode;
+        }
+
+        auto&& pObjectLink = FindInputLink(nodeIndex, 1);
+        if (!pObjectLink) {
+            SR_ERROR("FluxGraph::CompileCastNode() : object pin of node {} is not connected!", nodeIndex);
+            context.hasErrors = true;
+            return FluxInvalidNode;
+        }
+
+        const FluxValueRef object = EvaluateOutput(context, pObjectLink->GetSourceNode(), pObjectLink->GetSourcePin());
+        if (context.hasErrors) {
+            return FluxInvalidNode;
+        }
+
+        /// приведённое значение переносится в собственный регистр только если у него есть
+        /// потребители, иначе оно кладётся в нулевой регистр и сразу затирается признаком успеха
+        const uint64_t key = MakeFluxValueKey(nodeIndex, 2);
+        const uint32_t useCount = GetUseCount(context, key);
+
+        FluxRegisterId destination = context.ToOperand(0);
+
+        if (useCount > 0) {
+            FluxValueRef result;
+            result.sourceNode = nodeIndex;
+            result.sourcePin = 2;
+            result.registerIndex = context.AllocateRegister();
+            result.operand = context.ToOperand(result.registerIndex);
+            result.isRegister = true;
+            result.loopDepth = context.loopDepth;
+
+            context.materialized.emplace(key, result);
+            context.pendingUses.emplace(key, useCount);
+
+            destination = result.operand;
+        }
+
+        {
+            auto&& instruction = EmitInstruction(context, FluxOpcode::Cast, nodeIndex);
+            /// целевой тип разрешается средой исполнения по имени через FluxUtils::Cast
+            instruction.callable.object = node.GetName();
+            instruction.operands.reserve(2);
+            instruction.operands.emplace_back(object.operand);
+            instruction.operands.emplace_back(destination);
+        }
+
+        ReleaseValue(context, object);
+
+        const uint32_t successLabel = CreateLabel(context, "cast_success");
+        EmitJump(context, FluxOpcode::Branch, successLabel, nodeIndex);
+
+        const uint32_t terminator = context.terminatorLabel;
+
+        /// ветви являются альтернативными путями исполнения, поэтому вторая ветвь компилируется
+        /// с тем же состоянием распределителя и переиспользует те же регистры
+        const FluxRegisterSnapshot snapshot = context.SaveState();
+
+        CompileFlow(context, GetFlowTarget(nodeIndex, 1), terminator);
+
+        context.RestoreState(snapshot);
+
+        BindLabel(context, successLabel);
+        CompileFlow(context, GetFlowTarget(nodeIndex, 0), terminator);
+
+        context.flowTerminated = true;
+        return FluxInvalidNode;
     }
 
     /// =================================================== Значения ===================================================

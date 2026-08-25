@@ -11,13 +11,13 @@
 namespace SR_UTILS_NS {
     SRClassMeta::~SRClassMeta() = default;
 
-    void SRClassMeta::Save(SR_UTILS_NS::ISerializer& serializer, const SR_UTILS_NS::Serializable& obj) const {
+    void SRClassMeta::Save(ISerializer& serializer, const Serializable& obj) const {
 		for (auto&& pMeta : GetBaseMetas()) {
 			pMeta->Save(serializer, obj);
 		}
     }
 
-    bool SRClassMeta::Load(SR_UTILS_NS::IDeserializer& deserializer, SR_UTILS_NS::Serializable& obj) const {
+    bool SRClassMeta::Load(IDeserializer& deserializer, Serializable& obj) const {
     	for (auto&& pMeta : GetBaseMetas()) {
     		if (!pMeta->Load(deserializer, obj)) {
     			return false;
@@ -26,7 +26,7 @@ namespace SR_UTILS_NS {
         return true;
     }
 
-    bool SRClassMeta::IsInherited(SR_UTILS_NS::StringAtom baseClass) const noexcept {
+    bool SRClassMeta::IsInherited(StringAtom baseClass) const noexcept {
 		if (GetFactoryName() == baseClass) {
 			return false;
 		}
@@ -44,7 +44,7 @@ namespace SR_UTILS_NS {
     	return false;
     }
 
-    void SRClassMeta::ForEachProperty(const SR_HTYPES_NS::Function<void(const SR_UTILS_NS::Reflection::Property& property, uint64_t index)>& func, uint64_t* pIndex) const {
+    void SRClassMeta::ForEachProperty(const SR_HTYPES_NS::Function<void(const Reflection::Property& property, uint64_t index)>& func, uint64_t* pIndex) const {
     	uint64_t index = 0;
     	if (!pIndex) {
     		pIndex = &index;
@@ -60,7 +60,7 @@ namespace SR_UTILS_NS {
     	}
     }
 
-    void SRClassMeta::ForEachMethod(const SR_HTYPES_NS::Function<void(const SR_UTILS_NS::Reflection::Method& method, uint64_t index)>& func, uint64_t* pIndex) const {
+    void SRClassMeta::ForEachMethod(const SR_HTYPES_NS::Function<void(const Reflection::Method& method, uint64_t index)>& func, uint64_t* pIndex) const {
     	uint64_t index = 0;
     	if (!pIndex) {
     		pIndex = &index;
@@ -76,7 +76,7 @@ namespace SR_UTILS_NS {
     	}
     }
 
-    std::span<const SR_UTILS_NS::StringAtom> SRClassMeta::GetCategory() const noexcept {
+    std::span<const StringAtom> SRClassMeta::GetCategory() const noexcept {
     	for (auto&& pBase : GetBaseMetas()) {
 			if (!pBase->GetCategory().empty()) {
 				return pBase->GetCategory();
@@ -85,7 +85,7 @@ namespace SR_UTILS_NS {
     	return {};
     }
 
-    std::span<const SR_UTILS_NS::StringAtom> SRClassMeta::GetExtensions() const noexcept {
+    std::span<const StringAtom> SRClassMeta::GetExtensions() const noexcept {
     	for (auto&& pBase : GetBaseMetas()) {
 			if (!pBase->GetExtensions().empty()) {
 				return pBase->GetExtensions();
@@ -109,8 +109,8 @@ namespace SR_UTILS_NS {
         return std::ranges::any_of(extensions, [extension](auto&& ext) { return ext == extension; });
     }
 
-    SR_UTILS_NS::StringAtom SRClassMeta::GetExtension() const noexcept {
-        static const SR_UTILS_NS::StringAtom empty = {};
+    StringAtom SRClassMeta::GetExtension() const noexcept {
+        static const StringAtom empty = {};
         auto&& extensions = GetExtensions();
         return extensions.empty() ? empty : extensions.front();
     }
@@ -129,8 +129,8 @@ namespace SR_UTILS_NS {
         return m_versionCached;
     }
 
-    SR_UTILS_NS::StringAtom SRClassMeta::GetInspectorName() const noexcept {
-        static const SR_UTILS_NS::StringAtom def = "ObjectPropertyDrawer";
+    StringAtom SRClassMeta::GetInspectorName() const noexcept {
+        static const StringAtom def = "ObjectPropertyDrawer";
         return def;
     }
 
@@ -154,19 +154,19 @@ namespace SR_UTILS_NS {
         return std::span<const SRClassMeta*>();
     }
 
-    std::span<const SR_UTILS_NS::Reflection::Property> SRClassMeta::GetProperties() const noexcept {
-        return std::span<const SR_UTILS_NS::Reflection::Property>();
+    std::span<const Reflection::Property> SRClassMeta::GetProperties() const noexcept {
+        return std::span<const Reflection::Property>();
     }
 
-    std::span<const SR_UTILS_NS::Reflection::Method> SRClassMeta::GetMethods() const noexcept {
-        return std::span<const SR_UTILS_NS::Reflection::Method>();
+    std::span<const Reflection::Method> SRClassMeta::GetMethods() const noexcept {
+        return std::span<const Reflection::Method>();
     }
 
-    SR_UTILS_NS::StringAtom SRClassMeta::GetFactoryName() const noexcept {
-        return SR_UTILS_NS::StringAtom();
+    StringAtom SRClassMeta::GetFactoryName() const noexcept {
+        return StringAtom();
     }
 
-    SR_UTILS_NS::StringAtom SRClassMeta::GetDisplayName() const noexcept {
+    StringAtom SRClassMeta::GetDisplayName() const noexcept {
         return GetFactoryName();
     }
 
@@ -180,7 +180,7 @@ namespace SR_UTILS_NS {
         }
     }
 
-    bool SRClassMeta::IsSameOrInherited(SR_UTILS_NS::StringAtom name) const {
+    bool SRClassMeta::IsSameOrInherited(StringAtom name) const {
         if (GetFactoryName() == name) {
             return true;
         }
@@ -202,7 +202,7 @@ namespace SR_UTILS_NS {
         }
     }
 
-    const SR_UTILS_NS::Reflection::Method* SRClassMeta::FindMethod(StringAtom name) const noexcept {
+    const Reflection::Method* SRClassMeta::FindMethod(StringAtom name) const noexcept {
         for (auto&& method : GetMethods()) {
             if (method.GetName() == name) {
                 return &method;
@@ -218,5 +218,9 @@ namespace SR_UTILS_NS {
 
     Reflection::TypeInfoVTable SRClassMeta::GetVTable() const noexcept {
         return Reflection::TypeInfoVTable();
+    }
+
+    Reflection::Value SRClassMeta::Cast(const Reflection::Value& value) const noexcept {
+        return Reflection::Value();
     }
 }

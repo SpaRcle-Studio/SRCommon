@@ -282,6 +282,9 @@ namespace SR_MATH_NS {
     FColor FColor::operator*(const FColor &p_v) const {
         return FColor(r * p_v.r, g * p_v.g, b * p_v.b, a * p_v.a);
     }
+    FColor FColor::operator/(const FColor &p_v) const {
+        return FColor(r / p_v.r, g / p_v.g, b / p_v.b, a / p_v.a);
+    }
     FColor FColor::operator+(const FColor& v) const {
         return FColor(r + v.r, g + v.g, b + v.b, a + v.a);
     }

@@ -3,6 +3,7 @@
 //
 
 #include <Utils/Flux/Runtime/FluxRuntime.h>
+#include <Utils/Flux/Runtime/FluxUtils.h>
 #include <Utils/Reflection/TypeInfoSerialization.h>
 #include <Utils/Reflection/Method.h>
 #include <Utils/Serialization/JsonSerialization.h>
@@ -158,6 +159,23 @@ namespace SR_FLUX_NS {
                 dst = src.Ref();
                 break;
             }
+            case FluxOpcode::Cast: {
+                if (m_validation && instruction.callable.object.empty()) SR_UNLIKELY_ATTRIBUTE {
+                    SR_ERROR("FluxRuntime::ExecuteInstruction() : cast target type is not specified!");
+                    execution.state = FluxExecutionState::Error;
+                    return false;
+                }
+                auto&& srcType = GetRegisterType(execution, instruction.operands[0]);
+                auto&& dstType = GetRegisterType(execution, instruction.operands[1]);
+                auto&& src = GetRegister(execution, instruction.operands[0], srcType, RegisterOperation::Read);
+                auto&& dst = GetRegister(execution, instruction.operands[1], dstType, RegisterOperation::Write);
+                Reflection::Value casted = FluxUtils::Instance().Cast(src, instruction.callable.object);
+                /// признак успеха читается инструкцией br из нулевого регистра
+                Reflection::Value isSuccessful = Reflection::Value::Create<bool>(casted.IsValid());
+                dst = std::move(casted);
+                GetResultRegister(execution) = std::move(isSuccessful);
+                break;
+            }
             case FluxOpcode::Return: {
                 if (execution.callStack.empty()) {
                     execution.state = FluxExecutionState::Finished;
@@ -237,7 +255,8 @@ namespace SR_FLUX_NS {
             return false;
         }
 
-        if (instruction.opcode >= FluxOpcode::Copy && instruction.opcode <= FluxOpcode::Ref) {
+        /// Cast, как и бинарные пересылки, принимает источник и приёмник
+        if (instruction.opcode >= FluxOpcode::Copy && instruction.opcode <= FluxOpcode::Cast) {
             if (instruction.operands.size() != 2) {
                 SR_ERROR("FluxRuntime::ValidateInstruction() : invalid number of operands for opcode {}!", static_cast<uint32_t>(instruction.opcode));
                 execution.state = FluxExecutionState::Error;

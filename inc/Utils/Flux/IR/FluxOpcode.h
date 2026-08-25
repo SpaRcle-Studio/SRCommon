@@ -16,6 +16,11 @@ namespace SR_FLUX_NS {
         Swap,
         Ref,
 
+        /// приведение типа: dst = FluxUtils::Cast(src, callable.object).
+        /// Успешность приведения кладётся в результирующий регистр, поэтому за инструкцией
+        /// может следовать br
+        Cast,
+
         Call,
 
         Push,
@@ -37,6 +42,7 @@ namespace SR_FLUX_NS {
         { "mv", FluxOpcode::Move },
         { "swap", FluxOpcode::Swap },
         { "ref", FluxOpcode::Ref },
+        { "cast", FluxOpcode::Cast },
         { "call", FluxOpcode::Call },
         { "ret", FluxOpcode::Return },
         { "jmp", FluxOpcode::Jump },

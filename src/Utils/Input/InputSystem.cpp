@@ -10,6 +10,8 @@
 #include <Utils/Profile/TracyContext.h>
 #include <Utils/Types/Thread.h>
 
+#include <Codegen/InputSystem.generated.hpp>
+
 namespace SR_UTILS_NS {
     std::string_view InputTextEvent::GetText() const { return std::string_view(text, length); }
 
@@ -22,8 +24,6 @@ namespace SR_UTILS_NS {
         this->text[newText.size()] = '\0'; // null-terminate the string
         length = static_cast<uint8_t>(newText.size());
     }
-
-    Input::~Input() = default;
 
     void Input::UpdateMouse(float_t /* dt */) {
         SR_TRACY_ZONE;

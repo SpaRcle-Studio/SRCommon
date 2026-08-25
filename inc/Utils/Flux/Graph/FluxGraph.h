@@ -64,7 +64,9 @@ namespace SR_FLUX_NS {
 
         Branch,
         For,
-        While
+        While,
+
+        Cast
 
         /// TODO:
         /// Sequence,
@@ -87,6 +89,8 @@ namespace SR_FLUX_NS {
     ///   While         | in:  0 - flow, 1 - условие           | out: 0 - flow (тело), 1 - flow (после цикла)
     ///   For           | in:  0 - flow, 1 - начало, 2 - конец, 3 - шаг (опционально)
     ///                 | out: 0 - flow (тело), 1 - flow (после цикла), 2 - текущий индекс
+    ///   Cast          | in:  0 - flow, 1 - объект
+    ///                 | out: 0 - flow (успех), 1 - flow (cast failed), 2 - приведённый объект
     class FluxGraphNode : public Serializable {
         SR_CLASS()
     public:
@@ -110,7 +114,7 @@ namespace SR_FLUX_NS {
     private:
         /// @property
         FluxGraphNodeType m_type = FluxGraphNodeType::Unknown;
-        /// @property @tooltip(for ReadVariable / WriteVariable / Event)
+        /// @property @tooltip(for ReadVariable / WriteVariable / Event, target type for Cast)
         StringAtom m_name;
         /// @property
         SR_MATH_NS::FVector2 m_position;
@@ -179,6 +183,7 @@ namespace SR_FLUX_NS {
         SR_NODISCARD uint32_t CompileBranchNode(FluxGraphCompileContext& context, uint32_t nodeIndex) const;
         SR_NODISCARD uint32_t CompileWhileNode(FluxGraphCompileContext& context, uint32_t nodeIndex) const;
         SR_NODISCARD uint32_t CompileForNode(FluxGraphCompileContext& context, uint32_t nodeIndex) const;
+        SR_NODISCARD uint32_t CompileCastNode(FluxGraphCompileContext& context, uint32_t nodeIndex) const;
 
         SR_NODISCARD bool CompileCall(FluxGraphCompileContext& context, uint32_t nodeIndex, uint32_t objectPin) const;
 

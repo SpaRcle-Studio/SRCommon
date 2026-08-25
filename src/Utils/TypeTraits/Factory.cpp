@@ -38,8 +38,8 @@ namespace SR_UTILS_NS {
         return {};
     }
 
-    Vector<SR_UTILS_NS::StringAtom> Factory::GetInheritances(SR_UTILS_NS::StringAtom baseClass) const noexcept {
-        Vector<SR_UTILS_NS::StringAtom> result;
+    Vector<StringAtom> Factory::GetInheritances(StringAtom baseClass) const noexcept {
+        Vector<StringAtom> result;
         for (auto&& [name, info] : m_types) {
             if (auto&& pMeta = info.metaGetter()) {
                 if (pMeta->IsInherited(baseClass)) {
@@ -50,7 +50,7 @@ namespace SR_UTILS_NS {
         return result;
     }
 
-    bool Factory::IsAbstract(SR_UTILS_NS::StringAtom name) const noexcept {
+    bool Factory::IsAbstract(StringAtom name) const noexcept {
         if (auto&& pIt = m_types.find(name); pIt != m_types.end()) {
             return pIt->second.isAbstract;
         }
@@ -58,7 +58,7 @@ namespace SR_UTILS_NS {
         return false;
     }
 
-    SRClass* Factory::CreateBase(SR_UTILS_NS::StringAtom name) const noexcept {
+    SRClass* Factory::CreateBase(StringAtom name) const noexcept {
         SR_TRACY_ZONE;
 
         auto&& pIt = m_types.find(name);
@@ -82,7 +82,7 @@ namespace SR_UTILS_NS {
         return nullptr;
     }
 
-    const SRClassMeta* Factory::GetType(SR_UTILS_NS::StringAtom name) const noexcept {
+    const SRClassMeta* Factory::GetType(StringAtom name) const noexcept {
         auto&& pIt = m_types.find(name);
         if (pIt != m_types.end()) {
             return pIt->second.metaGetter();
@@ -90,7 +90,7 @@ namespace SR_UTILS_NS {
         return nullptr;
     }
 
-    void Factory::ForEachClassInModule(SR_UTILS_NS::StringAtom moduleName, const SR_HTYPES_NS::Function<void(const SRClassMeta*)>& func) const noexcept {
+    void Factory::ForEachClassInModule(StringAtom moduleName, const SR_HTYPES_NS::Function<void(const SRClassMeta*)>& func) const noexcept {
         for (auto&& [name, info] : m_types) {
             if (info.moduleName == moduleName) {
                 if (auto&& pMeta = info.metaGetter()) {
@@ -100,7 +100,7 @@ namespace SR_UTILS_NS {
         }
     }
 
-    const Factory::TypeInfo* Factory::GetTypeInfo(SR_UTILS_NS::StringAtom name) const noexcept {
+    const Factory::TypeInfo* Factory::GetTypeInfo(StringAtom name) const noexcept {
         auto&& pIt = m_types.find(name);
         if (pIt != m_types.end()) {
             return &pIt->second;

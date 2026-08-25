@@ -9,6 +9,8 @@
 #include <Utils/FileSystem/Path.h>
 #include <Utils/Memory/Allocator.h>
 #include <Utils/Platform/Platform.h>
+#include <Utils/Platform/Stacktrace.h>
+#include <Utils/Common/Breakpoint.h>
 
 namespace SR_UTILS_NS::Reflection {
     Value ReflectedContainerIterator::operator*() const {
@@ -300,8 +302,9 @@ namespace SR_UTILS_NS::Reflection {
             return;
         }
         if (!g_typeInfoPool) SR_UNLIKELY_ATTRIBUTE {
-            SR_PLATFORM_NS::WriteConsoleError("FreeTypeInfo() : TypeInfoPool is not initialized!");
-            SR_PLATFORM_NS::Terminate(true);
+            SR_PLATFORM_NS::WriteConsoleError("FreeTypeInfo() : TypeInfoPool is not initialized! Stack trace: {}"_format(GetStacktrace()));
+            Breakpoint();
+            return;
         }
         FreeTypeInfo(pTypeInfo->pNext[0]);
         FreeTypeInfo(pTypeInfo->pNext[1]);

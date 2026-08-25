@@ -34,6 +34,7 @@ namespace SR_UTILS_NS {
         void ForEachMethod(const SR_HTYPES_NS::Function<void(const SR_UTILS_NS::Reflection::Method& method, uint64_t index)>& func, uint64_t* pIndex = nullptr) const;
         virtual void ForEachSRClass(SRClass& srClass, const SR_HTYPES_NS::Function<void(SRClass&)>& function) const noexcept;
         virtual void CloneTo(const SRClass& src, SRClass& dest) const noexcept;
+        virtual Reflection::Value Cast(const Reflection::Value& value) const noexcept;
 
         SR_NODISCARD virtual SR_UTILS_NS::StringAtom GetInspectorName() const noexcept;
 

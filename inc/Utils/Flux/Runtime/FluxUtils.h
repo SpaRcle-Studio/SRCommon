@@ -20,6 +20,8 @@ namespace SR_FLUX_NS {
         /// @method @evaluate
         SR_NODISCARD Component::Ptr GetActiveFluxComponent() const;
 
+        SR_NODISCARD Reflection::Value Cast(const Reflection::Value& value, StringAtom target) const;
+
     private:
         Component::Ptr m_activeFluxComponent = nullptr;
 

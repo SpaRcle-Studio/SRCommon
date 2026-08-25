@@ -138,6 +138,7 @@ namespace SR_MATH_NS {
         FColor &operator%=(const FColor &p_v);
         FColor operator/(const Unit& v) const;
         FColor operator*(const FColor &p_v) const;
+        FColor operator/(const FColor& v) const;
         FColor operator+(const FColor& v) const;
 
         SR_NODISCARD float_t RelativeLuminance() const;

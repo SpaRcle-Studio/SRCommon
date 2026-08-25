@@ -134,8 +134,18 @@ namespace SR_FLUX_NS {
             instruction.callable.function = Advance().value;
         }
 
-        static constexpr FluxOpcode opcodesWithTwoOperands[4] = {
-            FluxOpcode::Copy, FluxOpcode::Move, FluxOpcode::Swap, FluxOpcode::Ref
+        if (instruction.opcode == FluxOpcode::Cast) {
+            /// синтаксис: cast <TargetType> <src> <dst>
+            auto&& targetLexem = Advance();
+            if (targetLexem.kind != LexerDetails::LexemKind::Identifier) {
+                SR_ERROR("FluxParser::ParseInstruction() : expected target type name after cast opcode!");
+                return false;
+            }
+            instruction.callable.object = targetLexem.value;
+        }
+
+        static constexpr FluxOpcode opcodesWithTwoOperands[5] = {
+            FluxOpcode::Copy, FluxOpcode::Move, FluxOpcode::Swap, FluxOpcode::Ref, FluxOpcode::Cast
         };
 
         if (std::ranges::find(opcodesWithTwoOperands, instruction.opcode) != std::end(opcodesWithTwoOperands)) {

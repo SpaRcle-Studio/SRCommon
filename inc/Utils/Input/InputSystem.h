@@ -33,13 +33,11 @@ namespace SR_UTILS_NS {
     static const StringAtom INPUT_TEXT_EVENT_DATA_ID = "InputTextEventData";
     static const StringAtom INPUT_TEXT_EVENT_ID = "InputTextEvent";
 
-    class Input : public Singleton<Input>, public SubscriptionHolder {
+    /// @noCopyable @noMovable
+    class Input : public Singleton<Input>, public SubscriptionHolder, public SRClass {
+        SR_CLASS()
         SR_REGISTER_SINGLETON(Input)
         enum class State { UnPressed, Down, Pressed, Up };
-
-    protected:
-        ~Input() override;
-
     public:
         void SetMouseScroll(double_t xOffset, double_t yOffset);
         void SetFocusedWindowRect(const std::optional<SR_MATH_NS::FRect>& rect);
@@ -48,20 +46,33 @@ namespace SR_UTILS_NS {
         void Reload();
         void ResetMouse();
 
+        /// @method @evaluate
         SR_NODISCARD SR_MATH_NS::FVector2 GetMouseDrag();
+        /// @method @evaluate
         SR_NODISCARD SR_MATH_NS::FVector2 GetMousePos() const;
+        /// @method @evaluate
         SR_NODISCARD bool IsPlayMode() const;
+        /// @method @evaluate
         SR_NODISCARD bool IsAppFocused() const;
+        /// @method @evaluate
         SR_NODISCARD int32_t GetMouseWheel() const;
+        /// @method @evaluate
         SR_NODISCARD SR_MATH_NS::FVector2 GetMouseScroll() const { return m_mouseScroll; }
+        /// @method @evaluate
         SR_NODISCARD bool IsCursorLocked() const;
 
+        /// @method @evaluate
         bool GetMouseDown(MouseCode code);
+        /// @method @evaluate
         bool GetMouseUp(MouseCode code);
+        /// @method @evaluate
         bool GetMouse(MouseCode code);
 
+        /// @method @evaluate
         bool GetKeyDown(KeyCode key);
+        /// @method @evaluate
         bool GetKeyUp(KeyCode key);
+        /// @method @evaluate
         bool GetKey(KeyCode key);
 
         void LockCursor(CursorLockInfo& info);

@@ -18,9 +18,13 @@ namespace SR_UTILS_NS {
         EntityRefBase();
 
     public:
+        /// @method @evaluate
         SR_NODISCARD virtual StringAtom GetTypeName() const noexcept;
+        /// @method @evaluate
         SR_NODISCARD const Entity::Ptr& GetEntity() const noexcept;
+        /// @method @evaluate
         SR_NODISCARD EntityId GetEntityId() const noexcept { return m_entityId; }
+
         SR_NODISCARD bool IsResolved() const noexcept;
 
         SR_NODISCARD virtual bool IsApplicable(const SR_HTYPES_NS::SharedPtr<Entity>& pEntity) const noexcept;

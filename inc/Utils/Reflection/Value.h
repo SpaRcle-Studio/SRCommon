@@ -97,6 +97,7 @@ namespace SR_UTILS_NS::Reflection {
 
         template<typename T> const T* Cast() const;
         template<typename T> T* Cast();
+        template<typename T> Value CastSRClass() const;
 
         SR_NODISCARD static Value CreateDefault(TypeInfo* pTypeInfo);
 
@@ -203,6 +204,33 @@ namespace SR_UTILS_NS::Reflection {
 
     template<typename T> const T* Value::Cast() const {
         return static_cast<const T*>(m_storage.GetData());
+    }
+
+    template<typename T> Value Value::CastSRClass() const {
+        if (!IsValid()) {
+            return Value();
+        }
+
+        auto&& typeInfo = GetTypeInfo();
+        if (typeInfo.category == ReflectedCategoryType::Container && typeInfo.detailedType == "SharedPtr") {
+            auto&& pCasted = dynamic_cast<T*>(GetSRClass());
+            if (!pCasted) {
+                return Value();
+            }
+            return Value::Create(SR_HTYPES_NS::SharedPtr(pCasted));
+        }
+        else if (typeInfo.category == ReflectedCategoryType::Object) {
+            auto&& pCasted = dynamic_cast<T*>(GetSRClass());
+            if (!pCasted) {
+                return Value();
+            }
+            if (IsRef()) {
+                return Value::CreateRef(*pCasted);
+            }
+            return Value::Create(*pCasted);
+        }
+
+        return Value();
     }
 }
 

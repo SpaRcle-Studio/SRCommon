@@ -61,8 +61,11 @@ namespace SR_FLUX_NS {
 
             if (!instruction.callable.object.empty()) {
                 out += instruction.callable.object.ToStringView();
-                out += ".";
-                out += instruction.callable.function.ToStringView();
+                /// у cast имя функции не задаётся - в объекте лежит целевой тип
+                if (!instruction.callable.function.empty()) {
+                    out += ".";
+                    out += instruction.callable.function.ToStringView();
+                }
                 out += " ";
             }
 
