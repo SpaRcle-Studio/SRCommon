@@ -472,6 +472,21 @@ namespace SR_UTILS_NS {
         return replaced;
     }
 
+    void StringUtils::SplitView(StringView source, StringView delimiter, Vector<StringView>& out) const {
+        out.clear();
+        size_t pos = 0;
+        while ((pos = source.find(delimiter)) != std::string::npos) {
+            if (auto&& token = source.substr(0, pos); !token.empty()) {
+                out.emplace_back(token);
+            }
+            source.remove_prefix(pos + delimiter.size());
+        }
+
+        if (!source.empty()) {
+            out.emplace_back(source);
+        }
+    }
+
     String GetErrorString(int err) {
         char buf[256]{};
     #ifdef _WIN32

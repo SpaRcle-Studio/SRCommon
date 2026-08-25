@@ -69,9 +69,11 @@ namespace SR_FLUX_NS {
                 out += " ";
             }
 
+            uint32_t operandOffset = 0;
             if (instruction.opcode == FluxOpcode::Branch || instruction.opcode == FluxOpcode::Jump) {
                 if (!instruction.operands.empty()) {
                     const auto labelIndex = instruction.operands[0];
+                    operandOffset++;
                     if (labelIndex < labels.size()) {
                         out += labels[labelIndex].name;
                     }
@@ -80,19 +82,19 @@ namespace SR_FLUX_NS {
                     }
                 }
             }
-            else {
-                for (const auto& operand : instruction.operands) {
-                    if (operand < constants.size()) {
-                        out += "@" + std::to_string(operand) + " ";
-                    }
-                    else if (operand < constants.size() + storage.size()) {
-                        out += "$" + std::to_string(operand - constants.size()) + " ";
-                    }
-                    else {
-                        out += "%" + std::to_string(operand - constants.size() - storage.size()) + " ";
-                    }
+
+            for (const auto& operand : instruction.operands | std::views::drop(operandOffset)) {
+                if (operand < constants.size()) {
+                    out += "@" + std::to_string(operand) + " ";
+                }
+                else if (operand < constants.size() + storage.size()) {
+                    out += "$" + std::to_string(operand - constants.size()) + " ";
+                }
+                else {
+                    out += "%" + std::to_string(operand - constants.size() - storage.size()) + " ";
                 }
             }
+
             out += "\n";
             ++instructionIndex;
         }

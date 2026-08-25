@@ -60,8 +60,18 @@ namespace SR_FLUX_NS {
         Vector<uint32_t> loopScopeStarts;
         Vector<uint64_t> evaluationStack; /// защита от циклов среди чистых узлов
 
+        /// ключи значений, живых на момент входа в каждое ветвление потока. Нужны точке слияния:
+        /// значение, вычисленное внутри одной ветви, не доживает до слияния, так как остальные
+        /// ветви приходят туда переходом и его регистр не заполняли
+        Vector<uint64_t> flowSplitKeys;
+        Vector<uint32_t> flowSplitStarts;
+
         SR_NODISCARD uint32_t AllocateRegister();
         void FreeRegister(uint32_t index);
+
+        void EnterFlowSplit();
+        void LeaveFlowSplit();
+        void PruneToFlowSplitScope();
 
         SR_NODISCARD FluxRegisterId ToOperand(uint32_t registerIndex) const noexcept {
             return static_cast<FluxRegisterId>(registerBase + registerIndex);

@@ -29,6 +29,53 @@ namespace SR_FLUX_NS {
         availableRegisters[index] = true;
     }
 
+    void FluxGraphCompileContext::EnterFlowSplit() {
+        flowSplitStarts.emplace_back(static_cast<uint32_t>(flowSplitKeys.size()));
+        for (auto&& [key, value] : materialized) {
+            flowSplitKeys.emplace_back(key);
+        }
+    }
+
+    void FluxGraphCompileContext::LeaveFlowSplit() {
+        if (flowSplitStarts.empty()) {
+            return;
+        }
+        flowSplitKeys.resize(flowSplitStarts.back());
+        flowSplitStarts.pop_back();
+    }
+
+    void FluxGraphCompileContext::PruneToFlowSplitScope() {
+        if (flowSplitStarts.empty()) {
+            return;
+        }
+
+        const uint32_t start = flowSplitStarts.back();
+
+        Vector<uint64_t> expired;
+        for (auto&& [key, value] : materialized) {
+            bool isAlive = false;
+            for (uint32_t i = start; i < flowSplitKeys.size(); ++i) {
+                if (flowSplitKeys[i] == key) {
+                    isAlive = true;
+                    break;
+                }
+            }
+            if (!isAlive) {
+                expired.emplace_back(key);
+            }
+        }
+
+        for (auto&& key : expired) {
+            if (auto&& pIt = materialized.find(key); pIt != materialized.end()) {
+                if (pIt->second.isRegister) {
+                    FreeRegister(pIt->second.registerIndex);
+                }
+                materialized.erase(key);
+            }
+            pendingUses.erase(key);
+        }
+    }
+
     FluxRegisterSnapshot FluxGraphCompileContext::SaveState() const {
         FluxRegisterSnapshot snapshot;
         snapshot.availableRegisters = availableRegisters;
@@ -60,6 +107,8 @@ namespace SR_FLUX_NS {
         deferredReleases.clear();
         loopScopeStarts.clear();
         evaluationStack.clear();
+        flowSplitKeys.clear();
+        flowSplitStarts.clear();
         loopDepth = 0;
         terminatorLabel = FluxInvalidLabel;
         flowTerminated = false;

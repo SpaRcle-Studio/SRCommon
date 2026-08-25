@@ -267,7 +267,11 @@ namespace SR_FLUX_NS {
                     context.terminatorLabel = previousTerminator;
                     return;
                 }
-                const uint32_t labelIndex = CreateLabel(context, "node");
+                /// код после метки исполняется всеми входящими путями, поэтому он не имеет права
+                /// опираться на значения, вычисленные внутри текущей ветви - остальные пути
+                /// приходят сюда переходом и соответствующие регистры не заполняли
+                context.PruneToFlowSplitScope();
+                const uint32_t labelIndex = CreateLabel(context, "merge");
                 BindLabel(context, labelIndex);
                 context.emittedLabels.emplace(nodeIndex, labelIndex);
             }
@@ -390,12 +394,16 @@ namespace SR_FLUX_NS {
         /// с тем же состоянием распределителя и переиспользует те же регистры
         const FluxRegisterSnapshot snapshot = context.SaveState();
 
+        context.EnterFlowSplit();
+
         CompileFlow(context, GetFlowTarget(nodeIndex, 1), terminator);
 
         context.RestoreState(snapshot);
 
         BindLabel(context, trueLabel);
         CompileFlow(context, GetFlowTarget(nodeIndex, 0), terminator);
+
+        context.LeaveFlowSplit();
 
         context.flowTerminated = true;
         return FluxInvalidNode;
@@ -409,6 +417,7 @@ namespace SR_FLUX_NS {
         /// область цикла открывается до вычисления условия: условие пересчитывается на каждой
         /// итерации, поэтому значения, вычисленные снаружи, не должны освобождаться внутри
         PushLoopScope(context);
+        context.EnterFlowSplit();
 
         BindLabel(context, headLabel);
 
@@ -425,6 +434,7 @@ namespace SR_FLUX_NS {
         CompileFlow(context, GetFlowTarget(nodeIndex, 0), headLabel);
 
         BindLabel(context, endLabel);
+        context.LeaveFlowSplit();
         PopLoopScope(context);
 
         /// тело цикла завершено собственным переходом, но поток продолжается после цикла
@@ -496,6 +506,7 @@ namespace SR_FLUX_NS {
         const uint32_t endLabel = CreateLabel(context, "for_end");
 
         PushLoopScope(context);
+        context.EnterFlowSplit();
 
         BindLabel(context, headLabel);
         {
@@ -525,6 +536,7 @@ namespace SR_FLUX_NS {
         EmitJump(context, FluxOpcode::Jump, headLabel, nodeIndex);
 
         BindLabel(context, endLabel);
+        context.LeaveFlowSplit();
         PopLoopScope(context);
 
         ReleaseValue(context, to);
@@ -600,12 +612,16 @@ namespace SR_FLUX_NS {
         /// с тем же состоянием распределителя и переиспользует те же регистры
         const FluxRegisterSnapshot snapshot = context.SaveState();
 
+        context.EnterFlowSplit();
+
         CompileFlow(context, GetFlowTarget(nodeIndex, 1), terminator);
 
         context.RestoreState(snapshot);
 
         BindLabel(context, successLabel);
         CompileFlow(context, GetFlowTarget(nodeIndex, 0), terminator);
+
+        context.LeaveFlowSplit();
 
         context.flowTerminated = true;
         return FluxInvalidNode;
@@ -982,6 +998,10 @@ namespace SR_FLUX_NS {
     }
 
     void FluxGraph::AddLink(const FluxGraphLink& link) {
+        /// дубликат связи удвоил бы число входящих потоков узла и создал бы метку слияния на ровном месте
+        if (m_links.find_if([&link](const FluxGraphLink& other) { return other == link; }) != m_links.end()) {
+            return;
+        }
         m_links.emplace_back(link);
     }
 
