@@ -17,6 +17,7 @@ namespace SR_UTILS_NS {
     namespace Reflection {
         class Property;
         class Method;
+        class Value;
     }
 
     class Serializable;
