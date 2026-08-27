@@ -45,10 +45,11 @@ namespace SR_UTILS_NS {
 
         virtual bool SetDirty(bool dirty);
 
-        virtual ComponentPtr GetOrCreateComponent(const std::string& name);
-        virtual ComponentPtr GetOrCreateComponent(StringAtom name);
-        virtual ComponentPtr GetComponent(const std::string& name);
-        virtual ComponentPtr GetComponent(StringAtom name);
+        /// @method @evaluate
+        virtual SR_HTYPES_NS::SharedPtr<Component> GetComponent(StringAtom name);
+        /// @method
+        virtual SR_HTYPES_NS::SharedPtr<Component> GetOrCreateComponent(StringAtom name);
+
         virtual bool MoveComponent(const ComponentPtr& pComponent, int32_t offset);
 
         SR_NODISCARD bool HasComponent(const ComponentPtr& pComponent) const;

@@ -110,6 +110,13 @@ namespace SR_UTILS_NS {
         return nullptr;
     }
 
+    EnumReflector* EnumReflectorManager::TryGetReflector(SR_UTILS_NS::StringAtom name) const {
+        if (auto&& pIt = m_reflectors.find(name); pIt != m_reflectors.end()) {
+            return pIt->second;
+        }
+        return nullptr;
+    }
+
     EnumReflectorManager& EnumReflectorManager::Instance() {
         static EnumReflectorManager instance;
         return instance;

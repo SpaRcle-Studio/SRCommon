@@ -11,6 +11,8 @@
 #include <Utils/Platform/Platform.h>
 #include <Utils/Platform/Stacktrace.h>
 #include <Utils/Common/Breakpoint.h>
+#include <Utils/TypeTraits/Factory.h>
+#include <Utils/Common/EnumReflector.h>
 
 namespace SR_UTILS_NS::Reflection {
     Value ReflectedContainerIterator::operator*() const {
@@ -392,6 +394,74 @@ namespace SR_UTILS_NS::Reflection {
 
         delete g_typeInfoPool;
         g_typeInfoPool = nullptr;
+    }
+
+    void GetTypeNamesByCategory(ReflectedCategoryType category, Vector<StringAtom>& outNames) {
+        outNames.clear();
+        switch (category) {
+            case ReflectedCategoryType::Arithmetic:
+                outNames = {
+                    "int8", "int16", "int32", "int64",
+                    "uint8", "uint16", "uint32", "uint64",
+                    "float", "double", "bool"
+                };
+                break;
+            case ReflectedCategoryType::String:
+                outNames = {
+                    "Path", "String", "StringView", "StringAtom", "UnicodeString"
+                };
+                break;
+            case ReflectedCategoryType::MathVector:
+                outNames = {
+                    "FVector2", "FVector3", "FVector4", "FVector6",
+                    "IVector2", "IVector3", "IVector4", "IVector6",
+                    "UVector2", "UVector3", "UVector4", "UVector6",
+                    "BVector2", "BVector3", "BVector4", "BVector6"
+                };
+                break;
+            case ReflectedCategoryType::MathRect:
+                outNames = {
+                    "FRect", "IRect", "URect", "USRect"
+                };
+                break;
+            case ReflectedCategoryType::MathSize:
+                outNames = {
+                    "FSize", "USize", "ISize",
+                    "FSize2", "USize2", "ISize2"
+                };
+                break;
+            case ReflectedCategoryType::MathObject:
+                outNames = {
+                    "Color", "Quaternion", "AABB", "Matrix3x3", "Matrix4x4"
+                };
+                break;
+            case ReflectedCategoryType::Value:
+                break;
+            case ReflectedCategoryType::Container:
+                outNames = {
+                    "FlatHashSet", "FlatHashMap", "Vector", "Set", "Map", "SharedPtr"
+                };
+                break;
+            case ReflectedCategoryType::Object: {
+                auto&& factory = Factory::Instance();
+                factory.ForEachClass([&](const SRClassMeta* pMeta) {
+                    if (pMeta->IsAbstract()) {
+                        return;
+                    }
+                    outNames.emplace_back(pMeta->GetFactoryName());
+                });
+                break;
+            }
+            case ReflectedCategoryType::Enum: {
+                auto&& enumReflectorManager = EnumReflectorManager::Instance();
+                for (auto&& [name, pReflector] : enumReflectorManager.GetReflectors()) {
+                    outNames.emplace_back(name);
+                }
+                break;
+            }
+            default:
+                break;
+        }
     }
 
     template<typename T> void ReflectedTypeInlineCopy(const ReflectedValue& from, ReflectedValue& to) {

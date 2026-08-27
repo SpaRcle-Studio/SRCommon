@@ -34,10 +34,6 @@ namespace SR_UTILS_NS {
         return nullptr;
     }
 
-    Component::Ptr IComponentable::GetComponent(const std::string& name) {
-        return GetComponent(StringAtom(name));
-    }
-
     bool IComponentable::ContainsComponent(const std::string& name) {
         return GetComponent(name);
     }
@@ -48,10 +44,6 @@ namespace SR_UTILS_NS {
             return true;
         }
         return (m_dirty = dirty);
-    }
-
-    Component::Ptr IComponentable::GetOrCreateComponent(const std::string& name) {
-        return GetOrCreateComponent(StringAtom(name));
     }
 
     Component::Ptr IComponentable::GetComponent(StringAtom name) {

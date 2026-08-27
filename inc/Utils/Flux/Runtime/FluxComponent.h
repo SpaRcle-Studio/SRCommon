@@ -29,6 +29,10 @@ namespace SR_FLUX_NS {
     private:
         /// @property
         ResourceRef<FluxGraphAsset> m_graph;
+        /// @property
+        Vector<Reflection::Value> m_variables;
+        /// @property
+        Reflection::Value m_constant;
 
     private:
         Vector<Reflection::Value> m_callArguments;

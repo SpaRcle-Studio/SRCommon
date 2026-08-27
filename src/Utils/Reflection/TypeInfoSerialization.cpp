@@ -162,9 +162,10 @@ namespace SR_UTILS_NS::Reflection {
         auto&& typeInfo = value.GetTypeInfo();
         switch (typeInfo.category) {
             case ReflectedCategoryType::Enum: {
-                auto&& pReflector = EnumReflectorManager::Instance().GetReflector(typeInfo.detailedType);
+                auto&& pReflector = EnumReflectorManager::Instance().TryGetReflector(typeInfo.detailedType);
                 if (!pReflector) {
-                    SRHalt("SerializeValue() : unknown enum type: {}", typeInfo.detailedType);
+                    SR_WARN("SerializeValue() : unknown enum type: {}", typeInfo.detailedType);
+                    return;
                 }
                 serializer.WriteString(pReflector->ToStringInternal(*value.Cast<int64_t>()).value(), SerializationId::Create("enum"));
                 break;
@@ -186,7 +187,7 @@ namespace SR_UTILS_NS::Reflection {
                     serializer.WriteString(*value.Cast<String>(), SerializationId::Create("string"));
                 }
                 else {
-                    SRHalt("SerializeValue() : unknown string type: {}", typeInfo.detailedType);
+                    SR_WARN("SerializeValue() : unknown string type: {}", typeInfo.detailedType);
                 }
                 break;
             }
@@ -205,7 +206,8 @@ namespace SR_UTILS_NS::Reflection {
                 }
                 break;
             default:
-                SRHalt("SerializeValue() : unknown reflected type: {}", typeInfo.category);
+                SR_WARN("SerializeValue() : unknown reflected type: {}", typeInfo.category);
+                return;
         }
     }
 
@@ -215,7 +217,8 @@ namespace SR_UTILS_NS::Reflection {
             case ReflectedCategoryType::Enum: {
                 auto&& pReflector = EnumReflectorManager::Instance().GetReflector(typeInfo.detailedType);
                 if (!pReflector) {
-                    SRHalt("DeserializeValue() : unknown enum type: {}", typeInfo.detailedType);
+                    SR_WARN("DeserializeValue() : unknown enum type: {}", typeInfo.detailedType);
+                    return false;
                 }
                 String enumStr;
                 deserializer.ReadString(enumStr, SerializationId::Create("enum"));
@@ -266,7 +269,7 @@ namespace SR_UTILS_NS::Reflection {
             default:
                 break;
         }
-        SRHalt("DeserializeValue() : unknown reflected type: {}", typeInfo.category);
+        SR_WARN("DeserializeValue() : unknown reflected type: {}", typeInfo.category);
         return false;
     }
 }

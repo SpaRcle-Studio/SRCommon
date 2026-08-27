@@ -487,6 +487,10 @@ namespace SR_UTILS_NS {
         }
     }
 
+    StringAtom StringUtils::MakeAtom(StringView str) {
+        return StringAtom(str);
+    }
+
     String GetErrorString(int err) {
         char buf[256]{};
     #ifdef _WIN32

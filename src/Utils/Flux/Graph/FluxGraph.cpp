@@ -1058,6 +1058,15 @@ namespace SR_FLUX_NS {
         return nodeIndex < m_nodes.size() ? &m_nodes[nodeIndex] : nullptr;
     }
 
+    uint32_t FluxGraph::GetNodeIndex(const FluxGraphNode* pNode) const {
+        if (!pNode) {
+            return SR_UINT32_MAX;
+        }
+
+        const auto nodeIndex = static_cast<uint32_t>(pNode - m_nodes.data());
+        return nodeIndex < m_nodes.size() ? nodeIndex : SR_UINT32_MAX;
+    }
+
     void FluxGraphNode::SetCallable(const FluxCallable& callable) {
         m_callableObject = callable.object;
         m_callableFunction = callable.function;

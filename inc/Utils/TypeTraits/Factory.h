@@ -92,6 +92,7 @@ namespace SR_UTILS_NS {
         SR_NODISCARD const SRClassMeta* GetType(SR_UTILS_NS::StringAtom name) const noexcept override;
         SR_NODISCARD const TypeInfo* GetTypeInfo(SR_UTILS_NS::StringAtom name) const noexcept;
         void ForEachClassInModule(SR_UTILS_NS::StringAtom moduleName, const SR_HTYPES_NS::Function<void(const SRClassMeta*)>& func) const noexcept;
+        void ForEachClass(const SR_HTYPES_NS::Function<void(const SRClassMeta*)>& func) const noexcept;
 
     private:
         void WriteLog(const std::string& message) const noexcept;

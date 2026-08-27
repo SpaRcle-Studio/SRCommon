@@ -94,7 +94,7 @@ namespace SR_UTILS_NS::Reflection {
     }
 
     Value Method::Invoke(Owner& owner, const Params& params) const {
-        if (m_pReturnTypeInfo && GetParamsCount() == 0) {
+        if (m_pReturnTypeInfo && GetParamsCount() > 0) {
             return m_withReturnWithParams(owner, params);
         }
         else {

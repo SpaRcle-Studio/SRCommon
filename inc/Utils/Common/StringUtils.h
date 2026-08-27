@@ -31,6 +31,9 @@ namespace SR_UTILS_NS {
         /// @method
         void ToUpper(String& str);
 
+        /// @method @evaluate
+        StringAtom MakeAtom(StringView str);
+
         void Base64Decode(StringView source, String& base64);
         void Base64Encode(StringView base64, String& result);
 

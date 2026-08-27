@@ -122,40 +122,42 @@ namespace SR_FLUX_NS {
     bool FluxRuntime::ExecuteInstruction(FluxExecution& execution, const FluxInstruction& instruction) {
         SR_TRACY_ZONE;
 
-        if (!ValidateInstruction(execution, instruction)) SR_UNLIKELY_ATTRIBUTE {
+        if (m_validation && !ValidateInstruction(execution, instruction)) SR_UNLIKELY_ATTRIBUTE {
             return false;
         }
 
+        auto&& pOperands = instruction.operands.data();
+
         switch (instruction.opcode) {
             case FluxOpcode::Copy: {
-                auto&& srcType = GetRegisterType(execution, instruction.operands[0]);
-                auto&& dstType = GetRegisterType(execution, instruction.operands[1]);
-                auto&& src = GetRegister(execution, instruction.operands[0], srcType, RegisterOperation::Read);
-                auto&& dst = GetRegister(execution, instruction.operands[1], dstType, RegisterOperation::Write);
+                auto&& srcType = GetRegisterType(execution, pOperands[0]);
+                auto&& dstType = GetRegisterType(execution, pOperands[1]);
+                auto&& src = GetRegister(execution, pOperands[0], srcType, RegisterOperation::Read);
+                auto&& dst = GetRegister(execution, pOperands[1], dstType, RegisterOperation::Write);
                 dst = src.Copy();
                 break;
             }
             case FluxOpcode::Move: {
-                auto&& srcType = GetRegisterType(execution, instruction.operands[0]);
-                auto&& dstType = GetRegisterType(execution, instruction.operands[1]);
-                auto&& src = GetRegister(execution, instruction.operands[0], srcType, RegisterOperation::Write);
-                auto&& dst = GetRegister(execution, instruction.operands[1], dstType, RegisterOperation::Write);
+                auto&& srcType = GetRegisterType(execution, pOperands[0]);
+                auto&& dstType = GetRegisterType(execution, pOperands[1]);
+                auto&& src = GetRegister(execution, pOperands[0], srcType, RegisterOperation::Write);
+                auto&& dst = GetRegister(execution, pOperands[1], dstType, RegisterOperation::Write);
                 dst = std::move(src);
                 break;
             }
             case FluxOpcode::Swap: {
-                auto&& srcType = GetRegisterType(execution, instruction.operands[0]);
-                auto&& dstType = GetRegisterType(execution, instruction.operands[1]);
-                auto&& src = GetRegister(execution, instruction.operands[0], srcType, RegisterOperation::Write);
-                auto&& dst = GetRegister(execution, instruction.operands[1], dstType, RegisterOperation::Write);
+                auto&& srcType = GetRegisterType(execution, pOperands[0]);
+                auto&& dstType = GetRegisterType(execution, pOperands[1]);
+                auto&& src = GetRegister(execution, pOperands[0], srcType, RegisterOperation::Write);
+                auto&& dst = GetRegister(execution, pOperands[1], dstType, RegisterOperation::Write);
                 std::swap(src, dst);
                 break;
             }
             case FluxOpcode::Ref: {
-                auto&& srcType = GetRegisterType(execution, instruction.operands[0]);
-                auto&& dstType = GetRegisterType(execution, instruction.operands[1]);
-                auto&& src = GetRegister(execution, instruction.operands[0], srcType, RegisterOperation::Read);
-                auto&& dst = GetRegister(execution, instruction.operands[1], dstType, RegisterOperation::Write);
+                auto&& srcType = GetRegisterType(execution, pOperands[0]);
+                auto&& dstType = GetRegisterType(execution, pOperands[1]);
+                auto&& src = GetRegister(execution, pOperands[0], srcType, RegisterOperation::Read);
+                auto&& dst = GetRegister(execution, pOperands[1], dstType, RegisterOperation::Write);
                 dst = src.Ref();
                 break;
             }
@@ -165,10 +167,10 @@ namespace SR_FLUX_NS {
                     execution.state = FluxExecutionState::Error;
                     return false;
                 }
-                auto&& srcType = GetRegisterType(execution, instruction.operands[0]);
-                auto&& dstType = GetRegisterType(execution, instruction.operands[1]);
-                auto&& src = GetRegister(execution, instruction.operands[0], srcType, RegisterOperation::Read);
-                auto&& dst = GetRegister(execution, instruction.operands[1], dstType, RegisterOperation::Write);
+                auto&& srcType = GetRegisterType(execution, pOperands[0]);
+                auto&& dstType = GetRegisterType(execution, pOperands[1]);
+                auto&& src = GetRegister(execution, pOperands[0], srcType, RegisterOperation::Read);
+                auto&& dst = GetRegister(execution, pOperands[1], dstType, RegisterOperation::Write);
                 Reflection::Value casted = FluxUtils::Instance().Cast(src, instruction.callable.object);
                 /// признак успеха читается инструкцией br из нулевого регистра
                 Reflection::Value isSuccessful = Reflection::Value::Create<bool>(casted.IsValid());
@@ -197,19 +199,19 @@ namespace SR_FLUX_NS {
                     execution.state = FluxExecutionState::Error;
                     return false;
                 }
-                auto&& dstType = GetRegisterType(execution, instruction.operands[0]);
-                auto&& dst = GetRegister(execution, instruction.operands[0], dstType, RegisterOperation::Write);
+                auto&& dstType = GetRegisterType(execution, pOperands[0]);
+                auto&& dst = GetRegister(execution, pOperands[0], dstType, RegisterOperation::Write);
                 dst = std::move(execution.valueStack.back());
                 execution.valueStack.pop_back();
                 break;
             }
             case FluxOpcode::Jump: {
-                auto&& labelId = instruction.operands[0];
+                auto&& labelId = pOperands[0];
                 execution.instructionPointer = m_program->labels[labelId].instructionPointer - 1;
                 break;
             }
             case FluxOpcode::Branch: {
-                auto&& labelId = instruction.operands[0];
+                auto&& labelId = pOperands[0];
                 auto&& conditionValue = GetResultRegister(execution);
                 auto&& type = conditionValue.GetTypeInfo();
                 if (m_validation) SR_UNLIKELY_ATTRIBUTE {
@@ -229,7 +231,7 @@ namespace SR_FLUX_NS {
                 break;
             }
             case FluxOpcode::Call:
-                if (!CallMethod(execution, instruction)) {
+                if (!CallMethod(execution, instruction)) SR_UNLIKELY_ATTRIBUTE {
                     return false;
                 }
                 break;
@@ -243,10 +245,6 @@ namespace SR_FLUX_NS {
     }
 
     bool FluxRuntime::ValidateInstruction(FluxExecution& execution, const FluxInstruction& instruction) const {
-        if (m_validation) {
-            return true;
-        }
-
         SR_TRACY_ZONE;
 
         if (instruction.opcode == FluxOpcode::Unknown) {
@@ -298,7 +296,6 @@ namespace SR_FLUX_NS {
     RegisterType FluxRuntime::GetRegisterType(FluxExecution& execution, FluxRegisterId registerId) const {
         const auto constantCount = m_program->constants.size();
         const auto storageCount = m_program->storage.size();
-        const auto registerCount = execution.registers.size();
 
         if (registerId < constantCount) {
             return RegisterType::Constant;
@@ -306,7 +303,10 @@ namespace SR_FLUX_NS {
         else if (registerId < constantCount + storageCount) {
             return RegisterType::Storage;
         }
-        else if (registerId < constantCount + storageCount + registerCount) {
+        else if (!m_validation) {
+            return RegisterType::Register;
+        }
+        else if (registerId < constantCount + storageCount + execution.registers.size()) {
             if (registerId >= (m_maxRegisters + constantCount + storageCount)) {
                 SR_ERROR("FluxRuntime::GetRegisterType() : register id {} exceeds max registers {}!", registerId, (m_maxRegisters + constantCount + storageCount));
                 execution.state = FluxExecutionState::Error;
@@ -324,6 +324,10 @@ namespace SR_FLUX_NS {
         static Reflection::Value dummy;
 
         switch (type) {
+            case RegisterType::Register: {
+                const auto index = (registerId - m_constants.size()) - m_storage.size();
+                return execution.registers[index];
+            }
             case RegisterType::Constant: {
                 if (operation == RegisterOperation::Write) {
                     SR_ERROR("FluxRuntime::GetRegister() : cannot write to constant register {}!", registerId);
@@ -334,13 +338,6 @@ namespace SR_FLUX_NS {
             }
             case RegisterType::Storage:
                 return m_storage[registerId - m_program->constants.size()];
-            case RegisterType::Register: {
-                const auto index = (registerId - m_constants.size()) - m_storage.size();
-                if (index >= execution.registers.size()) {
-                    execution.registers.resize(index + 1);
-                }
-                return execution.registers[index];
-            }
             default:
                 break;
         }

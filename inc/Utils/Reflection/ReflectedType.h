@@ -82,6 +82,7 @@ namespace SR_UTILS_NS::Reflection {
     extern SR_COMMON_DLL_API bool IsReflectedTypeSigned(StringView type);
     extern SR_COMMON_DLL_API bool IsReflectedTypeIntegral(StringView type);
     extern SR_COMMON_DLL_API SizeType GetReflectedTypeSize(StringView type);
+    extern SR_COMMON_DLL_API void GetTypeNamesByCategory(ReflectedCategoryType category, Vector<StringAtom>& outNames);
 
     constexpr inline SizeType ReflectedValueStorageSize = 64;
 

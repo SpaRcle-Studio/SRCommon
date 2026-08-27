@@ -159,6 +159,7 @@ namespace SR_FLUX_NS {
         SR_NODISCARD FluxProgram Compile() const;
 
         SR_NODISCARD uint32_t GetNodeCount() const { return static_cast<uint32_t>(m_nodes.size()); }
+        SR_NODISCARD uint32_t GetNodeIndex(const FluxGraphNode* pNode) const;
         SR_NODISCARD FluxGraphNode* GetNode(uint32_t nodeIndex);
         SR_NODISCARD const FluxGraphNode* GetNode(uint32_t nodeIndex) const;
 

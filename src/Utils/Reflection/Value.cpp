@@ -23,6 +23,9 @@ namespace SR_UTILS_NS::Reflection {
 
     SizeType BaseContainerValueRef::Size() const {
         auto&& vtable = m_value->GetTypeInfo().vtable.containerVTable;
+        if (!vtable.pSize) {
+            return 0;
+        }
         return vtable.pSize(m_value->GetStorage());
     }
 
@@ -234,6 +237,9 @@ namespace SR_UTILS_NS::Reflection {
         if (!m_typeInfo) {
             return 0;
         }
+        if (!m_typeInfo->vtable.pSizeOfAlign) {
+            return 0;
+        }
         return GetTypeInfo().vtable.pSizeOfAlign(GetTypeInfo()).first;
     }
 
@@ -263,20 +269,23 @@ namespace SR_UTILS_NS::Reflection {
             return pShared->GetSRClass();
         }
         auto&& typeInfo = GetTypeInfo();
+        if (!typeInfo.vtable.pGetTypeController) {
+            return nullptr;
+        }
         if (typeInfo.category == ReflectedCategoryType::Container) {
             if (typeInfo.detailedType == "EntityRef") {
-                auto&& pController = GetTypeInfo().vtable.pGetTypeController(const_cast<ReflectedValue&>(m_storage));
+                auto&& pController = typeInfo.vtable.pGetTypeController(const_cast<ReflectedValue&>(m_storage));
                 return static_cast<EntityRefBase*>(pController);
             }
             if (typeInfo.detailedType == "ResourceRef") {
-                auto&& pController = GetTypeInfo().vtable.pGetTypeController(const_cast<ReflectedValue&>(m_storage));
+                auto&& pController = typeInfo.vtable.pGetTypeController(const_cast<ReflectedValue&>(m_storage));
                 return static_cast<ResourceRefBase*>(pController);
             }
         }
         if (typeInfo.category != ReflectedCategoryType::Object) {
             return nullptr;
         }
-        void* pController = GetTypeInfo().vtable.pGetTypeController(const_cast<ReflectedValue&>(m_storage));
+        void* pController = typeInfo.vtable.pGetTypeController(const_cast<ReflectedValue&>(m_storage));
         return static_cast<SRClass*>(pController);
     }
 
@@ -289,7 +298,10 @@ namespace SR_UTILS_NS::Reflection {
         if (typeInfo.category != ReflectedCategoryType::Container || typeInfo.detailedType != "SharedPtr") {
             return nullptr;
         }
-        auto&& pController = GetTypeInfo().vtable.pGetTypeController(const_cast<ReflectedValue&>(m_storage));
+        if (!typeInfo.vtable.pGetTypeController) {
+            return nullptr;
+        }
+        auto&& pController = typeInfo.vtable.pGetTypeController(const_cast<ReflectedValue&>(m_storage));
         return static_cast<SR_HTYPES_NS::SharedPtrBase*>(pController);
     }
 
@@ -324,7 +336,7 @@ namespace SR_UTILS_NS::Reflection {
         Value value;
         value.m_allocator = IAllocator::GetDefaultAllocator();
         value.m_typeInfo = CopyTypeInfo(pTypeInfo);
-        if (pTypeInfo) {
+        if (pTypeInfo && pTypeInfo->vtable.pConstructor) {
             value.m_storage = pTypeInfo->vtable.pConstructor(*value.m_allocator);
         }
         return value;

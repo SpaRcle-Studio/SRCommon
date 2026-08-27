@@ -55,7 +55,7 @@ namespace SR_FLUX_NS {
         Vector<Reflection::Value*> m_callArguments;
 
         bool m_initialized = false;
-        bool m_validation = true;
+        bool m_validation = false;
         bool m_continueOnError = false;
         bool m_hasErrors = false;
 

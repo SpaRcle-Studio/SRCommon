@@ -29,6 +29,7 @@ namespace SR_UTILS_NS {
         void UnregisterReflector(const char* name);
 
         SR_NODISCARD EnumReflector* GetReflector(SR_UTILS_NS::StringAtom name) const;
+        SR_NODISCARD EnumReflector* TryGetReflector(SR_UTILS_NS::StringAtom name) const;
         SR_NODISCARD const Reflectors& GetReflectors() const noexcept { return m_reflectors; }
 
     private:

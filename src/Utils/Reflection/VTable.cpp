@@ -90,7 +90,6 @@ namespace SR_UTILS_NS::Reflection {
                     table.pSizeOfAlign = pIt->second;
                 }
                 else {
-                    SRHalt("FindVTable() : arithmetic type '{}' is not registered!", typeInfo.detailedType);
                     return false;
                 }
             }
@@ -98,8 +97,11 @@ namespace SR_UTILS_NS::Reflection {
             return true;
         }
         if (typeInfo.category == ReflectedCategoryType::Object) {
-            typeInfo.vtable = Factory::Instance().GetType(typeInfo.detailedType)->GetVTable();
-            return true;
+            if (auto&& pType = Factory::Instance().GetType(typeInfo.detailedType)) {
+                typeInfo.vtable = pType->GetVTable();
+                return true;
+            }
+            return false;
         }
         if (typeInfo.category == ReflectedCategoryType::String) {
             auto&& pTypeInfo = AllocateTypeInfo();
@@ -107,7 +109,6 @@ namespace SR_UTILS_NS::Reflection {
                 pIt->second(pTypeInfo);
             }
             else {
-                SRHalt("FindVTable() : TypeInfoVTable for type '{}' is not registered!", typeInfo.detailedType);
                 FreeTypeInfo(pTypeInfo);
                 return false;
             }
