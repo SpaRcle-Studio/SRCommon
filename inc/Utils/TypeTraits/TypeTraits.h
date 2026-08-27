@@ -73,14 +73,19 @@ namespace SR_UTILS_NS {
         using Arg = typename TypeAt<I, Args...>::Type;
     };
 
-    template <typename T, typename = void>
+    /// The result of a type trait is cached by the compiler at the first point of instantiation.
+	/// If that point happens to be a context where T is still incomplete (clang does this with PCH),
+	/// the false result would be reused everywhere, even where T is already complete.
+	/// The unique Tag (a distinct closure type per use site) forces a fresh instantiation,
+	/// so completeness is always checked at the point of use.
+	template <typename T, typename Tag = decltype([]{}), typename = void>
 	struct IsCompleteType : std::false_type {};
 
-	template <typename T>
-	struct IsCompleteType<T, std::void_t<decltype(sizeof(T))>> : std::true_type {};
+	template <typename T, typename Tag>
+	struct IsCompleteType<T, Tag, std::void_t<decltype(sizeof(T))>> : std::true_type {};
 
-	template <typename T>
-	constexpr bool IsCompleteTypeV = IsCompleteType<T>::value;
+	template <typename T, typename Tag = decltype([]{})>
+	constexpr bool IsCompleteTypeV = IsCompleteType<T, Tag>::value;
 
 	template<template<typename, size_t> typename Tmpl1>
 	struct IsStdArrayTemplate : std::false_type
