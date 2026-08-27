@@ -158,6 +158,15 @@ namespace SR_UTILS_NS::Reflection {
         SaveTypeInfoInternal(type, pTypeInfo);
     }
 
+    static SerializationId SERIALIZE_AXIS_ID[6] = {
+        SerializationId::Create("x"),
+        SerializationId::Create("y"),
+        SerializationId::Create("z"),
+        SerializationId::Create("w"),
+        SerializationId::Create("u"),
+        SerializationId::Create("v")
+    };
+
     void SerializeValue(const Value& value, ISerializer& serializer) {
         auto&& typeInfo = value.GetTypeInfo();
         switch (typeInfo.category) {
@@ -205,6 +214,12 @@ namespace SR_UTILS_NS::Reflection {
                     serializer.WriteInt(*value.Cast<int64_t>(), SerializationId::Create("int"));
                 }
                 break;
+            case ReflectedCategoryType::MathVector: {
+                for (uint8_t i = 0; i < typeInfo.detailedSize; ++i) {
+                    serializer.WriteInt(value.Cast<int64_t>()[i], SERIALIZE_AXIS_ID[i]);
+                }
+                break;
+            }
             default:
                 SR_WARN("SerializeValue() : unknown reflected type: {}", typeInfo.category);
                 return;
@@ -263,6 +278,12 @@ namespace SR_UTILS_NS::Reflection {
                 }
                 else {
                     deserializer.ReadInt(*value.Cast<int64_t>(), SerializationId::Create("int"));
+                }
+                return true;
+            }
+            case ReflectedCategoryType::MathVector: {
+                for (uint8_t i = 0; i < typeInfo.detailedSize; ++i) {
+                    deserializer.ReadInt(value.Cast<int64_t>()[i], SERIALIZE_AXIS_ID[i]);
                 }
                 return true;
             }

@@ -17,7 +17,7 @@ namespace SR_UTILS_NS::Reflection {
     {
         m_params.reserve(other.m_params.size());
         for (auto&& param : other.m_params) {
-            m_params.emplace_back(Parameter{ param.name, CopyTypeInfo(param.pTypeInfo) });
+            m_params.emplace_back(Parameter{ param.name, CopyTypeInfo(param.pTypeInfo), param.isReference, param.isConst });
         }
         m_pReturnTypeInfo = CopyTypeInfo(other.m_pReturnTypeInfo);
     }
@@ -39,7 +39,7 @@ namespace SR_UTILS_NS::Reflection {
 
             m_params.reserve(other.m_params.size());
             for (auto&& param : other.m_params) {
-                m_params.emplace_back(Parameter{ param.name, CopyTypeInfo(param.pTypeInfo) });
+                m_params.emplace_back(Parameter{ param.name, CopyTypeInfo(param.pTypeInfo), param.isReference, param.isConst });
             }
         }
         return *this;
@@ -156,8 +156,8 @@ namespace SR_UTILS_NS::Reflection {
         return true;
     }
 
-    Method& Method::AddParam(StringAtom name, TypeInfo* pTypeInfo) {
-        m_params.emplace_back(Parameter{ name, pTypeInfo });
+    Method& Method::AddParam(StringAtom name, TypeInfo* pTypeInfo, const bool isReference, const bool isConst) {
+        m_params.emplace_back(Parameter{ name, pTypeInfo, isReference, isConst });
         return *this;
     }
 
@@ -177,6 +177,10 @@ namespace SR_UTILS_NS::Reflection {
 
     bool Method::IsEvaluate() const {
         return m_isEvaluate;
+    }
+
+    bool Method::IsOutputParam(const uint32_t index) const {
+        return index < m_params.size() && m_params[index].IsOutput();
     }
 
     Method& Method::SetReturnType(TypeInfo* pReturnTypeInfo) {

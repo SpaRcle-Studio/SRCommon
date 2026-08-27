@@ -24,12 +24,14 @@ namespace SR_UTILS_NS {
         SR_REGISTER_SINGLETON(StringUtils);
         SR_CLASS()
     public:
-        /// @method
+        /// @method @evaluate
         void Reverse(String& str);
-        /// @method
+        /// @method @evaluate
         void ToLower(String& str);
-        /// @method
+        /// @method @evaluate
         void ToUpper(String& str);
+        /// @method @evaluate
+        String Concat(const String& left, const String& right);
 
         /// @method @evaluate
         StringAtom MakeAtom(StringView str);

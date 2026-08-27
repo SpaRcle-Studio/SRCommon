@@ -413,21 +413,17 @@ namespace SR_UTILS_NS::Reflection {
                 break;
             case ReflectedCategoryType::MathVector:
                 outNames = {
-                    "FVector2", "FVector3", "FVector4", "FVector6",
-                    "IVector2", "IVector3", "IVector4", "IVector6",
-                    "UVector2", "UVector3", "UVector4", "UVector6",
-                    "BVector2", "BVector3", "BVector4", "BVector6"
+                    "int32", "int64", "uint32", "uint64", "float", "bool",
                 };
                 break;
             case ReflectedCategoryType::MathRect:
                 outNames = {
-                    "FRect", "IRect", "URect", "USRect"
+                    "float", "int32", "uint32", "uint16"
                 };
                 break;
             case ReflectedCategoryType::MathSize:
                 outNames = {
-                    "FSize", "USize", "ISize",
-                    "FSize2", "USize2", "ISize2"
+                    "float", "int32", "uint32"
                 };
                 break;
             case ReflectedCategoryType::MathObject:
@@ -459,6 +455,24 @@ namespace SR_UTILS_NS::Reflection {
                 }
                 break;
             }
+            default:
+                break;
+        }
+    }
+
+    void GetTypeDetailedSizes(ReflectedCategoryType category, StringAtom detailedType, Vector<uint8_t>& outSizes) {
+        outSizes.clear();
+        switch (category) {
+            case ReflectedCategoryType::MathVector:
+                outSizes.emplace_back(2);
+                outSizes.emplace_back(3);
+                outSizes.emplace_back(4);
+                outSizes.emplace_back(6);
+                break;
+            case ReflectedCategoryType::MathSize:
+                outSizes.emplace_back(1);
+                outSizes.emplace_back(2);
+                break;
             default:
                 break;
         }

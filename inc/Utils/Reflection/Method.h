@@ -14,6 +14,13 @@ namespace SR_UTILS_NS::Reflection {
         struct Parameter {
             StringAtom name;
             TypeInfo* pTypeInfo = nullptr;
+            /// TypeInfo хранит тип со снятыми cv-квалификаторами и ссылкой, поэтому способ
+            /// передачи параметра приходится запоминать отдельно
+            bool isReference = false;
+            bool isConst = false;
+
+            /// параметр принимается по неконстантной ссылке, то есть метод может его изменить
+            SR_NODISCARD bool IsOutput() const noexcept { return isReference && !isConst; }
         };
     public:
         using Owner = SRClass;
@@ -39,6 +46,8 @@ namespace SR_UTILS_NS::Reflection {
         SR_NODISCARD bool IsEditorButton() const;
         SR_NODISCARD bool IsActive(Owner& owner) const;
         SR_NODISCARD bool IsEvaluate() const;
+        /// принимается ли параметр по неконстантной ссылке - такой параметр является выходным
+        SR_NODISCARD bool IsOutputParam(uint32_t index) const;
         SR_NODISCARD const TypeInfo* GetReturnType() const;
 
         void InvokeVoid(Owner& owner) const;
@@ -54,7 +63,7 @@ namespace SR_UTILS_NS::Reflection {
         Method& SetReturnType(TypeInfo* pReturnTypeInfo);
         Method& SetEditorButton();
         Method& SetCondition(MethodActiveCallbackFn condition);
-        Method& AddParam(StringAtom name, TypeInfo* pTypeInfo);
+        Method& AddParam(StringAtom name, TypeInfo* pTypeInfo, bool isReference = false, bool isConst = false);
         Method& SetEvaluate();
 
     private:

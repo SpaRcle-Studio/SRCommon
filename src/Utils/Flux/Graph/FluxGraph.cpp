@@ -5,9 +5,12 @@
 #include <Utils/Flux/Graph/FluxGraph.h>
 #include <Utils/Flux/Graph/FluxGraphCompileContext.h>
 #include <Utils/Flux/IR/FluxProgram.h>
+#include <Utils/Common/Singleton.h>
 #include <Utils/Memory/Allocator.h>
 #include <Utils/Memory/MemoryLiterals.h>
+#include <Utils/Reflection/Method.h>
 #include <Utils/Reflection/TypeInfoSerialization.h>
+#include <Utils/Reflection/VTable.h>
 #include <Utils/Serialization/JsonSerialization.h>
 
 #include <Codegen/FluxGraph.generated.hpp>
@@ -20,17 +23,41 @@ namespace SR_FLUX_NS {
             return type == FluxGraphNodeType::Invoke ? 1 : 0;
         }
 
+        /// Объект синглтона среда исполнения разрешает по имени, поэтому в инструкцию он не
+        /// передаётся - его пин занят первым аргументом вызова
+        SR_NODISCARD bool IsSingletonCallable(const FluxCallable& callable) {
+            return GetSingletonManager()->GetSingletonMeta(callable.object.GetHash()) != nullptr;
+        }
+
+        /// Пин, с которого начинаются аргументы вызова
+        SR_NODISCARD uint32_t GetFirstArgumentPin(const FluxGraphNodeType type, const FluxCallable& callable) {
+            const uint32_t objectPin = GetCallObjectPin(type);
+            return IsSingletonCallable(callable) ? objectPin : objectPin + 1;
+        }
+
+        /// Значение по умолчанию для типа параметра. Используется, когда входной пин выходного
+        /// аргумента не подключен
+        SR_NODISCARD Reflection::Value MakeDefaultValue(Reflection::TypeInfo* pTypeInfo) {
+            if (!pTypeInfo || (!pTypeInfo->vtable.pConstructor && !Reflection::FindVTable(*pTypeInfo))) {
+                return {};
+            }
+            return Reflection::Value::CreateDefault(pTypeInfo);
+        }
+
         /// Является ли выходной пин узла пином данных, а не потока исполнения
         SR_NODISCARD bool IsDataOutputPin(const FluxGraphNodeType type, const uint32_t pinIndex) {
             switch (type) {
                 case FluxGraphNodeType::Event:
                     return pinIndex >= 1;
                 case FluxGraphNodeType::Invoke:
-                    return pinIndex == 1;
+                    /// первый пин - возвращаемое значение, за ним идут выходные аргументы
+                    return pinIndex >= 1;
                 case FluxGraphNodeType::For:
                 case FluxGraphNodeType::Cast:
                     return pinIndex == 2;
                 case FluxGraphNodeType::Evaluate:
+                    /// нулевой пин - результат вызова, за ним идут выходные аргументы
+                    return true;
                 case FluxGraphNodeType::Constant:
                 case FluxGraphNodeType::ReadVariable:
                     return pinIndex == 0;
@@ -88,7 +115,7 @@ namespace SR_FLUX_NS {
         return *this;
     }
 
-    FluxProgram FluxGraph::Compile() const {
+    Optional<FluxProgram> FluxGraph::Compile() const {
         SR_TRACY_ZONE;
 
         FluxProgram program;
@@ -126,10 +153,7 @@ namespace SR_FLUX_NS {
 
         if (context.hasErrors) {
             SR_ERROR("FluxGraph::Compile() : failed to compile graph!");
-            program.instructions.clear();
-            program.labels.clear();
-            program.requiredRegisters = 0;
-            return program;
+            return Optional<FluxProgram>();
         }
 
         program.requiredRegisters = context.requiredRegisters;
@@ -156,6 +180,12 @@ namespace SR_FLUX_NS {
             auto&& node = m_nodes[i];
 
             if (node.GetType() == FluxGraphNodeType::Constant) {
+                /// if not linked, the constant is not used and does not need to be serialized
+                if (!FindOutputLink(i, 0)) {
+                    context.constantIndices.emplace(MakeFluxValueKey(i, 0), SR_UINT32_MAX);
+                    continue;
+                }
+
                 const uint32_t index = AddVariable(context, node.GetConstant(), false);
                 if (index == SR_UINT32_MAX) {
                     SR_ERROR("FluxGraph::CollectConstants() : failed to serialize constant of node {}!", i);
@@ -175,6 +205,34 @@ namespace SR_FLUX_NS {
                     return;
                 }
                 context.constantIndices.emplace(MakeFluxValueKey(i, 3), index);
+                continue;
+            }
+
+            /// входной пин выходного аргумента разрешается не подключать - тогда метод получает
+            /// значение по умолчанию, которое узел тут же публикует изменённым на выходном пине
+            if (node.GetType() == FluxGraphNodeType::Invoke || node.GetType() == FluxGraphNodeType::Evaluate) {
+                auto&& pMethod = node.GetCallable().FindMethodMeta();
+                if (!pMethod) {
+                    continue;
+                }
+
+                const uint32_t firstArgumentPin = GetFirstArgumentPin(node.GetType(), node.GetCallable());
+
+                for (uint32_t param = 0; param < pMethod->GetParamsCount(); ++param) {
+                    const uint32_t pin = firstArgumentPin + param;
+                    if (!pMethod->IsOutputParam(param) || FindInputLink(i, pin)) {
+                        continue;
+                    }
+
+                    const uint32_t index = AddVariable(context, MakeDefaultValue(pMethod->GetParam(param).pTypeInfo), false);
+                    if (index == SR_UINT32_MAX) {
+                        SR_ERROR("FluxGraph::CollectConstants() : failed to create default value for argument \"{}\" of node {}! Connect the pin explicitly.",
+                            pMethod->GetParam(param).name, i);
+                        context.hasErrors = true;
+                        return;
+                    }
+                    context.constantIndices.emplace(MakeFluxValueKey(i, pin), index);
+                }
             }
         }
     }
@@ -326,6 +384,12 @@ namespace SR_FLUX_NS {
     uint32_t FluxGraph::CompileInvokeNode(FluxGraphCompileContext& context, const uint32_t nodeIndex) const {
         if (!CompileCall(context, nodeIndex, GetCallObjectPin(FluxGraphNodeType::Invoke))) {
             return FluxInvalidNode;
+        }
+
+        /// у метода без возвращаемого значения первый выходной пин занят выходным аргументом,
+        /// который материализован самим вызовом
+        if (!HasFluxResultPin(FluxGraphNodeType::Invoke, m_nodes[nodeIndex].GetCallable().FindMethodMeta())) {
+            return GetFlowTarget(nodeIndex, 0);
         }
 
         /// возвращаемое значение среда исполнения кладёт в нулевой регистр, поэтому оно
@@ -629,12 +693,55 @@ namespace SR_FLUX_NS {
 
     /// =================================================== Значения ===================================================
 
+    uint32_t FluxGraph::GetCallArgumentCount(const uint32_t nodeIndex, const uint32_t firstArgumentPin, const Reflection::Method* pMethod) const {
+        /// сигнатура метода является источником истины: у выходного аргумента входной пин может
+        /// быть не подключен, поэтому по связям его количество не восстановить
+        if (pMethod) {
+            return pMethod->GetParamsCount();
+        }
+        const uint32_t maxPin = GetMaxInputPin(nodeIndex);
+        return maxPin >= firstArgumentPin ? (maxPin - firstArgumentPin) + 1 : 0;
+    }
+
+    FluxValueRef FluxGraph::MaterializeOutArgument(FluxGraphCompileContext& context, const uint32_t nodeIndex, const uint32_t outputPin, const FluxValueRef& source) const {
+        /// источник больше не понадобится. Если это был временный регистр, у которого вызов был
+        /// последним потребителем, то распределитель вернёт его же и копия не понадобится
+        ReleaseValue(context, source);
+
+        FluxValueRef output;
+        output.sourceNode = nodeIndex;
+        output.sourcePin = outputPin;
+        output.registerIndex = context.AllocateRegister();
+        output.operand = context.ToOperand(output.registerIndex);
+        output.isRegister = true;
+        output.loopDepth = context.loopDepth;
+
+        /// метод изменяет аргумент прямо в переданной ячейке, поэтому она обязана принадлежать
+        /// узлу: константы неизменяемы, а значение, у которого остались другие потребители,
+        /// портить нельзя
+        if (output.operand != source.operand) {
+            EmitBinary(context, FluxOpcode::Copy, source.operand, output.operand, nodeIndex);
+        }
+
+        const uint64_t key = MakeFluxValueKey(nodeIndex, outputPin);
+        context.materialized.emplace(key, output);
+        /// к потребителям добавляется одно владеющее использование: регистр освобождает сам узел
+        /// сразу после вызова, даже если значение никто не читает
+        context.pendingUses.emplace(key, GetUseCount(context, key) + 1);
+
+        return output;
+    }
+
     bool FluxGraph::CompileCall(FluxGraphCompileContext& context, const uint32_t nodeIndex, const uint32_t objectPin) const {
         auto&& node = m_nodes[nodeIndex];
 
-        /// если пин объекта не подключен, то вызов считается обращением к синглтону и объект
-        /// не передаётся в инструкцию - среда исполнения разрешит его по имени
-        auto&& pObjectLink = FindInputLink(nodeIndex, objectPin);
+        /// объект синглтона в инструкцию не передаётся - среда исполнения разрешит его по имени,
+        /// поэтому пин объекта у такого вызова занят первым аргументом. У остальных вызовов
+        /// неподключенный пин объекта тоже не даёт операнда, и вызов разрешается по имени
+        const bool isSingleton = IsSingletonCallable(node.GetCallable());
+        const uint32_t firstArgumentPin = isSingleton ? objectPin : objectPin + 1;
+
+        auto&& pObjectLink = isSingleton ? nullptr : FindInputLink(nodeIndex, objectPin);
 
         FluxValueRef object;
         if (pObjectLink) {
@@ -644,20 +751,54 @@ namespace SR_FLUX_NS {
             }
         }
 
-        Vector<FluxValueRef> arguments;
-        const uint32_t maxPin = GetMaxInputPin(nodeIndex);
-        arguments.reserve(maxPin);
+        auto&& pMethod = node.GetCallable().FindMethodMeta();
+        const uint32_t argumentCount = GetCallArgumentCount(nodeIndex, firstArgumentPin, pMethod);
 
-        for (uint32_t pin = objectPin + 1; pin <= maxPin; ++pin) {
-            auto&& pArgumentLink = FindInputLink(nodeIndex, pin);
-            if (!pArgumentLink) {
+        Vector<FluxValueRef> arguments;
+        Vector<uint32_t> outputPins;
+        arguments.reserve(argumentCount);
+        outputPins.reserve(argumentCount);
+
+        for (uint32_t param = 0; param < argumentCount; ++param) {
+            const uint32_t pin = firstArgumentPin + param;
+            const uint32_t outputPin = GetFluxOutArgumentPin(node.GetType(), pMethod, param);
+
+            if (auto&& pArgumentLink = FindInputLink(nodeIndex, pin)) {
+                arguments.emplace_back(EvaluateOutput(context, pArgumentLink->GetSourceNode(), pArgumentLink->GetSourcePin()));
+                if (context.hasErrors) {
+                    return false;
+                }
+            }
+            else if (outputPin != FluxInvalidPin) {
+                /// значение по умолчанию для неподключенного выходного аргумента подготовлено
+                /// проходом CollectConstants
+                auto&& pConstantIt = context.constantIndices.find(MakeFluxValueKey(nodeIndex, pin));
+                if (pConstantIt == context.constantIndices.end()) {
+                    SR_ERROR("FluxGraph::CompileCall() : default value of argument pin {} of node {} is missing!", pin, nodeIndex);
+                    context.hasErrors = true;
+                    return false;
+                }
+                FluxValueRef argument;
+                argument.sourceNode = nodeIndex;
+                argument.sourcePin = pin;
+                argument.operand = static_cast<FluxRegisterId>(pConstantIt->second);
+                argument.loopDepth = context.loopDepth;
+                arguments.emplace_back(argument);
+            }
+            else {
                 SR_ERROR("FluxGraph::CompileCall() : argument pin {} of node {} is not connected!", pin, nodeIndex);
                 context.hasErrors = true;
                 return false;
             }
-            arguments.emplace_back(EvaluateOutput(context, pArgumentLink->GetSourceNode(), pArgumentLink->GetSourcePin()));
-            if (context.hasErrors) {
-                return false;
+
+            outputPins.emplace_back(outputPin);
+        }
+
+        /// выходные аргументы переносятся в собственные регистры узла до вызова: инструкция
+        /// получит уже те операнды, которые метод имеет право изменить
+        for (uint32_t param = 0; param < arguments.size(); ++param) {
+            if (outputPins[param] != FluxInvalidPin) {
+                arguments[param] = MaterializeOutArgument(context, nodeIndex, outputPins[param], arguments[param]);
             }
         }
 
@@ -676,6 +817,8 @@ namespace SR_FLUX_NS {
         if (pObjectLink) {
             ReleaseValue(context, object);
         }
+        /// у выходного аргумента освобождается его собственное владеющее использование,
+        /// у обычного - использование, созданное связью
         for (auto&& argument : arguments) {
             ReleaseValue(context, argument);
         }
@@ -733,23 +876,46 @@ namespace SR_FLUX_NS {
                 if (!compiled) {
                     return {};
                 }
-                result.registerIndex = context.AllocateRegister();
-                result.operand = context.ToOperand(result.registerIndex);
-                result.isRegister = true;
-                /// результат вызова лежит в нулевом регистре и будет затёрт следующим вызовом
-                EmitBinary(context, FluxOpcode::Move, context.ToOperand(0), result.operand, nodeIndex);
-                break;
+
+                /// вызов компилируется один раз, поэтому результат забирается из нулевого регистра
+                /// сразу - даже если запрошен был выходной аргумент. Иначе чтение результата после
+                /// чтения аргумента скомпилировало бы вызов повторно
+                const uint64_t resultKey = MakeFluxValueKey(nodeIndex, 0);
+                const uint32_t resultUseCount = GetUseCount(context, resultKey);
+
+                if (HasFluxResultPin(FluxGraphNodeType::Evaluate, node.GetCallable().FindMethodMeta()) &&
+                    !context.materialized.contains(resultKey) &&
+                    (key == resultKey || resultUseCount > 0)
+                ) {
+                    FluxValueRef resultValue;
+                    resultValue.sourceNode = nodeIndex;
+                    resultValue.sourcePin = 0;
+                    resultValue.registerIndex = context.AllocateRegister();
+                    resultValue.operand = context.ToOperand(resultValue.registerIndex);
+                    resultValue.isRegister = true;
+                    resultValue.loopDepth = context.loopDepth;
+
+                    /// результат вызова лежит в нулевом регистре и будет затёрт следующим вызовом
+                    EmitBinary(context, FluxOpcode::Move, context.ToOperand(0), resultValue.operand, nodeIndex);
+
+                    context.materialized.emplace(resultKey, resultValue);
+                    context.pendingUses.emplace(resultKey, SR_MAX(resultUseCount, 1u));
+                }
+
+                /// выходной аргумент материализован самим вызовом
+                if (auto&& pIt = context.materialized.find(key); pIt != context.materialized.end()) {
+                    return pIt->second;
+                }
+
+                SR_ERROR("FluxGraph::EvaluateOutput() : output pin {} of node {} is not produced by the call!", pinIndex, nodeIndex);
+                context.hasErrors = true;
+                return {};
             }
             default:
                 SR_ERROR("FluxGraph::EvaluateOutput() : value of node {} is used before it is produced!", nodeIndex);
                 context.hasErrors = true;
                 return {};
         }
-
-        context.materialized.emplace(key, result);
-        context.pendingUses.emplace(key, SR_MAX(GetUseCount(context, key), 1u));
-
-        return result;
     }
 
     FluxValueRef FluxGraph::EvaluateCondition(FluxGraphCompileContext& context, const uint32_t nodeIndex, const uint32_t pinIndex) const {
@@ -765,8 +931,12 @@ namespace SR_FLUX_NS {
         const uint64_t key = MakeFluxValueKey(sourceNode, sourcePin);
 
         /// условие читается средой исполнения из нулевого регистра. Если оно вычисляется чистым
-        /// вызовом с единственным потребителем, то результат уже находится там - регистр не нужен
+        /// вызовом с единственным потребителем, то результат уже находится там - регистр не нужен.
+        /// Выходной аргумент такого вызова лежит в собственном регистре, поэтому для него путь
+        /// не годится
         if (m_nodes[sourceNode].GetType() == FluxGraphNodeType::Evaluate &&
+            sourcePin == 0 &&
+            HasFluxResultPin(FluxGraphNodeType::Evaluate, m_nodes[sourceNode].GetCallable().FindMethodMeta()) &&
             !context.materialized.contains(key) &&
             GetUseCount(context, key) <= 1
         ) {
@@ -1065,6 +1235,11 @@ namespace SR_FLUX_NS {
 
         const auto nodeIndex = static_cast<uint32_t>(pNode - m_nodes.data());
         return nodeIndex < m_nodes.size() ? nodeIndex : SR_UINT32_MAX;
+    }
+
+    Reflection::Value* FluxGraph::FindVariable(StringAtom name) {
+        auto&& pIt = m_variables.find(name);
+        return pIt != m_variables.end() ? &pIt->second : nullptr;
     }
 
     void FluxGraphNode::SetCallable(const FluxCallable& callable) {

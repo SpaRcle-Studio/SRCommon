@@ -491,6 +491,14 @@ namespace SR_UTILS_NS {
         return StringAtom(str);
     }
 
+    String StringUtils::Concat(const String& left, const String& right) {
+        String result;
+        result.reserve(left.size() + right.size());
+        result += left;
+        result += right;
+        return result;
+    }
+
     String GetErrorString(int err) {
         char buf[256]{};
     #ifdef _WIN32

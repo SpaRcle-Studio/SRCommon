@@ -169,9 +169,14 @@ namespace SR_UTILS_NS::Reflection {
                 m_storage = other.m_storage;
             }
             else if (m_typeInfo) {
-                m_storage = m_typeInfo->vtable.pConstructor(*m_allocator);
-                if (auto&& pCopy = other.GetTypeInfo().vtable.pCopy) {
-                    pCopy(other.m_storage, m_storage);
+                if (m_typeInfo->vtable.pConstructor) {
+                    m_storage = m_typeInfo->vtable.pConstructor(*m_allocator);
+                    if (auto&& pCopy = other.GetTypeInfo().vtable.pCopy) {
+                        pCopy(other.m_storage, m_storage);
+                    }
+                }
+                else {
+                    m_storage = {};
                 }
             }
             else {
@@ -198,9 +203,14 @@ namespace SR_UTILS_NS::Reflection {
         Value result;
         result.m_allocator = m_allocator;
         result.m_typeInfo = CopyTypeInfo(m_typeInfo);
-        result.m_storage = GetTypeInfo().vtable.pConstructor(*m_allocator);
-        if (auto&& pCopy = GetTypeInfo().vtable.pCopy) {
-            pCopy(m_storage, result.m_storage);
+        if (GetTypeInfo().vtable.pConstructor) {
+            result.m_storage = GetTypeInfo().vtable.pConstructor(*m_allocator);
+            if (auto&& pCopy = GetTypeInfo().vtable.pCopy) {
+                pCopy(m_storage, result.m_storage);
+            }
+        }
+        else {
+            result.m_storage = {};
         }
         return result;
     }

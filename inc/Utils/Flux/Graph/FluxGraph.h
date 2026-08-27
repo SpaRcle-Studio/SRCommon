@@ -6,13 +6,17 @@
 #define SR_ENGINE_COMMON_FLUX_GRAPH_H
 
 #include <Utils/Reflection/Value.h>
+#include <Utils/Reflection/Method.h>
 #include <Utils/Flux/IR/FluxInstruction.h>
+#include <Utils/Types/Optional.h>
 
 namespace SR_FLUX_NS {
     struct FluxGraphCompileContext;
     struct FluxValueRef;
     struct FluxProgram;
     class FluxGraphNode;
+
+    SR_MAYBE_UNUSED static constexpr uint32_t FluxInvalidPin = SR_UINT32_MAX;
 
     /// Ключ значения, которое производит выходной пин узла графа
     SR_MAYBE_UNUSED static constexpr uint64_t MakeFluxValueKey(uint32_t nodeIndex, uint32_t pinIndex) noexcept {
@@ -73,6 +77,43 @@ namespace SR_FLUX_NS {
         /// Synchronize,
     )
 
+    /// Индекс первого выходного пина, отведённого под выходные аргументы вызова.
+    /// FluxInvalidPin, если узел не является вызовом
+    SR_NODISCARD inline uint32_t GetFluxOutArgumentBasePin(const FluxGraphNodeType type, const Reflection::Method* pMethod) noexcept {
+        /// нулевой выходной пин у Invoke занят потоком исполнения, а у Evaluate - результатом.
+        /// Пин результата существует только у методов, которые что-то возвращают. Сигнатура
+        /// неизвестного метода считается возвращающей значение - так раскладка совпадает с той,
+        /// что строил редактор до появления метаданных
+        const bool hasResult = !pMethod || pMethod->HasReturn();
+        switch (type) {
+            case FluxGraphNodeType::Invoke:
+                return hasResult ? 2 : 1;
+            case FluxGraphNodeType::Evaluate:
+                return hasResult ? 1 : 0;
+            default:
+                return FluxInvalidPin;
+        }
+    }
+
+    /// Производит ли нулевой выходной пин узла Evaluate (или первый - узла Invoke) результат вызова
+    SR_NODISCARD inline bool HasFluxResultPin(const FluxGraphNodeType type, const Reflection::Method* pMethod) noexcept {
+        return (type == FluxGraphNodeType::Invoke || type == FluxGraphNodeType::Evaluate) && (!pMethod || pMethod->HasReturn());
+    }
+
+    /// Выходной пин, на котором узел публикует изменённое значение аргумента paramIndex.
+    /// FluxInvalidPin, если аргумент не является выходным
+    SR_NODISCARD inline uint32_t GetFluxOutArgumentPin(const FluxGraphNodeType type, const Reflection::Method* pMethod, const uint32_t paramIndex) noexcept {
+        const uint32_t basePin = GetFluxOutArgumentBasePin(type, pMethod);
+        if (!pMethod || basePin == FluxInvalidPin || !pMethod->IsOutputParam(paramIndex)) {
+            return FluxInvalidPin;
+        }
+        uint32_t offset = 0;
+        for (uint32_t i = 0; i < paramIndex; ++i) {
+            offset += pMethod->IsOutputParam(i) ? 1 : 0;
+        }
+        return basePin + offset;
+    }
+
     /// Слияние ветвей. Выходной flow-пин ведёт ровно в один узел, а входной flow-пин принимает
     /// сколько угодно связей. Узел с несколькими входящими потоками компилируется один раз и
     /// получает метку, остальные пути приходят в неё переходом - код после точки слияния не
@@ -80,15 +121,30 @@ namespace SR_FLUX_NS {
     /// остальные пути его регистр не заполняли, поэтому после метки оно вычисляется заново
     /// (для чистых узлов) либо приводит к ошибке компиляции.
     ///
+    /// Аргументы, принимаемые методом по неконстантной ссылке, считаются выходными: помимо
+    /// входного пина узел получает для такого аргумента отдельный выходной пин, на котором
+    /// публикуется значение, изменённое вызовом. Выходные пины аргументов идут подряд, в порядке
+    /// следования параметров, сразу за пином результата (см. GetFluxOutArgumentBasePin).
+    /// Значение аргумента всегда попадает в собственный регистр узла, поэтому источник вызовом
+    /// не портится: константа копируется в регистр (константы неизменяемы), значение переменной
+    /// тоже копируется - чтобы записать результат обратно, нужен узел WriteVariable. Копирование
+    /// не выполняется лишь тогда, когда источником был временный регистр, у которого этот вызов
+    /// был последним потребителем - такой регистр переиспользуется напрямую.
+    /// Входной пин выходного аргумента разрешается не подключать: тогда метод получит значение
+    /// по умолчанию для типа параметра.
+    ///
     /// Раскладка пинов узлов. Flow-пин всегда имеет индекс 0 (и на входе, и на выходе).
     /// Узлы Evaluate / Constant / ReadVariable являются чистыми - они не участвуют в потоке
     /// исполнения и вычисляются в точке использования.
     ///
     ///   Event         | out: 0 - flow, 1..N - аргументы события
-    ///   Invoke        | in:  0 - flow, 1 - объект (не подключен -> синглтон), 2..N - аргументы
-    ///                 | out: 0 - flow, 1 - возвращаемое значение
-    ///   Evaluate      | in:  0 - объект (не подключен -> синглтон), 1..N - аргументы
-    ///                 | out: 0 - результат вызова
+    ///   Invoke        | in:  0 - flow, 1 - объект (у синглтона пин занят первым аргументом),
+    ///                 |      далее - аргументы
+    ///                 | out: 0 - flow, 1 - возвращаемое значение (если метод его имеет),
+    ///                 |      далее - выходные аргументы
+    ///   Evaluate      | in:  0 - объект (у синглтона пин занят первым аргументом),
+    ///                 |      далее - аргументы
+    ///                 | out: 0 - результат вызова (если метод его имеет), далее - выходные аргументы
     ///   Constant      | out: 0 - значение
     ///   ReadVariable  | out: 0 - значение
     ///   WriteVariable | in:  0 - flow, 1 - значение          | out: 0 - flow
@@ -156,7 +212,9 @@ namespace SR_FLUX_NS {
         void RemoveInputLink(uint32_t nodeIndex, uint32_t pinIndex);
         void RemoveOutputLink(uint32_t nodeIndex, uint32_t pinIndex);
 
-        SR_NODISCARD FluxProgram Compile() const;
+        SR_NODISCARD Optional<FluxProgram> Compile() const;
+
+        SR_NODISCARD Reflection::Value* FindVariable(StringAtom name);
 
         SR_NODISCARD uint32_t GetNodeCount() const { return static_cast<uint32_t>(m_nodes.size()); }
         SR_NODISCARD uint32_t GetNodeIndex(const FluxGraphNode* pNode) const;
@@ -194,6 +252,9 @@ namespace SR_FLUX_NS {
         SR_NODISCARD uint32_t CompileCastNode(FluxGraphCompileContext& context, uint32_t nodeIndex) const;
 
         SR_NODISCARD bool CompileCall(FluxGraphCompileContext& context, uint32_t nodeIndex, uint32_t objectPin) const;
+        /// материализует выходной аргумент в собственном регистре узла и публикует его на выходном пине
+        SR_NODISCARD FluxValueRef MaterializeOutArgument(FluxGraphCompileContext& context, uint32_t nodeIndex, uint32_t outputPin, const FluxValueRef& source) const;
+        SR_NODISCARD uint32_t GetCallArgumentCount(uint32_t nodeIndex, uint32_t firstArgumentPin, const Reflection::Method* pMethod) const;
 
         SR_NODISCARD FluxValueRef EvaluateOutput(FluxGraphCompileContext& context, uint32_t nodeIndex, uint32_t pinIndex) const;
         SR_NODISCARD FluxValueRef EvaluateCondition(FluxGraphCompileContext& context, uint32_t nodeIndex, uint32_t pinIndex) const;
