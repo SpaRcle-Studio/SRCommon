@@ -18,18 +18,18 @@ namespace SR_UTILS_NS {
         template<typename Y> RawPointerHolder(Y* ptr)
             : m_ptr(ptr)
         {
+            /// the holder owns the object, so it must be able to delete and copy it. Y is required to be
+            /// complete right here: a trait based check could be answered from another context and would
+            /// silently leave the holder without a deleter in some translation units.
+            SR_UTILS_NS::RequireCompleteType<Y>();
+
             if (m_ptr) {
-                if constexpr (SR_UTILS_NS::IsCompleteTypeV<Y>) {
-                    m_deleter = [](T* p) { delete static_cast<Y*>(p); };
-                    if constexpr (std::is_copy_constructible_v<Y>) {
-                        m_copier = [](const T& obj) { return new Y(static_cast<const Y&>(obj)); };
-                    }
-                    else {
-                        m_copier = nullptr;
-                    }
+                m_deleter = [](T* p) { delete static_cast<Y*>(p); };
+                if constexpr (std::is_copy_constructible_v<Y>) {
+                    m_copier = [](const T& obj) { return new Y(static_cast<const Y&>(obj)); };
                 }
                 else {
-                    SRHalt("RawPointerHolder() : Type T must be complete to use default deleter and allocator!");
+                    m_copier = nullptr;
                 }
             }
         }

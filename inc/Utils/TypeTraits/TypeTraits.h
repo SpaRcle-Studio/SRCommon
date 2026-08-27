@@ -73,19 +73,29 @@ namespace SR_UTILS_NS {
         using Arg = typename TypeAt<I, Args...>::Type;
     };
 
-    /// The result of a type trait is cached by the compiler at the first point of instantiation.
-	/// If that point happens to be a context where T is still incomplete (clang does this with PCH),
-	/// the false result would be reused everywhere, even where T is already complete.
-	/// The unique Tag (a distinct closure type per use site) forces a fresh instantiation,
-	/// so completeness is always checked at the point of use.
-	template <typename T, typename Tag = decltype([]{}), typename = void>
+    /// \warning The compiler caches the result at the first point of instantiation, so the answer may come
+	///          from a context where T was still incomplete (clang does exactly this through a PCH).
+	///          Never make observable behaviour depend on it: both branches of such a check must be
+	///          semantically equivalent, otherwise the same inline template gets compiled differently in
+	///          different translation units and the linker silently picks one of them (ODR violation).
+	///          When a complete type is actually required, use RequireCompleteType<T>() instead.
+	template <typename T, typename = void>
 	struct IsCompleteType : std::false_type {};
 
-	template <typename T, typename Tag>
-	struct IsCompleteType<T, Tag, std::void_t<decltype(sizeof(T))>> : std::true_type {};
+	template <typename T>
+	struct IsCompleteType<T, std::void_t<decltype(sizeof(T))>> : std::true_type {};
 
-	template <typename T, typename Tag = decltype([]{})>
-	constexpr bool IsCompleteTypeV = IsCompleteType<T, Tag>::value;
+	template <typename T>
+	constexpr bool IsCompleteTypeV = IsCompleteType<T>::value;
+
+	/// Hard requirement: T must be complete right here. sizeof(T) is checked directly at every instantiation,
+	/// so unlike IsCompleteType it can not be cached from a context where T was incomplete, and all compilers
+	/// report the problem in the same place. void is allowed, it is used as a type erased pointer type.
+	template <typename T> constexpr void RequireCompleteType() noexcept {
+		if constexpr (!std::is_void_v<T>) {
+			static_assert(sizeof(T) > 0, "Type must be a complete type here! Check includes.");
+		}
+	}
 
 	template<template<typename, size_t> typename Tmpl1>
 	struct IsStdArrayTemplate : std::false_type

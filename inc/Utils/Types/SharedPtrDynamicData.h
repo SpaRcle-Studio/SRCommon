@@ -8,6 +8,10 @@
 #include <Utils/Common/AssertFwd.h>
 #include <Utils/Common/TypeInfo.h>
 #include <Utils/TypeTraits/TypeTraits.h>
+/// SRClass must be a complete type here: the class getter installed by InitBasic<T>() is the single
+/// source of truth about the SRClass part of the object at runtime, and it must be installed the same
+/// way in every translation unit. A forward declaration used to make it depend on the include order.
+#include <Utils/TypeTraits/SRClass.h>
 
 //#define SR_SHARED_PTR_TRACE
 
@@ -19,10 +23,6 @@ namespace SR_UTILS_NS {
     enum class SharedPtrPolicy : uint8_t {
         Automatic, Manually
     };
-}
-
-namespace SR_UTILS_NS {
-    class SRClass;
 }
 
 namespace SR_HTYPES_NS {
@@ -111,7 +111,7 @@ namespace SR_HTYPES_NS {
                     return static_cast<SRClass*>(ptr);
                 };
             }
-            else if constexpr (std::is_polymorphic_v<T> && SR_UTILS_NS::IsCompleteTypeV<SRClass>) {
+            else if constexpr (std::is_polymorphic_v<T>) {
                 classGetter = [](void* p) -> SRClass* {
                     T* ptr = static_cast<T*>(p);
                     return dynamic_cast<SRClass*>(ptr);

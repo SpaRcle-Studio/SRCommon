@@ -81,6 +81,10 @@ namespace SR_HTYPES_NS {
     { }
 
     template<class T> SharedPtr<T>::SharedPtr(const T* constPtr) {
+        /// this constructor takes ownership of the object, so it needs to know how to delete it
+        /// and whether it is an SRClass. T is required to be complete, no silent fallbacks.
+        SR_UTILS_NS::RequireCompleteType<T>();
+
         T* ptr = const_cast<T*>(constPtr);
         if (!ptr) {
             return;
@@ -88,10 +92,7 @@ namespace SR_HTYPES_NS {
 
         m_ptr = ptr;
 
-        if constexpr (!SR_UTILS_NS::IsCompleteTypeV<T>) {
-            static_assert(AlwaysFalseV<T>, "SharedPtr<T>::SharedPtr(const T* constPtr) : T must be a complete type!");
-        }
-        else if constexpr (SR_UTILS_NS::IsDerivedFrom<SharedPtr, T>::value) {
+        if constexpr (SR_UTILS_NS::IsDerivedFrom<SharedPtr, T>::value) {
             m_data = ptr->GetPtrData();
             if (m_data) {
                 m_data->IncrementStrong();
@@ -127,6 +128,9 @@ namespace SR_HTYPES_NS {
     }
 
     template<class T> SharedPtr<T>::SharedPtr(const T* constPtr, SR_UTILS_NS::SharedPtrPolicy policy) {
+        /// same as above: InitBasic<T>() below installs the deleter and the class getter for T.
+        SR_UTILS_NS::RequireCompleteType<T>();
+
         T* ptr = const_cast<T*>(constPtr);
         SR_SAFE_PTR_ASSERT(ptr, "Ptr is nullptr!");
 
@@ -246,6 +250,15 @@ namespace SR_HTYPES_NS {
         if (!m_ptr) {
             return nullptr;
         }
+
+        /// the getter was installed by InitBasic<T>(), where T is guaranteed to be complete, so it is the
+        /// only variant that gives the same answer in every translation unit. this method is compiled even
+        /// where T is just forward declared (it is a virtual override), so the casts below are a fallback
+        /// for the data that was created without InitBasic - and they must agree with the getter.
+        if (m_data && m_data->classGetter) {
+            return m_data->classGetter(m_ptr);
+        }
+
         if constexpr (SR_UTILS_NS::IsCompleteTypeV<T>) {
             if constexpr (std::is_base_of_v<SR_UTILS_NS::SRClass, T>) {
                 return static_cast<SR_UTILS_NS::SRClass*>(m_ptr);
@@ -254,7 +267,8 @@ namespace SR_HTYPES_NS {
                 return dynamic_cast<SR_UTILS_NS::SRClass*>(m_ptr);
             }
         }
-        return (m_data && m_data->classGetter) ? m_data->classGetter(m_ptr) : nullptr;
+
+        return nullptr;
     }
 
     template<class T> void SharedPtr<T>::DecrementPointer() {
@@ -399,21 +413,28 @@ namespace SR_HTYPES_NS {
 
 namespace SR_UTILS_NS {
     template<typename Y, typename T> SR_HTYPES_NS::SharedPtr<Y> SR_FORCE_INLINE DynamicPointerCast(const SR_HTYPES_NS::SharedPtr<T>& pPointer) {
-        if constexpr (std::is_same_v<T, void>) {
+        if constexpr (std::is_same_v<T, void> || std::is_same_v<Y, void>) {
             return SR_HTYPES_NS::SharedPtr<Y>();
         }
+        else {
+            /// the destination type is always named by the caller, so it is a hard requirement.
+            SR_UTILS_NS::RequireCompleteType<Y>();
 
-        if constexpr (!SR_UTILS_NS::IsCompleteTypeV<T> || !SR_UTILS_NS::IsCompleteTypeV<Y>) {
-            SRHalt("DynamicPointerCast with incomplete type! Check includes!");
-            return SR_HTYPES_NS::SharedPtr<Y>();
+            auto&& pData = pPointer.GetPtrData();
+            if (!pData || !pData->valid) {
+                return SR_HTYPES_NS::SharedPtr<Y>();
+            }
+
+            if constexpr (SR_UTILS_NS::IsCompleteTypeV<T>) {
+                return SR_HTYPES_NS::SharedPtr<Y>(dynamic_cast<Y*>(const_cast<T*>(pPointer.Get())));
+            }
+            else {
+                /// T is only forward declared here, so the cast goes through the type erased SRClass getter
+                /// installed where T was complete. for SRClass hierarchies the result is the same as the
+                /// direct dynamic_cast above, so it does not matter which branch a translation unit compiled.
+                return SR_HTYPES_NS::SharedPtr<Y>(dynamic_cast<Y*>(pPointer.GetSRClass()));
+            }
         }
-
-        auto&& pData = pPointer.GetPtrData();
-        if (pData && pData->valid) {
-            return SR_HTYPES_NS::SharedPtr<Y>(dynamic_cast<Y*>(const_cast<T*>(pPointer.Get())));
-        }
-
-        return SR_HTYPES_NS::SharedPtr<Y>();
     }
 
     template<typename Y, typename T> SR_HTYPES_NS::SharedPtr<Y> SR_FORCE_INLINE StaticPointerCast(const SR_HTYPES_NS::SharedPtr<T>& pPointer) {

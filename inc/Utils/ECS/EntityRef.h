@@ -44,6 +44,11 @@ namespace SR_UTILS_NS {
     };
 
     template<typename T> SR_NODISCARD StringAtom EntityRefExtractTypeName() noexcept {
+        /// @note both branches must return the same name: Factory::Register() stores the meta factory name
+        ///       under typeid(T*), and it is the very same name that GetClassStaticName() returns. This is what
+        ///       makes the completeness check here safe - the compiler may answer it differently in different
+        ///       translation units, but the resulting name does not change. Do not add a branch that changes
+        ///       observable behaviour, see IsCompleteType.
         if constexpr (!std::is_same_v<T, void>) {
             if constexpr (SR_UTILS_NS::IsCompleteTypeV<T>) {
                 return T::GetClassStaticName();
