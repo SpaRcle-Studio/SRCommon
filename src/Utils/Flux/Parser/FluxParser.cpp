@@ -111,13 +111,27 @@ namespace SR_FLUX_NS {
                 SR_ERROR("FluxParser::ParseInstruction() : expected label name after jump opcode!");
                 return false;
             }
-            auto&& labelName = StringAtom(labelNameLexem.value);
-            auto&& pLabelIt = m_labels.find(labelName);
-            if (pLabelIt == m_labels.end()) {
-                m_labels.emplace_back(labelName);
-                pLabelIt = std::prev(m_labels.end());
+            instruction.operands.emplace_back(ReferenceLabel(labelNameLexem.value));
+            return true;
+        }
+
+        /// синтаксис: fork <label> <label> ...
+        if (instruction.opcode == FluxOpcode::Fork) {
+            instruction.operands.reserve(4);
+            bool isLineEnd = false;
+            while (!isLineEnd && !IsEnd()) {
+                auto&& labelNameLexem = Advance();
+                if (labelNameLexem.kind != LexerDetails::LexemKind::Identifier) {
+                    Back();
+                    break;
+                }
+                isLineEnd = labelNameLexem.isLineEnd;
+                instruction.operands.emplace_back(ReferenceLabel(labelNameLexem.value));
             }
-            instruction.operands.emplace_back(static_cast<FluxRegisterId>(m_labels.distance(pLabelIt)));
+            if (instruction.operands.empty()) {
+                SR_ERROR("FluxParser::ParseInstruction() : expected at least one label name after fork opcode!");
+                return false;
+            }
             return true;
         }
 
@@ -277,17 +291,36 @@ namespace SR_FLUX_NS {
         }
     }
 
+    FluxRegisterId FluxParser::ReferenceLabel(const StringView name) {
+        /// имена меток разрешаются в индексы после разбора всей программы, поэтому пока
+        /// запоминается лишь позиция имени в списке ссылок
+        auto&& labelName = StringAtom(name);
+        auto&& pLabelIt = m_labels.find(labelName);
+        if (pLabelIt == m_labels.end()) {
+            m_labels.emplace_back(labelName);
+            pLabelIt = std::prev(m_labels.end());
+        }
+        return static_cast<FluxRegisterId>(m_labels.distance(pLabelIt));
+    }
+
     bool FluxParser::ResolveLabels() {
         for (auto&& instruction : m_program->instructions) {
-            if (instruction.opcode == FluxOpcode::Jump || instruction.opcode == FluxOpcode::Branch) {
-                auto&& labelId = instruction.operands[0];
-                auto&& labelName = m_labels[labelId];
+            const bool isJump = instruction.opcode == FluxOpcode::Jump || instruction.opcode == FluxOpcode::Branch;
+            if (!isJump && instruction.opcode != FluxOpcode::Fork) {
+                continue;
+            }
+
+            /// у перехода метка только одна, у fork метками являются все операнды
+            const uint32_t count = isJump ? 1u : static_cast<uint32_t>(instruction.operands.size());
+
+            for (uint32_t i = 0; i < count; ++i) {
+                auto&& labelName = m_labels[instruction.operands[i]];
                 auto&& pLabelIt = m_program->labels.find_if([&labelName](const FluxLabel& label) { return label.name == labelName; });
                 if (pLabelIt == m_program->labels.end()) {
                     SR_ERROR("FluxParser::ResolveLabels() : label \"{}\" not found!", labelName);
                     return false;
                 }
-                instruction.operands[0] = static_cast<FluxRegisterId>(m_program->labels.distance(pLabelIt));
+                instruction.operands[i] = static_cast<FluxRegisterId>(m_program->labels.distance(pLabelIt));
             }
         }
 

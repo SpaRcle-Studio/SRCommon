@@ -7,6 +7,7 @@
 #include <Utils/Reflection/Value.h>
 #include <Utils/Serialization/Serializer.h>
 #include <Utils/Serialization/Deserializer.h>
+#include <Utils/Common/StringUtils.h>
 
 #include <Enum/ReflectedCategoryType.hpp>
 
@@ -176,7 +177,23 @@ namespace SR_UTILS_NS::Reflection {
                     SR_WARN("SerializeValue() : unknown enum type: {}", typeInfo.detailedType);
                     return;
                 }
-                serializer.WriteString(pReflector->ToStringInternal(*value.Cast<int64_t>()).value(), SerializationId::Create("enum"));
+                if (pReflector->GetEnumVariantInternal() == EnumVariant::Flags) {
+                    /// save names separated by '|'
+                    SR_THREAD_LOCAL static String enumStr;
+                    enumStr.clear();
+                    for (uint64_t i = 0; i < 64; ++i) {
+                        if ((*value.Cast<int64_t>() & (1LL << i)) != 0) {
+                            if (!enumStr.empty()) {
+                                enumStr += '|';
+                            }
+                            enumStr += pReflector->ToStringInternal(1LL << i).value().ToStringView();
+                        }
+                    }
+                    serializer.WriteString(enumStr, SerializationId::Create("enum"));
+                }
+                else {
+                    serializer.WriteString(pReflector->ToStringInternal(*value.Cast<int64_t>()).value(), SerializationId::Create("enum"));
+                }
                 break;
             }
             case ReflectedCategoryType::String: {
@@ -220,6 +237,11 @@ namespace SR_UTILS_NS::Reflection {
                 }
                 break;
             }
+            case ReflectedCategoryType::Object:
+                if (auto&& pClass = value.GetSRClass()) {
+                    pClass->GetMeta()->Save(serializer, *dynamic_cast<Serializable*>(pClass));
+                }
+                break;
             default:
                 SR_WARN("SerializeValue() : unknown reflected type: {}", typeInfo.category);
                 return;
@@ -235,9 +257,22 @@ namespace SR_UTILS_NS::Reflection {
                     SR_WARN("DeserializeValue() : unknown enum type: {}", typeInfo.detailedType);
                     return false;
                 }
-                String enumStr;
+                SR_THREAD_LOCAL static String enumStr;
+                enumStr.clear();
                 deserializer.ReadString(enumStr, SerializationId::Create("enum"));
-                *value.Cast<int64_t>() = pReflector->FromStringInternal(enumStr).value_or(0);
+                if (pReflector->GetEnumVariantInternal() == EnumVariant::Flags) {
+                    int64_t valueInt = 0;
+                    SR_THREAD_LOCAL static Vector<StringView> parts;
+                    parts.clear();
+                    StringUtils::Instance().SplitView(enumStr, "|", parts);
+                    for (const auto& part : parts) {
+                        valueInt |= pReflector->FromStringInternal(part).value_or(0);
+                    }
+                    *value.Cast<int64_t>() = valueInt;
+                }
+                else {
+                    *value.Cast<int64_t>() = pReflector->FromStringInternal(enumStr).value_or(0);
+                }
                 return true;
             }
             case ReflectedCategoryType::String: {
@@ -250,7 +285,7 @@ namespace SR_UTILS_NS::Reflection {
                     deserializer.ReadString(str, SerializationId::Create("view"));
                 }
                 else if (typeInfo.detailedType == "StringAtom") {
-                    String& str = *value.Cast<String>();
+                    StringAtom& str = *value.Cast<StringAtom>();
                     deserializer.ReadString(str, SerializationId::Create("atom"));
                 }
                 else if (typeInfo.detailedType == "UnicodeString") {
@@ -287,6 +322,12 @@ namespace SR_UTILS_NS::Reflection {
                 }
                 return true;
             }
+            case ReflectedCategoryType::Object:
+                if (auto&& pClass = value.GetSRClass()) {
+                    pClass->GetMeta()->Load(deserializer, *dynamic_cast<Serializable*>(pClass));
+                    return true;
+                }
+                break;
             default:
                 break;
         }

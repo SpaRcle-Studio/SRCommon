@@ -29,6 +29,10 @@ namespace SR_FLUX_NS {
         Jump,
         Branch,
 
+        /// ветвление исполнения: каждый операнд является меткой, с которой начнётся новое
+        /// исполнение с копией текущего состояния. Родитель продолжает со следующей инструкции
+        Fork,
+
         Return,
     };
 
@@ -47,6 +51,7 @@ namespace SR_FLUX_NS {
         { "ret", FluxOpcode::Return },
         { "jmp", FluxOpcode::Jump },
         { "br", FluxOpcode::Branch },
+        { "fork", FluxOpcode::Fork },
         { "push", FluxOpcode::Push },
         { "pop", FluxOpcode::Pop },
     };

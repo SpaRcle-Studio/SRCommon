@@ -368,6 +368,10 @@ namespace SR_FLUX_NS {
                 return CompileWhileNode(context, nodeIndex);
             case FluxGraphNodeType::Cast:
                 return CompileCastNode(context, nodeIndex);
+            case FluxGraphNodeType::Sequence:
+                return CompileSequenceNode(context, nodeIndex);
+            case FluxGraphNodeType::ParallelSequence:
+                return CompileParallelSequenceNode(context, nodeIndex);
             case FluxGraphNodeType::Evaluate:
             case FluxGraphNodeType::Constant:
             case FluxGraphNodeType::ReadVariable:
@@ -686,6 +690,113 @@ namespace SR_FLUX_NS {
         CompileFlow(context, GetFlowTarget(nodeIndex, 0), terminator);
 
         context.LeaveFlowSplit();
+
+        context.flowTerminated = true;
+        return FluxInvalidNode;
+    }
+
+    Vector<uint32_t> FluxGraph::CollectSequenceSteps(const uint32_t nodeIndex) const {
+        Vector<uint32_t> steps;
+        const uint32_t maxPin = GetMaxOutputPin(nodeIndex);
+        for (uint32_t pin = 0; pin <= maxPin; ++pin) {
+            /// неподключенный пин шагом не является - редактор всегда показывает один свободный
+            if (FindOutputLink(nodeIndex, pin)) {
+                steps.emplace_back(pin);
+            }
+        }
+        return steps;
+    }
+
+    uint32_t FluxGraph::CompileSequenceNode(FluxGraphCompileContext& context, const uint32_t nodeIndex) const {
+        const Vector<uint32_t> steps = CollectSequenceSteps(nodeIndex);
+
+        /// у узла без подключенных шагов делать нечего - поток завершается снаружи
+        if (steps.empty()) {
+            return FluxInvalidNode;
+        }
+
+        const uint32_t terminator = context.terminatorLabel;
+
+        /// шаг может завершиться несколькими путями, поэтому начало следующего шага является
+        /// точкой слияния: значения, вычисленные внутри шага, до неё не доживают
+        context.EnterFlowSplit();
+
+        for (uint32_t i = 0; i < steps.size(); ++i) {
+            const bool isLast = i + 1 == steps.size();
+
+            /// последний шаг продолжает поток узла, остальные - следующий шаг
+            const uint32_t stepTerminator = isLast ? terminator : CreateLabel(context, "sequence_step");
+
+            CompileFlow(context, GetFlowTarget(nodeIndex, steps[i]), stepTerminator);
+            if (context.hasErrors) {
+                context.LeaveFlowSplit();
+                return FluxInvalidNode;
+            }
+
+            if (!isLast) {
+                context.PruneToFlowSplitScope();
+                BindLabelFolded(context, stepTerminator);
+            }
+        }
+
+        context.LeaveFlowSplit();
+
+        /// последний шаг уже завершил цепочку сам
+        context.flowTerminated = true;
+        return FluxInvalidNode;
+    }
+
+    uint32_t FluxGraph::CompileParallelSequenceNode(FluxGraphCompileContext& context, const uint32_t nodeIndex) const {
+        const Vector<uint32_t> steps = CollectSequenceSteps(nodeIndex);
+
+        if (steps.empty()) {
+            return FluxInvalidNode;
+        }
+
+        Vector<uint32_t> labels;
+        labels.reserve(steps.size());
+        for (uint32_t i = 0; i < steps.size(); ++i) {
+            labels.emplace_back(CreateLabel(context, "parallel_branch"));
+        }
+
+        {
+            auto&& instruction = EmitInstruction(context, FluxOpcode::Fork, nodeIndex);
+            instruction.operands.reserve(labels.size());
+            for (auto&& labelIndex : labels) {
+                instruction.operands.emplace_back(static_cast<FluxRegisterId>(labelIndex));
+            }
+        }
+
+        const uint32_t terminator = context.terminatorLabel;
+
+        /// родитель ветви не исполняет - он продолжает свой путь. Продолжать здесь нечем, у узла
+        /// нет пина продолжения, поэтому путь родителя на этом заканчивается
+        if (terminator == FluxInvalidLabel) {
+            EmitInstruction(context, FluxOpcode::Return, nodeIndex);
+        }
+        else {
+            EmitJump(context, FluxOpcode::Jump, terminator, nodeIndex);
+        }
+
+        /// ветви исполняются каждая в своей копии состояния, поэтому они, как и альтернативные
+        /// пути ветвления, компилируются с одним и тем же состоянием распределителя
+        const FluxRegisterSnapshot snapshot = context.SaveState();
+
+        context.EnterFlowSplit();
+
+        for (uint32_t i = 0; i < steps.size(); ++i) {
+            context.RestoreState(snapshot);
+            BindLabel(context, labels[i]);
+            /// ветвь является самостоятельным исполнением: дойдя до конца своей цепочки, она
+            /// обязана завершиться, а не продолжить код родителя
+            CompileFlow(context, GetFlowTarget(nodeIndex, steps[i]), FluxInvalidLabel);
+            if (context.hasErrors) {
+                break;
+            }
+        }
+
+        context.LeaveFlowSplit();
+        context.RestoreState(snapshot);
 
         context.flowTerminated = true;
         return FluxInvalidNode;
@@ -1122,6 +1233,22 @@ namespace SR_FLUX_NS {
             return;
         }
         program.labels[labelIndex].instructionPointer = static_cast<uint32_t>(program.instructions.size());
+    }
+
+    void FluxGraph::BindLabelFolded(FluxGraphCompileContext& context, const uint32_t labelIndex) const {
+        auto&& instructions = context.program->instructions;
+
+        /// переход на метку, которая связывается прямо здесь, ничего не делает: код шага просто
+        /// продолжается кодом следующего шага. Остальные переходы на эту метку не страдают -
+        /// она встанет ровно туда, куда вёл убранный переход
+        if (!instructions.empty()) {
+            auto&& last = instructions.back();
+            if (last.opcode == FluxOpcode::Jump && !last.operands.empty() && last.operands[0] == labelIndex) {
+                instructions.pop_back();
+            }
+        }
+
+        BindLabel(context, labelIndex);
     }
 
     uint32_t FluxGraph::AddVariable(FluxGraphCompileContext& context, const Reflection::Value& value, const bool isStorage) const {

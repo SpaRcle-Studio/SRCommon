@@ -21,7 +21,7 @@ namespace SR_UTILS_NS {
         /// @method @evaluate
         SR_NODISCARD virtual StringAtom GetTypeName() const noexcept;
         /// @method @evaluate
-        SR_NODISCARD const Entity::Ptr& GetEntity() const noexcept;
+        SR_NODISCARD Entity::Ptr GetEntity() const noexcept;
         /// @method @evaluate
         SR_NODISCARD EntityId GetEntityId() const noexcept { return m_entityId; }
 
@@ -83,6 +83,23 @@ namespace SR_UTILS_NS {
             }
             return nullptr;
         }
+    };
+
+    /// @inspector(EntityRefPropertyDrawer)
+    class EntityRefDynamic : public EntityRefBase {
+        using Super = EntityRefBase;
+        SR_CLASS()
+    public:
+        SR_NODISCARD StringAtom GetTypeName() const noexcept override {
+            return m_typeName;
+        }
+
+        void SetTypeName(StringAtom typeName) { m_typeName = typeName; }
+
+    private:
+        /// @property
+        StringAtom m_typeName;
+
     };
 }
 

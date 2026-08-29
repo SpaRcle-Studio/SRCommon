@@ -45,6 +45,8 @@ namespace SR_UTILS_NS {
         void RotateXYZ(SR_MATH_NS::Unit x, SR_MATH_NS::Unit y, SR_MATH_NS::Unit z);
         /// @method
         void ScaleXYZ(SR_MATH_NS::Unit x, SR_MATH_NS::Unit y, SR_MATH_NS::Unit z);
+        /// @method
+        void SetRotationXYZ(SR_MATH_NS::Unit x, SR_MATH_NS::Unit y, SR_MATH_NS::Unit z);
 
         virtual void Translate(const SR_MATH_NS::FVector3& translation);
         virtual void Rotate(const SR_MATH_NS::FVector3& eulers);
@@ -97,9 +99,13 @@ namespace SR_UTILS_NS {
         SR_NODISCARD virtual SR_MATH_NS::FVector3 Up() const;
         SR_NODISCARD virtual SR_MATH_NS::FVector3 Forward() const;
 
+        /// @method @evaluate
         SR_NODISCARD virtual SR_MATH_NS::FVector3 GetTranslation() const;
+        /// @method @evaluate
         SR_NODISCARD virtual SR_MATH_NS::FVector3 GetRotation() const;
+        /// @method @evaluate
         SR_NODISCARD virtual SR_MATH_NS::FVector3 GetScale() const;
+        /// @method @evaluate
         SR_NODISCARD virtual SR_MATH_NS::FVector3 GetSkew() const;
 
         SR_NODISCARD virtual SR_MATH_NS::FVector2 GetTranslation2D() const;

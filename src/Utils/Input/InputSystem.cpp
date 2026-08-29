@@ -234,6 +234,10 @@ namespace SR_UTILS_NS {
         }
     }
 
+    void Input::SetMouseDrag(const SR_MATH_NS::FVector2& drag) {
+        m_mouseDrag = drag;
+    }
+
     void Input::ResetMouse() {
         m_mouse = m_mousePrev = SR_PLATFORM_NS::GetMousePos();
         m_mouseScroll = m_mouseScrollCurrent = SR_MATH_NS::FVector2(0.f);
@@ -252,6 +256,7 @@ namespace SR_UTILS_NS {
     }
 
     void Input::LockCursor(CursorLockInfo& info) {
+        SR_TRACY_ZONE;
         SR_LOCK_GUARD;
 
     retry:
@@ -266,6 +271,7 @@ namespace SR_UTILS_NS {
     }
 
     void Input::UnlockCursor(const CursorLockInfo& info) {
+        SR_TRACY_ZONE;
         SR_LOCK_GUARD;
         auto&& locks = m_cursorLocks[static_cast<uint32_t>(info.lockMode)];
         auto&& pIt = std::find_if(locks.begin(), locks.end(), [&info](const CursorLockInfo& lock) {
@@ -340,11 +346,59 @@ namespace SR_UTILS_NS {
         std::swap(m_info, other.m_info);
     }
 
+    CursorLock::CursorLock(const CursorLock& other) noexcept {
+        m_isLock = other.m_isLock;
+        m_info = other.m_info;
+        if (m_isLock) {
+            Input::Instance().LockCursor(m_info);
+        }
+    }
+
     CursorLock& CursorLock::operator=(CursorLock&& other) noexcept {
         if (this != &other) {
             std::swap(m_isLock, other.m_isLock);
             std::swap(m_info, other.m_info);
         }
         return *this;
+    }
+
+    CursorLock& CursorLock::operator=(const CursorLock& other) noexcept {
+        if (this != &other) {
+            if (m_isLock) {
+                Input::Instance().UnlockCursor(m_info);
+            }
+            m_isLock = other.m_isLock;
+            m_info = other.m_info;
+            if (m_isLock) {
+                Input::Instance().LockCursor(m_info);
+            }
+        }
+        return *this;
+    }
+
+    void CursorLock::SetLockMode(CursorLockMode lockMode) {
+        if (m_info.lockMode != lockMode) {
+            if (m_isLock) {
+                Input::Instance().UnlockCursor(m_info);
+            }
+            m_info.lockMode = lockMode;
+            if (m_isLock) {
+                Input::Instance().LockCursor(m_info);
+            }
+        }
+    }
+
+    void CursorLock::Lock() {
+        if (!m_isLock) {
+            m_isLock = true;
+            Input::Instance().LockCursor(m_info);
+        }
+    }
+
+    void CursorLock::Unlock() {
+        if (m_isLock) {
+            m_isLock = false;
+            Input::Instance().UnlockCursor(m_info);
+        }
     }
 } // namespace SR_UTILS_NS

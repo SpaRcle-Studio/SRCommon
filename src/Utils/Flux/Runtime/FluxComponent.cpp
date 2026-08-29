@@ -7,41 +7,59 @@
 #include <Utils/Flux/Runtime/FluxUtils.h>
 #include <Utils/Common/SubscriptionMessage.h>
 #include <Utils/Events/Broadcaster.h>
+#include <Utils/Types/Time.h>
 
 #include <Codegen/FluxComponent.generated.hpp>
 
 namespace SR_FLUX_NS {
-    void FluxComponent::Update(float_t dt) {
+    void FluxComponent::InitializeRuntime() {
         if (!m_runtime) {
-            m_isStartCalled = false;
+            SR_TRACY_ZONE;
             m_onReloadedSubscription.Reset();
             if (auto&& pGraph = m_graph.GetResource()) {
                 if (auto&& pProgram = pGraph->Compile()) {
                     m_runtime = new FluxRuntime(pProgram);
+                    m_runtime->Emit("Start", {}, UpdateMode::Any);
                 }
                 m_onReloadedSubscription = pGraph->Subscribe(IResource::RELOAD_DONE_EVENT, [this](auto&&) {
-                    m_isStartCalled = false;
                     m_runtime.Reset();
                 });
             }
         }
+    }
+
+    void FluxComponent::DoUpdate(float_t dt, UpdateMode updateMode) {
+        SR_TRACY_ZONE;
+
+        InitializeRuntime();
+
+        const StringView eventName = updateMode == UpdateMode::FixedUpdate ? "FixedUpdate" : "Update";
 
         if (m_runtime) {
-            FluxUtils::Instance().SetActiveFluxComponent(GetThis().StaticCast<Component>());
-            if (!m_isStartCalled) {
-                m_isStartCalled = true;
-                m_runtime->Emit("Start", {});
+            FluxUtils::Instance().SetActiveFluxComponent(this);
+            if (!m_runtime->IsEmitted(eventName) && !m_runtime->IsEmitted("Start")) {
+                if (updateMode == UpdateMode::Update) {
+                    m_callArguments.resize(1);
+                    m_callArguments[0] = Reflection::Value::Create(dt);
+                }
+                else {
+                    m_callArguments.clear();
+                }
+                m_runtime->Emit(eventName, m_callArguments, updateMode);
             }
-            else if (!m_runtime->IsEmitted("Update") && !m_runtime->IsEmitted("Start")) {
-                m_callArguments.resize(1);
-                m_callArguments[0] = Reflection::Value::Create(dt);
-                m_runtime->Emit("Update", m_callArguments);
-            }
-            m_runtime->Update(dt);
+            m_runtime->Update(dt, updateMode);
             FluxUtils::Instance().SetActiveFluxComponent(nullptr);
         }
+    }
 
+    void FluxComponent::Update(float_t dt) {
+        DoUpdate(dt, UpdateMode::Update);
         Super::Update(dt);
+    }
+
+    void FluxComponent::FixedUpdate() {
+        DoUpdate(SR_HTYPES_NS::Time::Instance().FixedDeltaTime(), UpdateMode::FixedUpdate);
+        Super::FixedUpdate();
     }
 
     void FluxComponent::InspectGraph() {
@@ -56,5 +74,13 @@ namespace SR_FLUX_NS {
             return pGraph->GetResourcePath();
         }
         return {};
+    }
+
+    const Reflection::Value& FluxComponent::GetVariable(StringAtom name) const {
+        if (auto&& pIt = m_variables.find(name); pIt != m_variables.end()) {
+            return pIt->second;
+        }
+        static Reflection::Value EMPTY_VALUE;
+        return EMPTY_VALUE;
     }
 }

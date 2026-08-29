@@ -245,4 +245,8 @@ namespace SR_UTILS_NS {
             GetScale()
         );
     }
+
+    void Transform::SetRotationXYZ(SR_MATH_NS::Unit x, SR_MATH_NS::Unit y, SR_MATH_NS::Unit z) {
+        SetRotation(SR_MATH_NS::FVector3(x, y, z));
+    }
 }

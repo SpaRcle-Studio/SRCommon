@@ -21,22 +21,22 @@ namespace SR_FLUX_NS {
 
     void FluxIRExecutor::Awake() {
         if (m_runtime) {
-            m_runtime->Emit("Awake", {});
+            m_runtime->Emit("Awake", {}, UpdateMode::Any);
         }
         Super::Awake();
     }
 
     void FluxIRExecutor::Start() {
         if (m_runtime) {
-            m_runtime->Emit("Start", {});
+            m_runtime->Emit("Start", {}, UpdateMode::Any);
         }
         Super::Start();
     }
 
     void FluxIRExecutor::Update(float_t dt) {
         if (m_runtime) {
-            m_runtime->Emit("Update", {});
-            m_runtime->Update(dt);
+            m_runtime->Emit("Update", {}, UpdateMode::Update);
+            m_runtime->Update(dt, UpdateMode::Update);
         }
         Super::Update(dt);
     }

@@ -13,7 +13,7 @@
 #include <Utils/Math/Vector2.h>
 
 namespace SR_UTILS_NS {
-    enum class CursorLockMode : uint8_t { Everywhere, Editor, PlayMode };
+    SR_ENUM_NS_CLASS_T(CursorLockMode, uint8_t, Everywhere, Editor, PlayMode);
 
     struct CursorLockInfo {
         std::optional<SR_MATH_NS::FRect> lockRect;
@@ -45,6 +45,7 @@ namespace SR_UTILS_NS {
         void Update(float_t dt);
         void Reload();
         void ResetMouse();
+        void SetMouseDrag(const SR_MATH_NS::FVector2& drag);
 
         /// @method @evaluate
         SR_NODISCARD SR_MATH_NS::FVector2 GetMouseDrag();
@@ -110,15 +111,25 @@ namespace SR_UTILS_NS {
         State m_keys[256] = {};
     };
 
-    class CursorLock : public NonCopyable {
-        using Super = NonCopyable;
-
+    class CursorLock : public Serializable {
+        using Super = Serializable;
+        SR_CLASS()
     public:
+        CursorLock() = default;
         explicit CursorLock(CursorLockMode lockMode, std::optional<SR_MATH_NS::FRect> lockRect = std::nullopt);
         ~CursorLock() override;
 
         CursorLock(CursorLock&& other) noexcept;
+        CursorLock(const CursorLock& other) noexcept;
         CursorLock& operator=(CursorLock&& other) noexcept;
+        CursorLock& operator=(const CursorLock& other) noexcept;
+
+        /// @method
+        void SetLockMode(CursorLockMode lockMode);
+        /// @method
+        void Lock();
+        /// @method
+        void Unlock();
 
     private:
         CursorLockInfo m_info;

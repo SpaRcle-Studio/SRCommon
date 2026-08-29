@@ -17,6 +17,13 @@ namespace SR_FLUX_NS {
         Error
     };
 
+
+    SR_ENUM_NS_CLASS_T(UpdateMode, uint8_t,
+        Any,
+        Update,
+        FixedUpdate
+    );
+
     struct FluxExecution {
         FluxExecution() = default;
         FluxExecution(FluxExecution&& other) noexcept;
@@ -33,6 +40,12 @@ namespace SR_FLUX_NS {
 
         SR_NODISCARD bool IsFinished() const;
         SR_NODISCARD bool CanBeExecuted() const;
+
+        /// Копия состояния для инструкции fork. Указатель инструкции проставляет вызывающая
+        /// сторона - потомок начинает с метки своей ветви
+        SR_NODISCARD FluxExecution Fork() const;
+
+        UpdateMode updateMode = UpdateMode::Any;
 
     };
 }

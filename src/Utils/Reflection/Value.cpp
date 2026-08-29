@@ -276,6 +276,9 @@ namespace SR_UTILS_NS::Reflection {
 
     SRClass* Value::GetSRClass() const {
         if (SR_HTYPES_NS::SharedPtrBase* pShared = GetSharedPtrBase()) {
+            if (!pShared->GetPtrData()) {
+                return nullptr;
+            }
             return pShared->GetSRClass();
         }
         auto&& typeInfo = GetTypeInfo();

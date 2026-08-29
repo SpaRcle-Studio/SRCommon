@@ -435,7 +435,7 @@ namespace SR_UTILS_NS::Reflection {
                 break;
             case ReflectedCategoryType::Container:
                 outNames = {
-                    "FlatHashSet", "FlatHashMap", "Vector", "Set", "Map", "SharedPtr"
+                    "FlatHashSet", "FlatHashMap", "Vector", "Set", "Map", "SharedPtr", "EntityRef", "ResourceRef"
                 };
                 break;
             case ReflectedCategoryType::Object: {

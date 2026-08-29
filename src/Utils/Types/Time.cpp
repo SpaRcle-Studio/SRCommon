@@ -4,6 +4,8 @@
 
 #include <Utils/Types/Time.h>
 
+#include <Codegen/Time.generated.hpp>
+
 namespace SR_HTYPES_NS {
     void Time::Update() {
         SR_TRACY_ZONE;

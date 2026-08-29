@@ -7,7 +7,7 @@
 
 #include <Utils/Common/Singleton.h>
 #include <Utils/Lexer/LexerUtils.h>
-#include <Utils/Flux/IR/FluxOpcode.h>
+#include <Utils/Flux/IR/FluxInstruction.h>
 
 namespace SR_FLUX_NS {
     struct FluxProgram;
@@ -26,6 +26,9 @@ namespace SR_FLUX_NS {
         bool ParseInstruction();
         bool ParseConstantsOrStorage(bool isStorage);
         bool ResolveLabels();
+        /// добавляет имя метки в список ссылок и возвращает его позицию - временный операнд,
+        /// который ResolveLabels заменит на индекс метки в программе
+        SR_NODISCARD FluxRegisterId ReferenceLabel(StringView name);
 
         SR_NODISCARD FluxOpcode ParseOpcode();
 

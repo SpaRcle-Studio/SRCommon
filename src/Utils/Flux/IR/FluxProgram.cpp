@@ -82,6 +82,19 @@ namespace SR_FLUX_NS {
                     }
                 }
             }
+            else if (instruction.opcode == FluxOpcode::Fork) {
+                /// все операнды fork являются метками ветвей
+                for (const auto& labelIndex : instruction.operands) {
+                    if (labelIndex < labels.size()) {
+                        out += labels[labelIndex].name;
+                    }
+                    else {
+                        out += "error_invalid_label";
+                    }
+                    out += " ";
+                    operandOffset++;
+                }
+            }
 
             for (const auto& operand : instruction.operands | std::views::drop(operandOffset)) {
                 if (operand < constants.size()) {
@@ -106,7 +119,7 @@ namespace SR_FLUX_NS {
         std::exchange(clone.instructions, {});
         std::exchange(clone.labels, {});
 
-        clone.allocator = (IAllocator*)new MonotonicAllocator(allocator->GetUsedMemory());
+        clone.allocator = allocator ? (IAllocator*)new MonotonicAllocator(allocator->GetUsedMemory()) : nullptr;
         clone.requiredRegisters = requiredRegisters;
 
         clone.instructions = Vector<FluxInstruction>(clone.allocator.Get());

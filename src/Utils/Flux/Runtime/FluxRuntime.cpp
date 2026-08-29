@@ -19,10 +19,11 @@ namespace SR_FLUX_NS {
         m_constants.clear();
         m_storage.clear();
         m_executions.clear();
+        m_pendingExecutions.clear();
         m_callArguments.clear();
     }
 
-    void FluxRuntime::Emit(StringView labelName, const Vector<Reflection::Value>& args, bool ignoreExisting) {
+    void FluxRuntime::Emit(StringView labelName, const Vector<Reflection::Value>& args, UpdateMode updateMode, bool ignoreExisting) {
         SR_TRACY_ZONE;
         if (m_hasErrors) {
             return;
@@ -44,12 +45,13 @@ namespace SR_FLUX_NS {
         execution.instructionPointer = pIt->instructionPointer;
         execution.registers.resize(m_maxRegisters);
         execution.emittedLabel = pIt->name;
+        execution.updateMode = updateMode;
         for (auto&& arg : args) {
             execution.valueStack.emplace_back(arg);
         }
     }
 
-    void FluxRuntime::Update(float_t dt) {
+    void FluxRuntime::Update(float_t dt, UpdateMode updateMode) {
         SR_TRACY_ZONE;
 
         if (m_hasErrors || !Initialize()) {
@@ -57,17 +59,19 @@ namespace SR_FLUX_NS {
             return;
         }
 
+        float_t& timeAccumulator = updateMode == UpdateMode::FixedUpdate ? m_fixedTimeAccumulator : m_timeAccumulator;
+
         if (m_executions.empty()) {
-            m_timeAccumulator = 0.f;
+            timeAccumulator = 0.f;
             return;
         }
 
-        m_timeAccumulator += dt;
+        timeAccumulator += dt;
 
-        const float_t floatingTicks = m_timeAccumulator / m_tickDuration;
+        const float_t floatingTicks = timeAccumulator / m_tickDuration;
         const auto ticks = static_cast<uint32_t>(floatingTicks);
         int64_t budget = m_budgetPerTick * ticks;
-        m_timeAccumulator -= static_cast<float_t>(ticks) * m_tickDuration;
+        timeAccumulator -= static_cast<float_t>(ticks) * m_tickDuration;
 
         uint32_t executionIndex = m_executions.size();
         bool hasAvailable = true;
@@ -84,18 +88,26 @@ namespace SR_FLUX_NS {
             }
 
             FluxExecution& execution = m_executions[executionIndex];
-            if (!execution.CanBeExecuted()) {
+            const bool updateModeSuitable = execution.updateMode == UpdateMode::Any || execution.updateMode == updateMode;
+            if (!updateModeSuitable || !execution.CanBeExecuted()) {
                 continue;
             }
             hasAvailable = true;
 
             budget -= Execute(execution, budgetPerExecution);
 
-            if (execution.state == FluxExecutionState::Error && !m_continueOnError) {
+            const bool hasError = execution.state == FluxExecutionState::Error;
+
+            /// ссылка на исполнение после этого недействительна - список мог перевыделиться
+            FlushPendingExecutions();
+
+            if (hasError && !m_continueOnError) {
                 m_hasErrors = true;
                 break;
             }
         }
+
+        FlushPendingExecutions();
 
         m_executions.erase_if([](const FluxExecution& execution) {
             return execution.IsFinished();
@@ -235,6 +247,11 @@ namespace SR_FLUX_NS {
                     return false;
                 }
                 break;
+            case FluxOpcode::Fork:
+                if (!ForkExecution(execution, instruction)) SR_UNLIKELY_ATTRIBUTE {
+                    return false;
+                }
+                break;
             default:
                 SR_ERROR("FluxRuntime::ExecuteInstruction() : unhandled opcode!");
                 execution.state = FluxExecutionState::Error;
@@ -274,6 +291,21 @@ namespace SR_FLUX_NS {
                 return false;
             }
         }
+        else if (instruction.opcode == FluxOpcode::Fork) {
+            /// все операнды fork являются метками ветвей
+            if (instruction.operands.empty()) {
+                SR_ERROR("FluxRuntime::ValidateInstruction() : fork has no branches!");
+                execution.state = FluxExecutionState::Error;
+                return false;
+            }
+            for (auto&& labelId : instruction.operands) {
+                if (labelId >= m_program->labels.size()) {
+                    SR_ERROR("FluxRuntime::ValidateInstruction() : invalid label id {}!", labelId);
+                    execution.state = FluxExecutionState::Error;
+                    return false;
+                }
+            }
+        }
         else if (instruction.opcode >= FluxOpcode::Push && instruction.opcode <= FluxOpcode::Pop || instruction.opcode == FluxOpcode::Branch) {
             if (instruction.operands.size() != 1) {
                 SR_ERROR("FluxRuntime::ValidateInstruction() : invalid number of operands for opcode {}!", static_cast<uint32_t>(instruction.opcode));
@@ -282,7 +314,7 @@ namespace SR_FLUX_NS {
             }
         }
 
-        if (instruction.opcode != FluxOpcode::Jump && instruction.opcode != FluxOpcode::Branch) {
+        if (instruction.opcode != FluxOpcode::Jump && instruction.opcode != FluxOpcode::Branch && instruction.opcode != FluxOpcode::Fork) {
             for (auto&& operand : instruction.operands) {
                 if (GetRegisterType(execution, operand) == RegisterType::Invalid) {
                     return false;
@@ -424,12 +456,12 @@ namespace SR_FLUX_NS {
                     return false;
                 }
             }
-        }
 
-        if (!pCallable) {
-            SR_ERROR("FluxRuntime::CallMethod() : failed to get callable type!");
-            execution.state = FluxExecutionState::Error;
-            return false;
+            if (!pCallable) {
+                SR_ERROR("FluxRuntime::CallMethod() : failed to get callable type!");
+                execution.state = FluxExecutionState::Error;
+                return false;
+            }
         }
 
         auto&& pFunction = pCallable->GetMeta()->FindMethod(instruction.callable.function);
@@ -460,6 +492,47 @@ namespace SR_FLUX_NS {
         }
 
         return true;
+    }
+
+    bool FluxRuntime::ForkExecution(FluxExecution& execution, const FluxInstruction& instruction) {
+        SR_TRACY_ZONE;
+
+        if (instruction.operands.empty()) SR_UNLIKELY_ATTRIBUTE {
+            SR_ERROR("FluxRuntime::ForkExecution() : no branches provided!");
+            execution.state = FluxExecutionState::Error;
+            return false;
+        }
+
+        for (auto&& labelId : instruction.operands) {
+            if (labelId >= m_program->labels.size()) SR_UNLIKELY_ATTRIBUTE {
+                SR_ERROR("FluxRuntime::ForkExecution() : invalid label id {}!", labelId);
+                execution.state = FluxExecutionState::Error;
+                return false;
+            }
+
+            if (m_executions.size() + m_pendingExecutions.size() >= m_maxExecutions) {
+                SR_ERROR("FluxRuntime::ForkExecution() : max executions {} reached!", m_maxExecutions);
+                execution.state = FluxExecutionState::Error;
+                return false;
+            }
+
+            /// потомок получает копию состояния родителя на момент выполнения инструкции и
+            /// начинает с первой инструкции своей ветви - её счётчик ещё не сдвигался
+            auto&& child = m_pendingExecutions.emplace_back(execution.Fork());
+            child.instructionPointer = m_program->labels[labelId].instructionPointer;
+        }
+
+        return true;
+    }
+
+    void FluxRuntime::FlushPendingExecutions() {
+        if (m_pendingExecutions.empty()) {
+            return;
+        }
+        for (auto&& execution : m_pendingExecutions) {
+            m_executions.emplace_back(std::move(execution));
+        }
+        m_pendingExecutions.clear();
     }
 
     Reflection::Value FluxRuntime::LoadFluxVariable(const FluxVariable& variable) {

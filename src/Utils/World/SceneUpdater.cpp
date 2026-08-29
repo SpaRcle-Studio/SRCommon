@@ -6,6 +6,7 @@
 #include <Utils/World/Scene.h>
 #include <Utils/ECS/GameObject.h>
 #include <Utils/ECS/Component.h>
+#include <Utils/Input/InputSystem.h>
 #include <Utils/Types/Function.h>
 #include <Utils/Profile/TracyContext.h>
 

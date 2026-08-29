@@ -70,12 +70,19 @@ namespace SR_FLUX_NS {
         For,
         While,
 
-        Cast
+        Cast,
+
+        Sequence,
+        ParallelSequence
 
         /// TODO:
-        /// Sequence,
         /// Synchronize,
     )
+
+    /// Узел, у которого все выходные пины являются шагами потока исполнения
+    SR_NODISCARD inline bool IsFluxSequenceNode(const FluxGraphNodeType type) noexcept {
+        return type == FluxGraphNodeType::Sequence || type == FluxGraphNodeType::ParallelSequence;
+    }
 
     /// Индекс первого выходного пина, отведённого под выходные аргументы вызова.
     /// FluxInvalidPin, если узел не является вызовом
@@ -133,6 +140,18 @@ namespace SR_FLUX_NS {
     /// Входной пин выходного аргумента разрешается не подключать: тогда метод получит значение
     /// по умолчанию для типа параметра.
     ///
+    /// Sequence инструкцией не является - это удобство редактора. Шаги компилируются подряд,
+    /// в порядке следования выходных пинов: код следующего шага просто идёт за кодом предыдущего,
+    /// как если бы узлы были соединены в одну цепочку. Значение, вычисленное внутри шага, до
+    /// следующего шага не доживает - шаг может завершиться несколькими путями, и не каждый из них
+    /// заполнял бы регистр.
+    ///
+    /// ParallelSequence, в отличие от него, компилируется в инструкцию fork: каждый её операнд
+    /// является меткой шага, с которой среда исполнения запускает новое исполнение с копией
+    /// состояния (регистры, стек значений, стек вызовов) на момент выполнения инструкции - как
+    /// fork(2) для процессов. Родитель продолжает свой путь дальше по потоку, а каждая ветвь
+    /// живёт самостоятельно и завершается по достижении конца своей цепочки.
+    ///
     /// Раскладка пинов узлов. Flow-пин всегда имеет индекс 0 (и на входе, и на выходе).
     /// Узлы Evaluate / Constant / ReadVariable являются чистыми - они не участвуют в потоке
     /// исполнения и вычисляются в точке использования.
@@ -154,6 +173,8 @@ namespace SR_FLUX_NS {
     ///                 | out: 0 - flow (тело), 1 - flow (после цикла), 2 - текущий индекс
     ///   Cast          | in:  0 - flow, 1 - объект
     ///                 | out: 0 - flow (успех), 1 - flow (cast failed), 2 - приведённый объект
+    ///   Sequence      | in:  0 - flow                        | out: 0..N - flow (шаги)
+    ///   ParallelSequence | in: 0 - flow                      | out: 0..N - flow (ветви)
     class FluxGraphNode : public Serializable {
         SR_CLASS()
     public:
@@ -250,6 +271,10 @@ namespace SR_FLUX_NS {
         SR_NODISCARD uint32_t CompileWhileNode(FluxGraphCompileContext& context, uint32_t nodeIndex) const;
         SR_NODISCARD uint32_t CompileForNode(FluxGraphCompileContext& context, uint32_t nodeIndex) const;
         SR_NODISCARD uint32_t CompileCastNode(FluxGraphCompileContext& context, uint32_t nodeIndex) const;
+        SR_NODISCARD uint32_t CompileSequenceNode(FluxGraphCompileContext& context, uint32_t nodeIndex) const;
+        SR_NODISCARD uint32_t CompileParallelSequenceNode(FluxGraphCompileContext& context, uint32_t nodeIndex) const;
+        /// выходные flow-пины узла, к которым подключены шаги, в порядке следования
+        SR_NODISCARD Vector<uint32_t> CollectSequenceSteps(uint32_t nodeIndex) const;
 
         SR_NODISCARD bool CompileCall(FluxGraphCompileContext& context, uint32_t nodeIndex, uint32_t objectPin) const;
         /// материализует выходной аргумент в собственном регистре узла и публикует его на выходном пине
@@ -272,6 +297,8 @@ namespace SR_FLUX_NS {
         void EmitJump(FluxGraphCompileContext& context, FluxOpcode opcode, uint32_t labelIndex, uint32_t debugId) const;
         SR_NODISCARD uint32_t CreateLabel(FluxGraphCompileContext& context, StringView prefix) const;
         void BindLabel(FluxGraphCompileContext& context, uint32_t labelIndex) const;
+        /// связывает метку, убирая хвостовой переход на неё же - код просто продолжается дальше
+        void BindLabelFolded(FluxGraphCompileContext& context, uint32_t labelIndex) const;
 
         SR_NODISCARD uint32_t AddVariable(FluxGraphCompileContext& context, const Reflection::Value& value, bool isStorage) const;
 

@@ -16,7 +16,7 @@ namespace SR_UTILS_NS {
         return StringAtom();
     }
 
-    const Entity::Ptr& EntityRefBase::GetEntity() const noexcept {
+    Entity::Ptr EntityRefBase::GetEntity() const noexcept {
         Resolve();
         return m_pEntity;
     }

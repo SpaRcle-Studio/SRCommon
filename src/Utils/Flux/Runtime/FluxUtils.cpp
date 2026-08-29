@@ -9,11 +9,11 @@
 namespace SR_FLUX_NS {
     SR_MAYBE_UNUSED auto&& fluxUtilsInitInstance = FluxUtils::Instance();
 
-    void FluxUtils::SetActiveFluxComponent(Component::Ptr pComponent) {
+    void FluxUtils::SetActiveFluxComponent(FluxComponent::Ptr pComponent) {
         m_activeFluxComponent = std::move(pComponent);
     }
 
-    Component::Ptr FluxUtils::GetActiveFluxComponent() const {
+    FluxComponent::Ptr FluxUtils::GetActiveFluxComponent() const {
         return m_activeFluxComponent;
     }
 

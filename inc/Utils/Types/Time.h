@@ -5,28 +5,31 @@
 #ifndef SR_ENGINE_TIME_H
 #define SR_ENGINE_TIME_H
 
-#include <Utils/Debug.h>
+#include <Utils/TypeTraits/SRClass.h>
 #include <Utils/Common/Singleton.h>
-#include <Utils/Profile/TracyContext.h>
 
 namespace SR_HTYPES_NS {
-    class Time : public Singleton<Time> {
+    /// @noCopyable @noMovable
+    class Time : public Singleton<Time>, public SRClass {
         SR_REGISTER_SINGLETON(Time)
+        SR_CLASS()
     public:
         using ClockT = std::chrono::high_resolution_clock;
 
     public:
-        ~Time() override = default;
-
         void Update();
 
         void SetDeltaTime(float_t dt) { m_deltaTime = dt; }
         void SetFixedDeltaTime(float_t dt) { m_fixedDeltaTime = dt; }
 
+        /// @method @evaluate
         SR_NODISCARD float_t FixedDeltaTime() const noexcept { return m_fixedDeltaTime; }
+        /// @method @evaluate
         SR_NODISCARD float_t DeltaTime() const noexcept { return m_deltaTime; }
-        SR_NODISCARD TimePointType Now() const noexcept { return m_timeInfo.load().m_point; }
+        /// @method @evaluate
         SR_NODISCARD uint64_t Count() const noexcept { return m_timeInfo.load().m_point.time_since_epoch().count(); }
+
+        SR_NODISCARD TimePointType Now() const noexcept { return m_timeInfo.load().m_point; }
         SR_NODISCARD float_t FClock() const noexcept { return static_cast<float_t>(Count()) / SR_CLOCKS_PER_SEC / SR_CLOCKS_PER_SEC; }
 
 #ifdef SR_LINUX
