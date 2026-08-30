@@ -135,6 +135,22 @@ namespace SR_UTILS_NS {
         CursorLockInfo m_info;
         bool m_isLock = false;
     };
+
+    class InputAccumulator {
+    public:
+        InputAccumulator() = default;
+        ~InputAccumulator() = default;
+
+    public:
+        void Accumulate();
+        void Apply(uint32_t frames);
+        void Reset();
+
+    private:
+        SR_MATH_NS::FVector2 m_mouseDragAccumulated;
+        SR_MATH_NS::FVector2 m_mouseDragOriginal;
+
+    };
 } // namespace SR_UTILS_NS
 
 #endif // SR_ENGINE_INPUT_SYSTEM_H

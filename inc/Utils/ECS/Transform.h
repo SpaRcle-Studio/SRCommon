@@ -47,6 +47,10 @@ namespace SR_UTILS_NS {
         void ScaleXYZ(SR_MATH_NS::Unit x, SR_MATH_NS::Unit y, SR_MATH_NS::Unit z);
         /// @method
         void SetRotationXYZ(SR_MATH_NS::Unit x, SR_MATH_NS::Unit y, SR_MATH_NS::Unit z);
+        /// @method
+        void SetQuaternion(const SR_MATH_NS::Quaternion& quaternion);
+        /// @method
+        void Follow(const Transform::Ptr& target, const SR_MATH_NS::FVector3& offset, float_t speed);
 
         virtual void Translate(const SR_MATH_NS::FVector3& translation);
         virtual void Rotate(const SR_MATH_NS::FVector3& eulers);
@@ -93,10 +97,14 @@ namespace SR_UTILS_NS {
         SR_NODISCARD virtual const SR_MATH_NS::Matrix4x4& GetMatrix() const;
         SR_NODISCARD virtual const SR_MATH_NS::AABB& GetAABB() const;
 
+        /// @method @evaluate
         SR_NODISCARD virtual SR_MATH_NS::Quaternion GetQuaternion() const;
 
+        /// @method @evaluate
         SR_NODISCARD virtual SR_MATH_NS::FVector3 Right() const;
+        /// @method @evaluate
         SR_NODISCARD virtual SR_MATH_NS::FVector3 Up() const;
+        /// @method @evaluate
         SR_NODISCARD virtual SR_MATH_NS::FVector3 Forward() const;
 
         /// @method @evaluate

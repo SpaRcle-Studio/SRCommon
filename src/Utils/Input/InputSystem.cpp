@@ -401,4 +401,24 @@ namespace SR_UTILS_NS {
             Input::Instance().UnlockCursor(m_info);
         }
     }
+
+    void InputAccumulator::Accumulate() {
+        m_mouseDragAccumulated += Input::Instance().GetMouseDrag();
+    }
+
+    void InputAccumulator::Apply(uint32_t frames) {
+        if (frames == 0) {
+            SRHalt("InputAccumulator::Apply() : frames cannot be zero!");
+            return;
+        }
+        auto&& input = Input::Instance();
+        m_mouseDragOriginal = input.GetMouseDrag();
+        m_mouseDragAccumulated += input.GetMouseDrag();
+        input.SetMouseDrag(m_mouseDragAccumulated / static_cast<float_t>(frames));
+    }
+
+    void InputAccumulator::Reset() {
+        m_mouseDragAccumulated = SR_MATH_NS::FVector2(0, 0);
+        Input::Instance().SetMouseDrag(m_mouseDragOriginal);
+    }
 } // namespace SR_UTILS_NS

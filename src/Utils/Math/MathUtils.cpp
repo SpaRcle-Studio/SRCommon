@@ -40,4 +40,20 @@ namespace SR_MATH_NS {
     float_t MathUtils::ClampFloat(float_t value, float_t min, float_t max) const {
         return Clamp(value, min, max);
     }
+
+    Quaternion MathUtils::QuaternionFromEulerAngles(float_t pitch, float_t yaw, float_t roll) const {
+        return Quaternion::FromEulerAngles(FVector3(pitch, yaw, roll));
+    }
+
+    Quaternion MathUtils::SlerpQuaternion(const Quaternion& a, const Quaternion& b, float_t t) const {
+        return a.Slerp(b, t);
+    }
+
+    Quaternion MathUtils::InverseQuaternion(const Quaternion& q) const {
+        return q.Inverse();
+    }
+
+    FVector3 MathUtils::MultiplyFVector3Quat(const FVector3& a, const Quaternion& b) const {
+        return b * a;
+    }
 }

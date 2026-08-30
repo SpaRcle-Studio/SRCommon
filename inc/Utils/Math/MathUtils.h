@@ -26,6 +26,8 @@ namespace SR_MATH_NS {
         /// @method @evaluate
         FVector3 MultiplyFVector3Float(const FVector3& a, float_t b) const;
         /// @method @evaluate
+        FVector3 MultiplyFVector3Quat(const FVector3& a, const Quaternion& b) const;
+        /// @method @evaluate
         FVector3 SumFVector3(const FVector3& a, const FVector3& b) const;
 
         /// @method @evaluate
@@ -70,6 +72,13 @@ namespace SR_MATH_NS {
         bool IsFloatGreater(float_t a, float_t b) const { return a > b; }
         /// @method @evaluate
         bool IsFloatLess(float_t a, float_t b) const { return a < b; }
+
+        /// @method @evaluate
+        Quaternion QuaternionFromEulerAngles(float_t pitch, float_t yaw, float_t roll) const;
+        /// @method @evaluate
+        Quaternion SlerpQuaternion(const Quaternion& a, const Quaternion& b, float_t t) const;
+        /// @method @evaluate
+        Quaternion InverseQuaternion(const Quaternion& q) const;
 
     };
 }

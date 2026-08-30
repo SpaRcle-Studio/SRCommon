@@ -6,6 +6,7 @@
 #define SR_ENGINE_COMMON_FLUX_RUNTIME_H
 
 #include <Utils/Flux/Runtime/FluxExecution.h>
+#include <Utils/Input/InputSystem.h>
 
 namespace SR_FLUX_NS {
     enum class RegisterType : uint8_t {
@@ -54,13 +55,18 @@ namespace SR_FLUX_NS {
         SR_NODISCARD Reflection::Value LoadFluxVariable(const FluxVariable& variable);
 
     public:
+        struct Accumulator {
+            InputAccumulator input;
+            float_t time = 0.0f;
+        };
+
         uint32_t m_maxRegisters = 16;
         uint32_t m_maxExecutions = 256;
         uint32_t m_budgetPerTick = 1024;
         float_t m_tickDuration = 0.016f; // 1 / 60 FPS
 
-        float_t m_timeAccumulator = 0.0f;
-        float_t m_fixedTimeAccumulator = 0.0f;
+        Accumulator m_accumulator;
+        Accumulator m_fixedAccumulator;
 
         Vector<FluxExecution> m_executions;
         Vector<FluxExecution> m_pendingExecutions;

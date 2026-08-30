@@ -193,7 +193,10 @@ namespace SR_UTILS_NS::Reflection {
             return false;
         }
         for (size_t i = 0; i < 2; ++i) {
-            if (pNext[i] != other.pNext[i]) {
+            if (bool(pNext[i]) != bool(other.pNext[i])) {
+                return false;
+            }
+            if (pNext[i] && *pNext[i] != *other.pNext[i]) {
                 return false;
             }
         }

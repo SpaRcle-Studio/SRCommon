@@ -59,22 +59,29 @@ namespace SR_FLUX_NS {
             return;
         }
 
-        float_t& timeAccumulator = updateMode == UpdateMode::FixedUpdate ? m_fixedTimeAccumulator : m_timeAccumulator;
+        Accumulator& accumulator = updateMode == UpdateMode::FixedUpdate ? m_fixedAccumulator : m_accumulator;
 
         if (m_executions.empty()) {
-            timeAccumulator = 0.f;
+            accumulator.time = 0.f;
             return;
         }
 
-        timeAccumulator += dt;
+        accumulator.time += dt;
 
-        const float_t floatingTicks = timeAccumulator / m_tickDuration;
+        const float_t floatingTicks = accumulator.time / m_tickDuration;
         const auto ticks = static_cast<uint32_t>(floatingTicks);
         int64_t budget = m_budgetPerTick * ticks;
-        timeAccumulator -= static_cast<float_t>(ticks) * m_tickDuration;
+        accumulator.time -= static_cast<float_t>(ticks) * m_tickDuration;
 
         uint32_t executionIndex = m_executions.size();
         bool hasAvailable = true;
+
+        if (budget <= 0) {
+            accumulator.input.Accumulate();
+            return;
+        }
+
+        accumulator.input.Apply(1);
 
         while (budget > 0) {
             const auto budgetPerExecution = SR_MAX(1, m_executions.size() / budget);
@@ -106,6 +113,8 @@ namespace SR_FLUX_NS {
                 break;
             }
         }
+
+        accumulator.input.Reset();
 
         FlushPendingExecutions();
 

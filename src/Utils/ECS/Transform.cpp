@@ -249,4 +249,16 @@ namespace SR_UTILS_NS {
     void Transform::SetRotationXYZ(SR_MATH_NS::Unit x, SR_MATH_NS::Unit y, SR_MATH_NS::Unit z) {
         SetRotation(SR_MATH_NS::FVector3(x, y, z));
     }
+
+    void Transform::SetQuaternion(const SR_MATH_NS::Quaternion& quaternion) {
+        SetRotation(quaternion);
+    }
+
+    void Transform::Follow(const Transform::Ptr& target, const SR_MATH_NS::FVector3& offset, float_t speed) {
+        if (!target) {
+            return;
+        }
+        auto&& headTranslation = target->GetGlobalTranslation() + offset;
+        SetGlobalTranslation(GetGlobalTranslation().Lerp(headTranslation, speed));
+    }
 }
