@@ -75,16 +75,7 @@ namespace SR_UTILS_NS::Reflection {
             SRHalt("SequenceContainerValueRef::Back() : container is empty!");
             return Value();
         }
-        auto&& vtable = m_value->GetTypeInfo().vtable.containerVTable;
-        auto&& iteratorVTable = m_value->GetTypeInfo().vtable.iteratorVTable;
-        auto pIt = vtable.pEnd(m_value->GetStorage());
-        iteratorVTable.pOffset(pIt, -1);
-        auto storage = iteratorVTable.pGetValue(m_value->GetStorage(), pIt);
-        Value value;
-        value.m_storage = storage;
-        value.m_typeInfo = CopyTypeInfo(m_value->GetTypeInfo().pNext[0]);
-        value.m_allocator = m_value->GetAllocator();
-        return value;
+        return *(Begin() + (Size() - 1));
     }
 
     ReflectedContainerIterator SequenceContainerValueRef::Insert(ReflectedContainerIterator pIt, const Value& value) {
