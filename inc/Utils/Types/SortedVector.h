@@ -57,6 +57,19 @@ namespace SR_HTYPES_NS {
         SR_NODISCARD SR_CONSTEXPR T& back() { return m_data.back(); }
         SR_NODISCARD SR_CONSTEXPR const T& back() const { return m_data.back(); }
 
+        SR_NODISCARD bool exists(const T& value) const {
+            if (m_data.empty()) {
+                return false;
+            }
+
+            auto it = std::lower_bound(m_data.begin(), m_data.end(), value, m_predicate);
+            return it != m_data.end() && *it == value;
+        }
+
+        SR_NODISCARD uint32_t count(const T& value) const {
+            return exists(value) ? 1 : 0;
+        }
+
         SR_NODISCARD SR_CONSTEXPR T& operator[](uint64_t index) {
             return m_data[index];
         }
@@ -114,6 +127,9 @@ namespace SR_HTYPES_NS {
         }
 
         void Erase(Iterator it) {
+            m_data.erase(it);
+        }
+        void erase(Iterator it) {
             m_data.erase(it);
         }
 

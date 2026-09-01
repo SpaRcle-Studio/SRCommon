@@ -26,6 +26,7 @@ namespace SR_FLUX_NS {
         void FixedUpdate() override;
 
         SR_NODISCARD Path GetGraphPath() const;
+        SR_NODISCARD const SR_HTYPES_NS::SharedPtr<FluxRuntime>& GetRuntime() const;
 
     private:
         /// @method @editorButton @condition(This.m_graph.IsValid())
@@ -44,7 +45,7 @@ namespace SR_FLUX_NS {
 
     private:
         Vector<Reflection::Value> m_callArguments;
-        RawPointerHolder<FluxRuntime> m_runtime;
+        SR_HTYPES_NS::SharedPtr<FluxRuntime> m_runtime;
         Subscription m_onReloadedSubscription;
 
     };

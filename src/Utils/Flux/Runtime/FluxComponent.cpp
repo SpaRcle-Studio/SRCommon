@@ -69,6 +69,10 @@ namespace SR_FLUX_NS {
         Broadcaster::Instance().Broadcast(Events::EVENT_DO_INSPECT_ENTITY_ID, message);
     }
 
+    const SR_HTYPES_NS::SharedPtr<FluxRuntime>& FluxComponent::GetRuntime() const {
+        return m_runtime;
+    }
+
     Path FluxComponent::GetGraphPath() const {
         if (auto&& pGraph = m_graph.GetResource()) {
             return pGraph->GetResourcePath();

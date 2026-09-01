@@ -9,8 +9,13 @@
 #include <Utils/Serialization/JsonSerialization.h>
 
 namespace SR_FLUX_NS {
+    FluxRuntime::FluxRuntime()
+        : Super(this, SharedPtrPolicy::Automatic)
+    { }
+
     FluxRuntime::FluxRuntime(const FluxProgram* pProgram)
-        : m_program(pProgram)
+        : Super(this, SharedPtrPolicy::Automatic)
+        , m_program(pProgram)
     {
         m_maxRegisters = m_program->requiredRegisters;
     }
@@ -41,7 +46,20 @@ namespace SR_FLUX_NS {
             SR_ERROR("FluxRuntime::Emit() : max executions {} reached!", m_maxExecutions);
             return;
         }
-        auto&& execution = m_executions.emplace_back();
+
+        if (m_poolExecutions.empty()) {
+            m_executions.emplace_back();
+        }
+        else {
+            m_executions.emplace_back(std::move(m_poolExecutions.back()));
+            m_poolExecutions.pop_back();
+        }
+
+        auto&& execution = m_executions.back();
+        execution.valueStack.clear();
+        execution.callStack.clear();
+        execution.state = FluxExecutionState::None;
+
         execution.instructionPointer = pIt->instructionPointer;
         execution.registers.resize(m_maxRegisters);
         execution.emittedLabel = pIt->name;
@@ -118,9 +136,15 @@ namespace SR_FLUX_NS {
 
         FlushPendingExecutions();
 
-        m_executions.erase_if([](const FluxExecution& execution) {
-            return execution.IsFinished();
-        });
+        for (auto&& pIt = m_executions.begin(); pIt != m_executions.end(); ) {
+            if (auto&& execution = *pIt; execution.IsFinished()) {
+                m_poolExecutions.emplace_back(std::move(execution));
+                pIt = m_executions.erase(pIt);
+            }
+            else {
+                ++pIt;
+            }
+        }
     }
 
     uint32_t FluxRuntime::Execute(FluxExecution& execution, uint32_t budget) {
@@ -265,6 +289,10 @@ namespace SR_FLUX_NS {
                 SR_ERROR("FluxRuntime::ExecuteInstruction() : unhandled opcode!");
                 execution.state = FluxExecutionState::Error;
                 return false;
+        }
+
+        if (m_onInstructionExecutedCallback) {
+            m_onInstructionExecutedCallback(execution, instruction);
         }
 
         return true;

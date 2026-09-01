@@ -21,9 +21,11 @@ namespace SR_FLUX_NS {
         Write,
     };
 
-    class FluxRuntime : public NonCopyable {
+    class FluxRuntime : public SR_HTYPES_NS::SharedPtr<FluxRuntime> {
+        using Super = SR_HTYPES_NS::SharedPtr<FluxRuntime>;
+        using OnInstructionExecutedCallback = SR_HTYPES_NS::Function<void(const FluxExecution&, const FluxInstruction&)>;
     public:
-        FluxRuntime() = default;
+        FluxRuntime();
         explicit FluxRuntime(const FluxProgram* pProgram);
         ~FluxRuntime() override;
 
@@ -33,6 +35,8 @@ namespace SR_FLUX_NS {
         bool Initialize();
 
         SR_NODISCARD bool IsEmitted(StringView labelName) const;
+
+        void SetOnInstructionExecutedCallback(OnInstructionExecutedCallback callback) { m_onInstructionExecutedCallback = std::move(callback); }
 
         const Vector<Reflection::Value>& GetConstants() { return m_constants; }
         const Vector<Reflection::Value>& GetStorage() { return m_storage; }
@@ -70,7 +74,10 @@ namespace SR_FLUX_NS {
 
         Vector<FluxExecution> m_executions;
         Vector<FluxExecution> m_pendingExecutions;
+        Vector<FluxExecution> m_poolExecutions;
         Vector<Reflection::Value*> m_callArguments;
+
+        OnInstructionExecutedCallback m_onInstructionExecutedCallback;
 
         bool m_initialized = false;
         bool m_validation = false;

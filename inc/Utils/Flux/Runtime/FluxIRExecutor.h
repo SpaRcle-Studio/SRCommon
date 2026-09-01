@@ -35,7 +35,7 @@ namespace SR_FLUX_NS {
 
         FileWatcher::Ptr m_programWatcher;
         RawPointerHolder<FluxProgram> m_program;
-        RawPointerHolder<FluxRuntime> m_runtime;
+        SR_HTYPES_NS::SharedPtr<FluxRuntime> m_runtime;
 
     };
 }

@@ -65,6 +65,7 @@ namespace SR_HTYPES_NS {
                 if (m_data->strongCount == 0 && m_data->weakCount == 0) {
                     delete m_data;
                 }
+                m_data = nullptr;
             }
 
             m_ptr = const_cast<T*>(ptr);
