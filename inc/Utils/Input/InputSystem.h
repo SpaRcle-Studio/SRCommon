@@ -37,7 +37,14 @@ namespace SR_UTILS_NS {
     class Input : public Singleton<Input>, public SubscriptionHolder, public SRClass {
         SR_CLASS()
         SR_REGISTER_SINGLETON(Input)
-        enum class State { UnPressed, Down, Pressed, Up };
+    public:
+        enum class State : uint8_t {
+            UnPressed = 0,
+            Down = 1 << 0,
+            Pressed = 1 << 1,
+            Up = 1 << 2
+        };
+        using KeyStates = std::array<State, 256>;
     public:
         void SetMouseScroll(double_t xOffset, double_t yOffset);
         void SetFocusedWindowRect(const std::optional<SR_MATH_NS::FRect>& rect);
@@ -46,6 +53,7 @@ namespace SR_UTILS_NS {
         void Reload();
         void ResetMouse();
         void SetMouseDrag(const SR_MATH_NS::FVector2& drag);
+        void SetKeyStates(const KeyStates& states);
 
         /// @method @evaluate
         SR_NODISCARD SR_MATH_NS::FVector2 GetMouseDrag();
@@ -75,6 +83,8 @@ namespace SR_UTILS_NS {
         bool GetKeyUp(KeyCode key);
         /// @method @evaluate
         bool GetKey(KeyCode key);
+
+        SR_NODISCARD KeyStates GetKeyStates() const { return m_keys; }
 
         void LockCursor(CursorLockInfo& info);
         void UnlockCursor(const CursorLockInfo& info);
@@ -108,7 +118,7 @@ namespace SR_UTILS_NS {
         std::atomic<bool> m_isVisible = true;
         std::atomic<bool> m_isPlayMode = false;
 
-        State m_keys[256] = {};
+        KeyStates m_keys = {};
     };
 
     class CursorLock : public Serializable {
@@ -145,10 +155,13 @@ namespace SR_UTILS_NS {
         void Accumulate();
         void Apply(uint32_t frames);
         void Reset();
+        void ResetKeyboard();
 
     private:
+        Vector<Input::KeyStates> m_frameKeyStates;
         SR_MATH_NS::FVector2 m_mouseDragAccumulated;
         SR_MATH_NS::FVector2 m_mouseDragOriginal;
+        Input::KeyStates m_keyStatesOriginal;
 
     };
 } // namespace SR_UTILS_NS

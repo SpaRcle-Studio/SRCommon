@@ -8,6 +8,8 @@
 #include <Utils/Reflection/Method.h>
 #include <Utils/Serialization/JsonSerialization.h>
 
+#include <Enum/UpdateMode.hpp>
+
 namespace SR_FLUX_NS {
     FluxRuntime::FluxRuntime()
         : Super(this, SharedPtrPolicy::Automatic)

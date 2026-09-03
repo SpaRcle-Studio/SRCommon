@@ -15,6 +15,18 @@
 namespace SR_UTILS_NS {
     std::string_view InputTextEvent::GetText() const { return std::string_view(text, length); }
 
+    uint8_t KeyStateToIndex(Input::State state) {
+        switch (state) {
+            case Input::State::UnPressed: return 0;
+            case Input::State::Down: return 1;
+            case Input::State::Pressed: return 2;
+            case Input::State::Up: return 3;
+            default:
+                SRHalt("KeyStateToIndex() : invalid state!");
+                return 0;
+        }
+    }
+
     void InputTextEvent::SetText(std::string_view newText) {
         if (newText.size() > sizeof(this->text) - 1) {
             SRHalt("InputTextEvent::SetText() : text size exceeds maximum length!");
@@ -129,50 +141,12 @@ namespace SR_UTILS_NS {
 
         for (uint16_t i = 5; i < 256; ++i) {
             const State* table = keyboardState.keyStates[i] ? kDownTransition : kUpTransition;
-            const State next = table[static_cast<int>(m_keys[i])];
+            const State next = table[KeyStateToIndex(m_keys[i])];
             if (next != m_keys[i]) {
                 SetState(i, next);
             }
         }
     }
-
-    // void Input::UpdateKeyboard() {
-    //     SR_TRACY_ZONE;
-    //
-    //     if (!IsAppFocused()) {
-    //         return;
-    //     }
-    //
-    //     const SR_PLATFORM_NS::KeyboardState keyboardState = SR_PLATFORM_NS::GetSystemKeyboardState();
-    //
-    //     for (uint16_t i = 5; i < 256; ++i) {
-    //         if (keyboardState.keyStates[i]) {
-    //             switch (m_keys[i]) {
-    //                 case State::UnPressed:
-    //                 case State::Up:
-    //                     SetState(i, State::Down);
-    //                     break;
-    //                 case State::Down:
-    //                     SetState(i, State::Pressed);
-    //                     break;
-    //                 case State::Pressed: break;
-    //             }
-    //         }
-    //         else {
-    //             switch (m_keys[i]) {
-    //                 case State::UnPressed:
-    //                     break;
-    //                 case State::Down:
-    //                 case State::Pressed:
-    //                     SetState(i, State::Up);
-    //                     break;
-    //                 case State::Up:
-    //                     SetState(i, State::UnPressed);
-    //                     break;
-    //             }
-    //         }
-    //     }
-    // }
 
     void Input::Update(float_t dt) {
         SR_TRACY_ZONE;
@@ -194,11 +168,11 @@ namespace SR_UTILS_NS {
         UpdateKeyboard();
     }
 
-    bool Input::GetKeyDown(KeyCode key) { return m_keys[(int)key] == State::Down; }
+    bool Input::GetKeyDown(KeyCode key) { return SR_MATH_NS::IsMaskIncludedSubMask(m_keys[(int)key], State::Down); }
 
-    bool Input::GetKeyUp(KeyCode key) { return m_keys[(int)key] == State::Up; }
+    bool Input::GetKeyUp(KeyCode key) { return SR_MATH_NS::IsMaskIncludedSubMask(m_keys[(int)key], State::Up); }
 
-    bool Input::GetKey(KeyCode key) { return (m_keys[(int)key] == State::Pressed || m_keys[(int)key] == State::Down); }
+    bool Input::GetKey(KeyCode key) { return SR_MATH_NS::IsMaskIncludedSubMask(m_keys[(int)key], State::Down) || SR_MATH_NS::IsMaskIncludedSubMask(m_keys[(int)key], State::Pressed); }
 
     SR_MATH_NS::FVector2 Input::GetMouseDrag() { return m_mouseDrag; }
 
@@ -236,6 +210,10 @@ namespace SR_UTILS_NS {
 
     void Input::SetMouseDrag(const SR_MATH_NS::FVector2& drag) {
         m_mouseDrag = drag;
+    }
+
+    void Input::SetKeyStates(const KeyStates& states) {
+        m_keys = states;
     }
 
     void Input::ResetMouse() {
@@ -403,22 +381,46 @@ namespace SR_UTILS_NS {
     }
 
     void InputAccumulator::Accumulate() {
-        m_mouseDragAccumulated += Input::Instance().GetMouseDrag();
+        SR_TRACY_ZONE;
+        auto&& input = Input::Instance();
+        m_frameKeyStates.emplace_back(input.GetKeyStates());
+        m_mouseDragAccumulated += input.GetMouseDrag();
     }
 
     void InputAccumulator::Apply(uint32_t frames) {
+        SR_TRACY_ZONE;
         if (frames == 0) {
             SRHalt("InputAccumulator::Apply() : frames cannot be zero!");
             return;
         }
         auto&& input = Input::Instance();
         m_mouseDragOriginal = input.GetMouseDrag();
+        m_keyStatesOriginal = input.GetKeyStates();
         m_mouseDragAccumulated += input.GetMouseDrag();
         input.SetMouseDrag(m_mouseDragAccumulated / static_cast<float_t>(frames));
+
+        if (!m_frameKeyStates.empty()) {
+            m_frameKeyStates.emplace_back(input.GetKeyStates());
+            Input::KeyStates accumulatedKeyStates;
+            memset(&accumulatedKeyStates, 0, sizeof(accumulatedKeyStates));
+
+            for (const auto& keyStates : m_frameKeyStates) {
+                for (size_t i = 0; i < accumulatedKeyStates.size(); ++i) {
+                    accumulatedKeyStates[i] = static_cast<Input::State>(static_cast<uint8_t>(accumulatedKeyStates[i]) | static_cast<uint8_t>(keyStates[i]));
+                }
+            }
+            input.SetKeyStates(accumulatedKeyStates);
+        }
     }
 
     void InputAccumulator::Reset() {
+        ResetKeyboard();
         m_mouseDragAccumulated = SR_MATH_NS::FVector2(0, 0);
         Input::Instance().SetMouseDrag(m_mouseDragOriginal);
+    }
+
+    void InputAccumulator::ResetKeyboard() {
+        m_frameKeyStates.clear();
+        Input::Instance().SetKeyStates(m_keyStatesOriginal);
     }
 } // namespace SR_UTILS_NS

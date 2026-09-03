@@ -79,6 +79,7 @@ namespace SR_UTILS_NS {
         template <typename InputIt> Iterator insert(ConstIterator pos, InputIt pFirst, InputIt pLast);
         SR_NODISCARD T& at(SizeType index);
         SR_NODISCARD const T& at(SizeType index) const { return const_cast<Vector*>(this)->at(index); }
+        SR_NODISCARD SizeType index_of(const T& value) const noexcept;
 
         SR_NODISCARD auto operator<=>(const Vector& other) const noexcept;
 
@@ -130,6 +131,15 @@ namespace SR_UTILS_NS {
         IAllocator* m_allocator = nullptr;
 
     };
+
+    template<typename T> SizeType Vector<T>::index_of(const T &value) const noexcept {
+        for (SizeType i = 0; i < m_size; ++i) {
+            if (static_cast<T*>(m_data)[i] == value) {
+                return i;
+            }
+        }
+        return static_cast<SizeType>(-1);
+    }
 
     template<typename T> auto Vector<T>::operator<=>(const Vector &other) const noexcept {
         if (m_size != other.m_size) {
