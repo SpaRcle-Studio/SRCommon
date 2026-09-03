@@ -7,6 +7,7 @@
 #include <Utils/Flux/Graph/FluxGraph.h>
 #include <Utils/Flux/Graph/FluxCompileUtils.h>
 #include <Utils/Flux/IR/FluxProgram.h>
+#include <Utils/Flux/IR/FluxProgramOptimizer.h>
 #include <Utils/Memory/Allocator.h>
 #include <Utils/Memory/MemoryLiterals.h>
 
@@ -1017,6 +1018,8 @@ namespace SR_FLUX_NS {
         }
 
         program.requiredRegisters = context.requiredRegisters;
+
+        OptimizeProgram(program);
 
         return program;
     }
