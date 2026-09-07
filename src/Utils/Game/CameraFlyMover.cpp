@@ -54,6 +54,7 @@ namespace SR_UTILS_NS {
 
         if (!input.GetKey(SR_UTILS_NS::KeyCode::LCtrl)) {
             bool accelerateX = false;
+            bool accelerateY = false;
             bool accelerateZ = false;
 
             if (input.GetKey(SR_UTILS_NS::KeyCode::W)) {
@@ -64,6 +65,16 @@ namespace SR_UTILS_NS {
             if (input.GetKey(SR_UTILS_NS::KeyCode::S)) {
                 m_velocity -= SR_UTILS_NS::Transform3D::FORWARD * velocityAccel * dt;
                 accelerateZ = true;
+            }
+
+            if (input.GetKey(SR_UTILS_NS::KeyCode::E)) {
+                m_velocity += SR_UTILS_NS::Transform3D::UP * velocityAccel * dt;
+                accelerateY = true;
+            }
+
+            if (input.GetKey(SR_UTILS_NS::KeyCode::Q)) {
+                m_velocity -= SR_UTILS_NS::Transform3D::UP * velocityAccel * dt;
+                accelerateY = true;
             }
 
             if (input.GetKey(SR_UTILS_NS::KeyCode::A)) {
@@ -78,6 +89,9 @@ namespace SR_UTILS_NS {
 
             if (!accelerateX)
                 m_velocity.x *= damping;
+
+            if (!accelerateY)
+                m_velocity.y *= damping;
 
             if (!accelerateZ)
                 m_velocity.z *= damping;
