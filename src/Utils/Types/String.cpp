@@ -556,6 +556,26 @@ namespace SR_UTILS_NS {
         return result;
     }
 
+    SizeType String::find_first_of(char c, SizeType pos) const {
+        if (pos >= m_size) {
+            return npos;
+        }
+        const auto* found = static_cast<const char*>(memchr(m_data + pos, c, m_size - pos));
+        return found ? static_cast<SizeType>(found - m_data) : npos;
+    }
+
+    SizeType String::find_first_of(StringView str, SizeType pos) const {
+        if (pos >= m_size || empty()) {
+            return npos;
+        }
+        for (SizeType i = pos; i < m_size; ++i) {
+            if (str.find(m_data[i]) != StringView::npos) {
+                return i;
+            }
+        }
+        return npos;
+    }
+
     void StringView::remove_prefix(SizeType n) {
         if (n > m_size) {
             SRHalt("StringView::remove_prefix() : prefix size exceeds string size!");

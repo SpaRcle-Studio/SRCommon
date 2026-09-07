@@ -807,4 +807,23 @@ namespace std {
     }
 }
 
+template<typename T> struct fmt::formatter<SR_UTILS_NS::Vector<T>> {
+    template<typename ParseContext>
+    constexpr auto parse(ParseContext& ctx) { return ctx.begin(); }
+
+    template<typename FormatContext> auto format(SR_UTILS_NS::Vector<T> const& vec, FormatContext& ctx) const {
+        auto out = ctx.out();
+        out = fmt::format_to(out, "[");
+        for (size_t i = 0; i < vec.size(); ++i) {
+            out = fmt::format_to(out, "{}", vec[i]);
+            if (i < vec.size() - 1) {
+                out = fmt::format_to(out, ", ");
+            }
+        }
+        out = fmt::format_to(out, "]");
+        return out;
+    }
+};
+
+
 #endif //SR_COMMON_VECTOR_H

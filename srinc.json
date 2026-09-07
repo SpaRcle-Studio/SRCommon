@@ -5,6 +5,7 @@
     ],
     "exclude": [
         "src/Utils/Network/Asio/",
+        "src/Utils/Network/HTTP/",
         "src/Utils/Profile/TracyContext.cpp",
         "src/Utils/FileSystem/MappedFile.cpp",
         "src/Utils/Platform/Android",

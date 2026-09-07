@@ -12,7 +12,7 @@ namespace SR_UTILS_NS::StoreUtils {
         SR_TRACY_ZONE;
         SR_UTILS_NS::Path path = SR_UTILS_NS::ResourceManager::Instance().GetCachePath().Concat("User/UserData.xml");
 
-        if (!path.CreateIfNotExists()) {
+        if (!path.Create()) {
             SRHalt("Storage::Save() : failed to create file \"{}\"!", path);
         }
 
@@ -44,6 +44,11 @@ namespace SR_UTILS_NS::StoreUtils {
                     break;
                 }
             }
+        }
+
+        if (!path.Create()) {
+            SRHalt("Storage::Save() : failed to create path \"{}\"!", path);
+            return;
         }
 
         if (!document.Save(path)) {

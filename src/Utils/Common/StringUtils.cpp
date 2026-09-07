@@ -499,6 +499,20 @@ namespace SR_UTILS_NS {
         return result;
     }
 
+    bool StringUtils::CompareAnyCase(StringView left, StringView right) {
+        if (left.size() != right.size()) {
+            return false;
+        }
+
+        for (size_t i = 0; i < left.size(); ++i) {
+            if (std::tolower(static_cast<unsigned char>(left[i])) != std::tolower(static_cast<unsigned char>(right[i]))) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     String GetErrorString(int err) {
         char buf[256]{};
     #ifdef _WIN32

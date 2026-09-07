@@ -99,6 +99,8 @@ namespace SR_UTILS_NS {
         SR_NODISCARD SizeType find(const String& str, SizeType pos = 0) const;
         SR_NODISCARD SizeType find(char c, SizeType pos = 0) const;
         SR_NODISCARD SizeType rfind(char c, SizeType pos = npos) const;
+        SR_NODISCARD SizeType find_first_of(char c, SizeType pos = 0) const;
+        SR_NODISCARD SizeType find_first_of(StringView str, SizeType pos = 0) const;
 
         SR_NODISCARD const char* begin() const;
         SR_NODISCARD const char* end() const;

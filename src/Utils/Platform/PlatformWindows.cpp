@@ -35,6 +35,8 @@
 
 #include <Utils/Platform/WindowsMemoryAllocationHooks.h>
 
+#include "../Network/HTTP/WindowsHTTPClient.cpp"
+
 namespace SR_UTILS_NS::Platform {
     std::wstring ConvertToUnicode(const std::string& str) {
         UINT codePage = CP_ACP;

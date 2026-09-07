@@ -32,6 +32,8 @@ namespace SR_UTILS_NS {
         void ToUpper(String& str);
         /// @method @evaluate
         String Concat(const String& left, const String& right);
+        /// @method @evaluate
+        bool CompareAnyCase(StringView left, StringView right);
 
         /// @method @evaluate
         StringAtom MakeAtom(StringView str);
