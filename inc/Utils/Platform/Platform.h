@@ -160,6 +160,16 @@ namespace SR_UTILS_NS::Platform {
     SR_COMMON_DLL_API extern void SetCursorLockActive(bool active);
     SR_COMMON_DLL_API extern bool IsCursorLockActive();
 
+#ifdef SR_EMSCRIPTEN
+    /// The engine canvas is an ordinary DOM element, so it is not necessarily placed at the
+    /// top-left corner of the page. Browser events report viewport ("client") coordinates,
+    /// which must be mapped into canvas-local space before they can be used as input.
+    SR_COMMON_DLL_API extern SR_MATH_NS::FVector2 WebClientToCanvasPos(float_t clientX, float_t clientY);
+    /// True while the page focus is inside an editable element of the surrounding site
+    /// (<input>, <textarea>, contenteditable), where the engine must not consume keyboard input.
+    SR_COMMON_DLL_API extern bool IsWebEditableElementFocused();
+#endif
+
     struct SR_COMMON_DLL_API PlatformHooks {
         decltype(&ReadFile) originalReadFile = nullptr;
         decltype(&GetPathType) originalGetPathType = nullptr;
