@@ -610,7 +610,9 @@ namespace SR_MATH_NS {
             );
         }
 
-        SR_NODISCARD Quaternion ToQuat() const requires(std::is_same_v<T, Unit>);
+        SR_NODISCARD Quaternion ToQuat() const requires(std::is_same_v<T, Unit>) {
+            return Quaternion(*this);
+        }
 
         SR_FORCE_INLINE const T &operator[](int p_axis) const {
             return coord[p_axis];
@@ -818,15 +820,6 @@ namespace SR_MATH_NS {
     };
 
 #ifdef SR_COMMON_DLL_EXPORTS
-    template<typename T> Quaternion Vector3<T>::ToQuat() const requires(std::is_same_v<T, Unit>) {
-        if constexpr (std::is_same_v<T, Unit>) {
-            return Quaternion(*this); //, inRads
-        }
-        else {
-            return Quaternion::Identity();
-        }
-    }
-
     template<typename T> Vector3<T> Vector3<T>::Rotate(const Quaternion &q) const requires(std::is_same_v<T, Unit>)  {
         // Extract the vector part of the quaternion
         Vector3 u(q.self.x, q.self.y, q.self.z);
