@@ -90,15 +90,15 @@ namespace SR_UTILS_NS {
         return false;
     }
 
-    std::vector<std::string> FileSystem::ReadAllLines(const Path &path) {
-        std::ifstream file(path.c_str());
-        std::vector<std::string> lines = { };
-        while (file.good()) {
-            std::string line;
-            std::getline(file,line);
-            lines.push_back(line);
+    Vector<StringView> FileSystem::ReadAllLines(const Path& path, String& buffer) {
+        SR_TRACY_ZONE;
+        if (auto&& file = VFS::Instance().OpenFile(path, FileMode::Read)) {
+            file.Read(buffer);
+            Vector<StringView> lines;
+            StringUtils::Instance().SplitViewByLines(buffer, lines);
+            return lines;
         }
-        return lines;
+        return {};
     }
 
     uint64_t FileSystem::GetExecutableAndModulesHash() {

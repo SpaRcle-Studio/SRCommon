@@ -22,7 +22,7 @@ namespace SR_UTILS_NS {
 
         static bool WriteToFile(StringView path, StringView data);
         static void NormalizePathInPlace(String& path);
-        static std::vector<std::string> ReadAllLines(const SR_UTILS_NS::Path& path);
+        static Vector<StringView> ReadAllLines(const SR_UTILS_NS::Path& path, String& buffer);
 
         static uint64_t ReadHashFromFile(const SR_UTILS_NS::Path& path);
         static bool WriteHashToFile(const SR_UTILS_NS::Path& path, uint64_t hash);
