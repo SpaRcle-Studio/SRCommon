@@ -15,6 +15,9 @@ namespace SR_HTYPES_NS {
         using ConstIterator = typename SR_UTILS_NS::Vector<T>::const_iterator;
 
         SortedVector() = default;
+        SortedVector(IAllocator* pAllocator)
+            : m_data(pAllocator)
+        { }
         SortedVector(SortedVector&& other) noexcept
             : m_data(SR_UTILS_NS::Exchange(other.m_data, { }))
         { }

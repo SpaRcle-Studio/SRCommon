@@ -4,6 +4,7 @@
 
 #include <Utils/Types/Marshal.h>
 #include <Utils/Common/StringUtils.h>
+#include <Utils/FileSystem/VFS.h>
 #include <Utils/Resources/ResourceManager.h>
 #include <Utils/Profile/TracyContext.h>
 
@@ -44,69 +45,30 @@ namespace SR_HTYPES_NS {
         SR_TRACY_ZONE;
         SR_TRACY_ZONE_TEXT(path);
 
-        if (!path.Make()) {
+        auto&& file = VFS::Instance().OpenFile(path, FileMode::Write);
+        if (!file) {
             return false;
         }
-
-        std::ofstream file;
-        file.open(path.ToString(), std::ios::binary);
-        if (!file.is_open()) {
-            return false;
-        }
-
-        file.write(Super::View(), Size());
-        file.close();
-
+        file.Write(Super::View(), Size());
         return true;
-    }
-
-    Marshal::Ptr Marshal::LoadPtr(const Path& path) {
-        SR_TRACY_ZONE;
-        SR_TRACY_ZONE_TEXT(path.ToStringRef());
-
-        FILE* f = fopen(path.c_str(), "rb");
-        if (!f) {
-            return nullptr;
-        }
-
-        fseek(f, 0, SEEK_END);
-        size_t size = ftell(f);
-        fseek(f, 0, SEEK_SET);
-
-        char* buffer = Allocate(size);
-        fread(buffer, 1, size, f);
-        fclose(f);
-
-        auto&& pMarshal = new Marshal(buffer, size, false);
-
-        if (!pMarshal->Valid()) {
-            delete pMarshal;
-            pMarshal = nullptr;
-        }
-
-        return pMarshal;
     }
 
     Marshal Marshal::Load(const Path& path) {
         SR_TRACY_ZONE;
         SR_TRACY_ZONE_TEXT(path.ToStringRef());
 
-        FILE* f = fopen(path.c_str(), "rb");
-        if (!f) {
+        auto&& file = VFS::Instance().OpenFile(path, FileMode::Read);
+        if (!file) {
+            SR_ERROR("Marshal::Load() : failed to open file: {}", path);
             return Marshal();
         }
 
-        fseek(f, 0, SEEK_END);
-        size_t size = ftell(f);
-        fseek(f, 0, SEEK_SET);
-
+        const auto size = file.GetSize();
         char* buffer = Allocate(size);
         {
             SR_TRACY_ZONE_N("Read");
-            fread(buffer, 1, size, f);
+            file.Read(buffer, size);
         }
-        fclose(f);
-
         return Marshal(buffer, size, false);
     }
 
@@ -198,6 +160,10 @@ namespace SR_HTYPES_NS {
 
     Marshal::Marshal(const MappedFile &mappedFile)
         : Stream(mappedFile)
+    { }
+
+    Marshal::Marshal(const File& file)
+        : Stream(file)
     { }
 
     Marshal::Marshal() = default;

@@ -58,17 +58,15 @@ namespace SR_UTILS_NS {
     }
 
     bool Prefab::Load() {
-        Path&& path = Path(GetResourceId());
-        if (!path.IsAbs()) {
-            path = ResourceManager::Instance().GetResPath().Concat(path);
-        }
+        SR_TRACY_ZONE;
 
         SR_SAFE_DELETE_PTR(m_pDeserializer);
         m_pDeserializer = new SR_UTILS_NS::SRADeserializer();
 
-        if (!m_pDeserializer->LoadFromFile(path)) {
+        auto&& path = GetResourcePath();
+        if (!m_pDeserializer->LoadFromFile(CoreResLoader::GetResPath().Concat(path))) {
             m_loadState = LoadState::Error;
-            SR_ERROR("Prefab::Load() : failed to load prefab!\n\tPath: " + path.ToString());
+            SR_ERROR("Prefab::Load() : failed to load prefab!\n\tPath: {}", path);
             return false;
         }
 
@@ -85,14 +83,14 @@ namespace SR_UTILS_NS {
 
         if (type.Empty()) {
             m_loadState = LoadState::Error;
-            SR_ERROR("Prefab::Load() : prefab type is empty!\n\tPath: " + path.ToString());
+            SR_ERROR("Prefab::Load() : prefab type is empty!\n\tPath: {}", path);
             return false;
         }
 
         m_data = SR_UTILS_NS::Factory::Instance().Create<SceneObject>(type);
         if (!m_data) {
             m_loadState = LoadState::Error;
-            SR_ERROR("Prefab::Load() : failed to create scene object from type: " + type.ToString());
+            SR_ERROR("Prefab::Load() : failed to create scene object from type: {}!\n\tPath: {}", type, path);
             return false;
         }
 

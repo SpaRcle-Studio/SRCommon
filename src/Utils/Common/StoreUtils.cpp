@@ -10,11 +10,6 @@
 namespace SR_UTILS_NS::StoreUtils {
     void Storage::Save() {
         SR_TRACY_ZONE;
-        SR_UTILS_NS::Path path = SR_UTILS_NS::ResourceManager::Instance().GetCachePath().Concat("User/UserData.xml");
-
-        if (!path.Create()) {
-            SRHalt("Storage::Save() : failed to create file \"{}\"!", path);
-        }
 
         auto&& document = SR_XML_NS::Document::New();
         auto&& root = document.Root().AppendChild("UserData");
@@ -46,11 +41,7 @@ namespace SR_UTILS_NS::StoreUtils {
             }
         }
 
-        if (!path.Create()) {
-            SRHalt("Storage::Save() : failed to create path \"{}\"!", path);
-            return;
-        }
-
+        SR_UTILS_NS::Path path = SR_UTILS_NS::ResourceManager::Instance().GetCachePath().Concat("User/UserData.xml");
         if (!document.Save(path)) {
             SRHalt("Storage::Save() : failed to save YAML document to file \"{}\"!", path);
         }
@@ -62,11 +53,16 @@ namespace SR_UTILS_NS::StoreUtils {
     void Storage::Load() {
         SR_TRACY_ZONE;
         SR_UTILS_NS::Path path = SR_UTILS_NS::ResourceManager::Instance().GetCachePath().Concat("User/UserData.xml");
-        if (!path.Exists(SR_UTILS_NS::Path::Type::File)) {
+        if (!path.IsFile()) {
             return;
         }
 
         auto&& document = SR_XML_NS::Document::Load(path);
+        if (!document) {
+            SR_ERROR("Storage::Load() : failed to load document from file \"{}\"!", path);
+            return;
+        }
+
         auto&& root = document.Root().GetNode("UserData");
         if (!root) {
             return;

@@ -25,7 +25,7 @@ namespace SR_UTILS_NS {
         SR_LOG("Asset::LoadImpl() : loading asset \"{}\"", path);
 
         SR_UTILS_NS::SRADeserializer deserializer;
-        if (!deserializer.LoadFromFile(resourceManager.GetResPath().Concat(path))) {
+        if (!deserializer.LoadFromFile(CoreResLoader::GetResPath().Concat(path))) {
             SR_ERROR("Asset::LoadImpl() : failed to deserialize asset from file!\n\tPath: {}", path);
             return nullptr;
         }
@@ -57,7 +57,7 @@ namespace SR_UTILS_NS {
         Asset::Ptr pThis = StaticPointerCast<Asset>(GetThis());
         Serialization::Save(serializer, pThis, SerializationId::Create("asset"));
 
-        if (!serializer.SaveToFile(resourceManager.GetResPath().Concat(path))) {
+        if (!serializer.SaveToFile(CoreResLoader::GetResPath().Concat(path))) {
             SR_ERROR("Asset::SaveAsset() : failed to save asset to file!\n\tPath: {}", path);
             return false;
         }
@@ -67,7 +67,7 @@ namespace SR_UTILS_NS {
 
     bool Asset::Load() {
         SR_UTILS_NS::SRADeserializer deserializer;
-        if (!deserializer.LoadFromFile(ResourceManager::Instance().GetResPath().Concat(GetResourcePath()))) {
+        if (!deserializer.LoadFromFile(CoreResLoader::GetResPath().Concat(GetResourcePath()))) {
             SR_ERROR("Asset::Load() : failed to deserialize asset from file!\n\tPath: {}", GetResourcePath());
             return false;
         }
@@ -98,14 +98,14 @@ namespace SR_UTILS_NS {
     }
 
     bool Asset::SaveAsset() const {
-        return SaveAsset(SR_UTILS_NS::ResourceManager::Instance().GetResPath().Concat(GetResourcePath()));
+        return SaveAsset(GetResourcePath());
     }
 
     SR_HTYPES_NS::SharedPtr<Asset> Asset::CreateNew(const Path& rawPath, StringAtom assetType) {
         auto&& resourceManager = ResourceManager::Instance();
-        SR_UTILS_NS::Path&& path = rawPath.RemoveSubPath(resourceManager.GetResPath());
+        SR_UTILS_NS::Path path = CoreResLoader::GetResPath().Concat(rawPath.RemoveSubPath(resourceManager.GetResPath()));
 
-        if (resourceManager.GetResPath().Concat(path).Exists()) {
+        if (path.IsExists()) {
             SR_ERROR("Asset::CreateNew() : asset already exists at path: {}", path);
             return nullptr;
         }
@@ -115,7 +115,7 @@ namespace SR_UTILS_NS {
         SR_HTYPES_NS::SharedPtr<Asset> pAsset = Factory::Instance().Create<Asset>(assetType);
         pAsset->m_loadState = IResource::LoadState::Loaded;
 
-        if (!pAsset->SaveAsset(resourceManager.GetResPath().Concat(path))) {
+        if (!pAsset->SaveAsset(path)) {
             SR_ERROR("Asset::CreateNew() : failed to save asset to path: {}", path);
             pAsset->DeleteResource();
             return nullptr;

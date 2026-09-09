@@ -8,6 +8,7 @@
 #include <Utils/Resources/IResource.h>
 #include <Utils/Types/SafePointer.h>
 #include <Utils/Types/MeshSceneStructure.h>
+#include <Utils/FileSystem/File.h>
 #include <Utils/Types/Map.h>
 
 namespace SR_WORLD_NS {
@@ -77,7 +78,7 @@ namespace SR_HTYPES_NS {
         bool Load() override;
 
     private:
-        RawPointerHolder<MappedFile> m_pMappedFileCache;
+        File m_pMappedFileCache;
         mutable MeshSceneStructure m_sceneStructure;
         RawMeshParams m_params;
         bool m_fromCache = false;

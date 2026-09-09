@@ -285,20 +285,6 @@ namespace SR_PLATFORM_NS {
         std::cerr << msg << std::flush;
     }
 
-    bool WaitAndDelete(const SR_UTILS_NS::Path& path) {
-        if (!path.IsFile()) {
-            SR_WARN("Platform::WaitAndDelete() : path is not a file. Path: '{}'", path.ToString());
-            return false;
-        }
-
-        SR_LOG("Platform::WaitAndDelete() : waiting for file to be deleted...");
-        while (true) {
-            if (IsFileDeletable(path)) {
-                return Delete(path);
-            }
-        }
-    }
-
     void TextToClipboard(const std::string& text) { SRHaltOnce("Not implemented!"); }
 
     void CopyFilesToClipboard(std::list<SR_UTILS_NS::Path> paths) { SRHaltOnce("Not implemented!"); }
@@ -519,21 +505,6 @@ namespace SR_PLATFORM_NS {
         return result;
     }
 
-    bool CreateFolder(const std::string& path) {
-        if (path.empty()) {
-            SR_WARN("Platform::CreateFolder() : path is empty!");
-            return false;
-        }
-
-        const std::string command = "mkdir -p " + path;
-        if (system(command.c_str()) != 0) {
-            SR_WARN("Platform::CreateFolder() : failed to create folder!\n\tPath: {}", path);
-            return false;
-        }
-
-        return true;
-    }
-
     Path GetApplicationPath() {
         return std::filesystem::canonical("/proc/self/exe").string();
     }
@@ -544,7 +515,7 @@ namespace SR_PLATFORM_NS {
 
     std::optional<Path> GetApplicationLogPath() { return std::nullopt; }
 
-    Path GetApplicationName() {
+    String GetApplicationName() {
         std::string sp;
         std::ifstream("/proc/self/comm") >> sp;
 
@@ -552,15 +523,6 @@ namespace SR_PLATFORM_NS {
     }
 
     bool FileIsHidden(const Path& path) { return path.GetBaseNameView()[0] == '.'; }
-
-    FileMetadata GetFileMetadata(const Path& file) {
-        FileMetadata fileMetadata;
-        struct stat result{};
-        if (stat(file.c_str(), &result) == 0) {
-            fileMetadata.lastWriteTime = result.st_mtime;
-        }
-        return fileMetadata;
-    }
 
     void SelfOpen() {
         auto&& applicationPath = GetApplicationPath();

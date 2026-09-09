@@ -78,7 +78,6 @@ namespace SR_UTILS_NS::Platform {
 
     extern std::mutex g_platformLogMutex;
 
-    SR_COMMON_DLL_API extern bool RemoveAssetsPrefix(std::string_view& path);
     SR_COMMON_DLL_API extern void SetOverriddenMouseState(const std::optional<MouseState>& mouseState);
     SR_COMMON_DLL_API extern std::optional<MouseState> GetOverriddenMouseState();
     SR_COMMON_DLL_API extern void SetOverriddenKeyboardState(const std::optional<KeyboardState>& keyboardState);
@@ -100,7 +99,6 @@ namespace SR_UTILS_NS::Platform {
 
     SR_COMMON_DLL_API extern std::string ExecuteCommand(const std::string& command, const std::vector<std::string>& env = {});
     SR_COMMON_DLL_API extern void SetEnvironmentVar(const std::string_view& name, const std::string_view& value);
-    SR_COMMON_DLL_API extern bool ReadFile(const Path& path, String& buffer);
     SR_COMMON_DLL_API extern void TextToClipboard(const std::string& text);
     SR_COMMON_DLL_API extern void CopyFilesToClipboard(std::list<SR_UTILS_NS::Path> paths);
     SR_COMMON_DLL_API extern void SetCurrentProcessDirectory(const SR_UTILS_NS::Path& directory);
@@ -114,10 +112,9 @@ namespace SR_UTILS_NS::Platform {
     SR_COMMON_DLL_API extern void OpenFile(const SR_UTILS_NS::Path& path, const std::string& args);
     SR_COMMON_DLL_API extern void Unzip(const SR_UTILS_NS::Path& source, const SR_UTILS_NS::Path& destination, bool replace = true);
     SR_COMMON_DLL_API extern void OpenWithAssociatedApp(const Path& filepath);
-    SR_COMMON_DLL_API extern bool CreateFolder(const std::string& path);
-    SR_COMMON_DLL_API extern bool Copy(const Path& from, const Path& to);
-    SR_COMMON_DLL_API extern bool Delete(const Path& path);
-    SR_COMMON_DLL_API extern bool WaitAndDelete(const Path& path);
+    SR_COMMON_DLL_API extern bool CreateDirectories(StringView path);
+    SR_COMMON_DLL_API extern bool IsFileExists(StringView path);
+    SR_COMMON_DLL_API extern bool IsDirectoryExists(StringView path);
     SR_COMMON_DLL_API extern bool DownloadFile(const std::string& url, const SR_UTILS_NS::Path& outputPath);
     SR_COMMON_DLL_API extern void* LoadLibraryModule(const Path& path);
     SR_COMMON_DLL_API extern bool UnloadLibraryModule(void* pLibrary);
@@ -125,7 +122,7 @@ namespace SR_UTILS_NS::Platform {
     SR_COMMON_DLL_API extern bool IsLibraryModuleLoaded(const Path& path);
     SR_COMMON_DLL_API extern void SetApplicationMainLoop(bool(*mainLoop)(void*), void* pApplication);
 
-    SR_COMMON_DLL_API extern Path::Type GetPathType(std::string_view path);
+    SR_COMMON_DLL_API extern Path::Type GetPathType(StringView path);
     SR_COMMON_DLL_API extern uint64_t GetProcessUsedMemory();
     SR_COMMON_DLL_API extern uint16_t GetCurrentProcessId();
     SR_COMMON_DLL_API extern SR_MATH_NS::FVector2 GetMousePos();
@@ -135,9 +132,7 @@ namespace SR_UTILS_NS::Platform {
     SR_COMMON_DLL_API extern Path GetApplicationResourcesPath();
     SR_COMMON_DLL_API extern Path GetApplicationPath();
     SR_COMMON_DLL_API extern Path GetApplicationDirectory();
-    SR_COMMON_DLL_API extern Path GetApplicationName();
-    SR_COMMON_DLL_API extern void GetInDirectory(const Path& dir, Path::Type type, SR_UTILS_NS::Vector<Path>& out);
-    SR_COMMON_DLL_API extern FileMetadata GetFileMetadata(const Path& file);
+    SR_COMMON_DLL_API extern String GetApplicationName();
     SR_COMMON_DLL_API extern SR_MATH_NS::UVector2 GetScreenResolution();
     SR_COMMON_DLL_API extern double_t GetScreenDPI();
     SR_COMMON_DLL_API extern std::vector<SR_MATH_NS::UVector2> GetScreenResolutions();
@@ -170,21 +165,8 @@ namespace SR_UTILS_NS::Platform {
     SR_COMMON_DLL_API extern bool IsWebEditableElementFocused();
 #endif
 
-    struct SR_COMMON_DLL_API PlatformHooks {
-        decltype(&ReadFile) originalReadFile = nullptr;
-        decltype(&GetPathType) originalGetPathType = nullptr;
-
-        SR_HTYPES_NS::Function<bool(const Path&, String&)> readFileHook;
-        SR_HTYPES_NS::Function<Path::Type(const StringView&)> getFileTypeHook;
-
-        SR_HTYPES_NS::Function<StringView(StringView)> pathResolver;
-    };
-
-    extern PlatformHooks g_platformHooks;
     extern std::atomic<std::optional<MouseState>> g_overriddenMouseState;
     extern std::atomic<std::optional<KeyboardState>> g_overriddenKeyboardState;
-
-    SR_COMMON_DLL_API extern void InitializeHooks(const std::function<void(PlatformHooks& hooks)>& callback);
 } // namespace SR_UTILS_NS::Platform
 
 #endif // SR_ENGINE_UTILS_PLATFORM_H

@@ -13,11 +13,13 @@ namespace SR_UTILS_NS {
     class ISerializer;
     struct SerializationId;
 
+    enum class FSItemType {
+        Undefined, File, Folder
+    };
+
     class SR_COMMON_DLL_API Path {
     public:
-        enum class Type {
-            Undefined, File, Folder
-        };
+        using Type = FSItemType;
 
     public:
         Path();
@@ -26,6 +28,7 @@ namespace SR_UTILS_NS {
         Path(SR_UTILS_NS::StringAtom stringAtom);
         Path(const std::string& path);
         Path(const String& path);
+        Path(StringView path);
         Path(std::string_view path);
         Path(const std::wstring& path);
 
@@ -34,6 +37,7 @@ namespace SR_UTILS_NS {
 
         Path& operator=(Path&& path) noexcept;
         operator const String&(); /** NOLINT */
+        operator StringView(); /** NOLINT */
         Path& operator=(const Path& path);
         Path& operator=(const String& path);
         Path& operator=(const StringView& path);
@@ -49,9 +53,7 @@ namespace SR_UTILS_NS {
         void Save(ISerializer& serializer, const SerializationId& id) const;
         void Load(IDeserializer& deserializer, const SerializationId& id);
 
-        bool Make(Type type = Type::Undefined) const;
-        bool Create() const;
-        bool CreateIfNotExists() const;
+        bool CreateDirectories() const;
 
         void Normalize();
 
@@ -65,12 +67,12 @@ namespace SR_UTILS_NS {
         SR_NODISCARD String ToString() const;
         SR_NODISCARD std::string ConvertToFileName() const;
         SR_NODISCARD const String& ToStringRef() const;
-        SR_NODISCARD std::string_view ToStringView() const;
+        SR_NODISCARD StringView ToStringView() const;
         SR_NODISCARD std::wstring ToWinApiPath() const;
         SR_NODISCARD std::wstring ToUnicodeString() const;
         SR_NODISCARD size_t GetHash() const;
         SR_NODISCARD uint64_t GetFileHash() const;
-        SR_NODISCARD uint64_t GetFolderHash(uint64_t deep = SR_UINT64_MAX) const;
+        SR_NODISCARD uint64_t GetFolderHash() const;
         SR_NODISCARD const char* CStr() const;
         SR_NODISCARD const char* c_str() const;
         SR_NODISCARD uint64_t size() const;
@@ -79,9 +81,10 @@ namespace SR_UTILS_NS {
         SR_NODISCARD Path GetPrevious() const;
         SR_NODISCARD Path GetFolder() const;
 
-        SR_NODISCARD Path Concat(const SR_UTILS_NS::StringAtom path) const;
+        SR_NODISCARD Path Concat(StringAtom path) const;
         SR_NODISCARD Path Concat(const std::string& path) const;
-        SR_NODISCARD Path Concat(const std::string_view path) const;
+        SR_NODISCARD Path Concat(std::string_view path) const;
+        SR_NODISCARD Path Concat(StringView path) const;
         SR_NODISCARD Path Concat(const char* path) const;
         SR_NODISCARD Path Concat(const Path& path) const;
         SR_NODISCARD Path Concat(const String& path) const;
@@ -97,12 +100,10 @@ namespace SR_UTILS_NS {
         SR_NODISCARD bool IsSubPath(const Path& subPath) const;
         SR_NODISCARD bool Contains(const std::string_view& str) const;
         SR_NODISCARD bool IsHidden() const;
-        SR_NODISCARD bool Exists() const;
-        SR_NODISCARD bool Exists(Type type) const;
 
-        SR_NODISCARD Type GetType() const;
         SR_NODISCARD bool IsDir() const;
         SR_NODISCARD bool IsFile() const;
+        SR_NODISCARD bool IsExists() const;
         SR_NODISCARD bool IsAbs() const;
         SR_NODISCARD bool IsEmpty() const;
 

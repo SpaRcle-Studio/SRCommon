@@ -3,7 +3,7 @@
 //
 
 #include <Utils/Types/String.h>
-#include <Utils/Common/AssertFwd.h>
+#include <Utils/FileSystem/Path.h>
 
 namespace SR_UTILS_NS {
     String::String() = default;
@@ -25,7 +25,7 @@ namespace SR_UTILS_NS {
         : String(str.data(), str.size(), pAllocator)
     { }
 
-    String::String(String str, IAllocator* pAllocator)
+    String::String(const String& str, IAllocator* pAllocator)
         : String(str.m_data, str.m_size, pAllocator)
     { }
 
@@ -537,6 +537,9 @@ namespace SR_UTILS_NS {
 
     String& String::erase(SizeType pos, SizeType count) {
         const size_t eraseCount = std::min(count, m_size - pos);
+        if (eraseCount == 0) {
+            return *this;
+        }
 
         std::memmove(
             m_data + pos,
@@ -576,6 +579,101 @@ namespace SR_UTILS_NS {
         return npos;
     }
 
+    String String::operator+(StringView rhs) const {
+        if (m_size == 0) {
+            return String(rhs);
+        }
+        if (rhs.empty()) {
+            return *this;
+        }
+        String result;
+        SizeType newSize = m_size + rhs.size();
+        result.resize(newSize);
+        memcpy(result.m_data, m_data, m_size);
+        memcpy(result.m_data + m_size, rhs.data(), rhs.size());
+        result.m_data[newSize] = '\0';
+        return result;
+    }
+
+    SizeType String::find_last_of(StringView str, SizeType pos) const {
+        if (empty()) {
+            return npos;
+        }
+        SizeType searchStart = pos < m_size ? pos : m_size - 1;
+        for (int64_t i = searchStart; i >= 0; --i) {
+            if (str.find(m_data[i]) != StringView::npos) {
+                return static_cast<SizeType>(i);
+            }
+        }
+        return npos;
+    }
+
+    SizeType String::find_last_of(char c, SizeType pos) const {
+        if (empty()) {
+            return npos;
+        }
+        SizeType searchStart = pos < m_size ? pos : m_size - 1;
+        for (int64_t i = searchStart; i >= 0; --i) {
+            if (m_data[i] == c) {
+                return static_cast<SizeType>(i);
+            }
+        }
+        return npos;
+    }
+
+    void String::remove_prefix(SizeType n) {
+        if (n > m_size) {
+            SRHalt("String::remove_prefix() : prefix size exceeds string size!");
+            clear();
+            return;
+        }
+        memmove(m_data, m_data + n, m_size - n);
+        m_size -= n;
+        m_data[m_size] = '\0';
+    }
+
+    void String::remove_suffix(SizeType n) {
+        if (n > m_size) {
+            SRHalt("String::remove_suffix() : suffix size exceeds string size!");
+            clear();
+            return;
+        }
+        m_size -= n;
+        m_data[m_size] = '\0';
+    }
+
+    bool String::ends_with(char c) const {
+        return m_size > 0 && m_data[m_size - 1] == c;
+    }
+
+    void String::insert(SizeType pos, StringView str) {
+        if (pos > m_size) {
+            SRHalt("String::insert() : position exceeds string size!");
+            return;
+        }
+        SizeType newSize = m_size + str.size();
+        if (newSize > m_capacity) {
+            reserve(SR_MAX(newSize, m_capacity * 2));
+        }
+        memmove(m_data + pos + str.size(), m_data + pos, m_size - pos);
+        memcpy(m_data + pos, str.data(), str.size());
+        m_size = newSize;
+        m_data[m_size] = '\0';
+    }
+
+    char& String::front() {
+        if (m_size == 0) {
+            SRHalt("String::front() : string is empty!");
+            static char dummy = '\0';
+            return dummy;
+        }
+        return m_data[0];
+    }
+
+    const char& String::front() const {
+        return const_cast<String*>(this)->front();
+    }
+
     void StringView::remove_prefix(SizeType n) {
         if (n > m_size) {
             SRHalt("StringView::remove_prefix() : prefix size exceeds string size!");
@@ -584,6 +682,16 @@ namespace SR_UTILS_NS {
             return;
         }
         m_data += n;
+        m_size -= n;
+    }
+
+    void StringView::remove_suffix(SizeType n) {
+        if (n > m_size) {
+            SRHalt("StringView::remove_suffix() : suffix size exceeds string size!");
+            m_data = nullptr;
+            m_size = 0;
+            return;
+        }
         m_size -= n;
     }
 
@@ -619,6 +727,19 @@ namespace SR_UTILS_NS {
             count = maxCount;
         }
         return StringView(std::string_view(m_data + pos, count));
+    }
+
+    StringView& StringView::erase(SizeType pos, SizeType count) {
+        if (pos >= m_size || empty()) {
+            return *this;
+        }
+        SizeType maxCount = m_size - pos;
+        if (count > maxCount) {
+            count = maxCount;
+        }
+        m_data += pos;
+        m_size -= count;
+        return *this;
     }
 
     char StringView::operator[](size_t index) const {
@@ -704,6 +825,60 @@ namespace SR_UTILS_NS {
 
     StringView::operator String() const {
         return String(std::string_view(m_data ? m_data : "", m_size));
+    }
+
+    bool StringView::starts_with(StringView str) const {
+        if (str.size() > m_size) {
+            return false;
+        }
+        return std::equal(str.begin(), str.end(), m_data);
+    }
+
+    char& StringView::front() {
+        if (m_size == 0) {
+            SRHalt("StringView::front() : string is empty!");
+            static char dummy = '\0';
+            return dummy;
+        }
+        return const_cast<char&>(m_data[0]);
+    }
+
+    const char& StringView::front() const {
+        return const_cast<StringView*>(this)->front();
+    }
+
+    StringView::StringView(const Path& path) {
+        *this = path.ToStringView();
+    }
+
+    SizeType StringView::find_last_of(char c, SizeType pos) const {
+        if (empty()) {
+            return npos;
+        }
+        SizeType searchStart = pos < m_size ? pos : m_size - 1;
+        for (int64_t i = searchStart; i >= 0; --i) {
+            if (m_data[i] == c) {
+                return static_cast<SizeType>(i);
+            }
+        }
+        return npos;
+    }
+
+    SizeType StringView::find_last_of(StringView str, SizeType pos) const {
+        if (empty()) {
+            return npos;
+        }
+        SizeType searchStart = pos < m_size ? pos : m_size - 1;
+        for (int64_t i = searchStart; i >= 0; --i) {
+            if (str.find(m_data[i]) != StringView::npos) {
+                return static_cast<SizeType>(i);
+            }
+        }
+        return npos;
+    }
+
+    bool StringView::starts_with(char c) const {
+        return !empty() && m_data[0] == c;
     }
 }
 

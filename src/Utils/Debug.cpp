@@ -4,6 +4,8 @@
 
 #include <Utils/Debug.h>
 #include <Utils/FileSystem/FileSystem.h>
+#include <Utils/Common/CLIManager.h>
+#include <Utils/FileSystem/VFS.h>
 #include <Utils/Resources/ResourceManager.h>
 #include <Utils/Platform/Stacktrace.h>
 #include <Utils/Platform/Platform.h>
@@ -37,6 +39,12 @@ namespace SR_UTILS_NS {
                 break;
             default:
                 break;
+        }
+
+        if (CLIManager::Instance().IsFlagPresent(CLIFlags::ErrorWarnAsAssert)) {
+            if (type == DebugLogType::Warn || type == DebugLogType::Error || type == DebugLogType::VulkanError) {
+                type = DebugLogType::Assert;
+            }
         }
 
         String msg = rawMsg;
@@ -85,11 +93,11 @@ namespace SR_UTILS_NS {
                 }
             }
 
-
             std::cout << std::flush;
 
-            if (m_file.is_open()) {
-                m_file << (memoryUsage + prefix + " " + msg) << std::flush;
+            if (m_file) {
+                m_file << memoryUsage << prefix << " " << msg;
+                m_file.Flush();
             }
         }
 
@@ -104,29 +112,18 @@ namespace SR_UTILS_NS {
 
         InitColorTheme();
 
-    #if !defined(SR_ANDROID) && !defined(SR_EMSCRIPTEN)
-        auto&& successfulPath = SR_PLATFORM_NS::GetApplicationPath().GetFolder().Concat("/successful");
-        if (successfulPath.Exists(Path::Type::File))
-            Platform::Delete(successfulPath);
-    #endif
-
         m_isInit = true;
         m_showUseMemory = ShowUsedMemory;
 
     #ifndef SR_EMSCRIPTEN
         m_logPath = logPath;
-
-        if (!m_logPath.GetFolder().CreateIfNotExists()) {
-            SR_PLATFORM_NS::WriteConsoleError("Failed to create log folder!\n\tLog path: " + m_logPath.ToString());
+        if (!VFS::Instance().HaveMount(m_logPath)) {
+            VFS::Instance().Mount(m_logPath, new DirectoryVFSBackend(m_logPath), 0, true);
         }
 
-        if (m_logPath.Exists(Path::Type::File)) {
-            Platform::Delete(m_logPath);
-        }
-
-        m_file.open(m_logPath.c_str());
-        if (!m_file.is_open()) {
-            SR_PLATFORM_NS::WriteConsoleError("Debug::Init() : failed to open log file!\n\tLog path: " + m_logPath.ToString());
+        m_file = VFS::Instance().OpenFile(m_logPath, FileMode::Write);
+        if (!m_file) {
+            SR_PLATFORM_NS::WriteConsoleError("Debug::Init() : failed to open log file!\n\tLog path: {}"_format(m_logPath));
         }
 
         Print("Debugger has been initialized. \n\tLog path: {}"_format(m_logPath), DebugLogType::Debug);
@@ -172,28 +169,15 @@ namespace SR_UTILS_NS {
         }
 
         if (m_countErrors == 0 && m_countWarnings == 0) {
-            std::string msg = "Debugger has been stopped with no errors and warnings!";
+            static const auto msg = "Debugger has been stopped with no errors and warnings!";
             Print(msg, DebugLogType::Debug);
         }
         else {
-            std::string msg = "Debugger has been stopped with errors!\n"
-                              "\tErrors count: "+std::to_string(m_countErrors)+
-                              "\n\tWarnings count: "+std::to_string(m_countWarnings);
+            const auto msg = "Debugger has been stopped with errors!\n\tErrors count: {}\n\tWarnings count: {}"_format(m_countErrors, m_countWarnings);
             Print(msg, DebugLogType::Debug);
         }
 
-        if (m_file.is_open()) {
-            m_file.close();
-        }
-
-    #ifndef SR_ANDROID
-        auto&& path = Platform::GetApplicationPath().GetFolder().Concat("/successful");
-        std::ofstream success(path.c_str());
-        if (success.is_open()) {
-            success.close();
-        }
-    #endif
-
+        m_file = {};
         m_isInit = false;
     }
 

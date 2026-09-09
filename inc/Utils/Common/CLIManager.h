@@ -17,7 +17,8 @@ namespace SR_UTILS_NS {
         ContinueAfterTests = 1 << 1,
         DeleteOldApp       = 1 << 2,
         Headless           = 1 << 3,
-        Validation         = 1 << 4
+        Validation         = 1 << 4,
+        ErrorWarnAsAssert  = 1 << 5
     );
 
     SR_ENUM_NS_STRUCT_T(CLIOptions, uint32_t,

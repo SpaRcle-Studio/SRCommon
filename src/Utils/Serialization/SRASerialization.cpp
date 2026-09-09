@@ -5,6 +5,7 @@
 #include <Utils/Common/ToString.h>
 #include <Utils/Common/Features.h>
 #include <Utils/Common/LexicalCast.h>
+#include <Utils/Common/StringUtils.h>
 #include <Utils/FileSystem/FileSystem.h>
 #include <Utils/Serialization/SRASerialization.h>
 
@@ -245,7 +246,9 @@ namespace SR_UTILS_NS {
         }
 
         String buffer;
-        std::vector<std::string_view> lines = FileSystem::ReadAllTextAsStringViewVector(path, buffer);
+        FileSystem::ReadFile(path, buffer);
+        Vector<StringView> lines;
+        StringUtils::Instance().SplitViewByLines(buffer, lines);
         if (lines.empty()) {
             SR_ERROR("SRADeserializer::LoadFromFile() : empty data!\n\tPath: {}", path);
             return false;
@@ -255,11 +258,12 @@ namespace SR_UTILS_NS {
     }
 
     bool SRADeserializer::LoadFromString(const std::string& str) {
-        const std::vector<std::string_view> lines = SR_UTILS_NS::StringUtils::SplitViewWithEmpty(str, "\n");
+        Vector<StringView> lines;
+        StringUtils::Instance().SplitViewByLines(str, lines);
         return LoadFromStringsBuffer(lines);
     }
 
-    bool SRADeserializer::LoadFromStringsBuffer(const std::vector<std::string_view>& lines) {
+    bool SRADeserializer::LoadFromStringsBuffer(const Vector<StringView>& lines) {
         SR_TRACY_ZONE;
 
         if (lines.empty()) {

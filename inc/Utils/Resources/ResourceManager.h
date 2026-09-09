@@ -29,10 +29,7 @@ namespace SR_UTILS_NS {
         SR_NODISCARD bool IsUsePointStackTraceProfilingEnabled() const { return m_usePointStackTraceProfiling; }
         SR_NODISCARD Path GetResPath() const;
         SR_NODISCARD const Path& GetResPathRef() const;
-        SR_NODISCARD Path GetEngineResPath() const { return m_engineFolder; }
-        SR_NODISCARD const Path& GetEngineResPathRef() const { return m_engineFolder; }
         SR_NODISCARD Path GetCachePath() const;
-        SR_NODISCARD Path GetEngineCachePath() const;
         SR_NODISCARD FileSystemWatcher::Ptr GetFileSystemWatcher() const { return m_fileSystemWatcher; }
         SR_NODISCARD IResourceReloader* GetDefaultReloader() const { return m_defaultReloader.Get(); }
         SR_NODISCARD bool HasDirtyResources() const { return m_hasDirtyResources; }
@@ -50,7 +47,6 @@ namespace SR_UTILS_NS {
         void ReloadResource(const IResource::Ptr& pResource);
         void ReloadResource(StringAtom id, StringAtom typeName);
         void ReloadAll(StringAtom typeName);
-        void ChangeResourcesFolder(const Path& path);
 
         void Execute(const SR_HTYPES_NS::Function<void()>& fun);
         void InspectResources(const SR_HTYPES_NS::Function<void(ResourcesTypes&)>& callback);
@@ -66,7 +62,7 @@ namespace SR_UTILS_NS {
         bool IsSingletonCanBeDestroyed() const override { return false; }
 
     public:
-        bool Initialize(const Path& resourcesFolder, const Path& engineResourcesFolder);
+        bool Initialize();
         void DeInitialize();
 
         /// Проверить хэши ресурсов и перезагрузить их, если это требуется
@@ -101,8 +97,6 @@ namespace SR_UTILS_NS {
         std::atomic<bool> m_force = false;
         std::atomic<bool> m_hasDirtyResources = false;
 
-        Path m_folder;
-        Path m_engineFolder;
         SR_HTYPES_NS::Thread::Ptr m_thread = nullptr;
         uint64_t m_lastTime = 0;
         uint64_t m_deltaTime = 0;
@@ -138,6 +132,9 @@ struct CoreResLoader {
     template<typename T> SR_NODISCARD static SR_HTYPES_NS::SharedPtr<T> Load(SR_UTILS_NS::StringAtom id, const SR_UTILS_NS::IResourceVariant* pVariant = nullptr) {
         return SR_UTILS_NS::DynamicPointerCast<T>(SR_UTILS_NS::ResourceManager::Instance().LoadResource(id, T::GetClassStaticName(), pVariant));
     }
+    SR_NODISCARD static SR_UTILS_NS::Path GetResPath() { return SR_UTILS_NS::ResourceManager::Instance().GetResPath(); }
+    SR_NODISCARD static SR_UTILS_NS::Path GetCachePath() { return SR_UTILS_NS::ResourceManager::Instance().GetCachePath(); }
+    SR_NODISCARD static const SR_UTILS_NS::Path& GetResPathRef() { return SR_UTILS_NS::ResourceManager::Instance().GetResPathRef(); }
 };
 
 #endif //SR_ENGINE_COMMON_RESOURCE_MANAGER_H

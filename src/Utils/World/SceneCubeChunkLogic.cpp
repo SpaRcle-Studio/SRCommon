@@ -306,23 +306,6 @@ namespace SR_WORLD_NS {
     void SceneCubeChunkLogic::SaveRegion(const SR_UTILS_NS::Path& path, Region* pRegion, SR_HTYPES_NS::DataStorage* pContext) const {
         SR_TRACY_ZONE;
         SR_LOCK_GUARD;
-
-        path.Create();
-
-        auto&& regPath = path.Concat(pRegion->GetPosition().ToString()).ConcatExt("dat");
-        if (auto&& pRegionMarshal = pRegion->Save(pContext); pRegionMarshal) {
-            if (pRegionMarshal->Valid()) {
-                pRegionMarshal->Save(regPath);
-            }
-            else if (regPath.IsFile()) {
-                SR_PLATFORM_NS::Delete(regPath);
-            }
-
-            SR_SAFE_DELETE_PTR(pRegionMarshal);
-        }
-        else if (regPath.Exists(Path::Type::File)) {
-            Platform::Delete(regPath);
-        }
     }
 
     Path SceneCubeChunkLogic::GetRegionsPath() const {

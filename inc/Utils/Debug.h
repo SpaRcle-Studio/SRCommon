@@ -5,7 +5,7 @@
 #ifndef SR_ENGINE_UTILS_DEBUG_H
 #define SR_ENGINE_UTILS_DEBUG_H
 
-#include <Utils/FileSystem/Path.h>
+#include <Utils/FileSystem/File.h>
 #include <Utils/Common/Singleton.h>
 #include <Utils/Common/Enumerations.h>
 #include <Utils/Common/StringFormat.h>
@@ -90,7 +90,7 @@ namespace SR_UTILS_NS {
 
         std::atomic<bool> m_isInit = false;
         Path m_logPath;
-        std::ofstream m_file;
+        File m_file;
         std::atomic<Level> m_level = Level::Low;
         size_t m_countErrors = 0;
         size_t m_countWarnings = 0;

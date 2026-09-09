@@ -9,9 +9,22 @@
 #include <Utils/FileSystem/FileSystem.h>
 #include <Utils/Types/Vector.h>
 
-#include <Enum/KeyCode.hpp>
-
 #include <filesystem>
+#include <sys/stat.h>
+#include <cerrno>
+
+#ifdef SR_WIN32
+    #include <direct.h>
+    #ifdef SR_MINGW
+        #define SR_MKDIR(path) mkdir(path)
+    #else
+        #define SR_MKDIR(path) _mkdir(path)
+    #endif
+#elif defined(SR_LINUX) || defined(SR_APPLE) || defined(SR_EMSCRIPTEN) || defined(SR_ANDROID)
+    #define SR_MKDIR(path) mkdir(path, 0777)
+#else
+    #error "Unsupported platform"
+#endif
 
 namespace SR_PLATFORM_NS {
     bool IsMobilePlatform() {
@@ -25,19 +38,16 @@ namespace SR_PLATFORM_NS {
         }
     }
 
-    bool IsSupportThreads() {
-        return GetType() != PlatformType::Emscripten;
+    bool IsFileExists(StringView path) {
+        return GetPathType(path) == FSItemType::File;
     }
 
-    bool RemoveAssetsPrefix(std::string_view& path) {
-        if (path.starts_with(":assets:")) {
-            path = path.substr(8); // length of ":assets:"
-            if (path.starts_with("/")) {
-                path = path.substr(1);
-            }
-            return true;
-        }
-        return false;
+    bool IsDirectoryExists(StringView path) {
+        return GetPathType(path) == FSItemType::Folder;
+    }
+
+    bool IsSupportThreads() {
+        return GetType() != PlatformType::Emscripten;
     }
 
     BuildType GetBuildType() {
@@ -48,125 +58,6 @@ namespace SR_PLATFORM_NS {
     #else
         return BuildType::Unknown;
     #endif
-    }
-
-    void GetInDirectory(const Path& dir, Path::Type type, SR_UTILS_NS::Vector<Path>& out) {
-        SR_TRACY_ZONE;
-        out.clear();
-
-        uint32_t count = 0;
-
-        if (!dir.IsDir()) {
-            return;
-        }
-
-        for (const auto& entry : std::filesystem::directory_iterator(dir.View())) {
-            const bool isDirectory = entry.is_directory();
-            const bool isFile = entry.is_regular_file();
-            if ((type == Path::Type::Folder && isDirectory) || (type == Path::Type::File && isFile) || type == Path::Type::Undefined) {
-                count++;
-            }
-        }
-
-        out.reserve(count);
-
-        for (const auto& entry : std::filesystem::directory_iterator(dir.View())) {
-            const bool isDirectory = entry.is_directory();
-            const bool isFile = entry.is_regular_file();
-            if ((type == Path::Type::Folder && isDirectory) || (type == Path::Type::File && isFile) || type == Path::Type::Undefined) {
-                out.emplace_back(entry.path());
-            }
-        }
-    }
-
-    bool Copy(const Path& from, const Path& to) {
-        SR_TRACY_ZONE;
-
-    #ifdef SR_ANDROID
-        std::string_view pathToView = to.ToStringView();
-        if (RemoveAssetsPrefix(pathToView)) {
-            SR_ERROR("Platform::Copy() : can't write asset file!");
-            return false;
-        }
-    #endif
-
-        if (from.IsFile()) {
-            SR_UTILS_NS::String buffer;
-            if (!SR_UTILS_NS::FileSystem::ReadFile(from, buffer)) {
-                SR_ERROR("Platform::Copy() : failed to read file!\n\tPath: {}", from);
-                return false;
-            }
-
-            to.Create();
-
-            std::ofstream file(to.c_str(), std::ios::binary);
-            if (!file.is_open()) {
-                SR_ERROR("Platform::Copy() : failed to open file for writing!\n\tPath: {}\n\tReason = {} ({})", to, errno, std::system_category().message(errno));
-                return false;
-            }
-            file.write(buffer.data(), buffer.size());
-            CopyPermissions(from, to);
-            return true;
-        }
-
-        if (!from.IsDir()) {
-            SR_ERROR("Platform::Copy() : \"{}\" is not a directory!", from);
-            return false;
-        }
-
-        to.Create();
-
-        Vector<Path> items;
-        GetInDirectory(from, Path::Type::Undefined, items);
-        for (auto&& item : items) {
-            if (Copy(item, to.Concat(item.GetBaseNameAndExt()))) {
-                continue;
-            }
-
-            return false;
-        }
-
-        return true;
-    }
-
-    bool Delete(const Path& path) { /// TODO: Обезопасить от безвозвратного удаления файлов
-        SR_TRACY_ZONE;
-
-        if (path.IsFile()) {
-            const bool result = std::remove(path.CStr()) == 0;
-
-            if (!result) {
-                SR_WARN("Platform::Delete() : failed to delete file!\n\tPath: {}", path.CStr());
-            }
-
-            return result;
-        }
-
-        if (!path.IsDir()) {
-            return false;
-        }
-
-        SR_UTILS_NS::Vector<Path> items;
-        GetInDirectory(path, Path::Type::Undefined, items);
-        for (auto&& item : items) {
-            if (Delete(item)) {
-                continue;
-            }
-
-            return false;
-        }
-
-    #ifdef SR_WIN32
-        const bool result = _rmdir(path.CStr()) == 0;
-    #else
-        const bool result = rmdir(path.CStr()) == 0;
-    #endif
-
-        if (!result) {
-            SR_WARN("Platform::Delete() : failed to delete folder!\n\tPath: {}", path.CStr());
-        }
-
-        return result;
     }
 
 #ifndef SR_LINUX
@@ -192,6 +83,50 @@ namespace SR_PLATFORM_NS {
         return false;
     }
 #endif
+
+    bool CreateDirectories(StringView path) {
+        if (path.empty()) {
+            return false;
+        }
+
+        static SR_THREAD_LOCAL String current;
+        current.clear();
+
+        for (size_t i = 0; i < path.size(); ++i) {
+            const char c = path[i];
+            current += c;
+
+            if (c != '/' && c != '\\' && i + 1 != path.size())
+                continue;
+
+            /// Не пытаемся создавать корень "C:/" и пустые компоненты.
+            if (current.empty() || current == "/" || current == "\\")
+                continue;
+
+        #ifdef SR_WIN32
+            if (current.size() == 3 && current[1] == ':' && (current[2] == '/' || current[2] == '\\')) {
+                continue;
+            }
+        #endif
+
+            if (SR_MKDIR(current.c_str()) != 0) {
+                struct stat st{};
+                if (stat(current.c_str(), &st) != 0 && errno != EEXIST)
+                    return false;
+            }
+        }
+
+        /// Последний компонент, если путь не заканчивался slash'ем.
+        if (!current.empty() && current.back() != '/' && current.back() != '\\') {
+            if (SR_MKDIR(current.c_str()) != 0) {
+                struct stat st{};
+                if (stat(current.c_str(), &st) != 0 && errno != EEXIST)
+                    return false;
+            }
+        }
+
+        return true;
+    }
 
     void KeyboardState::Set(KeyCode key, const bool isPressed) {
         const bool current = keyStates[static_cast<uint8_t>(key)];
@@ -221,6 +156,41 @@ namespace SR_PLATFORM_NS {
         return g_overriddenKeyboardState.load();
     }
 
+    Path GetApplicationResourcesPath() {
+        if (GetType() == PlatformType::Android) {
+            return "Resources";
+        }
+
+        if (auto&& folderArg = CLIManager::Instance().GetOptionValue(CLIOptions::Resources); folderArg.has_value()) {
+            auto&& folder = SR_UTILS_NS::Path(folderArg.value());
+
+            if (!SR_PLATFORM_NS::IsDirectoryExists(folder)) {
+                SR_INFO("Platform::GetApplicationResourcesPath() : specified resources folder does not exist! Path: {}", folder);
+            }
+            else {
+                return folder;
+            }
+        }
+
+        static const StringView potentialPaths[5] = { "Resources", "../Resources", "../../Resources", "../../../Resources", "../../../../Resources", };
+        for (auto&& relativePath : potentialPaths) {
+            auto&& fullPath = GetApplicationPath().Concat(relativePath);
+            if (SR_PLATFORM_NS::IsDirectoryExists(fullPath)) {
+                if (SR_PLATFORM_NS::IsDirectoryExists(fullPath.Concat("Engine"))) { /// Check is folder correct
+                    return fullPath;
+                }
+            }
+        }
+
+        static const SR_UTILS_NS::Path defaultFlatpakPath = "/app/share/SREngine/Resources";
+        if (SR_PLATFORM_NS::IsDirectoryExists(defaultFlatpakPath)) {
+            return defaultFlatpakPath;
+        }
+
+        SR_LOG("Platform::GetApplicationResourcesPath() : resources folder was not found in any of the potential paths. Please specify the resources folder using --resources option or reinstall the application.");
+        return SR_UTILS_NS::Path();
+    }
+
 #if !defined(SR_EMSCRIPTEN)
     void SetApplicationMainLoop(bool(*mainLoop)(void*), void* pApplication) {
         while (mainLoop(pApplication)) {
@@ -233,41 +203,7 @@ namespace SR_PLATFORM_NS {
 #endif
 
 #if !defined(SR_ANDROID)
-    bool ReadFileOriginal(const Path& path, String& buffer) {
-        SR_TRACY_ZONE;
-
-        if (!path.Exists(Path::Type::File)) {
-            return false;
-        }
-
-        // Открываем файл в бинарном режиме и сразу получаем размер
-        std::ifstream file(path.c_str(), std::ios::binary | std::ios::ate);
-        if (!file) {
-            return false;
-        }
-
-        const std::streamsize size = file.tellg();
-
-        buffer.resize(static_cast<size_t>(size));
-        file.seekg(0, std::ios::beg);
-        if (!file.read(buffer.data(), size)) {
-            return false;
-        }
-        return true;
-    }
-
-    bool ReadFile(const Path& path, String& buffer) {
-        SR_TRACY_ZONE;
-
-        if (g_platformHooks.readFileHook) {
-            return g_platformHooks.readFileHook(path, buffer);
-        }
-        else {
-            return ReadFileOriginal(path, buffer);
-        }
-    }
-
-    Path::Type GetPathTypeOriginal(std::string_view path) {
+    Path::Type GetPathType(StringView path) {
         SR_TRACY_ZONE;
 
     #ifdef SR_WIN32
@@ -302,58 +238,6 @@ namespace SR_PLATFORM_NS {
         SRHalt("Unsupported OS!");
         return Path::Type::Undefined;
     #endif
-    }
-
-    Path::Type GetPathType(std::string_view path) {
-        if (g_platformHooks.getFileTypeHook) {
-            return g_platformHooks.getFileTypeHook(path);
-        }
-        else {
-            return GetPathTypeOriginal(path);
-        }
-    }
-
-    Path GetApplicationResourcesPath() {
-        if (auto&& folderArg = CLIManager::Instance().GetOptionValue(CLIOptions::Resources); folderArg.has_value()) {
-            auto&& folder = SR_UTILS_NS::Path(folderArg.value());
-
-            if (!folder.Exists(SR_UTILS_NS::Path::Type::Folder)) {
-                SR_INFO("Platform::GetApplicationResourcesPath() : specified resources folder does not exist! Path: {}", folder);
-            }
-            else {
-                return folder;
-            }
-        }
-
-        static const std::vector<std::string> potentialPaths = {
-            "Resources", "../Resources", "../../Resources", "../../../Resources", "../../../../Resources",
-        };
-
-        for (auto&& relativePath : potentialPaths) {
-            auto&& fullPath = GetApplicationPath().Concat(relativePath);
-            if (fullPath.Exists(SR_UTILS_NS::Path::Type::Folder)) {
-                if (fullPath.Concat("Engine").Exists(SR_UTILS_NS::Path::Type::Folder)) { /// Check is folder correct
-                    return fullPath;
-                }
-            }
-        }
-
-        SR_UTILS_NS::Path defaultFlatpakPath = "/app/share/SREngine/Resources";
-        if (defaultFlatpakPath.Exists(SR_UTILS_NS::Path::Type::Folder)) {
-            return defaultFlatpakPath;
-        }
-
-        SR_LOG("Platform::GetApplicationResourcesPath() : resources folder was not found in any of the potential paths. Please specify the resources folder using --resources option or reinstall the application.");
-
-        return SR_UTILS_NS::Path();
-    }
-
-    void InitializeHooks(const std::function<void(PlatformHooks& hooks)>& callback) {
-        PlatformHooks hooks;
-        hooks.originalReadFile = &ReadFileOriginal;
-        hooks.originalGetPathType = &GetPathTypeOriginal;
-        callback(hooks);
-        g_platformHooks = hooks;
     }
 #endif
 } // namespace SR_PLATFORM_NS

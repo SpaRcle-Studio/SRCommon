@@ -4,6 +4,7 @@
 
 #include <Utils/Serialization/BaseSerialization.h>
 #include <Utils/Localization/Encoding.h>
+#include <Utils/FileSystem/FileSystem.h>
 #include <Utils/Types/UnicodeString.h>
 #include <Utils/Memory/Allocator.h>
 #include <Utils/Memory/MemoryLiterals.h>
@@ -32,21 +33,8 @@ namespace SR_UTILS_NS {
             return false;
         }
 
-        if (!path.CreateIfNotExists()) {
-            SR_ERROR("IBaseSerialization::SaveToFileImpl() : failed to create path!\n\tPath: " + path.ToString());
-            return false;
-        }
-
-        std::ofstream file(path.c_str());
-        if (!file.is_open()) {
-            SR_ERROR("IBaseSerialization::SaveToFileImpl() : failed to open file!\n\tPath: " + path.ToString());
-            return false;
-        }
-
         String buffer = ToStringBase();
-        file << std::string_view(buffer.data(), buffer.size());
-        file.close();
-        return true;
+        return FileSystem::WriteToFile(path, buffer);
     }
 
     void IBaseSerialization::WriteNode(const SerializationNode& node) noexcept {

@@ -217,11 +217,6 @@ namespace SR_PLATFORM_NS {
         SRWebSetCursorVisible(isVisible ? 1 : 0);
     }
 
-    FileMetadata GetFileMetadata(const Path& file) {
-        FileMetadata fileMetadata;
-        return fileMetadata;
-    }
-
     MouseState GetMouseState() {
         if (auto&& overridden = GetOverriddenMouseState()) {
             return overridden.value();
@@ -320,10 +315,6 @@ namespace SR_PLATFORM_NS {
         SRHaltOnce("Not implemented!");
     }
 
-    bool CreateFolder(const std::string& path) {
-        return std::filesystem::create_directories(path);
-    }
-
     Path GetApplicationPath() {
         return Path();
     }
@@ -341,7 +332,7 @@ namespace SR_PLATFORM_NS {
         return std::nullopt;
     }
 
-    Path GetApplicationName() {
+    String GetApplicationName() {
         return "SREngine";
     }
 

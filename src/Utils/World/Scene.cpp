@@ -96,8 +96,8 @@ namespace SR_WORLD_NS {
             SR_LOG("Scene::New() : creating new scene...");
         }
 
-        if (SR_UTILS_NS::FileSystem::IsFileExists(path)) {
-            SRHalt("Scene::New() : scene already exists!\n\tPath: " + path.ToString());
+        if (path.IsFile()) {
+            SRHalt("Scene::New() : scene already exists!\n\tPath: {}", path);
             return Scene::Ptr();
         }
 
@@ -530,7 +530,7 @@ namespace SR_WORLD_NS {
     }
 
     bool Scene::IsExists(const Path& path) {
-        return GetAbsPath(path).Exists();
+        return GetAbsPath(path).IsExists();
     }
 
     Scene::SceneLogicPtr Scene::GetLogicBase() const {

@@ -39,7 +39,7 @@ namespace SR_HTYPES_NS {
         delete m_importer;
 
         if (m_fromCache) {
-            m_pMappedFileCache.Reset();
+            m_pMappedFileCache = {};
             m_scene = nullptr;
         }
     #endif
@@ -54,7 +54,7 @@ namespace SR_HTYPES_NS {
         }
 
         if (m_fromCache) {
-            m_pMappedFileCache.Reset();
+            m_pMappedFileCache = {};
             m_scene = nullptr;
         }
     #endif

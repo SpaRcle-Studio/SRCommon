@@ -6,22 +6,23 @@
 #define SR_ENGINE_COMMON_MAPPED_FILE_H
 
 #include <Utils/Common/NonCopyable.h>
+#include <Utils/Common/PassKey.h>
 #include <Utils/FileSystem/Path.h>
 
 namespace SR_UTILS_NS {
     class MappedFile;
+    class MappedFileImpl;
 
-    struct SR_COMMON_DLL_API MappedFileImpl {
-        static MappedFile Open(const Path& path, bool write);
+    class SR_COMMON_DLL_API MappedFileOpenerImpl {
+        friend class MappedFile;
+        static MappedFile Open(StringView path, bool write);
         static void Close(MappedFile &mappedFile);
     };
 
     class SR_COMMON_DLL_API MappedFile final : public NonCopyable {
-        friend struct MappedFileImpl;
-    private:
-        MappedFile() = default;
-
+        friend class MappedFileOpenerImpl;
     public:
+        MappedFile() = default;
         MappedFile(MappedFile&& other) noexcept;
         MappedFile& operator=(MappedFile&& other) noexcept;
         ~MappedFile() override;
@@ -29,7 +30,8 @@ namespace SR_UTILS_NS {
         SR_NODISCARD operator bool() const noexcept;
 
     public:
-        SR_NODISCARD static MappedFile Open(const Path& path, bool write = false);
+        SR_NODISCARD static MappedFile Open(PassKey<MappedFileImpl>, StringView path, bool write = false);
+        SR_NODISCARD static MappedFile Open(PassKey<MappedFileImpl>, const Path& path, bool write = false);
         SR_NODISCARD const char* GetData() const noexcept;
         SR_NODISCARD uint64_t GetSize() const noexcept;
         SR_NODISCARD std::string_view GetDataView() const noexcept;

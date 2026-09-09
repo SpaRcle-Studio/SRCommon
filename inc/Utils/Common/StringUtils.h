@@ -41,6 +41,10 @@ namespace SR_UTILS_NS {
         void Base64Decode(StringView source, String& base64);
         void Base64Encode(StringView base64, String& result);
 
+        void ConvertToUTF8(const wchar_t* pSource, uint32_t size, String& result);
+
+        void SplitViewByLines(StringView buffer, Vector<StringView>& outLines);
+
         static bool CheckSearchMatch(StringView searchBuffer, StringView text);
 
         static String MakeDisplayName(StringView name);
@@ -53,18 +57,18 @@ namespace SR_UTILS_NS {
             return { r, g, b };
         }
 
-        static SR_FORCE_INLINE std::string GetDirToFileFromFullPath(std::string full_path) {
-            size_t size = full_path.size();
+        static SR_FORCE_INLINE StringView GetDirToFileFromFullPath(StringView path) {
+            size_t size = path.size();
 
             while (size > 0){
                 size--;
-                if (full_path[size] == '\\' || full_path[size] == '/')
+                if (path[size] == '\\' || path[size] == '/')
                     break;
             }
 
-            full_path.resize(size);
+            path.remove_suffix(path.size() - size);
 
-            return full_path;
+            return path;
         }
 
         static SR_FORCE_INLINE std::string MultiConcat(const std::string& target, int32_t n) {

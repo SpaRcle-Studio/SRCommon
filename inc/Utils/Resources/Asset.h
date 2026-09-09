@@ -68,9 +68,8 @@ namespace SR_UTILS_NS {
 
     template<class AssetT> SR_HTYPES_NS::SharedPtr<AssetT> Asset::LoadOrCreate(const Path& rawPath) {
         auto&& resourceManager = ResourceManager::Instance();
-        SR_UTILS_NS::Path&& path = rawPath.RemoveSubPath(resourceManager.GetResPath());
-
-        if (resourceManager.GetResPath().Concat(path).Exists(Path::Type::File)) {
+        SR_UTILS_NS::Path&& path = CoreResLoader::GetResPath().Concat(rawPath.RemoveSubPath(resourceManager.GetResPath()));
+        if (path.IsFile()) {
             return Asset::template Load<AssetT>(path);
         }
         else {

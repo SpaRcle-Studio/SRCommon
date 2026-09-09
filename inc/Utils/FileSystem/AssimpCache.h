@@ -25,6 +25,7 @@ namespace SR_HTYPES_NS {
 }
 
 namespace SR_UTILS_NS {
+    class File;
     class MappedFile;
 
     extern const uint8_t SR_ASSIMP_MAX_NUMBER_OF_COLOR_SETS;
@@ -39,7 +40,7 @@ namespace SR_UTILS_NS {
         using MeshMap = std::pair<std::vector<aiMesh*>, std::unordered_map<aiMesh*, MeshIndex>>;
     public:
         bool Save(const SR_UTILS_NS::Path& path, const aiScene* pScene) const;
-        aiScene* Load(const SR_UTILS_NS::Path& path, SR_UTILS_NS::RawPointerHolder<SR_UTILS_NS::MappedFile>& cache) const;
+        aiScene* Load(const SR_UTILS_NS::Path& path, File& cache) const;
 
     private:
         SR_NODISCARD NodeMap BuildNodeMap(const aiScene* pScene) const;

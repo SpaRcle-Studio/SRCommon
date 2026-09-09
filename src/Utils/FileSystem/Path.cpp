@@ -4,6 +4,7 @@
 
 #include <Utils/FileSystem/Path.h>
 #include <Utils/FileSystem/FileSystem.h>
+#include <Utils/FileSystem/VFS.h>
 #include <Utils/Platform/Platform.h>
 #include <Utils/Profile/TracyContext.h>
 #include <Utils/Serialization/Serializer.h>
@@ -37,6 +38,10 @@ namespace SR_UTILS_NS {
     { }
 
     Path::Path(const String& path)
+        : m_path(path)
+    { }
+
+    Path::Path(StringView path)
         : m_path(path)
     { }
 
@@ -89,30 +94,48 @@ namespace SR_UTILS_NS {
         return GetNormalized();
     }
 
-    std::string_view Path::ToStringView() const {
+    StringView Path::ToStringView() const {
         return GetNormalized();
     }
 
     bool Path::IsDir() const {
-        return GetType() == Type::Folder;
+        return VFS::Instance().IsFolderExists(GetNormalized());
     }
 
     bool Path::IsFile() const {
-        return GetType() == Type::File;
+        return VFS::Instance().IsFileExists(GetNormalized());
+    }
+
+    bool Path::IsExists() const {
+        return VFS::Instance().IsExists(GetNormalized());
     }
 
     void Path::GetFiles(Vector<Path>& out) const {
-        return SR_PLATFORM_NS::GetInDirectory(*this, Path::Type::File, out);
+        SR_TRACY_ZONE;
+        out.clear();
+        VFS::Instance().Enumerate(GetNormalized(), [&](const VFSEntry& entry) {
+            if (entry.type == FSItemType::File) {
+                out.emplace_back(entry.relativePath);
+            }
+        }, false);
     }
 
     void Path::GetAll(Vector<Path>& out) const {
         SR_TRACY_ZONE;
-        return SR_PLATFORM_NS::GetInDirectory(*this, Path::Type::Undefined, out);
+        out.clear();
+        VFS::Instance().Enumerate(GetNormalized(), [&](const VFSEntry& entry) {
+            out.emplace_back(entry.relativePath);
+        }, false);
     }
 
     void Path::GetFolders(Vector<Path>& out) const {
         SR_TRACY_ZONE;
-        return SR_PLATFORM_NS::GetInDirectory(*this, Path::Type::Folder, out);
+        out.clear();
+        VFS::Instance().Enumerate(GetNormalized(), [&](const VFSEntry& entry) {
+            if (entry.type == FSItemType::Folder) {
+                out.emplace_back(entry.relativePath);
+            }
+        }, false);
     }
 
     const char* Path::CStr() const {
@@ -135,30 +158,28 @@ namespace SR_UTILS_NS {
         return m_hash;
     }
 
-    Path::Type Path::GetType() const {
-        return SR_PLATFORM_NS::GetPathType(GetNormalized());
-    }
-
     Path Path::Concat(const std::string_view path) const {
-        return Concat(std::string(path));
+        return Concat(StringView(path));
     }
 
-    Path Path::Concat(const SR_UTILS_NS::StringAtom path) const {
-        return Concat(path.ToStringRef());
+    Path Path::Concat(const StringAtom path) const {
+        return Concat(path.ToStringView());
     }
 
     Path Path::Concat(const char* path) const {
-        return Concat(std::string(path));
+        return Concat(StringView(path));
+    }
+
+    Path Path::Concat(const StringView path) const {
+        auto&& normalized = GetNormalized();
+        if ((!normalized.empty() && normalized.back() != '/') && (!path.empty() && path.front() != '/')) {
+            return (normalized + "/") + path;
+        }
+        return normalized + path;
     }
 
     Path Path::Concat(const std::string& path) const {
-        auto&& normalized = GetNormalized();
-
-        if ((!normalized.empty() && normalized.back() != '/') && (!path.empty() && path.front() != '/')) {
-            return normalized + "/" + path;
-        }
-
-        return normalized + path;
+        return Concat(StringView(path));
     }
 
     Path Path::Concat(const Path& path) const {
@@ -167,17 +188,6 @@ namespace SR_UTILS_NS {
 
     Path Path::Concat(const String& path) const {
         return Concat(path.view());
-    }
-
-    bool Path::Exists() const {
-        return GetType() != Type::Undefined;
-    }
-
-    bool Path::Exists(Type type) const {
-        if (type == Type::Undefined) {
-            return false;
-        }
-        return GetType() == type;
     }
 
     Path Path::ConcatExt(const std::string& ext) const {
@@ -206,27 +216,17 @@ namespace SR_UTILS_NS {
         return ConcatExt(ext.ToStringRef());
     }
 
-    bool Path::Create() const {
-        auto&& normalized = GetNormalized();
-
+    bool Path::CreateDirectories() const {
+        StringView normalized = GetNormalized();
         if (normalized.empty()) {
             return false;
         }
 
-        std::string_view extension = GetExtensionView();
+        StringView extension = GetExtensionView();
         if (extension.empty()) {
-            return FileSystem::CreatePath(normalized);
+            return VFS::Instance().CreateDirectories(normalized);
         }
-
-        return FileSystem::CreatePath(normalized.substr(0, normalized.size() - (GetBaseNameView().size() + extension.size() + 1)));
-    }
-
-    bool Path::CreateIfNotExists() const {
-        if (!Exists()) {
-            return Create();
-        }
-
-        return true;
+        return VFS::Instance().CreateDirectories(normalized.substr(0, normalized.size() - (GetBaseNameView().size() + extension.size() + 1)));
     }
 
     void Path::Save(ISerializer& serializer, const SerializationId& id) const {
@@ -236,24 +236,6 @@ namespace SR_UTILS_NS {
     void Path::Load(IDeserializer& deserializer, const SerializationId& id) {
         deserializer.ReadString(m_path, id);
         m_isNormalized = false;
-    }
-
-    bool Path::Make(Type type) const {
-        auto&& normalized = GetNormalized();
-        if (normalized.empty()) {
-            return false;
-        }
-
-        switch (type) {
-            default:
-                SRAssert(false);
-                SR_FALLTHROUGH;
-            case Type::Undefined:
-            case Type::File:
-                return FileSystem::CreatePath(normalized.substr(0, normalized.size() - (GetBaseNameView().size() + GetExtensionView().size() + 1)));
-            case Type::Folder:
-                return FileSystem::CreatePath(normalized);
-        }
     }
 
     Path Path::GetPrevious() const {
@@ -274,16 +256,7 @@ namespace SR_UTILS_NS {
     }
 
     Path Path::GetFolder() const {
-        switch (GetType()) {
-            case Type::File:
-                return SR_UTILS_NS::StringUtils::GetDirToFileFromFullPath(GetNormalized());
-            default:
-                SRHalt0();
-                SR_FALLTHROUGH;
-            case Type::Folder:
-            case Type::Undefined:
-                return GetNormalized();
-        }
+        return StringUtils::GetDirToFileFromFullPath(GetNormalized());
     }
 
     std::string_view Path::GetExtensionView() const {
@@ -337,8 +310,8 @@ namespace SR_UTILS_NS {
         return FileSystem::GetFileHash(GetNormalized());
     }
 
-    uint64_t Path::GetFolderHash(uint64_t deep) const {
-        return FileSystem::GetFolderHash(GetNormalized(), deep);
+    uint64_t Path::GetFolderHash() const {
+        return FileSystem::GetFolderHash(GetNormalized());
     }
 
     bool Path::IsAbs() const {
@@ -381,9 +354,9 @@ namespace SR_UTILS_NS {
         return GetNormalized().empty();
     }
 
-    bool Path::Copy(const Path &destination) const {
+    bool Path::Copy(const Path& destination) const {
         SR_TRACY_ZONE;
-        return Platform::Copy(*this, destination);
+        return VFS::Instance().Copy(*this, destination);
     }
 
      std::string_view Path::GetBaseNameAndExtView() const {
@@ -544,12 +517,12 @@ namespace SR_UTILS_NS {
 
     bool Path::IsDirectoryEmpty() const {
         SR_GLOBAL_LOCK;
-        static Vector<Path> files;
-        GetFiles(files);
-        if (!files.empty()) {
-            return false;
-        }
-        GetFolders(files);
-        return files.empty();
+        static Vector<Path> entries;
+        GetAll(entries);
+        return entries.empty();
+    }
+
+    Path::operator StringView() {
+        return GetNormalized();
     }
 }

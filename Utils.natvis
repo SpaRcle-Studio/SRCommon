@@ -133,7 +133,7 @@
     </Type>
 
     <!-- Utils strings -->
-    <Type Name="SR_UTILS_NS::String">
+    <Type Name="SpaRcle::Utils::String">
         <DisplayString Condition="m_data == 0 || m_size == 0">empty</DisplayString>
         <DisplayString Condition="m_data != 0 &amp;&amp; m_size != 0">"{m_data,s8}" (size={m_size}, cap={m_capacity})</DisplayString>
         <Expand>
@@ -147,12 +147,17 @@
         </Expand>
     </Type>
 
-    <Type Name="SR_UTILS_NS::StringView">
+    <Type Name="SpaRcle::Utils::StringView">
         <DisplayString Condition="m_data == 0 || m_size == 0">empty</DisplayString>
-        <DisplayString Condition="m_data != 0 &amp;&amp; m_size != 0">size={m_size}</DisplayString>
+        <DisplayString Condition="m_data != 0 &amp;&amp; m_size != 0">{m_data,[m_size]s}</DisplayString>
+
         <Expand>
-            <Synthetic Name="[size]"><DisplayString>{m_size}</DisplayString></Synthetic>
-            <Synthetic Name="[data]"><DisplayString>{m_data}</DisplayString></Synthetic>
+            <Synthetic Name="[size]">
+                <DisplayString>{m_size}</DisplayString>
+            </Synthetic>
+            <Synthetic Name="[data]">
+                <DisplayString>{m_data}</DisplayString>
+            </Synthetic>
             <ArrayItems Condition="m_data != 0">
                 <Size>m_size</Size>
                 <ValuePointer>m_data</ValuePointer>

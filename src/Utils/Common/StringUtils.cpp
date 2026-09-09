@@ -513,6 +513,104 @@ namespace SR_UTILS_NS {
         return true;
     }
 
+    void StringUtils::SplitViewByLines(StringView buffer, Vector<StringView>& outLines) {
+        SR_TRACY_ZONE;
+        outLines.clear();
+        outLines.reserve(buffer.size() / 32); // Предварительно резервируем память для строк
+
+        // Разбиваем buffer на строки, каждая строка — отдельный string_view
+        const char* start = buffer.data();
+        const char* end = buffer.data() + buffer.size();
+        const char* line_start = start;
+
+        for (const char* ptr = start; ptr < end; ++ptr) {
+            if (*ptr == '\n') {
+                size_t len = ptr - line_start;
+                if (len > 0 && *(ptr - 1) == '\r') {
+                    --len;  // Убираем \r для Windows-строк
+                }
+                outLines.emplace_back(StringView(line_start, len));
+                line_start = ptr + 1;
+            }
+        }
+
+        // Последняя строка (если файл не заканчивается на \n)
+        if (line_start < end) {
+            size_t len = end - line_start;
+            outLines.emplace_back(StringView(line_start, len));
+        }
+    }
+
+    void StringUtils::ConvertToUTF8(const wchar_t* pSource, uint32_t size, String& result) {
+        result.clear();
+
+        if (!pSource || size == 0)
+            return;
+
+        // Максимум 4 UTF-8 байта на один Unicode code point.
+        result.resize(static_cast<size_t>(size) * 4);
+
+        char* dst = result.data();
+        size_t dstSize = 0;
+
+        auto WriteByte = [&](uint8_t value) {
+            dst[dstSize++] = static_cast<char>(value);
+        };
+
+        auto WriteUTF8 = [&](uint32_t cp) {
+            if (cp <= 0x7F) {
+                WriteByte(static_cast<uint8_t>(cp));
+            }
+            else if (cp <= 0x7FF) {
+                WriteByte(static_cast<uint8_t>(0xC0 | (cp >> 6)));
+                WriteByte(static_cast<uint8_t>(0x80 | (cp & 0x3F)));
+            }
+            else if (cp <= 0xFFFF) {
+                WriteByte(static_cast<uint8_t>(0xE0 | (cp >> 12)));
+                WriteByte(static_cast<uint8_t>(0x80 | ((cp >> 6) & 0x3F)));
+                WriteByte(static_cast<uint8_t>(0x80 | (cp & 0x3F)));
+            }
+            else {
+                WriteByte(static_cast<uint8_t>(0xF0 | (cp >> 18)));
+                WriteByte(static_cast<uint8_t>(0x80 | ((cp >> 12) & 0x3F)));
+                WriteByte(static_cast<uint8_t>(0x80 | ((cp >> 6) & 0x3F)));
+                WriteByte(static_cast<uint8_t>(0x80 | (cp & 0x3F)));
+            }
+        };
+
+        if constexpr (sizeof(wchar_t) == 2) {
+            // Windows: wchar_t == UTF-16
+            for (uint32_t i = 0; i < size; ++i) {
+                uint32_t cp = static_cast<uint16_t>(pSource[i]);
+                if (cp >= 0xD800 && cp <= 0xDBFF) {
+                    if (i + 1 >= size)
+                        break; // malformed UTF-16
+                    const uint32_t low = static_cast<uint16_t>(pSource[++i]);
+                    if (low < 0xDC00 || low > 0xDFFF)
+                        continue; // malformed surrogate pair
+                    cp = 0x10000 + ((cp - 0xD800) << 10) + (low - 0xDC00);
+                }
+                else if (cp >= 0xDC00 && cp <= 0xDFFF) {
+                    continue; // stray low surrogate
+                }
+
+                WriteUTF8(cp);
+            }
+        }
+        else {
+            // Linux/macOS/Android/Emscripten: wchar_t == UTF-32
+            for (uint32_t i = 0; i < size; ++i) {
+                const uint32_t cp = static_cast<uint32_t>(pSource[i]);
+                if (cp > 0x10FFFF || (cp >= 0xD800 && cp <= 0xDFFF)) {
+                    continue; // invalid Unicode scalar
+                }
+                WriteUTF8(cp);
+            }
+        }
+
+        result.resize(dstSize);
+    }
+
     String GetErrorString(int err) {
         char buf[256]{};
     #ifdef _WIN32

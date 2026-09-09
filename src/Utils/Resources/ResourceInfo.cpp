@@ -52,7 +52,7 @@ namespace SR_UTILS_NS {
             pStorageRef->path = StringAtom(pResource->GetResourcePath().ToStringView());
             pStorageRef->id = pResource->GetResourceId();
         }
-        else if (pStorageRef->path != pResource->GetResourcePath()) {
+        else if (pStorageRef->path.ToStringView() != pResource->GetResourcePath()) {
             SRHalt("ResourceType::Add() : resource path mismatch!\n\tExpected: {}\n\tActual: {}", pStorageRef->path, pResource->GetResourcePath());
             return;
         }

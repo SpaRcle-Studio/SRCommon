@@ -135,7 +135,12 @@ namespace SR_UTILS_NS {
 
         String fileData;
         if (!SR_UTILS_NS::FileSystem::ReadFile(path, fileData)) {
-            SR_ERROR("Document::Load() : file not exists! \n\tPath: " + path.ToString());
+            SR_ERROR("Document::Load() : file not exists! \n\tPath: {}", path);
+            return Document(); /// NOLINT
+        }
+
+        if (fileData.empty()) {
+            SR_ERROR("Document::Load() : file is empty! \n\tPath: {}", path);
             return Document(); /// NOLINT
         }
 
@@ -155,10 +160,8 @@ namespace SR_UTILS_NS {
     std::string Xml::Document::Dump() const {
         if (!Valid())
             return std::string();
-
         std::ostringstream stream;
         m_document->save(stream, PUGIXML_TEXT("    "));
-
         return stream.str();
     }
 
@@ -187,18 +190,14 @@ namespace SR_UTILS_NS {
         return Node(m_document->root());
     }
 
-    bool Xml::Document::Save(const Path &path) const {
-        if (!path.Exists()) {
-            path.Create();
-        }
-
+    bool Xml::Document::Save(const Path& path) const {
         std::string document = Dump();
         if (document.empty()) {
             SR_ERROR("Document::Save() : document is empty!");
             return false;
         }
 
-        if (!SR_UTILS_NS::FileSystem::WriteToFile(path.ToStringRef(), document)) {
+        if (!FileSystem::WriteToFile(path, document)) {
             SR_ERROR("Document::Save() : failed to save document! \n\tPath: " + path.ToString());
             return false;
         }

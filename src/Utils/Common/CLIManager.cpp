@@ -28,6 +28,15 @@ namespace SR_UTILS_NS {
             flags[std::string("--" + SR_UTILS_NS::StringUtils::ToKebabCase(flag))] = SR_UTILS_NS::EnumReflector::FromString<CLIFlags>(flag);
         }
 
+        String availableOptions = "CLIManager::Init() : available options:\n";
+        for (auto&& [flag, value] : flags) {
+            availableOptions += SR_FORMAT("\t{}\n", flag);
+        }
+        for (auto&& [option, value] : options) {
+            availableOptions += SR_FORMAT("\t{} <value>\n", option);
+        }
+        SR_PLATFORM_NS::WriteConsoleLog(availableOptions);
+
         for (int i = 1; i < argc; ++i) {
             std::string arg = argv[i];
 

@@ -6,6 +6,7 @@
 #include <Utils/Common/StringUtils.h>
 #include <Utils/Profile/TracyContext.h>
 #include <Utils/FileSystem/MappedFile.h>
+#include <Utils/FileSystem/File.h>
 
 namespace SR_HTYPES_NS {
     Stream::Stream(const MappedFile& mappedFile)
@@ -13,6 +14,14 @@ namespace SR_HTYPES_NS {
         , m_size(mappedFile.GetSize())
         , m_pos(0)
         , m_data(const_cast<char*>(mappedFile.GetData()))
+        , m_isOwner(false)
+    { }
+
+    Stream::Stream(const File& file)
+        : m_capacity(file.GetSize())
+        , m_size(file.GetSize())
+        , m_pos(0)
+        , m_data(const_cast<char*>(file.Data().data()))
         , m_isOwner(false)
     { }
 

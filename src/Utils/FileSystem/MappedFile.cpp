@@ -3,25 +3,18 @@
 //
 
 #include <Utils/FileSystem/MappedFile.h>
+#include <Utils/FileSystem/File.h>
 
 namespace SR_UTILS_NS {
 #if defined(SR_WIN32)
-    MappedFile MappedFileImpl::Open(const Path& path, bool write) {
+    MappedFile MappedFileOpenerImpl::Open(StringView path, bool write) {
         MappedFile mappedFile;
 
         constexpr DWORD access = GENERIC_READ;
         constexpr DWORD share  = FILE_SHARE_READ;
 
-        std::string_view resolvedPath;
-        if (SR_PLATFORM_NS::g_platformHooks.pathResolver) {
-            resolvedPath = SR_PLATFORM_NS::g_platformHooks.pathResolver(path.ToStringView());
-        }
-        else {
-            resolvedPath = path.ToStringView();
-        }
-
         mappedFile.m_pHandle = CreateFileA(
-            resolvedPath.data(),
+            path.data(),
             access,
             share,
             nullptr,
@@ -63,7 +56,7 @@ namespace SR_UTILS_NS {
         return mappedFile.m_pData ? std::move(mappedFile) : MappedFile();
     }
 
-    void MappedFileImpl::Close(MappedFile& mappedFile) {
+    void MappedFileOpenerImpl::Close(MappedFile& mappedFile) {
         if (mappedFile.m_pData) {
             UnmapViewOfFile(mappedFile.m_pData);
         }
@@ -75,7 +68,7 @@ namespace SR_UTILS_NS {
         }
     }
 #elif defined(SR_LINUX) || defined(SR_ANDROID)
-     MappedFile MappedFileImpl::Open(const Path& path, bool write) {
+     MappedFile MappedFileOpenerImpl::Open(StringView path, bool write) {
          MappedFile mappedFile;
 
          int flags = write ? O_RDWR : O_RDONLY;
@@ -112,7 +105,7 @@ namespace SR_UTILS_NS {
          return mappedFile;
      }
 
-    void MappedFileImpl::Close(MappedFile& mappedFile) {
+    void MappedFileOpenerImpl::Close(MappedFile& mappedFile) {
         if (mappedFile.m_pData) {
             munmap(mappedFile.m_pData, mappedFile.m_size);
         }
@@ -123,7 +116,7 @@ namespace SR_UTILS_NS {
     }
 #else
     /// buffered fallback for unsupported platforms
-    MappedFile MappedFileImpl::Open(const Path& path, bool write) {
+    MappedFile MappedFileOpenerImpl::Open(StringView path, bool write) {
         MappedFile mappedFile;
         mappedFile.m_pHandle = new String();
         if (!FileSystem::ReadFile(path, *static_cast<String*>(mappedFile.m_pHandle))) {
@@ -135,7 +128,7 @@ namespace SR_UTILS_NS {
         return mappedFile;
     }
 
-    void MappedFileImpl::Close(MappedFile& mappedFile) {
+    void MappedFileOpenerImpl::Close(MappedFile& mappedFile) {
         if (mappedFile.m_pHandle) {
             delete static_cast<String*>(mappedFile.m_pHandle);
         }
@@ -166,18 +159,19 @@ namespace SR_UTILS_NS {
         Close();
     }
 
-    MappedFile MappedFile::Open(const Path& path, bool write) {
+    MappedFile MappedFile::Open(PassKey<MappedFileImpl>, StringView path, bool write) {
         SR_TRACY_ZONE;
-        if (!path.IsFile()) {
-            SR_ERROR("MappedFile::Open() : path is not a file! Path: {}", path);
-            return MappedFile();
-        }
-        return MappedFileImpl::Open(path, write);
+        return MappedFileOpenerImpl::Open(path, write);
+    }
+
+    MappedFile MappedFile::Open(PassKey<MappedFileImpl>, const Path& path, bool write) {
+        SR_TRACY_ZONE;
+        return MappedFileOpenerImpl::Open(path, write);
     }
 
     void MappedFile::Close() {
         SR_TRACY_ZONE;
-        MappedFileImpl::Close(*this);
+        MappedFileOpenerImpl::Close(*this);
         m_pData = nullptr;
         m_size = 0;
         m_pHandle = nullptr;

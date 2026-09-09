@@ -4,6 +4,7 @@
 
 #include <Utils/Resources/Yaml.h>
 #include <Utils/FileSystem/FileSystem.h>
+#include <Utils/FileSystem/VFS.h>
 #include <Utils/Debug.h>
 #include <Utils/Profile/TracyContext.h>
 
@@ -224,26 +225,16 @@ namespace SR_UTILS_NS::Yaml {
     }
 
     bool Document::Save(const SR_UTILS_NS::Path& path) const {
-        if (!path.Exists()) {
-            if (!path.Create()) {
-                SR_ERROR("Document::Save() : failed to create path!\n\tPath: '{}'", path.c_str());
-                return false;
-            }
-        }
-
-        std::ofstream file(path.ToStringRef());
+        auto&& file = VFS::Instance().OpenFile(path, FileMode::Write);
         if (!file) {
-            SR_ERROR("Document::Save() : failed to open file. \n\tPath: '{}'", path.c_str());
+            SR_ERROR("Document::Save() : failed to open file!\n\tPath: {}", path);
             return false;
         }
 
         if (m_pImpl) {
-            for (auto&& node : static_cast<DocumentImpl*>(m_pImpl)->m_tree.m_arena) {
-                file << node;
-            }
+            auto&& arena = static_cast<DocumentImpl*>(m_pImpl)->m_tree.m_arena;
+            file.Write(arena.data(), arena.size());
         }
-
-        file.close();
         return true;
     }
 

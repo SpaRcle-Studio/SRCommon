@@ -8,6 +8,7 @@
 #include <Utils/stdInclude.h>
 
 namespace SR_UTILS_NS {
+    class File;
     class MappedFile;
 }
 
@@ -16,6 +17,7 @@ namespace SR_HTYPES_NS {
     public:
         Stream();
         Stream(const MappedFile& mappedFile);  /** NOLINT */
+        Stream(const File& file);  /** NOLINT */
         Stream(std::ifstream& ifs);  /** NOLINT */
         Stream(StringView str);  /** NOLINT */
         Stream(const char* pData, uint64_t size, bool copy = true);

@@ -8,14 +8,10 @@
 
 namespace SR_UTILS_NS {
     bool Settings::Load() {
-        Path path = GetResourcePath();
-        if (!path.IsAbs()) {
-            path = GetAssociatedPath().Concat(path);
-        }
-
+        Path path = CoreResLoader::GetResPath().Concat(GetResourcePath());
         m_document = SR_XML_NS::Document::Load(path);
         if (!m_document.Valid()) {
-            SR_ERROR("Settings::Load() : file not found! \n\tPath: " + path.ToString());
+            SR_ERROR("Settings::Load() : file not found! \n\tPath: {}", path);
             return false;
         }
 
@@ -23,7 +19,7 @@ namespace SR_UTILS_NS {
             LoadSettings(settings);
         }
         else {
-            SR_ERROR("Settings::Load() : \"Settings\" node not found! \n\tPath: " + path.ToString());
+            SR_ERROR("Settings::Load() : \"Settings\" node not found! \n\tPath: {}", path);
             return false;
         }
 

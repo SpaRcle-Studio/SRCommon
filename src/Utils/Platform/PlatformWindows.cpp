@@ -246,7 +246,7 @@ namespace SR_UTILS_NS::Platform {
         }
 
         auto&& appName = SR_PLATFORM_NS::GetApplicationName();
-        auto&& appNameW = ConvertToUnicode(appName.ToString());
+        auto&& appNameW = ConvertToUnicode(appName.c_str());
 
         for (const auto& [name, data] : values) {
             if (data.find(appNameW) == 0) {
@@ -409,8 +409,8 @@ namespace SR_UTILS_NS::Platform {
 
     ///функция для получения файла/файлов из буфер обмена
     void PasteFilesFromClipboard(const SR_UTILS_NS::Path &topath) {
-
-        if(!topath.IsDir()) {
+        SRHalt("PlatformWindows::PasteFilesFromClipboard() : not implemented!");
+        /*if(!topath.IsDir()) {
             return;
         }
 
@@ -431,7 +431,7 @@ namespace SR_UTILS_NS::Platform {
             }
         } else {
             return;
-        }
+        }*/
     }
 
     KeyboardState GetSystemKeyboardState() {
@@ -522,7 +522,7 @@ namespace SR_UTILS_NS::Platform {
     }
 
     bool IsFileDeletable(const SR_UTILS_NS::Path& path) {
-        if (!path.Exists() || !path.IsFile()) {
+        if (!path.IsExists() || !path.IsFile()) {
             SR_WARN("Platform::CanBeDeleted() : path does not exist or is not a file.");
             return false;
         }
@@ -599,30 +599,8 @@ namespace SR_UTILS_NS::Platform {
 #endif
     }
 
-    bool CreateFolder(const std::string& path) {
-#ifdef SR_MINGW
-        return mkdir(path.c_str());
-#else
-        return _mkdir(path.c_str());
-#endif
-    }
-
     bool IsConsoleFocused() {
         return GetForegroundWindow() == GetCurrentProcess();
-    }
-
-    bool WaitAndDelete(const SR_UTILS_NS::Path& path) {
-        if (!path.IsFile()) {
-            SR_WARN("Platform::WaitAndDelete() : path is not a file. Path: '{}'", path.ToString());
-            return false;
-        }
-
-        SR_LOG("Platform::WaitAndDelete() : waiting for file to be deleted...");
-        while (true) {
-            if (IsFileDeletable(path)) {
-                return Delete(path);
-            }
-        }
     }
 
     Path GetApplicationPath() {
@@ -646,7 +624,7 @@ namespace SR_UTILS_NS::Platform {
         return std::nullopt;
     }
 
-    Path GetApplicationName() {
+    String GetApplicationName() {
         const std::size_t buf_len = 260;
         auto s = new TCHAR[buf_len];
         auto path_len = GetModuleFileName(GetModuleHandle(nullptr), s, buf_len);
@@ -694,24 +672,9 @@ namespace SR_UTILS_NS::Platform {
 
     void Unzip(const SR_UTILS_NS::Path& source, const SR_UTILS_NS::Path& destination, bool replace) {
 		//TODO: Add support for the 'replace' argument.
-        destination.CreateIfNotExists();
+        destination.CreateDirectories();
         std::string command = "tar -xf "+ source.ToString() + " -C " + destination.ToString();
         system(command.c_str());
-    }
-
-    FileMetadata GetFileMetadata(const Path& file) {
-        FileMetadata fileMetadata;
-        WIN32_FIND_DATA fd;
-        HANDLE hFind = ::FindFirstFile(file.c_str(), &fd);
-        if(hFind != INVALID_HANDLE_VALUE) {
-            ///You must convert FILETIME to ULARGE_INTEGER to get a value for uint64_t
-            ULARGE_INTEGER lastWriteTime{fd.ftLastWriteTime.dwLowDateTime, fd.ftLastWriteTime.dwHighDateTime};
-            fileMetadata.lastWriteTime = lastWriteTime.QuadPart;
-            ::FindClose(hFind);
-        } else {
-            fileMetadata.lastWriteTime = SR_UINT64_MAX; ///TODO: какое значение стоит назначить в случае, если не был получен handle файла?
-        }
-        return fileMetadata; ///TODO: std::move в будущем, когда FileMetadata станет больше?
     }
 
     SR_MATH_NS::UVector2 GetScreenResolution() {
@@ -870,7 +833,7 @@ namespace SR_UTILS_NS::Platform {
     bool DownloadFile(const std::string& url, const Path& outputPath) {
         SR_LOG("Platform::DownloadFile() : downloading file from url: {}", url);
 
-        if (!outputPath.Create()) {
+        if (!outputPath.CreateDirectories()) {
             SR_ERROR("Platform::DownloadFile() : failed to create output path: {}", outputPath.ToStringRef());
             return false;
         }

@@ -56,7 +56,7 @@ namespace SR_UTILS_NS {
     void Features::SetPath(const SR_UTILS_NS::Path& path) {
         SR_LOCK_GUARD;
 
-        if (path.IsEmpty() || !path.Exists()) {
+        if (!path.IsFile()) {
             SR_ERROR("Features::Reload() : file not found! \n\tPath: {}", path);
             return;
         }

@@ -23,7 +23,7 @@ namespace SR_UTILS_NS::Localization {
     }
 
     void LocalizationFile::LoadLocalizationStrings(const Path& filePath) {
-        auto&& pFileContents = FileSystem::ReadFileAsBlob(filePath.ToString());
+        auto&& pFileContents = FileSystem::ReadFileAsBlob(filePath);
         if (!pFileContents) {
             SR_ERROR("LocalizationFile::LoadLocalizationStrings() : failed to read localization file! Path: {}", filePath);
             return;

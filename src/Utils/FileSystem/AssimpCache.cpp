@@ -4,6 +4,7 @@
 
 #include <Utils/FileSystem/AssimpCache.h>
 #include <Utils/FileSystem/MappedFile.h>
+#include <Utils/FileSystem/VFS.h>
 #include <Utils/Types/Marshal.h>
 #include <Utils/Profile/TracyContext.h>
 
@@ -101,18 +102,16 @@ namespace SR_UTILS_NS {
         return marshal.Save(path);
     }
 
-    aiScene* AssimpCache::Load(const Path& path, RawPointerHolder<SR_UTILS_NS::MappedFile>& cache) const {
+    aiScene* AssimpCache::Load(const Path& path, File& cache) const {
         SR_TRACY_ZONE;
         SR_TRACY_ZONE_TEXT(path.ToStringRef());
 
-        SRAssert2(!cache, "Heap is not empty!");
-
-        SR_UTILS_NS::MappedFile mappedFile = SR_UTILS_NS::MappedFile::Open(path, true);
-        if (!mappedFile) {
+        cache = VFS::Instance().OpenFile(path, FileMode::ReadWriteMap);
+        if (!cache) {
             return nullptr;
         }
 
-        auto&& marshal = SR_HTYPES_NS::Marshal(mappedFile);
+        auto&& marshal = SR_HTYPES_NS::Marshal(cache);
 
         /// version
         if (marshal.Read<uint64_t>() != VERSION) {
@@ -130,8 +129,6 @@ namespace SR_UTILS_NS {
         LoadMaterials(marshal, pScene);
         LoadTextures(marshal, pScene);
         LoadAnimations(marshal, pScene);
-
-        cache = new SR_UTILS_NS::MappedFile(std::move(mappedFile));
 
         return pScene;
     }

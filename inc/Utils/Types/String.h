@@ -10,6 +10,7 @@
 namespace SR_UTILS_NS {
     class StringView;
     class IAllocator;
+    class Path;
 
     class SR_COMMON_DLL_API String {
     public:
@@ -25,7 +26,7 @@ namespace SR_UTILS_NS {
         String(IAllocator* pAllocator);
         String(const char* str, SizeType size, IAllocator* pAllocator);
         String(StringView str, IAllocator* pAllocator);
-        String(String str, IAllocator* pAllocator);
+        String(const String& str, IAllocator* pAllocator);
         String(const std::string& str, IAllocator* pAllocator);
         String(std::string_view str, IAllocator* pAllocator);
 
@@ -57,6 +58,7 @@ namespace SR_UTILS_NS {
         SR_NODISCARD String operator+(const char* rhs) const;
         SR_NODISCARD String operator+(const std::string& rhs) const;
         SR_NODISCARD String operator+(std::string_view rhs) const;
+        SR_NODISCARD String operator+(StringView rhs) const;
 
         SR_NODISCARD bool operator==(const String& rhs) const noexcept;
         SR_NODISCARD bool operator!=(const String& rhs) const noexcept;
@@ -83,16 +85,20 @@ namespace SR_UTILS_NS {
         SR_NODISCARD const char* data() const;
         SR_NODISCARD char* data();
         SR_NODISCARD char& back();
+        SR_NODISCARD char& front();
         SR_NODISCARD const char& back() const;
+        SR_NODISCARD const char& front() const;
         SR_NODISCARD std::string_view view() const;
 
         SR_NODISCARD bool contains(std::string_view str) const;
         SR_NODISCARD bool starts_with(std::string_view str) const;
         SR_NODISCARD bool ends_with(std::string_view str) const;
+        SR_NODISCARD bool ends_with(char c) const;
 
         SR_NODISCARD String substr(SizeType pos, SizeType count = npos) const;
         SR_NODISCARD String DetachAllocator() const;
         SR_NODISCARD bool HasAllocator() const;
+        SR_NODISCARD void insert(SizeType pos, StringView str);
 
         SR_NODISCARD SizeType find(const char* str, SizeType pos = 0) const;
         SR_NODISCARD SizeType find(std::string_view str, SizeType pos = 0) const;
@@ -101,6 +107,8 @@ namespace SR_UTILS_NS {
         SR_NODISCARD SizeType rfind(char c, SizeType pos = npos) const;
         SR_NODISCARD SizeType find_first_of(char c, SizeType pos = 0) const;
         SR_NODISCARD SizeType find_first_of(StringView str, SizeType pos = 0) const;
+        SR_NODISCARD SizeType find_last_of(char c, SizeType pos = npos) const;
+        SR_NODISCARD SizeType find_last_of(StringView str, SizeType pos = 0) const;
 
         SR_NODISCARD const char* begin() const;
         SR_NODISCARD const char* end() const;
@@ -121,6 +129,9 @@ namespace SR_UTILS_NS {
 
         String& erase(SizeType pos, SizeType count = npos);
         String erase(SizeType pos, SizeType count = npos) const;
+
+        void remove_prefix(SizeType n);
+        void remove_suffix(SizeType n);
 
         template<class Elem, class Traits> friend std::basic_ostream<Elem, Traits>& operator<<(std::basic_ostream<Elem, Traits>& os, const String& str) {
             return os << str.c_str();
@@ -188,7 +199,10 @@ namespace SR_UTILS_NS {
             , m_size(str.size())
         { }
 
+        StringView(const Path& path);
+
         void remove_prefix(SizeType n);
+        void remove_suffix(SizeType n);
         void clear();
 
         constexpr StringView& operator=(const StringView& other) = default;
@@ -202,8 +216,12 @@ namespace SR_UTILS_NS {
         SR_NODISCARD bool empty() const;
         SR_NODISCARD const char* data() const;
         SR_NODISCARD char& back();
+        SR_NODISCARD char& front();
         SR_NODISCARD const char& back() const;
+        SR_NODISCARD const char& front() const;
         SR_NODISCARD StringView substr(SizeType pos, SizeType count = npos) const;
+
+        StringView& erase(SizeType pos, SizeType count = npos);
 
         SR_NODISCARD char operator[](size_t index) const;
 
@@ -215,6 +233,10 @@ namespace SR_UTILS_NS {
         SR_NODISCARD SizeType find(StringView str, SizeType pos = 0) const;
         SR_NODISCARD SizeType find(const String& str, SizeType pos = 0) const;
         SR_NODISCARD SizeType find(char c, SizeType pos = 0) const;
+        SR_NODISCARD SizeType find_last_of(char c, SizeType pos = npos) const;
+        SR_NODISCARD SizeType find_last_of(StringView str, SizeType pos = 0) const;
+        SR_NODISCARD bool starts_with(StringView str) const;
+        SR_NODISCARD bool starts_with(char c) const;
 
         SR_NODISCARD bool operator==(const StringView& rhs) const noexcept;
         SR_NODISCARD bool operator!=(const StringView& rhs) const noexcept;

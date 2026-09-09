@@ -216,15 +216,13 @@ namespace SR_UTILS_NS {
             path = GetAssociatedPath().Concat(path);
         }
 
-        if (path.Exists(Path::Type::File)) {
+        if (path.IsFile()) {
             if (auto&& hash = path.GetFileHash(); hash != SR_UINT64_MAX) {
                 return hash;
             }
         }
 
-        SRHaltOnce("IResource::GetFileHash() : failed to get resource hash! \n\tResource id: " + std::string(GetResourceId()) +
-            "\n\tResource path: " + path.ToString());
-
+        SRHaltOnce("IResource::GetFileHash() : failed to get resource hash! \n\tResource id: {}\n\tResource path: {}", GetResourceId(), path);
         return 0;
     }
 

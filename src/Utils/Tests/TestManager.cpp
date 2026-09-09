@@ -5,6 +5,7 @@
 #include <Utils/Tests/TestManager.h>
 #include <Utils/Platform/Platform.h>
 #include <Utils/Debug.h>
+#include <Utils/FileSystem/VFS.h>
 
 #include <Codegen/TestManager.generated.hpp>
 
@@ -17,15 +18,22 @@ namespace SR_UTILS_NS {
         SR_TRACY_ZONE;
 
         auto&& applicationPath = SR_PLATFORM_NS::GetApplicationPath().GetFolder();
-        auto&& resourcePath = SR_PLATFORM_NS::GetApplicationResourcesPath();
 
         if (!SR_UTILS_NS::Debug::Instance().IsInitialized()) {
             SR_UTILS_NS::Debug::Instance().Initialize(applicationPath.Concat("srengine-tests.log"), true, SR_UTILS_NS::Debug::Theme::Dark);
             SR_UTILS_NS::Debug::Instance().SetLevel(SR_UTILS_NS::Debug::Level::Low);
         }
 
+        if (auto&& appFolder = SR_PLATFORM_NS::GetApplicationDirectory(); !appFolder.empty()) {
+            SR_UTILS_NS::VFS::Instance().Mount("", new SR_UTILS_NS::ReadOnlyDirectoryVFSBackend(appFolder), -50);
+        }
+
+        auto&& engineResourcesPath = SR_PLATFORM_NS::GetApplicationResourcesPath();
+        auto&& resourcesPath = SR_UTILS_NS::ResourceManager::Instance().GetResPath();
+        SR_UTILS_NS::VFS::Instance().Mount(resourcesPath, new SR_UTILS_NS::DirectoryVFSBackend(engineResourcesPath), 0);
+
         if (!SR_UTILS_NS::ResourceManager::Instance().IsInitialized()) {
-            SR_UTILS_NS::ResourceManager::Instance().Initialize(resourcePath, resourcePath);
+            SR_UTILS_NS::ResourceManager::Instance().Initialize();
         }
 
         SR_LOG_TEST("TestManager::RunAll() : loading TestManagerAsset...");

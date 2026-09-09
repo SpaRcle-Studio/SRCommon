@@ -23,6 +23,7 @@ namespace SR_HTYPES_NS {
     public:
         Marshal();
         Marshal(const MappedFile& mappedFile);
+        Marshal(const File& file);
         Marshal(std::ifstream& ifs); /** NOLINT */
         Marshal(StringView str); /** NOLINT */
         Marshal(const char* pData, uint64_t size, bool copy = true);
@@ -36,7 +37,6 @@ namespace SR_HTYPES_NS {
         SR_NODISCARD Marshal FullCopy() const;
 
         static Marshal Load(const Path& path);
-        static Marshal::Ptr LoadPtr(const Path& path);
         static Marshal LoadFromMemory(StringView data);
         static Marshal LoadFromBase64(StringView base64);
 

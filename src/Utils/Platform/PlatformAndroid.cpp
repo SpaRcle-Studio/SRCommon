@@ -50,11 +50,6 @@ namespace SR_UTILS_NS::Platform {
 
     }
 
-    FileMetadata GetFileMetadata(const Path& file) {
-        FileMetadata fileMetadata;
-        return fileMetadata;
-    }
-
     MouseState GetMouseState() {
         MouseState state;
         return state;
@@ -226,48 +221,9 @@ namespace SR_UTILS_NS::Platform {
         SRHaltOnce("Not implemented!");
     }
 
-    bool CreateFolder(const std::string& path) {
-        if (path.empty()) {
-            SR_WARN("Platform::CreateFolder() : path is empty!");
-            return false;
-        }
-
-        std::string current;
-        std::stringstream ss(path);
-        std::string segment;
-
-        // разбиваем путь по '/'
-        while (std::getline(ss, segment, '/')) {
-            if (segment.empty())
-                continue;
-
-            current += "/";
-            current += segment;
-
-            if (mkdir(current.c_str(), 0777) != 0) {
-                if (errno == EEXIST) {
-                    continue; // уже есть, норм
-                }
-                else {
-                    SR_WARN("Platform::CreateFolder() : failed to create folder!\n\tPath: {}", current);
-                    return false;
-                }
-            }
-        }
-
-        return true;
-    }
-
-    Path GetApplicationResourcesPath() {
-        return ":assets:";
-    }
-
-    void InitializeHooks(const std::function<void(PlatformHooks& hooks)>& callback) {
-
-    }
-
-    Path::Type GetPathType(std::string_view path) {
-        if (RemoveAssetsPrefix(path)) {
+    Path::Type GetPathType(StringView path) {
+        struct stat st{};
+        if (stat(path.data(), &st) != 0) {
             if (path.empty()) {
                 return Path::Type::Folder; // root of assets
             }
@@ -289,11 +245,6 @@ namespace SR_UTILS_NS::Platform {
                 }
             }
 
-            return Path::Type::Undefined;
-        }
-
-        struct stat st{};
-        if (stat(path.data(), &st) != 0) {
             return Path::Type::Undefined;
         }
 
@@ -320,12 +271,11 @@ namespace SR_UTILS_NS::Platform {
         return Path(pAndroidInstance->activity->internalDataPath);
     }
 
-
     std::optional<Path> GetApplicationLogPath() {
         return Path(pAndroidInstance->activity->externalDataPath);
     }
 
-    Path GetApplicationName() {
+    String GetApplicationName() {
         return "SREngine";
     }
 

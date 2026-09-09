@@ -5,7 +5,8 @@
 #include <Utils/Resources/ResourceEmbedder.h>
 #include <Utils/Common/StringAtomLiterals.h>
 #include <Utils/Common/LexicalCast.h>
-#include <Utils/Debug.h>
+#include <Utils/FileSystem/VFS.h>
+#include <Utils/Platform/Platform.h>
 
 namespace SR_UTILS_NS {
     bool ResourceEmbedder::ExportAllResources() {
@@ -15,13 +16,6 @@ namespace SR_UTILS_NS {
     bool ResourceEmbedder::ExportAllResources(const SR_UTILS_NS::Path& newDirectory) {
         bool result = true;
         SR_LOG("ResourceEmbedder::ExportAllResources() : exporting {} resources to '{}'", m_resources.size(), newDirectory);
-
-        if (!newDirectory.IsEmpty() && !newDirectory.Exists()) {
-            if (!newDirectory.Create()) {
-                SR_ERROR("ResourceEmbedder::ExportAllResources() : failed to create new directory!");
-                result = false;
-            }
-        }
 
         for (auto&& [path, data] : m_resources) {
             if (!ExportToFile(path, data, newDirectory)) {
@@ -33,42 +27,22 @@ namespace SR_UTILS_NS {
     }
 
     bool ResourceEmbedder::ExportToFile(std::string_view path, const Resource& resource, const SR_UTILS_NS::Path& newDirectory) {
-        SR_UTILS_NS::Path resourcePath = newDirectory.Concat(path);
-        if (newDirectory.IsEmpty()) {
-            resourcePath = SR_UTILS_NS::Path(path);
+        Path resourcePath = newDirectory.Concat(path);
+        if (newDirectory.empty()) {
+            resourcePath = path;
         }
 
-        if (!resourcePath.Exists()) {
-        #ifdef SR_LINUX
-            /// It is needed because on Linux there are files without extensions.
-            if (!SR_PLATFORM_NS::CreateFolder(resourcePath.GetPrevious().GetFolder().ToString())) {
-                SR_ERROR("ResourceEmbedder::ExportToFile() : failed to create path!");
-                return false;
-            }
-
-        #else
-            if (!resourcePath.Create()) {
-                SR_ERROR("ResourceEmbedder::ExportToFile() : failed to create path!");
-                return false;
-            }
-        #endif
-        }
-
-        std::ofstream file(resourcePath.c_str(), std::ios::out | std::ios::binary);
-        if (!file.is_open()) {
-            SR_ERROR("ResourceEmbedder::ExportToFile() : failed to open file '{}'!", path);
+        auto&& file = VFS::Instance().OpenFile(resourcePath, FileMode::Write);
+        if (!file) {
+            SR_ERROR("ResourceEmbedder::ExportToFile() : failed to open file '{}'!", resourcePath);
             return false;
         }
 
         std::string decompressedData = Decompress(resource);
-        file.write(decompressedData.data(), static_cast<int64_t>(decompressedData.size()));
-        file.close();
+        file.Write(decompressedData.data(), static_cast<int64_t>(decompressedData.size()));
 
-    #ifdef SR_LINUX
         auto&& applicationPath = SR_PLATFORM_NS::GetApplicationPath();
-        SR_LOG("ResourceEmbedder::ExportToFile() : trying to copy permissions for file \n\t'{}' \n\tApplication path: {}", path, applicationPath);
-        Platform::CopyPermissions(applicationPath, resourcePath);
-    #endif
+        SR_PLATFORM_NS::CopyPermissions(applicationPath, resourcePath);
 
         return true;
     }

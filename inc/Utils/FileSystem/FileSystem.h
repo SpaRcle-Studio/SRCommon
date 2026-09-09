@@ -17,12 +17,10 @@ namespace SR_UTILS_NS {
     public:
         static uint64_t GetExecutableAndModulesHash();
 
-        static bool CreatePath(std::string path, SizeType offset = 0);
-
         static bool IsAllowedPathSymbol(char c);
         static bool IsPathSeparator(char c);
 
-        static bool WriteToFile(const Path& path, const std::string_view& text);
+        static bool WriteToFile(StringView path, StringView data);
         static void NormalizePathInPlace(String& path);
         static std::vector<std::string> ReadAllLines(const SR_UTILS_NS::Path& path);
 
@@ -31,14 +29,9 @@ namespace SR_UTILS_NS {
 
         static std::shared_ptr<String> ReadFileAsBlob(const Path& path);
         static bool ReadFile(const Path& path, String& buffer);
-        static bool IsFileExists(const Path& path);
-
-        static std::vector<std::string_view> ReadAllTextAsStringViewVector(const Path& path, String& buffer);
-
-        static void ForEachFileInFolder(const Path& path, bool recursive, const SR_HTYPES_NS::Function<void(const Path&)>& func);
 
         static uint64_t GetFileHash(const Path& path);
-        static uint64_t GetFolderHash(const Path& path, uint64_t deep = SR_UINT64_MAX);
+        static uint64_t GetFolderHash(const Path& path);
     };
 }
 

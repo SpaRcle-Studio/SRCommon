@@ -9,6 +9,7 @@
 #include <Utils/Resources/FileWatcher.h>
 #include <Utils/Resources/Asset.h>
 #include <Utils/Resources/Asset.h>
+#include <Utils/FileSystem/VFS.h>
 #include <Utils/Common/Features.h>
 #include <Utils/Common/StringFormat.h>
 #include <Utils/Common/Hashes.h>
@@ -19,13 +20,10 @@ namespace SR_UTILS_NS {
     /// Seconds
     const uint64_t ResourceManager::ResourceLifeTime = 30 * SR_CLOCKS_PER_SEC;
 
-    bool ResourceManager::Initialize(const SR_UTILS_NS::Path& resourcesFolder, const SR_UTILS_NS::Path& engineResourceFolder) {
+    bool ResourceManager::Initialize() {
         SR_TRACY_ZONE;
 
-        SR_INFO("ResourceManager::Initialize() : initializing resource manager..."
-            "\n\tResources folder: {}\n\tEngine resources folder: {}",
-            resourcesFolder, engineResourceFolder
-        );
+        SR_INFO("ResourceManager::Initialize() : initializing resource manager...");
 
         if (m_isInit) {
             SRHalt("ResourceManager::Initialize() : is already initialized!");
@@ -39,9 +37,13 @@ namespace SR_UTILS_NS {
         m_destroyQueue.reserve(256);
         m_defaultReloader = new DefaultResourceReloader();
 
-        m_engineFolder = engineResourceFolder;
-
-        ChangeResourcesFolder(resourcesFolder);
+        Path resourcesWatchFolder = GetResPath();
+        VFS::Instance().ResolvePath(resourcesWatchFolder);
+        SR_LOG("ResourceManager::Initialize() : starting file system watcher for \"{}\"...", resourcesWatchFolder);
+        m_fileSystemWatcher.AutoFree();
+        m_fileSystemWatcher = FileSystemWatcher::MakeShared();
+        m_fileSystemWatcher->AddListener(resourcesWatchFolder);
+        m_fileSystemWatcher->StartAsyncWatch();
 
         m_resources.max_load_factor(0.9f);
 
@@ -149,8 +151,8 @@ namespace SR_UTILS_NS {
     }
 
     const Path& ResourceManager::GetResPathRef() const {
-        SRAssert2(m_isInit, "Resource manager isn't initialized : {}", m_folder);
-        return m_folder;
+        static Path resPath = "Resources";
+        return resPath;
     }
 
     bool ResourceManager::Thread() {
@@ -542,14 +544,7 @@ namespace SR_UTILS_NS {
         if (auto&& cache = SR_PLATFORM_NS::GetApplicationCachePath()) {
             return cache->Concat("Cache");
         }
-        return GetResPathRef().Concat("Cache");
-    }
-
-    Path ResourceManager::GetEngineCachePath() const {
-        if (auto&& cache = SR_PLATFORM_NS::GetApplicationCachePath()) {
-            return cache->Concat("Cache");
-        }
-        return GetEngineResPathRef().Concat("Cache");
+        return "Resources/Cache";
     }
 
     ResourceType* ResourceManager::GetOrCreateResourceType(SR_UTILS_NS::StringAtom typeName) {
@@ -566,18 +561,5 @@ namespace SR_UTILS_NS {
         SR_INFO("ResourceManager::GetOrCreateResourceType() : registered new resource type \"{}\"", typeName);
 
         return pResourceType;
-    }
-
-    void ResourceManager::ChangeResourcesFolder(const Path& path) {
-        SR_LOCK_GUARD;
-        if (path == m_folder) {
-            return;
-        }
-        SR_LOG("ResourceManager::ChangeResourcesFolder() : changing resources folder to \"{}\"...", path);
-        m_folder = path;
-        m_fileSystemWatcher.AutoFree();
-        m_fileSystemWatcher = FileSystemWatcher::MakeShared();
-        m_fileSystemWatcher->AddListener(m_folder);
-        m_fileSystemWatcher->StartAsyncWatch();
     }
 }
