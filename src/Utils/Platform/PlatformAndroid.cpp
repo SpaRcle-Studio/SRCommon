@@ -89,7 +89,7 @@ namespace SR_UTILS_NS::Platform {
         return (void*)pAndroidInstance;
     }
 
-    bool ReadFile(const Path& path, String& buffer) {
+    /*bool ReadFile(const Path& path, String& buffer) {
         std::string_view pathView = path.ToStringView();
         if (!RemoveAssetsPrefix(pathView)) {
             // Открываем файл в бинарном режиме и сразу получаем размер
@@ -126,7 +126,7 @@ namespace SR_UTILS_NS::Platform {
         AAsset_close(pAsset);
 
         return true;
-    }
+    }*/
 
     void WriteMessage(int log, const std::string& msg) {
         const size_t maxLen = 1024;

@@ -174,16 +174,6 @@ namespace SR_PLATFORM_NS {
     }
 
     void CopyPermissions(const SR_UTILS_NS::Path& source, const SR_UTILS_NS::Path& destination) {
-        if (!source.Exists() || !destination.Exists()) {
-            SR_ERROR(
-                "Platform::CopyPermissions() : either source or destination path does not exist."
-                "\n\tSource: '{}'\n\tDestination: '{}'",
-                source.ToString(), destination.ToString()
-            );
-
-            return;
-        }
-
         auto&& currentHandle = open(source.c_str(), O_RDONLY);
         auto&& destinationHandle = open(destination.c_str(), O_RDONLY);
 

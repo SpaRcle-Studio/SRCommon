@@ -64,7 +64,7 @@ namespace SR_UTILS_NS {
             }
             else if (arg.ends_with(".srproject")) {
                 m_projectPath = SR_UTILS_NS::Path(arg);
-                if (!m_projectPath->IsFile()) {
+                if (!SR_PLATFORM_NS::IsFileExists(m_projectPath->ToStringView())) {
                     SR_PLATFORM_NS::WriteConsoleWarn(SR_FORMAT("CLIManager::Init() : project path is not a file: '{}'\n", *m_projectPath));
                     m_projectPath = std::nullopt;
                 }
