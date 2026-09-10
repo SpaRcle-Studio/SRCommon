@@ -5,6 +5,7 @@
 #include <Utils/Network/GitHubDownloader.h>
 #include <Utils/Platform/Platform.h>
 #include <Utils/Common/LexicalCast.h>
+#include <Utils/Common/CLIManager.h>
 
 #include <nlohmann/json.hpp>
 
@@ -67,6 +68,13 @@ namespace SR_NETWORK_NS {
             SRHalt("GitHubDownloader::GitHubDownloader() : failed to create HTTP client!");
             return;
         }
+        if (auto&& token = SR_UTILS_NS::CLIManager::Instance().GetOptionValue(CLIOptions::GitHubAuthToken)) {
+            m_token = token.value();
+            SR_INFO("GitHubDownloader::GitHubDownloader() : GitHub auth token provided.");
+        }
+        else {
+            SR_INFO("GitHubDownloader::GitHubDownloader() : GitHub auth token not provided! Rate limits may apply.");
+        }
     }
 
     const Vector<String>& GitHubDownloader::GetBranches() const {
@@ -85,6 +93,10 @@ namespace SR_NETWORK_NS {
             }
         };
 
+        if (!m_token.empty()) {
+            request.headers.emplace_back("Authorization", "Bearer {}"_format(m_token));
+        }
+
         m_responseBody.clear();
         SR_NETWORK_NS::HTTPResponse response;
         const bool success = m_pClient->Send(request, response, [this](std::span<const std::byte> data) {
@@ -93,7 +105,7 @@ namespace SR_NETWORK_NS {
         });
 
         if (!success || response.statusCode != 200) {
-            SR_ERROR("GitHubDownloader::GetBranches() : failed to get branches! Status code: {}", response.statusCode);
+            SR_ERROR("GitHubDownloader::GetBranches() : failed to get branches! Status code: {}\n\tURL: {}", response.statusCode, request.url);
             return m_branches;
         }
 
@@ -128,6 +140,10 @@ namespace SR_NETWORK_NS {
             }
         };
 
+        if (!m_token.empty()) {
+            request.headers.emplace_back("Authorization", "Bearer {}"_format(m_token));
+        }
+
         m_responseBody.clear();
 
         SR_NETWORK_NS::HTTPResponse response;
@@ -137,7 +153,7 @@ namespace SR_NETWORK_NS {
         });
 
         if (!success || response.statusCode != 200) {
-            SR_ERROR("GitHubDownloader::GetDefaultBranch() : failed to get repository! Status code: {}", response.statusCode);
+            SR_ERROR("GitHubDownloader::GetDefaultBranch() : failed to get repository! Status code: {}\n\tURL: {}", response.statusCode, request.url);
             return {};
         }
 
@@ -185,6 +201,10 @@ namespace SR_NETWORK_NS {
             }
         };
 
+        if (!m_token.empty()) {
+            request.headers.emplace_back("Authorization", "Bearer {}"_format(m_token));
+        }
+
         SR_NETWORK_NS::HTTPResponse response;
         const bool success = m_pClient->Send(request, response, [&outData](std::span<const std::byte> data) {
             outData.append(reinterpret_cast<const char*>(data.data()), static_cast<SizeType>(data.size()));
@@ -192,7 +212,7 @@ namespace SR_NETWORK_NS {
         });
 
         if (!success || response.statusCode != 200) {
-            SR_ERROR("GitHubDownloader::DownloadFile() : failed to download file \"{}\"! Status code: {}", path, response.statusCode);
+            SR_ERROR("GitHubDownloader::DownloadFile() : failed to download file \"{}\"! Status code: {}\n\tURL: {}", path, response.statusCode, request.url);
             outData.clear();
             return false;
         }
@@ -224,6 +244,10 @@ namespace SR_NETWORK_NS {
             }
         };
 
+        if (!m_token.empty()) {
+            request.headers.emplace_back("Authorization", "Bearer {}"_format(m_token));
+        }
+
         m_responseBody.clear();
         SR_NETWORK_NS::HTTPResponse response;
         const bool success = m_pClient->Send(request, response,[this](std::span<const std::byte> data) {
@@ -232,7 +256,7 @@ namespace SR_NETWORK_NS {
         });
 
         if (!success || response.statusCode != 200) {
-            SR_ERROR("GitHubDownloader::GetTree() : failed to get repository tree! Status code: {}", response.statusCode);
+            SR_ERROR("GitHubDownloader::GetTree() : failed to get repository tree! Status code: {}\n\tURL: {}", response.statusCode, request.url);
             return m_tree;
         }
 

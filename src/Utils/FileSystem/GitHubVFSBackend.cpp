@@ -132,6 +132,7 @@ namespace SR_UTILS_NS {
         auto&& pCacheIt = m_cache.find(repositoryPathBuffer);
         if (pCacheIt == m_cache.end()) {
             String data;
+            SR_LOG("GitHubVFSBackend::OpenFile() : downloading file \"{}\" from repository \"{}/{}\" (branch: {})...", repositoryPathBuffer, m_pDownloader->GetRepo().owner, m_pDownloader->GetRepo().repo, m_branch);
             if (!m_pDownloader->DownloadFile(repositoryPathBuffer, data, m_branch)) {
                 SR_ERROR("GitHubVFSBackend::OpenFile() : failed to download file!\n\tPath: {}", repositoryPathBuffer);
                 return File();

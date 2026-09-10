@@ -51,6 +51,7 @@ namespace SR_NETWORK_NS {
         mutable String m_defaultBranch;
         mutable Tree m_tree;
 
+        String m_token; /// TODO: сделать шифрование токена, чтобы его нельзя было прочитать из памяти
         String m_url;
         GitHubRepo m_repo;
         RawPointerHolder<IHTTPClient> m_pClient;

@@ -230,7 +230,7 @@ namespace SR_UTILS_NS {
         });
     }
 
-    void VFS::ResolvePath(String& path) const {
+    void VFS::ResolvePath(String& path, FileMode mode) const {
         SR_TRACY_ZONE;
         SR_LOCK_GUARD;
 
@@ -238,6 +238,16 @@ namespace SR_UTILS_NS {
         virtualPath = path;
 
         for (auto&& mount : m_mounts) {
+            const bool isRead = SR_MATH_NS::IsMaskIncludedSubMask(mode, FileMode::Read);
+            const bool isWrite = SR_MATH_NS::IsMaskIncludedSubMask(mode, FileMode::Write);
+
+            if (isRead && !mount.pBackend->ReadSupports()) {
+                continue;
+            }
+            if (isWrite && !mount.pBackend->WriteSupports()) {
+                continue;
+            }
+
             if (mount.pBackend->IsApplicable(virtualPath)) {
                 mount.pBackend->ResolveVirtualPath(virtualPath, path);
                 if (SR_PLATFORM_NS::GetPathType(path) == FSItemType::Undefined) {
@@ -251,12 +261,12 @@ namespace SR_UTILS_NS {
         path.clear();
     }
 
-    void VFS::ResolvePath(Path& path) const {
+    void VFS::ResolvePath(Path& path, FileMode mode) const {
         SR_TRACY_ZONE;
         SR_LOCK_GUARD;
         static String resolvedPath;
         resolvedPath = path.ToStringView();
-        ResolvePath(resolvedPath);
+        ResolvePath(resolvedPath, mode);
         path = resolvedPath;
     }
 
@@ -290,10 +300,10 @@ namespace SR_UTILS_NS {
 
             /// CopyPermissions работает с настоящей файловой системой, поэтому пути нужно развернуть
             String resolvedSource = source;
-            ResolvePath(resolvedSource);
+            ResolvePath(resolvedSource, FileMode::Read);
 
             String resolvedDestination = destination;
-            ResolvePath(resolvedDestination);
+            ResolvePath(resolvedDestination, FileMode::Write);
 
             if (!resolvedSource.empty() && !resolvedDestination.empty()) {
                 SR_PLATFORM_NS::CopyPermissions(resolvedSource, resolvedDestination);

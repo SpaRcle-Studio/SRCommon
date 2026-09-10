@@ -119,7 +119,7 @@ namespace SR_UTILS_NS {
     #ifndef SR_EMSCRIPTEN
         m_logPath = logPath;
         if (!VFS::Instance().HaveMount(m_logPath)) {
-            VFS::Instance().Mount(m_logPath, new DirectoryVFSBackend(m_logPath), 0, true);
+            VFS::Instance().Mount(m_logPath, new SingleFileDirectoryVFSBackend(m_logPath), 0, true);
         }
 
         m_file = VFS::Instance().OpenFile(m_logPath, FileMode::Write);

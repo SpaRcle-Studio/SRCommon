@@ -38,7 +38,7 @@ namespace SR_UTILS_NS {
         m_defaultReloader = new DefaultResourceReloader();
 
         Path resourcesWatchFolder = GetResPath();
-        VFS::Instance().ResolvePath(resourcesWatchFolder);
+        VFS::Instance().ResolvePath(resourcesWatchFolder, FileMode::Read);
         SR_LOG("ResourceManager::Initialize() : starting file system watcher for \"{}\"...", resourcesWatchFolder);
         m_fileSystemWatcher.AutoFree();
         m_fileSystemWatcher = FileSystemWatcher::MakeShared();
@@ -342,7 +342,7 @@ namespace SR_UTILS_NS {
         if (pVariant) {
             pResource->SetVariant(*pVariant);
         }
-        pResource->SetId(id.ToStringRef(), false /** auto register */);
+        pResource->SetId(id, false /** auto register */);
 
         if (!pResource->Reload()) {
             SR_ERROR("ResourceManager::LoadResource() : failed to load {}! \n\tPath: {}", typeName, id);

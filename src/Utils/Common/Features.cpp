@@ -68,8 +68,7 @@ namespace SR_UTILS_NS {
         SR_LOCK_GUARD;
         SR_TRACY_ZONE;
 
-        if (m_path.IsEmpty()) {
-            SR_ERROR("Features::Reload() : path is empty!");
+        if (m_path.empty()) {
             return false;
         }
 
@@ -77,7 +76,7 @@ namespace SR_UTILS_NS {
 
         const auto& doc = SR_XML_NS::Document::Load(m_path);
         if (!doc) {
-            SR_ERROR("Features::Reload() : failed to load document! \n\tPath: {}", m_path);
+            SR_ERROR("Features::Reload() : failed to load document!\n\tPath: {}", m_path);
             return false;
         }
 

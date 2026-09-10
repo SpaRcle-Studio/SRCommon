@@ -38,8 +38,9 @@ namespace SR_UTILS_NS {
         void Delete(StringView path);
         bool Copy(StringView from, StringView to);
 
-        void ResolvePath(String& path) const;
-        void ResolvePath(Path& path) const;
+        void ResolvePath(String& path, FileMode mode) const;
+        void ResolvePath(Path& path, FileMode mode) const;
+
         void UnResolvePath(String& path) const;
         void UnResolvePath(Path& path) const;
 

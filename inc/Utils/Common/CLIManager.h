@@ -25,7 +25,8 @@ namespace SR_UTILS_NS {
         Resources,
         LogDir,
         RunScene,
-        GameLink
+        GameLink,
+        GitHubAuthToken
     );
 
     class CLIManager : public SR_UTILS_NS::Singleton<CLIManager> {

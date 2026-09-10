@@ -43,7 +43,7 @@ namespace SR_UTILS_NS {
         virtual void ResolveVirtualPath(StringView virtualPath, String& outRealPath) const = 0;
         virtual void Delete(StringView path) const = 0;
 
-        SR_NODISCARD bool IsApplicable(StringView path) const;
+        SR_NODISCARD virtual bool IsApplicable(StringView path) const;
 
         void SetVirtualPath(PassKey<VFS>, StringView virtualPath) { m_virtualPath = virtualPath; }
         SR_NODISCARD StringView GetVirtualPath() const { return m_virtualPath; }

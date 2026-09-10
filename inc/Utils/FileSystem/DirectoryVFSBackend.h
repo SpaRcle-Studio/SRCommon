@@ -43,6 +43,27 @@ namespace SR_UTILS_NS {
 
         SR_NODISCARD bool ReadSupports() const override { return false; }
     };
+
+    class SingleFileDirectoryVFSBackend : public DirectoryVFSBackend {
+    public:
+        explicit SingleFileDirectoryVFSBackend(StringView realPath)
+            : DirectoryVFSBackend(realPath)
+        { }
+
+        SR_NODISCARD bool IsApplicable(StringView path) const override {
+            return path == GetVirtualPath();
+        }
+    };
+
+    class ReadOnlySingleFileDirectoryVFSBackend : public SingleFileDirectoryVFSBackend {
+    public:
+        explicit ReadOnlySingleFileDirectoryVFSBackend(StringView realPath)
+            : SingleFileDirectoryVFSBackend(realPath)
+        { }
+
+        SR_NODISCARD bool WriteSupports() const override { return false; }
+
+    };
 }
 
 #endif //SR_ENGINE_COMMON_DIRECTORY_VFS_BACKEND_H

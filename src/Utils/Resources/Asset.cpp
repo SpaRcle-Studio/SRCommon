@@ -14,18 +14,23 @@ namespace SR_UTILS_NS {
         SR_TRACY_ZONE_TEXT_C(rawPath.c_str());
         SR_GLOBAL_RECURSIVE_LOCK;
 
-        auto&& resourceManager = ResourceManager::Instance();
-        SR_UTILS_NS::Path path = rawPath.RemoveSubPath(resourceManager.GetResPath());
+        auto&& path = rawPath.RemoveSubPath(CoreResLoader::GetResPath());
 
-        Asset::Ptr pAsset = DynamicPointerCast<Asset>(resourceManager.FindAnyType(SR_UTILS_NS::StringAtom(path.View()), nullptr));
+        Asset::Ptr pAsset = DynamicPointerCast<Asset>(ResourceManager::Instance().FindAnyType(SR_UTILS_NS::StringAtom(path.View()), nullptr));
         if (pAsset) {
             return pAsset;
         }
 
         SR_LOG("Asset::LoadImpl() : loading asset \"{}\"", path);
 
+        /// Допускается расположение ассетов вне папки ресурсов
+        auto&& resourcePath = CoreResLoader::GetResPath().Concat(path);
+        if (!resourcePath.IsFile()) {
+            resourcePath = path;
+        }
+
         SR_UTILS_NS::SRADeserializer deserializer;
-        if (!deserializer.LoadFromFile(CoreResLoader::GetResPath().Concat(path))) {
+        if (!deserializer.LoadFromFile(resourcePath)) {
             SR_ERROR("Asset::LoadImpl() : failed to deserialize asset from file!\n\tPath: {}", path);
             return nullptr;
         }
@@ -57,7 +62,12 @@ namespace SR_UTILS_NS {
         Asset::Ptr pThis = StaticPointerCast<Asset>(GetThis());
         Serialization::Save(serializer, pThis, SerializationId::Create("asset"));
 
-        if (!serializer.SaveToFile(CoreResLoader::GetResPath().Concat(path))) {
+        /// Допускается расположение ассетов вне папки ресурсов
+        if (!path.IsFile()) {
+            path = CoreResLoader::GetResPath().Concat(path);
+        }
+
+        if (!serializer.SaveToFile(path)) {
             SR_ERROR("Asset::SaveAsset() : failed to save asset to file!\n\tPath: {}", path);
             return false;
         }
@@ -67,8 +77,15 @@ namespace SR_UTILS_NS {
 
     bool Asset::Load() {
         SR_UTILS_NS::SRADeserializer deserializer;
-        if (!deserializer.LoadFromFile(CoreResLoader::GetResPath().Concat(GetResourcePath()))) {
-            SR_ERROR("Asset::Load() : failed to deserialize asset from file!\n\tPath: {}", GetResourcePath());
+
+        /// Допускается расположение ассетов вне папки ресурсов
+        auto&& resourcePath = CoreResLoader::GetResPath().Concat(GetResourcePath());
+        if (!resourcePath.IsFile()) {
+            resourcePath = GetResourcePath();
+        }
+
+        if (!deserializer.LoadFromFile(resourcePath)) {
+            SR_ERROR("Asset::Load() : failed to deserialize asset from file!\n\tPath: {}", resourcePath);
             return false;
         }
 
@@ -76,9 +93,13 @@ namespace SR_UTILS_NS {
             const bool success = Serialization::Load(deserializer, *this, SerializationId::Create("ptr"));
             deserializer.EndObject();
             if (!success) {
-                SR_ERROR("Asset::Load() : failed to load asset from deserializer!\n\tPath: {}", GetResourcePath());
+                SR_ERROR("Asset::Load() : failed to load asset from deserializer!\n\tPath: {}", resourcePath);
                 return false;
             }
+        }
+        else {
+            SR_ERROR("Asset::Load() : failed to begin object \"asset\" in deserializer!\n\tPath: {}", resourcePath);
+            return false;
         }
 
         OnAssetLoaded();
