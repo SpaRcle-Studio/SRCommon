@@ -18,6 +18,7 @@
 #include <Utils/Platform/Platform.h>
 #include <Utils/Serialization/SRASerialization.h>
 #include <Utils/FileSystem/FileSystem.h>
+#include <Utils/FileSystem/VFS.h>
 
 #include <Enum/SceneLogicType.hpp>
 
@@ -594,5 +595,28 @@ namespace SR_WORLD_NS {
 
     Scene::GameObjectPtr Scene::GetMainCamera() const {
         return nullptr;
+    }
+
+    bool Scene::PlayScene(const Path& path) {
+        StringView extension = path.GetExtensionView();
+
+        auto&& runtimePath = SR_UTILS_NS::ResourceManager::Instance().GetCachePath().Concat(SR_UTILS_NS::Path(SR_WORLD_NS::Scene::RuntimeScenePath).ConcatExt(extension));
+
+        if (runtimePath.IsDir()) {
+            SR_UTILS_NS::VFS::Instance().Delete(runtimePath);
+        }
+
+        SR_LOG("Scene::PlayScene() : copying scene: \n\tFrom: {}\n\tTo: {}", GetAbsPath(path), runtimePath);
+
+        if (!GetAbsPath(path).Copy(runtimePath)) {
+            SR_ERROR("Scene::PlayScene() : failed to copy scene!\n\tSource: {}\n\tDestination: {}", path, runtimePath);
+            return false;
+        }
+
+        if (auto&& pRuntimeScene = SR_WORLD_NS::Scene::LoadScene(SR_UTILS_NS::Path(SR_WORLD_NS::Scene::RuntimeScenePath).ConcatExt(extension))) {
+            SceneAllocator::Instance().AddSceneToQueue(pRuntimeScene);
+            return true;
+        }
+        return false;
     }
 }

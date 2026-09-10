@@ -165,7 +165,7 @@
         </Expand>
     </Type>
 
-    <Type Name="SR_UTILS_NS::StringAtom">
+    <Type Name="SpaRcle::Utils::StringAtom">
         <DisplayString Condition="m_info == 0">empty</DisplayString>
         <DisplayString Condition="m_info != 0">hash={m_info->hash}</DisplayString>
         <Expand>

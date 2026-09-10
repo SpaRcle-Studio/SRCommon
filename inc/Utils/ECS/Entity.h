@@ -7,9 +7,18 @@
 
 #include <Utils/Serialization/Serializable.h>
 #include <Utils/Types/SharedPtr.h>
+#include <Utils/Types/Optional.h>
+#include <Utils/Types/SortedVector.h>
 
 namespace SR_UTILS_NS {
     class Entity;
+    struct AliveEntityDebuggerInfo {
+        Optional<bool> enabled;
+        SR_HTYPES_NS::SortedVector<Entity*> aliveEntities;
+    };
+
+    extern SR_COMMON_DLL_API const AliveEntityDebuggerInfo& GetAliveEntityDebuggerInfo();
+
     class EntityController;
 
     typedef uint64_t EntityId;

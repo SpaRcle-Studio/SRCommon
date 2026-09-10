@@ -41,9 +41,9 @@ namespace SR_WORLD_NS {
         using SceneObjects = Vector<SceneObjectPtr>;
         using GameObjectPtr = SR_HTYPES_NS::SharedPtr<GameObject>;
 
-        SR_MAYBE_UNUSED SR_INLINE_STATIC const std::string RuntimeScenePath = "Scenes/Runtime-cache-scene"; /// NOLINT
-        SR_MAYBE_UNUSED SR_INLINE_STATIC const std::string NewScenePath = "Scenes/New-cache-scene"; /// NOLINT
-        SR_MAYBE_UNUSED SR_INLINE_STATIC const std::string NewPrefabPath = "Scenes/New-cache-prefab"; /// NOLINT
+        SR_MAYBE_UNUSED SR_INLINE_STATIC const StringView RuntimeScenePath = "Scenes/Runtime-cache-scene"; /// NOLINT
+        SR_MAYBE_UNUSED SR_INLINE_STATIC const StringView NewScenePath = "Scenes/New-cache-scene"; /// NOLINT
+        SR_MAYBE_UNUSED SR_INLINE_STATIC const StringView NewPrefabPath = "Scenes/New-cache-prefab"; /// NOLINT
 
     public:
         Scene();
@@ -55,6 +55,7 @@ namespace SR_WORLD_NS {
         static Scene::Ptr LoadScene(const Path& path);
         static bool IsExists(const Path& path);
         static Path GetAbsPath(const Path& path);
+        static bool PlayScene(const Path& path);
 
         void Init();
         void Prepare();

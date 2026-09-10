@@ -191,7 +191,7 @@ namespace SR_UTILS_NS {
         return Concat(path.view());
     }
 
-    Path Path::ConcatExt(const std::string& ext) const {
+    Path Path::ConcatExt(StringView ext) const {
         auto&& normalized = GetNormalized();
 
         if (ext.empty()) {
@@ -205,16 +205,20 @@ namespace SR_UTILS_NS {
         return normalized + "." + ext;
     }
 
-    Path Path::ConcatExt(const std::string_view& ext) const {
-        return ConcatExt(std::string(ext));
+    Path Path::ConcatExt(const std::string& ext) const {
+        return ConcatExt(StringView(ext));
+    }
+
+    Path Path::ConcatExt(std::string_view ext) const {
+        return ConcatExt(StringView(ext));
     }
 
     Path Path::ConcatExt(const char* ext) const {
-        return ConcatExt(std::string(ext));
+        return ConcatExt(StringView(ext));
     }
 
     Path Path::ConcatExt(StringAtom ext) const {
-        return ConcatExt(ext.ToStringRef());
+        return ConcatExt(ext.ToStringView());
     }
 
     bool Path::CreateDirectories() const {

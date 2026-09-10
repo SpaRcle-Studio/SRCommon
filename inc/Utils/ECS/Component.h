@@ -33,6 +33,7 @@ namespace SR_UTILS_NS {
 
     class SR_COMMON_DLL_API Component : public Entity {
         SR_CLASS()
+        using Super = Entity;
         friend class GameObject;
         friend class IComponentable;
         friend class ComponentManager;

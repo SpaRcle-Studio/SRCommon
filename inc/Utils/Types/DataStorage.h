@@ -91,7 +91,7 @@ namespace SR_HTYPES_NS {
         return GetPointer<T>(SR_HASH_STR_REGISTER(name));
     }
 
-    template<typename T> T *DataStorage::GetPointer() const {
+    template<typename T> T* DataStorage::GetPointer() const {
         SR_TRACY_ZONE;
         return GetPointer<T>(SR_HASH_TYPE_NAME_STR_REGISTER(T));
     }

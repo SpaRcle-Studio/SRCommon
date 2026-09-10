@@ -14,16 +14,16 @@ namespace SR_HTYPES_NS {
     public:
         SR_NODISCARD uint64_t Size() const noexcept;
         SR_NODISCARD bool Empty() const noexcept;
+        SR_NODISCARD bool Contains(const T& value) const noexcept;
 
         void Flush(const std::function<void(T&)>& callBack);
-
         void Push(const T& value) noexcept;
 
         SR_NODISCARD std::shared_lock<std::shared_mutex> ReadLock() const { return std::shared_lock<std::shared_mutex>(m_accessMutex); }
         SR_NODISCARD std::lock_guard<std::shared_mutex> WriteLock() const { return std::lock_guard<std::shared_mutex>(m_accessMutex); }
 
     private:
-        std::queue<T> m_data;
+        Vector<T> m_data;
 
         /// защищает буфер m_data от порчи данных
         mutable std::mutex m_dataMutex;
@@ -33,15 +33,18 @@ namespace SR_HTYPES_NS {
 
     };
 
+    template<typename T> bool SafeQueue<T>::Contains(const T &value) const noexcept {
+        std::lock_guard lock(m_dataMutex);
+        return std::find(m_data.begin(), m_data.end(), value) != m_data.end();
+    }
+
     template<typename T> void SafeQueue<T>::Push(const T &value) noexcept {
         std::lock_guard lock(m_dataMutex);
-
-        m_data.push(value);
+        m_data.emplace_back(value);
     }
 
     template<typename T> uint64_t SafeQueue<T>::Size() const noexcept {
         std::lock_guard lock(m_dataMutex);
-
         return m_data.size();
     }
 
@@ -57,7 +60,7 @@ namespace SR_HTYPES_NS {
 
         while (!m_data.empty()) {
             callBack(m_data.front());
-            m_data.pop();
+            m_data.pop_back();
         }
     }
 }

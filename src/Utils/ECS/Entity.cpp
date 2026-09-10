@@ -6,17 +6,34 @@
 #include <Utils/ECS/EntityController.h>
 #include <Utils/ECS/EntityRef.h>
 #include <Utils/Reflection/SRClassUtils.h>
+#include <Utils/Common/Features.h>
 
 #include <Enum/EditorFlags.hpp>
 
 #include <Codegen/Entity.generated.hpp>
 
 namespace SR_UTILS_NS {
+    AliveEntityDebuggerInfo gAliveEntityDebuggerInfo = AliveEntityDebuggerInfo();
+
+    const AliveEntityDebuggerInfo& GetAliveEntityDebuggerInfo() {
+        return gAliveEntityDebuggerInfo;
+    }
+
     Entity::Entity()
         : SR_HTYPES_NS::SharedPtr<Entity>(this, SharedPtrPolicy::Manually)
-    { }
+    {
+        if (!gAliveEntityDebuggerInfo.enabled.has_value()) {
+            gAliveEntityDebuggerInfo.enabled = SR_UTILS_NS::Features::Instance().Enabled("AliveEntityDebugger", false);
+        }
+        if (gAliveEntityDebuggerInfo.enabled.value()) {
+            gAliveEntityDebuggerInfo.aliveEntities.Add(this);
+        }
+    }
 
     Entity::~Entity() {
+        if (gAliveEntityDebuggerInfo.enabled.value()) {
+            gAliveEntityDebuggerInfo.aliveEntities.Remove(this);
+        }
         UnregisterEntity();
     }
 

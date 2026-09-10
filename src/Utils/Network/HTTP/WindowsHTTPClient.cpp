@@ -231,14 +231,43 @@ namespace SR_NETWORK_NS {
                         rawHeaders.pop_back();
                     }
 
-                    /*
-                     * Здесь при необходимости можно
-                     * распарсить rawHeaders в
-                     * response.headers.
-                     *
-                     * Для базового клиента это можно
-                     * оставить на следующий этап.
-                     */
+                    SizeType lineStart = 0;
+                    bool isFirstLine = true;
+
+                    while (lineStart < rawHeaders.size()) {
+                        SizeType lineEnd = rawHeaders.find(L'\n', lineStart);
+
+                        if (lineEnd == std::wstring::npos) {
+                            lineEnd = rawHeaders.size();
+                        }
+
+                        // Убираем \r из CRLF.
+                        if (lineEnd > lineStart && rawHeaders[lineEnd - 1] == L'\r') {
+                            --lineEnd;
+                        }
+
+                        if (lineEnd > lineStart) {
+                            if (!isFirstLine) {
+                                const SizeType separator = rawHeaders.find(L':', lineStart);
+                                if (separator != std::wstring::npos && separator > lineStart) {
+                                    SizeType valueStart = separator + 1;
+
+                                    while (valueStart < lineEnd && (rawHeaders[valueStart] == L' ' || rawHeaders[valueStart] == L'\t')) {
+                                        ++valueStart;
+                                    }
+
+                                    String name = WideToUTF8({rawHeaders.data() + lineStart, separator - lineStart});
+                                    String value = WideToUTF8({rawHeaders.data() + valueStart, lineEnd - valueStart});
+
+                                    response.headers.emplace_back(Pair<String, String>(std::move(name), std::move(value)));
+                                }
+                            }
+
+                            isFirstLine = false;
+                        }
+
+                        lineStart = lineEnd + 1;
+                    }
                 }
             }
 

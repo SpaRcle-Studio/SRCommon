@@ -13,17 +13,19 @@ namespace SR_WORLD_NS {
     class SR_COMMON_DLL_API SceneAllocator : public SR_UTILS_NS::Singleton<SceneAllocator> {
         SR_REGISTER_SINGLETON(SceneAllocator)
         using ScenePtr = SR_HTYPES_NS::SharedPtr<Scene>;
-        typedef SR_HTYPES_NS::Function<ScenePtr(void)> Allocator;
-
+        using AllocatorFn = SR_HTYPES_NS::Function<ScenePtr(void)>;
+        using AddSceneToQueueFn = SR_HTYPES_NS::Function<void(const ScenePtr&)>;
     protected:
         ~SceneAllocator() override = default;
 
     public:
-        bool Init(const Allocator& allocator);
+        void AddSceneToQueue(const ScenePtr& pScene);
+        bool Init(const AllocatorFn& allocator, const AddSceneToQueueFn& addSceneToQueue);
         SR_NODISCARD ScenePtr Allocate() const;
 
     private:
-        Allocator m_allocator;
+        AllocatorFn m_allocator;
+        AddSceneToQueueFn m_addSceneToQueue;
 
     };
 }

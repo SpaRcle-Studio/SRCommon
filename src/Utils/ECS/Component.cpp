@@ -13,6 +13,10 @@
 #include <Codegen/Component.generated.hpp>
 
 namespace SR_UTILS_NS {
+    Component::Component()
+        : Super()
+    { }
+
     Component::~Component() {
         /// если срабатывает ассерт, значит, вероятнее всего, какой-то игровой объект до сих пор удерживает компонент,
         /// а значит, будет падение.
@@ -254,7 +258,5 @@ namespace SR_UTILS_NS {
     bool Component::HasScene() const {
         return TryGetScene();
     }
-
-    Component::Component() = default;
 }
 

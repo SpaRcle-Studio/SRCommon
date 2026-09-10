@@ -125,8 +125,8 @@ namespace SR_UTILS_NS {
         std::atomic<bool> m_isFromMemory = false;
 
         Vector<SR_HTYPES_NS::SharedPtr<FileWatcher>> m_watchers;
-        Vector<SR_UTILS_NS::StringAtom> m_debugUseStackTraces;
-        Vector<SR_UTILS_NS::StringAtom> m_debugUnUseStackTraces;
+        Vector<String> m_debugUseStackTraces;
+        Vector<String> m_debugUnUseStackTraces;
 
     private:
         ResourceInfoWeakPtr m_resourceInfo;
