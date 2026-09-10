@@ -95,8 +95,11 @@ namespace SR_UTILS_NS {
             if (!m_realPath.empty()) {
                 relativePathBuffer.remove_prefix(m_realPath.size() + 1); // +1 to remove the trailing slash
             }
-            relativePathBuffer.insert(0, GetVirtualPath());
-            relativePathBuffer.insert(GetVirtualPath().size(), "/");
+            /// у корневого бекенда виртуальный путь пуст, и ведущий слеш сделал бы путь абсолютным
+            if (!GetVirtualPath().empty()) {
+                relativePathBuffer.insert(0, GetVirtualPath());
+                relativePathBuffer.insert(GetVirtualPath().size(), "/");
+            }
 
             StringView name = relativePathBuffer;
             if (auto&& slashPos = name.find_last_of('/'); slashPos != StringView::npos) {

@@ -163,14 +163,32 @@ namespace SR_PLATFORM_NS {
         auto&& destinationHandle = open(destination.c_str(), O_RDONLY);
 
         if (currentHandle == -1 || destinationHandle == -1) {
-            SR_ERROR("Platform::CopyPermissions() : failed to open file handles.");
+            SR_ERROR("Platform::CopyPermissions() : failed to open file handles!\n\tSource: {}\n\tDestination: {}\n\tError: {}",
+                source.ToStringView(), destination.ToStringView(), SR_UTILS_NS::GetErrorString(errno));
+
+            if (currentHandle != -1) {
+                close(currentHandle);
+            }
+            if (destinationHandle != -1) {
+                close(destinationHandle);
+            }
             return;
         }
 
-        struct stat fst;
-        fstat(currentHandle, &fst);
-        fchown(destinationHandle, fst.st_uid, fst.st_gid);
-        fchmod(destinationHandle, fst.st_mode);
+        struct stat fst{};
+        if (fstat(currentHandle, &fst) == 0) {
+            /// смена владельца доступна только root, поэтому её неудача не является ошибкой
+            (void)fchown(destinationHandle, fst.st_uid, fst.st_gid);
+
+            if (fchmod(destinationHandle, fst.st_mode) != 0) {
+                SR_ERROR("Platform::CopyPermissions() : failed to copy file mode!\n\tDestination: {}\n\tError: {}",
+                    destination.ToStringView(), SR_UTILS_NS::GetErrorString(errno));
+            }
+        }
+        else {
+            SR_ERROR("Platform::CopyPermissions() : failed to stat source file!\n\tSource: {}\n\tError: {}",
+                source.ToStringView(), SR_UTILS_NS::GetErrorString(errno));
+        }
 
         close(currentHandle);
         close(destinationHandle);
@@ -427,12 +445,12 @@ namespace SR_PLATFORM_NS {
     std::string ExecuteCommand(const std::string& command, const std::vector<std::string>& env) {
         int pipefd[2];
         if (pipe(pipefd) == -1) {
-            return "Error: pipe() failed: " + std::string(strerror(errno));
+            return "Error: pipe() failed: " + std::string(SR_UTILS_NS::GetErrorString(errno));
         }
 
         pid_t pid = fork();
         if (pid == -1) {
-            return "Error: fork() failed: " + std::string(strerror(errno));
+            return "Error: fork() failed: " + std::string(SR_UTILS_NS::GetErrorString(errno));
         }
 
         /*auto [args2, argv2] = BuildArgv(command);
@@ -582,7 +600,7 @@ namespace SR_PLATFORM_NS {
         }
 
         // Shall we use thread-safe strerror_r() instead of strerror()?
-        std::string message(strerror(errno));
+        std::string message(SR_UTILS_NS::GetErrorString(errno));
         return message;
     }
 

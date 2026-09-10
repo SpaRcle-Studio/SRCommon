@@ -142,7 +142,25 @@ namespace SR_UTILS_NS {
     void VFS::Mount(StringView virtualPath, IVFSBackend* pBackend, int32_t priority, bool permanent) {
         SR_TRACY_ZONE;
         SR_LOCK_GUARD;
-        SR_LOG("VFS::Mount() : mounting virtual path \"{}\" with priority {}...", virtualPath, priority);
+
+        StringView realPath = pBackend->GetRealPath();
+        if (virtualPath.empty()) {
+            if (realPath.empty()) {
+                SR_LOG("VFS::Mount() : mounting root virtual path with priority {}...", priority);
+            }
+            else {
+                SR_LOG("VFS::Mount() : mounting root ({}) virtual path with priority {}...", realPath, priority);
+            }
+        }
+        else {
+            if (realPath.empty()) {
+                SR_LOG("VFS::Mount() : mounting virtual path \"{}\" with priority {}...", virtualPath, priority);
+            }
+            else {
+                SR_LOG("VFS::Mount() : mounting virtual path \"{}\" ({}) with priority {}...", virtualPath, realPath, priority);
+            }
+        }
+
         pBackend->SetVirtualPath({}, virtualPath);
         m_mounts.emplace_back(VFSMount{ pBackend, priority, permanent });
         std::stable_sort(m_mounts.begin(), m_mounts.end(), [](const VFSMount& lhs, const VFSMount& rhs) {
@@ -246,6 +264,8 @@ namespace SR_UTILS_NS {
         SR_TRACY_ZONE;
         SR_LOCK_GUARD;
 
+        SR_LOG("VFS::Copy() : copying from \"{}\" to \"{}\"...", from, to);
+
         auto&& copyFile = [&](StringView source, StringView destination) {
             auto&& sourceFile = OpenFile(source, FileMode::Read);
             auto&& destinationFile = OpenFile(destination, FileMode::Write);
@@ -264,14 +284,28 @@ namespace SR_UTILS_NS {
                     return false;
                 }
             }
-            SR_PLATFORM_NS::CopyPermissions(source, destination);
+            /// файлы нужно закрыть до копирования прав, иначе Windows не даст открыть их повторно
+            sourceFile = File();
+            destinationFile = File();
+
+            /// CopyPermissions работает с настоящей файловой системой, поэтому пути нужно развернуть
+            String resolvedSource = source;
+            ResolvePath(resolvedSource);
+
+            String resolvedDestination = destination;
+            ResolvePath(resolvedDestination);
+
+            if (!resolvedSource.empty() && !resolvedDestination.empty()) {
+                SR_PLATFORM_NS::CopyPermissions(resolvedSource, resolvedDestination);
+            }
+
             return true;
         };
 
         if (IsFileExists(from)) {
             return copyFile(from, to);
         }
-        else if (!IsFolderExists(from)) {
+        else if (IsFolderExists(from)) {
             bool haveErrors = false;
             Enumerate(from, [&](const VFSEntry& entry) {
                 if (!haveErrors && entry.type == FSItemType::File) {

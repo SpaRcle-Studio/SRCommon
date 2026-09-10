@@ -126,7 +126,9 @@ namespace SR_UTILS_NS {
             attributesCount = 0;
             stride = 0;
             instanced = false;
-            memset(attributes, 0, sizeof(attributes));
+            for (auto&& attribute : attributes) {
+                attribute = VertexAttributeDescription();
+            }
         }
 
         SR_NODISCARD uint64_t GetHash() const;
