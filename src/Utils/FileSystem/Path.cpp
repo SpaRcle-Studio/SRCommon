@@ -5,6 +5,7 @@
 #include <Utils/FileSystem/Path.h>
 #include <Utils/FileSystem/FileSystem.h>
 #include <Utils/FileSystem/VFS.h>
+#include <Utils/FileSystem/IVFSBackend.h>
 #include <Utils/Platform/Platform.h>
 #include <Utils/Profile/TracyContext.h>
 #include <Utils/Serialization/Serializer.h>

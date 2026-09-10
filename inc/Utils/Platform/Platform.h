@@ -139,7 +139,6 @@ namespace SR_UTILS_NS::Platform {
     SR_COMMON_DLL_API extern bool FileIsHidden(const Path& path);
     SR_COMMON_DLL_API extern bool IsAbsolutePath(const Path& path);
     SR_COMMON_DLL_API extern bool IsRunningUnderDebugger();
-    SR_COMMON_DLL_API extern bool IsFileDeletable(const SR_UTILS_NS::Path& path);
     SR_COMMON_DLL_API extern std::optional<Path> GetApplicationCachePath();
     SR_COMMON_DLL_API extern std::optional<Path> GetApplicationLogPath();
 

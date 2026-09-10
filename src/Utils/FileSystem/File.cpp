@@ -301,6 +301,76 @@ namespace SR_UTILS_NS {
         return StringView{ const_cast<char*>(m_mappedFile.GetData()), static_cast<SizeType>(m_mappedFile.GetSize()) };
     }
 
+    MemoryFileImpl::MemoryFileImpl(String&& data)
+        : m_data(std::move(data))
+    { }
+
+    bool MemoryFileImpl::Open(StringView path, FileMode mode) {
+        m_mode = mode;
+        m_position = 0;
+        /// содержимое уже было передано в конструкторе, открывать нечего
+        return true;
+    }
+
+    void MemoryFileImpl::Close() {
+        m_data.clear();
+        m_position = 0;
+    }
+
+    uint64_t MemoryFileImpl::GetSize() const {
+        return m_data.size();
+    }
+
+    uint64_t MemoryFileImpl::GetPosition() const {
+        return m_position;
+    }
+
+    uint64_t MemoryFileImpl::Read(void* data, uint64_t size) {
+        const uint64_t remaining = m_data.size() - m_position;
+        const uint64_t toRead = std::min(size, remaining);
+        if (toRead == 0) {
+            return 0;
+        }
+        std::memcpy(data, m_data.data() + m_position, toRead);
+        m_position += toRead;
+        return toRead;
+    }
+
+    uint64_t MemoryFileImpl::Write(const void* data, uint64_t size) {
+        SRHalt("MemoryFileImpl::Write() : file is read-only!");
+        return 0;
+    }
+
+    bool MemoryFileImpl::Seek(int64_t offset, SeekOrigin origin) {
+        int64_t newPos = 0;
+        switch (origin) {
+            case SeekOrigin::Begin:
+                newPos = offset;
+                break;
+            case SeekOrigin::Current:
+                newPos = static_cast<int64_t>(m_position) + offset;
+                break;
+            case SeekOrigin::End:
+                newPos = static_cast<int64_t>(m_data.size()) + offset;
+                break;
+            default:
+                SRHalt("MemoryFileImpl::Seek() : invalid seek origin!");
+                return false;
+        }
+
+        if (newPos < 0 || static_cast<uint64_t>(newPos) > m_data.size()) {
+            SRHalt("MemoryFileImpl::Seek() : seek position out of bounds!");
+            return false;
+        }
+
+        m_position = static_cast<uint64_t>(newPos);
+        return true;
+    }
+
+    StringView MemoryFileImpl::Data() {
+        return StringView(m_data.data(), m_data.size());
+    }
+
     void FileImpl::RemoveUse() {
         if (SRVerify(m_useCount > 0)) {
             --m_useCount;

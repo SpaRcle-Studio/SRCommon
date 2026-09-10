@@ -13,10 +13,6 @@ namespace SR_UTILS_NS {
     class ISerializer;
     struct SerializationId;
 
-    enum class FSItemType {
-        Undefined, File, Folder
-    };
-
     class SR_COMMON_DLL_API Path {
     public:
         using Type = FSItemType;

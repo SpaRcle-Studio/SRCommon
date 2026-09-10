@@ -41,6 +41,10 @@ namespace SR_NETWORK_NS {
         SR_NODISCARD const GitHubRepo& GetRepo() const;
         SR_NODISCARD const Tree& GetTree(StringView branch = StringView()) const;
 
+        /// Скачивает содержимое файла по пути внутри репозитория (raw.githubusercontent.com).
+        /// Ветка по умолчанию берется из GetDefaultBranch().
+        SR_NODISCARD bool DownloadFile(StringView path, String& outData, StringView branch = StringView()) const;
+
     private:
         mutable SR_UTILS_NS::String m_responseBody;
         mutable Vector<String> m_branches;

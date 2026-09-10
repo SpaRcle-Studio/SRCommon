@@ -4,8 +4,9 @@
 
 #include <Utils/Debug.h>
 #include <Utils/FileSystem/FileSystem.h>
-#include <Utils/Common/CLIManager.h>
+#include <Utils/FileSystem/DirectoryVFSBackend.h>
 #include <Utils/FileSystem/VFS.h>
+#include <Utils/Common/CLIManager.h>
 #include <Utils/Resources/ResourceManager.h>
 #include <Utils/Platform/Stacktrace.h>
 #include <Utils/Platform/Platform.h>

@@ -3,6 +3,7 @@
 //
 
 #include <Utils/FileSystem/FileSystem.h>
+#include <Utils/FileSystem/IVFSBackend.h>
 #include <Utils/FileSystem/VFS.h>
 #include <Utils/FileSystem/MappedFile.h>
 #include <Utils/Platform/Platform.h>

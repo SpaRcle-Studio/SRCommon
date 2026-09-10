@@ -521,20 +521,6 @@ namespace SR_UTILS_NS::Platform {
         return -1;
     }
 
-    bool IsFileDeletable(const SR_UTILS_NS::Path& path) {
-        if (!path.IsExists() || !path.IsFile()) {
-            SR_WARN("Platform::CanBeDeleted() : path does not exist or is not a file.");
-            return false;
-        }
-
-        if (auto&& file = std::ofstream(path.c_str())) {
-            file.close();
-            return true;
-        }
-
-        return false;
-    }
-
     void SetSamePermissions(const SR_UTILS_NS::Path& path) {
         SRHaltOnce("Platform::SetSamePermissions() : is not implemented!");
     }

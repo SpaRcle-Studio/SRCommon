@@ -162,6 +162,10 @@ constexpr uint32_t SR_INVALID_DESCRIPTOR_SET = SR_ID_INVALID;
 constexpr uint32_t SR_INVALID_FBO = SR_ID_INVALID;
 
 namespace SR_UTILS_NS {
+    enum class FSItemType : uint8_t {
+        Undefined, File, Folder
+    };
+
     // Предназначено в основном для использования в static_assert, чтобы сделать его зависимым от T
     template<class T>
     inline constexpr bool AlwaysFalseV = std::is_same_v<std::decay_t<T>, std::add_cv_t<std::decay_t<T>>>;

@@ -8,26 +8,10 @@
 #include <Utils/Common/PassKey.h>
 #include <Utils/FileSystem/Path.h>
 #include <Utils/FileSystem/MappedFile.h>
+#include <Utils/FileSystem/FileMode.h>
 
 namespace SR_UTILS_NS {
     class VFS;
-
-    SR_ENUM_NS_STRUCT_T(FileMode, uint8_t,
-        None = 0,
-        Read = 1 << 0,
-        Write = 1 << 1,
-        Map = 1 << 2,
-        ReadWrite = Read | Write,
-        ReadMap = Read | Map,
-        WriteMap = Write | Map,
-        ReadWriteMap = Read | Write | Map
-    );
-
-    enum class SeekOrigin : uint8_t {
-        Begin,
-        Current,
-        End
-    };
 
     class FileImpl : public NonCopyable {
     public:
@@ -96,6 +80,32 @@ namespace SR_UTILS_NS {
 
     private:
         MappedFile m_mappedFile;
+        uint64_t m_position = 0;
+
+    };
+
+    /// Файл, целиком находящийся в памяти. Используется бекендами VFS, которые не имеют
+    /// доступа к настоящей файловой системе (например, загрузка по сети).
+    class MemoryFileImpl : public FileImpl {
+    public:
+        MemoryFileImpl() = default;
+        explicit MemoryFileImpl(String&& data);
+
+        bool Open(StringView path, FileMode mode) override;
+        void Close() override;
+
+        SR_NODISCARD uint64_t GetSize() const override;
+        SR_NODISCARD uint64_t GetPosition() const override;
+
+        uint64_t Read(void* data, uint64_t size) override;
+        uint64_t Write(const void* data, uint64_t size) override;
+
+        bool Seek(int64_t offset, SeekOrigin origin) override;
+
+        SR_NODISCARD StringView Data() override;
+
+    private:
+        String m_data;
         uint64_t m_position = 0;
 
     };

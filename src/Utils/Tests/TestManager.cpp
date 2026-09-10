@@ -6,6 +6,7 @@
 #include <Utils/Platform/Platform.h>
 #include <Utils/Debug.h>
 #include <Utils/FileSystem/VFS.h>
+#include <Utils/FileSystem/DirectoryVFSBackend.h>
 
 #include <Codegen/TestManager.generated.hpp>
 

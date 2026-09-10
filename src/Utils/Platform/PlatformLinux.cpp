@@ -128,21 +128,6 @@ namespace SR_PLATFORM_NS {
         return false;
     }
 
-    bool IsFileDeletable(const SR_UTILS_NS::Path& path) {
-        if (!path.Exists() || !path.IsFile()) {
-            SR_WARN("Platform::CanBeDeleted() : path does not exist or is not a file.");
-            return false;
-        }
-
-        auto&& file = std::fstream(path.c_str(), std::ios::in);
-        if (file.is_open()) {
-            file.close();
-            return true;
-        }
-
-        return false;
-    }
-
     void OpenFile(const SR_UTILS_NS::Path& path, const std::string& args) {
         String command;
         if (path.IsAbs()) {

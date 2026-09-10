@@ -7,102 +7,17 @@
 
 #include <Utils/FileSystem/File.h>
 #include <Utils/Common/Singleton.h>
-#include <Utils/Types/FlatHashMap.h>
 #include <Utils/Types/SharedPtr.h>
 #include <Utils/Types/SortedVector.h>
 
 namespace SR_UTILS_NS {
-    struct VFSEntry {
-        StringView name;
-        StringView extension;
-        StringView fullPath;
-        StringView relativePath;
-        FSItemType type = FSItemType::Undefined;
-    };
-
-    struct VFSMount;
-
-    class IVFSBackend : public NonCopyable {
-    public:
-        IVFSBackend() = default;
-        IVFSBackend(StringView realPath)
-            : m_realPath(realPath)
-        { }
-
-    public:
-        using EnumerateCallback = SR_HTYPES_NS::Function<void(const VFSEntry&)>;
-
-        SR_NODISCARD virtual bool ReadSupports() const = 0;
-        SR_NODISCARD virtual bool WriteSupports() const = 0;
-        SR_NODISCARD virtual FSItemType GetType(StringView path) const = 0;
-        SR_NODISCARD virtual File OpenFile(StringView path, FileMode mode) const = 0;
-
-        virtual void Enumerate(StringView directory, const EnumerateCallback& callback, bool recursive) const = 0;
-        virtual void ResolveVirtualPath(StringView virtualPath, String& outRealPath) const = 0;
-        virtual void Delete(StringView path) const = 0;
-
-        SR_NODISCARD bool IsApplicable(StringView path) const;
-
-        void SetVirtualPath(PassKey<VFS>, StringView virtualPath) { m_virtualPath = virtualPath; }
-        SR_NODISCARD StringView GetVirtualPath() const { return m_virtualPath; }
-
-        SR_NODISCARD StringView GetRealPath() const { return m_realPath; }
-
-        void AddIgnoredExtension(StringView extension) { m_ignoredExtensions.insert(extension); }
-
-    protected:
-        String m_virtualPath;
-        String m_realPath;
-        Set<String> m_ignoredExtensions;
-
-    };
-
-    class DirectoryVFSBackend : public IVFSBackend {
-    public:
-        explicit DirectoryVFSBackend(StringView realPath)
-            : IVFSBackend(realPath)
-        { }
-
-    public:
-        SR_NODISCARD bool ReadSupports() const override { return true; }
-        SR_NODISCARD bool WriteSupports() const override { return true; }
-        SR_NODISCARD FSItemType GetType(StringView path) const override;
-        SR_NODISCARD File OpenFile(StringView path, FileMode mode) const override;
-
-        void Enumerate(StringView directory, const EnumerateCallback& callback, bool recursive) const override;
-        void Delete(StringView path) const override;
-        void ResolveVirtualPath(StringView virtualPath, String& outRealPath) const override;
-
-    private:
-
-    };
-
-    class ReadOnlyDirectoryVFSBackend : public DirectoryVFSBackend {
-    public:
-        explicit ReadOnlyDirectoryVFSBackend(StringView realPath)
-            : DirectoryVFSBackend(realPath)
-        { }
-
-        SR_NODISCARD bool WriteSupports() const override { return false; }
-    };
+    class IVFSBackend;
+    struct VFSEntry;
 
     struct VFSMount {
         IVFSBackend* pBackend = nullptr;
         int32_t priority = 0;
         bool permanent = false;
-    };
-
-    class AndroidVFSBackend : public IVFSBackend {
-    public:
-        SR_NODISCARD bool ReadSupports() const override { return true; }
-        SR_NODISCARD bool WriteSupports() const override { return false; }
-        SR_NODISCARD FSItemType GetType(StringView path) const override;
-        SR_NODISCARD File OpenFile(StringView path, FileMode mode) const override;
-
-        void Delete(StringView path) const override;
-        void Enumerate(StringView directory, const EnumerateCallback& callback, bool recursive) const override;
-        void ResolveVirtualPath(StringView virtualPath, String& outRealPath) const override;
-
     };
 
     /// @noCopyable @noMovable

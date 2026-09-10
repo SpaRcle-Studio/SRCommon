@@ -158,6 +158,48 @@ namespace SR_NETWORK_NS {
         return m_repo;
     }
 
+    bool GitHubDownloader::DownloadFile(StringView path, String& outData, StringView branch) const {
+        SR_TRACY_ZONE;
+
+        outData.clear();
+
+        if (path.empty()) {
+            SR_ERROR("GitHubDownloader::DownloadFile() : path is empty!");
+            return false;
+        }
+
+        if (branch.empty()) {
+            branch = GetDefaultBranch();
+            if (branch.empty()) {
+                SR_ERROR("GitHubDownloader::DownloadFile() : default branch is empty!");
+                return false;
+            }
+        }
+
+        SR_NETWORK_NS::HTTPRequest request {
+            .method = SR_NETWORK_NS::HTTPMethod::GET,
+            .url = "https://raw.githubusercontent.com/{}/{}/{}/{}"_format(m_repo.owner, m_repo.repo, branch, path),
+            .headers = {
+                { "Accept", "application/vnd.github.raw" },
+                { "User-Agent", SR_PLATFORM_NS::GetApplicationName() }
+            }
+        };
+
+        SR_NETWORK_NS::HTTPResponse response;
+        const bool success = m_pClient->Send(request, response, [&outData](std::span<const std::byte> data) {
+            outData.append(reinterpret_cast<const char*>(data.data()), static_cast<SizeType>(data.size()));
+            return true;
+        });
+
+        if (!success || response.statusCode != 200) {
+            SR_ERROR("GitHubDownloader::DownloadFile() : failed to download file \"{}\"! Status code: {}", path, response.statusCode);
+            outData.clear();
+            return false;
+        }
+
+        return true;
+    }
+
     const GitHubDownloader::Tree& GitHubDownloader::GetTree(StringView branch) const {
         SR_TRACY_ZONE;
 
