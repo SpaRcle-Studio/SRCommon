@@ -66,6 +66,12 @@ namespace SR_UTILS_NS {
             return;
         }
 
+        /// бекенд может быть примонтирован поверх другого и содержать лишь часть дерева,
+        /// поэтому отсутствие директории - штатная ситуация, а не ошибка
+        if (SR_PLATFORM_NS::GetPathType(gEnumerateResolvedPathBuffer) != FSItemType::Folder) {
+            return;
+        }
+
         static String fullPathBuffer;
         static String relativePathBuffer;
 

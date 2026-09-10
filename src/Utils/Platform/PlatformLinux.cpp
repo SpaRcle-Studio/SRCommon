@@ -505,6 +505,7 @@ namespace SR_PLATFORM_NS {
     Path GetApplicationDirectory() { return GetApplicationPath().GetFolder(); }
 
     std::optional<Path> GetApplicationCachePath() { return std::nullopt; }
+    std::optional<Path> GetApplicationDataPath() { return std::nullopt; }
 
     std::optional<Path> GetApplicationLogPath() { return std::nullopt; }
 

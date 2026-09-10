@@ -268,6 +268,12 @@ namespace SR_UTILS_NS::Platform {
     }
 
     std::optional<Path> GetApplicationCachePath() {
+        /// кеш лежит внутри ресурсов, как и на остальных платформах, а корень записи задаёт
+        /// внутреннее хранилище приложения (см. GetApplicationDataPath)
+        return std::nullopt;
+    }
+
+    std::optional<Path> GetApplicationDataPath() {
         return Path(pAndroidInstance->activity->internalDataPath);
     }
 
@@ -289,15 +295,7 @@ namespace SR_UTILS_NS::Platform {
     }
 
     bool IsAbsolutePath(const Path& path) {
-        if (path.ToStringView().starts_with(":assets:")) {
-            return true;
-        }
-
-        if (path.ToStringView().starts_with(pAndroidInstance->activity->internalDataPath)) {
-            return true;
-        }
-
-        return false;
+        return !path.empty() && path[0] == '/';
     }
 
     SR_MATH_NS::UVector2 GetScreenResolution() {

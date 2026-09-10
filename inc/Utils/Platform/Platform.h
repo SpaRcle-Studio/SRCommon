@@ -140,6 +140,10 @@ namespace SR_UTILS_NS::Platform {
     SR_COMMON_DLL_API extern bool IsAbsolutePath(const Path& path);
     SR_COMMON_DLL_API extern bool IsRunningUnderDebugger();
     SR_COMMON_DLL_API extern std::optional<Path> GetApplicationCachePath();
+    /// Папка, в которую приложение может писать. На платформах, где рядом с исполняемым файлом
+    /// писать нельзя (например, android), ресурсы монтируются только на чтение, а всё изменяемое
+    /// уходит в этот путь.
+    SR_COMMON_DLL_API extern std::optional<Path> GetApplicationDataPath();
     SR_COMMON_DLL_API extern std::optional<Path> GetApplicationLogPath();
 
     SR_COMMON_DLL_API extern void SetMousePos(const SR_MATH_NS::IVector2& pos);

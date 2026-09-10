@@ -9,16 +9,12 @@
 
 namespace SR_UTILS_NS {
     /// Бекенд для доступа к ресурсам, упакованным в apk (папка assets).
-    /// Реальные пути имеют вид ":assets:/Engine/Shaders/...", где ":assets:" - корень assets.
-    /// Платформа считает такие пути абсолютными (см. Platform::IsAbsolutePath под android).
+    /// Ресурсы упаковываются вместе с папкой "Resources", поэтому пути внутри assets полностью
+    /// совпадают с виртуальными путями движка и никакого особого префикса не требуется.
+    /// Бекенд монтируется в корень, так же как папка приложения на остальных платформах.
     class AndroidVFSBackend : public IVFSBackend {
     public:
-        static constexpr StringView ASSETS_PREFIX = ":assets:";
-
-    public:
-        AndroidVFSBackend()
-            : IVFSBackend(ASSETS_PREFIX)
-        { }
+        AndroidVFSBackend() = default;
 
     public:
         SR_NODISCARD bool ReadSupports() const override { return true; }

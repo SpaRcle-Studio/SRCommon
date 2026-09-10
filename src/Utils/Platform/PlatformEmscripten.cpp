@@ -327,6 +327,10 @@ namespace SR_PLATFORM_NS {
         return std::nullopt;
     }
 
+    std::optional<Path> GetApplicationDataPath() {
+        return std::nullopt;
+    }
+
 
     std::optional<Path> GetApplicationLogPath() {
         return std::nullopt;

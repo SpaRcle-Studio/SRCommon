@@ -183,14 +183,7 @@ namespace SR_UTILS_NS {
 #endif
 
     void AndroidVFSBackend::ResolveAssetPath(StringView virtualPath, String& outAssetPath) const {
-        /// путь может быть уже реальным (":assets:/Engine/...") либо виртуальным ("Resources/Engine/...")
-        if (virtualPath.starts_with(ASSETS_PREFIX)) {
-            virtualPath.remove_prefix(ASSETS_PREFIX.size());
-        }
-        else if (!GetVirtualPath().empty() && virtualPath.starts_with(GetVirtualPath())) {
-            virtualPath.remove_prefix(GetVirtualPath().size());
-        }
-
+        /// пути внутри assets совпадают с виртуальными, поэтому достаточно нормализовать слеши
         while (virtualPath.starts_with('/')) {
             virtualPath.remove_prefix(1);
         }
@@ -204,14 +197,7 @@ namespace SR_UTILS_NS {
     }
 
     void AndroidVFSBackend::ResolveVirtualPath(StringView virtualPath, String& outRealPath) const {
-        static String assetPathBuffer;
-        ResolveAssetPath(virtualPath, assetPathBuffer);
-
-        outRealPath = ASSETS_PREFIX;
-        if (!assetPathBuffer.empty()) {
-            outRealPath += '/';
-            outRealPath += assetPathBuffer;
-        }
+        ResolveAssetPath(virtualPath, outRealPath);
     }
 
     FSItemType AndroidVFSBackend::GetType(StringView path) const {
@@ -320,16 +306,6 @@ namespace SR_UTILS_NS {
                     continue;
                 }
 
-                String fullPath = ASSETS_PREFIX;
-                fullPath += '/';
-                fullPath += assetPath;
-
-                String relativePath = assetPath;
-                if (!GetVirtualPath().empty()) {
-                    relativePath.insert(0, GetVirtualPath());
-                    relativePath.insert(GetVirtualPath().size(), "/");
-                }
-
                 StringView extension = name;
                 if (auto&& dotPos = extension.find_last_of('.'); dotPos != StringView::npos) {
                     extension.remove_prefix(dotPos + 1);
@@ -341,8 +317,9 @@ namespace SR_UTILS_NS {
                 VFSEntry vfsEntry;
                 vfsEntry.name = name;
                 vfsEntry.extension = extension;
-                vfsEntry.fullPath = fullPath;
-                vfsEntry.relativePath = relativePath;
+                /// путь внутри assets и есть виртуальный путь, отдельного реального пути нет
+                vfsEntry.fullPath = assetPath;
+                vfsEntry.relativePath = assetPath;
                 vfsEntry.type = isFile ? FSItemType::File : FSItemType::Folder;
 
                 callback(vfsEntry);

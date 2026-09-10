@@ -252,8 +252,7 @@ namespace SR_UTILS_NS {
 
             return normalized.substr(0, pos);
         }
-
-        return normalized;
+        return Path();
     }
 
     Path Path::GetFolder() const {
