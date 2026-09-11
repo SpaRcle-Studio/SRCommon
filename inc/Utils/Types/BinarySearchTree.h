@@ -10,7 +10,7 @@
 
 namespace SR_HTYPES_NS {
     template<typename T> class BinarySearchTree : public SR_UTILS_NS::NonCopyable {
-        using Comparator = std::function<uint32_t(T* pA, T* pB)>;
+        using Comparator = SR_HTYPES_NS::Function<uint32_t(T* pA, T* pB)>;
     public:
         explicit BinarySearchTree(Comparator&& comparator)
             : m_comparator(std::move(comparator))

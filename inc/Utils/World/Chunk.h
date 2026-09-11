@@ -37,7 +37,7 @@ namespace SR_WORLD_NS {
         };
 
     public:
-        typedef std::function<Chunk*(SRChunkAllocArgs)> Allocator;
+        typedef SR_HTYPES_NS::Function<Chunk*(SRChunkAllocArgs)> Allocator;
 
     public:
         static void SetAllocator(const Allocator& allocator);

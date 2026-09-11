@@ -133,7 +133,7 @@ namespace SR_NETWORK_NS {
         return copySize;
     }
 
-    uint64_t GNSSocket::AsyncReceive(void* data, std::function<void(uint64_t bytesReceived)> callback) {
+    uint64_t GNSSocket::AsyncReceive(void* data, SR_HTYPES_NS::Function<void(uint64_t bytesReceived)> callback) {
         SRHalt("GNSSocket::AsyncReceive() : use the polling-based async receive instead!");
         return 0;
     }

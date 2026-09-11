@@ -7,6 +7,11 @@
 
 #include <Utils/Types/Pair.h>
 
+#if defined(SR_EMSCRIPTEN)
+    #include <unordered_map>
+    #include <unordered_set>
+#endif
+
 namespace SR_HTYPES_NS {
     template<typename Key, typename Value> class FlatHashMap {
     #if defined(SR_EMSCRIPTEN)

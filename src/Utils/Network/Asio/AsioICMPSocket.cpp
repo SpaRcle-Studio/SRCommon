@@ -127,7 +127,7 @@ namespace SR_NETWORK_NS {
         return false;
     }
 
-    uint64_t AsioICMPSocket::AsyncReceive(void* data, std::function<void(uint64_t bytesReceived)> callback) {
+    uint64_t AsioICMPSocket::AsyncReceive(void* data, SR_HTYPES_NS::Function<void(uint64_t bytesReceived)> callback) {
         // TODO: Change the size to a variable
         m_socket->async_receive(asio::buffer(data, 65536), [callback](const asio::error_code& error, uint64_t bytesReceived){
             callback(bytesReceived);

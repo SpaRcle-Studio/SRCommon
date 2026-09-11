@@ -9,7 +9,7 @@
 
 namespace SR_HTYPES_NS {
     template<typename T> class LinkedList : public SR_UTILS_NS::NonCopyable {
-        using Comparator = std::function<uint32_t(T* pA, T* pB)>;
+        using Comparator = SR_HTYPES_NS::Function<uint32_t(T* pA, T* pB)>;
     public:
         LinkedList() = default;
         ~LinkedList() override = default;

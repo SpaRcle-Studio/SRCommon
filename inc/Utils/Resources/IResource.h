@@ -48,7 +48,7 @@ namespace SR_UTILS_NS {
         ~IResource() override;
 
     public:
-        bool Execute(const std::function<bool()>& fun) const;
+        bool Execute(const SR_HTYPES_NS::Function<bool()>& fun) const;
 
         SR_NODISCARD virtual uint64_t GetFileHash() const;
         SR_NODISCARD virtual bool IsAllowedToRevive() const { return false; }

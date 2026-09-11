@@ -51,7 +51,7 @@ namespace SR_HTYPES_NS {
     };
 
     template<typename T> class NodeDictionary : public SR_UTILS_NS::NonCopyable {
-        using Comparator = std::function<uint32_t(T* pA, T* pB)>;
+        using Comparator = SR_HTYPES_NS::Function<uint32_t(T* pA, T* pB)>;
     public:
         void Insert(T* pKey, uint64_t keySize, T* pValue, uint64_t valueSize);
         SR_NODISCARD T* Search(T* pKey, uint64_t keySize) const;

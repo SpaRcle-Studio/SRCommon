@@ -12,7 +12,6 @@
 
 #include <Utils/Math/Vector3.h>
 #include <Utils/Types/SharedPtr.h>
-#include <Utils/Types/SafeVariable.h>
 
 namespace SR_UTILS_NS {
     class Transform3D;

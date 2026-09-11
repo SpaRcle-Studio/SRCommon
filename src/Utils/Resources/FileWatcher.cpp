@@ -5,6 +5,7 @@
 #include <Utils/Resources/FileWatcher.h>
 #include <Utils/Resources/ResourceManager.h>
 #include <Utils/Common/SubscriptionMessage.h>
+#include <Utils/Common/Bind.h>
 
 namespace SR_UTILS_NS {
     FileWatcher::FileWatcher(SR_UTILS_NS::Path path)
@@ -38,7 +39,7 @@ namespace SR_UTILS_NS {
 
         m_subscription = SR_UTILS_NS::ResourceManager::Instance().GetFileSystemWatcher()->Subscribe(
             FileSystemWatcher::MODIFIED_EVENT_ID,
-            std::bind(&FileWatcher::Signal, this, std::placeholders::_1)
+            SR_UTILS_NS::Bind(&FileWatcher::Signal, this, SR_UTILS_NS::Placeholders::_1)
         );
     }
 

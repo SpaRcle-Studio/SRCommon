@@ -264,7 +264,7 @@ namespace SR_UTILS_NS {
         return false;
     }
 
-    bool IResource::Execute(const std::function<bool()>& fun) const {
+    bool IResource::Execute(const SR_HTYPES_NS::Function<bool()>& fun) const {
         SR_TRACY_ZONE;
         return fun();
     }

@@ -30,7 +30,7 @@ namespace SR_NETWORK_NS {
         bool Close() override;
 
         uint64_t Receive(void* data, size_t size) override;
-        uint64_t AsyncReceive(void* data, std::function<void(uint64_t bytesReceived)> callback) override;
+        uint64_t AsyncReceive(void* data, SR_HTYPES_NS::Function<void(uint64_t bytesReceived)> callback) override;
 
         SR_NODISCARD bool IsOpen() const override;
 

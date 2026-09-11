@@ -16,7 +16,7 @@ namespace SR_HTYPES_NS {
         SR_NODISCARD bool Empty() const noexcept;
         SR_NODISCARD bool Contains(const T& value) const noexcept;
 
-        void Flush(const std::function<void(T&)>& callBack);
+        void Flush(const SR_HTYPES_NS::Function<void(T&)>& callBack);
         void Push(const T& value) noexcept;
 
         SR_NODISCARD std::shared_lock<std::shared_mutex> ReadLock() const { return std::shared_lock<std::shared_mutex>(m_accessMutex); }
@@ -52,7 +52,7 @@ namespace SR_HTYPES_NS {
         return Size() == 0;
     }
 
-    template<typename T> void SafeQueue<T>::Flush(const std::function<void(T&)>& callBack) {
+    template<typename T> void SafeQueue<T>::Flush(const SR_HTYPES_NS::Function<void(T&)>& callBack) {
         std::lock(m_accessMutex, m_dataMutex);
 
         std::lock_guard lk1(m_accessMutex, std::adopt_lock);

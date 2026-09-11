@@ -14,7 +14,7 @@ namespace SR_NETWORK_NS {
         friend class Context;
         using Super = SR_HTYPES_NS::SharedPtr<Acceptor>;
     public:
-        using Callback = std::function<void(SR_HTYPES_NS::SharedPtr<Socket>)>;
+        using Callback = SR_HTYPES_NS::Function<void(SR_HTYPES_NS::SharedPtr<Socket>)>;
 
     protected:
         explicit Acceptor(SocketType type, Context::Ptr pContext, std::string address, uint16_t port)

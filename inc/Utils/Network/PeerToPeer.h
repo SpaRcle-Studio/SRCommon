@@ -14,7 +14,7 @@ namespace SR_NETWORK_NS {
     class PeerToPeer : public SR_HTYPES_NS::SharedPtr<PeerToPeer> {
         friend class Context;
         using Super = SR_HTYPES_NS::SharedPtr<PeerToPeer>;
-        using Callback = std::function<void(const PeerToPeer::Ptr& pP2P, const Socket::Ptr&)>;
+        using Callback = SR_HTYPES_NS::Function<void(const PeerToPeer::Ptr& pP2P, const Socket::Ptr&)>;
     private:
         PeerToPeer(SocketType type, Context::Ptr pContext, StringView address, uint16_t port);
 
