@@ -7,7 +7,7 @@
 #include <Utils/Resources/ResourceManager.h>
 
 namespace SR_UTILS_NS {
-    IResource::Ptr ResourceType::Find(ResourceId id, const IResourceVariant* pVariant) const {
+    IResource::Ptr ResourceType::Find(StringAtom id, const IResourceVariant* pVariant) const {
         if (auto&& pIt = m_storage.find(id); pIt != m_storage.end()) {
             return pIt->second->Find(pVariant);
         }
@@ -15,7 +15,7 @@ namespace SR_UTILS_NS {
         return nullptr;
     }
 
-    bool ResourceType::IsLast(ResourceId id, const IResourceVariant* pVariant) {
+    bool ResourceType::IsLast(StringAtom id, const IResourceVariant* pVariant) {
         if (auto&& pIt = m_storage.find(id); pIt == m_storage.end()) {
             return true;
         }

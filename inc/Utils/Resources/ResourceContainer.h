@@ -20,15 +20,15 @@ namespace SR_UTILS_NS {
         void AddDependency(const ResourceContainer::Ptr& pContainer);
         void RemoveDependency(const ResourceContainer::Ptr& pContainer);
 
-        SR_NODISCARD const std::unordered_set<ResourceContainer::Ptr>& GetContainerParents() const { return m_parents; }
+        SR_NODISCARD const SR_HTYPES_NS::FlatHashSet<ResourceContainer::Ptr>& GetContainerParents() const { return m_parents; }
 
     protected:
         void UpdateResources(int32_t depth = 0);
         virtual void OnResourceUpdated(ResourceContainer* pContainer, int32_t depth);
 
     private:
-        std::unordered_set<ResourceContainer::Ptr> m_parents;
-        std::unordered_set<ResourceContainer::Ptr> m_dependencies;
+        SR_HTYPES_NS::FlatHashSet<ResourceContainer::Ptr> m_parents;
+        SR_HTYPES_NS::FlatHashSet<ResourceContainer::Ptr> m_dependencies;
 
     };
 }

@@ -90,10 +90,7 @@ namespace SR_HTYPES_NS {
     }
 
     template<typename T> T Marshal::Read() {
-        if constexpr (std::is_same_v<T, std::any>) {
-            return MarshalUtils::LoadAny<std::any>(*this);
-        }
-        else if constexpr (std::is_same_v<T, UnicodeString>) {
+        if constexpr (std::is_same_v<T, UnicodeString>) {
             return MarshalUtils::LoadUnicodeString(*this);
         }
         else if constexpr (IsStringV<T>) {
@@ -108,10 +105,7 @@ namespace SR_HTYPES_NS {
     }
 
     template<typename T> void Marshal::Write(const T &value) {
-        if constexpr (std::is_same_v<T, std::any>) {
-            MarshalUtils::SaveAny<std::any>(*this, value);
-        }
-        else if constexpr (std::is_same_v<T, StringAtom>) {
+        if constexpr (std::is_same_v<T, StringAtom>) {
             MarshalUtils::SaveShortString(*this, value.ToStringRef());
         }
         else if constexpr (IsStringV<T>) {

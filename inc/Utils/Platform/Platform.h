@@ -166,6 +166,10 @@ namespace SR_UTILS_NS::Platform {
     /// True while the page focus is inside an editable element of the surrounding site
     /// (<input>, <textarea>, contenteditable), where the engine must not consume keyboard input.
     SR_COMMON_DLL_API extern bool IsWebEditableElementFocused();
+    /// В браузере нет командной строки, поэтому её роль играет query-строка адреса:
+    /// `index.html?headless&run-scene=Scenes/Test.scene`. Возвращает уже раскодированные
+    /// токены в том же виде, в котором они пришли бы в argv.
+    SR_COMMON_DLL_API extern std::vector<std::string> GetWebCommandLineArgs();
 #endif
 
     extern std::atomic<std::optional<MouseState>> g_overriddenMouseState;

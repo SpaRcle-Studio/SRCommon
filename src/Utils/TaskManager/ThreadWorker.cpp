@@ -10,7 +10,6 @@
 #include <Utils/Platform/Platform.h>
 #include <Utils/Types/Time.h>
 #include <Utils/Types/Thread.h>
-#include <Utils/Types/DataStorage.h>
 #include <Utils/Common/Features.h>
 #include <Utils/TypeTraits/Factory.h>
 #include <Utils/TaskManager/ThreadWorkerSettings.h>
@@ -90,10 +89,6 @@ namespace SR_UTILS_NS {
     void ThreadWorkerStateBase::AddSkipCondition(SR_UTILS_NS::StringAtom name, ThreadWorkerState state) {
         SRAssert2(m_skipConditions.count(name) == 0, "ThreadWorkerStateBase::AddSkipCondition() : skip condition \"{}\" already exists!", name);
         m_skipConditions[name] = state;
-    }
-
-    SR_HTYPES_NS::DataStorage& ThreadWorkerStateBase::GetContext() {
-        return GetThreadWorker()->GetThreadsWorker()->GetContext();
     }
 
     ThreadsWorker* ThreadWorkerStateBase::GetThreadsWorker() const {
@@ -403,13 +398,6 @@ namespace SR_UTILS_NS {
         }
 
         return false;
-    }
-
-    SR_HTYPES_NS::DataStorage& ThreadsWorker::GetContext() {
-        if (!m_context) {
-            m_context = new SR_HTYPES_NS::DataStorage();
-        }
-        return *m_context;
     }
 
     void ThreadsWorker::Execute() {

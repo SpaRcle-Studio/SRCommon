@@ -31,8 +31,6 @@ namespace SR_UTILS_NS {
         void SetAllowEmptyElementsInArray(const bool value) noexcept { m_isAllowEmptyElementsInArray = value; }
         void SetWriteVersion(const bool value) noexcept { m_isNeedWriteVersion = value; }
 
-        void WriteAny(const std::any& value, const SerializationId& name);
-
         virtual void WriteString(std::string_view value, const SerializationId& name) = 0;
         virtual void WriteString(std::u32string_view value, const SerializationId& name) = 0;
         virtual void WriteBool(bool value, const SerializationId& name) = 0;

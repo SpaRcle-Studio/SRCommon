@@ -576,21 +576,12 @@ namespace SR_WORLD_NS {
         }
     }
 
-    SR_HTYPES_NS::DataStorage &Scene::GetDataStorage() {
-        return m_dataStorage;
-    }
-
-    const SR_HTYPES_NS::DataStorage &Scene::GetDataStorage() const {
-        return m_dataStorage;
-    }
-
     const SR_HTYPES_NS::SharedPtr<SR_UTILS_NS::EntityController>& Scene::GetEntityController() const {
         return m_pEntityController;
     }
 
     bool Scene::IsEditorMode() const {
-        static const StringAtom editorModeKey = "EditorMode";
-        return GetDataStorage().GetValueDef<bool>(editorModeKey, false);
+        return m_isEditorMode;
     }
 
     Scene::GameObjectPtr Scene::GetMainCamera() const {
@@ -618,5 +609,15 @@ namespace SR_WORLD_NS {
             return true;
         }
         return false;
+    }
+
+    ISceneModule* Scene::GetModule(StringView name) const {
+        SR_TRACY_ZONE;
+        auto&& pIt = m_modules.find(name);
+        return pIt != m_modules.end() ? pIt->second : nullptr;
+    }
+
+    void Scene::SetModule(StringView name, ISceneModule *pModule) {
+        m_modules[name] = pModule;
     }
 }

@@ -1,9 +1,5 @@
 #include <Utils/stdInclude.h>
 
-#include "../libs/cssparser/cssparser/CSSParser.cpp"
-#include "../libs/cssparser/cssparser/CSSProperties.cpp"
-#include "../libs/cssparser/cssparser/CSSUtils.cpp"
-
 #ifdef SR_COMMON_EMBED_RESOURCES
     #include <EmbedResources.cxx>
 #endif
@@ -57,7 +53,6 @@
 #endif
 
 #include "../src/Utils/FileSystem/MappedFile.cpp"
-
 #include "../src/Utils/Profile/TracyContext.cpp"
 
 #include "../libs/xxHash/xxhash.c"

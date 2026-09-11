@@ -5,7 +5,6 @@
 #include <Utils/Resources/Yaml.h>
 #include <Utils/FileSystem/FileSystem.h>
 #include <Utils/FileSystem/VFS.h>
-#include <Utils/Debug.h>
 #include <Utils/Profile/TracyContext.h>
 
 #include <rapidyaml/src/ryml.hpp>

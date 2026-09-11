@@ -8,11 +8,11 @@
 #include <Utils/ECS/IComponentable.h>
 
 #include <Utils/Types/StringAtom.h>
-#include <Utils/Types/DataStorage.h>
 #include <Utils/Types/Vector.h>
 
 #include <Utils/World/SceneLogicType.h>
 #include <Utils/World/CameraData.h>
+#include <Utils/World/ISceneModule.h>
 
 namespace SR_UTILS_NS {
     class SceneObject;
@@ -66,17 +66,17 @@ namespace SR_WORLD_NS {
         bool SetDirty(bool dirty) override;
 
         void SetPath(const Path& path);
+        void SetEditorMode(bool isEditorMode) { m_isEditorMode = isEditorMode; }
 
     public:
         SR_NODISCARD std::string GetName() const;
         SR_NODISCARD const Path& GetPath() const { return m_path; }
         SR_NODISCARD Path GetAbsPath() const;
         SR_NODISCARD bool IsPrefab() const noexcept override;
-        SR_NODISCARD SR_HTYPES_NS::DataStorage& GetDataStorage();
-        SR_NODISCARD const SR_HTYPES_NS::DataStorage& GetDataStorage() const;
         SR_NODISCARD SR_INLINE SceneUpdater* GetSceneUpdater() const { return m_sceneUpdater; }
         SR_NODISCARD SceneLogicPtr GetLogicBase() const;
         SR_NODISCARD const SR_HTYPES_NS::SharedPtr<SR_UTILS_NS::EntityController>& GetEntityController() const;
+        SR_NODISCARD ISceneModule* GetModule(StringView name) const;
 
         /// Запущена ли сцена
         SR_NODISCARD virtual bool IsPlayingMode() const { return false; }
@@ -93,6 +93,7 @@ namespace SR_WORLD_NS {
         SceneObjectPtr Find(SR_UTILS_NS::StringAtom name);
 
         void RegisterSceneObject(const SceneObjectPtr& pSO);
+        void SetModule(StringView name, ISceneModule* pModule);
 
         virtual SceneObjectPtr InstanceFromFile(const SR_UTILS_NS::Path& path);
         virtual SceneObjectPtr Instance(const Types::RawMesh* rawMesh);
@@ -128,13 +129,12 @@ namespace SR_WORLD_NS {
 
         float_t m_speed = 1.f;
 
+        bool m_isEditorMode = false;
         bool m_isInitialized = false;
         bool m_isPreDestroyed = false;
         bool m_isDestroyed = false;
 
         std::atomic<bool> m_isHierarchyChanged = false;
-
-        SR_HTYPES_NS::DataStorage m_dataStorage;
 
         std::list<uint64_t> m_freeObjIndices;
         std::list<SceneObjectPtr> m_newQueue;
@@ -148,6 +148,7 @@ namespace SR_WORLD_NS {
         SceneObjects m_sceneObjects;
 
         SR_HTYPES_NS::SharedPtr<SR_UTILS_NS::EntityController> m_pEntityController;
+        Map<StringAtom, ISceneModule*> m_modules;
 
     private:
         /// @property

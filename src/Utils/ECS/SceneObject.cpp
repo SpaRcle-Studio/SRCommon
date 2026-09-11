@@ -12,6 +12,8 @@
 #include <Utils/World/Scene.h>
 #include <Utils/FileSystem/PathDataAccessor.h>
 #include <Utils/Serialization/SRASerialization.h>
+#include <Utils/Profile/TracyContext.h>
+#include <Utils/Common/HashManager.h>
 
 #include <Codegen/SceneObject.generated.hpp>
 

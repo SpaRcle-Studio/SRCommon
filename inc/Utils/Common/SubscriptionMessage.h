@@ -21,8 +21,7 @@ namespace SR_UTILS_NS {
         void SetString(StringAtom id, const std::string& value);
         void SetStringAtom(StringAtom id, StringAtom value);
         void SetPath(StringAtom id, const SR_UTILS_NS::Path& value);
-        void SetAny(StringAtom id, const std::any& value);
-        void SetAny(StringAtom id, std::any&& value);
+        void SetPointer(StringAtom id, void* value);
 
         void Reset();
 
@@ -31,8 +30,8 @@ namespace SR_UTILS_NS {
         SR_NODISCARD std::string GetString(StringAtom id, const std::optional<std::string>& def = std::nullopt) const;
         SR_NODISCARD StringAtom GetStringAtom(StringAtom id, const std::optional<StringAtom>& def = std::nullopt) const;
         SR_NODISCARD SR_UTILS_NS::Path GetPath(StringAtom id, const std::optional<SR_UTILS_NS::Path>& def = std::nullopt) const;
+        SR_NODISCARD void* GetPointer(StringAtom id, const std::optional<void*>& def = std::nullopt) const;
         SR_NODISCARD const SR_UTILS_NS::Path& GetPathRef(StringAtom id) const;
-        SR_NODISCARD const std::any& GetAny(StringAtom id) const;
 
     private:
         static void PrintError(const char* format, StringAtom id);
@@ -83,11 +82,11 @@ namespace SR_UTILS_NS {
         struct Data {
             StringAtom id;
 
+            void* pointerValue = nullptr;
             bool boolValue = false;
             uint64_t intValue = 0;
             StringAtom atomValue;
             std::optional<SR_UTILS_NS::Path> pathValue;
-            std::optional<std::any> anyValue;
             std::optional<std::string> strValue;
 
             template<typename T> SR_NODISCARD T& GetValueRef() {
@@ -112,11 +111,8 @@ namespace SR_UTILS_NS {
                     }
                     return *pathValue;
                 }
-                else if constexpr (std::is_same_v<T, std::any>) {
-                    if (!anyValue.has_value()) {
-                        anyValue.emplace();
-                    }
-                    return *anyValue;
+                else if constexpr (std::is_same_v<T, void*>) {
+                    return pointerValue;
                 }
                 else {
                     SRHalt("Unsupported type!");

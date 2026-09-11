@@ -15,6 +15,8 @@
 #include <emscripten/html5.h>
 #include <filesystem>
 
+#include "../Network/HTTP/EmscriptenHTTPClient.cpp"
+
 #if defined(__EMSCRIPTEN_PTHREADS__)
     #include <pthread.h>
 #endif
@@ -71,6 +73,69 @@ EM_JS(void, SRWebSetCursorVisible, (int isVisible), {
         pElement.style.cursor = isVisible ? "" : "none";
     }
 });
+
+/*
+ * В браузере нет argv, его роль играет query-строка адреса. Разбор делается на стороне JS,
+ * потому что URLSearchParams декодирует процентные последовательности корректнее ручного парсера.
+ *
+ * Наружу отдаётся готовый список токенов (в том же виде, в котором они пришли бы в argv),
+ * склеенный через ASCII Unit Separator (0x1F): в осмысленных значениях этот символ не
+ * встречается, поэтому его можно использовать как разделитель, не экранируя данные.
+ *
+ * Забирается результат в два прохода: первый разбирает адрес и сообщает размер, второй копирует
+ * строку в память, выделенную уже на стороне C++. Так не нужно тянуть malloc/free через
+ * границу JS.
+ */
+EM_JS(int, SRWebPrepareCommandLineArgs, (), {
+    var tokens = [];
+
+    try {
+        var params = new URLSearchParams((globalThis.location && globalThis.location.search) || "");
+
+        params.forEach(function(value, key) {
+            if (!key) {
+                return;
+            }
+
+            /// Позволяем писать как `?headless`, так и `?--headless`.
+            var name = key.charAt(0) === "-" ? key : "--" + key;
+
+            /// Путь до проекта в командной строке передаётся позиционным аргументом,
+            /// поэтому `?project=Game.srproject` разворачивается без имени опции.
+            if (name === "--project") {
+                if (value) {
+                    tokens.push(value);
+                }
+                return;
+            }
+
+            tokens.push(name);
+
+            /// `?headless` даёт пустое значение - это флаг, значения у него нет.
+            if (value) {
+                tokens.push(value);
+            }
+        });
+    } catch (e) {
+        console.error("SRWebPrepareCommandLineArgs() : failed to parse the query string: " + e);
+        tokens = [];
+    }
+
+    globalThis.__srWebArgs = tokens.join(String.fromCharCode(0x1F));
+
+    return lengthBytesUTF8(globalThis.__srWebArgs);
+});
+
+EM_JS(void, SRWebTakeCommandLineArgs, (char* pOut, int size), {
+    var args = globalThis.__srWebArgs || "";
+    globalThis.__srWebArgs = null;
+
+    if (size > 0) {
+        stringToUTF8(args, pOut, size + 1);
+    }
+});
+
+EM_JS_DEPS(srengine_platform, "$lengthBytesUTF8,$stringToUTF8");
 
 namespace SR_PLATFORM_NS {
     struct EmscriptenMainLoopData {
@@ -172,6 +237,37 @@ namespace SR_PLATFORM_NS {
 
     bool IsWebEditableElementFocused() {
         return SRWebIsEditableFocused() != 0;
+    }
+
+    std::vector<std::string> GetWebCommandLineArgs() {
+        const int size = SRWebPrepareCommandLineArgs();
+        if (size <= 0) {
+            return {};
+        }
+
+        std::string tokens(static_cast<size_t>(size) + 1, '\0');
+        SRWebTakeCommandLineArgs(tokens.data(), size);
+        tokens.resize(static_cast<size_t>(size));
+
+        std::vector<std::string> args;
+
+        constexpr char separator = static_cast<char>(0x1F);
+
+        size_t tokenStart = 0;
+
+        while (tokenStart <= tokens.size()) {
+            size_t tokenEnd = tokens.find(separator, tokenStart);
+
+            if (tokenEnd == std::string::npos) {
+                tokenEnd = tokens.size();
+            }
+
+            args.emplace_back(tokens, tokenStart, tokenEnd - tokenStart);
+
+            tokenStart = tokenEnd + 1;
+        }
+
+        return args;
     }
 
     void MainLoopProxy() {

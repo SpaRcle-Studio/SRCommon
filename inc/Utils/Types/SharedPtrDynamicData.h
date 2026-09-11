@@ -8,6 +8,8 @@
 #include <Utils/Common/AssertFwd.h>
 #include <Utils/Common/TypeInfo.h>
 #include <Utils/TypeTraits/TypeTraits.h>
+#include <Utils/Types/FlatHashMap.h>
+
 /// SRClass must be a complete type here: the class getter installed by InitBasic<T>() is the single
 /// source of truth about the SRClass part of the object at runtime, and it must be installed the same
 /// way in every translation unit. A forward declaration used to make it depend on the include order.
@@ -64,11 +66,11 @@ namespace SR_HTYPES_NS {
         SR_MAYBE_UNUSED static bool CheckMemoryLeaks();
 
     public:
-        SR_NODISCARD const std::unordered_set<SharedPtrDynamicData*>& GetData() const;
+        SR_NODISCARD const SR_HTYPES_NS::FlatHashSet<SharedPtrDynamicData*>& GetData() const;
 
     private:
         std::atomic<uint64_t> m_count = 0;
-        std::unordered_set<SharedPtrDynamicData*> m_data;
+        SR_HTYPES_NS::FlatHashSet<SharedPtrDynamicData*> m_data;
 
     };
 

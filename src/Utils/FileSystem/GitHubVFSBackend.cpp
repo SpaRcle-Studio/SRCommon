@@ -5,6 +5,7 @@
 #include <Utils/FileSystem/GitHubVFSBackend.h>
 #include <Utils/FileSystem/File.h>
 #include <Utils/Network/GitHubDownloader.h>
+#include <Utils/Profile/TracyContext.h>
 
 namespace SR_UTILS_NS {
     GitHubVFSBackend::GitHubVFSBackend(StringView url, StringView branch)

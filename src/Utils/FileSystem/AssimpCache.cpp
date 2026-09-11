@@ -465,7 +465,8 @@ namespace SR_UTILS_NS {
             return std::move(nodeMap);
         }
 
-        std::stack<uint64_t> stack;
+        Vector<uint64_t> stack;
+        stack.reserve(128);
         aiNode* pCurrentNode = pScene->mRootNode;
 
         uint64_t index = 0;
@@ -479,14 +480,14 @@ namespace SR_UTILS_NS {
             pCurrentNode = pCurrentNode->mChildren[childId];
             nodeMap.second[pCurrentNode] = ++index;
             nodeMap.first.emplace_back(pCurrentNode);
-            stack.push(childId);
+            stack.emplace_back(childId);
             goto retry;
         }
 
         if (!stack.empty()) {
             pCurrentNode = pCurrentNode->mParent;
-            childId = stack.top() + 1;
-            stack.pop();
+            childId = stack.back() + 1;
+            stack.pop_back();
             goto retry;
         }
 

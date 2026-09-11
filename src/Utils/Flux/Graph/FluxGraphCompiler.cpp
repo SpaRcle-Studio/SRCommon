@@ -10,6 +10,7 @@
 #include <Utils/Flux/IR/FluxProgramOptimizer.h>
 #include <Utils/Memory/Allocator.h>
 #include <Utils/Memory/MemoryLiterals.h>
+#include <Utils/Profile/TracyContext.h>
 
 namespace SR_FLUX_NS {
     FluxGraphCompiler::FluxGraphCompiler(const FluxGraph& graph)

@@ -4,8 +4,6 @@
 
 #include <Utils/Types/Thread.h>
 #include <Utils/Platform/Platform.h>
-#include <Utils/Types/DataStorage.h>
-#include <Utils/Common/StringUtils.h>
 #include <Utils/Profile/TracyContext.h>
 
 namespace SR_HTYPES_NS {
@@ -21,10 +19,6 @@ namespace SR_HTYPES_NS {
         if (Joinable()) {
             SRHalt("Thread::~Thread() : thread is joinable! Thread: {}", m_id);
         }
-        if (m_context) {
-            delete m_context;
-            m_context = nullptr;
-        }
     }
 
     Thread::Thread(Thread::ThreadId id)
@@ -33,7 +27,6 @@ namespace SR_HTYPES_NS {
     #ifdef SR_THREADS_ALLOWED
         GetImpl().thread = std::thread();
     #endif
-        m_context = new DataStorage();
     }
 
     Thread::Thread()
@@ -43,7 +36,6 @@ namespace SR_HTYPES_NS {
     #else
     {
         GetImpl().isRan = false;
-        m_context = new DataStorage();
     }
     #endif
 
@@ -214,10 +206,6 @@ namespace SR_HTYPES_NS {
     #else
         return true;
     #endif
-    }
-
-    DataStorage* Thread::GetContext() {
-        return m_context;
     }
 
     Thread::ThreadId Thread::EmptyThreadId() {

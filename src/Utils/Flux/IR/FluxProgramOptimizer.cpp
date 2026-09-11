@@ -5,6 +5,7 @@
 #include <Utils/Flux/IR/FluxProgramOptimizer.h>
 #include <Utils/Flux/IR/FluxProgram.h>
 #include <Utils/Reflection/Method.h>
+#include <Utils/Profile/TracyContext.h>
 
 namespace SR_FLUX_NS {
     namespace {

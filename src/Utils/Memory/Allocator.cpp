@@ -3,6 +3,7 @@
 //
 
 #include <Utils/Memory/Allocator.h>
+#include <Utils/Profile/TracyContext.h>
 
 namespace SR_UTILS_NS {
     void* DefaultAllocator::Allocate(SR_UTILS_NS::SizeType size, SR_UTILS_NS::SizeType alignment) {

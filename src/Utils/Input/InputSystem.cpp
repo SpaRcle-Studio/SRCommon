@@ -159,7 +159,7 @@ namespace SR_UTILS_NS {
 
         for (auto& event : m_textEvents) {
             SubscriptionMessage msg;
-            msg.SetAny(INPUT_TEXT_EVENT_DATA_ID, event);
+            msg.SetPointer(INPUT_TEXT_EVENT_DATA_ID, &event);
             Broadcast(INPUT_TEXT_EVENT_ID, msg);
         }
         m_textEvents.clear();

@@ -11,7 +11,6 @@
 #include <Utils/ECS/Transform.h>
 
 #include <Utils/Math/Vector3.h>
-#include <Utils/Types/SafePointer.h>
 #include <Utils/Types/SharedPtr.h>
 #include <Utils/Types/SafeVariable.h>
 

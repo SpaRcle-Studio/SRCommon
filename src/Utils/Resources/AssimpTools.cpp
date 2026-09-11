@@ -3,6 +3,7 @@
 //
 
 #include <Utils/Resources/AssimpTools.h>
+#include <Utils/Profile/TracyContext.h>
 
 #ifdef SR_UTILS_ASSIMP
 

@@ -55,8 +55,6 @@ namespace SR_UTILS_NS {
         virtual uint64_t BeginArray(const SerializationId& id) = 0;
         virtual void EndArray() = 0;
 
-        void ReadAny(std::any& value, const SerializationId& name);
-
         virtual void ReadString(std::string& value, const SerializationId& name) = 0;
         virtual void ReadString(String& value, const SerializationId& name) = 0;
         virtual void ReadString(StringAtom& value, const SerializationId& name) = 0;

@@ -111,7 +111,6 @@ namespace SR_UTILS_NS {
         SR_NODISCARD ThreadWorkerState GetState(SR_UTILS_NS::StringAtom name) const;
         SR_NODISCARD const ThreadWorkerStateBase::Ptr& GetWorkerState(SR_UTILS_NS::StringAtom name) const;
         SR_NODISCARD bool IsActive() const { return m_isActive; }
-        SR_NODISCARD SR_HTYPES_NS::DataStorage& GetContext();
         SR_NODISCARD bool IsAlive() const;
 
         void AddThread(ThreadWorker::Ptr pThread);
@@ -129,7 +128,6 @@ namespace SR_UTILS_NS {
         Vector<ThreadWorker::Ptr> m_threadWorkers;
         bool m_isActive = false;
         std::atomic<bool> m_isAlive = true;
-        RawPointerHolder<SR_HTYPES_NS::DataStorage> m_context;
         std::recursive_mutex m_mutex;
 
     };

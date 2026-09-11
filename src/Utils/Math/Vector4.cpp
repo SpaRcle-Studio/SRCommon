@@ -3,8 +3,8 @@
 //
 
 #include <Utils/Math/Vector4.h>
-
 #include <Utils/Common/StringAtomLiterals.h>
+#include <Utils/Profile/TracyContext.h>
 
 namespace SR_MATH_NS {
     uint64_t FNV1a64(StringView str) {

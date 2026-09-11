@@ -6,7 +6,6 @@
 #define SR_ENGINE_COMMON_RAW_MESH_H
 
 #include <Utils/Resources/IResource.h>
-#include <Utils/Types/SafePointer.h>
 #include <Utils/Types/MeshSceneStructure.h>
 #include <Utils/FileSystem/File.h>
 #include <Utils/Types/Map.h>

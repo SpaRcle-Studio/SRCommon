@@ -4,6 +4,7 @@
 
 #include <Utils/FileSystem/IVFSBackend.h>
 #include <Utils/Platform/Platform.h>
+#include <Utils/Profile/TracyContext.h>
 
 namespace SR_UTILS_NS {
     bool IVFSBackend::IsApplicable(StringView path) const {

@@ -7,7 +7,6 @@
 #include <Utils/Flux/Graph/FluxGraphCompiler.h>
 #include <Utils/Flux/IR/FluxProgram.h>
 #include <Utils/Flux/Graph/FluxCompileUtils.h>
-#include <Utils/Common/Singleton.h>
 #include <Utils/Memory/Allocator.h>
 #include <Utils/Memory/MemoryLiterals.h>
 #include <Utils/Reflection/Method.h>

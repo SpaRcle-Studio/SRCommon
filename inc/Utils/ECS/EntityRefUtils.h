@@ -7,7 +7,6 @@
 
 #include <Utils/Common/Enumerations.h>
 #include <Utils/Serialization/Serializable.h>
-#include <Utils/Types/SafePointer.h>
 #include <Utils/Types/SharedPtr.h>
 
 namespace SR_WORLD_NS {

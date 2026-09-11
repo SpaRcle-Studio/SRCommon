@@ -40,7 +40,7 @@ namespace SR_HTYPES_NS {
         --m_count;
     }
 
-    const std::unordered_set<SharedPtrDynamicData *> &SharedPtrDynamicDataCounter::GetData() const {
+    const SR_HTYPES_NS::FlatHashSet<SharedPtrDynamicData*> &SharedPtrDynamicDataCounter::GetData() const {
         return m_data;
     }
 

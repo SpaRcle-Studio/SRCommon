@@ -33,8 +33,6 @@
     #include <initializer_list>
     #include <codecvt>
     #include <cstddef>
-    #include <unordered_set>
-    #include <stack>
     #include <cctype>
     #include <charconv>
     #include <locale>
@@ -42,7 +40,6 @@
     #include <variant>
     #include <memory>
     #include <fstream>
-    #include <ostream>
     #include <queue>
     #include <mutex>
     #include <cassert>
@@ -50,11 +47,8 @@
     #include <ranges>
     #include <atomic>
     #include <utility>
-    #include <functional>
     #include <exception>
-    #include <unordered_map>
     #include <algorithm>
-    #include <any>
     #include <thread>
     #include <sstream>
     #include <list>

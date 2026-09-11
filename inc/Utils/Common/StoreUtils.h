@@ -21,7 +21,8 @@ namespace SR_UTILS_NS::StoreUtils {
             Float,
             Int,
             Bool,
-            String
+            String,
+            Pointer
         };
     private:
         union Value {
@@ -48,6 +49,9 @@ namespace SR_UTILS_NS::StoreUtils {
                     value.s = new std::string();
                 }
                 return *value.s;
+            }
+            else if constexpr (std::is_same_v<Type, void*>) {
+                return reinterpret_cast<void*&>(value.i);
             }
             else {
                 static_assert(SR_UTILS_NS::AlwaysFalseV<T>, "Unsupported type!");
@@ -162,6 +166,15 @@ namespace SR_UTILS_NS::StoreUtils {
             Storage::Instance().Set(storeType, Storage::ValueType::String, key, value);
         }
 
+        /// ================= Pointer =================
+
+        SR_NODISCARD static bool HasPointer(SR_UTILS_NS::StringAtom key) { return Has(key, Storage::ValueType::Pointer); }
+        SR_NODISCARD static void* GetPointer(SR_UTILS_NS::StringAtom key, const std::optional<void*>& def = std::nullopt) {
+            return Storage::Instance().Get<void*>(storeType, Storage::ValueType::Pointer, key, def);
+        }
+        static void SetPointer(SR_UTILS_NS::StringAtom key, void* value) {
+            Storage::Instance().Set(storeType, Storage::ValueType::Pointer, key, value);
+        }
     };
 
     using Temp = Template<Storage::StorageType::Temp>;

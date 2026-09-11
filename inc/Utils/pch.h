@@ -19,10 +19,10 @@
 #include <Utils/Common/AssertFwd.h>
 #include <Utils/Common/Enumerations.h>
 #include <Utils/Common/Hashes.h>
+#include <Utils/Common/Singleton.h>
 
 #include <Utils/Types/StringAtom.h>
 #include <Utils/Types/SharedPtr.h>
-#include <Utils/Types/SafePointer.h>
 #include <Utils/Types/FlatHashMap.h>
 #include <Utils/Types/Function.h>
 #include <Utils/Types/String.h>

@@ -1,4 +1,4 @@
-// 
+//
 // Created by innerviewer on 2025-04-16.
 //
 
@@ -12,6 +12,31 @@
 
 namespace SR_UTILS_NS {
     void CLIManager::Init(int argc, char** argv) {
+        SR_TRACY_ZONE;
+
+        std::vector<std::string> args;
+        args.reserve(static_cast<size_t>(argc > 1 ? argc - 1 : 0));
+
+        /// argv[0] - путь до исполняемого файла, аргументом он не является.
+        for (int i = 1; i < argc; ++i) {
+            args.emplace_back(argv[i]);
+        }
+
+    #ifdef SR_EMSCRIPTEN
+        /*
+         * В браузере нет командной строки, её роль играет query-строка адреса:
+         * `index.html?headless&run-scene=Scenes/Test.scene`.
+         * Нативные аргументы при этом сохраняются - main() может передать их,
+         * например, из --proxy-to-worker или из тестового окружения.
+         */
+        auto&& webArgs = SR_PLATFORM_NS::GetWebCommandLineArgs();
+        args.insert(args.end(), webArgs.begin(), webArgs.end());
+    #endif
+
+        Init(args);
+    }
+
+    void CLIManager::Init(const std::vector<std::string>& args) {
         SR_TRACY_ZONE;
 
         auto&& rawOptions = SR_UTILS_NS::EnumReflector::GetNames<CLIOptions>();
@@ -37,14 +62,16 @@ namespace SR_UTILS_NS {
         }
         SR_PLATFORM_NS::WriteConsoleLog(availableOptions);
 
-        for (int i = 1; i < argc; ++i) {
-            std::string arg = argv[i];
+        for (size_t i = 0; i < args.size(); ++i) {
+            const std::string& arg = args[i];
+
+            const bool hasValue = i + 1 < args.size() && args[i + 1].rfind("--", 0) != 0;
 
             if (flags.count(arg) > 0) {
                 // Check if a value follows the flag
-                if (i + 1 < argc && std::string(argv[i + 1]).rfind("--", 0) != 0) {
+                if (hasValue) {
                     SR_PLATFORM_NS::WriteConsoleWarn(SR_FORMAT("CLIManager::Init() : unexpected value for flag '{}': '{}'"
-                        "\n\tFlags do not take values!\n", arg, argv[i + 1])
+                        "\n\tFlags do not take values!\n", arg, args[i + 1])
                     );
 
                     ++i; // Skip the unexpected value
@@ -53,12 +80,12 @@ namespace SR_UTILS_NS {
                 }
             }
             else if (options.count(arg) > 0) {
-                if (i + 1 < argc && std::string(argv[i + 1]).rfind("--", 0) != 0) {
-                    m_options[options.find(arg)->second] = argv[i + 1];
+                if (hasValue) {
+                    m_options[options.find(arg)->second] = args[i + 1];
                     ++i; // Skip the value
                 } else {
                     SR_PLATFORM_NS::WriteConsoleWarn(SR_FORMAT("CLIManager::Init() : missing value for option "
-                        "'{}': '{}'\n", arg, argv[i + 1])
+                        "'{}'\n", arg)
                     );
                 }
             }

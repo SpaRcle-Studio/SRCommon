@@ -40,7 +40,7 @@ namespace SR_UTILS_NS {
         }
 
     private:
-        std::unordered_map<SR_UTILS_NS::StringAtom, std::unordered_set<IEvent*>> m_events;
+        SR_HTYPES_NS::FlatHashMap<SR_UTILS_NS::StringAtom, Set<IEvent*>> m_events;
 
     };
 }

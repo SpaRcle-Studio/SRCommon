@@ -5,7 +5,6 @@
 #ifndef SR_ENGINE_OBSERVER_H
 #define SR_ENGINE_OBSERVER_H
 
-#include <Utils/Types/SafePointer.h>
 #include <Utils/Types/SharedPtr.h>
 #include <Utils/Math/Vector3.h>
 #include <Utils/Common/StringFormat.h>

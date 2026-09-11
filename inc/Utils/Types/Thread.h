@@ -10,12 +10,12 @@
 #include <Utils/Types/Function.h>
 #include <Utils/Types/LockGuard.h>
 #include <Utils/Types/String.h>
+#include <Utils/Profile/TracyContext.h>
 
 /** Warning: этот метод очень медленный! */
 #define SR_THIS_THREAD (SR_HTYPES_NS::Thread::Factory::Instance().GetThisThread())
 
 namespace SR_HTYPES_NS {
-    class DataStorage;
     class Thread;
 
     struct ThreadImpl {
@@ -82,7 +82,6 @@ namespace SR_HTYPES_NS {
     public:
         SR_NODISCARD bool Joinable() const;
         SR_NODISCARD ThreadId GetId() const;
-        SR_NODISCARD DataStorage* GetContext();
 
         void SetName(StringView name);
 
@@ -105,7 +104,6 @@ namespace SR_HTYPES_NS {
     private:
         ThreadId m_id;
         String m_name;
-        DataStorage* m_context = nullptr;
         mutable ThreadImpl* m_impl = nullptr;
 
     };
