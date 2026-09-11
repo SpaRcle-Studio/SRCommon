@@ -5,6 +5,7 @@
 #include <Utils/FileSystem/AndroidVFSBackend.h>
 #include <Utils/FileSystem/File.h>
 #include <Utils/Platform/Platform.h>
+#include <Utils/Profile/TracyContext.h>
 
 #ifdef SR_ANDROID
     #include <Utils/Platform/AndroidNativeAppGlue.h>

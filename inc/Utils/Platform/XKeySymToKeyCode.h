@@ -5,9 +5,11 @@
 #ifndef SR_COMMON_XKEYSYM_TO_KEYCODE_H
 #define SR_COMMON_XKEYSYM_TO_KEYCODE_H
 
+#include <Utils/Types/Map.h>
+
 namespace SR_PLATFORM_NS {
     /// Fortunately, there are things like Copilot to generate this kind of stuff...
-    static std::map<KeySym, uint8_t> keysymToIndex = {
+    static Map<KeySym, uint8_t> keysymToIndex = {
         {XK_BackSpace, 8}, // KeyCode::BackSpace = 8
         {XK_Tab, 9}, // KeyCode::Tab = 9
         {XK_Return, 13}, // KeyCode::Enter = 13
