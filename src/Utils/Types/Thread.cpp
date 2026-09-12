@@ -139,6 +139,10 @@ namespace SR_HTYPES_NS {
     }
 
     bool Thread::Execute(const SR_HTYPES_NS::Function<bool()>& function) const {
+    #ifndef SR_THREADS_ALLOWED
+        function();
+        return true;
+    #else
         if (GetId() == SR_UTILS_NS::GetThisThreadId()) {
             return function();
         }
@@ -162,6 +166,7 @@ namespace SR_HTYPES_NS {
         }
 
         return GetImpl().executeResult;
+    #endif
     }
 
     void Thread::SetName(StringView name) {
