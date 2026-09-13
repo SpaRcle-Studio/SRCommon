@@ -161,7 +161,7 @@ namespace SR_UTILS_NS {
         SR_MATH_NS::FVector3 m_skew = SR_MATH_NS::FVector3::One();
 
         /// @property @setter(SetLocalPriority)
-        int32_t m_localPriority = 0;
+        int32_t m_localPriority = 1;
         /// @property @setter(SetRelativePriority)
         bool m_relativePriority = true;
 

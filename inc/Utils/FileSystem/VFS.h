@@ -26,6 +26,7 @@ namespace SR_UTILS_NS {
         SR_CLASS()
     public:
         SR_NODISCARD bool IsExists(StringView path) const;
+        SR_NODISCARD bool IsWritable(StringView path) const;
         SR_NODISCARD bool IsFileExists(StringView path) const;
         SR_NODISCARD bool IsFolderExists(StringView path) const;
         SR_NODISCARD File OpenFile(StringView path, FileMode mode);

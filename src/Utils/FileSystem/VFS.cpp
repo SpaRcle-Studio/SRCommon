@@ -391,4 +391,20 @@ namespace SR_UTILS_NS {
         UnResolvePath(unresolvedPath);
         path = unresolvedPath;
     }
+
+    bool VFS::IsWritable(StringView path) const {
+        SR_TRACY_ZONE;
+        SR_LOCK_GUARD;
+
+        for (auto&& mount : m_mounts) {
+            if (!mount.pBackend->WriteSupports()) {
+                continue;
+            }
+            if (mount.pBackend->IsApplicable(path)) {
+                return mount.pBackend->GetType(path) != FSItemType::Undefined;
+            }
+        }
+
+        return false;
+    }
 }
