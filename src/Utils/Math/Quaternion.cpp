@@ -9,8 +9,12 @@
 
 namespace SR_MATH_NS {
     Vector3<Unit> Quaternion::EulerAngle() const {
-        glm::vec3 euler = glm::eulerAngles(glm::normalize(self));
-        return Vector3<Unit>(euler.x, euler.y, euler.z).Degrees();
+        const Quaternion normalized = Normalize();
+        return Vector3<Unit>(
+            normalized.Pitch(),
+            normalized.Yaw(),
+            normalized.Roll()
+        ).Degrees();
     }
 
     Quaternion::Quaternion(const Vector3<Unit>& eulerAngle) {
@@ -23,36 +27,39 @@ namespace SR_MATH_NS {
         this->z = c.x * c.y * s.z - s.x * s.y * c.z;
     }
 
-    Vector3<Unit> Quaternion::operator*(const Vector3<Unit> &v) const noexcept {
+    Vector3<Unit> Quaternion::operator*(const Vector3<Unit>& v) const {
         Vector3<Unit> const QuatVector(x, y, z);
         Vector3<Unit> const uv = QuatVector.Cross(v);
         Vector3<Unit> const uuv = QuatVector.Cross(uv);
-
         return v + ((uv * w) + uuv) * static_cast<Unit>(2);
     }
 
-    Quaternion Quaternion::Rotate(const Vector3<Unit> &v) const {
-        if (v.Empty())
-            return *this;
+    Quaternion Quaternion::Rotate(const Vector3<Unit>& dir) const {
+        return dir.Empty() ? *this : Rotate(1.f, dir.Radians());
+    }
 
-        glm::quat q = glm::rotate(self, 1.f, glm::radians(glm::vec3(v.x, v.y, v.z)));
-        return Quaternion(q);
+    Quaternion Quaternion::Rotate(const Unit angleRad, Vector3<Unit> dir) const {
+        /// Axis of rotation must be normalised
+        const Unit len = dir.Length();
+        if (abs(len - static_cast<Unit>(1)) > static_cast<Unit>(0.001)) {
+            const Unit oneOverLen = static_cast<T>(1) / len;
+            dir *= oneOverLen;
+        }
+
+        Unit const sinValue = SR_SIN(angleRad * static_cast<T>(0.5));
+
+        /// конструктор принимает (x, y, z, w)
+        return (*this) * Quaternion(dir.x * sinValue, dir.y * sinValue, dir.z * sinValue, SR_COS(angleRad * static_cast<T>(0.5)));
     }
 
     Matrix4x4 Quaternion::ToMat4x4() const {
-        return Matrix4x4(mat4_cast(self));
+        return Matrix4x4(Matrix3x3(*this));
     }
 
     Vector3<Unit> Quaternion::operator/(const Vector3<Unit> &v) const {
         FVector3 rot = EulerAngle();
-
         /// TODO: здесь должна быть инвертирована ось z?
-        Quaternion q = Quaternion(glm::vec3(1) / glm::vec3(
-                rot.x,
-                rot.y,
-                -rot.z
-        ));
-
+        Quaternion q = Quaternion(FVector3(1) / FVector3(rot.x, rot.y, -rot.z));
         return Vector3<Unit>(q * v);
     }
 
@@ -142,53 +149,35 @@ namespace SR_MATH_NS {
         return FromEuler(euler);
     }
 
-    Unit Quaternion::Pitch() const noexcept {
-       const Unit value_y = static_cast<Unit>(2) * (y * z + w * x);
-       const Unit value_x = w * w - x * x - y * y + z * z;
-
-       /// avoid atan2(0,0) - handle singularity - Matiis
-       if (Vector2<Unit>(value_x, value_y) == Vector2<Unit>(Unit(0), Unit(0))) {
-           return static_cast<Unit>(static_cast<Unit>(2) * atan2(x, w));
-       }
-
-       return static_cast<Unit>(atan2(value_y, value_x));
-    }
-
-    Quaternion Quaternion::RotateX(Unit angle) const {
-       if (angle == static_cast<Unit>(0)) {
+    Quaternion Quaternion::RotateX(Unit angleDeg) const {
+       if (angleDeg == static_cast<Unit>(0)) {
            return *this;
        }
-
-       glm::quat q = glm::rotate(self, static_cast<float_t>(SR_RAD(angle)), glm::vec3(1, 0, 0));
-       return Quaternion(q);
+       return Rotate(SR_RAD(angleDeg), Vector3<Unit>(1, 0, 0));
     }
 
-    Quaternion Quaternion::RotateY(Unit angle) const {
-       if (angle == static_cast<Unit>(0)) {
+    Quaternion Quaternion::RotateY(Unit angleDeg) const {
+       if (angleDeg == static_cast<Unit>(0)) {
            return *this;
        }
-
-       glm::quat q = glm::rotate(self, static_cast<float_t>(SR_RAD(angle)), glm::vec3(0, 1, 0));
-       return Quaternion(q);
+        return Rotate(SR_RAD(angleDeg), Vector3<Unit>(0, 1, 0));
     }
 
-    Quaternion Quaternion::RotateZ(Unit angle) const {
-       if (angle == static_cast<Unit>(0)) {
-           return *this;
-       }
-
-       glm::quat q = glm::rotate(self, static_cast<float_t>(SR_RAD(angle)), glm::vec3(0, 0, 1));
-       return Quaternion(q);
+    Quaternion Quaternion::RotateZ(Unit angleDeg) const {
+        if (angleDeg == static_cast<Unit>(0)) {
+            return *this;
+        }
+        return Rotate(SR_RAD(angleDeg), Vector3<Unit>(0, 0, 1));
     }
 
     Quaternion Quaternion::Conjugate() const {
          return Quaternion(-x, -y, -z, w);
     }
 
-    SR_NODISCARD Quaternion::T Quaternion::X() const noexcept { return static_cast<T>(self.x); }
-    SR_NODISCARD Quaternion::T Quaternion::Y() const noexcept { return static_cast<T>(self.y); }
-    SR_NODISCARD Quaternion::T Quaternion::Z() const noexcept { return static_cast<T>(self.z); }
-    SR_NODISCARD Quaternion::T Quaternion::W() const noexcept { return static_cast<T>(self.w); }
+    SR_NODISCARD Quaternion::T Quaternion::X() const noexcept { return static_cast<T>(x); }
+    SR_NODISCARD Quaternion::T Quaternion::Y() const noexcept { return static_cast<T>(y); }
+    SR_NODISCARD Quaternion::T Quaternion::Z() const noexcept { return static_cast<T>(z); }
+    SR_NODISCARD Quaternion::T Quaternion::W() const noexcept { return static_cast<T>(w); }
 
     Quaternion Quaternion::LookAt(const Vector3<Unit>& direction) {
         static Vector3<Unit> up = Vector3<Unit>(0, 1, 0);
@@ -226,7 +215,7 @@ namespace SR_MATH_NS {
 
     Quaternion Quaternion::LookAt(const Vector3<Unit>& direction, const Vector3<Unit>& up) {
         FVector3 normDir = direction.Normalize();
-        Quaternion q = glm::quatLookAt(glm::vec3(normDir.x, normDir.y, normDir.z), glm::vec3(up.x, up.y, up.z));
+        Quaternion q = QuatLookAtRH(FVector3(normDir.x, normDir.y, normDir.z), FVector3(up.x, up.y, up.z));
         if (q.IsFinite()) {  /// проверка существования кватерниона
             return q;
         }
@@ -354,14 +343,6 @@ namespace SR_MATH_NS {
         }
     }
 
-    glm::mat4 Quaternion::ToMat4x4GLM() const noexcept {
-        return mat4_cast(self);
-    }
-
-    const glm::quat& Quaternion::ToGLM() const noexcept {
-        return self;
-    }
-
     Quaternion::Quaternion(const Quaternion &p_q)
         : x(p_q.x)
         , y(p_q.y)
@@ -372,10 +353,6 @@ namespace SR_MATH_NS {
     Quaternion::Quaternion() {
         x = y = z = static_cast<T>(0);
         w = static_cast<T>(1);
-    }
-
-    Quaternion::Quaternion(const glm::quat &q) {
-        self = q;
     }
 
     Quaternion::Quaternion(Quaternion::T x, Quaternion::T y, Quaternion::T z, Quaternion::T w)
@@ -394,7 +371,7 @@ namespace SR_MATH_NS {
     }
 
     Quaternion Quaternion::Inverse() const {
-        return Quaternion(glm::inverse(self));
+        return Conjugate() / Dot(*this);
     }
 
     bool Quaternion::IsEquals(const Quaternion &q, Unit tolerance) const noexcept {
@@ -499,18 +476,28 @@ namespace SR_MATH_NS {
     }
 
     Quaternion Quaternion::Normalize() const {
-        //return Quaternion(glm::normalize(self));
         return NormalizeSafe();
     }
 
     Quaternion Quaternion::NormalizeSafe() const {
-        float dot = Dot(*this);
+        const Unit dot = Dot(*this);
         if (dot > SR_KINDA_SMALL_NUMBER_EPSILON) {
-            float rSqrt = 1.0f / SR_SQRT(dot);
+            const Unit rSqrt = 1.0f / SR_SQRT(dot);
             return Quaternion(x * rSqrt, y * rSqrt, z * rSqrt, w * rSqrt);
         }
-
         return Identity();
+    }
+
+    Unit Quaternion::Pitch() const noexcept {
+        const Unit value_y = static_cast<Unit>(2) * (y * z + w * x);
+        const Unit value_x = w * w - x * x - y * y + z * z;
+
+        /// avoid atan2(0,0) - handle singularity - Matiis
+        if (Vector2<Unit>(value_x, value_y) == Vector2<Unit>(Unit(0), Unit(0))) {
+            return static_cast<Unit>(static_cast<Unit>(2) * atan2(x, w));
+        }
+
+        return static_cast<Unit>(atan2(value_y, value_x));
     }
 
     Unit Quaternion::Roll() const noexcept {
@@ -521,8 +508,8 @@ namespace SR_MATH_NS {
         return asin(SR_CLAMP(static_cast<Unit>(-2) * (x * z - w * y), static_cast<Unit>(-1), static_cast<Unit>(1)));
     }
 
-    std::string Quaternion::ToString() const {
-        return "(" + std::to_string(self.x) + ", " + std::to_string(self.y) + ", " + std::to_string(self.z) + ", " + std::to_string(self.w) + ")";
+    String Quaternion::ToString() const {
+        return "({}, {}, {}, {})"_format(x, y, z, w);
     }
 
     bool Quaternion::operator!=(const Quaternion &q) const noexcept {
@@ -562,60 +549,61 @@ namespace SR_MATH_NS {
     #endif
     }
 
-    void Quaternion::operator+=(const Quaternion &p_q) {
-        self += p_q.self;
+    void Quaternion::operator+=(const Quaternion& q) {
+        (*this) = (*this) + q;
     }
 
-    void Quaternion::operator-=(const Quaternion &p_q) {
-        self -= p_q.self;
+    void Quaternion::operator-=(const Quaternion& q) {
+        (*this) = (*this) - q;
     }
 
-    void Quaternion::operator*=(const Quaternion &p_q) {
-        self *= p_q.self;
+    void Quaternion::operator*=(const Quaternion& q) {
+        (*this) = (*this) * q;
     }
 
-    void Quaternion::operator*=(const double &s){
-        self *= s;
+    void Quaternion::operator*=(const Unit& s){
+        (*this) = (*this) * s;
     }
 
-    void Quaternion::operator/=(const double &s) {
-        self *= 1.0 / s;
+    void Quaternion::operator/=(const Unit& s) {
+        return (*this) *= (static_cast<Unit>(1) / s);
     }
 
-    Quaternion Quaternion::operator+(const Quaternion &q2) const {
-        const Quaternion &q1 = *this;
-        return Quaternion(q1.self + q2.self);
+    Quaternion Quaternion::operator+(const Quaternion& q) const {
+        return Quaternion(x + q.x, y + q.y, z + q.z, w + q.w);
     }
 
-    Quaternion Quaternion::operator-(const Quaternion &q2) const {
-        const Quaternion &q1 = *this;
-        return Quaternion(q1.self - q2.self);
+    Quaternion Quaternion::operator-(const Quaternion& q) const {
+        return Quaternion(x - q.x, y - q.y, z - q.z, w - q.w);
     }
 
     Quaternion Quaternion::operator-() const {
-        const Quaternion &q2 = *this;
-        return Quaternion(-q2.self);
+        return Quaternion(-x, -y, -z, -w);
     }
 
-    Quaternion Quaternion::operator*(const double &s) const {
-        glm::quat q = self;
-        q *= s;
-        return Quaternion(q);
+    Quaternion Quaternion::operator*(const Quaternion& q) const {
+        return Quaternion(
+            w * q.x + x * q.w + y * q.z - z * q.y,
+            w * q.y + y * q.w + z * q.x - x * q.z,
+            w * q.z + z * q.w + x * q.y - y * q.x,
+            w * q.w - x * q.x - y * q.y - z * q.z
+        );
     }
 
-    Quaternion Quaternion::operator/(const double &s) const {
-        glm::quat q = self;
-        q *= 1.0 / s;
-        return Quaternion(q);
+    Quaternion Quaternion::operator/(const Unit& s) const {
+        return (*this) * (static_cast<Unit>(1) / s);
     }
 
-    Quaternion Quaternion::operator*(const Quaternion &rhs) const {
-        return Quaternion(self * rhs.self);
+    Quaternion Quaternion::operator*(const Unit& s) const {
+        return Quaternion(x * s, y * s, z * s, w * s);
     }
 
     Unit Quaternion::Dot(const Quaternion& q) const noexcept {
-        float_t dot = x * q.x + y * q.y + z * q.z + w * q.w;
-        return dot;
+        const float_t xx = x * q.x;
+        const float_t yy = y * q.y;
+        const float_t zz = z * q.z;
+        const float_t ww = w * q.w;
+        return (xx + yy) + (zz + ww);
     }
 
     void Quaternion::ToAxisAngle(Vector3<Unit>& axis, float_t& angle) const {
@@ -745,5 +733,28 @@ namespace SR_MATH_NS {
 
     Quaternion Quaternion::Nlerp(const Quaternion& a, const Quaternion& b, Unit t) {
         return a.Nlerp(b, t);
+    }
+
+    Quaternion Quaternion::QuatLookAtRH(const Vector3<Unit> &direction, const Vector3<Unit>& up) {
+        const FVector3 forward = -direction;
+
+        FVector3 right = SR_MATH_NS::Cross(up, forward);
+        right *= InverseSqrt(SR_MAX(static_cast<T>(0.00001), SR_MATH_NS::Dot(right, right)));
+
+        const FVector3 newUp = SR_MATH_NS::Cross(forward, right);
+
+        /// базисные векторы поворота - это столбцы матрицы, а Matrix3x3 хранит строки,
+        /// поэтому раскладываем их по столбцам вручную
+        const Matrix3x3 result(
+            FVector3(right.x, newUp.x, forward.x),
+            FVector3(right.y, newUp.y, forward.y),
+            FVector3(right.z, newUp.z, forward.z)
+        );
+
+        return result.ToQuaternion();
+    }
+
+    Quaternion Quaternion::WXYZ(Unit w, Unit x, Unit y, Unit z) {
+        return Quaternion(x, y, z, w);
     }
 }

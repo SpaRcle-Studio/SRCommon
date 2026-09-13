@@ -16,18 +16,17 @@ namespace SR_MATH_NS {
 
         union {
             struct { T x; T y; T z; };
-            T coord[3] = { 0 };
+            T coord[3];
         };
     public:
         SR_CONSTEXPR Vector3() { x = static_cast<T>(0); y = static_cast<T>(0); z = static_cast<T>(0); }
         SR_CONSTEXPR Vector3(T p_x, T p_y, T p_z) { x = p_x; y = p_y; z = p_z; }
         SR_CONSTEXPR Vector3(T p) { x = p; y = p; z = p; }
+        SR_CONSTEXPR Vector3(const Vector3<T>& vec) = default;
+        SR_CONSTEXPR Vector3(Vector3<T>&& vec) noexcept = default;
 
-        SR_CONSTEXPR Vector3(const Vector3<T>& vec) {
-            x = vec.x;
-            y = vec.y;
-            z = vec.z;
-        }
+        SR_CONSTEXPR Vector3<T>& operator=(const Vector3<T>& vec) = default;
+        SR_CONSTEXPR Vector3<T>& operator=(Vector3<T>&& vec) noexcept = default;
 
         template<typename U> explicit Vector3(const Vector3<U>& vec) {
             x = static_cast<T>(vec.x);
@@ -738,21 +737,24 @@ namespace SR_MATH_NS {
             return Vector3(x / p_v.x, y / p_v.y, z / p_v.z);
         }
 
-        template<typename U> SR_FORCE_INLINE Vector3 &operator*=(U p_scalar) {
+        template<typename U> SR_FORCE_INLINE Vector3& operator*=(U p_scalar) {
             x *= p_scalar;
             y *= p_scalar;
             z *= p_scalar;
             return *this;
         }
+
         template<typename U> SR_FORCE_INLINE Vector3 operator*(U p_scalar) const {
             return Vector3(x * p_scalar, y * p_scalar, z * p_scalar);
         }
+
         template<typename U> SR_FORCE_INLINE Vector3 &operator/=(U p_scalar) {
             x /= p_scalar;
             y /= p_scalar;
             z /= p_scalar;
             return *this;
         }
+
         template<typename U> SR_FORCE_INLINE Vector3 operator/(U p_scalar) const {
             return Vector3(x / p_scalar, y / p_scalar, z / p_scalar);
         }
@@ -822,10 +824,10 @@ namespace SR_MATH_NS {
 #ifdef SR_COMMON_DLL_EXPORTS
     template<typename T> Vector3<T> Vector3<T>::Rotate(const Quaternion &q) const requires(std::is_same_v<T, Unit>)  {
         // Extract the vector part of the quaternion
-        Vector3 u(q.self.x, q.self.y, q.self.z);
+        Vector3 u(q.x, q.y, q.z);
 
         // Extract the scalar part of the quaternion
-        auto s = q.self.w;
+        auto s = q.w;
 
         Vector3 v = *this;
 

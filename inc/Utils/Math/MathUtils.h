@@ -54,6 +54,46 @@ namespace SR_MATH_NS {
         float_t GetFVector2Y(const FVector2& v) const { return v.y; }
         /// @method @evaluate
         float_t SwitchFloat(float_t trueValue, float_t falseValue, bool condition) const { return condition ? trueValue : falseValue; }
+        /// @method @evaluate
+        float_t Sin(float_t value) const { return std::sin(value); }
+        /// @method @evaluate
+        float_t Cos(float_t value) const { return std::cos(value); }
+        /// @method @evaluate
+        float_t Tan(float_t value) const { return std::tan(value); }
+        /// @method @evaluate
+        float_t Asin(float_t value) const { return std::asin(value); }
+        /// @method @evaluate
+        float_t Acos(float_t value) const { return std::acos(value); }
+        /// @method @evaluate
+        float_t Atan(float_t value) const { return std::atan(value); }
+        /// @method @evaluate
+        float_t Atan2(float_t y, float_t x) const { return std::atan2(y, x); }
+        /// @method @evaluate
+        float_t Sqrt(float_t value) const { return std::sqrt(value); }
+        /// @method @evaluate
+        float_t Pow(float_t base, float_t exponent) const { return std::pow(base, exponent); }
+        /// @method @evaluate
+        float_t Exp(float_t value) const { return std::exp(value); }
+        /// @method @evaluate
+        float_t Log(float_t value) const { return std::log(value); }
+        /// @method @evaluate
+        float_t Log10(float_t value) const { return std::log10(value); }
+        /// @method @evaluate
+        float_t Abs(float_t value) const { return std::abs(value); }
+        /// @method @evaluate
+        float_t Floor(float_t value) const { return std::floor(value); }
+        /// @method @evaluate
+        float_t Ceil(float_t value) const { return std::ceil(value); }
+        /// @method @evaluate
+        float_t Round(float_t value) const { return std::round(value); }
+        /// @method @evaluate
+        float_t Min(float_t a, float_t b) const { return std::min(a, b); }
+        /// @method @evaluate
+        float_t Max(float_t a, float_t b) const { return std::max(a, b); }
+        /// @method @evaluate
+        bool IsEqual(float_t a, float_t b, float_t epsilon = 1e-6f) const { return std::abs(a - b) < epsilon; }
+        /// @method @evaluate
+        float_t IntToFloat(int32_t value) const { return static_cast<float_t>(value); }
 
         /// @method @evaluate
         bool BoolAnd(bool a, bool b) const { return a && b; }

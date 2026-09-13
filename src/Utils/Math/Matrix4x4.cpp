@@ -21,7 +21,8 @@ namespace SR_MATH_NS {
         }
 
         if (!rotation.IsIdentity()) {
-            GLMRotateMat4x4_Fast(self, rotation.ToGLM());
+            glm::quat q = glm::quat(rotation.w, rotation.x, rotation.y, rotation.z); /// glm принимает (w, x, y, z)
+            GLMRotateMat4x4_Fast(self, q);
         }
 
         if (!scale.IsOne()) {
@@ -29,7 +30,7 @@ namespace SR_MATH_NS {
         }
     #else
         GLMTranslateMat4x4(self, translate);
-        GLMRotateMat4x4_Fast(self, rotation.ToGLM());
+        GLMRotateMat4x4_Fast(self, glm::quat(rotation.w, rotation.x, rotation.y, rotation.z));
         GLMScaleMat4x4(self, scale);
     #endif
     }
@@ -39,8 +40,9 @@ namespace SR_MATH_NS {
     {
         GLMTranslateMat4x4(self, translate);
 
+        glm::quat q = glm::quat(rotation.w, rotation.x, rotation.y, rotation.z); /// glm принимает (w, x, y, z)
         GLMScaleMat4x4(self, skew);
-        GLMRotateMat4x4_Fast(self, rotation.ToGLM());
+        GLMRotateMat4x4_Fast(self, q);
         GLMScaleMat4x4(self, scale);
     }
 
@@ -62,8 +64,9 @@ namespace SR_MATH_NS {
     Matrix4x4::Matrix4x4(const FVector3& translate, const Quaternion& rotation) noexcept
         : Matrix4x4()
     {
+        glm::quat q = glm::quat(rotation.w, rotation.x, rotation.y, rotation.z); /// glm принимает (w, x, y, z)
         GLMTranslateMat4x4(self, translate);
-        GLMRotateMat4x4_Fast(self, rotation.ToGLM());
+        GLMRotateMat4x4_Fast(self, q);
     }
 
     Matrix4x4::Matrix4x4(const FVector3& translate) noexcept
@@ -75,7 +78,8 @@ namespace SR_MATH_NS {
     Matrix4x4::Matrix4x4(const Quaternion& rotation) noexcept
         : Matrix4x4()
     {
-        GLMRotateMat4x4_Fast(self, rotation.ToGLM());
+        glm::quat q = glm::quat(rotation.w, rotation.x, rotation.y, rotation.z); /// glm принимает (w, x, y, z)
+        GLMRotateMat4x4_Fast(self, q);
     }
 
     Matrix4x4::Matrix4x4(const FVector3& translate, const FVector3& scale) noexcept
@@ -88,7 +92,8 @@ namespace SR_MATH_NS {
     Matrix4x4::Matrix4x4(const Quaternion& rotation, const FVector3& scale) noexcept
         : Matrix4x4()
     {
-        GLMRotateMat4x4_Fast(self, rotation.ToGLM());
+        glm::quat q = glm::quat(rotation.w, rotation.x, rotation.y, rotation.z); /// glm принимает (w, x, y, z)
+        GLMRotateMat4x4_Fast(self, q);
         GLMScaleMat4x4(self, scale);
     }
 
@@ -353,7 +358,8 @@ namespace SR_MATH_NS {
     }
 
     SR_NODISCARD Matrix4x4 Matrix4x4::Rotate(const FVector3& angle) const {
-        return Matrix4x4(self * mat4_cast(angle.ToQuat().ToGLM()));
+        Quaternion q = angle.ToQuat();
+        return Matrix4x4(self * mat4_cast(glm::quat(q.w, q.x, q.y, q.z))); /// glm принимает (w, x, y, z)
     }
 
     SR_NODISCARD Matrix4x4 Matrix4x4::Rotate(const SR_MATH_NS::Quaternion& q) const {
@@ -420,7 +426,8 @@ namespace SR_MATH_NS {
                 glm::vec3(self[1]) / static_cast<float>(scale[1]),
                 glm::vec3(self[2]) / static_cast<float>(scale[2]));
 
-        quaternion = glm::quat_cast(rotMtx);
+        glm::quat q = glm::quat_cast(rotMtx);
+        quaternion = Quaternion(q.x, q.y, q.z, q.w);
 
         return true;
     }
@@ -438,7 +445,8 @@ namespace SR_MATH_NS {
                 glm::vec3(self[2]) / static_cast<float_t>(scaleZ)
         );
 
-        quaternion = glm::quat_cast(rotMtx);
+        glm::quat q = glm::quat_cast(rotMtx);
+        quaternion = Quaternion(q.x, q.y, q.z, q.w);
 
         return true;
     }
@@ -491,7 +499,7 @@ namespace SR_MATH_NS {
 
         if (glm::decompose(self, _scale, _rotation, _translation, _skew, _perspective)) {
             translation = FVector3(_translation.x, _translation.y, _translation.z);
-            rotation = _rotation;
+            rotation = Quaternion(_rotation.x, _rotation.y, _rotation.z, _rotation.w);
             scale = FVector3(_scale.x, _scale.y, _scale.z);
             skew = FVector3(_skew.x, _skew.y, _skew.z);
             return true;
@@ -563,7 +571,8 @@ namespace SR_MATH_NS {
         glm::vec3 y = glm::normalize(glmMat[1] - x * glm::dot(glmMat[1], x));
         glm::vec3 z = glm::cross(x, y); // автоматическая ортогональность
 
-        return glm::quat_cast(glm::mat3(x, y, z));
+        glm::quat q = glm::quat_cast(glm::mat3(x, y, z));
+        return Quaternion(q.x, q.y, q.z, q.w);
     }
 
     SR_NODISCARD FVector3 Matrix4x4::GetEulers() const {
@@ -708,5 +717,14 @@ namespace SR_MATH_NS {
         result.m[1][2] = skew.z; // Skew YZ
 
         return result;
+    }
+
+    Matrix4x4::Matrix4x4(const Matrix3x3& mat3x3) noexcept {
+        /// Matrix3x3 хранится по строкам, а Matrix4x4 (как и glm::mat4) - по столбцам,
+        /// поэтому при копировании нужно транспонировать
+        m00 = mat3x3[0][0]; m01 = mat3x3[1][0]; m02 = mat3x3[2][0]; m03 = 0.f;
+        m10 = mat3x3[0][1]; m11 = mat3x3[1][1]; m12 = mat3x3[2][1]; m13 = 0.f;
+        m20 = mat3x3[0][2]; m21 = mat3x3[1][2]; m22 = mat3x3[2][2]; m23 = 0.f;
+        m30 = 0.f; m31 = 0.f; m32 = 0.f; m33 = 1.f;
     }
 }

@@ -11,25 +11,31 @@
 namespace SR_MATH_NS {
     class SR_COMMON_DLL_API Matrix3x3 {
     public:
-        FVector3 elements[3] = {
-            FVector3(1, 0, 0),
-            FVector3(0, 1, 0),
-            FVector3(0, 0, 1)
+        union {
+            FVector3 elements[3];
+            Unit m[3][3];
         };
 
-        Matrix3x3() = default;
-        Matrix3x3(Quaternion rotation);
+        Matrix3x3();
+        Matrix3x3(const Matrix3x3& other) = default;
+        Matrix3x3(Matrix3x3&& other) noexcept = default;
+
+        Matrix3x3(const Quaternion& rotation);
         Matrix3x3(const FVector3& row0, const FVector3& row1, const FVector3& row2) {
             elements[0] = row0;
             elements[1] = row1;
             elements[2] = row2;
         }
 
+        Matrix3x3& operator=(const Matrix3x3& other) = default;
+        Matrix3x3& operator=(Matrix3x3&& other) noexcept = default;
+
+        SR_NODISCARD Quaternion ToQuaternion() const;
         SR_NODISCARD Matrix3x3 Inverse() const;
         SR_NODISCARD Matrix3x3 Identity() const;
         SR_NODISCARD Matrix3x3 operator*(const Matrix3x3& other) const;
 
-        SR_FORCE_INLINE const FVector3 &operator[](int axis) const {
+        SR_FORCE_INLINE const FVector3& operator[](int axis) const {
             return elements[axis];
         }
         SR_FORCE_INLINE FVector3 &operator[](int axis) {

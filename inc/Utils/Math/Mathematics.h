@@ -282,6 +282,10 @@ namespace SR_MATH_NS {
         return std::sqrt(value);
     }
 
+    static SR_FORCE_INLINE Unit SR_FASTCALL InverseSqrt(Unit value) {
+        return static_cast<Unit>(1.0 / std::sqrt(value));
+    }
+
     template<typename T, typename Y> static SR_FORCE_INLINE bool IsEquals(const T& a, const Y& b) noexcept {
         // Check for exact equality first, required to handle "infinity" values.
 

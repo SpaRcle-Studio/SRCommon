@@ -6,11 +6,14 @@
 #define SR_ENGINE_NUMERIC_H
 
 #include <Utils/Common/Singleton.h>
+#include <Utils/TypeTraits/SRClass.h>
 
 namespace SR_UTILS_NS {
-    class Random : public Singleton<Random> {
+    /// @noMovable @noCopyable
+    class Random : public Singleton<Random>, public SRClass {
         SR_REGISTER_SINGLETON(Random)
-    private:
+        SR_CLASS()
+    public:
         Random();
         ~Random() override = default;
 
@@ -19,12 +22,19 @@ namespace SR_UTILS_NS {
 
         template<typename T> void Shuffle(std::vector<T>& vector);
 
+        /// @method @evaluate
         SR_NODISCARD bool Bool();
+        /// @method @evaluate
         SR_NODISCARD float_t Float(float_t minimum, float_t maximum);
+        /// @method @evaluate
         SR_NODISCARD int32_t Int32Range(int32_t minimum, int32_t maximum);
+        /// @method @evaluate
         SR_NODISCARD int64_t Int64();
+        /// @method @evaluate
         SR_NODISCARD uint64_t UInt64();
+        /// @method @evaluate
         SR_NODISCARD int32_t Int32();
+        /// @method @evaluate
         SR_NODISCARD uint32_t UInt32();
 
     private:

@@ -4,6 +4,8 @@
 
 #include <Utils/Common/Numeric.h>
 
+#include <Codegen/Numeric.generated.hpp>
+
 namespace SR_UTILS_NS {
     Random::Random()
         : m_generator(clock())

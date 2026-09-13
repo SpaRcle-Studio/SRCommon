@@ -54,6 +54,8 @@ namespace SR_MATH_NS {
                   float_t m20v, float_t m21v, float_t m22v, float_t m23v,
                   float_t m30v, float_t m31v, float_t m32v, float_t m33v) noexcept;
 
+        Matrix4x4(const Matrix3x3& mat3x3) noexcept;
+
         explicit Matrix4x4(const FVector3& translate) noexcept;
         explicit Matrix4x4(const Quaternion& rotation) noexcept;
 

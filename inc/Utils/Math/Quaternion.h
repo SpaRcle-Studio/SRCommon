@@ -25,20 +25,17 @@ namespace SR_MATH_NS {
                 float_t z;
                 float_t w;
             };
-
-            glm::quat self{};
         };
     public:
-        SR_NODISCARD const glm::quat& ToGLM() const noexcept;
         SR_NODISCARD Vector4<Unit> Vector() const noexcept;
         SR_NODISCARD Matrix4x4 ToMat4x4() const;
-        SR_NODISCARD glm::mat4 ToMat4x4GLM() const noexcept;
         SR_NODISCARD Vector3<T> EulerAngle() const;
-        SR_NODISCARD Quaternion Rotate(const Vector3<T>& v) const;
+        SR_NODISCARD Quaternion Rotate(const Vector3<T>& dir) const;
+        SR_NODISCARD Quaternion Rotate(Unit angleRad, Vector3<Unit> dir) const;
 
-        SR_NODISCARD Quaternion RotateX(Unit angle) const;
-        SR_NODISCARD Quaternion RotateY(Unit angle) const;
-        SR_NODISCARD Quaternion RotateZ(Unit angle) const;
+        SR_NODISCARD Quaternion RotateX(Unit angleDeg) const;
+        SR_NODISCARD Quaternion RotateY(Unit angleDeg) const;
+        SR_NODISCARD Quaternion RotateZ(Unit angleDeg) const;
 
         SR_NODISCARD Quaternion Conjugate() const;
 
@@ -50,11 +47,12 @@ namespace SR_MATH_NS {
         Quaternion();
         Quaternion(const Quaternion &p_q);
         Quaternion(const Vector3<Unit> &p_euler);
-        Quaternion(const glm::quat &q);
         explicit Quaternion(const Matrix4x4& matrix);
         explicit Quaternion(const Matrix3x3& matrix);
         explicit Quaternion(T x, T y, T z, T w);
 
+        static Quaternion WXYZ(Unit w, Unit x, Unit y, Unit z);
+        static Quaternion QuatLookAtRH(const Vector3<Unit>& direction, const Vector3<Unit>& up);
         static bool IsEqualUsingDot(Unit dot);
         static Quaternion FromBasis(const Vector3<Unit>& right, const Vector3<Unit>& up, const Vector3<Unit>& forward);
         static Quaternion FromAxisAngle(const Vector3<Unit>& axis, Unit angle);
@@ -98,7 +96,7 @@ namespace SR_MATH_NS {
         SR_NODISCARD Unit Magnitude() const noexcept;
         SR_NODISCARD Unit SquaredNorm() const noexcept;
 
-        SR_NODISCARD std::string ToString() const;
+        SR_NODISCARD String ToString() const;
 
         bool operator!=(const Quaternion& q) const noexcept;
         bool operator==(const Quaternion& q) const noexcept;
@@ -113,16 +111,16 @@ namespace SR_MATH_NS {
         void operator+=(const Quaternion &p_q);
         void operator-=(const Quaternion &p_q);
         void operator*=(const Quaternion &p_q);
-        void operator*=(const double &s);
-        void operator/=(const double &s);
+        void operator*=(const Unit& s);
+        void operator/=(const Unit& s);
         Quaternion operator+(const Quaternion &q2) const;
         Quaternion operator-(const Quaternion &q2) const;
         Quaternion operator-() const;
-        Quaternion operator*(const double &s) const;
-        Quaternion operator/(const double &s) const;
-        Vector3<Unit> operator*(const Vector3<Unit> &v) const noexcept;
+        Quaternion operator*(const Unit& s) const;
+        Quaternion operator/(const Unit& s) const;
+        Vector3<Unit> operator*(const Vector3<Unit> &v) const;
         Vector3<Unit> operator/(const Vector3<Unit> &v) const;
-        Quaternion operator*(const Quaternion& rhs) const;
+        Quaternion operator*(const Quaternion& q) const;
     };
 
     inline static const Quaternion InfinityQuaternion = Quaternion { UnitMAX, UnitMAX, UnitMAX, UnitMAX };
