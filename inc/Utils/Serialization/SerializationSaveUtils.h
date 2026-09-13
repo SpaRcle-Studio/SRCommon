@@ -5,6 +5,8 @@
 #ifndef SR_ENGINE_UTILS_SERIALIZATION_SAVE_UTILS_H
 #define SR_ENGINE_UTILS_SERIALIZATION_SAVE_UTILS_H
 
+#include <Utils/Serialization/SerializationTraits.h>
+
 namespace SR_UTILS_NS {
     template<typename T, typename Enable = void> struct DefaultChecker {
 		using IsAlwaysFalse = std::true_type;

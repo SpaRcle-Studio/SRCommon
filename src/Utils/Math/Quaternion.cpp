@@ -463,7 +463,10 @@ namespace SR_MATH_NS {
         _mm_store_ps(result_array, interp_vec);
         return Quaternion(result_array[0], result_array[1], result_array[2], result_array[3]);
 #else
-        return glm::slerp(self, q.self, static_cast<float_t>(t));
+        glm::quat self = glm::quat(w, x, y, z);
+        glm::quat qself = glm::quat(q.w, q.x, q.y, q.z);
+        glm::quat result = glm::slerp(self, qself, static_cast<float_t>(t));
+        return Quaternion(result.x, result.y, result.z, result.w);
 #endif
     }
 
