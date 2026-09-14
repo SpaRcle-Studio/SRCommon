@@ -611,6 +611,14 @@ namespace SR_UTILS_NS {
         result.resize(dstSize);
     }
 
+    void StringUtils::ReplaceChars(String& buffer, char from, char to) {
+        for (char& c : buffer) {
+            if (c == from) {
+                c = to;
+            }
+        }
+    }
+
     String GetErrorString(int err) {
         char buf[256]{};
     #ifdef _WIN32

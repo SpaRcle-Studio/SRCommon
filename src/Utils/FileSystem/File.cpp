@@ -92,17 +92,18 @@ namespace SR_UTILS_NS {
         return m_pImpl ? m_pImpl->Data() : nullptr;
     }
 
-    void File::Read(String& buffer) {
+    bool File::Read(String& buffer) {
         SR_TRACY_ZONE;
         if (!m_pImpl || !SR_MATH_NS::IsMaskIncludedSubMask(m_pImpl->GetMode(), FileMode::Read)) {
             SRHalt("File::Read() : file is not open for reading!");
-            return;
+            return false;
         }
 
         uint64_t size = m_pImpl->GetSize();
         buffer.resize(size);
         uint64_t bytesRead = m_pImpl->Read(buffer.data(), size);
         buffer.resize(bytesRead);
+        return true;
     }
 
     bool File::IsOpen() const {

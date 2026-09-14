@@ -53,6 +53,9 @@ void* SRMalloc(SR_UTILS_NS::SizeType size);
 void* SRReAlloc(void* pMemory, SR_UTILS_NS::SizeType size);
 void SRFree(void* pMemory);
 
+void* SRZLibAlloc(void* opaque, unsigned items, unsigned size);
+void SRZLibFree(void* opaque, void* address);
+
 template<typename T, typename... Args> T* SRNew(Args&& ...args) {
     void* pMemory = SRMalloc(sizeof(T));
     T* pObject = new(pMemory) T(Forward<Args>(args)...);

@@ -131,7 +131,7 @@ namespace SR_UTILS_NS {
 
         SR_NODISCARD operator bool() const { return IsOpen(); }
 
-        void Read(String& buffer);
+        bool Read(String& buffer);
         uint64_t Read(void* data, uint64_t size);
         uint64_t Write(const void* data, uint64_t size);
 

@@ -101,3 +101,11 @@ void operator delete[](void* pMemory) noexcept {
     }
     SRFree(pMemory);
 }
+
+void* SRZLibAlloc(void* opaque, unsigned int items, unsigned int size) {
+    return SRMalloc(items * size);
+}
+
+void SRZLibFree(void* opaque, void* address) {
+    SRFree(address);
+}

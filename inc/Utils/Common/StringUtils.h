@@ -44,6 +44,7 @@ namespace SR_UTILS_NS {
         void ConvertToUTF8(const wchar_t* pSource, uint32_t size, String& result);
 
         void SplitViewByLines(StringView buffer, Vector<StringView>& outLines);
+        void ReplaceChars(String& buffer, char from, char to);
 
         static bool CheckSearchMatch(StringView searchBuffer, StringView text);
 
