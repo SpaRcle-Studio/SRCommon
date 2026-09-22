@@ -104,7 +104,7 @@ namespace SR_UTILS_NS::Reflection {
 
         SR_NODISCARD StringAtom GetName() const noexcept { return m_name; }
         SR_NODISCARD StringAtom GetDisplayName() const noexcept;
-        SR_NODISCARD StringAtom GetSerializeName() const noexcept { return m_serializeName; }
+        SR_NODISCARD StringAtom GetSerializeName() const noexcept;
         SR_NODISCARD PropertyPublicity GetPublicity() const noexcept { return m_publicity; }
         SR_NODISCARD const Value& GetDefaultValue() const noexcept;
         SR_NODISCARD const Value& GetResetValue() const noexcept;

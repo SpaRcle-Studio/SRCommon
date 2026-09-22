@@ -31,6 +31,13 @@ namespace SR_UTILS_NS::Reflection {
         return m_displayName;
     }
 
+    StringAtom Property::GetSerializeName() const noexcept {
+        if (m_serializeName.empty()) {
+            return m_name;
+        }
+        return m_serializeName;
+    }
+
     Value Property::Get(SRClass* pOwner) const noexcept {
         return m_getCallback(pOwner);
     }
