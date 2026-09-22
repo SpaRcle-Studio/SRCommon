@@ -294,7 +294,7 @@ namespace SR_UTILS_NS::Platform {
         SRHaltOnce("Not implemented!");
     }
 
-    bool IsAbsolutePath(const Path& path) {
+    bool IsAbsolutePath(const StringView path) {
         return !path.empty() && path[0] == '/';
     }
 

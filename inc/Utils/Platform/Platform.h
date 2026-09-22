@@ -137,7 +137,7 @@ namespace SR_UTILS_NS::Platform {
     SR_COMMON_DLL_API extern double_t GetScreenDPI();
     SR_COMMON_DLL_API extern std::vector<SR_MATH_NS::UVector2> GetScreenResolutions();
     SR_COMMON_DLL_API extern bool FileIsHidden(const Path& path);
-    SR_COMMON_DLL_API extern bool IsAbsolutePath(const Path& path);
+    SR_COMMON_DLL_API extern bool IsAbsolutePath(const StringView path);
     SR_COMMON_DLL_API extern bool IsRunningUnderDebugger();
     SR_COMMON_DLL_API extern std::optional<Path> GetApplicationCachePath();
     /// Папка, в которую приложение может писать. На платформах, где рядом с исполняемым файлом

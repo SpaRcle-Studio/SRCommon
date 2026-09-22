@@ -444,8 +444,8 @@ namespace SR_PLATFORM_NS {
         SRHaltOnce("Not suitable for web platform!");
     }
 
-    bool IsAbsolutePath(const Path& path) {
-        return std::filesystem::path(path.ToStringRef()).is_absolute();
+    bool IsAbsolutePath(const StringView path) {
+        return std::filesystem::path(std::string_view(path)).is_absolute();
     }
 
     SR_MATH_NS::UVector2 GetScreenResolution() {

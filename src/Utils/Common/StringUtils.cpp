@@ -611,6 +611,108 @@ namespace SR_UTILS_NS {
         result.resize(dstSize);
     }
 
+    void StringUtils::ConvertToWideString(const char* pSource, uint32_t size, std::wstring& result) {
+        result.clear();
+
+        if (!pSource || size == 0)
+            return;
+
+        // В худшем случае UTF-8 байт превращается в 2 UTF-16 wchar_t.
+        // Для UTF-32 максимум 1 wchar_t на code point.
+        result.resize(static_cast<size_t>(size) * (sizeof(wchar_t) == 2 ? 2 : 1));
+
+        wchar_t* dst = result.data();
+        size_t dstSize = 0;
+
+        auto WriteWChar = [&](uint32_t value) {
+            dst[dstSize++] = static_cast<wchar_t>(value);
+        };
+
+        auto WriteCodePoint = [&](uint32_t cp) {
+            if constexpr (sizeof(wchar_t) == 2) {
+                if (cp <= 0xFFFF) {
+                    WriteWChar(cp);
+                }
+                else {
+                    cp -= 0x10000;
+
+                    WriteWChar(static_cast<uint32_t>(0xD800 | (cp >> 10)));
+                    WriteWChar(static_cast<uint32_t>(0xDC00 | (cp & 0x3FF)));
+                }
+            }
+            else {
+                WriteWChar(cp);
+            }
+        };
+
+        for (uint32_t i = 0; i < size;) {
+            const uint8_t first = static_cast<uint8_t>(pSource[i]);
+
+            uint32_t cp = 0;
+            uint32_t sequenceSize = 0;
+
+            if (first <= 0x7F) {
+                cp = first;
+                sequenceSize = 1;
+            }
+            else if (first >= 0xC2 && first <= 0xDF) {
+                cp = first & 0x1F;
+                sequenceSize = 2;
+            }
+            else if (first >= 0xE0 && first <= 0xEF) {
+                cp = first & 0x0F;
+                sequenceSize = 3;
+            }
+            else if (first >= 0xF0 && first <= 0xF4) {
+                cp = first & 0x07;
+                sequenceSize = 4;
+            }
+            else {
+                // Invalid UTF-8 leading byte.
+                ++i;
+                continue;
+            }
+
+            if (i + sequenceSize > size) {
+                // Incomplete sequence.
+                break;
+            }
+
+            bool valid = true;
+
+            for (uint32_t j = 1; j < sequenceSize; ++j) {
+                const uint8_t byte = static_cast<uint8_t>(pSource[i + j]);
+
+                if ((byte & 0xC0) != 0x80) {
+                    valid = false;
+                    break;
+                }
+
+                cp = (cp << 6) | (byte & 0x3F);
+            }
+
+            if (!valid) {
+                ++i;
+                continue;
+            }
+
+            // Reject overlong encodings and invalid Unicode scalars.
+            if ((sequenceSize == 2 && cp < 0x80) ||
+                (sequenceSize == 3 && cp < 0x800) ||
+                (sequenceSize == 4 && cp < 0x10000) ||
+                cp > 0x10FFFF ||
+                (cp >= 0xD800 && cp <= 0xDFFF)) {
+                i += sequenceSize;
+                continue;
+            }
+
+            WriteCodePoint(cp);
+            i += sequenceSize;
+        }
+
+        result.resize(dstSize);
+    }
+
     void StringUtils::ReplaceChars(String& buffer, char from, char to) {
         for (char& c : buffer) {
             if (c == from) {

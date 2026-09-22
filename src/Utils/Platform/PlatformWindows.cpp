@@ -682,9 +682,8 @@ namespace SR_UTILS_NS::Platform {
         return ret;
     }
 
-    bool IsAbsolutePath(const Path &path) {
-        auto&& view = path.View();
-        return view.size() >= 2 && view[1] == ':';
+    bool IsAbsolutePath(const StringView path) {
+        return path.size() >= 2 && path[1] == ':';
     }
 
     void OpenWithAssociatedApp(const Path &path){

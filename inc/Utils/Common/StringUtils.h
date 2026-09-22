@@ -42,6 +42,7 @@ namespace SR_UTILS_NS {
         void Base64Encode(StringView base64, String& result);
 
         void ConvertToUTF8(const wchar_t* pSource, uint32_t size, String& result);
+        void ConvertToWideString(const char* pSource, uint32_t size, std::wstring& result);
 
         void SplitViewByLines(StringView buffer, Vector<StringView>& outLines);
         void ReplaceChars(String& buffer, char from, char to);

@@ -6,6 +6,8 @@
 #include <Utils/FileSystem/File.h>
 #include <Utils/Platform/Platform.h>
 #include <Utils/Common/StringUtils.h>
+#include <Utils/Memory/Allocator.h>
+#include <Utils/Memory/MemoryLiterals.h>
 
 #include <filesystem>
 #include <system_error>
@@ -59,6 +61,8 @@ namespace SR_UTILS_NS {
     }
 
     void DirectoryVFSBackend::Enumerate(StringView directory, const IVFSBackend::EnumerateCallback& callback, bool recursive) const {
+        SR_GLOBAL_LOCK;
+
         static String gEnumerateResolvedPathBuffer;
         ResolveVirtualPath(directory, gEnumerateResolvedPathBuffer);
         if (gEnumerateResolvedPathBuffer.empty()) {
@@ -130,13 +134,20 @@ namespace SR_UTILS_NS {
             callback(vfsEntry);
         };
 
+        static SR_UTILS_NS::MonotonicAllocator gEnumerateAllocator(8_KB);
+        gEnumerateAllocator.ResetMemory();
+        SR_UTILS_NS::SetThreadLocalAllocator(&gEnumerateAllocator);
+
+        Vector<std::filesystem::directory_entry> entries(&gEnumerateAllocator);
+        entries.reserve(16);
+
         if (recursive) {
             for (const auto& entry : std::filesystem::recursive_directory_iterator(gEnumerateResolvedPathBuffer.view(), errorCode)) {
                 if (errorCode) {
                     SR_ERROR("DirectoryVFSBackend::Enumerate() : failed to enumerate directory \"{}\"! Error: {}", gEnumerateResolvedPathBuffer, errorCode.message());
                     return;
                 }
-                processEntry(entry);
+                entries.emplace_back(entry);
             }
         }
         else {
@@ -145,9 +156,19 @@ namespace SR_UTILS_NS {
                     SR_ERROR("DirectoryVFSBackend::Enumerate() : failed to enumerate directory \"{}\"! Error: {}", gEnumerateResolvedPathBuffer, errorCode.message());
                     return;
                 }
-                processEntry(entry);
+                entries.emplace_back(entry);
             }
         }
+
+        SR_UTILS_NS::SetThreadLocalAllocator(nullptr);
+
+        for (const auto& entry : entries) {
+            processEntry(entry);
+        }
+
+        SR_UTILS_NS::SetThreadLocalAllocator(&gEnumerateAllocator);
+        entries = {};
+        SR_UTILS_NS::SetThreadLocalAllocator(nullptr);
     }
 
     void DirectoryVFSBackend::Delete(StringView path) const {

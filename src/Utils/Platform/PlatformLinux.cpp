@@ -531,7 +531,7 @@ namespace SR_PLATFORM_NS {
         }
     }
 
-    bool IsAbsolutePath(const Path& path) {
+    bool IsAbsolutePath(const StringView path) {
         if (!path.empty() && path[0] == '/') {
             return true;
         }

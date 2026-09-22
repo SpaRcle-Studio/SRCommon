@@ -113,30 +113,51 @@ namespace SR_UTILS_NS {
 
     void Path::GetFiles(Vector<Path>& out) const {
         SR_TRACY_ZONE;
-        out.clear();
+        uint32_t count = 0;
         VFS::Instance().Enumerate(GetNormalized(), [&](const VFSEntry& entry) {
             if (entry.type == FSItemType::File) {
-                out.emplace_back(entry.relativePath);
+                count++;
+                if (out.size() < count) {
+                    out.emplace_back(entry.relativePath);
+                }
+                else {
+                    out[count - 1] = entry.relativePath;
+                }
             }
         }, false);
+        out.resize(count);
     }
 
     void Path::GetAll(Vector<Path>& out) const {
         SR_TRACY_ZONE;
-        out.clear();
+        uint32_t count = 0;
         VFS::Instance().Enumerate(GetNormalized(), [&](const VFSEntry& entry) {
-            out.emplace_back(entry.relativePath);
+            count++;
+            if (out.size() < count) {
+                out.emplace_back(entry.relativePath);
+            }
+            else {
+                out[count - 1] = entry.relativePath;
+            }
         }, false);
+        out.resize(count);
     }
 
     void Path::GetFolders(Vector<Path>& out) const {
         SR_TRACY_ZONE;
-        out.clear();
+        uint32_t count = 0;
         VFS::Instance().Enumerate(GetNormalized(), [&](const VFSEntry& entry) {
             if (entry.type == FSItemType::Folder) {
-                out.emplace_back(entry.relativePath);
+                count++;
+                if (out.size() < count) {
+                    out.emplace_back(entry.relativePath);
+                }
+                else {
+                    out[count - 1] = entry.relativePath;
+                }
             }
         }, false);
+        out.resize(count);
     }
 
     const char* Path::CStr() const {
