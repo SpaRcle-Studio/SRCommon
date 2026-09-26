@@ -4,6 +4,7 @@
 
 #include <Utils/TypeTraits/Factory.h>
 #include <Utils/TypeTraits/SRClassMeta.h>
+#include <Utils/Reflection/Value.h>
 #include <Utils/Debug.h>
 #include <Utils/Common/Breakpoint.h>
 
@@ -71,6 +72,7 @@ namespace SR_UTILS_NS {
 
             auto&& pClass = pIt->second.allocator();
             if (pClass) {
+                InitNotNulls(pClass);
                 return pClass;
             }
 
@@ -144,6 +146,40 @@ namespace SR_UTILS_NS {
             }
         }
         return false;
+    }
+
+    void Factory::InitNotNulls(SRClass* pClass) const noexcept {
+        pClass->GetMeta()->ForEachProperty([&](const Reflection::Property& property, auto&&) {
+            if (property.GetEditorParams().IsNotNull() && !property.GetEditorParams().IsDontInitNull()) {
+                auto&& typeInfo = property.GetDefaultValue().GetTypeInfo();
+                if (typeInfo.category != Reflection::ReflectedCategoryType::Container || typeInfo.detailedType != "SharedPtr") {
+                    return;
+                }
+                auto type = typeInfo.pNext[0]->detailedType;
+                if (IsAbstract(type)) {
+                    type = GetFirstNonAbstractClass(type);
+                }
+                if (!type.empty()) {
+                    auto&& pNewValue = CreateBase(type);
+                    auto&& currentPointer = property.Get(pClass);
+                    currentPointer.GetSharedPtrBase()->SetPointerFromBase(dynamic_cast<SR_HTYPES_NS::SharedPtrBase*>(pNewValue));
+                }
+            }
+        });
+    }
+
+    StringAtom Factory::GetFirstNonAbstractClass(StringAtom baseClass) const noexcept {
+        for (auto&& [name, info] : m_types) {
+            if (info.isAbstract) {
+                continue;
+            }
+            if (auto&& pMeta = info.metaGetter()) {
+                if (pMeta->IsInherited(baseClass)) {
+                    return name;
+                }
+            }
+        }
+        return {};
     }
 
     bool BaseFactory::IsRegistered(const SRClassMeta* pMeta) const {

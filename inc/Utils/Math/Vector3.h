@@ -814,6 +814,7 @@ namespace SR_MATH_NS {
     typedef Vector3<uint32_t> UVector3;
     typedef Vector3<bool> BVector3;
 
+    SR_INLINE static const IVector3 IVector3MAX = IVector3 { INT32_MAX, INT32_MAX, INT32_MAX };
     SR_INLINE static const FVector3 InfinityFV3 = FVector3 { UnitMAX, UnitMAX, UnitMAX };
     SR_INLINE static const FVector3 CmpEpsilonFV3 = FVector3 {
             static_cast<Unit>(CMP_EPSILON),

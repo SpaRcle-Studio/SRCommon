@@ -30,6 +30,8 @@ namespace SR_HTYPES_NS {
     public:
         SR_NODISCARD MeshIndex GetMeshId() const noexcept { return m_meshId; }
         SR_NODISCARD const RawMeshPtr& GetRawMesh() const noexcept { return m_rawMesh; }
+        /// Внимание: это ссылка на путь разделяемого RawMesh. Писать по ней нельзя -
+        /// иначе путь подменится у всех держателей этого же ресурса.
         SR_NODISCARD const SR_UTILS_NS::Path& GetMeshPath() const noexcept;
         SR_NODISCARD std::string GetMeshStringPath() const noexcept;
         SR_NODISCARD bool IsValidMeshId() const noexcept;

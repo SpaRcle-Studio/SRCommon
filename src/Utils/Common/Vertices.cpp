@@ -33,6 +33,12 @@ namespace SR_UTILS_NS {
                 return true;
             }
 
+            if (verticesCount == 0 || vertexSize == 0) {
+                SR_ERROR("OptimizeVerticesImpl() : vertices data is empty!");
+                outSimplifiedIndices.clear();
+                return false;
+            }
+
         #ifdef SR_COMMON_MESHOPTIMIZER
             float resultError = 0.0f;
             uint32_t options = 0;

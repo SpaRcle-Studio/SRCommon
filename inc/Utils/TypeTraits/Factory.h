@@ -85,8 +85,9 @@ namespace SR_UTILS_NS {
             return Create<T>(T::GetClassStaticName());
         }
 
-        SR_NODISCARD SRClass* CreateBase(SR_UTILS_NS::StringAtom name) const noexcept;
-        SR_NODISCARD Vector<SR_UTILS_NS::StringAtom> GetInheritances(SR_UTILS_NS::StringAtom baseClass) const noexcept;
+        SR_NODISCARD SRClass* CreateBase(StringAtom name) const noexcept;
+        SR_NODISCARD Vector<StringAtom> GetInheritances(SR_UTILS_NS::StringAtom baseClass) const noexcept;
+        SR_NODISCARD StringAtom GetFirstNonAbstractClass(StringAtom baseClass) const noexcept;
         SR_NODISCARD bool HasBaseClass(StringAtom name, StringAtom baseClass) const noexcept;
         SR_NODISCARD bool IsAbstract(SR_UTILS_NS::StringAtom name) const noexcept;
         SR_NODISCARD const SRClassMeta* GetType(SR_UTILS_NS::StringAtom name) const noexcept override;
@@ -95,6 +96,7 @@ namespace SR_UTILS_NS {
         void ForEachClass(const SR_HTYPES_NS::Function<void(const SRClassMeta*)>& func) const noexcept;
 
     private:
+        void InitNotNulls(SRClass* pClass) const noexcept;
         void WriteLog(const std::string& message) const noexcept;
         void WriteError(const std::string& message) const noexcept;
 

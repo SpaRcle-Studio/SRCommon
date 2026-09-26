@@ -29,6 +29,7 @@ namespace SR_UTILS_NS::Reflection {
         EditorPropertyParams& SetRange(float_t min, float_t max) noexcept { m_range = std::make_pair(min, max); return *this; }
         EditorPropertyParams& SetNoHeader() noexcept { m_noHeader = true; return *this; }
         EditorPropertyParams& SetNotNull() noexcept { m_notNull = true; return *this; }
+        EditorPropertyParams& SetDontInitNull() noexcept { m_dontInitNull = true; return *this; }
         EditorPropertyParams& SetDebugOnly() noexcept { m_debugOnly = true; return *this; }
         EditorPropertyParams& SetTooltip(const StringAtom& tooltip) noexcept { m_tooltip = tooltip; return *this; }
         EditorPropertyParams& SetInspector(const StringAtom& inspector) noexcept { m_inspector = inspector; return *this; }
@@ -41,7 +42,7 @@ namespace SR_UTILS_NS::Reflection {
                     return *this;
                 }
             }
-            m_customArgs.emplace_back({ name, value });
+            m_customArgs.emplace_back(CustomArg{ name, value });
             return *this;
         }
 
@@ -54,6 +55,7 @@ namespace SR_UTILS_NS::Reflection {
         SR_NODISCARD StringAtom GetInspector() const noexcept { return m_inspector; }
         SR_NODISCARD bool IsNoHeader() const noexcept { return m_noHeader; }
         SR_NODISCARD bool IsNotNull() const noexcept { return m_notNull; }
+        SR_NODISCARD bool IsDontInitNull() const noexcept { return m_dontInitNull; }
         SR_NODISCARD bool IsDebugOnly() const noexcept { return m_debugOnly; }
 
         SR_NODISCARD std::string_view GetCustomArg(const StringAtom& name) const noexcept {
@@ -78,10 +80,11 @@ namespace SR_UTILS_NS::Reflection {
         float_t m_editorWidth = 0.f;
         float_t m_dragSpeed = 1.f;
         RangeType m_range;
-        bool m_noHeader = false;
-        bool m_notNull = false;
-        bool m_debugOnly = false;
-        SR_HTYPES_NS::ArrayVector<CustomArg, 16> m_customArgs;
+        bool m_noHeader     : 2 = false;
+        bool m_notNull      : 2 = false;
+        bool m_dontInitNull : 2 = false;
+        bool m_debugOnly    : 2 = false;
+        Vector<CustomArg> m_customArgs;
 
     };
 

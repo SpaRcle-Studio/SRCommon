@@ -653,6 +653,11 @@ namespace SR_UTILS_NS {
     template<typename T> Vector<T>::Vector(const Vector& other) {
         m_allocator = other.m_allocator;
         m_size = other.m_size;
+
+        if (m_size == 0) {
+            return;
+        }
+
         m_capacity = other.m_size;
         m_data = static_cast<T*>(AllocateMemory(sizeof(T) * other.m_size));
 

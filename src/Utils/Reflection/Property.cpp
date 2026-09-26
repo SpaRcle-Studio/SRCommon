@@ -61,7 +61,7 @@ namespace SR_UTILS_NS::Reflection {
         return *m_resetValue;
     }
 
-    const Value &Property::GetDefaultValue() const noexcept {
+    const Value& Property::GetDefaultValue() const noexcept {
         if (!m_defaultValue) {
             m_defaultValue = new Value();
         }

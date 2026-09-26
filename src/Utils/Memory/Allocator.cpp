@@ -75,14 +75,26 @@ namespace SR_UTILS_NS {
     }
 
     MonotonicAllocator::~MonotonicAllocator() {
-        SR_TRACY_ZONE;
-        Chunk* current = m_current;
-        while (current) {
-            Chunk* next = current->next;
-            SRFree(current->memory);
-            current->~Chunk();
-            SRFree(current);
-            current = next;
+        if (g_TracyAllocatorInitialized) {
+            SR_TRACY_ZONE;
+            Chunk *current = m_current;
+            while (current) {
+                Chunk *next = current->next;
+                SRFree(current->memory);
+                current->~Chunk();
+                SRFree(current);
+                current = next;
+            }
+        }
+        else {
+            Chunk *current = m_current;
+            while (current) {
+                Chunk *next = current->next;
+                SRFree(current->memory);
+                current->~Chunk();
+                SRFree(current);
+                current = next;
+            }
         }
     }
 

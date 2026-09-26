@@ -129,11 +129,12 @@ namespace SR_HTYPES_NS {
             return Add(std::forward<T>(value));
         }
 
-        void Erase(Iterator it) {
-            m_data.erase(it);
+        Vector<T>::Iterator Erase(Iterator it) {
+            return m_data.erase(it);
         }
-        void erase(Iterator it) {
-            m_data.erase(it);
+
+        Vector<T>::Iterator erase(Iterator it) {
+            return m_data.erase(it);
         }
 
         SR_NODISCARD SR_CONSTEXPR Iterator begin() { return m_data.begin(); }
@@ -158,6 +159,18 @@ namespace SR_HTYPES_NS {
 
             auto it = std::lower_bound(m_data.begin(), m_data.end(), value, m_predicate);
             if (it != m_data.end() && *it == value) {
+                return &(*it);
+            }
+            return nullptr;
+        }
+
+        SR_NODISCARD const T* FindNoCompare(const T& value) const {
+            if (m_data.empty()) {
+                return nullptr;
+            }
+
+            auto it = std::lower_bound(m_data.begin(), m_data.end(), value, m_predicate);
+            if (it != m_data.end()) {
                 return &(*it);
             }
             return nullptr;

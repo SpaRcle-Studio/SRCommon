@@ -48,7 +48,7 @@ namespace SR_UTILS_NS {
         void OnHierarchyChanged() override;
 
     private:
-        /// @property @getter(GetTransform) @setter(SetTransform) @notNull
+        /// @property @getter(GetTransform) @setter(SetTransform) @notNull @dontInitNull
         /// @loadCondition(!This.IsPrefabLoadingState())
         SR_HTYPES_NS::SharedPtr<Transform> m_transform;
 
