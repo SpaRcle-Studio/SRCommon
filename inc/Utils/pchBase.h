@@ -170,8 +170,8 @@ namespace SR_UTILS_NS {
         Seq
     };
 
-    template <ExecutionPolicy policy, class FwdIt, class Fn>
-    void ForEach(FwdIt first, FwdIt last, Fn func) noexcept {
+    template <ExecutionPolicy policy, class FwdItFirst, class FwdItLast, class Fn>
+    void ForEach(FwdItFirst first, FwdItLast last, Fn func) noexcept {
     #if defined(SR_EMSCRIPTEN) || defined(SR_CLANG) || defined(SR_ANDROID)
         std::for_each(first, last, func);
     #else

@@ -233,7 +233,7 @@ namespace SR_UTILS_NS {
     SR_NODISCARD bool Component::IsComponentValid() const noexcept { return m_parent; }
     SR_NODISCARD bool Component::IsAttached() const noexcept { return m_isAttached; }
 
-    SR_NODISCARD bool Component::IsActive() const noexcept { return m_isActive; }
+    SR_NODISCARD bool Component::IsActive() const noexcept { return m_isActive && m_isEnabled; }
     SR_NODISCARD bool Component::IsEnabled() const noexcept { return m_isEnabled; }
 
     SR_NODISCARD bool Component::IsAwake() const noexcept { return m_isAwake; }
