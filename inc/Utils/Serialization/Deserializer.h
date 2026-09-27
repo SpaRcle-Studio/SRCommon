@@ -45,6 +45,7 @@ namespace SR_UTILS_NS {
         SR_NODISCARD virtual bool AllowReAllocPointer(ReAllocPointerReason reason) const noexcept = 0;
 
         virtual void ResetWalker() = 0;
+        virtual void Detach() { }
 
         virtual bool BeginItem(const SerializationId& id, uint32_t index) = 0;
         virtual void EndItem() = 0;

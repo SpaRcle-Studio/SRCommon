@@ -43,9 +43,11 @@ namespace SR_UTILS_NS {
 
     IBaseSerialization::~IBaseSerialization() {
         SR_TRACY_ZONE;
+        m_root = SerializationNode();
         m_stack.Destroy();
         m_walker.Destroy();
-        m_root = SerializationNode();
+        m_stringsPool = {};
+        m_nodesPool = {};
     }
 
     /// ========================================== IBaseSerializer =====================================================
@@ -251,17 +253,21 @@ namespace SR_UTILS_NS {
         value = tempUnicode;
     }
 
+    void IBaseDeserializer::Detach() {
+        GetImpl().m_root.DetachAllocatorInPlace();
+    }
+
     SerializationNode SerializationNode::DetachAllocator() const noexcept {
         SR_TRACY_ZONE;
         SerializationNode node = *this;
-        node.DetachAllocatorImpl();
+        node.DetachAllocatorInPlace();
         return node;
     }
 
-    void SerializationNode::DetachAllocatorImpl() noexcept {
+    void SerializationNode::DetachAllocatorInPlace() noexcept {
         children = children.DetachAllocator();
         for (auto&& child : children) {
-            child.DetachAllocatorImpl();
+            child.DetachAllocatorInPlace();
         }
         string = string.DetachAllocator();
     }

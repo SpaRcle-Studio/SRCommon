@@ -91,8 +91,7 @@ namespace SR_UTILS_NS {
         SerializationTrivialDataType data = {};
         Vector<SerializationNode> children;
 
-    private:
-        void DetachAllocatorImpl() noexcept;
+        void DetachAllocatorInPlace() noexcept;
 
     };
 
@@ -184,6 +183,7 @@ namespace SR_UTILS_NS {
         SR_NODISCARD bool HasKey(const SerializationId& name) const noexcept override;
 
         void ResetWalker() override { GetImpl().m_walker.resize(1); }
+        void Detach();
 
         bool BeginItem(const SerializationId& id, uint32_t index) override;
         void EndItem() override;
