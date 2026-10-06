@@ -165,9 +165,9 @@
         </Expand>
     </Type>
 
-    <Type Name="SpaRcle::Utils::StringAtom">
+    <!--<Type Name="SpaRcle::Utils::StringAtom">
         <DisplayString Condition="m_info == 0">empty</DisplayString>
-        <DisplayString Condition="m_info != 0">hash={m_info->hash}</DisplayString>
+        <DisplayString Condition="m_info != 0">{m_info->data} (hash={m_info->hash})</DisplayString>
         <Expand>
             <Item Name="[hash]" Condition="m_info != 0">m_info->hash</Item>
             <Item Name="[str]" Condition="m_info != 0">m_info->data</Item>
@@ -175,6 +175,10 @@
             <Item Name="[info]" Condition="m_info != 0">*m_info</Item>
         </Expand>
     </Type>
+
+    <Type Name="SpaRcle::Utils::StringHashInfo">
+        <DisplayString>{data} (hash={hash})</DisplayString>
+    </Type>-->
 
     <Type Name="SR_HTYPES_NS::UnicodeString">
         <DisplayString Condition="m_internal.size() == 0">empty</DisplayString>

@@ -32,13 +32,13 @@ namespace SR_UTILS_NS {
         SR_NODISCARD StringAtom GetId() const noexcept { return m_id; }
         SR_NODISCARD virtual StringAtom GetResourceType() const noexcept { return {}; }
         SR_NODISCARD StringAtom GetExtension() const noexcept;
-        SR_NODISCARD const IResource::Ptr& GetResourceBase() const noexcept { return m_resource; }
+        SR_NODISCARD const IResource::Ptr& GetResourceBase() const noexcept;
 
     protected:
         /// @property @hidden
         StringAtom m_id;
         /// @property @hidden @dontSave @dontClone
-        IResource::Ptr m_resource;
+        mutable IResource::Ptr m_resource;
 
     };
 
@@ -48,6 +48,12 @@ namespace SR_UTILS_NS {
         ResourceRef() = default;
         ResourceRef(StringAtom id); /// NOLINT(google-explicit-constructor)
         ResourceRef(const Path& path); /// NOLINT(google-explicit-constructor)
+        ResourceRef(const SR_HTYPES_NS::SharedPtr<T>& pResource); /// NOLINT(google-explicit-constructor)
+        ResourceRef(const ResourceRef<T>& other) = default;
+        ResourceRef(ResourceRef<T>&& other) noexcept = default;
+
+        ResourceRef<T>& operator=(const ResourceRef<T>& other) = default;
+        ResourceRef<T>& operator=(ResourceRef<T>&& other) noexcept = default;
 
         SR_NODISCARD StringAtom GetResourceType() const noexcept override;
 
@@ -58,6 +64,10 @@ namespace SR_UTILS_NS {
             return nullptr;
         }
 
+        SR_NODISCARD operator bool() const noexcept {
+            return IsValid();
+        }
+
         bool operator==(const ResourceRef<T>& other) const noexcept {
             return m_id == other.m_id && GetResourceType() == other.GetResourceType();
         }
@@ -66,6 +76,18 @@ namespace SR_UTILS_NS {
             return !(*this == other);
         }
     };
+
+    template<class T> ResourceRef<T>::ResourceRef(const Types::SharedPtr<T>& pResource) {
+        if (pResource) {
+            m_id = pResource->GetResourceId();
+            m_resource = pResource.template StaticCast<IResource>();
+            m_resource->AddUsePoint();
+        }
+        else {
+            m_id = {};
+            m_resource = nullptr;
+        }
+    }
 
     template<class T> StringAtom ResourceRef<T>::GetResourceType() const noexcept {
         /// @note both branches must return the same name: Factory::Register() stores the meta factory name
@@ -88,7 +110,6 @@ namespace SR_UTILS_NS {
     template<class T> ResourceRef<T>::ResourceRef(StringAtom id) {
         SR_TRACY_ZONE;
         m_id = id;
-        m_resource = LoadResource(GetResourceType(), id);
     }
 
     template<class T> ResourceRef<T>::ResourceRef(const Path& path)

@@ -403,6 +403,7 @@ include(cmake/SRCommonLinking.cmake)
 
 if (MSVC)
     target_compile_options(Utils PUBLIC /openmp)
+    target_link_options(Utils PUBLIC "/NATVIS:${CMAKE_CURRENT_SOURCE_DIR}/Utils.natvis")
     if (NOT SR_COMMON_USE_CLANG_EMULATION)
         set_target_properties(Utils PROPERTIES
             VS_DEBUGGER_NATVIS "Utils.natvis"
