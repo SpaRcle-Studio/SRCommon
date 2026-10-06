@@ -3,9 +3,10 @@
 //
 
 #include <Utils/DebugDraw.h>
-#include <Utils/Debug.h>
 #include <Utils/Types/Thread.h>
 #include <Utils/Types/RawMesh.h>
+
+#include <Codegen/DebugDraw.generated.hpp>
 
 namespace SR_UTILS_NS {
     /// ---------------------------------------------- CALLBACKS INITIALIZATIONS ---------------------------------------

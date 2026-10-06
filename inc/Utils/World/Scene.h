@@ -100,7 +100,9 @@ namespace SR_WORLD_NS {
 
         virtual GameObjectPtr FindOrInstanceGameObject(SR_UTILS_NS::StringAtom name);
         virtual GameObjectPtr InstanceGameObject(SR_UTILS_NS::StringAtom name);
-        virtual GameObjectPtr GetMainCamera() const;
+
+        /// @method @evaluate
+        virtual SR_HTYPES_NS::SharedPtr<GameObject> GetMainCamera() const;
 
         IComponentable::ScenePtr GetScene() const override { return const_cast<ScenePtr>(this); }
 

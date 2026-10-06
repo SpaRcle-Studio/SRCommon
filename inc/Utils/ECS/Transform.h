@@ -126,8 +126,11 @@ namespace SR_UTILS_NS {
         /// @method @evaluate
         SR_NODISCARD SR_MATH_NS::FVector3 TransformDirection(const SR_MATH_NS::FVector3& direction) const;
 
+        /// @method @evaluate
         SR_NODISCARD SR_MATH_NS::FVector3 GetGlobalTranslation() const;
+        /// @method @evaluate
         SR_NODISCARD virtual SR_MATH_NS::Quaternion GetGlobalRotation() const;
+        /// @method @evaluate
         SR_NODISCARD virtual SR_MATH_NS::FVector3 GetGlobalScale() const;
 
         SR_NODISCARD Transform* GetParentTransform() const;

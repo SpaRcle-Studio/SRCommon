@@ -22,7 +22,11 @@ namespace SR_UTILS_NS {
      *
      * \arg Id: maybe SR_ID_INVALID
      */
-    class IDebugDraw {
+
+
+    /// @abstract @noCopyable @noMovable
+    class IDebugDraw : public SRClass {
+        SR_CLASS()
     public:
         using RemoveCallback = SR_HTYPES_NS::Function<void(uint64_t id)>;
         using DrawLineCallback = SR_HTYPES_NS::Function<uint64_t(uint64_t id, const SR_MATH_NS::FVector3& start, const SR_MATH_NS::FVector3& end, const SR_MATH_NS::FColor& color, float_t time)>;
@@ -78,6 +82,7 @@ namespace SR_UTILS_NS {
         uint64_t DrawMesh(SR_HTYPES_NS::RawMesh* pRawMesh, int32_t meshId, uint64_t id);
         uint64_t DrawMesh(SR_HTYPES_NS::RawMesh* pRawMesh, int32_t meshId);
 
+        /// @method
         uint64_t DrawLine(uint64_t id, const SR_MATH_NS::FVector3& start, const SR_MATH_NS::FVector3& end, const SR_MATH_NS::FColor& color, float_t time);
         uint64_t DrawLine(uint64_t id, const SR_MATH_NS::FVector3& start, const SR_MATH_NS::FVector3& end, const SR_MATH_NS::FColor& color);
         uint64_t DrawLine(uint64_t id, const SR_MATH_NS::FVector3& start, const SR_MATH_NS::FVector3& end, float_t time);
@@ -89,6 +94,7 @@ namespace SR_UTILS_NS {
         uint64_t DrawLine(uint64_t id);
         uint64_t DrawLine();
 
+        /// @method
         uint64_t DrawCube(uint64_t id, const SR_MATH_NS::FVector3& pos, const SR_MATH_NS::Quaternion& rot, const SR_MATH_NS::FVector3& scale, const SR_MATH_NS::FColor& color, float_t time);
         uint64_t DrawCube(uint64_t id, const SR_MATH_NS::FVector3& pos, const SR_MATH_NS::Quaternion& rot, const SR_MATH_NS::FVector3& scale, const SR_MATH_NS::FColor& color);
         uint64_t DrawCube(uint64_t id, const SR_MATH_NS::FVector3& pos, const SR_MATH_NS::Quaternion& rot, const SR_MATH_NS::FVector3& scale);
@@ -108,6 +114,7 @@ namespace SR_UTILS_NS {
         uint64_t DrawCube(uint64_t id);
         uint64_t DrawCube();
 
+        /// @method
         uint64_t DrawPlane(uint64_t id, const SR_MATH_NS::FVector3& pos, const SR_MATH_NS::Quaternion& rot, const SR_MATH_NS::FVector3& scale, const SR_MATH_NS::FColor& color, float_t time);
         uint64_t DrawPlane(uint64_t id, const SR_MATH_NS::FVector3& pos, const SR_MATH_NS::Quaternion& rot, const SR_MATH_NS::FVector3& scale, const SR_MATH_NS::FColor& color);
         uint64_t DrawPlane(uint64_t id, const SR_MATH_NS::FVector3& pos, const SR_MATH_NS::Quaternion& rot, const SR_MATH_NS::FVector3& scale);
@@ -127,6 +134,7 @@ namespace SR_UTILS_NS {
         uint64_t DrawPlane(uint64_t id);
         uint64_t DrawPlane();
 
+        /// @method
         uint64_t DrawSphere(uint64_t id, const SR_MATH_NS::FVector3& pos, const SR_MATH_NS::Quaternion& rot, const SR_MATH_NS::FVector3& scale, const SR_MATH_NS::FColor& color, float_t time);
         uint64_t DrawSphere(uint64_t id, const SR_MATH_NS::FVector3& pos, const SR_MATH_NS::Quaternion& rot, const SR_MATH_NS::FVector3& scale, const SR_MATH_NS::FColor& color);
         uint64_t DrawSphere(uint64_t id, const SR_MATH_NS::FVector3& pos, const SR_MATH_NS::Quaternion& rot, const SR_MATH_NS::FVector3& scale);
@@ -146,6 +154,7 @@ namespace SR_UTILS_NS {
         uint64_t DrawSphere(uint64_t id);
         uint64_t DrawSphere();
 
+        /// @method
         uint64_t DrawCapsule(uint64_t id, const SR_MATH_NS::FVector3& pos, const SR_MATH_NS::Quaternion& rot, const SR_MATH_NS::FVector3& scale, const SR_MATH_NS::FColor& color, float_t time);
         uint64_t DrawCapsule(uint64_t id, const SR_MATH_NS::FVector3& pos, const SR_MATH_NS::Quaternion& rot, const SR_MATH_NS::FVector3& scale, const SR_MATH_NS::FColor& color);
         uint64_t DrawCapsule(uint64_t id, const SR_MATH_NS::FVector3& pos, const SR_MATH_NS::Quaternion& rot, const SR_MATH_NS::FVector3& scale);
@@ -165,6 +174,7 @@ namespace SR_UTILS_NS {
         uint64_t DrawCapsule(uint64_t id);
         uint64_t DrawCapsule();
 
+        /// @method
         void DrawQuaternion(const SR_MATH_NS::FVector3& pos, const SR_MATH_NS::Quaternion& q, const SR_MATH_NS::FColor& color, float_t time);
 
     private:
@@ -175,12 +185,16 @@ namespace SR_UTILS_NS {
 
     };
 
+    /// @noCopyable @noMovable
     class DebugDraw : public IDebugDraw, public Singleton<DebugDraw> {
         SR_REGISTER_SINGLETON(DebugDraw)
+        SR_CLASS()
     };
 
+    /// @noCopyable @noMovable
     class DebugOverlayDraw : public IDebugDraw, public Singleton<DebugOverlayDraw> {
         SR_REGISTER_SINGLETON(DebugOverlayDraw)
+        SR_CLASS()
     };
 }
 
