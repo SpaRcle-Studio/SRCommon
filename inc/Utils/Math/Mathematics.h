@@ -80,6 +80,7 @@
 namespace SR_MATH_NS {
     template<typename T> SR_NODISCARD constexpr std::enable_if_t<std::is_arithmetic_v<T>, T> Min(T a, T b) noexcept { return a < b ? a : b; }
     template<typename T> SR_NODISCARD constexpr std::enable_if_t<std::is_arithmetic_v<T>, T> Max(T a, T b) noexcept { return a > b ? a : b; }
+    template<typename T> SR_NODISCARD constexpr std::enable_if_t<std::is_arithmetic_v<T>, T> Pow(T a, T b) noexcept { return static_cast<T>(std::pow(static_cast<double_t>(a), static_cast<double_t>(b))); }
 
     SR_COMMON_DLL_API extern bool HasSSE41();
 
