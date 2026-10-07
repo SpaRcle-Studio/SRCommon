@@ -26,9 +26,11 @@ namespace SR_UTILS_NS {
         void OnPostLoad() override;
         void CloneTo(SRClass& clone) const override;
 
+        void ForceLoad() const;
+
         SR_NODISCARD static IResource::Ptr LoadResource(StringAtom type, StringAtom id);
 
-        SR_NODISCARD bool IsValid() const noexcept { return m_resource.Valid(); }
+        SR_NODISCARD bool IsValid() const noexcept { return GetResourceBase().Valid(); }
         SR_NODISCARD StringAtom GetId() const noexcept { return m_id; }
         SR_NODISCARD virtual StringAtom GetResourceType() const noexcept { return {}; }
         SR_NODISCARD StringAtom GetExtension() const noexcept;
@@ -47,6 +49,7 @@ namespace SR_UTILS_NS {
     public:
         ResourceRef() = default;
         ResourceRef(StringAtom id); /// NOLINT(google-explicit-constructor)
+        ResourceRef(StringView id); /// NOLINT(google-explicit-constructor)
         ResourceRef(const Path& path); /// NOLINT(google-explicit-constructor)
         ResourceRef(const SR_HTYPES_NS::SharedPtr<T>& pResource); /// NOLINT(google-explicit-constructor)
         ResourceRef(const ResourceRef<T>& other) = default;
@@ -108,6 +111,11 @@ namespace SR_UTILS_NS {
     }
 
     template<class T> ResourceRef<T>::ResourceRef(StringAtom id) {
+        SR_TRACY_ZONE;
+        m_id = id;
+    }
+
+    template<class T> ResourceRef<T>::ResourceRef(StringView id) {
         SR_TRACY_ZONE;
         m_id = id;
     }

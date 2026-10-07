@@ -116,11 +116,6 @@ namespace SR_UTILS_NS {
     }
 
     void ResourceRefBase::OnPostLoad() {
-        SR_TRACY_ZONE;
-        if (m_resource) {
-            m_resource->RemoveUsePoint();
-        }
-        m_resource = m_id.empty() ? nullptr : LoadResource(GetResourceType(), m_id);
         Super::OnPostLoad();
     }
 
@@ -134,5 +129,12 @@ namespace SR_UTILS_NS {
             pResource->RemoveUsePoint();
         }
         static_cast<ResourceRefBase&>(clone).m_resource = m_resource;
+    }
+
+    void ResourceRefBase::ForceLoad() const {
+        SR_TRACY_ZONE;
+        if (!m_resource && !m_id.empty()) {
+            m_resource = LoadResource(GetResourceType(), m_id);
+        }
     }
 }
