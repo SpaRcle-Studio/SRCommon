@@ -289,15 +289,15 @@ namespace SR_MATH_NS {
         return FColor(r + v.r, g + v.g, b + v.b, a + v.a);
     }
 
-    FColor FColor::Red() { return FColor(255.f, 0.f, 0.f, 255.f); }
-    FColor FColor::Green() { return FColor(0.f, 255.f, 0.f, 255.f); }
-    FColor FColor::Blue() { return FColor(0.f, 0.f, 255.f, 255.f); }
-    FColor FColor::White() { return FColor(255.f, 255.f, 255.f, 255.f); }
-    FColor FColor::Black() { return FColor(0.f, 0.f, 0.f, 255.f); }
-    FColor FColor::Yellow() { return FColor(255.f, 255.f, 0.f, 255.f); }
-    FColor FColor::Cyan() { return FColor(0.f, 255.f, 255.f, 255.f); }
-    FColor FColor::Magenta() { return FColor(255.f, 0.f, 255.f, 255.f); }
-    FColor FColor::Alpha() { return FColor(0.f, 0.f, 0.f, 0.f); }
+    FColor FColor::Red() { return FColor(255.f, 0.f, 0.f, 255.f) / 255.f; }
+    FColor FColor::Green() { return FColor(0.f, 255.f, 0.f, 255.f) / 255.f; }
+    FColor FColor::Blue() { return FColor(0.f, 0.f, 255.f, 255.f) / 255.f; }
+    FColor FColor::White() { return FColor(255.f, 255.f, 255.f, 255.f)  / 255.f; }
+    FColor FColor::Black() { return FColor(0.f, 0.f, 0.f, 255.f) / 255.f; }
+    FColor FColor::Yellow() { return FColor(255.f, 255.f, 0.f, 255.f) / 255.f; }
+    FColor FColor::Cyan() { return FColor(0.f, 255.f, 255.f, 255.f) / 255.f; }
+    FColor FColor::Magenta() { return FColor(255.f, 0.f, 255.f, 255.f) / 255.f; }
+    FColor FColor::Alpha() { return FColor(0.f, 0.f, 0.f, 0.f) / 255.f; }
 
     FColor FColor::RGBFromHash(SRHashType hash) {
         FColor c;

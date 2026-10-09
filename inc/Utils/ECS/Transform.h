@@ -71,18 +71,21 @@ namespace SR_UTILS_NS {
                                const SR_UTILS_NS::Optional<SR_MATH_NS::Quaternion>& rotation,
                                const SR_UTILS_NS::Optional<SR_MATH_NS::FVector3>& scale);
 
+        /// @method
         virtual void SetGlobalTranslation(const SR_MATH_NS::FVector3& translation);
 
         virtual void SetGlobalRotation(const SR_MATH_NS::FVector3& eulers);
 
         virtual void SetGlobalRotation(const SR_MATH_NS::Quaternion& quaternion);
 
+        /// @method
         virtual void SetTranslation(const SR_MATH_NS::FVector3& translation);
         virtual void SetTranslation(SR_MATH_NS::Unit x, SR_MATH_NS::Unit y, SR_MATH_NS::Unit z);
         virtual void SetTranslationAndRotation(const SR_MATH_NS::FVector3& translation, const SR_MATH_NS::FVector3& euler);
         virtual void SetRotation(const SR_MATH_NS::FVector3& euler);
         virtual void SetRotation(const SR_MATH_NS::Quaternion& quaternion);
         virtual void SetRotation(SR_MATH_NS::Unit yaw, SR_MATH_NS::Unit pitch, SR_MATH_NS::Unit roll);
+        /// @method
         virtual void SetScale(const SR_MATH_NS::FVector3& scale);
         virtual void SetScale(SR_MATH_NS::Unit x, SR_MATH_NS::Unit y, SR_MATH_NS::Unit z);
         virtual void SetSkew(const SR_MATH_NS::FVector3& skew);

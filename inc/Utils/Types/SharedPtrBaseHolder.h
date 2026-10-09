@@ -33,6 +33,7 @@ namespace SR_UTILS_NS {
         void Decrement();
 
     private:
+        SR_HTYPES_NS::SharedPtrDynamicData* m_pControl = nullptr;
         SR_HTYPES_NS::SharedPtrBase* m_pData = nullptr;
 
     };
