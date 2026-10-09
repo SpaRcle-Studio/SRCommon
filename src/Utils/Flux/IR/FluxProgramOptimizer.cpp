@@ -44,6 +44,7 @@ namespace SR_FLUX_NS {
                 case FluxOpcode::Ref:
                 case FluxOpcode::Cast:
                 case FluxOpcode::Property:
+                case FluxOpcode::SetProperty:
                     return operandCount == 2;
                 case FluxOpcode::Push:
                 case FluxOpcode::Pop:
@@ -245,9 +246,10 @@ namespace SR_FLUX_NS {
                     m_callLayouts[index] = MakeCallLayout(instruction);
                 }
                 /// ref делает приёмник псевдонимом источника: запись в один регистр меняет значение
-                /// другого, поэтому оба исключаются из оптимизации. Свойство ссылается на данные
-                /// объекта, поэтому регистр объекта нельзя ни подменять, ни переиспользовать
-                else if (instruction.opcode == FluxOpcode::Ref || instruction.opcode == FluxOpcode::Property) {
+                /// другого, поэтому оба исключаются из оптимизации. prop сюда не относится: запись
+                /// в его приёмник лишь заменяет ссылку, а регистр объекта защищён тем, что операнды
+                /// prop не подменяются (IsReadOnlyOperand), а оптимизатор новых записей не создаёт
+                else if (instruction.opcode == FluxOpcode::Ref) {
                     for (auto&& operand : instruction.operands) {
                         if (IsRegister(operand)) {
                             m_aliased[operand - m_registerBase] = 1;
@@ -369,6 +371,8 @@ namespace SR_FLUX_NS {
                     fn(instruction.operands[0]);
                     break;
                 case FluxOpcode::Swap:
+                /// setprop читает объект и значение, а пишет в данные объекта, а не в регистр
+                case FluxOpcode::SetProperty:
                     fn(instruction.operands[0]);
                     fn(instruction.operands[1]);
                     break;
@@ -446,6 +450,11 @@ namespace SR_FLUX_NS {
                 for (auto&& operand : instruction.operands) {
                     fn(operand);
                 }
+            }
+
+            /// setprop меняет данные объекта прямо в его регистре
+            if (instruction.opcode == FluxOpcode::SetProperty) {
+                fn(instruction.operands[0]);
             }
         }
 

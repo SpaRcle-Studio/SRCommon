@@ -26,6 +26,11 @@ namespace SR_FLUX_NS {
         /// нетронутым, пока жива ссылка
         Property,
 
+        /// запись свойства объекта: свойство callable.function объекта operands[0] получает
+        /// значение operands[1]. Запись идёт через сеттер свойства, после чего вызывается
+        /// его обработчик изменения - так же, как при правке в редакторе
+        SetProperty,
+
         Call,
 
         Push,
@@ -53,6 +58,7 @@ namespace SR_FLUX_NS {
         { "ref", FluxOpcode::Ref },
         { "cast", FluxOpcode::Cast },
         { "prop", FluxOpcode::Property },
+        { "setprop", FluxOpcode::SetProperty },
         { "call", FluxOpcode::Call },
         { "ret", FluxOpcode::Return },
         { "jmp", FluxOpcode::Jump },

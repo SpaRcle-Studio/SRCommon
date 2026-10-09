@@ -50,6 +50,12 @@ namespace SR_FLUX_NS {
     /// аргументу, то оно не копируется, а передаётся по ссылке - метод изменяет само свойство.
     /// Класс объекта хранится в callable.object, имя свойства - в callable.function.
     ///
+    /// WriteProperty, как и WriteVariable, участвует в потоке исполнения. Значение записывается
+    /// через сеттер свойства, после чего вызывается обработчик его изменения. Константы
+    /// неизменяемы: если объект является константой или свойством константы, запись идёт в его
+    /// копию в собственном регистре узла. По той же причине свойство константы передаётся
+    /// в выходной аргумент копией, а не ссылкой.
+    ///
     /// Раскладка пинов узлов. Flow-пин всегда имеет индекс 0 (и на входе, и на выходе).
     /// Узлы Evaluate / Constant / ReadVariable / ReadProperty являются чистыми - они не участвуют
     /// в потоке исполнения и вычисляются в точке использования.
@@ -66,6 +72,8 @@ namespace SR_FLUX_NS {
     ///   ReadVariable  | out: 0 - значение
     ///   ReadProperty  | in:  0 - объект                      | out: 0 - ссылка на свойство
     ///   WriteVariable | in:  0 - flow, 1 - значение          | out: 0 - flow
+    ///   WriteProperty | in:  0 - flow, 1 - объект, 2 - значение | out: 0 - flow, 1 - объект
+    ///                 |      после записи (копия, если исходный объект был константой)
     ///   Branch        | in:  0 - flow, 1 - условие           | out: 0 - flow (true), 1 - flow (false)
     ///   While         | in:  0 - flow, 1 - условие           | out: 0 - flow (тело), 1 - flow (после цикла)
     ///   For           | in:  0 - flow, 1 - начало, 2 - конец, 3 - шаг (опционально)
@@ -88,6 +96,7 @@ namespace SR_FLUX_NS {
 
         SR_NODISCARD uint32_t CompileInvokeNode(FluxGraphCompileContext& context, uint32_t nodeIndex) const;
         SR_NODISCARD uint32_t CompileWriteVariableNode(FluxGraphCompileContext& context, uint32_t nodeIndex) const;
+        SR_NODISCARD uint32_t CompileWritePropertyNode(FluxGraphCompileContext& context, uint32_t nodeIndex) const;
         SR_NODISCARD uint32_t CompileBranchNode(FluxGraphCompileContext& context, uint32_t nodeIndex) const;
         SR_NODISCARD uint32_t CompileWhileNode(FluxGraphCompileContext& context, uint32_t nodeIndex) const;
         SR_NODISCARD uint32_t CompileForNode(FluxGraphCompileContext& context, uint32_t nodeIndex) const;
@@ -106,6 +115,9 @@ namespace SR_FLUX_NS {
         SR_NODISCARD FluxValueRef EvaluateProperty(FluxGraphCompileContext& context, uint32_t nodeIndex) const;
         SR_NODISCARD FluxValueRef EvaluateCondition(FluxGraphCompileContext& context, uint32_t nodeIndex, uint32_t pinIndex) const;
         void ReleaseValue(FluxGraphCompileContext& context, const FluxValueRef& value) const;
+        /// значение является константой либо ссылкой на свойство (в том числе вложенное) константы.
+        /// Константы неизменяемы, поэтому перед записью такое значение копируется
+        SR_NODISCARD bool IsConstantBacked(const FluxGraphCompileContext& context, const FluxValueRef& value) const;
 
         void PushLoopScope(FluxGraphCompileContext& context) const;
         void PopLoopScope(FluxGraphCompileContext& context) const;

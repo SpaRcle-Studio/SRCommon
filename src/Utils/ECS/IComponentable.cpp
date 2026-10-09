@@ -323,9 +323,13 @@ namespace SR_UTILS_NS {
         SetDirty(true);
     }
 
-    IComponentable::ScenePtr IComponentable::GetScene() const {
+    IComponentable::ScenePtr IComponentable::GetScenePtr() const {
         SRHalt("Not implemented!");
         return nullptr;
+    }
+
+    SR_HTYPES_NS::SharedPtr<SR_WORLD_NS::Scene> IComponentable::GetScene() const {
+        return GetScenePtr();
     }
 
     void IComponentable::OnPostLoad() {

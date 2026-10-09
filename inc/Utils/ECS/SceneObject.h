@@ -40,12 +40,15 @@ namespace SR_UTILS_NS {
         ~SceneObject() override;
 
     public:
+        /// @method @evaluate
         SR_NODISCARD SR_FORCE_INLINE StringAtom GetName() const { return m_name; }
+        /// @method @evaluate
         SR_NODISCARD SR_FORCE_INLINE bool IsEnabled() const noexcept { return m_isEnabled; }
         SR_NODISCARD SR_FORCE_INLINE uint64_t GetIdInScene() const noexcept { return m_idInScene; }
 
-        SR_NODISCARD SR_FORCE_INLINE ScenePtr GetScene() const override { return m_scene; }
+        SR_NODISCARD SR_FORCE_INLINE ScenePtr GetScenePtr() const override { return m_scene; }
 
+        /// @method @evaluate
         SR_NODISCARD SR_FORCE_INLINE StringAtom GetLayer() const noexcept { return m_cachedLayer; }
         SR_NODISCARD SR_FORCE_INLINE StringAtom GetLocalLayer() const noexcept { return m_layer; }
 
@@ -55,7 +58,9 @@ namespace SR_UTILS_NS {
         SR_NODISCARD SR_FORCE_INLINE const SR_HTYPES_NS::SharedPtr<Prefab>& GetPrefab() const noexcept { return m_prefabInfo.pPrefab; }
         SR_NODISCARD SR_FORCE_INLINE bool IsPrefabOwner() const noexcept { return m_prefabInfo.isOwner; }
 
+        /// @method @evaluate
         SR_NODISCARD SR_FORCE_INLINE const SceneObject::Ptr& GetParent() const noexcept { return m_parent; }
+        /// @method @evaluate
         SR_NODISCARD SR_FORCE_INLINE const SceneObject::Ptr& GetRoot() const noexcept { return m_root; }
 
         SR_NODISCARD SR_FORCE_INLINE bool HasChildren() const { return !m_children.empty(); }

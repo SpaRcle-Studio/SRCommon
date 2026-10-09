@@ -95,16 +95,19 @@ namespace SR_WORLD_NS {
         void RegisterSceneObject(const SceneObjectPtr& pSO);
         void SetModule(StringView name, ISceneModule* pModule);
 
-        virtual SceneObjectPtr InstanceFromFile(const SR_UTILS_NS::Path& path);
-        virtual SceneObjectPtr Instance(const Types::RawMesh* rawMesh);
+        /// @method
+        virtual SR_HTYPES_NS::SharedPtr<SceneObject> InstanceFromFile(const SR_UTILS_NS::Path& path);
+        virtual SR_HTYPES_NS::SharedPtr<SceneObject> Instance(const Types::RawMesh* rawMesh);
 
-        virtual GameObjectPtr FindOrInstanceGameObject(SR_UTILS_NS::StringAtom name);
-        virtual GameObjectPtr InstanceGameObject(SR_UTILS_NS::StringAtom name);
+        /// @method
+        virtual SR_HTYPES_NS::SharedPtr<GameObject> FindOrInstanceGameObject(SR_UTILS_NS::StringAtom name);
+        /// @method
+        virtual SR_HTYPES_NS::SharedPtr<GameObject> InstanceGameObject(SR_UTILS_NS::StringAtom name);
 
         /// @method @evaluate
         virtual SR_HTYPES_NS::SharedPtr<GameObject> GetMainCamera() const;
 
-        IComponentable::ScenePtr GetScene() const override { return const_cast<ScenePtr>(this); }
+        IComponentable::ScenePtr GetScenePtr() const override { return const_cast<ScenePtr>(this); }
 
         SR_NODISCARD float_t GetSpeed() const { return m_speed; }
         void SetSpeed(float_t speed) { m_speed = speed; }

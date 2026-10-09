@@ -88,7 +88,10 @@ namespace SR_UTILS_NS {
 
         SR_NODISCARD virtual bool IsPrefab() const noexcept { return false; }
 
-        SR_NODISCARD virtual ScenePtr GetScene() const;
+        SR_NODISCARD virtual ScenePtr GetScenePtr() const;
+
+        /// @method @evaluate
+        virtual SR_HTYPES_NS::SharedPtr<SR_WORLD_NS::Scene> GetScene() const;
 
         void OnPostLoad() override;
 

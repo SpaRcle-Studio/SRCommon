@@ -124,6 +124,8 @@ namespace SR_FLUX_NS {
                 return CompileInvokeNode(context, nodeIndex);
             case FluxGraphNodeType::WriteVariable:
                 return CompileWriteVariableNode(context, nodeIndex);
+            case FluxGraphNodeType::WriteProperty:
+                return CompileWritePropertyNode(context, nodeIndex);
             case FluxGraphNodeType::Branch:
                 return CompileBranchNode(context, nodeIndex);
             case FluxGraphNodeType::For:
@@ -207,6 +209,93 @@ namespace SR_FLUX_NS {
         const auto destination = static_cast<FluxRegisterId>(context.program->constants.size() + pStorageIt->second);
         EmitBinary(context, FluxOpcode::Copy, value.operand, destination, nodeIndex);
         ReleaseValue(context, value);
+
+        return GetFlowTarget(nodeIndex, 0);
+    }
+
+    uint32_t FluxGraphCompiler::CompileWritePropertyNode(FluxGraphCompileContext& context, const uint32_t nodeIndex) const {
+        auto&& node = m_graph.GetNodes()[nodeIndex];
+
+        if (node.GetCallable().object.empty() || node.GetCallable().function.empty()) {
+            SR_ERROR("FluxGraphCompiler::CompileWritePropertyNode() : property of node {} is not specified!", nodeIndex);
+            context.hasErrors = true;
+            return FluxInvalidNode;
+        }
+
+        auto&& pObjectLink = m_graph.FindInputLink(nodeIndex, 1);
+        auto&& pValueLink = m_graph.FindInputLink(nodeIndex, 2);
+        if (!pObjectLink || !pValueLink) {
+            SR_ERROR("FluxGraphCompiler::CompileWritePropertyNode() : object or value pin of node {} is not connected!", nodeIndex);
+            context.hasErrors = true;
+            return FluxInvalidNode;
+        }
+
+        FluxValueRef object = EvaluateOutput(context, pObjectLink->GetSourceNode(), pObjectLink->GetSourcePin());
+        if (context.hasErrors) {
+            return FluxInvalidNode;
+        }
+
+        /// выходной пин публикует объект после записи. Копия константы и так принадлежит узлу,
+        /// поэтому публикуется она сама, а иначе - ссылка на исходный объект
+        const uint64_t outputKey = MakeFluxValueKey(nodeIndex, 1);
+        const uint32_t outputUseCount = GetUseCount(context, outputKey);
+        const bool isCopied = IsConstantBacked(context, object);
+
+        /// константа не должна меняться - запись идёт в её копию, принадлежащую узлу
+        if (isCopied) {
+            FluxValueRef copy;
+            copy.sourceNode = nodeIndex;
+            copy.sourcePin = 1;
+            copy.registerIndex = context.AllocateRegister();
+            copy.operand = context.ToOperand(copy.registerIndex);
+            copy.isRegister = true;
+            copy.loopDepth = context.loopDepth;
+
+            EmitBinary(context, FluxOpcode::Copy, object.operand, copy.operand, nodeIndex);
+            ReleaseValue(context, object);
+
+            /// к потребителям выходного пина добавляется владеющее использование самого узла
+            context.materialized.emplace(outputKey, copy);
+            context.pendingUses.emplace(outputKey, outputUseCount + 1);
+
+            object = copy;
+        }
+
+        const FluxValueRef value = EvaluateOutput(context, pValueLink->GetSourceNode(), pValueLink->GetSourcePin());
+        if (context.hasErrors) {
+            return FluxInvalidNode;
+        }
+
+        {
+            auto&& instruction = EmitInstruction(context, FluxOpcode::SetProperty, nodeIndex);
+            instruction.callable = node.GetCallable();
+            instruction.operands.reserve(2);
+            instruction.operands.emplace_back(object.operand);
+            instruction.operands.emplace_back(value.operand);
+        }
+
+        ReleaseValue(context, value);
+
+        if (!isCopied && outputUseCount > 0) {
+            FluxValueRef output;
+            output.sourceNode = nodeIndex;
+            output.sourcePin = 1;
+            output.registerIndex = context.AllocateRegister();
+            output.operand = context.ToOperand(output.registerIndex);
+            output.isRegister = true;
+            output.loopDepth = context.loopDepth;
+
+            EmitBinary(context, FluxOpcode::Ref, object.operand, output.operand, nodeIndex);
+
+            /// выход ссылается на данные объекта, поэтому использование объекта переходит к выходу
+            /// и возвращается вместе с ним - до этого регистр объекта не будет переиспользован
+            context.materialized.emplace(outputKey, output);
+            context.pendingUses.emplace(outputKey, outputUseCount);
+            context.propertyOwners[outputKey] = object;
+        }
+        else {
+            ReleaseValue(context, object);
+        }
 
         return GetFlowTarget(nodeIndex, 0);
     }
@@ -483,7 +572,11 @@ namespace SR_FLUX_NS {
         const uint32_t terminator = context.terminatorLabel;
 
         /// шаг может завершиться несколькими путями, поэтому начало следующего шага является
-        /// точкой слияния: значения, вычисленные внутри шага, до неё не доживают
+        /// точкой слияния: значения, вычисленные внутри шага, до неё не доживают. Чистые узлы
+        /// поэтому пересчитываются в каждом шаге заново и снова потребляют значения, вычисленные
+        /// до узла. Счётчик использований учитывает связь лишь один раз, так что такие значения
+        /// не должны освобождаться внутри шагов - их освобождения откладываются, как в цикле
+        PushLoopScope(context);
         context.EnterFlowSplit();
 
         for (uint32_t i = 0; i < steps.size(); ++i) {
@@ -495,6 +588,7 @@ namespace SR_FLUX_NS {
             CompileFlow(context, GetFlowTarget(nodeIndex, steps[i]), stepTerminator);
             if (context.hasErrors) {
                 context.LeaveFlowSplit();
+                PopLoopScope(context);
                 return FluxInvalidNode;
             }
 
@@ -505,6 +599,7 @@ namespace SR_FLUX_NS {
         }
 
         context.LeaveFlowSplit();
+        PopLoopScope(context);
 
         /// последний шаг уже завершил цепочку сам
         context.flowTerminated = true;
@@ -581,8 +676,10 @@ namespace SR_FLUX_NS {
 
     FluxValueRef FluxGraphCompiler::MaterializeOutArgument(FluxGraphCompileContext& context, const uint32_t nodeIndex, const uint32_t outputPin, const FluxValueRef& source) const {
         /// значение свойства передаётся по ссылке: метод изменяет само свойство объекта. Регистр
-        /// свойства (а через него и объекта) удерживается, пока жив выходной аргумент
-        const bool isProperty = source.isRegister && context.propertyOwners.contains(MakeFluxValueKey(source.sourceNode, source.sourcePin));
+        /// свойства (а через него и объекта) удерживается, пока жив выходной аргумент. Свойство
+        /// константы менять нельзя, поэтому оно, как и сама константа, копируется
+        const bool isProperty = source.isRegister && context.propertyOwners.contains(MakeFluxValueKey(source.sourceNode, source.sourcePin)) &&
+            !IsConstantBacked(context, source);
 
         /// источник больше не понадобится. Если это был временный регистр, у которого вызов был
         /// последним потребителем, то распределитель вернёт его же и копия не понадобится
@@ -944,6 +1041,20 @@ namespace SR_FLUX_NS {
                 ReleaseValue(context, owner);
             }
         }
+    }
+
+    bool FluxGraphCompiler::IsConstantBacked(const FluxGraphCompileContext& context, const FluxValueRef& value) const {
+        if (value.operand < context.program->constants.size()) {
+            return true;
+        }
+        if (!value.isRegister) {
+            return false;
+        }
+        auto&& pOwnerIt = context.propertyOwners.find(MakeFluxValueKey(value.sourceNode, value.sourcePin));
+        if (pOwnerIt == context.propertyOwners.end()) {
+            return false;
+        }
+        return IsConstantBacked(context, pOwnerIt->second);
     }
 
     void FluxGraphCompiler::PushLoopScope(FluxGraphCompileContext& context) const {

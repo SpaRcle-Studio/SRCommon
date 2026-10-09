@@ -232,6 +232,11 @@ namespace SR_FLUX_NS {
                     return false;
                 }
                 break;
+            case FluxOpcode::SetProperty:
+                if (!SetProperty(execution, instruction)) SR_UNLIKELY_ATTRIBUTE {
+                    return false;
+                }
+                break;
             case FluxOpcode::Return: {
                 if (execution.callStack.empty()) {
                     execution.state = FluxExecutionState::Finished;
@@ -316,8 +321,9 @@ namespace SR_FLUX_NS {
             return false;
         }
 
-        /// Cast и Property, как и бинарные пересылки, принимают источник и приёмник
-        if (instruction.opcode >= FluxOpcode::Copy && instruction.opcode <= FluxOpcode::Property) {
+        /// Cast и Property, как и бинарные пересылки, принимают источник и приёмник,
+        /// SetProperty - объект и значение
+        if (instruction.opcode >= FluxOpcode::Copy && instruction.opcode <= FluxOpcode::SetProperty) {
             if (instruction.operands.size() != 2) {
                 SR_ERROR("FluxRuntime::ValidateInstruction() : invalid number of operands for opcode {}!", static_cast<uint32_t>(instruction.opcode));
                 execution.state = FluxExecutionState::Error;
@@ -551,28 +557,67 @@ namespace SR_FLUX_NS {
             return false;
         }
 
-        auto&& objectType = GetRegisterType(execution, instruction.operands[0]);
-        auto&& dstType = GetRegisterType(execution, instruction.operands[1]);
-        auto&& object = GetRegister(execution, instruction.operands[0], objectType, RegisterOperation::Read);
-        auto&& dst = GetRegister(execution, instruction.operands[1], dstType, RegisterOperation::Write);
+        SRClass* pOwner = nullptr;
+        auto&& pProperty = FindProperty(execution, instruction, pOwner);
+        if (!pProperty) SR_UNLIKELY_ATTRIBUTE {
+            return false;
+        }
 
-        SRClass* pOwner = object.GetSRClass();
-        if (!pOwner) {
-            SR_ERROR("FluxRuntime::GetProperty() : object is null or is not a class! Property: \"{}\"", instruction.callable.function);
+        auto&& dstType = GetRegisterType(execution, instruction.operands[1]);
+        auto&& dst = GetRegister(execution, instruction.operands[1], dstType, RegisterOperation::Write);
+        dst = pProperty->Get(pOwner);
+
+        return true;
+    }
+
+    bool FluxRuntime::SetProperty(FluxExecution& execution, const FluxInstruction& instruction) {
+        SR_TRACY_ZONE;
+
+        SRClass* pOwner = nullptr;
+        auto&& pProperty = FindProperty(execution, instruction, pOwner);
+        if (!pProperty) SR_UNLIKELY_ATTRIBUTE {
+            return false;
+        }
+
+        if (pProperty->IsReadOnly()) SR_UNLIKELY_ATTRIBUTE {
+            SR_ERROR("FluxRuntime::SetProperty() : property \"{}\" of class \"{}\" is read only!", instruction.callable.function, pOwner->GetMeta()->GetFactoryName());
             execution.state = FluxExecutionState::Error;
             return false;
+        }
+
+        auto&& valueType = GetRegisterType(execution, instruction.operands[1]);
+        auto&& value = GetRegister(execution, instruction.operands[1], valueType, RegisterOperation::Read);
+        if (!value.IsValid()) SR_UNLIKELY_ATTRIBUTE {
+            SR_ERROR("FluxRuntime::SetProperty() : value for property \"{}\" is not set!", instruction.callable.function);
+            execution.state = FluxExecutionState::Error;
+            return false;
+        }
+
+        pProperty->Set(pOwner, value);
+        pProperty->OnChanged(pOwner);
+
+        return true;
+    }
+
+    const Reflection::Property* FluxRuntime::FindProperty(FluxExecution& execution, const FluxInstruction& instruction, SRClass*& pOwner) {
+        auto&& objectType = GetRegisterType(execution, instruction.operands[0]);
+        auto&& object = GetRegister(execution, instruction.operands[0], objectType, RegisterOperation::Read);
+
+        pOwner = object.GetSRClass();
+        if (!pOwner) {
+            SR_ERROR("FluxRuntime::FindProperty() : object is null or is not a class! Property: \"{}\"", instruction.callable.function);
+            execution.state = FluxExecutionState::Error;
+            return nullptr;
         }
 
         auto&& pProperty = pOwner->GetMeta()->FindProperty(instruction.callable.function);
         if (!pProperty) {
-            SR_ERROR("FluxRuntime::GetProperty() : property \"{}\" not found in class \"{}\"!", instruction.callable.function, pOwner->GetMeta()->GetFactoryName());
+            SR_ERROR("FluxRuntime::FindProperty() : property \"{}\" not found in class \"{}\"!", instruction.callable.function, pOwner->GetMeta()->GetFactoryName());
             execution.state = FluxExecutionState::Error;
-            return false;
+            return nullptr;
         }
 
-        dst = pProperty->Get(pOwner);
-
-        return true;
+        return pProperty;
     }
 
     bool FluxRuntime::ForkExecution(FluxExecution& execution, const FluxInstruction& instruction) {

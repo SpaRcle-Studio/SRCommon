@@ -38,6 +38,11 @@ namespace SR_UTILS_NS {
         /// @method @evaluate
         StringAtom MakeAtom(StringView str);
 
+        /// @method @evaluate
+        bool Compare(StringView left, StringView right);
+        /// @method @evaluate
+        StringView GetViewFromAtom(StringAtom atom);
+
         void Base64Decode(StringView source, String& base64);
         void Base64Encode(StringView base64, String& result);
 

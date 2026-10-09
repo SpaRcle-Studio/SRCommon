@@ -173,7 +173,7 @@ namespace SR_UTILS_NS::EntityRefUtils {
             else if (auto&& pObject = DynamicPointerCast<SceneObject>(pFromEntity)) {
                 auto&& pParent = pObject->GetParent();
 
-                auto&& tree = pParent ? pParent->GetChildrenRef() : pObject->GetScene()->GetRootSceneObjects();
+                auto&& tree = pParent ? pParent->GetChildrenRef() : pObject->GetScenePtr()->GetRootSceneObjects();
 
                 uint16_t objectIndex = 0;
 
@@ -212,7 +212,7 @@ namespace SR_UTILS_NS::EntityRefUtils {
         }
 
         if (auto&& pObject = DynamicPointerCast<SceneObject>(owner.pEntity)) {
-            return pObject->GetScene();
+            return pObject->GetScenePtr();
         }
 
         return false;
@@ -226,11 +226,11 @@ namespace SR_UTILS_NS::EntityRefUtils {
                 if (!pComponent->IsComponentValid()) {
                     return SR_WORLD_NS::Scene::Ptr();
                 }
-                return pComponent->GetSceneObject()->GetScene();
+                return pComponent->GetSceneObject()->GetScenePtr();
             }
 
             if (auto&& pObject = DynamicPointerCast<SceneObject>(pEntity)) {
-                return pObject->GetScene();
+                return pObject->GetScenePtr();
             }
         }
 

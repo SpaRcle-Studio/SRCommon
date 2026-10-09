@@ -9,6 +9,10 @@
 #include <Utils/Serialization/Serializable.h>
 
 namespace SR_UTILS_NS {
+    class Entity;
+    class Component;
+    class SceneObject;
+
     struct LayerMask : public Serializable {
         SR_STRUCT()
 
@@ -27,14 +31,21 @@ namespace SR_UTILS_NS {
         SR_STRUCT()
 
         SR_NODISCARD bool operator==(const RayCastHit& other) const {
-            return position == other.position && normal == other.normal && distance == other.distance && pHandler == other.pHandler;
+            return position == other.position && normal == other.normal && distance == other.distance && pHandlerEntity == other.pHandlerEntity;
         }
 
         SR_NODISCARD bool operator!=(const RayCastHit& other) const {
             return !(*this == other);
         }
 
-        void* pHandler = nullptr;
+        void* pHandlerEntity = nullptr;
+
+        /// @method @evaluate
+        SR_NODISCARD SR_HTYPES_NS::SharedPtr<Entity> GetEntity() const;
+        /// @method @evaluate
+        SR_NODISCARD SR_HTYPES_NS::SharedPtr<Component> GetComponent() const;
+        /// @method @evaluate
+        SR_NODISCARD SR_HTYPES_NS::SharedPtr<SceneObject> GetSceneObject() const;
 
         /// @property
         SR_MATH_NS::FVector3 position;

@@ -491,6 +491,14 @@ namespace SR_UTILS_NS {
         return StringAtom(str);
     }
 
+    bool StringUtils::Compare(StringView left, StringView right) {
+        return left == right;
+    }
+
+    StringView StringUtils::GetViewFromAtom(StringAtom atom) {
+        return atom.ToStringView();
+    }
+
     String StringUtils::Concat(const String& left, const String& right) {
         String result;
         result.reserve(left.size() + right.size());

@@ -97,14 +97,15 @@ namespace SR_FLUX_NS {
             }
 
             for (const auto& operand : instruction.operands | std::views::drop(operandOffset)) {
+                /// префиксы обязаны совпадать с FluxParser: $ - константа, @ - хранилище
                 if (operand < constants.size()) {
-                    out += "@" + std::to_string(operand) + " ";
+                    FormatTo(out, "${} ", operand);
                 }
                 else if (operand < constants.size() + storage.size()) {
-                    out += "$" + std::to_string(operand - constants.size()) + " ";
+                    FormatTo(out, "@{} ", operand - constants.size());
                 }
                 else {
-                    out += "%" + std::to_string(operand - constants.size() - storage.size()) + " ";
+                    FormatTo(out, "%{} ", operand - constants.size() - storage.size());
                 }
             }
 

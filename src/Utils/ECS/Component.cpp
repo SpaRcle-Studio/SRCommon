@@ -74,9 +74,9 @@ namespace SR_UTILS_NS {
         }
         static const auto sceneName = SR_WORLD_NS::Scene::GetClassStaticName();
         if (m_parent->GetMeta()->IsSameOrInherited(sceneName)) {
-            return static_cast<SR_WORLD_NS::Scene&>(*m_parent).GetScene();
+            return static_cast<SR_WORLD_NS::Scene&>(*m_parent).GetScenePtr();
         }
-        return static_cast<SceneObject&>(*m_parent).GetScene();
+        return static_cast<SceneObject&>(*m_parent).GetScenePtr();
     }
 
     Component::GameObjectPtr Component::GetGameObject() const {

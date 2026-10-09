@@ -43,7 +43,7 @@ namespace SR_UTILS_NS {
                     return;
                 }
 
-                pInstance = pPrefab->Instance(pTarget->GetScene());
+                pInstance = pPrefab->Instance(pTarget->GetScenePtr());
                 if (pInstance) {
                     pTarget->AddChild(pInstance);
 

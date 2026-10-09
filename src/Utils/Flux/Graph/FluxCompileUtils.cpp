@@ -36,6 +36,8 @@ namespace SR_FLUX_NS {
             case FluxGraphNodeType::For:
             case FluxGraphNodeType::Cast:
                 return pinIndex == 2;
+            case FluxGraphNodeType::WriteProperty:
+                return pinIndex == 1;
             case FluxGraphNodeType::Evaluate:
                 /// нулевой пин - результат вызова, за ним идут выходные аргументы
                 return true;
