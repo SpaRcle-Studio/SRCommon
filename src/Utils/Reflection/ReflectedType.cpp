@@ -494,7 +494,7 @@ namespace SR_UTILS_NS::Reflection {
     }
 
     template<typename T> ReflectedValue ReflectedTypeConstructor(IAllocator& allocator) {
-        if constexpr (sizeof(T) <= ReflectedValueStorageSize) {
+        if constexpr (IsReflectedValueEmbeddable<T>) {
             ReflectedValue reflectedValue;
             new(&reflectedValue.storage.data) T();
             return ReflectedValue::MakeFromInlineData(reflectedValue.storage, ReflectedValueStorageType::Embedded);
@@ -507,7 +507,7 @@ namespace SR_UTILS_NS::Reflection {
     template<typename T> void ReflectedTypeDestructor(IAllocator& allocator, ReflectedValue& value) {
         auto pValue = static_cast<T*>(value.GetData());
         pValue->~T();
-        if constexpr (sizeof(T) > ReflectedValueStorageSize) {
+        if constexpr (!IsReflectedValueEmbeddable<T>) {
             allocator.Free(pValue, sizeof(T), alignof(T));
         }
     }

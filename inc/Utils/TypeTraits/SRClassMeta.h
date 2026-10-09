@@ -46,6 +46,7 @@ namespace SR_UTILS_NS {
         SR_NODISCARD bool HasExtension(const String& extension) const noexcept;
 
         SR_NODISCARD const SR_UTILS_NS::Reflection::Method* FindMethod(SR_UTILS_NS::StringAtom name) const noexcept;
+        SR_NODISCARD const SR_UTILS_NS::Reflection::Property* FindProperty(SR_UTILS_NS::StringAtom name) const noexcept;
 
         SR_NODISCARD virtual std::span<const SR_UTILS_NS::StringAtom> GetCategory() const noexcept;
         SR_NODISCARD virtual std::span<const SR_UTILS_NS::StringAtom> GetExtensions() const noexcept;

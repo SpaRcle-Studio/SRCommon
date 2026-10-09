@@ -44,9 +44,15 @@ namespace SR_FLUX_NS {
     /// fork(2) для процессов. Родитель продолжает свой путь дальше по потоку, а каждая ветвь
     /// живёт самостоятельно и завершается по достижении конца своей цепочки.
     ///
+    /// ReadProperty является чистым узлом и возвращает ссылку на свойство объекта, а не копию.
+    /// Ссылка указывает на данные объекта, поэтому регистр объекта удерживается до освобождения
+    /// значения свойства и не может быть переиспользован. Если свойство подключено к выходному
+    /// аргументу, то оно не копируется, а передаётся по ссылке - метод изменяет само свойство.
+    /// Класс объекта хранится в callable.object, имя свойства - в callable.function.
+    ///
     /// Раскладка пинов узлов. Flow-пин всегда имеет индекс 0 (и на входе, и на выходе).
-    /// Узлы Evaluate / Constant / ReadVariable являются чистыми - они не участвуют в потоке
-    /// исполнения и вычисляются в точке использования.
+    /// Узлы Evaluate / Constant / ReadVariable / ReadProperty являются чистыми - они не участвуют
+    /// в потоке исполнения и вычисляются в точке использования.
     ///
     ///   Event         | out: 0 - flow, 1..N - аргументы события
     ///   Invoke        | in:  0 - flow, 1 - объект (у синглтона пин занят первым аргументом),
@@ -58,6 +64,7 @@ namespace SR_FLUX_NS {
     ///                 | out: 0 - результат вызова (если метод его имеет), далее - выходные аргументы
     ///   Constant      | out: 0 - значение
     ///   ReadVariable  | out: 0 - значение
+    ///   ReadProperty  | in:  0 - объект                      | out: 0 - ссылка на свойство
     ///   WriteVariable | in:  0 - flow, 1 - значение          | out: 0 - flow
     ///   Branch        | in:  0 - flow, 1 - условие           | out: 0 - flow (true), 1 - flow (false)
     ///   While         | in:  0 - flow, 1 - условие           | out: 0 - flow (тело), 1 - flow (после цикла)
@@ -96,6 +103,7 @@ namespace SR_FLUX_NS {
         SR_NODISCARD uint32_t GetCallArgumentCount(uint32_t nodeIndex, uint32_t firstArgumentPin, const Reflection::Method* pMethod) const;
 
         SR_NODISCARD FluxValueRef EvaluateOutput(FluxGraphCompileContext& context, uint32_t nodeIndex, uint32_t pinIndex) const;
+        SR_NODISCARD FluxValueRef EvaluateProperty(FluxGraphCompileContext& context, uint32_t nodeIndex) const;
         SR_NODISCARD FluxValueRef EvaluateCondition(FluxGraphCompileContext& context, uint32_t nodeIndex, uint32_t pinIndex) const;
         void ReleaseValue(FluxGraphCompileContext& context, const FluxValueRef& value) const;
 

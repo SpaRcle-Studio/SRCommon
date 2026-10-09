@@ -73,6 +73,7 @@ namespace SR_FLUX_NS {
                 materialized.erase(key);
             }
             pendingUses.erase(key);
+            propertyOwners.erase(key);
         }
     }
 
@@ -81,6 +82,7 @@ namespace SR_FLUX_NS {
         snapshot.availableRegisters = availableRegisters;
         snapshot.materialized = materialized;
         snapshot.pendingUses = pendingUses;
+        snapshot.propertyOwners = propertyOwners;
         snapshot.deferredReleaseCount = static_cast<uint32_t>(deferredReleases.size());
         return snapshot;
     }
@@ -90,6 +92,7 @@ namespace SR_FLUX_NS {
         availableRegisters = snapshot.availableRegisters;
         materialized = snapshot.materialized;
         pendingUses = snapshot.pendingUses;
+        propertyOwners = snapshot.propertyOwners;
 
         /// вместе со счётчиками использований откатываются и отложенные освобождения ветви,
         /// иначе они были бы применены к восстановленным счётчикам повторно
@@ -103,6 +106,7 @@ namespace SR_FLUX_NS {
         availableRegisters.emplace_back(false); /// нулевой регистр всегда занят
         materialized.clear();
         pendingUses.clear();
+        propertyOwners.clear();
         emittedLabels.clear();
         deferredReleases.clear();
         loopScopeStarts.clear();

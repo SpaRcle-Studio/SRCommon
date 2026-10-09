@@ -41,6 +41,7 @@ namespace SR_FLUX_NS {
                 return true;
             case FluxGraphNodeType::Constant:
             case FluxGraphNodeType::ReadVariable:
+            case FluxGraphNodeType::ReadProperty:
                 return pinIndex == 0;
             default:
                 return false;

@@ -43,6 +43,7 @@ namespace SR_FLUX_NS {
                 case FluxOpcode::Swap:
                 case FluxOpcode::Ref:
                 case FluxOpcode::Cast:
+                case FluxOpcode::Property:
                     return operandCount == 2;
                 case FluxOpcode::Push:
                 case FluxOpcode::Pop:
@@ -244,8 +245,9 @@ namespace SR_FLUX_NS {
                     m_callLayouts[index] = MakeCallLayout(instruction);
                 }
                 /// ref делает приёмник псевдонимом источника: запись в один регистр меняет значение
-                /// другого, поэтому оба исключаются из оптимизации
-                else if (instruction.opcode == FluxOpcode::Ref) {
+                /// другого, поэтому оба исключаются из оптимизации. Свойство ссылается на данные
+                /// объекта, поэтому регистр объекта нельзя ни подменять, ни переиспользовать
+                else if (instruction.opcode == FluxOpcode::Ref || instruction.opcode == FluxOpcode::Property) {
                     for (auto&& operand : instruction.operands) {
                         if (IsRegister(operand)) {
                             m_aliased[operand - m_registerBase] = 1;
@@ -362,6 +364,7 @@ namespace SR_FLUX_NS {
                 case FluxOpcode::Move:
                 case FluxOpcode::Ref:
                 case FluxOpcode::Cast:
+                case FluxOpcode::Property:
                 case FluxOpcode::Push:
                     fn(instruction.operands[0]);
                     break;
@@ -391,6 +394,7 @@ namespace SR_FLUX_NS {
             switch (instruction.opcode) {
                 case FluxOpcode::Copy:
                 case FluxOpcode::Ref:
+                case FluxOpcode::Property:
                     fn(instruction.operands[1]);
                     break;
                 case FluxOpcode::Move:

@@ -29,6 +29,7 @@ namespace SR_FLUX_NS {
         Vector<bool> availableRegisters;
         Map<uint64_t, FluxValueRef> materialized;
         Map<uint64_t, uint32_t> pendingUses;
+        Map<uint64_t, FluxValueRef> propertyOwners;
         uint32_t deferredReleaseCount = 0;
     };
 
@@ -55,6 +56,9 @@ namespace SR_FLUX_NS {
         Map<uint32_t, uint32_t> emittedLabels; /// узел слияния потоков -> индекс метки
         Map<uint64_t, FluxValueRef> materialized; /// ключ значения -> уже вычисленное значение
         Map<uint64_t, uint32_t> pendingUses; /// ключ значения -> сколько использований осталось
+        /// ключ значения свойства -> объект, на данные которого оно ссылается. Объект удерживается,
+        /// пока живо значение свойства, иначе его регистр был бы переиспользован и затёрт
+        Map<uint64_t, FluxValueRef> propertyOwners;
 
         Vector<FluxValueRef> deferredReleases; /// освобождения, отложенные до выхода из цикла
         Vector<uint32_t> loopScopeStarts;

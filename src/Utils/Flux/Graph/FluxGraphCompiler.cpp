@@ -139,6 +139,7 @@ namespace SR_FLUX_NS {
             case FluxGraphNodeType::Evaluate:
             case FluxGraphNodeType::Constant:
             case FluxGraphNodeType::ReadVariable:
+            case FluxGraphNodeType::ReadProperty:
                 SR_ERROR("FluxGraphCompiler::CompileNode() : pure node {} cannot be a part of the execution flow!", nodeIndex);
                 context.hasErrors = true;
                 return FluxInvalidNode;
@@ -579,9 +580,15 @@ namespace SR_FLUX_NS {
     }
 
     FluxValueRef FluxGraphCompiler::MaterializeOutArgument(FluxGraphCompileContext& context, const uint32_t nodeIndex, const uint32_t outputPin, const FluxValueRef& source) const {
+        /// значение свойства передаётся по ссылке: метод изменяет само свойство объекта. Регистр
+        /// свойства (а через него и объекта) удерживается, пока жив выходной аргумент
+        const bool isProperty = source.isRegister && context.propertyOwners.contains(MakeFluxValueKey(source.sourceNode, source.sourcePin));
+
         /// источник больше не понадобится. Если это был временный регистр, у которого вызов был
         /// последним потребителем, то распределитель вернёт его же и копия не понадобится
-        ReleaseValue(context, source);
+        if (!isProperty) {
+            ReleaseValue(context, source);
+        }
 
         FluxValueRef output;
         output.sourceNode = nodeIndex;
@@ -594,11 +601,16 @@ namespace SR_FLUX_NS {
         /// метод изменяет аргумент прямо в переданной ячейке, поэтому она обязана принадлежать
         /// узлу: константы неизменяемы, а значение, у которого остались другие потребители,
         /// портить нельзя
-        if (output.operand != source.operand) {
+        const uint64_t key = MakeFluxValueKey(nodeIndex, outputPin);
+
+        if (isProperty) {
+            EmitBinary(context, FluxOpcode::Ref, source.operand, output.operand, nodeIndex);
+            context.propertyOwners[key] = source;
+        }
+        else if (output.operand != source.operand) {
             EmitBinary(context, FluxOpcode::Copy, source.operand, output.operand, nodeIndex);
         }
 
-        const uint64_t key = MakeFluxValueKey(nodeIndex, outputPin);
         context.materialized.emplace(key, output);
         /// к потребителям добавляется одно владеющее использование: регистр освобождает сам узел
         /// сразу после вызова, даже если значение никто не читает
@@ -739,6 +751,8 @@ namespace SR_FLUX_NS {
                 result.operand = static_cast<FluxRegisterId>(context.program->constants.size() + pIt->second);
                 return result;
             }
+            case FluxGraphNodeType::ReadProperty:
+                return EvaluateProperty(context, nodeIndex);
             case FluxGraphNodeType::Evaluate: {
                 if (context.evaluationStack.find(key) != context.evaluationStack.end()) {
                     SR_ERROR("FluxGraphCompiler::EvaluateOutput() : node {} is a part of a cyclic dependency!", nodeIndex);
@@ -791,6 +805,60 @@ namespace SR_FLUX_NS {
                 context.hasErrors = true;
                 return {};
         }
+    }
+
+    FluxValueRef FluxGraphCompiler::EvaluateProperty(FluxGraphCompileContext& context, const uint32_t nodeIndex) const {
+        auto&& node = m_graph.GetNodes()[nodeIndex];
+        const uint64_t key = MakeFluxValueKey(nodeIndex, 0);
+
+        if (node.GetCallable().object.empty() || node.GetCallable().function.empty()) {
+            SR_ERROR("FluxGraphCompiler::EvaluateProperty() : property of node {} is not specified!", nodeIndex);
+            context.hasErrors = true;
+            return {};
+        }
+
+        auto&& pObjectLink = m_graph.FindInputLink(nodeIndex, 0);
+        if (!pObjectLink) {
+            SR_ERROR("FluxGraphCompiler::EvaluateProperty() : object pin of node {} is not connected!", nodeIndex);
+            context.hasErrors = true;
+            return {};
+        }
+
+        if (context.evaluationStack.find(key) != context.evaluationStack.end()) {
+            SR_ERROR("FluxGraphCompiler::EvaluateProperty() : node {} is a part of a cyclic dependency!", nodeIndex);
+            context.hasErrors = true;
+            return {};
+        }
+        context.evaluationStack.emplace_back(key);
+        const FluxValueRef object = EvaluateOutput(context, pObjectLink->GetSourceNode(), pObjectLink->GetSourcePin());
+        context.evaluationStack.pop_back();
+        if (context.hasErrors) {
+            return {};
+        }
+
+        /// использование объекта не освобождается здесь, а переходит к значению свойства и
+        /// возвращается вместе с ним - до этого регистр объекта не достанется никому другому
+        FluxValueRef result;
+        result.sourceNode = nodeIndex;
+        result.sourcePin = 0;
+        result.registerIndex = context.AllocateRegister();
+        result.operand = context.ToOperand(result.registerIndex);
+        result.isRegister = true;
+        result.loopDepth = context.loopDepth;
+
+        {
+            auto&& instruction = EmitInstruction(context, FluxOpcode::Property, nodeIndex);
+            instruction.callable = node.GetCallable();
+            instruction.operands.reserve(2);
+            instruction.operands.emplace_back(object.operand);
+            instruction.operands.emplace_back(result.operand);
+        }
+
+        context.materialized.emplace(key, result);
+        context.pendingUses.emplace(key, SR_MAX(GetUseCount(context, key), 1u));
+        context.propertyOwners[key] = object;
+
+        return result;
     }
 
     FluxValueRef FluxGraphCompiler::EvaluateCondition(FluxGraphCompileContext& context, const uint32_t nodeIndex, const uint32_t pinIndex) const {
@@ -868,6 +936,13 @@ namespace SR_FLUX_NS {
             context.FreeRegister(value.registerIndex);
             context.pendingUses.erase(key);
             context.materialized.erase(key);
+
+            /// ссылка на свойство больше не нужна - объект можно отпустить
+            if (auto&& pOwnerIt = context.propertyOwners.find(key); pOwnerIt != context.propertyOwners.end()) {
+                const FluxValueRef owner = pOwnerIt->second;
+                context.propertyOwners.erase(pOwnerIt);
+                ReleaseValue(context, owner);
+            }
         }
     }
 

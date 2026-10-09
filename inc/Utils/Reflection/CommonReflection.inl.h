@@ -78,7 +78,7 @@ namespace SR_UTILS_NS::Reflection {
     /// ================================================================================================================
 
     template<typename T> ReflectedValue ReflectedTypeTemplateConstructor(IAllocator& allocator) {
-        if constexpr (sizeof(T) <= ReflectedValueStorageSize) {
+        if constexpr (IsReflectedValueEmbeddable<T>) {
             ReflectedValue reflectedValue;
             new (&reflectedValue.storage.data) T();
             reflectedValue.storageType = ReflectedValueStorageType::Embedded;
@@ -92,7 +92,7 @@ namespace SR_UTILS_NS::Reflection {
     template<typename T> void ReflectedTypeTemplateDestructor(IAllocator& allocator, ReflectedValue& value) {
         auto pContainer = static_cast<T*>(value.GetData());
         pContainer->~T();
-        if constexpr (sizeof(T) > ReflectedValueStorageSize) {
+        if constexpr (!IsReflectedValueEmbeddable<T>) {
             allocator.Free(pContainer, sizeof(T), alignof(T));
         }
     }

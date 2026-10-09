@@ -6,6 +6,7 @@
 #define SR_ENGINE_UTILS_TYPES_OPTIONAL_H
 
 #include <Utils/Reflection/Value.h>
+#include <Utils/Common/Singleton.h>
 
 namespace SR_UTILS_NS {
     class OptionalBase {
@@ -17,6 +18,18 @@ namespace SR_UTILS_NS {
         SR_NODISCARD virtual Reflection::Value GetReflectionValue() const noexcept = 0;
         virtual void Reset() noexcept = 0;
         virtual void SetValue(const Reflection::Value& value) = 0;
+
+    };
+
+    /// @noCopyable @noMovable
+    class OptionalUtils : public Singleton<OptionalUtils>, public SRClass {
+        SR_REGISTER_SINGLETON(OptionalUtils)
+        SR_CLASS()
+    public:
+        /// @method @evaluate @dontPack
+        Reflection::Value GetValue(const Reflection::Value& value) const;
+        /// @method @evaluate
+        bool HasValue(const Reflection::Value& value) const;
 
     };
 
@@ -65,10 +78,10 @@ namespace SR_UTILS_NS {
         SR_NODISCARD Reflection::Value GetReflectionValue() const noexcept override {
             if constexpr (Reflection::IsDetermineTypeInfoSupportedV<T>) {
                 if (m_hasValue) {
-                    return Reflection::Value::CreateRef(const_cast<T &>(m_value));
+                    return Reflection::Value::Create(T(m_value));
                 }
                 static const T defaultValue{};
-                return Reflection::Value::CreateCRef(defaultValue);
+                return Reflection::Value::Create(defaultValue);
             }
             return Reflection::Value();
         }

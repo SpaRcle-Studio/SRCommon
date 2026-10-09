@@ -73,7 +73,9 @@ namespace SR_FLUX_NS {
         Cast,
 
         Sequence,
-        ParallelSequence
+        ParallelSequence,
+
+        ReadProperty
 
         /// TODO:
         /// Synchronize,

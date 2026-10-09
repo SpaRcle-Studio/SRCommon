@@ -49,6 +49,7 @@ namespace SR_FLUX_NS {
         bool ExecuteInstruction(FluxExecution& execution, const FluxInstruction& instruction);
         bool ValidateInstruction(FluxExecution& execution, const FluxInstruction& instruction) const;
         bool CallMethod(FluxExecution& execution, const FluxInstruction& instruction);
+        bool GetProperty(FluxExecution& execution, const FluxInstruction& instruction);
         bool ForkExecution(FluxExecution& execution, const FluxInstruction& instruction);
         /// исполнения, порождённые fork, добавляются только между шагами планировщика: список
         /// исполнений нельзя трогать, пока по нему идёт цикл

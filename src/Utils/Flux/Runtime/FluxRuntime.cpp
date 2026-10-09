@@ -6,6 +6,8 @@
 #include <Utils/Flux/Runtime/FluxUtils.h>
 #include <Utils/Reflection/TypeInfoSerialization.h>
 #include <Utils/Reflection/Method.h>
+#include <Utils/Reflection/Property.h>
+#include <Utils/TypeTraits/SRClassMeta.h>
 #include <Utils/Serialization/JsonSerialization.h>
 
 #include <Enum/UpdateMode.hpp>
@@ -225,6 +227,11 @@ namespace SR_FLUX_NS {
                 GetResultRegister(execution) = std::move(isSuccessful);
                 break;
             }
+            case FluxOpcode::Property:
+                if (!GetProperty(execution, instruction)) SR_UNLIKELY_ATTRIBUTE {
+                    return false;
+                }
+                break;
             case FluxOpcode::Return: {
                 if (execution.callStack.empty()) {
                     execution.state = FluxExecutionState::Finished;
@@ -309,8 +316,8 @@ namespace SR_FLUX_NS {
             return false;
         }
 
-        /// Cast, как и бинарные пересылки, принимает источник и приёмник
-        if (instruction.opcode >= FluxOpcode::Copy && instruction.opcode <= FluxOpcode::Cast) {
+        /// Cast и Property, как и бинарные пересылки, принимают источник и приёмник
+        if (instruction.opcode >= FluxOpcode::Copy && instruction.opcode <= FluxOpcode::Property) {
             if (instruction.operands.size() != 2) {
                 SR_ERROR("FluxRuntime::ValidateInstruction() : invalid number of operands for opcode {}!", static_cast<uint32_t>(instruction.opcode));
                 execution.state = FluxExecutionState::Error;
@@ -529,6 +536,41 @@ namespace SR_FLUX_NS {
                 pFunction->InvokeVoid(*pCallable, m_callArguments) :
                 pFunction->InvokeVoid(*pCallable);
         }
+
+        return true;
+    }
+
+    bool FluxRuntime::GetProperty(FluxExecution& execution, const FluxInstruction& instruction) {
+        SR_TRACY_ZONE;
+
+        /// приёмник получает ссылку на данные объекта, поэтому запись в регистр объекта
+        /// уничтожила бы то, на что он ссылается
+        if (instruction.operands[0] == instruction.operands[1]) SR_UNLIKELY_ATTRIBUTE {
+            SR_ERROR("FluxRuntime::GetProperty() : object and destination registers must be different!");
+            execution.state = FluxExecutionState::Error;
+            return false;
+        }
+
+        auto&& objectType = GetRegisterType(execution, instruction.operands[0]);
+        auto&& dstType = GetRegisterType(execution, instruction.operands[1]);
+        auto&& object = GetRegister(execution, instruction.operands[0], objectType, RegisterOperation::Read);
+        auto&& dst = GetRegister(execution, instruction.operands[1], dstType, RegisterOperation::Write);
+
+        SRClass* pOwner = object.GetSRClass();
+        if (!pOwner) {
+            SR_ERROR("FluxRuntime::GetProperty() : object is null or is not a class! Property: \"{}\"", instruction.callable.function);
+            execution.state = FluxExecutionState::Error;
+            return false;
+        }
+
+        auto&& pProperty = pOwner->GetMeta()->FindProperty(instruction.callable.function);
+        if (!pProperty) {
+            SR_ERROR("FluxRuntime::GetProperty() : property \"{}\" not found in class \"{}\"!", instruction.callable.function, pOwner->GetMeta()->GetFactoryName());
+            execution.state = FluxExecutionState::Error;
+            return false;
+        }
+
+        dst = pProperty->Get(pOwner);
 
         return true;
     }

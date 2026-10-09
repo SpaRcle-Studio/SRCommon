@@ -242,6 +242,22 @@ namespace SR_UTILS_NS::Reflection {
                     pClass->GetMeta()->Save(serializer, *dynamic_cast<Serializable*>(pClass));
                 }
                 break;
+            case ReflectedCategoryType::MathObject:
+                if (typeInfo.detailedType == "Quaternion") {
+                    auto&& pQuat = value.Cast<SR_MATH_NS::Quaternion>();
+                    serializer.WriteFloat(pQuat->x, SerializationId::Create("x"));
+                    serializer.WriteFloat(pQuat->y, SerializationId::Create("y"));
+                    serializer.WriteFloat(pQuat->z, SerializationId::Create("z"));
+                    serializer.WriteFloat(pQuat->w, SerializationId::Create("w"));
+                }
+                else if (typeInfo.detailedType == "Color") {
+                    auto&& pColor = value.Cast<SR_MATH_NS::FColor>();
+                    serializer.WriteFloat(pColor->r, SerializationId::Create("r"));
+                    serializer.WriteFloat(pColor->g, SerializationId::Create("g"));
+                    serializer.WriteFloat(pColor->b, SerializationId::Create("b"));
+                    serializer.WriteFloat(pColor->a, SerializationId::Create("a"));
+                }
+                break;
             default:
                 SR_WARN("SerializeValue() : unknown reflected type: {}", typeInfo.category);
                 return;
@@ -325,6 +341,24 @@ namespace SR_UTILS_NS::Reflection {
             case ReflectedCategoryType::Object:
                 if (auto&& pClass = value.GetSRClass()) {
                     pClass->GetMeta()->Load(deserializer, *dynamic_cast<Serializable*>(pClass));
+                    return true;
+                }
+                break;
+            case ReflectedCategoryType::MathObject:
+                if (typeInfo.detailedType == "Quaternion") {
+                    auto&& pQuat = value.Cast<SR_MATH_NS::Quaternion>();
+                    deserializer.ReadFloat(pQuat->x, SerializationId::Create("x"));
+                    deserializer.ReadFloat(pQuat->y, SerializationId::Create("y"));
+                    deserializer.ReadFloat(pQuat->z, SerializationId::Create("z"));
+                    deserializer.ReadFloat(pQuat->w, SerializationId::Create("w"));
+                    return true;
+                }
+                if (typeInfo.detailedType == "Color") {
+                    auto&& pColor = value.Cast<SR_MATH_NS::FColor>();
+                    deserializer.ReadFloat(pColor->r, SerializationId::Create("r"));
+                    deserializer.ReadFloat(pColor->g, SerializationId::Create("g"));
+                    deserializer.ReadFloat(pColor->b, SerializationId::Create("b"));
+                    deserializer.ReadFloat(pColor->a, SerializationId::Create("a"));
                     return true;
                 }
                 break;

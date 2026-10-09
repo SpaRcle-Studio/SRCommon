@@ -87,6 +87,10 @@ namespace SR_UTILS_NS::Reflection {
 
     constexpr inline SizeType ReflectedValueStorageSize = 64;
 
+    /// Storage копируется побайтно, а std::u32string внутри UnicodeString в libstdc++ хранит указатель на собственный SSO-буфер
+    template<typename T> constexpr inline bool IsReflectedValueEmbeddable =
+        sizeof(T) <= ReflectedValueStorageSize && !std::is_same_v<T, SR_UTILS_NS::UnicodeString>;
+
     struct SR_COMMON_DLL_API ReflectedValue {
         struct Storage { alignas(std::max_align_t) std::byte data[ReflectedValueStorageSize]; };
         static ReflectedValue MakeFromPointer(void* pData, ReflectedValueStorageType storageType);

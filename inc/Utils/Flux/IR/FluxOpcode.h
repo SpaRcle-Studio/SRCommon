@@ -21,6 +21,11 @@ namespace SR_FLUX_NS {
         /// может следовать br
         Cast,
 
+        /// доступ к свойству объекта: dst = ссылка на свойство callable.function объекта src.
+        /// Приёмник ссылается на данные объекта, поэтому регистр объекта обязан оставаться
+        /// нетронутым, пока жива ссылка
+        Property,
+
         Call,
 
         Push,
@@ -47,6 +52,7 @@ namespace SR_FLUX_NS {
         { "swap", FluxOpcode::Swap },
         { "ref", FluxOpcode::Ref },
         { "cast", FluxOpcode::Cast },
+        { "prop", FluxOpcode::Property },
         { "call", FluxOpcode::Call },
         { "ret", FluxOpcode::Return },
         { "jmp", FluxOpcode::Jump },

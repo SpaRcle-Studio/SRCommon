@@ -140,7 +140,8 @@ namespace SR_FLUX_NS {
             instruction.opcode == FluxOpcode::Push ||
             instruction.opcode == FluxOpcode::Pop;
 
-        if (instruction.opcode == FluxOpcode::Call) {
+        /// синтаксис: call <Object>.<Function> <operands...>, prop <Class>.<Property> <src> <dst>
+        if (instruction.opcode == FluxOpcode::Call || instruction.opcode == FluxOpcode::Property) {
             instruction.operands.reserve(8);
             hasOperands = true;
             instruction.callable.object = Advance().value;
@@ -158,8 +159,8 @@ namespace SR_FLUX_NS {
             instruction.callable.object = targetLexem.value;
         }
 
-        static constexpr FluxOpcode opcodesWithTwoOperands[5] = {
-            FluxOpcode::Copy, FluxOpcode::Move, FluxOpcode::Swap, FluxOpcode::Ref, FluxOpcode::Cast
+        static constexpr FluxOpcode opcodesWithTwoOperands[6] = {
+            FluxOpcode::Copy, FluxOpcode::Move, FluxOpcode::Swap, FluxOpcode::Ref, FluxOpcode::Cast, FluxOpcode::Property
         };
 
         if (std::ranges::find(opcodesWithTwoOperands, instruction.opcode) != std::end(opcodesWithTwoOperands)) {

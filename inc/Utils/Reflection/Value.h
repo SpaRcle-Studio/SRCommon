@@ -167,7 +167,7 @@ namespace SR_UTILS_NS::Reflection {
             Value v;
             v.m_allocator = SR_UTILS_NS::IAllocator::GetDefaultAllocator();
             using Type = std::remove_cv_t<std::remove_reference_t<T>>;
-            if (sizeof(Type) <= ReflectedValueStorageSize) {
+            if constexpr (IsReflectedValueEmbeddable<Type>) {
                 ReflectedValue::Storage inlineData{};
                 new (&inlineData) Type(std::forward<Type>(value));
                 v.m_storage = ReflectedValue::MakeFromInlineData(inlineData, ReflectedValueStorageType::Embedded);

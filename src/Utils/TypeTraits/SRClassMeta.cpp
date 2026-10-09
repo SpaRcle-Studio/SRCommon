@@ -216,6 +216,20 @@ namespace SR_UTILS_NS {
         return nullptr;
     }
 
+    const Reflection::Property* SRClassMeta::FindProperty(StringAtom name) const noexcept {
+        for (auto&& property : GetProperties()) {
+            if (property.GetName() == name) {
+                return &property;
+            }
+        }
+        for (auto&& pBase : GetBaseMetas()) {
+            if (auto&& pProperty = pBase->FindProperty(name)) {
+                return pProperty;
+            }
+        }
+        return nullptr;
+    }
+
     Reflection::TypeInfoVTable SRClassMeta::GetVTable() const noexcept {
         return Reflection::TypeInfoVTable();
     }
