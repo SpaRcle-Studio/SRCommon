@@ -157,6 +157,8 @@ namespace SR_UTILS_NS {
         void Reset();
         void ResetKeyboard();
 
+        SR_NODISCARD bool IsEmpty() const { return m_frameKeyStates.empty(); }
+
     private:
         Vector<Input::KeyStates> m_frameKeyStates;
         SR_MATH_NS::FVector2 m_mouseDragAccumulated;
