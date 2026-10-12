@@ -24,6 +24,10 @@ namespace SR_MATH_NS {
         return min.x <= max.x && min.y <= max.y && min.z <= max.z;
     }
 
+    AABB AABB::operator+(const AABB& other) const {
+        return AABB(min + other.min, max + other.max);
+    }
+
     bool AABB::IsEmpty() const noexcept {
         return !IsValid();
     }

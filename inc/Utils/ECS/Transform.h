@@ -148,10 +148,9 @@ namespace SR_UTILS_NS {
 
     protected:
         GameObject* m_gameObject = nullptr;
-        mutable bool m_aabbDirty = true;
-        mutable bool m_dirtyRotation = false;
-        mutable bool m_dirtyScale = false;
-        mutable bool m_dirtyMatrix = false;
+        mutable bool m_dirtyRotation : 4 = false;
+        mutable bool m_dirtyScale    : 2 = false;
+        mutable bool m_dirtyMatrix   : 2 = false;
 
     };
 }

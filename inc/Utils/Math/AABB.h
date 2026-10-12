@@ -24,6 +24,8 @@ namespace SR_MATH_NS {
         void SetMin(const FVector3& _min) noexcept { min = _min; }
         void SetMax(const FVector3& _max) noexcept { max = _max; }
 
+        SR_NODISCARD AABB operator+(const AABB& other) const;
+
         SR_NODISCARD bool IsValid() const noexcept;
         SR_NODISCARD bool IsEmpty() const noexcept;
         SR_NODISCARD FVector3 GetCenter() const noexcept;

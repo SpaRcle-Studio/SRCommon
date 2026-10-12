@@ -433,6 +433,15 @@ namespace SR_HTYPES_NS {
         return m_sceneStructure;
     }
 
+    const SR_MATH_NS::AABB& RawMesh::GetAABB(uint32_t id) const {
+        static const SR_MATH_NS::AABB empty;
+        auto&& meshes = m_sceneStructure.GetMeshes();
+        if (id >= meshes.size()) {
+            return empty;
+        }
+        return meshes[id].aabb;
+    }
+
     bool RawMeshParams::operator==(const RawMeshParams &rhs) const {
         return animation == rhs.animation && convexHull == rhs.convexHull;
     }

@@ -650,27 +650,28 @@ namespace SR_MATH_NS {
     AABB Matrix4x4::TransformAABB(const AABB& localBox) const {
         SR_TRACY_ZONE;
 
-        // 8 углов локального бокса
+        /// 8 углов локального бокса
         std::array<SR_MATH_NS::FVector3, 8> corners = {
-                SR_MATH_NS::FVector3(localBox.min.x, localBox.min.y, localBox.min.z),
-                SR_MATH_NS::FVector3(localBox.max.x, localBox.min.y, localBox.min.z),
-                SR_MATH_NS::FVector3(localBox.min.x, localBox.max.y, localBox.min.z),
-                SR_MATH_NS::FVector3(localBox.max.x, localBox.max.y, localBox.min.z),
-                SR_MATH_NS::FVector3(localBox.min.x, localBox.min.y, localBox.max.z),
-                SR_MATH_NS::FVector3(localBox.max.x, localBox.min.y, localBox.max.z),
-                SR_MATH_NS::FVector3(localBox.min.x, localBox.max.y, localBox.max.z),
-                SR_MATH_NS::FVector3(localBox.max.x, localBox.max.y, localBox.max.z)
+            SR_MATH_NS::FVector3(localBox.min.x, localBox.min.y, localBox.min.z),
+            SR_MATH_NS::FVector3(localBox.max.x, localBox.min.y, localBox.min.z),
+            SR_MATH_NS::FVector3(localBox.min.x, localBox.max.y, localBox.min.z),
+            SR_MATH_NS::FVector3(localBox.max.x, localBox.max.y, localBox.min.z),
+            SR_MATH_NS::FVector3(localBox.min.x, localBox.min.y, localBox.max.z),
+            SR_MATH_NS::FVector3(localBox.max.x, localBox.min.y, localBox.max.z),
+            SR_MATH_NS::FVector3(localBox.min.x, localBox.max.y, localBox.max.z),
+            SR_MATH_NS::FVector3(localBox.max.x, localBox.max.y, localBox.max.z)
         };
 
         SR_MATH_NS::FVector3 newMin(
-                std::numeric_limits<float>::max(),
-                std::numeric_limits<float>::max(),
-                std::numeric_limits<float>::max()
+            std::numeric_limits<float_t>::max(),
+            std::numeric_limits<float_t>::max(),
+            std::numeric_limits<float_t>::max()
         );
+
         SR_MATH_NS::FVector3 newMax(
-                std::numeric_limits<float>::lowest(),
-                std::numeric_limits<float>::lowest(),
-                std::numeric_limits<float>::lowest()
+            std::numeric_limits<float_t>::lowest(),
+            std::numeric_limits<float_t>::lowest(),
+            std::numeric_limits<float_t>::lowest()
         );
 
         for (auto& c : corners) {

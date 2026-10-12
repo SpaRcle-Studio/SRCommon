@@ -40,15 +40,6 @@ namespace SR_UTILS_NS {
         return m_matrix;
     }
 
-    const SR_MATH_NS::AABB& Transform3D::GetAABB() const {
-        SR_TRACY_ZONE;
-        if (m_aabbDirty) SR_UNLIKELY_ATTRIBUTE {
-            m_aabbDirty = false;
-            m_cachedAABB = GetMatrix().TransformAABB(m_aabb);
-        }
-        return m_cachedAABB;
-    }
-
     void Transform3D::Rotate(const SR_MATH_NS::FVector3& eulers) {
         Rotate(eulers.Radians().ToQuat());
     }
@@ -181,14 +172,6 @@ namespace SR_UTILS_NS {
         m_scale = scale;
 
         UpdateTree();
-    }
-
-    void Transform3D::SetAABB(const SR_MATH_NS::AABB& aabb) {
-        if (aabb == m_aabb) {
-            return;
-        }
-        m_aabb = aabb;
-        m_aabbDirty = true;
     }
 
     void Transform3D::SetSkew(const SR_MATH_NS::FVector3& rawSkew) {

@@ -135,6 +135,7 @@ namespace SR_MATH_NS {
     typedef float Unit; //! can broke render
 
     constexpr double_t DoubleMAX = std::numeric_limits<double_t>::max();
+    constexpr float_t  FloatMIN  = std::numeric_limits<float_t>::min();
     constexpr float_t  FloatMAX  = std::numeric_limits<float_t>::max();
     constexpr int32_t  Int32MAX  = std::numeric_limits<int32_t>::max();
 

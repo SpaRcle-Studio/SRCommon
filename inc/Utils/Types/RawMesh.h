@@ -56,6 +56,7 @@ namespace SR_HTYPES_NS {
         SR_NODISCARD const MeshSceneStructure::BoneInfo& GetBoneInfo(uint32_t id, StringAtom name) const;
         SR_NODISCARD const MeshSceneStructure& GetSceneStructure() const;
         SR_NODISCARD bool HasBones(uint32_t id) const;
+        SR_NODISCARD const SR_MATH_NS::AABB& GetAABB(uint32_t id) const;
 
         SR_NODISCARD uint32_t GetVerticesCount(uint32_t id) const;
         SR_NODISCARD uint32_t GetIndicesCount(uint32_t id) const;

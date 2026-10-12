@@ -76,8 +76,8 @@ namespace SR_UTILS_NS {
         virtual bool RemoveComponent(const ComponentPtr& pComponent);
         virtual bool ContainsComponent(const std::string& name);
 
-        virtual void ForEachComponent(const SR_HTYPES_NS::Function<bool(const ComponentPtr&)>& fun) const;
-        virtual void ForEachComponent(const SR_HTYPES_NS::Function<bool(ComponentPtr&)>& fun);
+        virtual void ForEachComponent(const SR_HTYPES_NS::Function<bool(const Component&)>& fun) const;
+        virtual void ForEachComponent(const SR_HTYPES_NS::Function<bool(Component&)>& fun);
 
         template<typename T> SR_HTYPES_NS::SharedPtr<T> GetComponent() {
             return DynamicPointerCast<T>(GetComponent(T::GetClassStaticName()));

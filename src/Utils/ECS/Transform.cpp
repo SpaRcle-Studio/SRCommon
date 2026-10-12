@@ -192,7 +192,6 @@ namespace SR_UTILS_NS {
         m_dirtyMatrix = true;
         m_dirtyRotation = true;
         m_dirtyScale = true;
-        m_aabbDirty = true;
 
         m_gameObject->OnMatrixDirty();
 

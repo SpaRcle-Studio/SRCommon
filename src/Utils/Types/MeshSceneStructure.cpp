@@ -41,6 +41,30 @@ namespace SR_HTYPES_NS {
             auto&& meshData = m_meshes[i];
             meshData.materialId = pMesh->mMaterialIndex;
             meshData.meshId = i;
+
+            meshData.aabb = SR_MATH_NS::AABB(
+                SR_MATH_NS::FVector3(pMesh->mAABB.mMin.x, pMesh->mAABB.mMin.y, pMesh->mAABB.mMin.z),
+                SR_MATH_NS::FVector3(pMesh->mAABB.mMax.x, pMesh->mAABB.mMax.y, pMesh->mAABB.mMax.z)
+            );
+
+            if (meshData.aabb == SR_MATH_NS::AABB()) {
+                SR_TRACY_ZONE_N("AABB Calculation");
+
+                meshData.aabb.min = SR_MATH_NS::FloatMAX;
+                meshData.aabb.max = SR_MATH_NS::FloatMIN;
+
+                for (uint64_t vIndex = 0; vIndex < pMesh->mNumVertices; ++vIndex) {
+                    const auto& v = pMesh->mVertices[vIndex];
+
+                    meshData.aabb.min.x = SR_MIN(meshData.aabb.min.x, v.x);
+                    meshData.aabb.min.y = SR_MIN(meshData.aabb.min.y, v.y);
+                    meshData.aabb.min.z = SR_MIN(meshData.aabb.min.z, v.z);
+
+                    meshData.aabb.max.x = SR_MAX(meshData.aabb.max.x, v.x);
+                    meshData.aabb.max.y = SR_MAX(meshData.aabb.max.y, v.y);
+                    meshData.aabb.max.z = SR_MAX(meshData.aabb.max.z, v.z);
+                }
+            }
         }
 
         if (loadAnimation) {

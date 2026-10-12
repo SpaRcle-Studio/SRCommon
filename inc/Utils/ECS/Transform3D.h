@@ -37,10 +37,8 @@ namespace SR_UTILS_NS {
         void SetRotation(const SR_MATH_NS::Quaternion& quaternion) override;
         void SetScale(const SR_MATH_NS::FVector3& scale) override;
         void SetSkew(const SR_MATH_NS::FVector3& skew) override;
-        void SetAABB(const SR_MATH_NS::AABB& aabb);
 
         SR_NODISCARD const SR_MATH_NS::Matrix4x4& GetMatrix() const override;
-        SR_NODISCARD const SR_MATH_NS::AABB& GetAABB() const override;
 
         SR_NODISCARD SR_MATH_NS::Quaternion GetQuaternion() const override { return m_quaternion; }
         SR_NODISCARD SR_MATH_NS::Quaternion GetGlobalRotation() const override;
@@ -71,9 +69,6 @@ namespace SR_UTILS_NS {
         mutable SR_MATH_NS::Matrix4x4 m_localMatrix = SR_MATH_NS::Matrix4x4::Identity();
         mutable SR_MATH_NS::Matrix4x4 m_matrix = SR_MATH_NS::Matrix4x4::Identity();
         mutable SR_MATH_NS::Quaternion m_globalRotation = SR_MATH_NS::Quaternion::Identity();
-        mutable SR_MATH_NS::AABB m_cachedAABB;
-
-        mutable bool m_eulersDirty = true;
 
         /// @property @setter(SetTranslation) @defaultValue(SR_MATH_NS::FVector3::Zero()) @drag(0.01f)
         SR_MATH_NS::FVector3 m_translation = SR_MATH_NS::FVector3::Zero();
@@ -85,10 +80,9 @@ namespace SR_UTILS_NS {
         SR_MATH_NS::FVector3 m_scale = SR_MATH_NS::FVector3::One();
         /// @property @setter(SetSkew) @defaultValue(SR_MATH_NS::FVector3::One()) @drag(0.01f) @hidden
         SR_MATH_NS::FVector3 m_skew = SR_MATH_NS::FVector3::One();
-        /// @property @setter(SetAABB) @defaultValue(SR_MATH_NS::AABB::UnitCube()) @hidden
-        SR_MATH_NS::AABB m_aabb = SR_MATH_NS::AABB::UnitCube();
 
-        bool m_skewEnabled = false;
+        mutable bool m_eulersDirty : 4 = true;
+        bool m_skewEnabled         : 4 = false;
 
     };
 }

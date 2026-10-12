@@ -41,6 +41,7 @@ namespace SR_HTYPES_NS {
             Vector<VertexDataBuffer> vertexBuffers;
             SR_HTYPES_NS::FastMemoryArray<uint32_t> indices;
             BonesMap bones;
+            SR_MATH_NS::AABB aabb;
 
             std::optional<uint32_t> maxBoneId;
             std::optional<uint32_t> materialId;

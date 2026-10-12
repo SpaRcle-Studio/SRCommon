@@ -230,15 +230,15 @@ namespace SR_UTILS_NS {
             return;
         }
 
-        ForEachComponent([](const Component::Ptr& pComponent) -> bool {
-            pComponent->OnBeforeLayerChanged();
+        ForEachComponent([](auto&& component) -> bool {
+            component.OnBeforeLayerChanged();
             return true;
         });
 
         m_cachedLayer = m_layer = layer;
 
-        ForEachComponent([](const Component::Ptr& pComponent) -> bool {
-            pComponent->OnLayerChanged();
+        ForEachComponent([](auto&& component) -> bool {
+            component.OnLayerChanged();
             return true;
         });
 
@@ -382,15 +382,15 @@ namespace SR_UTILS_NS {
             return;
         }
 
-        ForEachComponent([](const Component::Ptr& pComponent) -> bool {
-            pComponent->OnBeforeLayerChanged();
+        ForEachComponent([](auto&& component) -> bool {
+            component.OnBeforeLayerChanged();
             return true;
         });
 
         m_cachedLayer = m_parent->m_cachedLayer;
 
-        ForEachComponent([](const Component::Ptr& pComponent) -> bool {
-            pComponent->OnLayerChanged();
+        ForEachComponent([](auto&& component) -> bool {
+            component.OnLayerChanged();
             return true;
         });
 
