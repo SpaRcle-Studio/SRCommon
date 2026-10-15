@@ -21,9 +21,13 @@ namespace SR_HTYPES_NS {
 
         void SetDeltaTime(float_t dt) { m_deltaTime = dt; }
         void SetFixedDeltaTime(float_t dt) { m_fixedDeltaTime = dt; }
+        void SetFixedAlpha(float_t alpha) { m_fixedAlpha = alpha; }
 
         /// @method @evaluate
         SR_NODISCARD float_t FixedDeltaTime() const noexcept { return m_fixedDeltaTime; }
+        /// Доля времени от последнего фиксированного шага до следующего (0..1), для интерполяции физики между шагами
+        /// @method @evaluate
+        SR_NODISCARD float_t FixedAlpha() const noexcept { return m_fixedAlpha; }
         /// @method @evaluate
         SR_NODISCARD float_t DeltaTime() const noexcept { return m_deltaTime; }
         /// @method @evaluate
@@ -41,6 +45,7 @@ namespace SR_HTYPES_NS {
     private:
         float_t m_deltaTime = 0.f;
         float_t m_fixedDeltaTime = 0.f;
+        float_t m_fixedAlpha = 1.f;
 
         struct TimeInfo {
             TimeInfo() = default;
