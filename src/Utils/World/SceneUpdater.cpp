@@ -58,6 +58,8 @@ namespace SR_WORLD_NS {
         SR_TRACY_ZONE;
         SR_LOCK_GUARD;
 
+        m_isPaused = isPaused;
+
         for (uint32_t i = 0; i < m_componentsPoolSize; ++i) {
             auto&& pComponent = m_updatableComponents[i];
             if (!pComponent) {

@@ -32,6 +32,8 @@ namespace SR_WORLD_NS {
         void UnRegisterComponent(SR_UTILS_NS::Component* pComponent);
 
         SR_NODISCARD SR_UTILS_NS::TimePointType GetLastBuildTime() const { return m_lastBuildTimePoint; }
+        /// Сцена не запущена или на паузе, обновляются только компоненты с ExecuteInEditMode
+        SR_NODISCARD bool IsPaused() const noexcept { return m_isPaused; }
 
     private:
         std::recursive_mutex m_mutex;
@@ -39,6 +41,7 @@ namespace SR_WORLD_NS {
 
         SR_UTILS_NS::TimePointType m_lastBuildTimePoint;
         bool m_dirty = false;
+        bool m_isPaused = false;
 
         uint32_t m_componentsPoolSize = 0;
         std::vector<SR_UTILS_NS::Component*> m_updatableComponents;
