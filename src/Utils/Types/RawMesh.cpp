@@ -7,6 +7,8 @@
 #include <Utils/FileSystem/FileSystem.h>
 #include <Utils/Resources/ResourceManager.h>
 #include <Utils/FileSystem/AssimpCache.h>
+#include <Utils/Serialization/SRASerialization.h>
+#include <Utils/Animations/SkeletonRig.h>
 
 #ifdef SR_UTILS_ASSIMP
     #include <Utils/Resources/AssimpTools.h>
@@ -60,6 +62,7 @@ namespace SR_HTYPES_NS {
     #endif
 
         m_sceneStructure = {};
+        m_metaInfo = RawMeshMetaInfo();
         m_fromCache = false;
 
         return !hasErrors;
@@ -70,6 +73,8 @@ namespace SR_HTYPES_NS {
         SR_TRACY_ZONE_TEXT(GetResourcePath().ToStringRef());
 
         bool hasErrors = !IResource::Load();
+
+        LoadMetaInfo();
 
         auto&& resPath = GetResourcePath();
 
@@ -140,6 +145,47 @@ namespace SR_HTYPES_NS {
     #endif
 
         return !hasErrors;
+    }
+
+    void RawMesh::LoadMetaInfo() {
+        SR_TRACY_ZONE;
+
+        m_metaInfo = RawMeshMetaInfo();
+
+        if (m_params.animation) {
+            return;
+        }
+
+        auto&& metaPath = ResourceManager::Instance().GetResPath().Concat(GetResourcePath()).ConcatExt(".meta");
+        if (!metaPath.IsFile()) {
+            return;
+        }
+
+        SR_UTILS_NS::SRADeserializer deserializer;
+        if (!deserializer.LoadFromFile(metaPath) || !m_metaInfo.Load(deserializer)) {
+            SR_WARN("RawMesh::LoadMetaInfo() : failed to load meta info from file: {}", metaPath);
+            m_metaInfo = RawMeshMetaInfo();
+        }
+    }
+
+    const RawMeshHolder* RawMesh::GetRigSkeleton() const {
+        if (m_metaInfo.rig.GetId().empty()) {
+            return nullptr;
+        }
+
+        auto&& pRig = m_metaInfo.rig.GetResource();
+        if (!pRig) {
+            SR_ERROR("RawMesh::GetRigSkeleton() : failed to load rig! Rig: {}\n\tPath: {}", m_metaInfo.rig.GetId(), GetResourcePath());
+            return nullptr;
+        }
+
+        auto&& skeleton = pRig->GetSkeleton();
+        if (!skeleton.IsValidMeshId()) {
+            SR_ERROR("RawMesh::GetRigSkeleton() : rig has invalid skeleton! Rig: {}\n\tPath: {}", m_metaInfo.rig.GetId(), GetResourcePath());
+            return nullptr;
+        }
+
+        return &skeleton;
     }
 
     uint32_t RawMesh::GetMeshesCount() const {
@@ -405,7 +451,12 @@ namespace SR_HTYPES_NS {
         vertexBuffers.reserve(8);
         if (vertexBuffers.empty()) {
             auto&& bones = GetMeshData(id).bones;
-            auto&& buffer = SR_UTILS_NS::VertexDataBuffer::AllocateFromAssimp(m_scene->mMeshes[id], [&bones](SR_UTILS_NS::StringAtom name)-> uint32_t {
+            auto&& pRigSkeleton = GetRigSkeleton();
+            auto&& buffer = SR_UTILS_NS::VertexDataBuffer::AllocateFromAssimp(m_scene->mMeshes[id], [&bones, pRigSkeleton](SR_UTILS_NS::StringAtom name)-> uint32_t {
+                if (pRigSkeleton) {
+                    auto&& rigBoneInfo = pRigSkeleton->GetRawMesh()->GetBoneInfo(pRigSkeleton->GetMeshId(), name);
+                    return rigBoneInfo.boneId.has_value() ? rigBoneInfo.boneId.value() : SR_ID_INVALID;
+                }
                 if (auto&& pIt = bones.find(name); pIt != bones.end() && pIt->second.boneId.has_value()) {
                     return pIt->second.boneId.value();
                 }

@@ -7,6 +7,7 @@
 
 #include <Utils/Resources/IResource.h>
 #include <Utils/Types/MeshSceneStructure.h>
+#include <Utils/Types/RawMeshMetaInfo.h>
 #include <Utils/FileSystem/File.h>
 #include <Utils/Types/Map.h>
 
@@ -64,6 +65,8 @@ namespace SR_HTYPES_NS {
         SR_NODISCARD Vector<StringAtom> GetAnimationNames() const;
         SR_NODISCARD int32_t GetMeshId(StringAtom name) const;
 
+        SR_NODISCARD const RawMeshMetaInfo& GetMetaInfo() const noexcept { return m_metaInfo; }
+
         SR_NODISCARD float_t GetScaleFactor() const;
         SR_NODISCARD Path GetAssociatedPath() const override;
 
@@ -78,6 +81,11 @@ namespace SR_HTYPES_NS {
         bool Load() override;
 
     private:
+        void LoadMetaInfo();
+        SR_NODISCARD const RawMeshHolder* GetRigSkeleton() const;
+
+    private:
+        RawMeshMetaInfo m_metaInfo;
         File m_pMappedFileCache;
         mutable MeshSceneStructure m_sceneStructure;
         RawMeshParams m_params;

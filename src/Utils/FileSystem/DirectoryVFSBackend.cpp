@@ -141,11 +141,13 @@ namespace SR_UTILS_NS {
         Vector<std::filesystem::directory_entry> entries(&gEnumerateAllocator);
         entries.reserve(16);
 
+        bool hasError = false;
+
         if (recursive) {
             for (const auto& entry : std::filesystem::recursive_directory_iterator(gEnumerateResolvedPathBuffer.view(), errorCode)) {
                 if (errorCode) {
-                    SR_ERROR("DirectoryVFSBackend::Enumerate() : failed to enumerate directory \"{}\"! Error: {}", gEnumerateResolvedPathBuffer, errorCode.message());
-                    return;
+                    hasError = true;
+                    break;
                 }
                 entries.emplace_back(entry);
             }
@@ -153,14 +155,22 @@ namespace SR_UTILS_NS {
         else {
             for (const auto& entry : std::filesystem::directory_iterator(gEnumerateResolvedPathBuffer.view(), errorCode)) {
                 if (errorCode) {
-                    SR_ERROR("DirectoryVFSBackend::Enumerate() : failed to enumerate directory \"{}\"! Error: {}", gEnumerateResolvedPathBuffer, errorCode.message());
-                    return;
+                    hasError = true;
+                    break;
                 }
                 entries.emplace_back(entry);
             }
         }
 
         SR_UTILS_NS::SetThreadLocalAllocator(nullptr);
+
+        if (hasError) {
+            SR_ERROR("DirectoryVFSBackend::Enumerate() : failed to enumerate directory \"{}\"! Error: {}", gEnumerateResolvedPathBuffer, errorCode.message());
+            SR_UTILS_NS::SetThreadLocalAllocator(&gEnumerateAllocator);
+            entries = {};
+            SR_UTILS_NS::SetThreadLocalAllocator(nullptr);
+            return;
+        }
 
         for (const auto& entry : entries) {
             processEntry(entry);
