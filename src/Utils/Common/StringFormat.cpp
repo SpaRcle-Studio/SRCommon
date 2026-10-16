@@ -9,8 +9,8 @@
 
 namespace SR_UTILS_NS {
     namespace Details {
-        void StringFormatError(const std::string& msg, bool breakPoint) {
-            SR_PLATFORM_NS::WriteConsoleError(msg);
+        void StringFormatError(StringView msg, bool breakPoint) {
+            SR_PLATFORM_NS::WriteConsoleError(msg.c_str());
             if (breakPoint) {
                 SR_UTILS_NS::Breakpoint();
             }

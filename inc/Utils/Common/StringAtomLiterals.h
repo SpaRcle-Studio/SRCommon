@@ -18,7 +18,7 @@ namespace SR_UTILS_NS::Details {
             : m_format(format)
         { }
 
-        template <class... Args> SR_NODISCARD std::string operator()(Args... args) const noexcept {
+        template <class... Args> SR_NODISCARD String operator()(Args... args) const noexcept {
             return SR_FORMAT(m_format, args...);
         }
     private:

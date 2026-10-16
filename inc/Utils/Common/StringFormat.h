@@ -9,31 +9,41 @@
 
 namespace SR_UTILS_NS {
     namespace Details {
-        extern void StringFormatError(const std::string& msg, bool breakPoint);
+        extern void StringFormatError(StringView msg, bool breakPoint);
     }
 
-    template <class... Args> SR_NODISCARD std::string Format(const char* format_str, Args&&... args) {
+    template <class... Args> SR_NODISCARD String Format(const char* format_str, Args&&... args) {
         try {
-            return fmt::format(fmt::runtime(format_str), std::forward<Args>(args)...);
+            static SR_THREAD_LOCAL std::string strBuff;
+            strBuff = fmt::format(fmt::runtime(format_str), std::forward<Args>(args)...);
+            return StringView(strBuff);
         }
         catch (std::exception& exception) {
-            Details::StringFormatError("Format() : an exception has occurred! Exception: " + std::string(exception.what()) + "\n", true);
-            return std::string(); /// NOLINT
+            Details::StringFormatError("Format() : an exception has occurred! Exception: " + String(exception.what()) + "\n", true);
+            return String(); /// NOLINT
         }
     }
 
-    template <class... Args> SR_NODISCARD std::string SPrintF(const char* format_str, Args&&... args) {
+    template <class... Args> SR_NODISCARD String Format(StringView format_str, Args&&... args) {
+        return Format(format_str.c_str(), std::forward<Args>(args)...);
+    }
+
+    template <class... Args> SR_NODISCARD String Format(const std::string& format_str, Args&&... args) {
+        return Format(format_str.c_str(), std::forward<Args>(args)...);
+    }
+
+    template <class... Args> SR_NODISCARD String Format(const String& format_str, Args&&... args) {
+        return Format(format_str.c_str(), std::forward<Args>(args)...);
+    }
+
+    template <class... Args> SR_NODISCARD String SPrintF(const char* format_str, Args&&... args) {
         try {
             return fmt::sprintf(format_str, std::forward<Args>(args)...);
         }
         catch (std::exception& exception) {
-            Details::StringFormatError("SPrintF() : an exception has occurred! Exception: " + std::string(exception.what()) + "\n", true);
-            return std::string(); /// NOLINT
+            Details::StringFormatError("SPrintF() : an exception has occurred! Exception: " + String(exception.what()) + "\n", true);
+            return String(); /// NOLINT
         }
-    }
-
-    template <class... Args> SR_NODISCARD std::string Format(const std::string& format_str, Args&&... args) {
-        return Format<Args...>(format_str.c_str(), std::forward<Args>(args)...);
     }
 
     template<class... Args> void FormatTo(String& dest, const char* format_str, Args&&... args) {
@@ -41,7 +51,7 @@ namespace SR_UTILS_NS {
             fmt::format_to(std::back_inserter(dest), fmt::runtime(format_str), std::forward<Args>(args)...);
         }
         catch (std::exception& exception) {
-            Details::StringFormatError("FormatTo() : an exception has occurred! Exception: " + std::string(exception.what()) + "\n", true);
+            Details::StringFormatError("FormatTo() : an exception has occurred! Exception: " + String(exception.what()) + "\n", true);
         }
     }
 
@@ -52,7 +62,7 @@ namespace SR_UTILS_NS {
             dest += buffer;
         }
         catch (std::exception& exception) {
-            Details::StringFormatError("FormatConcat() : an exception has occurred! Exception: " + std::string(exception.what()) + "\n", true);
+            Details::StringFormatError("FormatConcat() : an exception has occurred! Exception: " + String(exception.what()) + "\n", true);
         }
     }
 }

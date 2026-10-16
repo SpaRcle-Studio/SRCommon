@@ -11,7 +11,7 @@
 
 namespace SR_UTILS_NS {
     namespace Details {
-        extern void StringFormatError(const std::string& msg, bool breakPoint);
+        extern void StringFormatError(StringView msg, bool breakPoint);
         uint64_t StringFormatHashStrView(std::string_view sv);
     }
 

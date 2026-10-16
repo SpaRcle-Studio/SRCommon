@@ -418,6 +418,11 @@
 
 #define SR_THREAD_LOCAL thread_local
 
+#define SR_ENGINE_VERSION \
+    SR_EXPAND_AND_STRINGIFY(SR_ENGINE_MAJOR_VERSION) "." \
+    SR_EXPAND_AND_STRINGIFY(SR_ENGINE_MINOR_VERSION) "." \
+    SR_EXPAND_AND_STRINGIFY(SR_ENGINE_PATCH_VERSION)
+
 namespace SR_UTILS_NS {
 #if defined(SR_ANDROID) || defined(SR_EMSCRIPTEN)
     using SizeType = unsigned long;

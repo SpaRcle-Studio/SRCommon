@@ -58,10 +58,10 @@ namespace SR_UTILS_NS {
 
         msg.append("\n");
 
-        std::string threadName = SR_UTILS_NS::GetThisThreadId();
+        auto&& threadName = SR_UTILS_NS::GetThisThreadId();
 
-        auto&& prefix = SR_FORMAT("[{}] [{}]", SR_UTILS_NS::EnumReflector::ToStringAtom(type).ToCStr(), threadName);
-        auto&& memoryUsage = m_showUseMemory ? SR_FORMAT("<{} MB> ", static_cast<uint32_t>(SR_PLATFORM_NS::GetProcessUsedMemory() / 1024 / 1024)) : std::string();
+        auto&& prefix = SR_FORMAT("[{}] [{}]", SR_UTILS_NS::EnumReflector::ToStringAtom(type), threadName);
+        auto&& memoryUsage = m_showUseMemory ? SR_FORMAT("<{} MB> ", static_cast<uint32_t>(SR_PLATFORM_NS::GetProcessUsedMemory() / 1024 / 1024)) : String();
 
         {
             if (SR_PLATFORM_NS::GetType() == PlatformType::Android) {

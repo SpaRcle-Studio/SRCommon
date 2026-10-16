@@ -26,7 +26,7 @@ namespace Codegen {
         static const SR_UTILS_NS::SRClassMeta* GetMetaStatic() noexcept;                                                \
         const SR_UTILS_NS::SRClassMeta* GetMeta() const noexcept override {                                             \
             auto&& pStaticMetaFromClass = GetMetaStatic();                                                              \
-            SRAssert2(pStaticMetaFromClass, std::string("No static meta for: ") + typeid(*this).name());                \
+            SRAssert2(pStaticMetaFromClass, "No static meta for: {}", typeid(*this).name());                            \
             return pStaticMetaFromClass;                                                                                \
         }                                                                                                               \
                                                                                                                         \
