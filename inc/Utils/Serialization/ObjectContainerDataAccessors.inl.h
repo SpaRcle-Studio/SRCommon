@@ -189,9 +189,10 @@ template<typename MapType, typename T, typename U> struct ObjectDataAccessorMap 
     static constexpr SerializationId secondId = SerializationId::Create("second");
 
 	static void Save(ISerializer& serializer, const MapType& value, const SerializationId& id) {
+        SR_GLOBAL_RECURSIVE_LOCK;
         uint64_t count = 0;
 
-        SR_THREAD_LOCAL static SR_UTILS_NS::Vector<SR_UTILS_NS::Pair<const T*, const U*>> tempVector;
+        static SR_UTILS_NS::Vector<SR_UTILS_NS::Pair<const T*, const U*>> tempVector;
         tempVector.clear();
         for (auto&& item : value) {
             if (SR_UTILS_NS::Serialization::CanBeSaved(item)) {

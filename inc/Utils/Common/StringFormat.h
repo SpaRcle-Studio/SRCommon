@@ -14,9 +14,8 @@ namespace SR_UTILS_NS {
 
     template <class... Args> SR_NODISCARD String Format(const char* format_str, Args&&... args) {
         try {
-            static SR_THREAD_LOCAL std::string strBuff;
-            strBuff = fmt::format(fmt::runtime(format_str), std::forward<Args>(args)...);
-            return StringView(strBuff);
+            auto&& string = fmt::format(fmt::runtime(format_str), std::forward<Args>(args)...);
+            return StringView(string);
         }
         catch (std::exception& exception) {
             Details::StringFormatError("Format() : an exception has occurred! Exception: " + String(exception.what()) + "\n", true);

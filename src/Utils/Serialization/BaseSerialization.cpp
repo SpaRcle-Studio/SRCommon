@@ -244,13 +244,16 @@ namespace SR_UTILS_NS {
     }
 
     void IBaseDeserializer::ReadString(UnicodeString& value, const SerializationId& name) {
-        static SR_THREAD_LOCAL String tempUtf;
-        static SR_THREAD_LOCAL std::u32string tempUnicode;
-        tempUtf.clear();
-        ReadStringImpl(tempUtf, name);
+        struct TempBuffer {
+            String tempUtf;
+            std::u32string tempUnicode;
+        };
+        static SR_THREAD_LOCAL TempBuffer temp;
+        temp.tempUtf.clear();
+        ReadStringImpl(temp.tempUtf, name);
 
-        SR_UTILS_NS::Localization::UtfToUtf<char32_t, char>(tempUnicode, std::string_view(tempUtf));
-        value = tempUnicode;
+        SR_UTILS_NS::Localization::UtfToUtf<char32_t, char>(temp.tempUnicode, std::string_view(temp.tempUtf));
+        value = temp.tempUnicode;
     }
 
     void IBaseDeserializer::Detach() {
