@@ -9,6 +9,7 @@
 #include <Utils/Math/Vector4.h>
 #include <Utils/Common/Singleton.h>
 #include <Utils/Types/Function.h>
+#include <Utils/TypeTraits/SRClass.h>
 
 namespace SR_HTYPES_NS {
     class RawMesh;
