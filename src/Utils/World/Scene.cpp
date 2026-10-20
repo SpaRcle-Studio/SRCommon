@@ -89,7 +89,19 @@ namespace SR_WORLD_NS {
 
     void Scene::SetPath(const Path& path) {
         m_path = path;
-        m_absPath = GetAbsPath(path);
+        SRAssert(!m_path.IsAbs());
+    }
+
+    Scene::Ptr Scene::NewScene(SceneLogicType type) {
+        auto&& scenePath = CoreResLoader::GetCachePath().Concat(SR_WORLD_NS::Scene::NewScenePath).ConcatExt("scene");
+
+        uint64_t index = 0;
+        while (scenePath.IsExists()) {
+            scenePath = SR_FORMAT("{}-{}.scene", CoreResLoader::GetCachePath().Concat(SR_WORLD_NS::Scene::NewScenePath), index);
+            ++index;
+        }
+
+        return NewScene(scenePath, type);
     }
 
     Scene::Ptr Scene::NewScene(const Path& path, SceneLogicType type) {
@@ -100,6 +112,16 @@ namespace SR_WORLD_NS {
         if (path.IsFile()) {
             SRHalt("Scene::New() : scene already exists!\n\tPath: {}", path);
             return Scene::Ptr();
+        }
+
+        static const Path templateScene = "Engine/Scenes/template.scene";
+        if (CoreResLoader::GetResPath().Concat(templateScene).IsFile()) {
+            if (CoreResLoader::GetResPath().Concat(templateScene).Copy(path)) {
+                return LoadScene(path);
+            }
+            else {
+                SR_ERROR("Scene::NewScene() : failed to copy template scene \"{}\" to \"{}\"", templateScene, path);
+            }
         }
 
         auto&& pLogic = SR_UTILS_NS::Factory::Instance().Create<SceneLogic>("Scene{}Logic"_format(type));
@@ -124,14 +146,11 @@ namespace SR_WORLD_NS {
         return pScene;
     }
 
-    Scene::Ptr Scene::LoadScene(const Path& rawPath) {
+    Scene::Ptr Scene::LoadScene(const Path& path) {
         SR_TRACY_ZONE;
 
-        auto&& resourceManager = SR_UTILS_NS::ResourceManager::Instance();
-        const SR_UTILS_NS::Path path = rawPath.RemoveSubPath(resourceManager.GetResPathRef());
-
         if (Debug::Instance().GetLevel() > Debug::Level::None) {
-            SR_LOG("Scene::Load() : loading scene...\n\tPath: " + path.ToString());
+            SR_LOG("Scene::Load() : loading scene...\n\tPath: {}", path);
         }
 
         static auto&& destroySceneFn = [](Scene::Ptr& pScene) {
@@ -151,8 +170,8 @@ namespace SR_WORLD_NS {
         pScene->SetPath(path);
 
         SRADeserializer deserializer;
-        if (!deserializer.LoadFromFile(pScene->m_absPath)) {
-            SR_ERROR("Scene::Load() : failed to load scene!\n\tPath: " + pScene->m_absPath.ToString());
+        if (!deserializer.LoadFromFile(path)) {
+            SR_ERROR("Scene::Load() : failed to load scene!\n\tPath: {}", pScene->GetPath());
             destroySceneFn(pScene);
             return Scene::Ptr();
         }
@@ -165,7 +184,7 @@ namespace SR_WORLD_NS {
             pScene->GetEntityController()->Register(StaticPointerCast<Entity>(pScene), entityId);
         }
 
-        if (!pScene->m_logic || !pScene->m_logic->LoadLogic(deserializer, pScene->m_absPath)) {
+        if (!pScene->m_logic || !pScene->m_logic->LoadLogic(deserializer, pScene->GetPath())) {
             SR_ERROR("Scene::Load() : failed to load scene logic!");
             destroySceneFn(pScene);
             return Scene::Ptr();
@@ -279,12 +298,12 @@ namespace SR_WORLD_NS {
         serializer.SetUseTabs(true);
         Save(serializer);
 
-        if (!m_logic->SaveLogic(serializer, GetAbsPath(path))) {
+        if (!m_logic->SaveLogic(serializer, GetPath())) {
             SR_ERROR("Scene::SaveAt() : failed to save scene logic!");
             return false;
         }
 
-        if (!serializer.SaveToFile(m_logic->GetSceneDataPath(GetAbsPath(path)))) {
+        if (!serializer.SaveToFile(m_logic->GetSceneDataPath(GetPath()))) {
             SR_ERROR("Scene::SaveAt() : failed to save scene!");
             return false;
         }
@@ -526,27 +545,8 @@ namespace SR_WORLD_NS {
         m_destroyedComponents.emplace_back(pComponent);
     }
 
-    Path Scene::GetAbsPath() const {
-        return m_absPath;
-    }
-
-    bool Scene::IsExists(const Path& path) {
-        return GetAbsPath(path).IsExists();
-    }
-
     Scene::SceneLogicPtr Scene::GetLogicBase() const {
         return m_logic;
-    }
-
-    Path Scene::GetAbsPath(const Path& path) {
-        if (path.Contains(RuntimeScenePath) ||
-            path.Contains(NewScenePath) ||
-            path.Contains(NewPrefabPath)
-        ) {
-            return SR_UTILS_NS::ResourceManager::Instance().GetCachePath().Concat(path);
-        }
-
-        return SR_UTILS_NS::ResourceManager::Instance().GetResPath().Concat(path);
     }
 
     bool Scene::SetDirty(bool dirty) {
@@ -591,20 +591,20 @@ namespace SR_WORLD_NS {
     bool Scene::PlayScene(const Path& path) {
         StringView extension = path.GetExtensionView();
 
-        auto&& runtimePath = SR_UTILS_NS::ResourceManager::Instance().GetCachePath().Concat(SR_UTILS_NS::Path(SR_WORLD_NS::Scene::RuntimeScenePath).ConcatExt(extension));
+        auto&& runtimePath = CoreResLoader::GetCachePath().Concat(SR_WORLD_NS::Scene::RuntimeScenePath).ConcatExt(extension);
 
         if (runtimePath.IsDir()) {
             SR_UTILS_NS::VFS::Instance().Delete(runtimePath);
         }
 
-        SR_LOG("Scene::PlayScene() : copying scene: \n\tFrom: {}\n\tTo: {}", GetAbsPath(path), runtimePath);
+        SR_LOG("Scene::PlayScene() : copying scene: \n\tFrom: {}\n\tTo: {}", path, runtimePath);
 
-        if (!GetAbsPath(path).Copy(runtimePath)) {
+        if (!path.Copy(runtimePath)) {
             SR_ERROR("Scene::PlayScene() : failed to copy scene!\n\tSource: {}\n\tDestination: {}", path, runtimePath);
             return false;
         }
 
-        if (auto&& pRuntimeScene = SR_WORLD_NS::Scene::LoadScene(SR_UTILS_NS::Path(SR_WORLD_NS::Scene::RuntimeScenePath).ConcatExt(extension))) {
+        if (auto&& pRuntimeScene = SR_WORLD_NS::Scene::LoadScene(runtimePath)) {
             SceneAllocator::Instance().AddSceneToQueue(pRuntimeScene);
             return true;
         }

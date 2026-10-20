@@ -52,9 +52,8 @@ namespace SR_WORLD_NS {
     public:
         static Scene::Ptr CreateEmptyScene();
         static Scene::Ptr NewScene(const Path& path, SceneLogicType type);
+        static Scene::Ptr NewScene(SceneLogicType type);
         static Scene::Ptr LoadScene(const Path& path);
-        static bool IsExists(const Path& path);
-        static Path GetAbsPath(const Path& path);
         static bool PlayScene(const Path& path);
 
         void Init();
@@ -148,7 +147,6 @@ namespace SR_WORLD_NS {
         std::list<SR_HTYPES_NS::SharedPtr<Component>> m_destroyedComponents;
 
         Path m_path;
-        Path m_absPath;
 
         SceneObjects m_sceneObjects;
 

@@ -43,6 +43,10 @@ namespace SR_UTILS_NS {
 
         virtual void CloneTo(SRClass& clone) const;
 
+        /// SRClass и Serializable не могут иметь базовый оператор, так как иначе, наследники не определившие его,
+        /// будут считаться равными.
+        /// SR_NODISCARD bool operator==(const SRClass&) const = default;
+
         static SR_UTILS_NS::StringAtom GetClassStaticName() noexcept;
         static const SR_UTILS_NS::SRClassMeta* GetMetaStatic() noexcept;
         static SR_UTILS_NS::SRClass* AllocateStatic() noexcept;
