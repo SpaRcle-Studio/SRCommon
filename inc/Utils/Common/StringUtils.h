@@ -122,10 +122,12 @@ namespace SR_UTILS_NS {
 
         static std::string RemoveCharsFromString(std::string source, const std::string& charsToRemove) {
             for (char i : charsToRemove) {
-                source.erase(remove(source.begin(), source.end(), i), source.end());
+                source.erase(std::remove(source.begin(), source.end(), i), source.end());
             }
             return source;
         }
+
+        static String RemoveCharsFromString(String source, StringView charsToRemove);
 
         static char* Strncat(char* dest, const char* src, size_t count) {
             char* d = dest;

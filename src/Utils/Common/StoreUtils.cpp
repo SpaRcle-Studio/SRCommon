@@ -81,7 +81,7 @@ namespace SR_UTILS_NS::StoreUtils {
                 Set(StorageType::User, ValueType::Int, node.Name(), node.GetAttribute("Value").ToInt64());
             }
             else if (type == "String") {
-                Set(StorageType::User, ValueType::String, node.Name(), node.GetAttribute("Value").ToString());
+                Set(StorageType::User, ValueType::String, node.Name(), String(node.GetAttribute("Value").ToString()));
             }
             else {
                 SRHalt("Storage::Load() : unsupported value type!");
@@ -161,7 +161,7 @@ namespace SR_UTILS_NS::StoreUtils {
         , value(other.value)
     {
         if (type == ValueType::String && other.value.s) {
-            value.s = new std::string(*other.value.s);
+            value.s = new String(*other.value.s);
         }
     }
 
@@ -184,7 +184,7 @@ namespace SR_UTILS_NS::StoreUtils {
             value = other.value;
 
             if (type == ValueType::String && other.value.s) {
-                value.s = new std::string(*other.value.s);
+                value.s = new String(*other.value.s);
             }
         }
         return *this;

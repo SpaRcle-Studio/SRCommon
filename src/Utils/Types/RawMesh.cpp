@@ -9,6 +9,7 @@
 #include <Utils/FileSystem/AssimpCache.h>
 #include <Utils/Serialization/SRASerialization.h>
 #include <Utils/Animations/SkeletonRig.h>
+#include <Utils/TaskManager/TaskManager.h>
 
 #ifdef SR_UTILS_ASSIMP
     #include <Utils/Resources/AssimpTools.h>
@@ -30,19 +31,12 @@ namespace SR_HTYPES_NS {
 
     RawMesh::RawMesh()
         : Super()
-    {
-    #ifdef SR_UTILS_ASSIMP
-        m_importer = new Assimp::Importer();
-    #endif
-    }
+    { }
 
     RawMesh::~RawMesh() {
     #ifdef SR_UTILS_ASSIMP
-        delete m_importer;
-
-        if (m_fromCache) {
-            m_pMappedFileCache = {};
-            m_scene = nullptr;
+        if (m_assimp.pImporter) {
+            delete m_assimp.pImporter;
         }
     #endif
     }
@@ -50,99 +44,68 @@ namespace SR_HTYPES_NS {
     bool RawMesh::Unload() {
         bool hasErrors = !IResource::Unload();
 
-    #ifdef SR_UTILS_ASSIMP
-        if (m_importer) {
-            m_importer->FreeScene();
+        if (m_syncLoadTaskId) {
+            SR_LOG("RawMesh::Unload() : the model is still loading asynchronously! Waiting for the loading to finish...\n\tPath: {}", GetResourcePath());
+            SR_UTILS_NS::TaskManager::Instance().Wait(*m_syncLoadTaskId);
+            m_syncLoadTaskId = std::nullopt;
         }
 
-        if (m_fromCache) {
-            m_pMappedFileCache = {};
-            m_scene = nullptr;
+    #ifdef SR_UTILS_ASSIMP
+        if (m_assimp.pImporter) {
+            m_assimp.pImporter->FreeScene();
         }
+        m_assimp = {};
     #endif
 
         m_sceneStructure = {};
         m_metaInfo = RawMeshMetaInfo();
-        m_fromCache = false;
 
         return !hasErrors;
     }
 
     bool RawMesh::Load() {
         SR_TRACY_ZONE;
-        SR_TRACY_ZONE_TEXT(GetResourcePath().ToStringRef());
+        SR_TRACY_ZONE_TEXT(GetResourcePath());
 
         bool hasErrors = !IResource::Load();
 
         LoadMetaInfo();
 
-        auto&& resPath = GetResourcePath();
-
-        Path&& path = ResourceManager::Instance().GetResPath().Concat(resPath);
-        Path&& cache = ResourceManager::Instance().GetCachePath().Concat("Models").Concat(resPath);
-
-        if (m_params.animation) {
-            cache = cache.ConcatExt("animation");
+        if (m_syncLoadTaskId) {
+            SRHalt("RawMesh::Load() : model is already in loading state!");
+            return false;
         }
 
-        SR_MAYBE_UNUSED Path&& binary = cache.ConcatExt("cache");
-        SR_MAYBE_UNUSED Path&& hashFile = cache.ConcatExt("hash");
+        const bool asyncLoadSupport = SR_UTILS_NS::Features::Instance().Enabled("ModelsAsyncLoad", true);
 
-        SR_MAYBE_UNUSED const uint64_t resourceHash = path.GetFileHash();
+        if (asyncLoadSupport && GetMetaInfo().loadMode == ResourceLoadMode::Async) {
+            m_syncLoadTaskId = SR_UTILS_NS::TaskManager::Instance().ExecuteAsync([this](auto&& state) {
+                SR_TRACY_ZONE_N("Async model load");
+                SR_TRACY_ZONE_TEXT(GetResourcePath());
 
-        SR_MAYBE_UNUSED bool supportFastLoad = SR_UTILS_NS::Features::Instance().Enabled("FastModelsLoad", false);
-        SR_MAYBE_UNUSED bool needFastLoad = supportFastLoad;
+                if (!m_metaInfo.rig.GetId().empty()) {
+                    if (auto&& pRig = m_metaInfo.rig.GetResource()) {
+                        if (pRig->GetSkeleton().GetRawMesh() && !pRig->GetSkeleton().GetRawMesh()->CanBeUsed()) {
+                            state = SR_UTILS_NS::TaskState::Waiting;
+                            return;
+                        }
+                    }
+                }
+                state = SR_UTILS_NS::TaskState::Launched;
 
-    #ifdef SR_UTILS_ASSIMP
-    retry:
-        if (needFastLoad && resourceHash == SR_UTILS_NS::FileSystem::ReadHashFromFile(hashFile)) {
-            if ((m_scene = SR_UTILS_NS::AssimpCache::Instance().Load(binary, m_pMappedFileCache))) {
-                m_fromCache = true;
-            }
-            else {
-                needFastLoad = false;
-                goto retry;
-            }
+                LoadMeshData(GetResourcePath(), m_sceneStructure, m_assimp, m_params);
+                SR_UTILS_NS::TaskManager::Instance().ExecuteNextFrame([this]() {
+                    m_syncLoadTaskId = std::nullopt;
+                    Broadcast(SR_UTILS_NS::IResource::RELOAD_BEGIN_EVENT);
+                    Broadcast(SR_UTILS_NS::IResource::RELOAD_DONE_EVENT);
+                });
+            }, SR_UTILS_NS::TaskPriority::Critical);
+            SR_UTILS_NS::TaskManager::Instance().SetDescription(*m_syncLoadTaskId, GetResourceId());
+            return true;
         }
-        else {
-            String buffer;
-            if (!SR_UTILS_NS::FileSystem::ReadFile(path, buffer)) {
-                SR_ERROR("RawMesh::Load() : failed to read file!\n\tPath: {}", path);
-                return false;
-            }
-
-            m_scene = m_importer->ReadFileFromMemory(buffer.data(), buffer.size(), m_params.animation ? SR_RAW_MESH_ASSIMP_ANIMATION_FLAGS : SR_RAW_MESH_ASSIMP_FLAGS);
-
-            if (!m_scene) {
-                SR_ERROR("RawMesh::Load() : failed to load file!\n\tPath: {}\n\tReason: {}", path, m_importer->GetErrorString());
-                return false;
-            }
-
-            if (m_params.convexHull) {
-                ComputeConvexHull();
-            }
-
-            for (uint32_t i = 0; i < m_scene->mNumMeshes; ++i) {
-                AssimpTools::NormalizeWeights(m_scene->mMeshes[i]);
-            }
-
-            if (needFastLoad) {
-                SR_UTILS_NS::FileSystem::WriteHashToFile(hashFile, resourceHash);
-            }
+        else if (!LoadMeshData(GetResourcePath(), m_sceneStructure, m_assimp, m_params)) {
+            hasErrors = true;
         }
-
-        if (m_scene && !m_fromCache && supportFastLoad) {
-            SR_UTILS_NS::AssimpCache::Instance().Save(binary, m_scene);
-        }
-
-        if (m_scene) {
-            m_sceneStructure.ImportFromAssimp(m_scene, m_params.animation);
-        }
-        else {
-            SR_ERROR("RawMesh::Load() : failed to read file! \n\tPath: " + path.ToString() + "\n\tReason: " + m_importer->GetErrorString());
-            hasErrors |= true;
-        }
-    #endif
 
         return !hasErrors;
     }
@@ -189,7 +152,7 @@ namespace SR_HTYPES_NS {
     }
 
     uint32_t RawMesh::GetMeshesCount() const {
-        return m_sceneStructure.GetMeshes().size();
+        return GetSceneStructure().GetMeshes().size();
     }
 
     StringView RawMesh::GetGeometryName(uint32_t id) const {
@@ -197,9 +160,11 @@ namespace SR_HTYPES_NS {
             return {};
         }
 
+        const_cast<RawMesh&>(*this).ForceLoad();
+
     #ifdef SR_UTILS_ASSIMP
-        if (SRVerify(m_scene && id < m_scene->mNumMeshes)) {
-            return m_scene->mMeshes[id]->mName.C_Str();
+        if (SRVerify(GetAssimpScene() && id < m_assimp.pScene->mNumMeshes)) {
+            return m_assimp.pScene->mMeshes[id]->mName.C_Str();
         }
     #endif
         return StringView();
@@ -234,7 +199,7 @@ namespace SR_HTYPES_NS {
 
         static SR_HTYPES_NS::FastMemoryArray<uint32_t> empty;
 
-        auto&& meshes = m_sceneStructure.GetMeshes();
+        auto&& meshes = GetSceneStructure().GetMeshes();
         if (id >= meshes.size()) {
             return empty;
         }
@@ -246,12 +211,12 @@ namespace SR_HTYPES_NS {
         SR_HTYPES_NS::FastMemoryArray<uint32_t> indices;
 
     #ifdef SR_UTILS_ASSIMP
-        if (!m_scene || id >= m_scene->mNumMeshes) {
+        if (!m_assimp.pScene || id >= m_assimp.pScene->mNumMeshes) {
             SRHalt("Out of range or invalid scene!");
             return empty;
         }
 
-        auto&& mesh = m_scene->mMeshes[id];
+        auto&& mesh = m_assimp.pScene->mMeshes[id];
 
         indices.resize(mesh->mNumFaces * 3);
         uint32_t count = 0;
@@ -269,7 +234,7 @@ namespace SR_HTYPES_NS {
         indices.resize(count);
     #endif
 
-        meshes[id].indices = std::move(indices);
+        const_cast<MeshSceneStructure::MeshData&>(meshes[id]).indices = std::move(indices);
         return meshes[id].indices;
     }
 
@@ -279,12 +244,12 @@ namespace SR_HTYPES_NS {
         }
 
     #ifdef SR_UTILS_ASSIMP
-        if (!m_scene || id >= m_scene->mNumMeshes) {
-            SRAssert2(false, "Out of range or invalid scene!");
+        if (!m_assimp.pScene || id >= m_assimp.pScene->mNumMeshes) {
+            SRHalt("Out of range or invalid scene!");
             return {};
         }
 
-        return m_scene->mMeshes[id]->mNumVertices;
+        return m_assimp.pScene->mMeshes[id]->mNumVertices;
     #else
         return 0;
     #endif
@@ -296,12 +261,12 @@ namespace SR_HTYPES_NS {
         }
 
     #ifdef SR_UTILS_ASSIMP
-        if (!m_scene || id >= m_scene->mNumMeshes) {
+        if (!m_assimp.pScene || id >= m_assimp.pScene->mNumMeshes) {
             SRAssert2(false, "Out of range or invalid scene!");
             return {};
         }
 
-        auto&& mesh = m_scene->mMeshes[id];
+        auto&& mesh = m_assimp.pScene->mMeshes[id];
 
         uint32_t sum = 0;
 
@@ -317,7 +282,7 @@ namespace SR_HTYPES_NS {
 
     const MeshSceneStructure::BoneInfo& RawMesh::GetBoneInfo(uint32_t id, SR_UTILS_NS::StringAtom name) const {
         static const MeshSceneStructure::BoneInfo defValue;
-        auto&& meshes = m_sceneStructure.GetMeshes();
+        auto&& meshes = GetSceneStructure().GetMeshes();
         if (id >= meshes.size()) {
             return defValue;
         }
@@ -337,7 +302,7 @@ namespace SR_HTYPES_NS {
         float_t factor = 0.f;
 
     #ifdef SR_UTILS_ASSIMP
-        if (m_scene && m_scene->mMetaData->Get("UnitScaleFactor", factor))
+        if (m_assimp.pScene && m_assimp.pScene->mMetaData->Get("UnitScaleFactor", factor))
            return static_cast<float_t>(factor);
     #endif
 
@@ -352,28 +317,28 @@ namespace SR_HTYPES_NS {
 
     uint32_t RawMesh::GetAnimationsCount() const {
     #ifdef SR_UTILS_ASSIMP
-        if (!m_scene) {
+        if (!m_assimp.pScene) {
             SRHalt("Invalid scene!");
             return 0;
         }
 
-        return m_scene->mNumAnimations;
+        return m_assimp.pScene->mNumAnimations;
     #endif
         return 0;
     }
 
     Vector<SR_UTILS_NS::StringAtom> RawMesh::GetAnimationNames() const {
     #ifdef SR_UTILS_ASSIMP
-        if (!m_scene) {
+        if (!m_assimp.pScene) {
             SRHalt("Invalid scene!");
             return {};
         }
 
         Vector<SR_UTILS_NS::StringAtom> names;
-        names.reserve(m_scene->mNumAnimations);
+        names.reserve(m_assimp.pScene->mNumAnimations);
 
-        for (uint32_t i = 0; i < m_scene->mNumAnimations; ++i) {
-            names.emplace_back(m_scene->mAnimations[i]->mName.C_Str());
+        for (uint32_t i = 0; i < m_assimp.pScene->mNumAnimations; ++i) {
+            names.emplace_back(m_assimp.pScene->mAnimations[i]->mName.C_Str());
         }
 
         return names;
@@ -383,26 +348,22 @@ namespace SR_HTYPES_NS {
 
     const MeshSceneStructure::MeshData& RawMesh::GetMeshData(uint32_t id) const {
         static const MeshSceneStructure::MeshData empty;
-        auto&& meshes = m_sceneStructure.GetMeshes();
+        auto&& meshes = GetSceneStructure().GetMeshes();
         if (id >= meshes.size()) {
             return empty;
         }
         return meshes[id];
     }
 
-    void RawMesh::ComputeConvexHull() {
-        SR_TRACY_ZONE;
-    }
-
     int32_t RawMesh::GetMeshId(SR_UTILS_NS::StringAtom name) const {
     #ifdef SR_UTILS_ASSIMP
-        if (!m_scene) {
+        if (!GetAssimpScene()) {
             SRHalt("Invalid scene!");
             return SR_ID_INVALID;
         }
 
-        for (uint32_t i = 0; i < m_scene->mNumMeshes; ++i) {
-            if (m_scene->mMeshes[i]->mName.C_Str() == name) {
+        for (uint32_t i = 0; i < m_assimp.pScene->mNumMeshes; ++i) {
+            if (m_assimp.pScene->mMeshes[i]->mName.C_Str() == name) {
                 return static_cast<int32_t>(i);
             }
         }
@@ -412,11 +373,22 @@ namespace SR_HTYPES_NS {
 
 #ifdef SR_UTILS_ASSIMP
     const void* RawMesh::GetAssimpScene() const noexcept {
-        return m_scene;
+        if (m_syncLoadTaskId) {
+            SRHalt("RawMesh::GetAssimpScene() : the model is still loading asynchronously!");
+            return nullptr;
+        }
+        return m_assimp.pScene;
     }
 #endif
 
     bool RawMesh::IsAllowedToRevive() const {
+        return true;
+    }
+
+    bool RawMesh::CanBeUsed() const {
+        if (m_syncLoadTaskId) {
+            return false;
+        }
         return true;
     }
 
@@ -433,13 +405,13 @@ namespace SR_HTYPES_NS {
         }
 
     #ifdef SR_UTILS_ASSIMP
-        auto&& meshes = m_sceneStructure.GetMeshes();
-        if (!m_scene || id >= meshes.size()) {
-            SRAssert2(false, "Out of range or invalid scene!");
+        auto&& meshes = GetSceneStructure().GetMeshes();
+        if (!m_assimp.pScene || id >= meshes.size()) {
+            SRHalt("Out of range or invalid scene!");
             return empty;
         }
 
-        auto&& vertexBuffers = meshes[id].vertexBuffers;
+        auto&& vertexBuffers = const_cast<MeshSceneStructure::MeshData&>(meshes[id]).vertexBuffers;
         auto&& pIt = std::ranges::find_if(vertexBuffers, [&layout](const SR_UTILS_NS::VertexDataBuffer& buffer) {
             return buffer.layout.Compare(layout);
         });
@@ -452,7 +424,7 @@ namespace SR_HTYPES_NS {
         if (vertexBuffers.empty()) {
             auto&& bones = GetMeshData(id).bones;
             auto&& pRigSkeleton = GetRigSkeleton();
-            auto&& buffer = SR_UTILS_NS::VertexDataBuffer::AllocateFromAssimp(m_scene->mMeshes[id], [&bones, pRigSkeleton](SR_UTILS_NS::StringAtom name)-> uint32_t {
+            auto&& buffer = SR_UTILS_NS::VertexDataBuffer::AllocateFromAssimp(m_assimp.pScene->mMeshes[id], [&bones, pRigSkeleton](SR_UTILS_NS::StringAtom name)-> uint32_t {
                 if (pRigSkeleton) {
                     auto&& rigBoneInfo = pRigSkeleton->GetRawMesh()->GetBoneInfo(pRigSkeleton->GetMeshId(), name);
                     return rigBoneInfo.boneId.has_value() ? rigBoneInfo.boneId.value() : SR_ID_INVALID;
@@ -481,16 +453,100 @@ namespace SR_HTYPES_NS {
     }
 
     const MeshSceneStructure& RawMesh::GetSceneStructure() const {
+        if (m_syncLoadTaskId) {
+            SRHalt("RawMesh::GetSceneStructure() : the model is still loading asynchronously!");
+            static MeshSceneStructure def;
+            return def;
+        }
         return m_sceneStructure;
     }
 
     const SR_MATH_NS::AABB& RawMesh::GetAABB(uint32_t id) const {
         static const SR_MATH_NS::AABB empty;
-        auto&& meshes = m_sceneStructure.GetMeshes();
+        auto&& meshes = GetSceneStructure().GetMeshes();
         if (id >= meshes.size()) {
             return empty;
         }
         return meshes[id].aabb;
+    }
+
+    bool RawMesh::LoadMeshData(const Path& resPath, MeshSceneStructure& sceneStructure, MeshAssimpInfo& assimp, const RawMeshParams& params) {
+        Path&& path = CoreResLoader::GetResPath().Concat(resPath);
+        Path&& cache = CoreResLoader::GetCachePath().Concat("Models").Concat(resPath);
+
+        if (params.animation) {
+            cache = cache.ConcatExt("animation");
+        }
+
+        SR_MAYBE_UNUSED Path&& binary = cache.ConcatExt("cache");
+        SR_MAYBE_UNUSED Path&& hashFile = cache.ConcatExt("hash");
+
+        SR_MAYBE_UNUSED const uint64_t resourceHash = path.GetFileHash();
+        SR_MAYBE_UNUSED bool supportFastLoad = SR_UTILS_NS::Features::Instance().Enabled("FastModelsLoad", false);
+        SR_MAYBE_UNUSED bool needFastLoad = supportFastLoad;
+
+    #ifdef SR_UTILS_ASSIMP
+        bool fromCache = false;
+    retry:
+        if (needFastLoad && resourceHash == SR_UTILS_NS::FileSystem::ReadHashFromFile(hashFile)) {
+            if ((assimp.pScene = SR_UTILS_NS::AssimpCache::Instance().Load(binary, assimp.mappedFileCache))) {
+                fromCache = true;
+            }
+            else {
+                needFastLoad = false;
+                goto retry;
+            }
+        }
+        else {
+            String buffer;
+            if (!SR_UTILS_NS::FileSystem::ReadFile(path, buffer)) {
+                SR_ERROR("RawMesh::LoadMeshData() : failed to read file!\n\tPath: {}", path);
+                return false;
+            }
+
+            if (!assimp.pImporter) {
+                assimp.pImporter = new Assimp::Importer();
+            }
+            assimp.pScene = assimp.pImporter->ReadFileFromMemory(buffer.data(), buffer.size(), params.animation ? SR_RAW_MESH_ASSIMP_ANIMATION_FLAGS : SR_RAW_MESH_ASSIMP_FLAGS);
+
+            if (!assimp.pScene) {
+                SR_ERROR("RawMesh::LoadMeshData() : failed to load file!\n\tPath: {}\n\tReason: {}", path, assimp.pImporter->GetErrorString());
+                return false;
+            }
+
+            for (uint32_t i = 0; i < assimp.pScene->mNumMeshes; ++i) {
+                AssimpTools::NormalizeWeights(assimp.pScene->mMeshes[i]);
+            }
+
+            if (needFastLoad) {
+                SR_UTILS_NS::FileSystem::WriteHashToFile(hashFile, resourceHash);
+            }
+        }
+
+        if (assimp.pScene && !fromCache && supportFastLoad) {
+            SR_UTILS_NS::AssimpCache::Instance().Save(binary, assimp.pScene);
+        }
+
+        if (assimp.pScene) {
+            sceneStructure.ImportFromAssimp(assimp.pScene, params.animation);
+        }
+        else {
+            SR_ERROR("RawMesh::LoadMeshData() : failed to read file! \n\tPath: " + path.ToString() + "\n\tReason: " + assimp.pImporter->GetErrorString());
+            return false;
+        }
+        return true;
+    #endif
+
+        return false;
+    }
+
+    void RawMesh::ForceLoad() {
+        if (CanBeUsed()) {
+            return;
+        }
+        SR_LOG("RawMesh::ForceLoad() : force loading raw mesh \"{}\"...", GetResourceId());
+        SR_UTILS_NS::TaskManager::Instance().Wait(*m_syncLoadTaskId);
+        SR_UTILS_NS::TaskManager::Instance().Update();
     }
 
     bool RawMeshParams::operator==(const RawMeshParams &rhs) const {

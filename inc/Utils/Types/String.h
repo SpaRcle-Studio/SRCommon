@@ -129,6 +129,7 @@ namespace SR_UTILS_NS {
 
         String& erase(SizeType pos, SizeType count = npos);
         String erase(SizeType pos, SizeType count = npos) const;
+        iterator erase(const const_iterator first, const const_iterator last);
 
         void remove_prefix(SizeType n);
         void remove_suffix(SizeType n);

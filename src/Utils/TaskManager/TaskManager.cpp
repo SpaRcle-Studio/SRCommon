@@ -94,6 +94,10 @@ namespace SR_UTILS_NS {
         return m_priority;
     }
 
+    Task::State Task::GetState() const {
+        return m_state->load();
+    }
+
     bool Task::IsWaiting() const {
         return m_state->load() == State::Waiting;
     }
@@ -108,6 +112,14 @@ namespace SR_UTILS_NS {
 
     void Task::SetId(uint64_t id) {
         m_id = id;
+    }
+
+    void Task::SetDescription(StringView description) {
+        m_description = description;
+    }
+
+    StringView Task::GetDescription() const {
+        return m_description;
     }
 
     TaskManager::~TaskManager() {
@@ -164,7 +176,19 @@ namespace SR_UTILS_NS {
 
             TaskPriority highestPriority = TaskPriority::Unknown;
             Task::Ptr pTaskWithHighestPriority = nullptr;
+
             {
+                SR_LOCK_GUARD;
+                if (!m_waitIds.empty()) {
+                    for (auto&& id : m_waitIds) {
+                        if (auto&& pIt = m_tasks.find_if([id](auto&& pTask) { return pTask->GetId() == id; }); pIt != m_tasks.end()) {
+                            pTaskWithHighestPriority = *pIt;
+                        }
+                    }
+                }
+            }
+
+            if (!pTaskWithHighestPriority) {
                 SR_LOCK_GUARD;
 
                 for (auto&& pTask : m_tasks) {
@@ -179,7 +203,7 @@ namespace SR_UTILS_NS {
                 }
 
                 for (auto&& pTask : m_tasks) {
-                    if (pTask->IsWaiting() && pTask->GetPriority() == highestPriority) {
+                    if (pTask->IsWaiting() && pTask->GetPriority() == highestPriority && !m_delayedTasks.count(pTask.get())) {
                         pTaskWithHighestPriority = pTask;
                         break;
                     }
@@ -204,6 +228,9 @@ namespace SR_UTILS_NS {
                     m_delayedTasks.insert(pTaskWithHighestPriority.get());
                 }
             }
+            else {
+                m_delayedTasks.clear();
+            }
 
             return true;
         });
@@ -222,7 +249,7 @@ namespace SR_UTILS_NS {
 
         auto&& pTask = new Task([function](std::atomic<Task::State>* pState) {
             function(*pState);
-            if (pState->load() != Task::State::Stopped && pState->load() != Task::State::Failed) {
+            if (pState->load() != Task::State::Stopped && pState->load() != Task::State::Failed && pState->load() != Task::State::Waiting) {
                 pState->store(Task::State::Completed);
             }
             return false;
@@ -288,6 +315,11 @@ namespace SR_UTILS_NS {
 
         {
             SR_LOCK_GUARD;
+
+            while (!m_nextFrameTasks.empty()) {
+                m_nextFrameTasks.back()();
+                m_nextFrameTasks.pop_back();
+            }
 
             bool hasAnyLaunchedTask = false;
 
@@ -388,6 +420,25 @@ namespace SR_UTILS_NS {
 
     void TaskManager::Wait(TaskManager::TaskId taskId) const {
         SR_TRACY_ZONE;
+
+        if (!IsActive(taskId)) {
+            return;
+        }
+
+    retry:
+        bool isWaiting = false;
+        if (SR_PLATFORM_NS::IsSupportThreads()) {
+            SR_LOCK_GUARD;
+            isWaiting = m_waitIds.count(taskId);
+            if (!isWaiting) {
+                m_waitIds.insert(taskId);
+            }
+        }
+        if (isWaiting) {
+            SR_PLATFORM_NS::Sleep(5);
+            goto retry;
+        }
+
         while (IsActive(taskId)) {
             if (SR_PLATFORM_NS::IsSupportThreads()) {
                 SR_PLATFORM_NS::Sleep(5);
@@ -395,6 +446,34 @@ namespace SR_UTILS_NS {
             else {
                 SR_HTYPES_NS::Thread::Factory::Instance().ManuallyUpdateThreads();
             }
+        }
+
+        if (SR_PLATFORM_NS::IsSupportThreads()) {
+            SR_LOCK_GUARD;
+            if (!m_waitIds.erase(taskId)) {
+                SRHalt("TaskManager::Wait() : id already was removed! Something went wrong...");
+            }
+        }
+    }
+
+    void TaskManager::ExecuteNextFrame(const Function<void()>& task) {
+        SR_LOCK_GUARD;
+        m_nextFrameTasks.emplace_back(task);
+    }
+
+    void TaskManager::ForEachTask(const Function<void(Task&)>& callback) {
+        SR_TRACY_ZONE;
+        SR_LOCK_GUARD;
+        for (auto&& pTask : m_tasks) {
+            callback(*pTask);
+        }
+    }
+
+    void TaskManager::SetDescription(TaskManager::TaskId taskId, StringView description) {
+        SR_TRACY_ZONE;
+        SR_LOCK_GUARD;
+        if (auto&& pIt = m_tasks.find_if([taskId](auto&& pTask) { return pTask->GetId() == taskId; }); pIt != m_tasks.end()) {
+            (*pIt)->SetDescription(description);
         }
     }
 }

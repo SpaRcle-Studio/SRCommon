@@ -674,6 +674,12 @@ namespace SR_UTILS_NS {
         return const_cast<String*>(this)->front();
     }
 
+    String::iterator String::erase(String::const_iterator const first, String::const_iterator const last) {
+        const SizeType offset = first - m_data;
+        erase(offset, static_cast<SizeType>(last - first));
+        return begin() + offset;
+    }
+
     void StringView::remove_prefix(SizeType n) {
         if (n > m_size) {
             SRHalt("StringView::remove_prefix() : prefix size exceeds string size!");

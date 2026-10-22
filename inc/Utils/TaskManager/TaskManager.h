@@ -15,9 +15,9 @@ namespace SR_UTILS_NS {
         Unknown, Discardable, Low, Normal, High, Critical
     );
 
-    enum class TaskState : uint8_t {
+    SR_ENUM_NS_CLASS_T(TaskState, uint8_t,
         Unknown, Waiting, Launched, Stopped, Completed, Failed
-    };
+    );
 
     class SR_COMMON_DLL_API Task : public NonCopyable {
     public:
@@ -37,6 +37,7 @@ namespace SR_UTILS_NS {
         bool Stop();
 
         void SetId(uint64_t id);
+        void SetDescription(StringView description);
 
         SR_NODISCARD bool IsCompleted() const;
         SR_NODISCARD bool IsWaiting() const;
@@ -45,8 +46,11 @@ namespace SR_UTILS_NS {
         SR_NODISCARD State GetResult() const;
         SR_NODISCARD uint64_t GetId() const;
         SR_NODISCARD TaskPriority GetPriority() const;
+        SR_NODISCARD State GetState() const;
+        SR_NODISCARD StringView GetDescription() const;
 
     private:
+        String m_description;
         bool m_createThread = false;
         uint64_t m_id;
         Types::Thread::Ptr m_thread;
@@ -67,15 +71,18 @@ namespace SR_UTILS_NS {
     public:
         void Update();
 
+        void ExecuteNextFrame(const Function<void()>& task);
         TaskId ExecuteAsync(const SR_HTYPES_NS::Function<void(Task::AtomicState&)>& function, TaskPriority priority);
         TaskId ExecuteParallel(const SR_HTYPES_NS::Function<void(Task::AtomicState&)>& function, TaskPriority priority);
 
         Task::State GetResult(TaskId taskId) const;
         bool IsActive(TaskId taskId) const;
         void Wait(TaskId taskId) const;
+        void SetDescription(TaskId taskId, StringView description);
 
         void WaitForIdle();
         void RemoveDiscardable();
+        void ForEachTask(const Function<void(Task&)>& callback);
 
     private:
         SR_NODISCARD uint64_t GetUniqueId() const;
@@ -83,12 +90,14 @@ namespace SR_UTILS_NS {
         void InitSingleton() override;
 
     private:
+        Vector<Function<void()>> m_nextFrameTasks;
         SR_HTYPES_NS::Thread::Ptr m_thread = nullptr;
         std::atomic<bool> m_isRun;
-        std::vector<Task::Ptr> m_tasks;
+        Vector<Task::Ptr> m_tasks;
         /// Предполагается, что задач не будет слишком много,
         /// и не будет надобности в unordered set/map
         Set<TaskId> m_ids;
+        mutable Set<TaskId> m_waitIds;
         mutable Map<TaskId, Task::State> m_results;
         Set<Task*> m_delayedTasks;
 

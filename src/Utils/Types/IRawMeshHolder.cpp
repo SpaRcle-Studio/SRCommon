@@ -83,9 +83,9 @@ namespace SR_HTYPES_NS {
             return;
         }
 
-        auto&& count = static_cast<int32_t>(m_rawMesh->GetMeshesCount());
-
-        IRawMeshHolder::MeshIndex newIndex = SR_CLAMP(meshIndex, 0, SR_MAX(count - 1, 0));
+        const bool canBeUsed = m_rawMesh->CanBeUsed();
+        auto&& count = canBeUsed ? static_cast<int32_t>(m_rawMesh->GetMeshesCount()) : 0;
+        IRawMeshHolder::MeshIndex newIndex = canBeUsed ? SR_CLAMP(meshIndex, 0, SR_MAX(count - 1, 0)) : meshIndex;
 
         if (m_meshId != newIndex) {
             m_meshId = newIndex;
@@ -108,7 +108,7 @@ namespace SR_HTYPES_NS {
     }
 
     bool IRawMeshHolder::IsValidMeshId() const noexcept {
-        if (m_meshId < 0 || !m_rawMesh) {
+        if (m_meshId < 0 || !m_rawMesh || !m_rawMesh->CanBeUsed()) {
             return false;
         }
 

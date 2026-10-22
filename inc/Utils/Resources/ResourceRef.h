@@ -48,10 +48,12 @@ namespace SR_UTILS_NS {
         using Super = ResourceRefBase;
     public:
         ResourceRef() = default;
+        ResourceRef(const char* id); /// NOLINT(google-explicit-constructor)
         ResourceRef(StringAtom id); /// NOLINT(google-explicit-constructor)
         ResourceRef(StringView id); /// NOLINT(google-explicit-constructor)
         ResourceRef(const Path& path); /// NOLINT(google-explicit-constructor)
         ResourceRef(const SR_HTYPES_NS::SharedPtr<T>& pResource); /// NOLINT(google-explicit-constructor)
+        ResourceRef(T* pResource); /// NOLINT(google-explicit-constructor)
         ResourceRef(const ResourceRef<T>& other) = default;
         ResourceRef(ResourceRef<T>&& other) noexcept = default;
 
@@ -92,6 +94,18 @@ namespace SR_UTILS_NS {
         }
     }
 
+    template<class T> ResourceRef<T>::ResourceRef(T* pResource) {
+        if (pResource) {
+            m_id = pResource->GetResourceId();
+            m_resource = static_cast<IResource*>(pResource);
+            m_resource->AddUsePoint();
+        }
+        else {
+            m_id = {};
+            m_resource = nullptr;
+        }
+    }
+
     template<class T> StringAtom ResourceRef<T>::GetResourceType() const noexcept {
         /// @note both branches must return the same name: Factory::Register() stores the meta factory name
         ///       under typeid(T*), and it is the very same name that GetClassStaticName() returns. This is what
@@ -108,6 +122,11 @@ namespace SR_UTILS_NS {
         }
         static const StringAtom voidTypeName("void");
         return voidTypeName;
+    }
+
+    template<class T> ResourceRef<T>::ResourceRef(const char* id) {
+        SR_TRACY_ZONE;
+        m_id = id;
     }
 
     template<class T> ResourceRef<T>::ResourceRef(StringAtom id) {

@@ -30,7 +30,10 @@ namespace SR_UTILS_NS {
     #if !defined(SR_ANDROID) && !defined(SR_EMSCRIPTEN)
         nfdchar_t *outPath;
 
-        nfdresult_t result = NFD_PickFolder(&outPath, defaultPath.ToString().c_str());
+        SR_UTILS_NS::Path resolvedDefaultPath = defaultPath;
+        SR_UTILS_NS::VFS::Instance().ResolvePath(resolvedDefaultPath, FileMode::Write);
+
+        nfdresult_t result = NFD_PickFolder(&outPath, resolvedDefaultPath.c_str());
 
         if (result == NFD_OKAY)
         {

@@ -6,6 +6,7 @@
 #define SR_ENGINE_COMMON_RAW_MESH_META_INFO_H
 
 #include <Utils/Animations/SkeletonRig.h>
+#include <Utils/Resources/ResourceLoadMode.h>
 
 namespace SR_HTYPES_NS {
     struct RawMeshMetaInfo : public SR_UTILS_NS::Serializable {
@@ -20,6 +21,8 @@ namespace SR_HTYPES_NS {
         }
 
     public:
+        /// @property
+        SR_UTILS_NS::ResourceLoadMode loadMode = SR_UTILS_NS::ResourceLoadMode::Async;
         /// @property @tooltip(Риг с полным набором костей. Если задан, индексы костей меша сопоставляются по именам с индексами костей скелета рига)
         SR_UTILS_NS::ResourceRef<SR_ANIMATIONS_NS::SkeletonRig> rig;
 

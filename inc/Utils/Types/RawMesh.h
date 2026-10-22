@@ -35,6 +35,13 @@ namespace SR_HTYPES_NS {
         SR_CLASS()
         using Super = IResource;
         using ScenePtr = SR_HTYPES_NS::SharedPtr<SR_WORLD_NS::Scene>;
+        struct MeshAssimpInfo {
+        #ifdef SR_UTILS_ASSIMP
+            const aiScene* pScene = nullptr;
+            Assimp::Importer* pImporter = nullptr;
+        #endif
+            File mappedFileCache;
+        };
     public:
         using Ptr = SR_HTYPES_NS::SharedPtr<RawMesh>;
 
@@ -43,9 +50,8 @@ namespace SR_HTYPES_NS {
         ~RawMesh() override;
 
     public:
-        void ComputeConvexHull();
-
         void SetVariant(const IResourceVariant& variant) override;
+        void ForceLoad();
 
         SR_NODISCARD uint32_t GetMeshesCount() const;
         SR_NODISCARD StringView GetGeometryName(uint32_t id) const;
@@ -71,6 +77,7 @@ namespace SR_HTYPES_NS {
         SR_NODISCARD Path GetAssociatedPath() const override;
 
         SR_NODISCARD bool IsAllowedToRevive() const override;
+        SR_NODISCARD bool CanBeUsed() const;
 
     #ifdef SR_UTILS_ASSIMP
         SR_NODISCARD const void* GetAssimpScene() const noexcept;
@@ -84,17 +91,14 @@ namespace SR_HTYPES_NS {
         void LoadMetaInfo();
         SR_NODISCARD const RawMeshHolder* GetRigSkeleton() const;
 
+        static bool LoadMeshData(const Path& resPath, MeshSceneStructure& sceneStructure, MeshAssimpInfo& assimp, const RawMeshParams& params);
+
     private:
+        std::optional<uint64_t> m_syncLoadTaskId;
         RawMeshMetaInfo m_metaInfo;
-        File m_pMappedFileCache;
         mutable MeshSceneStructure m_sceneStructure;
         RawMeshParams m_params;
-        bool m_fromCache = false;
-
-    #ifdef SR_UTILS_ASSIMP
-        const aiScene* m_scene = nullptr;
-        Assimp::Importer* m_importer = nullptr;
-    #endif
+        MeshAssimpInfo m_assimp;
 
     };
 }

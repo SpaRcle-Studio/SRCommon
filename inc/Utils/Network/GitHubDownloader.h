@@ -30,12 +30,22 @@ namespace SR_NETWORK_NS {
         uint64_t size = 0;
     };
 
+    struct GitHubCloneContext {
+        uint32_t depth = 1;
+        StringView branch;
+        StringView url;
+    };
+
     class GitHubDownloader : public NonCopyable {
         using Tree = SR_HTYPES_NS::FlatHashMap<String, GitHubEntryInfo>;
     public:
         explicit GitHubDownloader(StringView url);
 
     public:
+        static bool CloneOrPullRepo(GitHubCloneContext cloneContext, StringView targetFolder, bool autoStash = true);
+        static bool CloneRepo(GitHubCloneContext cloneContext, StringView targetFolder);
+        static bool PullRepo(StringView targetFolder, bool autoStash = true);
+
         SR_NODISCARD const Vector<String>& GetBranches() const;
         SR_NODISCARD StringView GetDefaultBranch() const;
         SR_NODISCARD const GitHubRepo& GetRepo() const;

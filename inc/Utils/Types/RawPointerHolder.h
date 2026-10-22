@@ -98,6 +98,10 @@ namespace SR_UTILS_NS {
             return *this;
         }
 
+        void SetDeleter(const DeleterFn& deleter) {
+            m_deleter = deleter;
+        }
+
         T* Get() const noexcept {
             return m_ptr;
         }

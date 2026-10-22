@@ -729,6 +729,13 @@ namespace SR_UTILS_NS {
         }
     }
 
+    String StringUtils::RemoveCharsFromString(String source, StringView charsToRemove) {
+        for (char i : charsToRemove) {
+            source.erase(std::remove(source.begin(), source.end(), i), source.end());
+        }
+        return source;
+    }
+
     String GetErrorString(int err) {
         char buf[256]{};
     #ifdef _WIN32

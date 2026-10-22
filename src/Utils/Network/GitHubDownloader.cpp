@@ -6,6 +6,8 @@
 #include <Utils/Platform/Platform.h>
 #include <Utils/Common/LexicalCast.h>
 #include <Utils/Common/CLIManager.h>
+#include <Utils/Resources/ResourceManager.h>
+#include <Utils/FileSystem/VFS.h>
 
 #include <nlohmann/json.hpp>
 
@@ -303,5 +305,44 @@ namespace SR_NETWORK_NS {
         }
 
         return m_tree;
+    }
+
+    bool GitHubDownloader::CloneRepo(GitHubCloneContext context, StringView targetFolder) {
+    #ifdef SR_WIN32
+        auto&& gitPath = CoreResLoader::GetResPath().Concat("Engine/Utilities/git2.exe");
+    #else
+        auto&& gitPath = CoreResLoader::GetResPath().Concat("Engine/Utilities/git2");
+    #endif
+        SR_UTILS_NS::VFS::Instance().ResolvePath(gitPath, SR_UTILS_NS::FileMode::Read);
+
+        String branch = context.branch.empty() ? String() : " -b {} "_format(context.branch);
+        auto&& command = "\"{}\" clone {} {} {} --depth {}"_format(gitPath, context.url, targetFolder, branch, context.depth);
+        SR_SYSTEM_LOG("GitHubDownloader::CloneRepo() : cloning repository...\n\tCommand: " + command);
+        system(command.c_str());
+        return true;
+    }
+
+    bool GitHubDownloader::PullRepo(StringView targetFolder, bool autoStash) {
+    #ifdef SR_WIN32
+        auto&& gitPath = CoreResLoader::GetResPath().Concat("Engine/Utilities/git2.exe");
+    #else
+        auto&& gitPath = CoreResLoader::GetResPath().Concat("Engine/Utilities/git2");
+    #endif
+        SR_UTILS_NS::VFS::Instance().ResolvePath(gitPath, SR_UTILS_NS::FileMode::Read);
+
+        StringView autoStashStr = autoStash ? " --autostash" : " ";
+
+    #ifdef SR_WIN32
+        auto&& command = "{}: && cd {} && git pull -r {}"_format(targetFolder[0], targetFolder, autoStashStr);
+    #else
+        auto&& command = "cd {} && git pull -r {}"_format(targetFolder, autoStashStr);
+    #endif
+        SR_SYSTEM_LOG("GitHubDownloader::PullRepo() : pulling repository...\n\tCommand: " + command);
+        system(command.c_str());
+        return true;
+    }
+
+    bool GitHubDownloader::CloneOrPullRepo(GitHubCloneContext cloneContext, StringView targetFolder, bool autoStash) {
+        return Path(targetFolder).IsDir() ? PullRepo(targetFolder, autoStash) : CloneRepo(cloneContext, targetFolder);
     }
 }

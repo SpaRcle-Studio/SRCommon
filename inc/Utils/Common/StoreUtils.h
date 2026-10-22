@@ -29,7 +29,7 @@ namespace SR_UTILS_NS::StoreUtils {
             float_t f;
             bool b;
             int64_t i;
-            std::string* s;
+            String* s;
         };
 
         template<typename T> static T& VisitValue(Value& value) {
@@ -44,9 +44,9 @@ namespace SR_UTILS_NS::StoreUtils {
             else if constexpr (std::is_same_v<Type, bool>) {
                 return value.b;
             }
-            else if constexpr (std::is_same_v<Type, std::string>) {
+            else if constexpr (std::is_same_v<Type, String>) {
                 if (!value.s) {
-                    value.s = new std::string();
+                    value.s = new String();
                 }
                 return *value.s;
             }
@@ -159,10 +159,10 @@ namespace SR_UTILS_NS::StoreUtils {
         /// ================= String =================
 
         SR_NODISCARD static bool HasString(SR_UTILS_NS::StringAtom key) { return Has(key, Storage::ValueType::String); }
-        SR_NODISCARD static std::string GetString(SR_UTILS_NS::StringAtom key, const std::optional<std::string>& def = std::nullopt) {
-            return Storage::Instance().Get<std::string>(storeType, Storage::ValueType::String, key, def);
+        SR_NODISCARD static String GetString(SR_UTILS_NS::StringAtom key, const std::optional<String>& def = std::nullopt) {
+            return Storage::Instance().Get<String>(storeType, Storage::ValueType::String, key, def);
         }
-        static void SetString(SR_UTILS_NS::StringAtom key, const std::string& value) {
+        static void SetString(SR_UTILS_NS::StringAtom key, const String& value) {
             Storage::Instance().Set(storeType, Storage::ValueType::String, key, value);
         }
 
