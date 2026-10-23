@@ -109,18 +109,14 @@ namespace SR_WORLD_NS {
             SR_LOG("Scene::New() : creating new scene...");
         }
 
-        if (path.IsFile()) {
-            SRHalt("Scene::New() : scene already exists!\n\tPath: {}", path);
-            return Scene::Ptr();
-        }
-
-        static const Path templateScene = "Engine/Scenes/template.scene";
-        if (CoreResLoader::GetResPath().Concat(templateScene).IsFile()) {
-            if (CoreResLoader::GetResPath().Concat(templateScene).Copy(path)) {
-                return LoadScene(path);
-            }
-            else {
-                SR_ERROR("Scene::NewScene() : failed to copy template scene \"{}\" to \"{}\"", templateScene, path);
+        if (type != SceneLogicType::Prefab) {
+            static const Path templateScene = "Engine/Scenes/template.scene";
+            if (CoreResLoader::GetResPath().Concat(templateScene).IsFile()) {
+                if (CoreResLoader::GetResPath().Concat(templateScene).Copy(path)) {
+                    return LoadScene(path);
+                } else {
+                    SR_ERROR("Scene::NewScene() : failed to copy template scene \"{}\" to \"{}\"", templateScene, path);
+                }
             }
         }
 
@@ -348,7 +344,7 @@ namespace SR_WORLD_NS {
         return true;
     }
 
-    SceneObject::Ptr Scene::Instance(const SR_HTYPES_NS::RawMesh*) {
+    SceneObject::Ptr Scene::Instance(SR_HTYPES_NS::RawMesh*) {
         SRHalt("Method isn't implemented!");
         return SceneObject::Ptr();
     }

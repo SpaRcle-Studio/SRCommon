@@ -92,6 +92,11 @@ namespace SR_UTILS_NS {
         SR_TRACY_ZONE;
         SR_LOCK_GUARD;
 
+        if (m_isEnumerating) {
+            SRHaltTerminate("VFS::Enumerate() : recursive enumerate is not allowed!");
+        }
+        m_isEnumerating = true;
+
         if (!m_enumerateAllocator) {
             m_enumerateAllocator = (IAllocator*)new MonotonicAllocator(32_KB);
         }
@@ -118,6 +123,7 @@ namespace SR_UTILS_NS {
 
         paths = {};
         m_enumerateAllocator->ResetMemory();
+        m_isEnumerating = false;
     }
 
     void VFS::Delete(StringView path) {

@@ -58,6 +58,7 @@ namespace SR_UTILS_NS {
         void UnmountAll();
 
     private:
+        mutable bool m_isEnumerating = false;
         mutable RawPointerHolder<IAllocator> m_enumerateAllocator;
         Vector<VFSMount> m_mounts;
         SR_HTYPES_NS::SortedVector<FileImpl*> m_handles;

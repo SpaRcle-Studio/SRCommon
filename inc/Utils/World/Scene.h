@@ -96,7 +96,7 @@ namespace SR_WORLD_NS {
 
         /// @method
         virtual SR_HTYPES_NS::SharedPtr<SceneObject> InstanceFromFile(const SR_UTILS_NS::Path& path);
-        virtual SR_HTYPES_NS::SharedPtr<SceneObject> Instance(const Types::RawMesh* rawMesh);
+        virtual SR_HTYPES_NS::SharedPtr<SceneObject> Instance(SR_HTYPES_NS::RawMesh* rawMesh);
 
         /// @method
         virtual SR_HTYPES_NS::SharedPtr<GameObject> FindOrInstanceGameObject(SR_UTILS_NS::StringAtom name);
