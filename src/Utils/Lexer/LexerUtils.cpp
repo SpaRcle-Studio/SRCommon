@@ -114,7 +114,7 @@ namespace SR_UTILS_NS::LexerDetails {
     }
 
     String LexerMessage::ToString(const Vector<LexerInclude> &files, uint8_t tab) const {
-        SR_UTILS_NS::String message = SR_UTILS_NS::EnumReflector::ToStringAtom(code);
+        auto&& message = SR_UTILS_NS::String(SR_UTILS_NS::EnumReflector::ToStringAtom(code));
         if (fileIndex != SR_UINT16_MAX) {
             if (fileIndex >= files.size()) {
                 SRHalt("Invalid index!");

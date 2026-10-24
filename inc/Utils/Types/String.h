@@ -8,6 +8,7 @@
 #include <Utils/stdInclude.h>
 
 namespace SR_UTILS_NS {
+    class StringAtom;
     class StringView;
     class IAllocator;
     class Path;
@@ -33,6 +34,7 @@ namespace SR_UTILS_NS {
         String(const char* str); /// NOLINT
         String(const std::string& str); /// NOLINT
         String(std::string_view str); /// NOLINT
+        String(StringAtom str); /// NOLINT
         String(const String& other); /// NOLINT
         String(String&& other) noexcept;
         explicit String(StringView str); /// NOLINT
@@ -45,6 +47,7 @@ namespace SR_UTILS_NS {
         String& operator=(std::string&& str) noexcept;
         String& operator=(const String& other);
         String& operator=(StringView str);
+        String& operator=(StringAtom str);
         String& operator=(String&& other) noexcept;
 
         String& operator+=(const String& rhs);
@@ -89,6 +92,7 @@ namespace SR_UTILS_NS {
         SR_NODISCARD const char& back() const;
         SR_NODISCARD const char& front() const;
         SR_NODISCARD std::string_view view() const;
+        SR_NODISCARD StringView ToStringView() const;
 
         SR_NODISCARD bool contains(std::string_view str) const;
         SR_NODISCARD bool starts_with(std::string_view str) const;
@@ -236,6 +240,8 @@ namespace SR_UTILS_NS {
         SR_NODISCARD SizeType find(char c, SizeType pos = 0) const;
         SR_NODISCARD SizeType find_last_of(char c, SizeType pos = npos) const;
         SR_NODISCARD SizeType find_last_of(StringView str, SizeType pos = 0) const;
+        SR_NODISCARD bool contains(StringView str) const;
+        SR_NODISCARD bool ends_with(StringView str) const;
         SR_NODISCARD bool starts_with(StringView str) const;
         SR_NODISCARD bool starts_with(char c) const;
 

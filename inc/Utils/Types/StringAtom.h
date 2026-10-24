@@ -72,7 +72,7 @@ namespace SR_UTILS_NS {
         SR_NODISCARD const char* c_str() const;
         SR_NODISCARD const char* data() const;
         SR_NODISCARD const std::string& ToStringRef() const;
-        SR_NODISCARD std::string_view ToStringView() const;
+        SR_NODISCARD StringView ToStringView() const;
 
         void clear();
         void Clear();

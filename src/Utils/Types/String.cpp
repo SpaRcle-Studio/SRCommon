@@ -45,6 +45,10 @@ namespace SR_UTILS_NS {
         : String(std::string_view(str))
     { }
 
+    String::String(StringAtom str)
+        : String(std::string_view(str))
+    { }
+
     String::String(std::string_view str) {
         resize(static_cast<SizeType>(str.size()));
         if (m_data) {
@@ -107,6 +111,10 @@ namespace SR_UTILS_NS {
     }
 
     String& String::operator=(StringView str) {
+        return *this = std::string_view(str.data(), str.size());
+    }
+
+    String& String::operator=(StringAtom str) {
         return *this = std::string_view(str.data(), str.size());
     }
 
@@ -339,6 +347,10 @@ namespace SR_UTILS_NS {
 
     std::string_view String::view() const {
         return std::string_view(m_data ? m_data : "", m_size);
+    }
+
+    StringView String::ToStringView() const {
+        return StringView(m_data ? m_data : "", m_size);
     }
 
     bool String::starts_with(std::string_view prefix) const {
@@ -831,6 +843,15 @@ namespace SR_UTILS_NS {
 
     StringView::operator String() const {
         return String(std::string_view(m_data ? m_data : "", m_size));
+    }
+
+    bool StringView::contains(StringView str) const {
+        return find(str) != npos;
+    }
+
+    bool StringView::ends_with(StringView str) const {
+        const size_t n = str.size();
+        return n <= m_size && std::memcmp(m_data + m_size - n, str.data(), n) == 0;
     }
 
     bool StringView::starts_with(StringView str) const {

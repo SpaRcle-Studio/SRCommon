@@ -163,7 +163,7 @@ namespace SR_UTILS_NS {
         return m_info ? m_info->data : DEFAULT;
     };
 
-    SR_NODISCARD std::string_view StringAtom::ToStringView() const {
+    SR_NODISCARD StringView StringAtom::ToStringView() const {
         return m_info ? m_info->data : DEFAULT;
     }
 

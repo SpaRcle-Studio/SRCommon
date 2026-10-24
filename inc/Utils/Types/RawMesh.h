@@ -53,6 +53,7 @@ namespace SR_HTYPES_NS {
         void SetVariant(const IResourceVariant& variant) override;
         void ForceLoad();
 
+        SR_NODISCARD const IResourceVariant* GetVariant() const override;
         SR_NODISCARD uint32_t GetMeshesCount() const;
         SR_NODISCARD StringView GetGeometryName(uint32_t id) const;
 
@@ -105,13 +106,9 @@ namespace SR_HTYPES_NS {
 
 template<> struct SR_UTILS_NS::SRHash<SR_HTYPES_NS::RawMeshParams> {
     size_t operator()(SR_HTYPES_NS::RawMeshParams const& params) const {
-        std::size_t res = 0;
-
-        std::hash<bool> hBool;
-
-        res ^= hBool(params.animation) + 0x9e3779b9 + (res << 6u) + (res >> 2u);
-        res ^= hBool(params.convexHull) + 0x9e3779b9 + (res << 6u) + (res >> 2u);
-
+        std::size_t res =
+            (static_cast<std::size_t>(params.animation) << 0) |
+            (static_cast<std::size_t>(params.convexHull) << 1);
         return res;
     }
 };

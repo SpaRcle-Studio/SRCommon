@@ -131,6 +131,10 @@ namespace SR_UTILS_NS {
             }
         }
 
+        if (!m_nextFrameTasks.empty()) {
+            SRHalt("TaskManager::~TaskManager() : not all next frame tasks completed!");
+        }
+
         m_tasks.clear();
         m_ids.clear();
 

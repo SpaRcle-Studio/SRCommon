@@ -6,6 +6,7 @@
 #include <Utils/Resources/ResourceManager.h>
 #include <Utils/Common/SubscriptionMessage.h>
 #include <Utils/Common/Bind.h>
+#include <Utils/FileSystem/VFS.h>
 
 namespace SR_UTILS_NS {
     FileWatcher::FileWatcher(SR_UTILS_NS::Path path)
@@ -13,6 +14,7 @@ namespace SR_UTILS_NS {
         , m_path(std::move(path))
         , m_name("Unnamed")
     {
+        SR_UTILS_NS::VFS::Instance().ResolvePath(m_path, FileMode::Read);
         Subscribe();
     }
 

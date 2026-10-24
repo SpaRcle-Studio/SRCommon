@@ -107,14 +107,14 @@ namespace SR_UTILS_NS {
 
         const bool containsTracyProcess = ContainsTracyProcess();
         if (containsTracyProcess) {
-            SR_PLATFORM_NS::WriteConsoleLog("Tracy profiler detected! Waiting for connection (5 seconds)...");
+            SR_PLATFORM_NS::WriteConsoleLog("Tracy profiler detected! Waiting for connection (5 seconds)...\n");
             SR_HTYPES_NS::Time::Instance().Update();
             const auto startTime = SR_HTYPES_NS::Time::Instance().Clock();
             while (!TracyIsConnected) {
                 std::this_thread::sleep_for(std::chrono::milliseconds(1));
                 SR_HTYPES_NS::Time::Instance().Update();
                 if (SR_HTYPES_NS::Time::Instance().Clock() - startTime > 5000) {
-                    SR_PLATFORM_NS::WriteConsoleError("Tracy profiler connection timeout!");
+                    SR_PLATFORM_NS::WriteConsoleError("Tracy profiler connection timeout!\n");
                     break;
                 }
             }

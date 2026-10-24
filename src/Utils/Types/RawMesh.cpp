@@ -44,6 +44,10 @@ namespace SR_HTYPES_NS {
     bool RawMesh::Unload() {
         bool hasErrors = !IResource::Unload();
 
+        if (IsLoaded()) {
+            SR_LOG("RawMesh::Unload() : unloading raw mesh \"{}\"...", GetResourceId());
+        }
+
         if (m_syncLoadTaskId) {
             SR_LOG("RawMesh::Unload() : the model is still loading asynchronously! Waiting for the loading to finish...\n\tPath: {}", GetResourcePath());
             SR_UTILS_NS::TaskManager::Instance().Wait(*m_syncLoadTaskId);
@@ -94,12 +98,14 @@ namespace SR_HTYPES_NS {
                 state = SR_UTILS_NS::TaskState::Launched;
 
                 LoadMeshData(GetResourcePath(), m_sceneStructure, m_assimp, m_params);
-                SR_UTILS_NS::TaskManager::Instance().ExecuteNextFrame([this]() {
+                AddUsePoint();
+                SR_UTILS_NS::TaskManager::Instance().ExecuteNextFrame([this, pStrong = GetThis()]() {
                     m_syncLoadTaskId = std::nullopt;
                     Broadcast(SR_UTILS_NS::IResource::RELOAD_BEGIN_EVENT);
                     Broadcast(SR_UTILS_NS::IResource::RELOAD_DONE_EVENT);
+                    RemoveUsePoint();
                 });
-            }, SR_UTILS_NS::TaskPriority::Critical);
+            }, SR_UTILS_NS::TaskPriority::High);
             SR_UTILS_NS::TaskManager::Instance().SetDescription(*m_syncLoadTaskId, GetResourceId());
             return true;
         }
@@ -547,6 +553,10 @@ namespace SR_HTYPES_NS {
         SR_LOG("RawMesh::ForceLoad() : force loading raw mesh \"{}\"...", GetResourceId());
         SR_UTILS_NS::TaskManager::Instance().Wait(*m_syncLoadTaskId);
         SR_UTILS_NS::TaskManager::Instance().Update();
+    }
+
+    const IResourceVariant* RawMesh::GetVariant() const {
+        return &m_params;
     }
 
     bool RawMeshParams::operator==(const RawMeshParams &rhs) const {

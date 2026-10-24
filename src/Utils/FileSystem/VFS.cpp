@@ -149,21 +149,23 @@ namespace SR_UTILS_NS {
         SR_TRACY_ZONE;
         SR_LOCK_GUARD;
 
+        String modeLog = "R{}/W{}"_format(pBackend->ReadSupports() ? "+" : "-", pBackend->WriteSupports() ? "+" : "-");
+
         StringView realPath = pBackend->GetRealPath();
         if (virtualPath.empty()) {
             if (realPath.empty()) {
-                SR_LOG("VFS::Mount() : mounting root virtual path with priority {}...", priority);
+                SR_LOG("VFS::Mount() : mounting {} root virtual path with priority {}...", modeLog, priority);
             }
             else {
-                SR_LOG("VFS::Mount() : mounting root ({}) virtual path with priority {}...", realPath, priority);
+                SR_LOG("VFS::Mount() : mounting {} root ({}) virtual path with priority {}...", modeLog, realPath, priority);
             }
         }
         else {
             if (realPath.empty()) {
-                SR_LOG("VFS::Mount() : mounting virtual path \"{}\" with priority {}...", virtualPath, priority);
+                SR_LOG("VFS::Mount() : mounting {} virtual path \"{}\" with priority {}...", modeLog, virtualPath, priority);
             }
             else {
-                SR_LOG("VFS::Mount() : mounting virtual path \"{}\" ({}) with priority {}...", virtualPath, realPath, priority);
+                SR_LOG("VFS::Mount() : mounting {} virtual path \"{}\" ({}) with priority {}...", modeLog, virtualPath, realPath, priority);
             }
         }
 
@@ -177,7 +179,7 @@ namespace SR_UTILS_NS {
     void VFS::Unmount(IVFSBackend* pBackend) {
         SR_TRACY_ZONE;
         SR_LOCK_GUARD;
-        SR_LOG("VFS::Unmount() : unmounting virtual path \"{}\"...", pBackend->GetVirtualPath());
+        SR_LOG("VFS::Unmount() : unmounting virtual path \"{}\" (\"{}\")...", pBackend->GetVirtualPath(), pBackend->GetRealPath());
         for (auto&& it = m_mounts.begin(); it != m_mounts.end(); ++it) {
             if (it->pBackend == pBackend) {
                 m_mounts.erase(it);

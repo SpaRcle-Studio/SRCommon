@@ -114,14 +114,15 @@ namespace SR_UTILS_NS {
             auto&& event = m_events[i];
 
             m_pathTmp = event.dir;
+            m_pathTmp.Normalize();
             m_messageCache->SetPath(DIR_MSG_ID, m_pathTmp);
 
-            m_pathTmp.GetInternalUnsafeString() = event.dir;
+            m_pathTmp = event.dir;
             m_pathTmp.GetInternalUnsafeString().append(event.filename);
             m_pathTmp.Normalize();
             m_messageCache->SetPath(FILE_MSG_ID, m_pathTmp);
 
-            m_pathTmp.GetInternalUnsafeString() = event.dir;
+            m_pathTmp = event.dir;
             m_pathTmp.GetInternalUnsafeString().append(event.oldFilename);
             m_pathTmp.Normalize();
             m_messageCache->SetPath(OLD_FILE_MSG_ID, m_pathTmp);
