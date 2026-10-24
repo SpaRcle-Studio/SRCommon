@@ -49,7 +49,7 @@ namespace SR_HTYPES_NS {
         RawMeshPtr m_rawMesh;
         /// определяет порядок меша в файле, если их там несколько
         /// TODO: переделать в int16_t, но нужно написать миграторы.
-        MeshIndex m_meshId = SR_ID_INVALID;
+        MeshIndex m_meshId = 0;
 
     };
 

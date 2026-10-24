@@ -256,6 +256,10 @@ namespace SR_UTILS_NS {
     }
 
     bool IResource::Load() {
+        if (m_loadState == LoadState::Loading) {
+            SRHalt("IResource::Load() : load resource in loading progress!");
+        }
+
         if (m_loadState == LoadState::Unknown || m_loadState == LoadState::Unloaded) {
             m_loadState = LoadState::Loaded;
             return true;

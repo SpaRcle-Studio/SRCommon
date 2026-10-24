@@ -77,7 +77,7 @@ namespace SR_HTYPES_NS {
 
         if (!m_rawMesh) {
             if (m_meshId != SR_ID_INVALID) {
-                m_meshId = SR_ID_INVALID;
+                m_meshId = 0;
                 OnRawMeshChanged();
             }
             return;
@@ -128,21 +128,6 @@ namespace SR_HTYPES_NS {
 
         return empty;
     }
-
-    //std::vector<SR_UTILS_NS::Vertex> IRawMeshHolder::GetVertices() const noexcept {
-    //    SR_TRACY_ZONE;
-    //    static std::vector<SR_UTILS_NS::Vertex> defaultVertices;
-
-    //    if (!IsValidMeshId()) {
-    //        return defaultVertices;
-    //    }
-
-    //    if (auto&& pRawMesh = GetRawMesh()) {
-    //        return pRawMesh->GetVertices(GetMeshId());
-    //    }
-
-    //    return defaultVertices;
-    //}
 
     StringView IRawMeshHolder::GetGeometryName() const noexcept {
         return GetRawMesh() ? GetRawMesh()->GetGeometryName(GetMeshId()) : StringView();

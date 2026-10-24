@@ -51,6 +51,8 @@ namespace SR_UTILS_NS {
         const bool isRead = SR_MATH_NS::IsMaskIncludedSubMask(mode, FileMode::Read);
         const bool isWrite = SR_MATH_NS::IsMaskIncludedSubMask(mode, FileMode::Write);
 
+        IVFSBackend* pFirstWritable = nullptr;
+
         for (auto&& mount : m_mounts) {
             if (isRead && !mount.pBackend->ReadSupports()) {
                 continue;
@@ -61,12 +63,22 @@ namespace SR_UTILS_NS {
             }
 
             if (mount.pBackend->IsApplicable(path)) {
-                if (isRead && mount.pBackend->GetType(path) != FSItemType::File) {
+                const auto type = mount.pBackend->GetType(path);
+                if (isRead && type != FSItemType::File) {
+                    continue;
+                }
+                if (isWrite && type != FSItemType::File) {
+                    pFirstWritable = pFirstWritable ? pFirstWritable : mount.pBackend;
                     continue;
                 }
                 return mount.pBackend->OpenFile(path, mode);
             }
         }
+
+        if (pFirstWritable) {
+            return pFirstWritable->OpenFile(path, mode);
+        }
+
         return File();
     }
 
@@ -409,7 +421,9 @@ namespace SR_UTILS_NS {
                 continue;
             }
             if (mount.pBackend->IsApplicable(path)) {
-                return mount.pBackend->GetType(path) != FSItemType::Undefined;
+                if (mount.pBackend->GetType(path) != FSItemType::Undefined) {
+                    return true;
+                }
             }
         }
 

@@ -84,6 +84,7 @@ namespace SR_HTYPES_NS {
 
         if (asyncLoadSupport && GetMetaInfo().loadMode == ResourceLoadMode::Async) {
             m_loadState = LoadState::Loading;
+            AddUsePoint();
             m_syncLoadTaskId = SR_UTILS_NS::TaskManager::Instance().ExecuteAsync([this](auto&& state) {
                 SR_TRACY_ZONE_N("Async model load");
                 SR_TRACY_ZONE_TEXT(GetResourcePath());
@@ -100,12 +101,13 @@ namespace SR_HTYPES_NS {
 
                 LoadMeshData(GetResourcePath(), m_sceneStructure, m_assimp, m_params);
                 SR_UTILS_NS::TaskManager::Instance().ExecuteNextFrame([this, pStrong = GetThis().DynamicCast<RawMesh>()]() {
-                    m_loadState = LoadState::Loaded;
                     m_syncLoadTaskId = std::nullopt;
+                    m_loadState = LoadState::Loaded;
                     if (!pStrong->IsDestroyed()) {
                         Broadcast(SR_UTILS_NS::IResource::RELOAD_BEGIN_EVENT);
                         Broadcast(SR_UTILS_NS::IResource::RELOAD_DONE_EVENT);
                     }
+                    RemoveUsePoint();
                 });
             }, SR_UTILS_NS::TaskPriority::High);
             SR_UTILS_NS::TaskManager::Instance().SetDescription(*m_syncLoadTaskId, GetResourceId());
@@ -516,6 +518,7 @@ namespace SR_HTYPES_NS {
                 assimp.pImporter = new Assimp::Importer();
             }
             assimp.pScene = assimp.pImporter->ReadFileFromMemory(buffer.data(), buffer.size(), params.animation ? SR_RAW_MESH_ASSIMP_ANIMATION_FLAGS : SR_RAW_MESH_ASSIMP_FLAGS);
+            SR_LOG("RawMesh::LoadMeshData() : imported mesh from \"{}\"", resPath);
 
             if (!assimp.pScene) {
                 SR_ERROR("RawMesh::LoadMeshData() : failed to load file!\n\tPath: {}\n\tReason: {}", path, assimp.pImporter->GetErrorString());
