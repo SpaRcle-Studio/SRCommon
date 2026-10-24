@@ -63,7 +63,7 @@ namespace SR_UTILS_NS {
         Serialization::Save(serializer, pThis, SerializationId::Create("asset"));
 
         /// Допускается расположение ассетов вне папки ресурсов
-        if (!path.IsFile()) {
+        if (!path.IsFile() && !path.IsAbs()) {
             path = CoreResLoader::GetResPath().Concat(path);
         }
 

@@ -236,6 +236,11 @@ namespace SR_UTILS_NS {
                 continue;
             }
 
+            if (pResource->GetResourceLoadState() == IResource::LoadState::Loading) {
+                ++resourceIt;
+                continue;
+            }
+
             if (Debug::Instance().GetLevel() >= Debug::Level::Medium) {
                 SR_LOG("ResourceManager::GC() : free \"" + std::string(pResource->GetResourceId()) + "\" resource");
             }

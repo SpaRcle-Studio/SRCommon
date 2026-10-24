@@ -36,7 +36,7 @@ namespace SR_UTILS_NS {
         SR_INLINE_STATIC const StringAtom RELOAD_DONE_EVENT = "ReloadDone";
 
         enum class LoadState : uint8_t {
-            Unknown, Loaded, Unloaded, Error
+            Unknown, Loading, Loaded, Unloaded, Error
         };
 
         enum class RemoveUPResult : uint8_t {

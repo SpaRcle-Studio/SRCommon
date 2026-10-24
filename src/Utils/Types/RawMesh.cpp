@@ -83,6 +83,7 @@ namespace SR_HTYPES_NS {
         const bool asyncLoadSupport = SR_UTILS_NS::Features::Instance().Enabled("ModelsAsyncLoad", true);
 
         if (asyncLoadSupport && GetMetaInfo().loadMode == ResourceLoadMode::Async) {
+            m_loadState = LoadState::Loading;
             m_syncLoadTaskId = SR_UTILS_NS::TaskManager::Instance().ExecuteAsync([this](auto&& state) {
                 SR_TRACY_ZONE_N("Async model load");
                 SR_TRACY_ZONE_TEXT(GetResourcePath());
@@ -98,12 +99,13 @@ namespace SR_HTYPES_NS {
                 state = SR_UTILS_NS::TaskState::Launched;
 
                 LoadMeshData(GetResourcePath(), m_sceneStructure, m_assimp, m_params);
-                AddUsePoint();
-                SR_UTILS_NS::TaskManager::Instance().ExecuteNextFrame([this, pStrong = GetThis()]() {
+                SR_UTILS_NS::TaskManager::Instance().ExecuteNextFrame([this, pStrong = GetThis().DynamicCast<RawMesh>()]() {
+                    m_loadState = LoadState::Loaded;
                     m_syncLoadTaskId = std::nullopt;
-                    Broadcast(SR_UTILS_NS::IResource::RELOAD_BEGIN_EVENT);
-                    Broadcast(SR_UTILS_NS::IResource::RELOAD_DONE_EVENT);
-                    RemoveUsePoint();
+                    if (!pStrong->IsDestroyed()) {
+                        Broadcast(SR_UTILS_NS::IResource::RELOAD_BEGIN_EVENT);
+                        Broadcast(SR_UTILS_NS::IResource::RELOAD_DONE_EVENT);
+                    }
                 });
             }, SR_UTILS_NS::TaskPriority::High);
             SR_UTILS_NS::TaskManager::Instance().SetDescription(*m_syncLoadTaskId, GetResourceId());

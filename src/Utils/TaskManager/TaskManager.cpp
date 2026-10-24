@@ -297,6 +297,8 @@ namespace SR_UTILS_NS {
     void TaskManager::OnSingletonDestroy() {
         m_isRun = false;
 
+        SR_LOG("TaskManager::OnSingletonDestroy() : stopping task manager...");
+
         if (m_thread) {
             m_thread->TryJoin();
             m_thread->Free();
