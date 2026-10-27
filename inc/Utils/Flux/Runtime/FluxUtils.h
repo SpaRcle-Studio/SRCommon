@@ -19,6 +19,10 @@ namespace SR_FLUX_NS {
 
         /// @method @evaluate
         SR_NODISCARD FluxComponent::Ptr GetActiveFluxComponent() const;
+        /// @method @evaluate
+        SR_NODISCARD uint64_t GetContainerSize(const Reflection::Value& value) const;
+        /// @method @evaluate @dontPack
+        SR_NODISCARD Reflection::Value VectorAt(const Reflection::Value& vector, uint64_t index) const;
 
         SR_NODISCARD Reflection::Value Cast(const Reflection::Value& value, StringAtom target) const;
 

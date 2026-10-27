@@ -123,8 +123,8 @@ namespace SR_UTILS_NS {
     }
 
     SR_HTYPES_NS::SharedPtr<Asset> Asset::CreateNew(const Path& rawPath, StringAtom assetType) {
-        auto&& resourceManager = ResourceManager::Instance();
-        SR_UTILS_NS::Path path = CoreResLoader::GetResPath().Concat(rawPath.RemoveSubPath(resourceManager.GetResPath()));
+        SR_UTILS_NS::Path id = rawPath.RemoveSubPath(CoreResLoader::GetResPath());
+        SR_UTILS_NS::Path path = CoreResLoader::GetResPath().Concat(id);
 
         if (path.IsExists()) {
             SR_ERROR("Asset::CreateNew() : asset already exists at path: {}", path);
@@ -142,7 +142,7 @@ namespace SR_UTILS_NS {
             return nullptr;
         }
 
-        pAsset->SetId(StringAtom(path.View()), true);
+        pAsset->SetId(StringAtom(id.View()), true);
         return pAsset;
     }
 }

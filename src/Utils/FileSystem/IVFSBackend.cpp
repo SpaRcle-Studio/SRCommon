@@ -28,6 +28,14 @@ namespace SR_UTILS_NS {
             }
         }
 
+        if (!m_ignoredPaths.empty()) {
+            for (auto&& ignored : m_ignoredPaths) {
+                if (path.starts_with(ignored)) {
+                    return false;
+                }
+            }
+        }
+
         if (SR_PLATFORM_NS::IsAbsolutePath(path)) {
             if (m_virtualPath.empty()) {
                 return false;

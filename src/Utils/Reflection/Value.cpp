@@ -70,6 +70,11 @@ namespace SR_UTILS_NS::Reflection {
         vtable.pResize(m_value->GetStorage(), newSize, false);
     }
 
+    void SequenceContainerValueRef::Reserve(SizeType newSize) {
+        auto&& vtable = m_value->GetTypeInfo().vtable.containerVTable;
+        vtable.pResize(m_value->GetStorage(), newSize, true);
+    }
+
     Value SequenceContainerValueRef::Back() {
         if (Size() == 0) {
             SRHalt("SequenceContainerValueRef::Back() : container is empty!");

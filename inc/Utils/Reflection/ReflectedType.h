@@ -82,6 +82,7 @@ namespace SR_UTILS_NS::Reflection {
     extern SR_COMMON_DLL_API bool IsReflectedTypeSigned(StringView type);
     extern SR_COMMON_DLL_API bool IsReflectedTypeIntegral(StringView type);
     extern SR_COMMON_DLL_API SizeType GetReflectedTypeSize(StringView type);
+    extern SR_COMMON_DLL_API SizeType GetReflectedTypeNextCount(ReflectedCategoryType category, StringView type);
     extern SR_COMMON_DLL_API void GetTypeNamesByCategory(ReflectedCategoryType category, Vector<StringAtom>& outNames);
     extern SR_COMMON_DLL_API void GetTypeDetailedSizes(ReflectedCategoryType category, StringAtom detailedType, Vector<uint8_t>& outSizes);
 

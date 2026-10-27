@@ -429,4 +429,15 @@ namespace SR_UTILS_NS {
 
         return false;
     }
+
+    void VFS::GetFilesInDirectory(Vector<Path>& files, StringView directory, bool recursive) {
+        SR_TRACY_ZONE;
+        SR_LOCK_GUARD;
+        files.clear();
+        Enumerate(directory, [&files](const VFSEntry& entry) {
+            if (entry.type == FSItemType::File) {
+                files.emplace_back(entry.fullPath);
+            }
+        }, recursive);
+    }
 }

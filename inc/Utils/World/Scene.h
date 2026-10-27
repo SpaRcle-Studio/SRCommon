@@ -91,7 +91,9 @@ namespace SR_WORLD_NS {
         SceneObjectPtr Find(uint64_t hashName);
         SceneObjectPtr Find(SR_UTILS_NS::StringAtom name);
 
-        void RegisterSceneObject(const SceneObjectPtr& pSO);
+        /// @method
+        void RegisterSceneObject(const SR_HTYPES_NS::SharedPtr<SceneObject>& pSO);
+
         void SetModule(StringView name, ISceneModule* pModule);
 
         /// @method

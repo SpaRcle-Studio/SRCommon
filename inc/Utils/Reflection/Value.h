@@ -54,6 +54,7 @@ namespace SR_UTILS_NS::Reflection {
         SR_NODISCARD Value Back();
 
         void Resize(SizeType newSize);
+        void Reserve(SizeType newSize);
 
         ReflectedContainerIterator Insert(ReflectedContainerIterator pIt, const Value& value);
 

@@ -46,10 +46,11 @@ namespace SR_UTILS_NS {
             static SR_THREAD_LOCAL String typeInfo;
             deserializer.ReadString(typeInfo, gTypeInfoId);
             if (auto&& pTypeInfo = Reflection::LoadTypeInfo(typeInfo)) {
-                if (Reflection::FindVTable(*pTypeInfo)) {
-                    value = Reflection::Value::CreateDefault(pTypeInfo);
-                    Reflection::DeserializeValue(value, deserializer);
+                if (!Reflection::FindVTable(*pTypeInfo)) {
+                    SR_WARN("ObjectDataAccessor<SR_UTILS_NS::Reflection::Value>::Load() : failed to find vtable for \"{}\" type!", typeInfo);
                 }
+                value = Reflection::Value::CreateDefault(pTypeInfo);
+                Reflection::DeserializeValue(value, deserializer);
                 Reflection::FreeTypeInfo(pTypeInfo);
             }
             deserializer.EndObject();

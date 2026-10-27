@@ -50,6 +50,9 @@ namespace SR_UTILS_NS {
         void DeInitialize();
         bool IsSingletonCanBeDestroyed() const override;
 
+        /// @method @evaluate
+        void GetFilesInDirectory(Vector<Path>& files, StringView directory, bool recursive);
+
         void Enumerate(StringView directory, const SR_HTYPES_NS::Function<void(const VFSEntry&)>& callback, bool recursive) const;
 
         void Mount(StringView virtualPath, IVFSBackend* pBackend, int32_t priority, bool permanent = false);

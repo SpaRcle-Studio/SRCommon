@@ -57,6 +57,8 @@ namespace SR_UTILS_NS::Reflection {
     TypeInfo* TypeParser::ParseType() {
         SkipSpaces();
 
+        const bool wrapped = Consume('[');
+
         TypeInfo* pTypeInfo = AllocateTypeInfo();
         StringView baseType = ReadBaseType();
 
@@ -65,18 +67,24 @@ namespace SR_UTILS_NS::Reflection {
             return nullptr;
         }
 
-        pTypeInfo->category = EnumReflector::FromString<ReflectedCategoryType>(baseType.substr(0, dotPos));
+        pTypeInfo->category = EnumReflector::FromString<ReflectedCategoryType>(
+            baseType.substr(0, dotPos)
+        );
         pTypeInfo->detailedType = baseType.substr(dotPos + 1);
 
         if (Consume('(')) {
             SkipSpaces();
+
             const SizeType start = pos;
-            while (pos < source.size() && std::isdigit(static_cast<unsigned char>(source[pos]))) {
+            while (pos < source.size() &&
+                   std::isdigit(static_cast<unsigned char>(source[pos]))) {
                 ++pos;
             }
 
             StringView sizeStr = source.substr(start, pos - start);
-            pTypeInfo->detailedSize = static_cast<uint8_t>(std::stoull(std::string(sizeStr)));
+            pTypeInfo->detailedSize = static_cast<uint8_t>(
+                std::stoull(std::string(sizeStr))
+            );
 
             if (!Consume(')')) {
                 return nullptr;
@@ -97,8 +105,6 @@ namespace SR_UTILS_NS::Reflection {
                     return nullptr;
                 }
 
-                SkipSpaces();
-
                 if (Consume(',')) {
                     continue;
                 }
@@ -109,6 +115,10 @@ namespace SR_UTILS_NS::Reflection {
 
                 return nullptr;
             }
+        }
+
+        if (wrapped && !Consume(']')) {
+            return nullptr;
         }
 
         return pTypeInfo;
@@ -193,6 +203,22 @@ namespace SR_UTILS_NS::Reflection {
                 }
                 else {
                     serializer.WriteString(pReflector->ToStringInternal(*value.Cast<int64_t>()).value(), SerializationId::Create("enum"));
+                }
+                break;
+            }
+            case ReflectedCategoryType::Container: {
+                if (typeInfo.detailedType == "Vector") {
+                    auto&& container = const_cast<Value&>(value).AsSequenceContainer();
+                    serializer.BeginArray(container.Size(), SerializationId::Create("vector"));
+                    for (auto pIt = container.Begin(); pIt != container.End(); ++pIt) {
+                        serializer.BeginItem(SerializationId::Create("item"));
+                        SerializeValue(pIt.First(), serializer);
+                        serializer.EndItem();
+                    }
+                    serializer.EndArray();
+                }
+                else {
+                    SR_WARN("SerializeValue() : unknown container type: {}", typeInfo.detailedType);
                 }
                 break;
             }
@@ -291,6 +317,29 @@ namespace SR_UTILS_NS::Reflection {
                 }
                 return true;
             }
+            case ReflectedCategoryType::Container: {
+                if (typeInfo.detailedType == "Vector") {
+                    auto&& container = const_cast<Value&>(value).AsSequenceContainer();
+                    if (uint64_t size = deserializer.BeginArray(SerializationId::Create("vector")); size > 0) {
+                        container.Clear();
+                        container.Reserve(size);
+                        uint64_t index = 0;
+                        while (deserializer.BeginItem(SerializationId::Create("item"), index)) {
+                            Value item;
+                            DeserializeValue(item, deserializer);
+                            container.PushBack(item);
+                            deserializer.EndItem();
+                            index++;
+                        }
+                        deserializer.EndArray();
+                    }
+                    return true;
+                }
+                else {
+                    SRHalt("DeserializeValue() : unknown container type: {}", typeInfo.detailedType);
+                    return false;
+                }
+            }
             case ReflectedCategoryType::String: {
                 if (typeInfo.detailedType == "Path") {
                     Path& path = *value.Cast<Path>();
@@ -314,6 +363,7 @@ namespace SR_UTILS_NS::Reflection {
                 }
                 else {
                     SRHalt("DeserializeValue() : unknown string type: {}", typeInfo.detailedType);
+                    return false;
                 }
                 return true;
             }

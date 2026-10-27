@@ -81,7 +81,9 @@ namespace SR_UTILS_NS {
         SR_NODISCARD bool IsPrefabLoadingState() const noexcept final { return m_isPrefabLoadingState; }
         SR_NODISCARD int32_t GetChildIndex(const SceneObject& child) const;
 
+        /// @method
         SR_NODISCARD SceneObject::Ptr CloneSceneObject() const;
+
         SR_NODISCARD bool IsPrefab() const noexcept override { return m_prefabInfo.pPrefab; }
 
         SR_NODISCARD virtual SceneObjectType GetSceneObjectType() const noexcept {
@@ -94,16 +96,20 @@ namespace SR_UTILS_NS {
         /// @method
         void SetEnabled(bool value);
 
+        /// @method
+        void SetName(StringAtom name);
+        /// @method
+        void SetTag(StringAtom tag);
+        /// @method
+        void SetLayer(StringAtom layer);
+
         bool MoveToTree(const SceneObject::Ptr& destination);
         void RemoveChild(const SceneObject::Ptr& pChild);
         bool AddChild(const SceneObject::Ptr& pChild);
         void ForEachChild(const SR_HTYPES_NS::Function<void(SceneObject::Ptr&)>& fn);
         void ForEachChild(const SR_HTYPES_NS::Function<void(const SceneObject::Ptr&)>& fn) const;
         bool SetParent(const SceneObject::Ptr& parent);
-        void SetName(ObjectNameT name);
-        void SetTag(SR_UTILS_NS::StringAtom tag);
         bool Contains(const SceneObject::Ptr& pChild);
-        void SetLayer(StringAtom layer);
         void SetIdInScene(uint64_t id);
         void SetScene(ScenePtr pScene);
         void SetPrefab(const SR_HTYPES_NS::SharedPtr<Prefab>& pPrefab, bool isOwner);

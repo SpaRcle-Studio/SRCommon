@@ -365,7 +365,11 @@ namespace SR_UTILS_NS::Reflection {
         &SwitchTypeRegister<SR_MATH_NS::BVector2>,
         &SwitchTypeRegister<SR_MATH_NS::BVector3>,
         &SwitchTypeRegister<SR_MATH_NS::BVector4>,
-        &SwitchTypeRegister<SR_MATH_NS::BVector6>
+        &SwitchTypeRegister<SR_MATH_NS::BVector6>,
+
+        &SwitchTypeRegister<Vector<Path>>,
+        &SwitchTypeRegister<Vector<String>>,
+        &SwitchTypeRegister<Vector<StringAtom>>
     };
 
     void InitReflection() {
@@ -400,6 +404,7 @@ namespace SR_UTILS_NS::Reflection {
     }
 
     void GetTypeNamesByCategory(ReflectedCategoryType category, Vector<StringAtom>& outNames) {
+        SR_TRACY_ZONE;
         outNames.clear();
         switch (category) {
             case ReflectedCategoryType::Arithmetic:
@@ -438,7 +443,7 @@ namespace SR_UTILS_NS::Reflection {
                 break;
             case ReflectedCategoryType::Container:
                 outNames = {
-                    "FlatHashSet", "FlatHashMap", "Vector", "Set", "Map", "SharedPtr", "EntityRef", "ResourceRef"
+                    "FlatHashSet", "FlatHashMap", "Vector", "Set", "Map", "SharedPtr", "EntityRef", "ResourceRef", "Pair", "Optional"
                 };
                 break;
             case ReflectedCategoryType::Object: {
@@ -479,6 +484,22 @@ namespace SR_UTILS_NS::Reflection {
             default:
                 break;
         }
+    }
+
+    SizeType GetReflectedTypeNextCount(ReflectedCategoryType category, StringView type) {
+        if (category != ReflectedCategoryType::Container) {
+            return 0;
+        }
+
+        if (type == "FlatHashSet" || type == "Vector" || type == "Set" || type == "SharedPtr" || type == "EntityRef" || type == "ResourceRef" || type == "Optional") {
+            return 1;
+        }
+
+        if (type == "FlatHashMap" || type == "Map" || type == "Pair") {
+            return 2;
+        }
+
+        return 0;
     }
 
     template<typename T> void ReflectedTypeInlineCopy(const ReflectedValue& from, ReflectedValue& to) {

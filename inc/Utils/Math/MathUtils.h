@@ -37,6 +37,8 @@ namespace SR_MATH_NS {
         /// @method @evaluate
         float_t SumFloat(float_t a, float_t b) const { return a + b; }
         /// @method @evaluate
+        uint64_t SumInt(uint64_t a, uint64_t b) const { return a + b; }
+        /// @method @evaluate
         float_t SubtractFloat(float_t a, float_t b) const { return a - b; }
         /// @method @evaluate
         float_t BoolToFloat(bool value) const { return value ? 1.f : 0.f; }
@@ -112,6 +114,8 @@ namespace SR_MATH_NS {
         bool IsFloatGreater(float_t a, float_t b) const { return a > b; }
         /// @method @evaluate
         bool IsFloatLess(float_t a, float_t b) const { return a < b; }
+        /// @method @evaluate
+        bool IsIntLess(uint64_t a, uint64_t b) const { return a < b; }
 
         /// @method @evaluate
         Quaternion QuaternionFromEulerAngles(float_t pitch, float_t yaw, float_t roll) const;

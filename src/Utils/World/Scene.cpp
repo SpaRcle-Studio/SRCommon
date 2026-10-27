@@ -281,12 +281,10 @@ namespace SR_WORLD_NS {
 
     bool Scene::SaveSceneAt(const Path& path) {
         SR_TRACY_ZONE;
-        SR_INFO(SR_FORMAT("Scene::SaveAt() : saving scene...\n\tPath: {}", path.CStr()));
-
-        SRAssert(!path.IsAbs());
+        SR_INFO("Scene::SaveAt() : saving scene...\n\tPath: {}", path);
 
         if (m_path.GetExtensionView() != path.GetExtensionView()) {
-            SR_ERROR("Scene::SaveAt() : different extensions!\n\tSave path: " + path.ToString() + "\n\tScene path: " + m_path.ToString());
+            SR_ERROR("Scene::SaveAt() : different extensions!\n\tSave path: {}\n\tScene path: {}", path, m_path);
             return false;
         }
 
@@ -294,12 +292,12 @@ namespace SR_WORLD_NS {
         serializer.SetUseTabs(true);
         Save(serializer);
 
-        if (!m_logic->SaveLogic(serializer, GetPath())) {
+        if (!m_logic->SaveLogic(serializer, path)) {
             SR_ERROR("Scene::SaveAt() : failed to save scene logic!");
             return false;
         }
 
-        if (!serializer.SaveToFile(m_logic->GetSceneDataPath(GetPath()))) {
+        if (!serializer.SaveToFile(m_logic->GetSceneDataPath(path))) {
             SR_ERROR("Scene::SaveAt() : failed to save scene!");
             return false;
         }

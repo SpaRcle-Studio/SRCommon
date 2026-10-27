@@ -24,4 +24,12 @@ namespace SR_FLUX_NS {
         auto&& pTargetMeta = Factory::Instance().GetType(target);
         return pTargetMeta ? pTargetMeta->Cast(value) : Reflection::Value();
     }
+
+    uint64_t FluxUtils::GetContainerSize(const Reflection::Value& value) const {
+        return const_cast<Reflection::Value&>(value).AsSequenceContainer().Size();
+    }
+
+    Reflection::Value FluxUtils::VectorAt(const Reflection::Value& vector, uint64_t index) const {
+        return (const_cast<Reflection::Value&>(vector).AsSequenceContainer().Begin() + index).First();
+    }
 }

@@ -17,8 +17,8 @@ namespace SR_FLUX_NS {
         : m_graph(graph)
     {
         m_arithmeticObject = StringAtom("MathUtils");
-        m_addFunction = StringAtom("Add");
-        m_lessFunction = StringAtom("Less");
+        m_addFunction = StringAtom("SumInt");
+        m_lessFunction = StringAtom("IsIntLess");
     }
 
     /// =================================================== Поток ======================================================

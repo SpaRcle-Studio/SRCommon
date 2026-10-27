@@ -51,11 +51,13 @@ namespace SR_UTILS_NS {
         SR_NODISCARD StringView GetRealPath() const { return m_realPath; }
 
         void AddIgnoredExtension(StringView extension) { m_ignoredExtensions.insert(extension); }
+        void AddIgnoredPath(StringView path) { m_ignoredPaths.insert(path); }
 
     protected:
         String m_virtualPath;
         String m_realPath;
         Set<String> m_ignoredExtensions;
+        Set<String> m_ignoredPaths;
 
     };
 }

@@ -15,8 +15,10 @@ namespace SR_UTILS_NS {
     class IResourceReloader;
     class FileWatcher;
 
-    class ResourceManager final : public Singleton<ResourceManager> {
+    /// @noCopyable @noMovable
+    class ResourceManager final : public Singleton<ResourceManager>, public SRClass {
         SR_REGISTER_SINGLETON(ResourceManager)
+        SR_CLASS()
         using Hash = uint64_t;
         using ResourceLoaderFn = SR_HTYPES_NS::Function<IResource::Ptr(const StringAtom&)>;
     public:
@@ -27,12 +29,16 @@ namespace SR_UTILS_NS {
         SR_NODISCARD bool IsInitialized() const { return m_isInit; }
         SR_NODISCARD bool IsLastResource(const IResource::Ptr& pResource);
         SR_NODISCARD bool IsUsePointStackTraceProfilingEnabled() const { return m_usePointStackTraceProfiling; }
-        SR_NODISCARD Path GetResPath() const;
-        SR_NODISCARD const Path& GetResPathRef() const;
-        SR_NODISCARD Path GetCachePath() const;
         SR_NODISCARD FileSystemWatcher::Ptr GetFileSystemWatcher() const { return m_fileSystemWatcher; }
         SR_NODISCARD IResourceReloader* GetDefaultReloader() const { return m_defaultReloader.Get(); }
         SR_NODISCARD bool HasDirtyResources() const { return m_hasDirtyResources; }
+
+        /// @method @evaluate
+        SR_NODISCARD Path GetResPath() const;
+        /// @method @evaluate
+        SR_NODISCARD const Path& GetResPathRef() const;
+        /// @method @evaluate
+        SR_NODISCARD Path GetCachePath() const;
 
         SR_NODISCARD IResource::Ptr Find(StringAtom id, StringAtom typeName, const IResourceVariant* pVariant) const;
         SR_NODISCARD IResource::Ptr FindAnyType(StringAtom id, const IResourceVariant* pVariant) const;

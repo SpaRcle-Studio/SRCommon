@@ -507,6 +507,11 @@ namespace SR_UTILS_NS {
         return result;
     }
 
+
+    Path StringUtils::ConcatPath(const Path& left, const Path& right) {
+        return left.Concat(right);
+    }
+
     bool StringUtils::CompareAnyCase(StringView left, StringView right) {
         if (left.size() != right.size()) {
             return false;
@@ -734,6 +739,14 @@ namespace SR_UTILS_NS {
             source.erase(std::remove(source.begin(), source.end(), i), source.end());
         }
         return source;
+    }
+
+    StringView StringUtils::GetViewFromPath(const Path& path) {
+        return path;
+    }
+
+    String StringUtils::PathToString(const Path& path) {
+        return path.View();
     }
 
     String GetErrorString(int err) {

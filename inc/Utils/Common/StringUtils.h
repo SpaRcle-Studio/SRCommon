@@ -33,6 +33,8 @@ namespace SR_UTILS_NS {
         /// @method @evaluate
         String Concat(const String& left, const String& right);
         /// @method @evaluate
+        Path ConcatPath(const Path& left, const Path& right);
+        /// @method @evaluate
         bool CompareAnyCase(StringView left, StringView right);
 
         /// @method @evaluate
@@ -42,6 +44,10 @@ namespace SR_UTILS_NS {
         bool Compare(StringView left, StringView right);
         /// @method @evaluate
         StringView GetViewFromAtom(StringAtom atom);
+        /// @method @evaluate
+        StringView GetViewFromPath(const Path& path);
+        /// @method @evaluate
+        String PathToString(const Path& path);
 
         void Base64Decode(StringView source, String& base64);
         void Base64Encode(StringView base64, String& result);

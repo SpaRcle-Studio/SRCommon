@@ -8,13 +8,13 @@
 #include <Utils/Resources/ResourceInfo.h>
 #include <Utils/Resources/FileWatcher.h>
 #include <Utils/Resources/Asset.h>
-#include <Utils/Resources/Asset.h>
 #include <Utils/FileSystem/VFS.h>
 #include <Utils/Common/Features.h>
 #include <Utils/Common/StringFormat.h>
-#include <Utils/Common/Hashes.h>
 #include <Utils/Common/StringUtils.h>
 #include <Utils/TypeTraits/Factory.h>
+
+#include <Codegen/ResourceManager.generated.hpp>
 
 namespace SR_UTILS_NS {
     /// Seconds
