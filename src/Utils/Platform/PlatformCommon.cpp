@@ -42,6 +42,42 @@ namespace SR_PLATFORM_NS {
         return GetPathType(path) == FSItemType::File;
     }
 
+
+#if defined(SR_WIN32) || defined(SR_LINUX) || defined(SR_MACOS) || defined(SR_EMSCRIPTEN)
+    Path GetUserDataDirectory() {
+    #if defined(SR_WIN32)
+        char* localAppData = nullptr;
+        size_t len = 0;
+        _dupenv_s(&localAppData, &len, "LOCALAPPDATA");
+        if (localAppData) {
+            Path path(localAppData);
+            free(localAppData);
+            return path;
+        }
+        return Path();
+    #elif defined(SR_LINUX)
+        const char* xdgDataHome = getenv("XDG_DATA_HOME");
+            if (xdgDataHome) {
+                return Path(xdgDataHome);
+            }
+            return Path();
+        #elif defined(SR_MACOS)
+            const char* homeDir = getenv("HOME");
+            if (homeDir) {
+                Path path(homeDir);
+                return path.Concat("Library").Concat("Application Support");
+            }
+            return Path();
+        #elif defined(SR_EMSCRIPTEN)
+            // Emscripten не имеет файловой системы, поэтому возвращаем пустой путь
+            return Path();
+        #else
+            #error "Unsupported platform"
+            return Path();
+    #endif
+    }
+#endif
+
     bool IsDirectoryExists(StringView path) {
         return GetPathType(path) == FSItemType::Folder;
     }
