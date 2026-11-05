@@ -140,6 +140,23 @@ namespace SR_PLATFORM_NS {
         return keyStates[static_cast<uint8_t>(key)];
     }
 
+    std::optional<ApplicationInfo> g_applicationInfo;
+
+    void SetApplicationInfo(const ApplicationInfo& info) {
+        g_applicationInfo = info;
+    }
+
+    const ApplicationInfo& GetApplicationInfo() {
+        if (!g_applicationInfo) {
+            g_applicationInfo = ApplicationInfo();
+            g_applicationInfo->name = "SREngine";
+            g_applicationInfo->organization = "SpaRcle-Studio";
+            g_applicationInfo->version = SR_ENGINE_VERSION;
+            g_applicationInfo->engineVersion = SR_ENGINE_VERSION;
+        }
+        return g_applicationInfo.value();
+    }
+
     void SetOverriddenMouseState(const std::optional<MouseState>& mouseState) {
         g_overriddenMouseState.store(mouseState);
     }

@@ -57,6 +57,13 @@ namespace SR_UTILS_NS::Platform {
         bool Get(KeyCode key) const;
     };
 
+    struct ApplicationInfo {
+        String name;
+        String organization;
+        String version;
+        String engineVersion;
+    };
+
     struct MouseState {
         SR_MATH_NS::FVector2 position;
         /**
@@ -78,6 +85,8 @@ namespace SR_UTILS_NS::Platform {
 
     extern std::mutex g_platformLogMutex;
 
+    SR_COMMON_DLL_API extern void SetApplicationInfo(const ApplicationInfo& info);
+    SR_COMMON_DLL_API extern const ApplicationInfo& GetApplicationInfo();
     SR_COMMON_DLL_API extern void SetOverriddenMouseState(const std::optional<MouseState>& mouseState);
     SR_COMMON_DLL_API extern std::optional<MouseState> GetOverriddenMouseState();
     SR_COMMON_DLL_API extern void SetOverriddenKeyboardState(const std::optional<KeyboardState>& keyboardState);
@@ -132,6 +141,7 @@ namespace SR_UTILS_NS::Platform {
     SR_COMMON_DLL_API extern Path GetApplicationResourcesPath();
     SR_COMMON_DLL_API extern Path GetApplicationPath();
     SR_COMMON_DLL_API extern Path GetApplicationDirectory();
+    SR_COMMON_DLL_API extern Path GetUserDataDirectory();
     SR_COMMON_DLL_API extern String GetApplicationName();
     SR_COMMON_DLL_API extern SR_MATH_NS::UVector2 GetScreenResolution();
     SR_COMMON_DLL_API extern double_t GetScreenDPI();

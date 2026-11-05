@@ -267,6 +267,10 @@ namespace SR_UTILS_NS::Platform {
         return GetApplicationPath();
     }
 
+    Path GetUserDataDirectory() {
+        return Path(pAndroidInstance->activity->internalDataPath);
+    }
+
     std::optional<Path> GetApplicationCachePath() {
         /// кеш лежит внутри ресурсов, как и на остальных платформах, а корень записи задаёт
         /// внутреннее хранилище приложения (см. GetApplicationDataPath)
