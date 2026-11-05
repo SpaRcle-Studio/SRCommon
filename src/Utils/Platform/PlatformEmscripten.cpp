@@ -8,6 +8,7 @@
 #include <Utils/Platform/Stacktrace.h>
 #include <Utils/Common/Breakpoint.h>
 #include <Utils/FileSystem/FileSystem.h>
+#include <Utils/Input/InputSystem.h>
 
 #include <Utils/Input/KeyCodes.h>
 
@@ -172,6 +173,18 @@ namespace SR_PLATFORM_NS {
             return EM_FALSE;
         }
 
+        EM_BOOL WebWheelCallback(int eventType, const EmscriptenWheelEvent* pEvent, void* pUserData) {
+            double_t scale = 1.0;
+            if (pEvent->deltaMode == DOM_DELTA_PIXEL) {
+                scale = 0.01;
+            } else if (pEvent->deltaMode == DOM_DELTA_LINE) {
+                scale = 1.0 / 3.0;
+            }
+
+            SR_UTILS_NS::Input::Instance().SetMouseScroll(-pEvent->deltaX * scale, -pEvent->deltaY * scale);
+            return EM_FALSE;
+        }
+
         EM_BOOL WebKeyCallback(int eventType, const EmscriptenKeyboardEvent* pEvent, void* pUserData) {
             if (IsWebEditableElementFocused()) {
                 return EM_FALSE;
@@ -211,6 +224,7 @@ namespace SR_PLATFORM_NS {
             emscripten_set_mousedown_callback_on_thread(SR_WEB_CANVAS_SELECTOR, nullptr, EM_FALSE, WebMouseCallback, targetThread);
             emscripten_set_mouseup_callback_on_thread(EMSCRIPTEN_EVENT_TARGET_DOCUMENT, nullptr, EM_FALSE, WebMouseCallback, targetThread);
             emscripten_set_mousemove_callback_on_thread(EMSCRIPTEN_EVENT_TARGET_DOCUMENT, nullptr, EM_FALSE, WebMouseCallback, targetThread);
+            emscripten_set_wheel_callback_on_thread(SR_WEB_CANVAS_SELECTOR, nullptr, EM_FALSE, WebWheelCallback, targetThread);
 
             emscripten_set_keydown_callback_on_thread(EMSCRIPTEN_EVENT_TARGET_DOCUMENT, nullptr, EM_FALSE, WebKeyCallback, targetThread);
             emscripten_set_keyup_callback_on_thread(EMSCRIPTEN_EVENT_TARGET_DOCUMENT, nullptr, EM_FALSE, WebKeyCallback, targetThread);
@@ -220,6 +234,7 @@ namespace SR_PLATFORM_NS {
             emscripten_set_mousedown_callback(SR_WEB_CANVAS_SELECTOR, nullptr, EM_FALSE, WebMouseCallback);
             emscripten_set_mouseup_callback(EMSCRIPTEN_EVENT_TARGET_DOCUMENT, nullptr, EM_FALSE, WebMouseCallback);
             emscripten_set_mousemove_callback(EMSCRIPTEN_EVENT_TARGET_DOCUMENT, nullptr, EM_FALSE, WebMouseCallback);
+            emscripten_set_wheel_callback(SR_WEB_CANVAS_SELECTOR, nullptr, EM_FALSE, WebWheelCallback);
 
             emscripten_set_keydown_callback(EMSCRIPTEN_EVENT_TARGET_DOCUMENT, nullptr, EM_FALSE, WebKeyCallback);
             emscripten_set_keyup_callback(EMSCRIPTEN_EVENT_TARGET_DOCUMENT, nullptr, EM_FALSE, WebKeyCallback);

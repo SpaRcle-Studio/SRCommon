@@ -62,6 +62,18 @@ namespace SR_UTILS_NS {
                 }
                 /// Cursor visibility is managed by WaylandWindow
             }
+        #elif defined(SR_EMSCRIPTEN)
+            /// The browser does not allow the cursor to be warped to the lock center.
+            /// Use the actual canvas-relative position delta instead.
+            if (!m_isLocked) {
+                m_isLocked = true;
+                m_mouse = mouseState.position;
+                m_mouseDrag = SR_MATH_NS::FVector2(0, 0);
+            } else {
+                m_mouseDrag = mouseState.position - m_mouse;
+                m_mouse = mouseState.position;
+            }
+            SetCursorVisible(false);
         #else
             m_mousePrev = pActiveLock->lockRect ? pActiveLock->lockRect->Center() : m_focusedWindowRect->Center();
             m_mousePrev = m_mousePrev.Round();
