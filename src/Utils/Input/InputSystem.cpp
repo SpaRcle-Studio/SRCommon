@@ -63,15 +63,26 @@ namespace SR_UTILS_NS {
                 /// Cursor visibility is managed by WaylandWindow
             }
         #elif defined(SR_EMSCRIPTEN)
-            /// The browser does not allow the cursor to be warped to the lock center.
-            /// Use the actual canvas-relative position delta instead.
-            if (!m_isLocked) {
-                m_isLocked = true;
-                m_mouse = mouseState.position;
-                m_mouseDrag = SR_MATH_NS::FVector2(0, 0);
+            if (SR_PLATFORM_NS::IsCursorLockActive()) {
+                if (!m_isLocked) {
+                    m_isLocked = true;
+                    SR_PLATFORM_NS::ConsumeAccumulatedMouseDelta();
+                    m_mouseDrag = SR_MATH_NS::FVector2(0, 0);
+                } else {
+                    m_mouseDrag = SR_PLATFORM_NS::ConsumeAccumulatedMouseDelta();
+                }
             } else {
-                m_mouseDrag = mouseState.position - m_mouse;
-                m_mouse = mouseState.position;
+                SR_PLATFORM_NS::SetCursorLockActive(true);
+                /// Pointer lock can only be requested from a user gesture. Keep the old behavior
+                /// until the next mouse press activates it.
+                if (!m_isLocked) {
+                    m_isLocked = true;
+                    m_mouse = mouseState.position;
+                    m_mouseDrag = SR_MATH_NS::FVector2(0, 0);
+                } else {
+                    m_mouseDrag = mouseState.position - m_mouse;
+                    m_mouse = mouseState.position;
+                }
             }
             SetCursorVisible(false);
         #else
@@ -93,6 +104,9 @@ namespace SR_UTILS_NS {
             m_mousePrev = m_mouse;
             m_mouse = mouseState.position;
             m_isLocked = false;
+        #ifdef SR_EMSCRIPTEN
+            SR_PLATFORM_NS::SetCursorLockActive(false);
+        #endif
             SetCursorVisible(true);
             m_mouseDrag = (m_mouse - m_mousePrev);
         }

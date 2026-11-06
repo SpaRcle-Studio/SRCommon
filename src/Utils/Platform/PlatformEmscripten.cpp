@@ -151,6 +151,10 @@ namespace SR_PLATFORM_NS {
         KeyboardState g_webKeyboardState;
         bool g_webInputInstalled = false;
         bool g_webCursorVisible = true;
+        std::mutex g_webMouseDeltaMutex;
+        SR_MATH_NS::FVector2 g_webAccumulatedMouseDelta;
+        std::atomic<bool> g_webCursorLockActive = false;
+        std::atomic<bool> g_webCursorLockRequested = false;
 
         /// Browser button ids are 0 - left, 1 - middle, 2 - right, while the engine expects
         /// 0 - left, 1 - right, 2 - middle.
@@ -158,6 +162,13 @@ namespace SR_PLATFORM_NS {
 
         EM_BOOL WebMouseCallback(int eventType, const EmscriptenMouseEvent* pEvent, void* pUserData) {
             g_webMouseState.position = WebClientToCanvasPos(static_cast<float_t>(pEvent->clientX), static_cast<float_t>(pEvent->clientY));
+
+            if (g_webCursorLockActive.load()) {
+                std::lock_guard lock(g_webMouseDeltaMutex);
+                g_webAccumulatedMouseDelta += SR_MATH_NS::FVector2(
+                    static_cast<float_t>(pEvent->movementX), static_cast<float_t>(pEvent->movementY)
+                );
+            }
 
             if (eventType == EMSCRIPTEN_EVENT_MOUSEDOWN || eventType == EMSCRIPTEN_EVENT_MOUSEUP) {
                 const bool isDown = eventType == EMSCRIPTEN_EVENT_MOUSEDOWN;
@@ -170,6 +181,14 @@ namespace SR_PLATFORM_NS {
             }
 
             /// Never swallow the event here, the GUI backend decides what to consume.
+            return EM_FALSE;
+        }
+
+        EM_BOOL WebPointerLockCallback(int eventType, const EmscriptenPointerlockChangeEvent* pEvent, void* pUserData) {
+            g_webCursorLockActive.store(pEvent->isActive);
+            g_webCursorLockRequested.store(pEvent->isActive);
+            std::lock_guard lock(g_webMouseDeltaMutex);
+            g_webAccumulatedMouseDelta = {};
             return EM_FALSE;
         }
 
@@ -230,6 +249,7 @@ namespace SR_PLATFORM_NS {
             emscripten_set_keyup_callback_on_thread(EMSCRIPTEN_EVENT_TARGET_DOCUMENT, nullptr, EM_FALSE, WebKeyCallback, targetThread);
 
             emscripten_set_blur_callback_on_thread(EMSCRIPTEN_EVENT_TARGET_WINDOW, nullptr, EM_FALSE, WebBlurCallback, targetThread);
+            emscripten_set_pointerlockchange_callback_on_thread(EMSCRIPTEN_EVENT_TARGET_DOCUMENT, nullptr, EM_FALSE, WebPointerLockCallback, targetThread);
         #else
             emscripten_set_mousedown_callback(SR_WEB_CANVAS_SELECTOR, nullptr, EM_FALSE, WebMouseCallback);
             emscripten_set_mouseup_callback(EMSCRIPTEN_EVENT_TARGET_DOCUMENT, nullptr, EM_FALSE, WebMouseCallback);
@@ -240,6 +260,7 @@ namespace SR_PLATFORM_NS {
             emscripten_set_keyup_callback(EMSCRIPTEN_EVENT_TARGET_DOCUMENT, nullptr, EM_FALSE, WebKeyCallback);
 
             emscripten_set_blur_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW, nullptr, EM_FALSE, WebBlurCallback);
+            emscripten_set_pointerlockchange_callback(EMSCRIPTEN_EVENT_TARGET_DOCUMENT, nullptr, EM_FALSE, WebPointerLockCallback);
         #endif
         }
     }
@@ -333,6 +354,32 @@ namespace SR_PLATFORM_NS {
             return overridden.value();
         }
         return g_webMouseState;
+    }
+
+    void AccumulateMouseDelta(const SR_MATH_NS::FVector2& delta) {
+        std::lock_guard lock(g_webMouseDeltaMutex);
+        g_webAccumulatedMouseDelta += delta;
+    }
+
+    SR_MATH_NS::FVector2 ConsumeAccumulatedMouseDelta() {
+        std::lock_guard lock(g_webMouseDeltaMutex);
+        const auto delta = g_webAccumulatedMouseDelta;
+        g_webAccumulatedMouseDelta = {};
+        return delta;
+    }
+
+    void SetCursorLockActive(bool active) {
+        if (active) {
+            if (!g_webCursorLockRequested.exchange(true)) {
+                emscripten_request_pointerlock(SR_WEB_CANVAS_SELECTOR, EM_TRUE);
+            }
+        } else if (g_webCursorLockRequested.exchange(false)) {
+            emscripten_exit_pointerlock();
+        }
+    }
+
+    bool IsCursorLockActive() {
+        return g_webCursorLockActive.load();
     }
 
     void Unzip(const SR_UTILS_NS::Path& source, const SR_UTILS_NS::Path& destination, bool replace) {

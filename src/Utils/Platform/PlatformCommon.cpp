@@ -101,6 +101,7 @@ namespace SR_PLATFORM_NS {
         /// do nothing
     }
 
+#ifndef SR_EMSCRIPTEN
     void AccumulateMouseDelta(const SR_MATH_NS::FVector2& delta) {
         SRHalt("Platform::AccumulateMouseDelta() : not implemented!");
     }
@@ -118,6 +119,7 @@ namespace SR_PLATFORM_NS {
         SRHalt("Platform::IsCursorLockActive() : not implemented!");
         return false;
     }
+#endif
 #endif
 
     bool CreateDirectories(StringView path) {
