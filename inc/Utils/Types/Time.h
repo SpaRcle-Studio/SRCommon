@@ -36,10 +36,10 @@ namespace SR_HTYPES_NS {
         SR_NODISCARD TimePointType Now() const noexcept { return m_timeInfo.load().m_point; }
         SR_NODISCARD float_t FClock() const noexcept { return static_cast<float_t>(Count()) / SR_CLOCKS_PER_SEC / SR_CLOCKS_PER_SEC; }
 
-#ifdef SR_LINUX
-        SR_NODISCARD uint64_t Clock() const noexcept { return static_cast<uint64_t>(m_timeInfo.load().m_clock) / SR_CLOCKS_PER_SEC; }
-#else
+#if defined(SR_WIN32)
         SR_NODISCARD uint64_t Clock() const noexcept { return static_cast<uint64_t>(m_timeInfo.load().m_clock); }
+#else
+        SR_NODISCARD uint64_t Clock() const noexcept { return static_cast<uint64_t>(m_timeInfo.load().m_clock) / SR_CLOCKS_PER_SEC; }
 #endif
 
     private:
