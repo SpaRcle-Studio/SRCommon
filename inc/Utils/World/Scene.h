@@ -84,6 +84,7 @@ namespace SR_WORLD_NS {
         SR_NODISCARD bool IsEditorMode() const;
 
         SceneObjects& GetRootSceneObjects();
+        bool MoveRootSceneObject(const SceneObjectPtr& pSO, int32_t index);
 
         SceneObjectPtr FindByComponent(const std::string& name);
         SceneObjectPtr Find(const std::string& name);

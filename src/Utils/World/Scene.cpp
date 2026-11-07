@@ -242,15 +242,28 @@ namespace SR_WORLD_NS {
             return m_root;
         }
 
-        m_root.clear();
-        m_root.reserve(m_sceneObjects.size() / 2);
+        for (auto pIt = m_root.begin(); pIt != m_root.end(); ) {
+            if (!*pIt || (*pIt)->GetParent() || (*pIt)->IsDestroyed()) {
+                pIt = m_root.erase(pIt);
+            }
+            else {
+                ++pIt;
+            }
+        }
 
         for (auto&& gameObject : m_sceneObjects) {
             if (!gameObject) {
                 continue;
             }
 
-            if (!gameObject->GetParent()) {
+            bool isAlreadyAdded = false;
+            for (auto&& pRoot : m_root) {
+                if (pRoot == gameObject) {
+                    isAlreadyAdded = true;
+                    break;
+                }
+            }
+            if (!gameObject->GetParent() && !isAlreadyAdded) {
                 m_root.emplace_back(gameObject);
             }
         }
@@ -258,6 +271,28 @@ namespace SR_WORLD_NS {
         m_isHierarchyChanged = false;
 
         return m_root;
+    }
+
+    bool Scene::MoveRootSceneObject(const SceneObjectPtr& pSO, int32_t index) {
+        if (!pSO || pSO->GetParent()) {
+            return false;
+        }
+
+        auto&& root = GetRootSceneObjects();
+        auto&& pIt = std::find(root.begin(), root.end(), pSO);
+        if (pIt == root.end()) {
+            return false;
+        }
+
+        root.erase(pIt);
+        if (index < 0 || index >= static_cast<int32_t>(root.size())) {
+            root.emplace_back(pSO);
+        }
+        else {
+            root.insert(root.begin() + index, pSO);
+        }
+        SetDirty(true);
+        return true;
     }
 
     SceneObject::Ptr Scene::FindByComponent(const std::string &name) {

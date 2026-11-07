@@ -13,7 +13,10 @@ namespace SR_UTILS_NS {
     class SRAISerialization : public IBaseSerialization {
     public:
         void SetUseTabs(const bool value) noexcept { m_isNeedUseTabs = value; }
-        SR_NODISCARD bool IsNeedUseTabs() const noexcept { return m_isNeedUseTabs; }
+        void SetUseNumericDepth(const bool value) noexcept { m_isNeedNumericDepth = value; }
+
+        SR_NODISCARD bool IsNeedUseTabs() const noexcept;
+        SR_NODISCARD bool IsNeedNumericDepth() const noexcept { return m_isNeedNumericDepth; }
 
         SR_NODISCARD String ToStringBase() const noexcept override;
 
@@ -25,6 +28,7 @@ namespace SR_UTILS_NS {
 
     private:
         bool m_isNeedUseTabs = false;
+        bool m_isNeedNumericDepth = false;
 
     };
 

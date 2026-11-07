@@ -20,6 +20,17 @@ namespace SR_UTILS_NS {
             , max(max)
         { }
 
+        SR_NODISCARD static RectAnchors Fill() { return RectAnchors(SR_MATH_NS::FVector2(0, 0), SR_MATH_NS::FVector2(1, 1)); }
+        SR_NODISCARD static RectAnchors TopLeft() { return RectAnchors(SR_MATH_NS::FVector2(0, 0), SR_MATH_NS::FVector2(0, 0)); }
+        SR_NODISCARD static RectAnchors TopCenter() { return RectAnchors(SR_MATH_NS::FVector2(0.5f, 0), SR_MATH_NS::FVector2(0.5f, 0)); }
+        SR_NODISCARD static RectAnchors TopRight() { return RectAnchors(SR_MATH_NS::FVector2(1, 0), SR_MATH_NS::FVector2(1, 0)); }
+        SR_NODISCARD static RectAnchors MiddleLeft() { return RectAnchors(SR_MATH_NS::FVector2(0, 0.5f), SR_MATH_NS::FVector2(0, 0.5f)); }
+        SR_NODISCARD static RectAnchors MiddleCenter() { return RectAnchors(SR_MATH_NS::FVector2(0.5f, 0.5f), SR_MATH_NS::FVector2(0.5f, 0.5f)); }
+        SR_NODISCARD static RectAnchors MiddleRight() { return RectAnchors(SR_MATH_NS::FVector2(1, 0.5f), SR_MATH_NS::FVector2(1, 0.5f)); }
+        SR_NODISCARD static RectAnchors BottomLeft() { return RectAnchors(SR_MATH_NS::FVector2(0, 1), SR_MATH_NS::FVector2(0, 1)); }
+        SR_NODISCARD static RectAnchors BottomCenter() { return RectAnchors(SR_MATH_NS::FVector2(0.5f, 1), SR_MATH_NS::FVector2(0.5f, 1)); }
+        SR_NODISCARD static RectAnchors BottomRight() { return RectAnchors(SR_MATH_NS::FVector2(1, 1), SR_MATH_NS::FVector2(1, 1)); }
+
         /// @property @resetValue(SR_MATH_NS::FVector2(0.5f, 0.5f))
         SR_MATH_NS::FVector2 min = SR_MATH_NS::FVector2(0.5f, 0.5f);
         /// @property @resetValue(SR_MATH_NS::FVector2(0.5f, 0.5f))
@@ -34,6 +45,8 @@ namespace SR_UTILS_NS {
         }
 
     };
+
+    SR_COMMON_DLL_API extern std::span<RectAnchors> GetRectAnchorsPresets();
 
     /// @inspector(TransformRectPropertyDrawer)
     class SR_COMMON_DLL_API TransformRect : public Transform {

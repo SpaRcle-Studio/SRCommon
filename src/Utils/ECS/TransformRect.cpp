@@ -475,4 +475,20 @@ namespace SR_UTILS_NS {
         }
         return m_globalMaskInfo;
     }
+
+    std::span<RectAnchors> GetRectAnchorsPresets() {
+        static std::array<RectAnchors, 10> presets = {
+            RectAnchors::Fill(),
+            RectAnchors::TopLeft(),
+            RectAnchors::TopCenter(),
+            RectAnchors::TopRight(),
+            RectAnchors::MiddleLeft(),
+            RectAnchors::MiddleCenter(),
+            RectAnchors::MiddleRight(),
+            RectAnchors::BottomLeft(),
+            RectAnchors::BottomCenter(),
+            RectAnchors::BottomRight(),
+        };
+        return presets;
+    }
 }

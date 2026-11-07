@@ -77,7 +77,7 @@ namespace SR_UTILS_NS {
 
         Task::State GetResult(TaskId taskId) const;
         bool IsActive(TaskId taskId) const;
-        void Wait(TaskId taskId) const;
+        void Wait(TaskId taskId);
         void SetDescription(TaskId taskId, StringView description);
 
         void WaitForIdle();

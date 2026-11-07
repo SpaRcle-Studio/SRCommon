@@ -105,7 +105,7 @@ namespace SR_UTILS_NS {
 
         bool MoveToTree(const SceneObject::Ptr& destination);
         void RemoveChild(const SceneObject::Ptr& pChild);
-        bool AddChild(const SceneObject::Ptr& pChild);
+        bool AddChild(const SceneObject::Ptr& pChild, int32_t index = SR_ID_INVALID);
         void ForEachChild(const SR_HTYPES_NS::Function<void(SceneObject::Ptr&)>& fn);
         void ForEachChild(const SR_HTYPES_NS::Function<void(const SceneObject::Ptr&)>& fn) const;
         bool SetParent(const SceneObject::Ptr& parent);

@@ -424,7 +424,7 @@ namespace SR_UTILS_NS {
         }
     }
 
-    void TaskManager::Wait(TaskManager::TaskId taskId) const {
+    void TaskManager::Wait(TaskManager::TaskId taskId) {
         SR_TRACY_ZONE;
 
         if (!IsActive(taskId)) {
@@ -446,6 +446,25 @@ namespace SR_UTILS_NS {
         }
 
         while (IsActive(taskId)) {
+            if (SR_PLATFORM_NS::IsSupportThreads()) {
+                SR_LOCK_GUARD;
+                for (auto&& pTask : m_tasks) {
+                    if (pTask->GetPriority() == TaskPriority::Discardable && pTask->IsLaunched()) {
+                        /// discardable task may be very long, so we need to manually execute our task
+                        auto&& pIt = m_tasks.find_if([taskId](auto&& pTask) { return pTask->GetId() == taskId; });
+                        if (pIt != m_tasks.end()) {
+                            SR_LOG("TaskManager::Wait() : forced run task with id {} in main thread, because discardable task executing and locked the thread...", taskId);
+                            (*pIt)->Run();
+                            m_delayedTasks.erase((*pIt).get());
+                            m_results.insert(SR_UTILS_NS::MakePair((*pIt)->GetId(), (*pIt)->GetResult()));
+                            m_ids.erase((*pIt)->GetId());
+                            m_tasks.erase(pIt);
+                            m_waitIds.erase(taskId);
+                            return;
+                        }
+                    }
+                }
+            }
             if (SR_PLATFORM_NS::IsSupportThreads()) {
                 SR_PLATFORM_NS::Sleep(5);
             }

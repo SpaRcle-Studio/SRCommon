@@ -10,6 +10,10 @@
 #include <Utils/Serialization/SRASerialization.h>
 
 namespace SR_UTILS_NS {
+    bool SRAISerialization::IsNeedUseTabs() const noexcept {
+        return m_isNeedUseTabs || !m_isNeedNumericDepth;
+    }
+
     String SRAISerialization::ToStringBase() const noexcept {
         SR_TRACY_ZONE;
 
@@ -29,6 +33,13 @@ namespace SR_UTILS_NS {
             result += "use tabs: false\n";
         }
 
+        if (IsNeedNumericDepth()) {
+            result += "use numeric depth: true\n";
+        }
+        else {
+            result += "use numeric depth: false\n";
+        }
+
         SerializeNode(result, m_root, 0);
 
         return result;
@@ -42,7 +53,7 @@ namespace SR_UTILS_NS {
             /* Root     */ "-r:",
             /* Object   */ "-o:",
             /* Item     */ "-k:",
-            /* Array     */ "-a:",
+            /* Array    */ "-a:",
             /* String   */ "-s:",
             /* Boolean  */ "-b:",
             /* Integer  */ "-i:",
@@ -55,7 +66,7 @@ namespace SR_UTILS_NS {
             /* Root     */ "-r:",
             /* Object   */ "-o:",
             /* Item     */ "-k:",
-            /* Array     */ "-a:",
+            /* Array    */ "-a:",
             /* String   */ "-v:",
             /* Boolean  */ "-v:",
             /* Integer  */ "-v:",
@@ -68,7 +79,9 @@ namespace SR_UTILS_NS {
                 if (node.children.empty() && !IsAllowEmptyElementsInArrayImpl()) {
                     return;
                 }
-                result += StringFromSmallInt(depth);
+                if (IsNeedNumericDepth()) {
+                    result += StringFromSmallInt(depth);
+                }
                 result += basePrefixes[static_cast<uint8_t>(node.type)];
                 result += node.id.GetNameView();
                 result += "\n";
@@ -77,7 +90,9 @@ namespace SR_UTILS_NS {
                 }
                 break;
             default:
-                result += StringFromSmallInt(depth);
+                if (IsNeedNumericDepth()) {
+                    result += StringFromSmallInt(depth);
+                }
                 result += basePrefixes[static_cast<uint8_t>(node.type)];
                 result += node.id.GetNameView();
                 result += "\n";
@@ -109,13 +124,17 @@ namespace SR_UTILS_NS {
         if (node.type == SerializationDataType::String) {
             if (const uint32_t newLineCount = std::ranges::count(node.string, '\n'); newLineCount > 0) {
                 char buffer[64];
-                result += StringFromSmallInt(depth + 1);
+                if (IsNeedNumericDepth()) {
+                    result += StringFromSmallInt(depth + 1);
+                }
                 result += "-m:";
                 result += SerializeInt(newLineCount + 1, buffer, sizeof(buffer));
                 result += "\n";
             }
             else {
-                result += StringFromSmallInt(depth + 1);
+                if (IsNeedNumericDepth()) {
+                    result += StringFromSmallInt(depth + 1);
+                }
                 result += prefixes[static_cast<uint8_t>(node.type)];
             }
 
@@ -124,7 +143,9 @@ namespace SR_UTILS_NS {
             return;
         }
 
-        result += StringFromSmallInt(depth + 1);
+        if (IsNeedNumericDepth()) {
+            result += StringFromSmallInt(depth + 1);
+        }
         result += prefixes[static_cast<uint8_t>(node.type)];
 
         if (node.type == SerializationDataType::Boolean) {
@@ -169,16 +190,16 @@ namespace SR_UTILS_NS {
             case SerializationDataType::Object:
             case SerializationDataType::Array:
             case SerializationDataType::Item:
-                size += node.id.GetSize() + 4 + (m_isNeedUseTabs ? depth : 0);
+                size += node.id.GetSize() + 4 + (IsNeedUseTabs() ? depth : 0);
                 break;
             case SerializationDataType::String:
-                size += node.id.GetSize() + 4 + (m_isNeedUseTabs ? depth : 0);
-                size += 4 + (m_isNeedUseTabs ? (depth + 1) : 0);
+                size += node.id.GetSize() + 4 + (IsNeedUseTabs() ? depth : 0);
+                size += 4 + (IsNeedUseTabs() ? (depth + 1) : 0);
                 size += node.string.size();
                 break;
             default:
-                size += node.id.GetSize() + 4 + (m_isNeedUseTabs ? depth : 0);
-                size += 4 + (m_isNeedUseTabs ? (depth + 1) : 0);
+                size += node.id.GetSize() + 4 + (IsNeedUseTabs() ? depth : 0);
+                size += 4 + (IsNeedUseTabs() ? (depth + 1) : 0);
                 size += 10; /// среднее количество символов для числа
                 break;
         }
@@ -225,6 +246,7 @@ namespace SR_UTILS_NS {
         auto&& pDeserializer = std::make_unique<SRADeserializer>();
         pDeserializer->m_root = m_root;
         pDeserializer->SetUseTabs(IsNeedUseTabs());
+        pDeserializer->SetUseNumericDepth(IsNeedNumericDepth());
         pDeserializer->SetDontLoadTags(GetDontSaveTags());
 
         return pDeserializer;
@@ -278,19 +300,28 @@ namespace SR_UTILS_NS {
 
         static const SR_UTILS_NS::StringAtom RESTORE_MODE_TAG = "SRARestoreMode";
         bool restoreMode = SR_UTILS_NS::Features::Instance().Enabled(RESTORE_MODE_TAG, false);
+        bool numericDepth = true; /// for compatibility with old versions of the format, we will use numeric depth by default
 
         for (int32_t i = 1; i < lines.size(); ++i) {
             std::string_view line = lines[i];
 
-            if (i == 1 && line.find("use tabs:") != std::string::npos) {
-                const std::string_view useTabs = line.substr(line.find_first_of(':') + 1);
-                restoreMode &= (useTabs == " true" || useTabs == "true");
-                continue;
+            if (i >= 1 && i <= 2) {
+                if (line.find("use tabs:") != std::string::npos) {
+                    const std::string_view useTabs = line.substr(line.find_first_of(':') + 1);
+                    restoreMode &= (useTabs == " true" || useTabs == "true");
+                    continue;
+                }
+                if (line.find("use numeric depth:") != std::string::npos) {
+                    const std::string_view useNumericDepth = line.substr(line.find_first_of(':') + 1);
+                    numericDepth = (useNumericDepth == " true" || useNumericDepth == "true");
+                    restoreMode |= !numericDepth;
+                    continue;
+                }
             }
 
             int32_t depth = 0;
 
-            if (restoreMode) {
+            if (numericDepth || restoreMode) {
                 /// подсчитаем количество табов в начале строки
                 for (const char c : line) {
                     if (c == '\t') {
@@ -312,7 +343,7 @@ namespace SR_UTILS_NS {
                 continue;
             }
 
-            if (!restoreMode) {
+            if (numericDepth) {
                 const std::string_view depthStr = line.substr(0, line.find_first_of('-'));
                 depth = FastSToI(depthStr);
             }

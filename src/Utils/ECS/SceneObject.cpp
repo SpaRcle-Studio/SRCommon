@@ -516,7 +516,7 @@ namespace SR_UTILS_NS {
         return Find(SR_HASH_STR(name));
     }
 
-    bool SceneObject::AddChild(const SceneObject::Ptr& pChild) {
+    bool SceneObject::AddChild(const SceneObject::Ptr& pChild, int32_t index) {
         if (pChild.Get() == this) {
             SRHalt("It is impossible to make the parent a child!");
             return false;
@@ -541,7 +541,12 @@ namespace SR_UTILS_NS {
             return false;
         }
 
-        m_children.emplace_back(pChild);
+        if (index < 0 || index >= static_cast<int32_t>(m_children.size())) {
+            m_children.emplace_back(pChild);
+        }
+        else {
+            m_children.insert(m_children.begin() + index, pChild);
+        }
 
         pChild->OnParentLayerChanged();
         pChild->OnParentTagChanged();
