@@ -21,6 +21,8 @@ namespace SR_UTILS_NS {
 
         using Iterator = T*;
         using ConstIterator = const T*;
+        using ReverseIterator = std::reverse_iterator<Iterator>;
+        using ConstReverseIterator = std::reverse_iterator<ConstIterator>;
 
         using iterator = Iterator;
         using const_iterator = ConstIterator;
@@ -87,6 +89,13 @@ namespace SR_UTILS_NS {
         SR_NODISCARD SizeType size() const noexcept { return m_size; }
         SR_NODISCARD SizeType capacity() const noexcept { return m_capacity; }
         SR_NODISCARD static SizeType max_size() noexcept { return std::numeric_limits<SizeType>::max() / sizeof(T); }
+
+        SR_NODISCARD ReverseIterator rbegin() noexcept { return ReverseIterator(end()); }
+        SR_NODISCARD ReverseIterator rend() noexcept { return ReverseIterator(begin()); }
+        SR_NODISCARD ConstReverseIterator rbegin() const noexcept { return ConstReverseIterator(end()); }
+        SR_NODISCARD ConstReverseIterator rend() const noexcept { return ConstReverseIterator(begin()); }
+        SR_NODISCARD ConstReverseIterator crbegin() const noexcept { return ConstReverseIterator(end()); }
+        SR_NODISCARD ConstReverseIterator crend() const noexcept { return ConstReverseIterator(begin()); }
 
         SR_NODISCARD Iterator begin() noexcept { return static_cast<T*>(m_data); }
         SR_NODISCARD Iterator end() noexcept { return static_cast<T*>(m_data) + m_size; }

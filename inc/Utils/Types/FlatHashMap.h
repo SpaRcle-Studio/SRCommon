@@ -106,6 +106,15 @@ namespace SR_HTYPES_NS {
         using Iterator = typename Impl::iterator;
         using ConstIterator = typename Impl::const_iterator;
     public:
+        FlatHashSet() = default;
+        FlatHashSet(std::initializer_list<Key> init) : m_map(init) {} /// NOLINT
+        FlatHashSet(const FlatHashSet&) = default;
+        FlatHashSet(FlatHashSet&&) = default;
+        FlatHashSet& operator=(const FlatHashSet&) = default;
+        FlatHashSet& operator=(FlatHashSet&&) = default;
+        FlatHashSet& operator=(std::initializer_list<Key> init) { m_map = Impl(init); return *this; } /// NOLINT
+        ~FlatHashSet() = default;
+
         void clear() { m_map.clear(); }
         SR_NODISCARD Iterator find(const Key& key) { return m_map.find(key); }
         SR_NODISCARD ConstIterator find(const Key& key) const { return m_map.find(key); }
