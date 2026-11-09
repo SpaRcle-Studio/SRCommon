@@ -9,6 +9,8 @@
 #include <Utils/ECS/LayerManager.h>
 #include <Utils/ECS/TagManager.h>
 #include <Utils/ECS/IComponentable.h>
+#include <Utils/Reflection/Property.h>
+#include <Utils/Reflection/Value.h>
 
 namespace SR_UTILS_NS::World {
     class Scene;
@@ -16,6 +18,13 @@ namespace SR_UTILS_NS::World {
 
 namespace SR_UTILS_NS {
     class Prefab;
+
+    struct PrefabPropertyOverride {
+        EntityId targetId = SR_INVALID_ENTITY_ID;
+        Vector<StringAtom> propertyPath;
+        Reflection::Value value;
+        String objectData;
+    };
 
     SR_ENUM_NS_CLASS_T(SceneObjectType, int16_t,
         Invalid = -1,
@@ -92,6 +101,14 @@ namespace SR_UTILS_NS {
         }
 
         bool Load(IDeserializer& deserializer) override;
+        void Save(ISerializer& serializer) const override;
+
+        void SetPrefabPropertyOverride(Entity* pTarget, SRClass* pOwner, const Reflection::Property& property, const Vector<StringAtom>& propertyPath);
+        void SetPrefabObjectOverride(Entity* pTarget, SRClass* pObject, const Vector<StringAtom>& propertyPath);
+        SR_NODISCARD bool HasPrefabPropertyOverride(const Entity* pTarget, const Vector<StringAtom>& propertyPath) const;
+        bool RevertPrefabPropertyOverride(Entity* pTarget, const Vector<StringAtom>& propertyPath);
+        SceneObject* GetPrefabOwner() noexcept;
+        const SceneObject* GetPrefabOwner() const noexcept;
 
         /// @method
         void SetEnabled(bool value);
@@ -154,6 +171,9 @@ namespace SR_UTILS_NS {
 
         virtual void OnAttachedToParent() { }
 
+        Entity* FindPrefabEntity(EntityId sourceId) noexcept;
+        void ApplyPrefabPropertyOverrides();
+
     private:
         struct PrefabInfo {
             SR_HTYPES_NS::SharedPtr<Prefab> pPrefab;
@@ -166,6 +186,7 @@ namespace SR_UTILS_NS {
         bool m_isActive = false;
         bool m_isDestroyed = false;
         bool m_isPrefabLoadingState = false;
+        Vector<PrefabPropertyOverride> m_prefabPropertyOverrides;
 
         StringAtom m_cachedLayer;
         StringAtom m_cachedTag;

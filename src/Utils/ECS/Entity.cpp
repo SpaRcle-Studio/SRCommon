@@ -58,6 +58,12 @@ namespace SR_UTILS_NS {
         Super::OnPostLoad();
     }
 
+    void Entity::CloneTo(SRClass& clone) const {
+        Super::CloneTo(clone);
+        Entity& entityClone = static_cast<Entity&>(clone);
+        entityClone.m_prefabSourceId = m_prefabSourceId != SR_INVALID_ENTITY_ID ? m_prefabSourceId : m_entityId;
+    }
+
     void Entity::OnEntityIdReplaced(const EntityReplaceMap& replaceMap) {
         if (replaceMap.empty()) {
             return;

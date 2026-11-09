@@ -107,6 +107,7 @@ namespace SR_UTILS_NS {
 
         SR_NODISCARD const SR_MATH_NS::FRect& GetLayoutRect() const;
         SR_NODISCARD const SR_MATH_NS::FRect& GetScaledLayoutRect() const;
+        SR_NODISCARD SR_MATH_NS::FRect GetTransformedLayoutRect() const;
 
         SR_NODISCARD int32_t GetPriority() const;
         SR_NODISCARD int32_t GetLocalPriority() const noexcept { return m_localPriority; }

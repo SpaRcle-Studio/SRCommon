@@ -4,6 +4,7 @@
 
 #include <Utils/ECS/Prefab.h>
 #include <Utils/ECS/GameObject.h>
+#include <Utils/ECS/Component.h>
 #include <Utils/World/Scene.h>
 #include <Utils/Resources/ResourceManager.h>
 #include <Utils/Serialization/SRASerialization.h>
@@ -11,6 +12,16 @@
 #include <Codegen/Prefab.generated.hpp>
 
 namespace SR_UTILS_NS {
+    static void SetPrefabSourceIds(const SceneObject::Ptr& pSceneObject) {
+        pSceneObject->SetPrefabSourceId(pSceneObject->GetEntityId());
+        for (auto&& pComponent : pSceneObject->GetComponents()) {
+            pComponent->SetPrefabSourceId(pComponent->GetEntityId());
+        }
+        pSceneObject->ForEachChild([](SceneObject::Ptr& pChild) {
+            SetPrefabSourceIds(pChild);
+        });
+    }
+
     Prefab::Prefab() = default;
 
     Prefab::~Prefab() {
@@ -43,6 +54,7 @@ namespace SR_UTILS_NS {
             /// Empty prefab, nothing to load
         }
 
+        SetPrefabSourceIds(pSO);
         return true;
     }
 
@@ -101,6 +113,8 @@ namespace SR_UTILS_NS {
         else {
             /// Empty prefab
         }
+
+        SetPrefabSourceIds(m_data);
 
         return IResource::Load();
     }

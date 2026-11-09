@@ -109,6 +109,23 @@ namespace SR_UTILS_NS {
         return m_scaledLayoutRect;
     }
 
+    SR_MATH_NS::FRect TransformRect::GetTransformedLayoutRect() const {
+        const SR_MATH_NS::FRect& layoutRect = GetLayoutRect();
+        const SR_MATH_NS::Matrix4x4& matrix = GetMatrix();
+
+        const SR_MATH_NS::FVector4 bottomLeft = matrix.TransformPoint({ layoutRect.Left(), layoutRect.Bottom(), 0.f });
+        const SR_MATH_NS::FVector4 bottomRight = matrix.TransformPoint({ layoutRect.Right(), layoutRect.Bottom(), 0.f });
+        const SR_MATH_NS::FVector4 topLeft = matrix.TransformPoint({ layoutRect.Left(), layoutRect.Top(), 0.f });
+        const SR_MATH_NS::FVector4 topRight = matrix.TransformPoint({ layoutRect.Right(), layoutRect.Top(), 0.f });
+
+        const float_t minX = std::min(std::min(bottomLeft.x, bottomRight.x), std::min(topLeft.x, topRight.x));
+        const float_t minY = std::min(std::min(bottomLeft.y, bottomRight.y), std::min(topLeft.y, topRight.y));
+        const float_t maxX = std::max(std::max(bottomLeft.x, bottomRight.x), std::max(topLeft.x, topRight.x));
+        const float_t maxY = std::max(std::max(bottomLeft.y, bottomRight.y), std::max(topLeft.y, topRight.y));
+
+        return SR_MATH_NS::FRect(minX, minY, maxX - minX, maxY - minY);
+    }
+
     const SR_MATH_NS::Matrix4x4& TransformRect::GetMatrix() const {
         SR_TRACY_ZONE;
 

@@ -47,15 +47,18 @@ namespace SR_UTILS_NS {
     public:
         SR_NODISCARD bool IsEntityRegistered() const noexcept { return m_pEntityController; }
         SR_NODISCARD EntityId GetEntityId() const { return m_entityId; }
+        SR_NODISCARD EntityId GetPrefabSourceId() const noexcept { return m_prefabSourceId; }
         SR_NODISCARD Entity::Ptr GetEntity() const noexcept;
 
         void SetEntityController(EntityController* pEntityController);
         void SetEntityId(EntityId id);
+        void SetPrefabSourceId(EntityId id) noexcept { m_prefabSourceId = id; }
         void UnregisterEntity();
 
         void OnEntityIdReplaced(const EntityReplaceMap& replaceMap);
 
         void OnPostLoad() override;
+        void CloneTo(SRClass& clone) const override;
 
         void AddEditorFlags(EditorFlags flags) noexcept;
         void RemoveEditorFlags(EditorFlags flags) noexcept;
@@ -68,6 +71,7 @@ namespace SR_UTILS_NS {
         /// @property @hidden @dontSaveTags(Inspector)
         /// @loadCondition(!This.IsPrefabLoadingState())
         EntityId m_entityId = SR_INVALID_ENTITY_ID;
+        EntityId m_prefabSourceId = SR_INVALID_ENTITY_ID;
 
         EntityController* m_pEntityController = nullptr;
         EditorFlags m_editorFlags = EditorFlags::None;

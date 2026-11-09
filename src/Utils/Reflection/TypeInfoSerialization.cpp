@@ -8,6 +8,7 @@
 #include <Utils/Serialization/Serializer.h>
 #include <Utils/Serialization/Deserializer.h>
 #include <Utils/Common/StringUtils.h>
+#include <Utils/TypeTraits/Factory.h>
 
 #include <Enum/ReflectedCategoryType.hpp>
 
@@ -181,6 +182,13 @@ namespace SR_UTILS_NS::Reflection {
     void SerializeValue(const Value& value, ISerializer& serializer) {
         auto&& typeInfo = value.GetTypeInfo();
         switch (typeInfo.category) {
+            case ReflectedCategoryType::Value: {
+                auto&& pValue = value.Cast<Value>();
+                if (pValue && pValue->IsValid()) {
+                    SerializeValue(*pValue, serializer);
+                }
+                return;
+            }
             case ReflectedCategoryType::Enum: {
                 auto&& pReflector = EnumReflectorManager::Instance().TryGetReflector(typeInfo.detailedType);
                 if (!pReflector) {
@@ -217,8 +225,31 @@ namespace SR_UTILS_NS::Reflection {
                     }
                     serializer.EndArray();
                 }
+                else if (typeInfo.detailedType == "Map") {
+                    auto&& container = const_cast<Value&>(value).AsAssociativeContainer();
+                    serializer.BeginArray(container.Size(), SerializationId::Create("map"));
+                    for (auto pIt = container.Begin(); pIt != container.End(); ++pIt) {
+                        serializer.BeginItem(SerializationId::Create("item"));
+                        serializer.BeginObject(SerializationId::Create("pair"));
+                        SerializeValue(pIt.First(), serializer);
+                        SerializeValue(pIt.Second(), serializer);
+                        serializer.EndObject();
+                        serializer.EndItem();
+                    }
+                    serializer.EndArray();
+                }
+                else if (typeInfo.detailedType == "Set") {
+                    auto&& container = const_cast<Value&>(value).AsAssociativeContainer();
+                    serializer.BeginArray(container.Size(), SerializationId::Create("set"));
+                    for (auto pIt = container.Begin(); pIt != container.End(); ++pIt) {
+                        serializer.BeginItem(SerializationId::Create("item"));
+                        SerializeValue(pIt.First(), serializer);
+                        serializer.EndItem();
+                    }
+                    serializer.EndArray();
+                }
                 else {
-                    SR_WARN("SerializeValue() : unknown container type: {}", typeInfo.detailedType);
+                    SRHalt("SerializeValue() : unknown container type: {}", typeInfo.detailedType);
                 }
                 break;
             }
@@ -285,7 +316,7 @@ namespace SR_UTILS_NS::Reflection {
                 }
                 break;
             default:
-                SR_WARN("SerializeValue() : unknown reflected type: {}", typeInfo.category);
+                SRHalt("SerializeValue() : unknown reflected type: {}", typeInfo.category);
                 return;
         }
     }
@@ -293,6 +324,13 @@ namespace SR_UTILS_NS::Reflection {
     bool DeserializeValue(Value& value, IDeserializer& deserializer) {
         auto&& typeInfo = value.GetTypeInfo();
         switch (typeInfo.category) {
+            case ReflectedCategoryType::Value: {
+                auto&& pValue = value.Cast<Value>();
+                if (pValue && pValue->IsValid()) {
+                    return DeserializeValue(*pValue, deserializer);
+                }
+                return false;
+            }
             case ReflectedCategoryType::Enum: {
                 auto&& pReflector = EnumReflectorManager::Instance().GetReflector(typeInfo.detailedType);
                 if (!pReflector) {
@@ -318,7 +356,56 @@ namespace SR_UTILS_NS::Reflection {
                 return true;
             }
             case ReflectedCategoryType::Container: {
-                if (typeInfo.detailedType == "Vector") {
+                if (typeInfo.detailedType == "SharedPtr") {
+                    if (!value.GetTypeInfo().vtable.pGetTypeController) {
+                        SRHalt("DeserializeValue() : SharedPtr type controller is null for type: {}", typeInfo.detailedType);
+                        return false;
+                    }
+                    auto&& pSharedPtr = (SR_HTYPES_NS::SharedPtrBase*)value.GetTypeInfo().vtable.pGetTypeController(value.GetStorage());
+                    auto&& pNewObject = Factory::Instance().CreateBase(typeInfo.pNext[0]->detailedType);
+                    if (!pNewObject) {
+                        SRHalt("DeserializeValue() : failed to create object of type: {}", typeInfo.pNext[0]->detailedType);
+                        return false;
+                    }
+                    auto&& pNewObjectShared = dynamic_cast<SR_HTYPES_NS::SharedPtrBase*>(pNewObject);
+                    if (!pNewObjectShared) {
+                        SRHalt("DeserializeValue() : failed to cast object of type: {} to SharedPtrBase", typeInfo.pNext[0]->detailedType);
+                        delete pNewObject;
+                        return false;
+                    }
+                    pSharedPtr->SetPointerFromBase(pNewObjectShared);
+                    if (auto&& pSerializable = dynamic_cast<Serializable*>(pNewObjectShared)) {
+                        return pSerializable->Load(deserializer);
+                    }
+                    return true;
+                }
+                else if (typeInfo.detailedType == "Map") {
+                    if (!value.GetTypeInfo().vtable.pGetTypeController) {
+                        SRHalt("DeserializeValue() : Map type controller is null for type: {}", typeInfo.detailedType);
+                        return false;
+                    }
+                    auto&& container = const_cast<Value&>(value).AsAssociativeContainer();
+                    if (uint64_t size = deserializer.BeginArray(SerializationId::Create("map")); size > 0) {
+                        container.Clear();
+                        uint64_t index = 0;
+                        while (deserializer.BeginItem(SerializationId::Create("item"), index)) {
+                            Value key;
+                            Value val;
+                            DeserializeValue(key, deserializer);
+                            DeserializeValue(val, deserializer);
+                            container.Insert(key, val);
+                            deserializer.EndItem();
+                            index++;
+                        }
+                        deserializer.EndArray();
+                    }
+                    return true;
+                }
+                else if (typeInfo.detailedType == "Vector") {
+                    if (!value.GetTypeInfo().vtable.pGetTypeController) {
+                        SRHalt("DeserializeValue() : Vector type controller is null for type: {}", typeInfo.detailedType);
+                        return false;
+                    }
                     auto&& container = const_cast<Value&>(value).AsSequenceContainer();
                     if (uint64_t size = deserializer.BeginArray(SerializationId::Create("vector")); size > 0) {
                         container.Clear();

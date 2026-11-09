@@ -508,9 +508,10 @@ namespace SR_WORLD_NS {
             ProcessNewSO(pSO);
         }
 
-        m_registerEntityCache[pSO->GetPrefab().GetRawPtr()].emplace_back(static_cast<Entity*>(const_cast<SceneObject*>(pSO.Get())));
+        const SceneObject* pPrefabOwner = pSO->GetPrefabOwner();
+        m_registerEntityCache[pPrefabOwner].emplace_back(static_cast<Entity*>(const_cast<SceneObject*>(pSO.Get())));
         for (auto&& pComponent : pSO->GetComponents()) {
-            m_registerEntityCache[pSO->GetPrefab().GetRawPtr()].emplace_back(static_cast<Entity*>(const_cast<Component*>(pComponent.Get())));
+            m_registerEntityCache[pPrefabOwner].emplace_back(static_cast<Entity*>(const_cast<Component*>(pComponent.Get())));
         }
 
         for (auto&& pChild : pSO->GetChildrenRef()) {

@@ -18,6 +18,18 @@
 #include <Codegen/SceneObject.generated.hpp>
 
 namespace SR_UTILS_NS {
+    namespace {
+        static constexpr SerializationId prefabOverrideObjectId = SerializationId::Create("prefabOverrideObject");
+        static constexpr SerializationId overridesId = SerializationId::Create("prefabOverrides");
+        static constexpr SerializationId itemId = SerializationId::Create("override");
+        static constexpr SerializationId targetId = SerializationId::Create("targetId");
+        static constexpr SerializationId propertyId = SerializationId::Create("property");
+        static constexpr SerializationId propertyPathId = SerializationId::Create("propertyPath");
+        static constexpr SerializationId pathItemId = SerializationId::Create("property");
+        static constexpr SerializationId valueId = SerializationId::Create("value");
+        static constexpr SerializationId objectDataId = SerializationId::Create("objectData");
+    }
+
     SceneObject::SceneObject()
         : Super()
     {
@@ -57,26 +69,6 @@ namespace SR_UTILS_NS {
         CloneTo(*pClone);
 
         return pClone;
-
-        /// TODO: тут делается сериализация и десериализация, нужно сделать нормальный метод клонирования
-        /*SR_UTILS_NS::SRASerializer serializer;
-        Save(serializer);
-
-        auto&& pDeserializer = serializer.CreateDeserializer();
-
-        SR_UTILS_NS::SceneObject::Ptr pSceneObject;
-
-        switch (GetSceneObjectType()) {
-        case SceneObjectType::GameObject:
-                pSceneObject = SR_UTILS_NS::GameObject::MakeShared<GameObject, SceneObject>();
-                break;
-            default:
-                SRHalt("Unknown scene object type!");
-                return nullptr;
-        }
-
-        pSceneObject->Load(*pDeserializer);
-        return pSceneObject;*/
     }
 
     bool SceneObject::Load(IDeserializer& deserializer) {
@@ -87,7 +79,7 @@ namespace SR_UTILS_NS {
         }
 
         static constexpr SR_UTILS_NS::SerializationId prefabId = SR_UTILS_NS::SerializationId::Create("prefab");
-        std::string prefabPath;
+        String prefabPath;
         deserializer.ReadString(prefabPath, prefabId);
 
         if (!prefabPath.empty()) {
@@ -118,7 +110,265 @@ namespace SR_UTILS_NS {
             }
         }
 
+        if (IsPrefabOwner()) {
+            m_prefabPropertyOverrides.clear();
+        }
+        const uint64_t count = deserializer.BeginArray(overridesId);
+        for (uint32_t i = 0; i < count; ++i) {
+            if (!deserializer.BeginItem(itemId, i)) {
+                continue;
+            }
+            PrefabPropertyOverride prefabOverride;
+            deserializer.ReadUInt(prefabOverride.targetId, targetId);
+            const uint64_t pathSize = deserializer.BeginArray(propertyPathId);
+            for (uint32_t pathIndex = 0; pathIndex < pathSize; ++pathIndex) {
+                if (deserializer.BeginItem(pathItemId, pathIndex)) {
+                    StringAtom pathPart;
+                    deserializer.ReadString(pathPart, propertyId);
+                    prefabOverride.propertyPath.emplace_back(pathPart);
+                    deserializer.EndItem();
+                }
+            }
+            if (pathSize > 0) {
+                deserializer.EndArray();
+            }
+            Serialization::Load(deserializer, prefabOverride.value, valueId);
+            deserializer.ReadString(prefabOverride.objectData, objectDataId);
+            m_prefabPropertyOverrides.emplace_back(std::move(prefabOverride));
+            deserializer.EndItem();
+        }
+        if (count > 0) {
+            deserializer.EndArray();
+        }
+
+        ApplyPrefabPropertyOverrides();
+
         return true;
+    }
+
+    void SceneObject::Save(ISerializer& serializer) const {
+        Super::Save(serializer);
+
+        if (!IsPrefabOwner() || m_prefabPropertyOverrides.empty()) {
+            return;
+        }
+
+        serializer.BeginArray(m_prefabPropertyOverrides.size(), overridesId);
+        for (const PrefabPropertyOverride& prefabOverride : m_prefabPropertyOverrides) {
+            serializer.BeginItem(itemId);
+            serializer.WriteUInt(prefabOverride.targetId, targetId);
+            serializer.BeginArray(prefabOverride.propertyPath.size(), propertyPathId);
+            for (StringAtom pathPart : prefabOverride.propertyPath) {
+                serializer.BeginItem(pathItemId);
+                serializer.WriteString(pathPart.ToStringView(), propertyId);
+                serializer.EndItem();
+            }
+            serializer.EndArray();
+            if (prefabOverride.value) {
+                Serialization::Save(serializer, prefabOverride.value, valueId);
+            }
+            if (!prefabOverride.objectData.empty()) {
+                serializer.WriteString(prefabOverride.objectData, objectDataId);
+            }
+            serializer.EndItem();
+        }
+        serializer.EndArray();
+    }
+
+    SceneObject* SceneObject::GetPrefabOwner() noexcept {
+        SceneObject* pCurrent = this;
+        while (pCurrent && !pCurrent->IsPrefabOwner()) {
+            pCurrent = const_cast<SceneObject*>(pCurrent->GetParent().Get());
+        }
+        return pCurrent;
+    }
+
+    const SceneObject* SceneObject::GetPrefabOwner() const noexcept {
+        return const_cast<SceneObject*>(this)->GetPrefabOwner();
+    }
+
+    Entity* SceneObject::FindPrefabEntity(EntityId sourceId) noexcept {
+        if (GetPrefabSourceId() == sourceId) {
+            return this;
+        }
+        for (auto&& pComponent : GetComponents()) {
+            if (pComponent->GetPrefabSourceId() == sourceId) {
+                return const_cast<Component*>(pComponent.Get());
+            }
+        }
+        for (auto&& pChild : GetChildrenRef()) {
+            if (pChild->IsPrefabOwner()) {
+                continue;
+            }
+            if (Entity* pEntity = pChild->FindPrefabEntity(sourceId)) {
+                return pEntity;
+            }
+        }
+        return nullptr;
+    }
+
+    static const Reflection::Property* FindPropertyBySerializeName(SRClass* pOwner, StringAtom serializeName) {
+        const Reflection::Property* pResult = nullptr;
+        pOwner->GetMeta()->ForEachProperty([&](const Reflection::Property& property, uint64_t) {
+            if (!pResult && property.GetSerializeName() == serializeName) {
+                pResult = &property;
+            }
+        });
+        return pResult;
+    }
+
+    static const Reflection::Property* ResolvePrefabProperty(Entity* pTarget, const Vector<StringAtom>& propertyPath, SRClass*& pOwner) {
+        pOwner = pTarget;
+        if (!pOwner || propertyPath.empty()) {
+            return nullptr;
+        }
+        for (uint32_t i = 0; i + 1 < propertyPath.size(); ++i) {
+            const Reflection::Property* pProperty = FindPropertyBySerializeName(pOwner, propertyPath[i]);
+            if (!pProperty) {
+                return nullptr;
+            }
+            pOwner = pProperty->Get(pOwner).GetSRClass();
+            if (!pOwner) {
+                return nullptr;
+            }
+        }
+        return FindPropertyBySerializeName(pOwner, propertyPath.back());
+    }
+
+    void SceneObject::ApplyPrefabPropertyOverrides() {
+        if (!IsPrefabOwner()) {
+            return;
+        }
+        for (const PrefabPropertyOverride& prefabOverride : m_prefabPropertyOverrides) {
+            Entity* pTarget = FindPrefabEntity(prefabOverride.targetId);
+            SRClass* pPropertyOwner = nullptr;
+            const Reflection::Property* pProperty = ResolvePrefabProperty(pTarget, prefabOverride.propertyPath, pPropertyOwner);
+            if (!pProperty) {
+                SR_WARN("SceneObject::ApplyPrefabPropertyOverrides() : unresolved override target {}!", prefabOverride.targetId);
+                continue;
+            }
+            if (!prefabOverride.objectData.empty()) {
+                if (auto&& pObject = pProperty->Get(pPropertyOwner).GetSRClass()) {
+                    SRADeserializer objectDeserializer;
+                    if (objectDeserializer.LoadFromString(prefabOverride.objectData)) {
+                        if (auto&& pSerializable = dynamic_cast<Serializable*>(pObject)) {
+                            Serialization::Load(objectDeserializer, *pSerializable, prefabOverrideObjectId);
+                        }
+                    }
+                }
+                continue;
+            }
+            if (!prefabOverride.value || (prefabOverride.value.IsSharedPtr() && !prefabOverride.value.GetSRClass())) {
+                SR_WARN("SceneObject::ApplyPrefabPropertyOverrides() : empty pointer value for target {}!", prefabOverride.targetId);
+                continue;
+            }
+            if (pProperty->Get(pPropertyOwner).GetTypeInfo() != prefabOverride.value.GetTypeInfo()) {
+                SR_WARN("SceneObject::ApplyPrefabPropertyOverrides() : type mismatch for target {}!", prefabOverride.targetId);
+                continue;
+            }
+            pProperty->Set(pPropertyOwner, prefabOverride.value);
+            pProperty->OnChanged(pPropertyOwner);
+        }
+    }
+
+    void SceneObject::SetPrefabPropertyOverride(Entity* pTarget, SRClass* pPropertyOwner, const Reflection::Property& property, const Vector<StringAtom>& propertyPath) {
+        SceneObject* pOwner = GetPrefabOwner();
+        if (!pOwner || !pTarget || !pPropertyOwner || propertyPath.empty() || pTarget->GetPrefabSourceId() == SR_INVALID_ENTITY_ID) {
+            return;
+        }
+        for (auto pIt = pOwner->m_prefabPropertyOverrides.begin(); pIt != pOwner->m_prefabPropertyOverrides.end(); ) {
+            if (pIt->targetId == pTarget->GetPrefabSourceId() && pIt->propertyPath.size() == 1 && propertyPath.size() > 1 &&
+                pIt->propertyPath.front() == propertyPath.front() && pIt->value && pIt->value.IsSharedPtr() && !pIt->value.GetSRClass())
+            {
+                pIt = pOwner->m_prefabPropertyOverrides.erase(pIt);
+            }
+            else {
+                ++pIt;
+            }
+        }
+        for (PrefabPropertyOverride& prefabOverride : pOwner->m_prefabPropertyOverrides) {
+            if (prefabOverride.targetId == pTarget->GetPrefabSourceId() && prefabOverride.propertyPath == propertyPath) {
+                prefabOverride.value = property.Get(pPropertyOwner).Copy();
+                return;
+            }
+        }
+        pOwner->m_prefabPropertyOverrides.emplace_back(PrefabPropertyOverride {
+            pTarget->GetPrefabSourceId(), propertyPath, property.Get(pPropertyOwner).Copy(), String()
+        });
+    }
+
+    void SceneObject::SetPrefabObjectOverride(Entity* pTarget, SRClass* pObject, const Vector<StringAtom>& propertyPath) {
+        SceneObject* pOwner = GetPrefabOwner();
+        auto&& pSerializable = dynamic_cast<Serializable*>(pObject);
+        if (!pOwner || !pTarget || !pSerializable || propertyPath.empty() || pTarget->GetPrefabSourceId() == SR_INVALID_ENTITY_ID) {
+            return;
+        }
+        SRASerializer objectSerializer;
+        objectSerializer.SetWriteDefaults(true);
+        Serialization::Save(objectSerializer, *pSerializable, prefabOverrideObjectId);
+        for (PrefabPropertyOverride& prefabOverride : pOwner->m_prefabPropertyOverrides) {
+            if (prefabOverride.targetId == pTarget->GetPrefabSourceId() && prefabOverride.propertyPath == propertyPath) {
+                prefabOverride.value = Reflection::Value();
+                prefabOverride.objectData = objectSerializer.ToString();
+                return;
+            }
+        }
+        pOwner->m_prefabPropertyOverrides.emplace_back(PrefabPropertyOverride {
+            pTarget->GetPrefabSourceId(), propertyPath, Reflection::Value(), objectSerializer.ToString()
+        });
+    }
+
+    bool SceneObject::HasPrefabPropertyOverride(const Entity* pTarget, const Vector<StringAtom>& propertyPath) const {
+        const SceneObject* pOwner = GetPrefabOwner();
+        if (!pOwner || !pTarget) {
+            return false;
+        }
+        for (const PrefabPropertyOverride& prefabOverride : pOwner->m_prefabPropertyOverrides) {
+            if (prefabOverride.targetId == pTarget->GetPrefabSourceId() && prefabOverride.propertyPath == propertyPath) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    bool SceneObject::RevertPrefabPropertyOverride(Entity* pTarget, const Vector<StringAtom>& propertyPath) {
+        SceneObject* pOwner = GetPrefabOwner();
+        if (!pOwner || !pOwner->GetPrefab() || !pTarget || propertyPath.empty()) {
+            return false;
+        }
+        Entity* pSource = pOwner->GetPrefab()->GetData()->FindPrefabEntity(pTarget->GetPrefabSourceId());
+        SRClass* pSourcePropertyOwner = nullptr;
+        const Reflection::Property* pSourceProperty = ResolvePrefabProperty(pSource, propertyPath, pSourcePropertyOwner);
+        SRClass* pTargetPropertyOwner = nullptr;
+        const Reflection::Property* pTargetProperty = ResolvePrefabProperty(pTarget, propertyPath, pTargetPropertyOwner);
+        if (!pSourceProperty || !pTargetProperty) {
+            return false;
+        }
+        for (auto pIt = pOwner->m_prefabPropertyOverrides.begin(); pIt != pOwner->m_prefabPropertyOverrides.end(); ++pIt) {
+            if (pIt->targetId == pTarget->GetPrefabSourceId() && pIt->propertyPath == propertyPath) {
+                if (!pIt->objectData.empty()) {
+                    auto&& pSourceObject = pSourceProperty->Get(pSourcePropertyOwner).GetSRClass();
+                    auto&& pTargetObject = pTargetProperty->Get(pTargetPropertyOwner).GetSRClass();
+                    auto&& pSourceSerializable = dynamic_cast<Serializable*>(pSourceObject);
+                    auto&& pTargetSerializable = dynamic_cast<Serializable*>(pTargetObject);
+                    if (!pSourceSerializable || !pTargetSerializable) {
+                        return false;
+                    }
+                    SRASerializer objectSerializer;
+                    objectSerializer.SetWriteDefaults(true);
+                    Serialization::Save(objectSerializer, *pSourceSerializable, prefabOverrideObjectId);
+                    auto&& pDeserializer = objectSerializer.CreateDeserializer();
+                    Serialization::Load(*pDeserializer, *pTargetSerializable, prefabOverrideObjectId);
+                }
+                else {
+                    pTargetProperty->Set(pTargetPropertyOwner, pSourceProperty->Get(pSourcePropertyOwner));
+                    pTargetProperty->OnChanged(pTargetPropertyOwner);
+                }
+                pOwner->m_prefabPropertyOverrides.erase(pIt);
+                return true;
+            }
+        }
+        return false;
     }
 
     bool SceneObject::MoveToTree(const SceneObject::Ptr& pDestination) {
@@ -730,6 +980,7 @@ namespace SR_UTILS_NS {
         Super::CloneTo(clone);
 
         SceneObject& sceneObjectClone = static_cast<SceneObject&>(clone);
+        sceneObjectClone.m_prefabPropertyOverrides = m_prefabPropertyOverrides;
         sceneObjectClone.m_prefabInfo.isOwner = m_prefabInfo.isOwner;
         sceneObjectClone.m_prefabInfo.pPrefab = m_prefabInfo.pPrefab;
         if (sceneObjectClone.m_prefabInfo.pPrefab) {
