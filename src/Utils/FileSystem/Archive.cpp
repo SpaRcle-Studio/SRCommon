@@ -8,6 +8,8 @@
 #include <Utils/Common/StringUtils.h>
 #include <Utils/Platform/Platform.h>
 
+#include <zlib/contrib/minizip/zip.h>
+
 namespace SR_UTILS_NS {
     namespace Zip {
         constexpr uint32_t LocalFileSignature        = 0x04034b50;
@@ -174,6 +176,45 @@ namespace SR_UTILS_NS {
         return RawPointerHolder<Archive>();
     }
 
+    bool Archive::SaveZip(const Path& path, const Vector<Entry>& entries) {
+        auto&& archive = zipOpen64(path.c_str(), APPEND_STATUS_CREATE);
+        if (!archive) {
+            SR_ERROR("Archive::SaveZip() : failed to create archive: {}", path);
+            return false;
+        }
+
+        zip_fileinfo info = { };
+        for (auto&& entry : entries) {
+            if (entry.name.empty()) {
+                continue;
+            }
+            const int32_t openResult = zipOpenNewFileInZip64(
+                archive, SR_UTILS_NS::String(entry.name).c_str(), &info,
+                nullptr, 0, nullptr, 0, nullptr,
+                entry.isDirectory ? 0 : Z_DEFLATED,
+                entry.isDirectory ? 0 : Z_BEST_COMPRESSION,
+                entry.data.size() >= SR_UINT32_MAX ? 1 : 0
+            );
+            if (openResult != ZIP_OK) {
+                zipClose(archive, nullptr);
+                SR_ERROR("Archive::SaveZip() : failed to add entry: {}", entry.name);
+                return false;
+            }
+            if (!entry.isDirectory && !entry.data.empty() &&
+                zipWriteInFileInZip(archive, entry.data.data(), static_cast<uint32_t>(entry.data.size())) != ZIP_OK) {
+                zipCloseFileInZip(archive);
+                zipClose(archive, nullptr);
+                SR_ERROR("Archive::SaveZip() : failed to write entry: {}", entry.name);
+                return false;
+            }
+            if (zipCloseFileInZip(archive) != ZIP_OK) {
+                zipClose(archive, nullptr);
+                return false;
+            }
+        }
+        return zipClose(archive, nullptr) == ZIP_OK;
+    }
+
     bool Archive::UnpackZip() {
         SR_TRACY_ZONE;
 
@@ -284,9 +325,9 @@ namespace SR_UTILS_NS {
                 /// ZIP directory entry.
                 const bool isDirectory = fileNameLength > 0 && (fileName[fileNameLength - 1] == '/' || fileName[fileNameLength - 1] == '\\');
 
+                totalDataSize += fileNameLength + 1;
                 if (!isDirectory) {
                     totalDataSize += uncompressedSize;
-                    totalDataSize += fileNameLength + 1;
                 }
 
                 centralPosition += centralEntrySize;
@@ -464,7 +505,9 @@ namespace SR_UTILS_NS {
             Entry& entry = m_entries[entryIndex];
             m_unpackedData += pathTemp;
             entry.name = StringView(m_unpackedData.data() + m_unpackedData.size() - pathTemp.size(), pathTemp.size());
-            entry.data = StringView((const char*)decompressedData.data(), decompressedData.size());
+            const SizeType dataOffset = m_unpackedData.size();
+            m_unpackedData.append(reinterpret_cast<const char*>(decompressedData.data()), decompressedData.size());
+            entry.data = StringView(m_unpackedData.data() + dataOffset, decompressedData.size());
 
             centralPosition += centralEntrySize;
         }

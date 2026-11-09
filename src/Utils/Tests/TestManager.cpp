@@ -37,6 +37,11 @@ namespace SR_UTILS_NS {
             SR_UTILS_NS::ResourceManager::Instance().Initialize();
         }
 
+        if (!SR_UTILS_NS::ResourceManager::Instance().InitCache()) {
+            SR_ERROR("TestManager::RunAll() : failed to initialize cache!");
+            return TestExecutionResult::Fatal;
+        }
+
         SR_LOG_TEST("TestManager::RunAll() : loading TestManagerAsset...");
 
         SRAssert(!m_pTestManagerAsset);

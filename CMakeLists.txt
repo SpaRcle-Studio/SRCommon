@@ -260,6 +260,29 @@ SR_COMMON_GET_SOURCES(Utils)
 
 list(APPEND SR_UTILS_LINK_LIBRARIES ${Utils_SOURCES})
 
+if (SR_COMMON_ZLIB)
+    # Keep the C minizip implementation in its own target. Adding .c files to
+    # the C++ Utils target makes CMake generate the precompiled header as C.
+    set(SR_UTILS_MINIZIP_SOURCES
+        ${CMAKE_CURRENT_SOURCE_DIR}/libs/zlib/contrib/minizip/zip.c
+    )
+    # Assimp already compiles and exports minizip's ioapi.c. Avoid defining
+    # those symbols twice when Assimp is enabled.
+    if (NOT SR_COMMON_ASSIMP)
+        list(APPEND SR_UTILS_MINIZIP_SOURCES
+            ${CMAKE_CURRENT_SOURCE_DIR}/libs/zlib/contrib/minizip/ioapi.c
+        )
+    endif()
+    add_library(SRUtilsMinizip STATIC
+        ${SR_UTILS_MINIZIP_SOURCES}
+    )
+    target_include_directories(SRUtilsMinizip PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/libs/zlib
+        ${CMAKE_CURRENT_SOURCE_DIR}/libs/zlib/contrib/minizip
+    )
+    target_link_libraries(SRUtilsMinizip PRIVATE zlibstatic)
+endif()
+
 define_property(GLOBAL PROPERTY SR_UTILS_INCLUDE_DIRECTORIES
     BRIEF_DOCS "Contains linkable libraries"
     FULL_DOCS "Contains paths to libraries for linking"
@@ -319,6 +342,10 @@ else()
     endif()
 
     SR_COPY_SHARED_MODULE_TO_EXECUTABLE_FOLDER(Utils)
+endif()
+
+if (SR_COMMON_ZLIB)
+    target_link_libraries(Utils SRUtilsMinizip)
 endif()
 
 SR_COPY_STATIC_LIBRARY_TO_LIBRARY_FOLDER(Utils)

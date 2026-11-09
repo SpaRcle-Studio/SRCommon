@@ -7,6 +7,7 @@
 
 #include <Utils/Common/NonCopyable.h>
 #include <Utils/Types/RawPointerHolder.h>
+#include <Utils/FileSystem/Path.h>
 
 namespace SR_UTILS_NS {
     class File;
@@ -31,6 +32,7 @@ namespace SR_UTILS_NS {
     public:
         RawPointerHolder<Archive> static Load(StringView data);
         RawPointerHolder<Archive> static Load(File file);
+        static bool SaveZip(const Path& path, const Vector<Entry>& entries);
 
     public:
         void Enumerate(const EnumerateCallback& callback) const;

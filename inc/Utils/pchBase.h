@@ -405,4 +405,8 @@ namespace SR_UTILS_NS {
 
 using namespace std::literals::string_view_literals;
 
+#ifdef linux
+    #undef linux
+#endif
+
 #endif //SR_ENGINE_UTILS_PCH_BASE_H
