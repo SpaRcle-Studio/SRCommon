@@ -18,7 +18,8 @@ namespace SR_UTILS_NS {
         DeleteOldApp       = 1 << 2,
         Headless           = 1 << 3,
         Validation         = 1 << 4,
-        ErrorWarnAsAssert  = 1 << 5
+        ErrorWarnAsAssert  = 1 << 5,
+        DisableEditor      = 1 << 6
     );
 
     SR_ENUM_NS_STRUCT_T(CLIOptions, uint32_t,
