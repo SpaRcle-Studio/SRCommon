@@ -39,6 +39,7 @@ namespace SR_UTILS_NS {
 
         SR_NODISCARD bool IsFlagPresent(CLIFlags flag) const;
         SR_NODISCARD bool IsHeadlessMode() const;
+        SR_NODISCARD bool IsAppOpenedByProjectFile() const;
         SR_NODISCARD std::optional<String> GetOptionValue(CLIOptions option);
         SR_NODISCARD const Map<CLIOptions, std::optional<String>>& GetOptions() const { return m_options; }
         SR_NODISCARD CLIFlags GetFlags() const { return m_flags; }

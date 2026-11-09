@@ -64,7 +64,6 @@ namespace SR_UTILS_NS {
     private:
         Vector<SaveSlot::Ptr> m_slots;
         mutable Path m_saveDirectory;
-        mutable RawPointerHolder<IVFSBackend> m_pVFSBackend;
 
     };
 }

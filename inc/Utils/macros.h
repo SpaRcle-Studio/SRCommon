@@ -374,6 +374,10 @@
     #define SR_DLL_CDECL __cdecl
 #endif
 
+#if defined(SR_WIN32) || defined(SR_LINUX) || defined(SR_MACOS)
+    #define SR_DESKTOP
+#endif
+
 #if defined(SR_ENGINE_SCRIPT_API_MODE) || defined(SR_ENGINE_CODEGEN_DLL_API_DISABLE)
     #define SR_CODEGEN_DLL_API_IMPORT
     #define SR_CODEGEN_DLL_API_EXPORT

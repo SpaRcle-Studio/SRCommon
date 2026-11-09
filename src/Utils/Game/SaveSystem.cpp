@@ -18,8 +18,8 @@ namespace SR_UTILS_NS {
     void SaveSlot::Init(StringView groupName, StringView slotName) {
         m_groupName = groupName;
         m_slotName = slotName;
-        m_version = SR_PLATFORM_NS::GetApplicationInfo().engineVersion;
-        m_engineVersion = SR_PLATFORM_NS::GetApplicationInfo().version;
+        m_version = SR_PLATFORM_NS::GetApplicationInfo().version;
+        m_engineVersion = SR_PLATFORM_NS::GetApplicationInfo().engineVersion;
     }
 
     bool SaveSlot::Save(const Path& path) {
@@ -51,12 +51,6 @@ namespace SR_UTILS_NS {
                 SR_PLATFORM_NS::GetUserDataDirectory()
                 .Concat(SR_PLATFORM_NS::GetApplicationInfo().organization)
                 .Concat(SR_PLATFORM_NS::GetApplicationInfo().name);
-            m_pVFSBackend = new DirectoryVFSBackend(m_saveDirectory);
-            m_pVFSBackend.SetDeleter([](IVFSBackend* pVFS) {
-                VFS::Instance().Unmount(pVFS);
-                delete pVFS;
-            });
-            VFS::Instance().Mount(m_saveDirectory, m_pVFSBackend.Get(), 0);
         }
         return m_saveDirectory;
     }

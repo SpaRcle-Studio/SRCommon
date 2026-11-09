@@ -28,6 +28,7 @@ namespace SR_UTILS_NS {
     public:
         SR_NODISCARD bool IsInitialized() const { return m_isInit; }
         SR_NODISCARD bool IsLastResource(const IResource::Ptr& pResource);
+        SR_NODISCARD bool InitCache();
         SR_NODISCARD bool IsUsePointStackTraceProfilingEnabled() const { return m_usePointStackTraceProfiling; }
         SR_NODISCARD FileSystemWatcher::Ptr GetFileSystemWatcher() const { return m_fileSystemWatcher; }
         SR_NODISCARD IResourceReloader* GetDefaultReloader() const { return m_defaultReloader.Get(); }
@@ -102,6 +103,8 @@ namespace SR_UTILS_NS {
         std::atomic<bool> m_isRun = false;
         std::atomic<bool> m_force = false;
         std::atomic<bool> m_hasDirtyResources = false;
+
+        std::optional<Path> m_cacheFolder;
 
         SR_HTYPES_NS::Thread::Ptr m_thread = nullptr;
         uint64_t m_lastTime = 0;

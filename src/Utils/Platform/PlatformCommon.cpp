@@ -42,7 +42,6 @@ namespace SR_PLATFORM_NS {
         return GetPathType(path) == FSItemType::File;
     }
 
-
 #if defined(SR_WIN32) || defined(SR_LINUX) || defined(SR_MACOS) || defined(SR_EMSCRIPTEN)
     Path GetUserDataDirectory() {
     #if defined(SR_WIN32)

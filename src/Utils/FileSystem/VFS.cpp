@@ -230,6 +230,7 @@ namespace SR_UTILS_NS {
     void VFS::UnmountAll() {
         SR_TRACY_ZONE;
         SR_LOCK_GUARD;
+        SR_LOG("VFS::UnmountAll() : unmounting all mounts...");
         Vector<IVFSBackend*> unmountable;
         unmountable.reserve(m_mounts.size());
         for (auto&& mount : m_mounts) {
@@ -238,6 +239,7 @@ namespace SR_UTILS_NS {
             }
         }
         for (auto&& pBackend : unmountable) {
+            SR_LOG("VFS::UnmountAll() : unmounting \"{}\" mount...", pBackend->GetVirtualPath());
             Unmount(pBackend);
         }
     }

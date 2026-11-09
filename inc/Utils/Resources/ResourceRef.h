@@ -73,6 +73,24 @@ namespace SR_UTILS_NS {
             return IsValid();
         }
 
+        SR_NODISCARD T* operator->() noexcept {
+            auto&& pResource = GetResource();
+            if (!pResource) {
+                SRHalt("ResourceRef::operator->() : resource is nullptr!");
+                return nullptr;
+            }
+            return pResource.Get();
+        }
+
+        SR_NODISCARD const T* operator->() const noexcept {
+            auto&& pResource = GetResource();
+            if (!pResource) {
+                SRHalt("ResourceRef::operator->() : resource is nullptr!");
+                return nullptr;
+            }
+            return pResource.Get();
+        }
+
         bool operator==(const ResourceRef<T>& other) const noexcept {
             return m_id == other.m_id && GetResourceType() == other.GetResourceType();
         }

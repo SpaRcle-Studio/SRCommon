@@ -128,4 +128,8 @@ namespace SR_UTILS_NS {
     bool CLIManager::IsHeadlessMode() const {
         return IsFlagPresent(CLIFlags::Headless);
     }
+
+    bool CLIManager::IsAppOpenedByProjectFile() const {
+        return GetProjectPath().has_value();
+    }
 }

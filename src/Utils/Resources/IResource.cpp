@@ -190,6 +190,7 @@ namespace SR_UTILS_NS {
     bool IResource::Kill() {
         if (GetCountUses() == 0) {
             if (!IsDestroyed()) {
+                SR_LOG("IResource::Kill() : killing resource \"{}\"...", GetResourceId());
                 Destroy();
             }
 
@@ -300,8 +301,12 @@ namespace SR_UTILS_NS {
 
         auto&& resourcesManager = ResourceManager::Instance();
 
-        auto&& path = GetResourcePath();
-        auto&& pWatch = SR_UTILS_NS::FileWatcher::MakeShared(resourcesManager.GetResPath().Concat(path));
+        auto&& resourcePath = resourcesManager.GetResPath().Concat(GetResourcePath());
+        if (!resourcePath.IsFile()) {
+            resourcePath = GetResourcePath();
+        }
+
+        auto&& pWatch = SR_UTILS_NS::FileWatcher::MakeShared(resourcePath);
         if (!pWatch) {
             return;
         }

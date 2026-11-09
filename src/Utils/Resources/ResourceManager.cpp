@@ -81,6 +81,14 @@ namespace SR_UTILS_NS {
 
         PrintMemoryDump();
 
+        for (auto&& [hashTypeName, pResourceType] : m_resources) {
+            pResourceType->ForEach([&](IResource& resource) {
+                if (!resource.IsDestroyed()) {
+                    resource.Kill();
+                }
+            });
+        }
+
         Synchronize(true);
 
         m_isInit = false;
@@ -265,6 +273,10 @@ namespace SR_UTILS_NS {
 
     void ResourceManager::RegisterResource(const IResource::Ptr& pResource) {
         SR_TRACY_ZONE;
+
+        if (!m_isInit) {
+            SRHalt("ResourceManager::RegisterResource() : resources manager is not initialized!");
+        }
 
         SRAssert(!pResource->IsRegistered());
 
@@ -541,15 +553,31 @@ namespace SR_UTILS_NS {
         });
     }
 
+    bool ResourceManager::InitCache() {
+        if (auto&& cache = SR_PLATFORM_NS::GetApplicationCachePath()) {
+            m_cacheFolder = cache->Concat("Cache");
+        }
+        else {
+            m_cacheFolder = "Resources/Cache";
+        }
+        if (!SR_UTILS_NS::VFS::Instance().CreateDirectories(*m_cacheFolder)) {
+            SR_ERROR("ResourceManager::InitCache() : failed to create cache folder!");
+            m_cacheFolder.reset();
+            return false;
+        }
+        SR_LOG("ResourceManager::InitCache() : cache folder is: \"{}\"", *m_cacheFolder);
+        return true;
+    }
+
     Path ResourceManager::GetResPath() const {
         return GetResPathRef();
     }
 
     Path ResourceManager::GetCachePath() const {
-        if (auto&& cache = SR_PLATFORM_NS::GetApplicationCachePath()) {
-            return cache->Concat("Cache");
+        if (!m_cacheFolder) {
+            SRHaltTerminate("ResourceManager::GetCachePath() : cache is not initialized!");
         }
-        return "Resources/Cache";
+        return m_cacheFolder.value();
     }
 
     ResourceType* ResourceManager::GetOrCreateResourceType(SR_UTILS_NS::StringAtom typeName) {
