@@ -189,6 +189,29 @@ namespace SR_UTILS_NS::Platform {
         DeInitMemoryHooks();
     }
 
+    void RegisterApplication() {
+        SR_TRACY_ZONE;
+        SR_LOG("Platform::RegisterApplication() : register application...\n");
+
+        /// Регистрация расширения .srproject для открытия проектов в редакторе
+        {
+            std::string executablePath = GetApplicationPath().ToString();
+            std::replace(executablePath.begin(), executablePath.end(), '/', '\\');
+            std::string appPath = "\"{}\" \"%1\""_format(executablePath);
+
+            // .srproject → SRProjectFile
+            SetRegistryValue(HKEY_CURRENT_USER, "Software\\Classes\\.srproject", "SRProjectFile");
+            // описание
+            SetRegistryValue(HKEY_CURRENT_USER, "SRProjectFile", "SpaRcle Project File");
+            // команда запуска
+            std::string cmdKey = "Software\\Classes\\SRProjectFile\\shell\\open\\command";
+            SetRegistryValue(HKEY_CURRENT_USER, cmdKey.c_str(), appPath.c_str());
+
+            /// Уведомляем систему об изменении ассоциаций файлов, чтобы изменения вступили в силу
+            SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_IDLIST, NULL, NULL);
+        }
+    }
+
     void InitializePlatform() {
         SR_TRACY_ZONE;
         SR_PLATFORM_NS::WriteConsoleLog("Platform::InitializePlatform() : initializing Windows platform...\n");
@@ -261,24 +284,6 @@ namespace SR_UTILS_NS::Platform {
         }
 
         RegCloseKey(hKey);
-
-        /// Регистрация расширения .srproject для открытия проектов в редакторе
-        {
-            std::string executablePath = GetApplicationPath().ToString();
-            std::replace(executablePath.begin(), executablePath.end(), '/', '\\');
-            std::string appPath = "\"{}\" \"%1\""_format(executablePath);
-
-            // .srproject → SRProjectFile
-            SetRegistryValue(HKEY_CURRENT_USER, "Software\\Classes\\.srproject", "SRProjectFile");
-            // описание
-            SetRegistryValue(HKEY_CURRENT_USER, "SRProjectFile", "SpaRcle Project File");
-            // команда запуска
-            std::string cmdKey = "Software\\Classes\\SRProjectFile\\shell\\open\\command";
-            SetRegistryValue(HKEY_CURRENT_USER, cmdKey.c_str(), appPath.c_str());
-
-            /// Уведомляем систему об изменении ассоциаций файлов, чтобы изменения вступили в силу
-            SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_IDLIST, NULL, NULL);
-        }
     }
 
     void SetInstance(void*) {

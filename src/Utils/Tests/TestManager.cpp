@@ -45,10 +45,10 @@ namespace SR_UTILS_NS {
         SR_LOG_TEST("TestManager::RunAll() : loading TestManagerAsset...");
 
         SRAssert(!m_pTestManagerAsset);
-        m_pTestManagerAsset = SR_UTILS_NS::Asset::Load<TestManagerAsset>("ModuleTests/TestManagerAsset.sras");
+        m_pTestManagerAsset = SR_UTILS_NS::Asset::Load<TestManagerAsset>("Engine/ModuleTests/TestManagerAsset.sras");
         if (!m_pTestManagerAsset) {
             SR_LOG_TEST("TestManager::RunAll() : TestManagerAsset not found, creating a new one...");
-            m_pTestManagerAsset = SR_UTILS_NS::Asset::CreateNew<TestManagerAsset>("ModuleTests/TestManagerAsset.sras");
+            m_pTestManagerAsset = SR_UTILS_NS::Asset::CreateNew<TestManagerAsset>("Engine/ModuleTests/TestManagerAsset.sras");
             if (!m_pTestManagerAsset) {
                 SR_LOG_TEST("TestManager::RunAll() : failed to create TestManagerAsset!");
                 return TestExecutionResult::Fatal;
