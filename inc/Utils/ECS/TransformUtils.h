@@ -14,8 +14,8 @@ namespace SR_UTILS_NS {
     class TransformRect;
     class Transform;
 
-    SR_NODISCARD Transform* ExtractTransform(const SceneObject* pSO);
-    SR_NODISCARD SR_UTILS_NS::StringAtom GetTransformTypeName(const Transform* pTransform);
+    SR_NODISCARD SR_COMMON_DLL_API Transform* ExtractTransform(const SceneObject* pSO);
+    SR_NODISCARD SR_COMMON_DLL_API SR_UTILS_NS::StringAtom GetTransformTypeName(const Transform* pTransform);
 
     template<typename T> SR_NODISCARD T* ExtractTransformAs(const SceneObject* pSO) {
         auto&& pTransform = ExtractTransform(pSO);

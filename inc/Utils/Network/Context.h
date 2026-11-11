@@ -26,7 +26,7 @@ namespace SR_NETWORK_NS {
         ICMP
     )
 
-    class Context : public SR_HTYPES_NS::SharedPtr<Context> {
+    class SR_COMMON_DLL_API Context : public SR_HTYPES_NS::SharedPtr<Context> {
         using Super = SR_HTYPES_NS::SharedPtr<Context>;
         using PeerToPeerPtr = SR_HTYPES_NS::SharedPtr<PeerToPeer>;
         using AcceptorPtr = SR_HTYPES_NS::SharedPtr<Acceptor>;

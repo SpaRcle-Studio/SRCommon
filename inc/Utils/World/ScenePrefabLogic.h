@@ -8,7 +8,7 @@
 #include <Utils/World/SceneLogic.h>
 
 namespace SR_WORLD_NS {
-    class ScenePrefabLogic : public SceneLogic {
+    class SR_COMMON_DLL_API ScenePrefabLogic : public SceneLogic {
         SR_CLASS()
         using Super = SceneLogic;
     public:

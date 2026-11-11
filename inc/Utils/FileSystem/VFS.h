@@ -14,14 +14,14 @@ namespace SR_UTILS_NS {
     class IVFSBackend;
     struct VFSEntry;
 
-    struct VFSMount {
+    struct SR_COMMON_DLL_API VFSMount {
         IVFSBackend* pBackend = nullptr;
         int32_t priority = 0;
         bool permanent = false;
     };
 
     /// @noCopyable @noMovable
-    class VFS : public Singleton<VFS>, public SRClass {
+    class SR_COMMON_DLL_API VFS : public Singleton<VFS>, public SRClass {
         SR_REGISTER_SINGLETON(VFS);
         SR_CLASS()
     public:

@@ -26,7 +26,7 @@ namespace SR_UTILS_NS {
 #endif
 
 namespace SR_UTILS_NS {
-    class TracyContextManager : public SR_UTILS_NS::Singleton<TracyContextManager> {
+    class SR_COMMON_DLL_API TracyContextManager : public SR_UTILS_NS::Singleton<TracyContextManager> {
         SR_REGISTER_SINGLETON(TracyContextManager)
         using Super = SR_UTILS_NS::Singleton<TracyContextManager>;
         using TracyContextPtr = void*;

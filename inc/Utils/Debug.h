@@ -18,13 +18,13 @@ namespace SR_UTILS_NS {
         Error, ScriptError, ScriptLog, Vulkan, VulkanLog, VulkanError, Assert, Success, Test
     );
 
-    static bool IsErrorLogType(DebugLogType type);
-    static bool IsWarningLogType(DebugLogType type);
+    SR_COMMON_DLL_API bool IsErrorLogType(DebugLogType type);
+    SR_COMMON_DLL_API bool IsWarningLogType(DebugLogType type);
 
-    static fmt::text_style GetTextStyleColorByLogType(DebugLogType type);
+    SR_COMMON_DLL_API fmt::text_style GetTextStyleColorByLogType(DebugLogType type);
 
     /// @noCopyable @noMovable
-    class Debug : public Singleton<Debug>, public SRClass {
+    class SR_COMMON_DLL_API Debug : public Singleton<Debug>, public SRClass {
         SR_REGISTER_SINGLETON(Debug);
         SR_CLASS()
     public:

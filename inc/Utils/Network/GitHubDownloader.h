@@ -36,7 +36,7 @@ namespace SR_NETWORK_NS {
         StringView url;
     };
 
-    class GitHubDownloader : public NonCopyable {
+    class SR_COMMON_DLL_API GitHubDownloader : public NonCopyable {
         using Tree = SR_HTYPES_NS::FlatHashMap<String, GitHubEntryInfo>;
     public:
         explicit GitHubDownloader(StringView url);

@@ -8,8 +8,8 @@
 #include <Utils/Common/StringFormat.h>
 #include <Utils/Types/StringAtom.h>
 
-SR_UTILS_NS::StringAtom operator"" _atom(const char* str, size_t);
-uint64_t operator"" _atom_hash(const char* str, size_t);
+SR_COMMON_DLL_API SR_UTILS_NS::StringAtom operator"" _atom(const char* str, size_t);
+SR_COMMON_DLL_API uint64_t operator"" _atom_hash(const char* str, size_t);
 
 namespace SR_UTILS_NS::Details {
     class Formatter {

@@ -8,23 +8,23 @@
 #include <Utils/Common/StringFormat.h>
 
 namespace SR_UTILS_NS::LogDetails {
-    SR_NORETURN void AssertTerminateFwd(const std::string& msg);
-    bool AssertFwd(const std::string& msg);
-    bool AssertOnceCheckFwd(const std::string& msg);
-    void LogFwd(const std::string& msg);
-    void LogTestFwd(const std::string& msg);
-    void WarnFwd(const std::string& msg);
-    void InfoFwd(const std::string& msg);
-    void ErrorFwd(const std::string& msg);
-    void GraphLogFwd(const std::string& msg);
-    void SuccessFwd(const std::string& msg);
-    void ShaderFwd(const std::string& msg);
-    void ShaderLogFwd(const std::string& msg);
-    void SystemLogFwd(const std::string& msg);
-    void VulkanMsgFwd(const std::string& msg);
-    void VulkanLogFwd(const std::string& msg);
-    void VulkanErrorFwd(const std::string& msg);
-    void DebugLogFwd(const std::string& msg);
+    SR_NORETURN SR_COMMON_DLL_API void AssertTerminateFwd(const std::string& msg);
+    SR_COMMON_DLL_API bool AssertFwd(const std::string& msg);
+    SR_COMMON_DLL_API bool AssertOnceCheckFwd(const std::string& msg);
+    SR_COMMON_DLL_API void LogFwd(const std::string& msg);
+    SR_COMMON_DLL_API void LogTestFwd(const std::string& msg);
+    SR_COMMON_DLL_API void WarnFwd(const std::string& msg);
+    SR_COMMON_DLL_API void InfoFwd(const std::string& msg);
+    SR_COMMON_DLL_API void ErrorFwd(const std::string& msg);
+    SR_COMMON_DLL_API void GraphLogFwd(const std::string& msg);
+    SR_COMMON_DLL_API void SuccessFwd(const std::string& msg);
+    SR_COMMON_DLL_API void ShaderFwd(const std::string& msg);
+    SR_COMMON_DLL_API void ShaderLogFwd(const std::string& msg);
+    SR_COMMON_DLL_API void SystemLogFwd(const std::string& msg);
+    SR_COMMON_DLL_API void VulkanMsgFwd(const std::string& msg);
+    SR_COMMON_DLL_API void VulkanLogFwd(const std::string& msg);
+    SR_COMMON_DLL_API void VulkanErrorFwd(const std::string& msg);
+    SR_COMMON_DLL_API void DebugLogFwd(const std::string& msg);
 }
 
 #define SR_LOG_TEST(...)     SR_UTILS_NS::LogDetails::LogTestFwd(SR_FORMAT(__VA_ARGS__))

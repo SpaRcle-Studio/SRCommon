@@ -15,7 +15,7 @@ namespace SR_UTILS_NS {
 namespace SR_WORLD_NS {
     class Scene;
 
-    class SceneUpdater : public SR_UTILS_NS::NonCopyable {
+    class SR_COMMON_DLL_API SceneUpdater : public SR_UTILS_NS::NonCopyable {
         using Super = SR_UTILS_NS::NonCopyable;
     public:
         explicit SceneUpdater(Scene* pScene);

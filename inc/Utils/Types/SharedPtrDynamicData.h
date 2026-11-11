@@ -54,7 +54,7 @@ namespace SR_HTYPES_NS {
 
     };
 
-    class SharedPtrDynamicDataCounter : public SR_UTILS_NS::NonCopyable {
+    class SR_COMMON_DLL_API SharedPtrDynamicDataCounter : public SR_UTILS_NS::NonCopyable {
     public:
         SR_NODISCARD uint64_t GetCount() const;
 
@@ -74,7 +74,7 @@ namespace SR_HTYPES_NS {
 
     };
 
-    struct SharedPtrDynamicData {
+    struct SR_COMMON_DLL_API SharedPtrDynamicData {
         SharedPtrDynamicData(uint64_t strongCount, uint64_t weakCount, bool valid, SR_UTILS_NS::SharedPtrPolicy policy);
         ~SharedPtrDynamicData();
 

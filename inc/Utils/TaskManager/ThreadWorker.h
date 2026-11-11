@@ -27,7 +27,7 @@ namespace SR_UTILS_NS {
     class ThreadWorker;
 
     /// @abstract @noCopyable @noMovable
-    class ThreadWorkerStateBase : public SR_HTYPES_NS::SharedPtr<ThreadWorkerStateBase>, public SR_UTILS_NS::Serializable {
+    class SR_COMMON_DLL_API ThreadWorkerStateBase : public SR_HTYPES_NS::SharedPtr<ThreadWorkerStateBase>, public SR_UTILS_NS::Serializable {
         using Super = SR_HTYPES_NS::SharedPtr<ThreadWorkerStateBase>;
         SR_CLASS()
     public:
@@ -100,7 +100,7 @@ namespace SR_UTILS_NS {
 
     };
 
-    class ThreadsWorker final : public SR_HTYPES_NS::SharedPtr<ThreadsWorker> {
+    class SR_COMMON_DLL_API ThreadsWorker final : public SR_HTYPES_NS::SharedPtr<ThreadsWorker> {
         using Super = SR_HTYPES_NS::SharedPtr<ThreadsWorker>;
     private:
         ThreadsWorker();

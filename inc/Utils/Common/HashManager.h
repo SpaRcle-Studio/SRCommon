@@ -19,7 +19,7 @@ namespace SR_UTILS_NS {
     };
 
     /// Не можем наследоваться от Singleton
-    class HashManager : SR_UTILS_NS::NonCopyable {
+    class SR_COMMON_DLL_API HashManager : SR_UTILS_NS::NonCopyable {
         using Hash = uint64_t;
         using Storage = SR_HTYPES_NS::FlatHashMap<Hash, StringHashInfo*>;
     private:

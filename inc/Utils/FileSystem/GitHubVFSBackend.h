@@ -16,7 +16,7 @@ namespace SR_UTILS_NS {
     /// Бекенд, монтирующий репозиторий GitHub только на чтение. Дерево файлов запрашивается один
     /// раз через GitHubDownloader, содержимое файлов скачивается по требованию и кешируется в памяти.
     /// Реальные пути имеют вид ":github:/Engine/Shaders/...", где ":github:" - корень репозитория.
-    class GitHubVFSBackend : public IVFSBackend {
+    class SR_COMMON_DLL_API GitHubVFSBackend : public IVFSBackend {
         using Cache = SR_HTYPES_NS::FlatHashMap<String, String>;
     public:
         static constexpr StringView GITHUB_PREFIX = ":github:";

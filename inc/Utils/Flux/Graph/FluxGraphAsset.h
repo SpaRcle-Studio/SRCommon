@@ -11,7 +11,7 @@
 
 namespace SR_FLUX_NS {
     /// @extension(flux)
-    class FluxGraphAsset : public Asset {
+    class SR_COMMON_DLL_API FluxGraphAsset : public Asset {
         using Super = Asset;
         SR_CLASS()
     public:

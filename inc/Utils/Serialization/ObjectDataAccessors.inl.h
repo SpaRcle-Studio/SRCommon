@@ -5,176 +5,176 @@
 #ifndef SR_ENGINE_OBJECT_DATA_ACCESSORS_INL_H
 #define SR_ENGINE_OBJECT_DATA_ACCESSORS_INL_H
 
-template<> struct ObjectDataAccessor<SR_UTILS_NS::String> {
+template<> struct SR_COMMON_DLL_API ObjectDataAccessor<SR_UTILS_NS::String> {
 	static void Save(ISerializer& serializer, const SR_UTILS_NS::String& value, const SerializationId& id);
 	static void Load(IDeserializer& deserializer, SR_UTILS_NS::String& value, const SerializationId& id);
 };
 
-template<> struct ObjectDataAccessor<SR_UTILS_NS::Reflection::Value> {
+template<> struct SR_COMMON_DLL_API ObjectDataAccessor<SR_UTILS_NS::Reflection::Value> {
 	static void Save(ISerializer& serializer, const SR_UTILS_NS::Reflection::Value& value, const SerializationId& id);
 	static void Load(IDeserializer& deserializer, SR_UTILS_NS::Reflection::Value& value, const SerializationId& id);
 };
 
-template<> struct ObjectDataAccessor<SR_UTILS_NS::StringAtom> {
+template<> struct SR_COMMON_DLL_API ObjectDataAccessor<SR_UTILS_NS::StringAtom> {
 	static void Save(ISerializer& serializer, const SR_UTILS_NS::StringAtom& value, const SerializationId& id) ;
 	static void Load(IDeserializer& deserializer, SR_UTILS_NS::StringAtom& value, const SerializationId& id);
 };
 
-template<> struct ObjectDataAccessor<UnicodeString> {
+template<> struct SR_COMMON_DLL_API ObjectDataAccessor<UnicodeString> {
 	static void Save(ISerializer& serializer, const UnicodeString& value, const SerializationId& id);
 	static void Load(IDeserializer& deserializer, UnicodeString& value, const SerializationId& id);
 };
 
-template<> struct ObjectDataAccessor<bool> {
+template<> struct SR_COMMON_DLL_API ObjectDataAccessor<bool> {
 	static void Save(ISerializer& serializer, const bool value, const SerializationId& id);
 	static void Load(IDeserializer& deserializer, bool& value, const SerializationId& id);
 };
 
-template<> struct ObjectDataAccessor<float_t> {
+template<> struct SR_COMMON_DLL_API ObjectDataAccessor<float_t> {
 	static void Save(ISerializer& serializer, const float_t value, const SerializationId& id);
 	static void Load(IDeserializer& deserializer, float_t& value, const SerializationId& id);
 };
 
-template<> struct ObjectDataAccessor<double_t> {
+template<> struct SR_COMMON_DLL_API ObjectDataAccessor<double_t> {
 	static void Save(ISerializer& serializer, const double_t value, const SerializationId& id);
 	static void Load(IDeserializer& deserializer, double& value, const SerializationId& id);
 };
 
-template<> struct ObjectDataAccessor<std::int8_t> {
+template<> struct SR_COMMON_DLL_API ObjectDataAccessor<std::int8_t> {
 	static void Save(ISerializer& serializer, const std::int8_t value, const SerializationId& id);
 	static void Load(IDeserializer& deserializer, std::int8_t& value, const SerializationId& id);
 };
 
-template<> struct ObjectDataAccessor<std::int16_t> {
+template<> struct SR_COMMON_DLL_API ObjectDataAccessor<std::int16_t> {
 	static void Save(ISerializer& serializer, const std::int16_t value, const SerializationId& id);
 	static void Load(IDeserializer& deserializer, std::int16_t& value, const SerializationId& id);
 };
 
-template<> struct ObjectDataAccessor<std::int32_t> {
+template<> struct SR_COMMON_DLL_API ObjectDataAccessor<std::int32_t> {
 	static void Save(ISerializer& serializer, const std::int32_t value, const SerializationId& id) ;
 	static void Load(IDeserializer& deserializer, std::int32_t& value, const SerializationId& id);
 };
 
-template<> struct ObjectDataAccessor<std::int64_t> {
+template<> struct SR_COMMON_DLL_API ObjectDataAccessor<std::int64_t> {
 	static void Save(ISerializer& serializer, const std::int64_t value, const SerializationId& id);
 	static void Load(IDeserializer& deserializer, std::int64_t& value, const SerializationId& id);
 };
 
-template<> struct ObjectDataAccessor<std::uint8_t> {
+template<> struct SR_COMMON_DLL_API ObjectDataAccessor<std::uint8_t> {
 	static void Save(ISerializer& serializer, std::uint8_t value, const SerializationId& id);
 	static void Load(IDeserializer& deserializer, std::uint8_t& value, const SerializationId& id);
 };
 
-template<> struct ObjectDataAccessor<std::uint16_t> {
+template<> struct SR_COMMON_DLL_API ObjectDataAccessor<std::uint16_t> {
 	static void Save(ISerializer& serializer, std::uint16_t value, const SerializationId& id);
 	static void Load(IDeserializer& deserializer, std::uint16_t& value, const SerializationId& id);
 };
 
-template<> struct ObjectDataAccessor<std::uint32_t> {
+template<> struct SR_COMMON_DLL_API ObjectDataAccessor<std::uint32_t> {
 	static void Save(ISerializer& serializer, std::uint32_t value, const SerializationId& id);
 	static void Load(IDeserializer& deserializer, std::uint32_t& value, const SerializationId& id);
 };
 
-template<> struct ObjectDataAccessor<std::uint64_t> {
+template<> struct SR_COMMON_DLL_API ObjectDataAccessor<std::uint64_t> {
 	static void Save(ISerializer& serializer, std::uint64_t value, const SerializationId& id);
 	static void Load(IDeserializer& deserializer, std::uint64_t& value, const SerializationId& id);
 };
 
-template<> struct ObjectDataAccessor<SR_MATH_NS::Quaternion> {
+template<> struct SR_COMMON_DLL_API ObjectDataAccessor<SR_MATH_NS::Quaternion> {
 	static void Save(ISerializer& serializer, const SR_MATH_NS::Quaternion& value, const SerializationId& id);
 	static void Load(IDeserializer& deserializer, SR_MATH_NS::Quaternion& value, const SerializationId& id);
 };
 
-template<> struct ObjectDataAccessor<SR_MATH_NS::AABB> {
+template<> struct SR_COMMON_DLL_API ObjectDataAccessor<SR_MATH_NS::AABB> {
 	static void Save(ISerializer& serializer, const SR_MATH_NS::AABB& value, const SerializationId& id);
 	static void Load(IDeserializer& deserializer, SR_MATH_NS::AABB& value, const SerializationId& id);
 };
 
-template<> struct ObjectDataAccessor<SR_MATH_NS::FRect> {
+template<> struct SR_COMMON_DLL_API ObjectDataAccessor<SR_MATH_NS::FRect> {
     static void Save(ISerializer& serializer, const SR_MATH_NS::FRect& value, const SerializationId& id);
     static void Load(IDeserializer& deserializer, SR_MATH_NS::FRect& value, const SerializationId& id);
 };
 
-template<> struct ObjectDataAccessor<SR_MATH_NS::FColor> {
+template<> struct SR_COMMON_DLL_API ObjectDataAccessor<SR_MATH_NS::FColor> {
     static void Save(ISerializer& serializer, const SR_MATH_NS::FColor& value, const SerializationId& id);
     static void Load(IDeserializer& deserializer, SR_MATH_NS::FColor& value, const SerializationId& id);
 };
 
-template<> struct ObjectDataAccessor<SR_MATH_NS::IRect> {
+template<> struct SR_COMMON_DLL_API ObjectDataAccessor<SR_MATH_NS::IRect> {
     static void Save(ISerializer& serializer, const SR_MATH_NS::IRect& value, const SerializationId& id);
     static void Load(IDeserializer& deserializer, SR_MATH_NS::IRect& value, const SerializationId& id);
 };
 
-template<> struct ObjectDataAccessor<SR_MATH_NS::URect> {
+template<> struct SR_COMMON_DLL_API ObjectDataAccessor<SR_MATH_NS::URect> {
     static void Save(ISerializer& serializer, const SR_MATH_NS::URect& value, const SerializationId& id);
     static void Load(IDeserializer& deserializer, SR_MATH_NS::URect& value, const SerializationId& id);
 };
 
-template<> struct ObjectDataAccessor<SR_MATH_NS::USRect> {
+template<> struct SR_COMMON_DLL_API ObjectDataAccessor<SR_MATH_NS::USRect> {
     static void Save(ISerializer& serializer, const SR_MATH_NS::USRect& value, const SerializationId& id);
     static void Load(IDeserializer& deserializer, SR_MATH_NS::USRect& value, const SerializationId& id);
 };
 
-template<> struct ObjectDataAccessor<SR_MATH_NS::FVector2> {
+template<> struct SR_COMMON_DLL_API ObjectDataAccessor<SR_MATH_NS::FVector2> {
     static void Save(ISerializer& serializer, const SR_MATH_NS::FVector2& value, const SerializationId& id);
     static void Load(IDeserializer& deserializer, SR_MATH_NS::FVector2& value, const SerializationId& id);
 };
-template<> struct ObjectDataAccessor<SR_MATH_NS::IVector2> {
+template<> struct SR_COMMON_DLL_API ObjectDataAccessor<SR_MATH_NS::IVector2> {
     static void Save(ISerializer& serializer, const SR_MATH_NS::IVector2& value, const SerializationId& id);
     static void Load(IDeserializer& deserializer, SR_MATH_NS::IVector2& value, const SerializationId& id);
 };
-template<> struct ObjectDataAccessor<SR_MATH_NS::UVector2> {
+template<> struct SR_COMMON_DLL_API ObjectDataAccessor<SR_MATH_NS::UVector2> {
     static void Save(ISerializer& serializer, const SR_MATH_NS::UVector2& value, const SerializationId& id);
     static void Load(IDeserializer& deserializer, SR_MATH_NS::UVector2& value, const SerializationId& id);
 };
-template<> struct ObjectDataAccessor<SR_MATH_NS::USVector2> {
+template<> struct SR_COMMON_DLL_API ObjectDataAccessor<SR_MATH_NS::USVector2> {
     static void Save(ISerializer& serializer, const SR_MATH_NS::USVector2& value, const SerializationId& id);
     static void Load(IDeserializer& deserializer, SR_MATH_NS::USVector2& value, const SerializationId& id);
 };
 
-template<> struct ObjectDataAccessor<SR_MATH_NS::FVector3> {
+template<> struct SR_COMMON_DLL_API ObjectDataAccessor<SR_MATH_NS::FVector3> {
     static void Save(ISerializer& serializer, const SR_MATH_NS::FVector3& value, const SerializationId& id);
     static void Load(IDeserializer& deserializer, SR_MATH_NS::FVector3& value, const SerializationId& id);
 };
-template<> struct ObjectDataAccessor<SR_MATH_NS::BVector3> {
+template<> struct SR_COMMON_DLL_API ObjectDataAccessor<SR_MATH_NS::BVector3> {
     static void Save(ISerializer& serializer, const SR_MATH_NS::BVector3& value, const SerializationId& id);
     static void Load(IDeserializer& deserializer, SR_MATH_NS::BVector3& value, const SerializationId& id);
 };
-template<> struct ObjectDataAccessor<SR_MATH_NS::IVector3> {
+template<> struct SR_COMMON_DLL_API ObjectDataAccessor<SR_MATH_NS::IVector3> {
     static void Save(ISerializer& serializer, const SR_MATH_NS::IVector3& value, const SerializationId& id);
     static void Load(IDeserializer& deserializer, SR_MATH_NS::IVector3& value, const SerializationId& id);
 };
-template<> struct ObjectDataAccessor<SR_MATH_NS::UVector3> {
+template<> struct SR_COMMON_DLL_API ObjectDataAccessor<SR_MATH_NS::UVector3> {
     static void Save(ISerializer& serializer, const SR_MATH_NS::UVector3& value, const SerializationId& id);
     static void Load(IDeserializer& deserializer, SR_MATH_NS::UVector3& value, const SerializationId& id);
 };
 
-template<> struct ObjectDataAccessor<SR_MATH_NS::FVector4> {
+template<> struct SR_COMMON_DLL_API ObjectDataAccessor<SR_MATH_NS::FVector4> {
     static void Save(ISerializer& serializer, const SR_MATH_NS::FVector4& value, const SerializationId& id);
     static void Load(IDeserializer& deserializer, SR_MATH_NS::FVector4& value, const SerializationId& id);
 };
-template<> struct ObjectDataAccessor<SR_MATH_NS::BVector4> {
+template<> struct SR_COMMON_DLL_API ObjectDataAccessor<SR_MATH_NS::BVector4> {
     static void Save(ISerializer& serializer, const SR_MATH_NS::BVector4& value, const SerializationId& id);
     static void Load(IDeserializer& deserializer, SR_MATH_NS::BVector4& value, const SerializationId& id);
 };
-template<> struct ObjectDataAccessor<SR_MATH_NS::IVector4> {
+template<> struct SR_COMMON_DLL_API ObjectDataAccessor<SR_MATH_NS::IVector4> {
     static void Save(ISerializer& serializer, const SR_MATH_NS::IVector4& value, const SerializationId& id);
     static void Load(IDeserializer& deserializer, SR_MATH_NS::IVector4& value, const SerializationId& id);
 };
-template<> struct ObjectDataAccessor<SR_MATH_NS::UVector4> {
+template<> struct SR_COMMON_DLL_API ObjectDataAccessor<SR_MATH_NS::UVector4> {
     static void Save(ISerializer& serializer, const SR_MATH_NS::UVector4& value, const SerializationId& id);
     static void Load(IDeserializer& deserializer, SR_MATH_NS::UVector4& value, const SerializationId& id);
 };
 
-template<> struct ObjectDataAccessor<SR_MATH_NS::FVector6> {
+template<> struct SR_COMMON_DLL_API ObjectDataAccessor<SR_MATH_NS::FVector6> {
     static void Save(ISerializer& serializer, const SR_MATH_NS::FVector6& value, const SerializationId& id);
     static void Load(IDeserializer& deserializer, SR_MATH_NS::FVector6& value, const SerializationId& id);
 };
-template<> struct ObjectDataAccessor<SR_MATH_NS::IVector6> {
+template<> struct SR_COMMON_DLL_API ObjectDataAccessor<SR_MATH_NS::IVector6> {
     static void Save(ISerializer& serializer, const SR_MATH_NS::IVector6& value, const SerializationId& id);
     static void Load(IDeserializer& deserializer, SR_MATH_NS::IVector6& value, const SerializationId& id);
 };
-template<> struct ObjectDataAccessor<SR_MATH_NS::UVector6> {
+template<> struct SR_COMMON_DLL_API ObjectDataAccessor<SR_MATH_NS::UVector6> {
     static void Save(ISerializer& serializer, const SR_MATH_NS::UVector6& value, const SerializationId& id);
     static void Load(IDeserializer& deserializer, SR_MATH_NS::UVector6& value, const SerializationId& id);
 };

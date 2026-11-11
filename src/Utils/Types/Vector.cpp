@@ -5,7 +5,7 @@
 #include <Utils/Types/Vector.h>
 
 namespace SR_UTILS_NS {
-    template class Vector<int32_t>;
-    template class Vector<uint32_t>;
-    template class Vector<StringAtom>;
+    template class SR_COMMON_DLL_API Vector<int32_t>;
+    template class SR_COMMON_DLL_API Vector<uint32_t>;
+    template class SR_COMMON_DLL_API Vector<StringAtom>;
 }

@@ -18,7 +18,7 @@ namespace SR_FLUX_NS {
         uint32_t instructionPointer = 0;
     };
 
-    struct FluxProgram {
+    struct SR_COMMON_DLL_API FluxProgram {
         FluxProgram() = default;
         FluxProgram(const FluxProgram& other);
         FluxProgram(FluxProgram&& other) noexcept;

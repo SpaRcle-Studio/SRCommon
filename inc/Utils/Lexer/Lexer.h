@@ -10,7 +10,7 @@
 #include <Utils/Types/Optional.h>
 
 namespace SR_UTILS_NS {
-    class Lexer : public Singleton<Lexer> {
+    class SR_COMMON_DLL_API Lexer : public Singleton<Lexer> {
         SR_REGISTER_SINGLETON(Lexer)
         using Lexems = Vector<LexerDetails::Lexem>;
         using ProcessedLexem = Optional<LexerDetails::Lexem>;

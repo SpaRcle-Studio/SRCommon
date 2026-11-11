@@ -8,7 +8,7 @@
 #include <Utils/FileSystem/IVFSBackend.h>
 
 namespace SR_UTILS_NS {
-    class DirectoryVFSBackend : public IVFSBackend {
+    class SR_COMMON_DLL_API DirectoryVFSBackend : public IVFSBackend {
     public:
         explicit DirectoryVFSBackend(StringView realPath)
             : IVFSBackend(realPath)

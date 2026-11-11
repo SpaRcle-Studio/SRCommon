@@ -15,7 +15,7 @@ namespace SR_FLUX_NS {
     class FluxRuntime;
 
     /// @category(Scripting) @displayName(Flux)
-    class FluxComponent : public Component {
+    class SR_COMMON_DLL_API FluxComponent : public Component {
         using Super = Component;
         SR_CLASS()
     public:

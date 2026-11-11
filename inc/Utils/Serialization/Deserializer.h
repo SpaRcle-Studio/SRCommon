@@ -16,7 +16,7 @@ namespace SR_UTILS_NS {
     class Path;
     class StringAtom;
 
-    class IDeserializer {
+    class SR_COMMON_DLL_API IDeserializer {
     public:
         using UniquePtr = std::unique_ptr<IDeserializer>;
 

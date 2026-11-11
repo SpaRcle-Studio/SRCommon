@@ -16,7 +16,7 @@ namespace SR_UTILS_NS {
     class FileWatcher;
 
     /// @noCopyable @noMovable
-    class ResourceManager final : public Singleton<ResourceManager>, public SRClass {
+    class SR_COMMON_DLL_API ResourceManager final : public Singleton<ResourceManager>, public SRClass {
         SR_REGISTER_SINGLETON(ResourceManager)
         SR_CLASS()
         using Hash = uint64_t;

@@ -12,7 +12,7 @@ namespace SR_UTILS_NS::Reflection {
 }
 
 namespace SR_FLUX_NS {
-    struct FluxCallable {
+    struct SR_COMMON_DLL_API FluxCallable {
         StringAtom object;
         StringAtom function;
 

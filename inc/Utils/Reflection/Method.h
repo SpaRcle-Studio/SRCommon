@@ -10,7 +10,7 @@
 #include <Utils/Reflection/Value.h>
 
 namespace SR_UTILS_NS::Reflection {
-    class Method {
+    class SR_COMMON_DLL_API Method {
         struct Parameter {
             StringAtom name;
             TypeInfo* pTypeInfo = nullptr;
@@ -84,10 +84,10 @@ namespace SR_UTILS_NS::Reflection {
 
     };
 
-    void InvokeMethodVoid(Method::Owner& owner, StringAtom name);
-    void InvokeMethodVoid(Method::Owner& owner, StringAtom name, const Method::Params& params);
-    Value InvokeMethod(Method::Owner& owner, StringAtom name, const Method::Params& params);
-    Value InvokeMethod(Method::Owner& owner, StringAtom name);
+    SR_COMMON_DLL_API void InvokeMethodVoid(Method::Owner& owner, StringAtom name);
+    SR_COMMON_DLL_API void InvokeMethodVoid(Method::Owner& owner, StringAtom name, const Method::Params& params);
+    SR_COMMON_DLL_API Value InvokeMethod(Method::Owner& owner, StringAtom name, const Method::Params& params);
+    SR_COMMON_DLL_API Value InvokeMethod(Method::Owner& owner, StringAtom name);
 }
 
 #endif //SR_ENGINE_UTILS_REFLECTION_METHOD_H

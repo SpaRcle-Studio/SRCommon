@@ -11,7 +11,7 @@
 namespace SR_NETWORK_NS {
     class Context;
 
-    class PeerToPeer : public SR_HTYPES_NS::SharedPtr<PeerToPeer> {
+    class SR_COMMON_DLL_API PeerToPeer : public SR_HTYPES_NS::SharedPtr<PeerToPeer> {
         friend class Context;
         using Super = SR_HTYPES_NS::SharedPtr<PeerToPeer>;
         using Callback = SR_HTYPES_NS::Function<void(const PeerToPeer::Ptr& pP2P, const Socket::Ptr&)>;

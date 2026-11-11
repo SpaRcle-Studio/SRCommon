@@ -35,7 +35,7 @@ namespace SR_MATH_NS {
        Both
     )
 
-    struct CurveKeyframe {
+    struct SR_COMMON_DLL_API CurveKeyframe {
         float_t time = 0.f;
         float_t value = 0.f;
 
@@ -57,7 +57,7 @@ namespace SR_MATH_NS {
         { }
     };
 
-    class Curve {
+    class SR_COMMON_DLL_API Curve {
     public:
         Curve() = default;
 

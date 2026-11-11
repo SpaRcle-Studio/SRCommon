@@ -10,7 +10,7 @@
 
 namespace SR_UTILS_NS {
     /// @noMovable @noCopyable
-    class Random : public Singleton<Random>, public SRClass {
+    class SR_COMMON_DLL_API Random : public Singleton<Random>, public SRClass {
         SR_REGISTER_SINGLETON(Random)
         SR_CLASS()
     public:

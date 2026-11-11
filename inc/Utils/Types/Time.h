@@ -10,7 +10,7 @@
 
 namespace SR_HTYPES_NS {
     /// @noCopyable @noMovable
-    class Time : public Singleton<Time>, public SRClass {
+    class SR_COMMON_DLL_API Time : public Singleton<Time>, public SRClass {
         SR_REGISTER_SINGLETON(Time)
         SR_CLASS()
     public:

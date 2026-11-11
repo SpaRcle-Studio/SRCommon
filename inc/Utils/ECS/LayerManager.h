@@ -8,7 +8,7 @@
 #include <Utils/Resources/Asset.h>
 
 namespace SR_UTILS_NS {
-    struct RenderLayerInfo : public Serializable {
+    struct SR_COMMON_DLL_API RenderLayerInfo : public Serializable {
         SR_STRUCT()
 
         /// @property
@@ -54,7 +54,7 @@ namespace SR_UTILS_NS {
         }
     };
 
-    class LayerManagerSettings final : public SR_UTILS_NS::Asset {
+    class SR_COMMON_DLL_API LayerManagerSettings final : public SR_UTILS_NS::Asset {
         SR_CLASS()
         using Super = SR_UTILS_NS::Asset;
     public:
@@ -66,7 +66,7 @@ namespace SR_UTILS_NS {
         StringAtom defaultLayer = "Default";
     };
 
-    class LayerManager : public Singleton<LayerManager> {
+    class SR_COMMON_DLL_API LayerManager : public Singleton<LayerManager> {
         SR_REGISTER_SINGLETON(LayerManager);
     public:
         SR_NODISCARD bool HasLayer(StringAtom layer) const;

@@ -26,7 +26,7 @@ namespace SR_UTILS_NS {
 
 
     /// @abstract @noCopyable @noMovable
-    class IDebugDraw : public SRClass {
+    class SR_COMMON_DLL_API IDebugDraw : public SRClass {
         SR_CLASS()
     public:
         using RemoveCallback = SR_HTYPES_NS::Function<void(uint64_t id)>;
@@ -179,7 +179,6 @@ namespace SR_UTILS_NS {
         void DrawQuaternion(const SR_MATH_NS::FVector3& pos, const SR_MATH_NS::Quaternion& q, const SR_MATH_NS::FColor& color, float_t time);
 
     private:
-        std::recursive_mutex m_mutex;
         void* m_currentSwitcher = nullptr;
         Callbacks* m_currentCallbacks = nullptr;
         Map<void*, Callbacks> m_callbacks;
@@ -187,13 +186,13 @@ namespace SR_UTILS_NS {
     };
 
     /// @noCopyable @noMovable
-    class DebugDraw : public IDebugDraw, public Singleton<DebugDraw> {
+    class SR_COMMON_DLL_API DebugDraw : public IDebugDraw, public Singleton<DebugDraw> {
         SR_REGISTER_SINGLETON(DebugDraw)
         SR_CLASS()
     };
 
     /// @noCopyable @noMovable
-    class DebugOverlayDraw : public IDebugDraw, public Singleton<DebugOverlayDraw> {
+    class SR_COMMON_DLL_API DebugOverlayDraw : public IDebugDraw, public Singleton<DebugOverlayDraw> {
         SR_REGISTER_SINGLETON(DebugOverlayDraw)
         SR_CLASS()
     };

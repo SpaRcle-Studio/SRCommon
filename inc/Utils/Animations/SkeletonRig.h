@@ -18,7 +18,7 @@ namespace SR_HTYPES_NS {
 }
 
 namespace SR_ANIMATIONS_NS {
-    struct SkeletonRigBoneInfo : public SR_UTILS_NS::Serializable {
+    struct SR_COMMON_DLL_API SkeletonRigBoneInfo : public SR_UTILS_NS::Serializable {
         SR_STRUCT()
 
         /// @property
@@ -35,14 +35,14 @@ namespace SR_ANIMATIONS_NS {
         }
     };
 
-    struct SkeletonRigBoneChain : public SR_UTILS_NS::Serializable {
+    struct SR_COMMON_DLL_API SkeletonRigBoneChain : public SR_UTILS_NS::Serializable {
         SR_STRUCT()
 
         /// @property
         SR_UTILS_NS::Vector<SkeletonRigBoneInfo> bones;
     };
 
-    struct SkeletonAutoRigRules : public SR_UTILS_NS::Serializable {
+    struct SR_COMMON_DLL_API SkeletonAutoRigRules : public SR_UTILS_NS::Serializable {
         SR_STRUCT()
 
         /// @property
@@ -66,7 +66,7 @@ namespace SR_ANIMATIONS_NS {
         SR_NODISCARD bool IsBoneCustom(SR_UTILS_NS::StringAtom name) const;
     };
 
-    struct SkeletonWorldSettings : public SR_UTILS_NS::Serializable {
+    struct SR_COMMON_DLL_API SkeletonWorldSettings : public SR_UTILS_NS::Serializable {
         SR_STRUCT()
 
         /// @property
@@ -78,7 +78,7 @@ namespace SR_ANIMATIONS_NS {
     };
 
     /// @extension(rig)
-    class SkeletonRig : public SR_UTILS_NS::Asset {
+    class SR_COMMON_DLL_API SkeletonRig : public SR_UTILS_NS::Asset {
         SR_CLASS()
     public:
         SR_NODISCARD const SkeletonRigBoneChain* RetargetBone(SR_UTILS_NS::StringAtom name, SR_UTILS_NS::StringAtom& outName) const;

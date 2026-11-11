@@ -20,7 +20,7 @@ namespace SR_UTILS_NS {
     );
 
     /// @abstract @noCopyable @noMovable
-    class ITestController : public SR_UTILS_NS::Serializable, public SR_HTYPES_NS::SharedPtr<ITestController> {
+    class SR_COMMON_DLL_API ITestController : public SR_UTILS_NS::Serializable, public SR_HTYPES_NS::SharedPtr<ITestController> {
         SR_CLASS()
     public:
         using Ptr = SR_HTYPES_NS::SharedPtr<ITestController>;
@@ -65,7 +65,7 @@ namespace SR_UTILS_NS {
 
     };
 
-    class TestManager : public Singleton<TestManager> {
+    class SR_COMMON_DLL_API TestManager : public Singleton<TestManager> {
         SR_REGISTER_SINGLETON(TestManager)
     public:
         SR_NODISCARD TestExecutionResult RunAll();

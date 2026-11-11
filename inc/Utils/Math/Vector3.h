@@ -867,10 +867,10 @@ namespace SR_MATH_NS {
         );
     }
 
-    FVector3 GetPerpendicularVector(const FVector3& direction);
-    FVector3 SafePerpendicular(const FVector3& v);
+    SR_COMMON_DLL_API FVector3 GetPerpendicularVector(const FVector3& direction);
+    SR_COMMON_DLL_API FVector3 SafePerpendicular(const FVector3& v);
 
-    FVector3 ProjectOnPlane(
+    SR_COMMON_DLL_API FVector3 ProjectOnPlane(
         const FVector3& point,
         const FVector3& planeOrigin,
         const FVector3& planeTarget,
@@ -878,9 +878,9 @@ namespace SR_MATH_NS {
         float_t weight
     );
 
-    FVector3 ProjectOnPlane(const FVector3& v, const FVector3& planeNormal /* must be normalized */);
+    SR_COMMON_DLL_API FVector3 ProjectOnPlane(const FVector3& v, const FVector3& planeNormal /* must be normalized */);
 
-    FVector3 Mix(const FVector3& a, const FVector3& b, float_t t);
+    SR_COMMON_DLL_API FVector3 Mix(const FVector3& a, const FVector3& b, float_t t);
 }
 
 namespace std {

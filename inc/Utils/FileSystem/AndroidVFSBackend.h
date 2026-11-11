@@ -12,7 +12,7 @@ namespace SR_UTILS_NS {
     /// Ресурсы упаковываются вместе с папкой "Resources", поэтому пути внутри assets полностью
     /// совпадают с виртуальными путями движка и никакого особого префикса не требуется.
     /// Бекенд монтируется в корень, так же как папка приложения на остальных платформах.
-    class AndroidVFSBackend : public IVFSBackend {
+    class SR_COMMON_DLL_API AndroidVFSBackend : public IVFSBackend {
     public:
         AndroidVFSBackend() = default;
 

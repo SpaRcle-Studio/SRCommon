@@ -32,7 +32,7 @@ namespace SR_UTILS_NS {
         Double,
     };
 
-    struct SerializationNode {
+    struct SR_COMMON_DLL_API SerializationNode {
         SerializationNode() = default;
         SerializationNode(const SerializationId& id, SerializationDataType type)
             : id(id)
@@ -98,7 +98,7 @@ namespace SR_UTILS_NS {
     class IBaseSerializer;
     class IBaseDeserializer;
 
-    class IBaseSerialization {
+    class SR_COMMON_DLL_API IBaseSerialization {
         friend IBaseSerializer;
         friend IBaseDeserializer;
     public:
@@ -130,7 +130,7 @@ namespace SR_UTILS_NS {
 
     };
 
-    class IBaseSerializer : public ISerializer {
+    class SR_COMMON_DLL_API IBaseSerializer : public ISerializer {
     public:
         SR_NODISCARD bool SaveToFile(const SR_UTILS_NS::Path& path) const override { return GetImpl().SaveToFileImpl(path); }
         SR_NODISCARD String ToString() const noexcept override { return GetImpl().ToStringBase(); }
@@ -172,7 +172,7 @@ namespace SR_UTILS_NS {
 
     };
 
-    class IBaseDeserializer : public IDeserializer {
+    class SR_COMMON_DLL_API IBaseDeserializer : public IDeserializer {
         using Super = IDeserializer;
     public:
         IBaseDeserializer();

@@ -9,7 +9,7 @@
 #include <Utils/Math/Rect.h>
 
 namespace SR_UTILS_NS {
-    class SkylineAllocator : public NonCopyable {
+    class SR_COMMON_DLL_API SkylineAllocator : public NonCopyable {
     public:
         SkylineAllocator() = default;
         SkylineAllocator(uint32_t width, uint32_t height)

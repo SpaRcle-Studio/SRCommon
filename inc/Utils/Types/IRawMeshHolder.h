@@ -14,7 +14,7 @@ namespace SR_HTYPES_NS {
     class RawMesh;
 
     /// Этот класс предоставляет удобный интерфейс для работы с RwMesh
-    class IRawMeshHolder {
+    class SR_COMMON_DLL_API IRawMeshHolder {
     public:
         using RawMeshPtr = SR_HTYPES_NS::SharedPtr<SR_HTYPES_NS::RawMesh>;
         using MeshIndex = int32_t;
@@ -53,7 +53,7 @@ namespace SR_HTYPES_NS {
 
     };
 
-    class RawMeshHolder : public SR_UTILS_NS::Serializable, public IRawMeshHolder {
+    class SR_COMMON_DLL_API RawMeshHolder : public SR_UTILS_NS::Serializable, public IRawMeshHolder {
         SR_CLASS()
         using Super = SR_UTILS_NS::Serializable;
     public:

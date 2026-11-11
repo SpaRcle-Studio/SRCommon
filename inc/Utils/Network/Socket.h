@@ -8,7 +8,7 @@
 #include <Utils/Network/Context.h>
 
 namespace SR_NETWORK_NS {
-    class Socket : public SR_HTYPES_NS::SharedPtr<Socket> {
+    class SR_COMMON_DLL_API Socket : public SR_HTYPES_NS::SharedPtr<Socket> {
         friend class Context;
         using Super = SR_HTYPES_NS::SharedPtr<Socket>;
         using ReceiveCallback = SR_HTYPES_NS::Function<void(const Socket::Ptr&, const DataPackage::Ptr&, uint64_t size)>;

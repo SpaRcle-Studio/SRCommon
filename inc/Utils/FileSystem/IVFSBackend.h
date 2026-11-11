@@ -14,7 +14,7 @@ namespace SR_UTILS_NS {
     class File;
     class VFS;
 
-    struct VFSEntry {
+    struct SR_COMMON_DLL_API VFSEntry {
         StringView name;
         StringView extension;
         StringView fullPath;
@@ -24,7 +24,7 @@ namespace SR_UTILS_NS {
 
     struct VFSMount;
 
-    class IVFSBackend : public NonCopyable {
+    class SR_COMMON_DLL_API IVFSBackend : public NonCopyable {
     public:
         IVFSBackend() = default;
         IVFSBackend(StringView realPath)

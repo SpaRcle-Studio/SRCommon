@@ -15,7 +15,7 @@
 namespace SR_UTILS_NS {
     class ResourceManager;
 
-    class FileWatcher final : public SR_HTYPES_NS::SharedPtr<FileWatcher>, SR_UTILS_NS::NonCopyable {
+    class SR_COMMON_DLL_API FileWatcher final : public SR_HTYPES_NS::SharedPtr<FileWatcher>, SR_UTILS_NS::NonCopyable {
         using CallBack = SR_HTYPES_NS::Function<void(FileWatcher* pWatcher)>;
         friend class ResourceManager;
     public:

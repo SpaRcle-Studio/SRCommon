@@ -10,7 +10,7 @@
 
 namespace SR_UTILS_NS {
     /// @extension(sras)
-    class Asset : public IResource {
+    class SR_COMMON_DLL_API Asset : public IResource {
         SR_CLASS()
         using Super = IResource;
     public:

@@ -23,7 +23,7 @@ namespace SR_FLUX_NS {
         return (static_cast<uint64_t>(nodeIndex) << 32u) | static_cast<uint64_t>(pinIndex);
     }
 
-    class FluxGraphLink : public Serializable {
+    class SR_COMMON_DLL_API FluxGraphLink : public Serializable {
         SR_CLASS()
     public:
         SR_NODISCARD uint32_t GetSourceNode() const { return m_sourceNode; }
@@ -82,7 +82,7 @@ namespace SR_FLUX_NS {
         /// Synchronize,
     )
 
-    class FluxGraphNode : public Serializable {
+    class SR_COMMON_DLL_API FluxGraphNode : public Serializable {
         SR_CLASS()
     public:
         SR_NODISCARD FluxGraphNodeType GetType() const { return m_type; }
@@ -120,7 +120,7 @@ namespace SR_FLUX_NS {
 
     };
 
-    class FluxGraph : public Serializable {
+    class SR_COMMON_DLL_API FluxGraph : public Serializable {
         SR_CLASS()
     public:
         FluxGraph();

@@ -11,7 +11,7 @@
 
 namespace SR_UTILS_NS {
     /// @inspector(EntityRefPropertyDrawer)
-    class EntityRefBase : public SR_UTILS_NS::Serializable {
+    class SR_COMMON_DLL_API EntityRefBase : public SR_UTILS_NS::Serializable {
         using Super = SR_UTILS_NS::Serializable;
         SR_CLASS()
     public:
@@ -86,7 +86,7 @@ namespace SR_UTILS_NS {
     };
 
     /// @inspector(EntityRefPropertyDrawer)
-    class EntityRefDynamic : public EntityRefBase {
+    class SR_COMMON_DLL_API EntityRefDynamic : public EntityRefBase {
         using Super = EntityRefBase;
         SR_CLASS()
     public:

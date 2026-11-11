@@ -359,10 +359,10 @@ namespace SR_MATH_NS {
     typedef Rect<uint32_t> URect;
     typedef Rect<uint16_t> USRect;
 
-    FVector2 ClipToRectEdge(const FRect& rect, const FVector2& from, const FVector2& to);
-    FVector2 ClipParallelLineToRect(const FRect& rect, const FVector2& linePoint, const FVector2& lineDir);
-    bool ClipLineToRect(const FRect& rect, const FVector2& linePoint, const FVector2& lineDir, FVector2& outNear, FVector2& outFar);
-    bool ClipRayToRect(const FRect& rect, const FVector2& linePoint, const FVector2& dir, FVector2& outPoint);
+    SR_COMMON_DLL_API FVector2 ClipToRectEdge(const FRect& rect, const FVector2& from, const FVector2& to);
+    SR_COMMON_DLL_API FVector2 ClipParallelLineToRect(const FRect& rect, const FVector2& linePoint, const FVector2& lineDir);
+    SR_COMMON_DLL_API bool ClipLineToRect(const FRect& rect, const FVector2& linePoint, const FVector2& lineDir, FVector2& outNear, FVector2& outFar);
+    SR_COMMON_DLL_API bool ClipRayToRect(const FRect& rect, const FVector2& linePoint, const FVector2& dir, FVector2& outPoint);
 }
 
 template<typename T> struct fmt::formatter<SR_MATH_NS::Rect<T>> {

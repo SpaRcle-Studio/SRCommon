@@ -11,7 +11,7 @@
 #include <Utils/Types/FlatHashMap.h>
 
 namespace SR_UTILS_NS {
-    class ResourceEmbedder {
+    class SR_COMMON_DLL_API ResourceEmbedder {
         struct Resource {
             std::string_view compressedHex;
             uint64_t decompressedSize = 0;

@@ -18,7 +18,7 @@
 namespace SR_HTYPES_NS {
     class Thread;
 
-    struct ThreadImpl {
+    struct SR_COMMON_DLL_API ThreadImpl {
     #ifdef SR_THREADS_ALLOWED
         std::thread thread;
     #endif
@@ -40,7 +40,7 @@ namespace SR_HTYPES_NS {
         SR_NODISCARD static ThreadId EmptyThreadId();
         SR_NODISCARD ThreadImpl& GetImpl() const;
 
-        class Factory : public Singleton<Factory> {
+        class SR_COMMON_DLL_API Factory : public Singleton<Factory> {
             SR_REGISTER_SINGLETON(Factory)
             friend class Thread;
         protected:

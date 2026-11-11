@@ -49,9 +49,9 @@ namespace SR_UTILS_NS {
     };
 }
 
-void* SRMalloc(SR_UTILS_NS::SizeType size);
-void* SRReAlloc(void* pMemory, SR_UTILS_NS::SizeType size);
-void SRFree(void* pMemory);
+SR_COMMON_DLL_API void* SRMalloc(SR_UTILS_NS::SizeType size);
+SR_COMMON_DLL_API void* SRReAlloc(void* pMemory, SR_UTILS_NS::SizeType size);
+SR_COMMON_DLL_API void SRFree(void* pMemory);
 
 void* SRZLibAlloc(void* opaque, unsigned items, unsigned size);
 void SRZLibFree(void* opaque, void* address);

@@ -8,7 +8,7 @@
 #include <Utils/stdInclude.h>
 
 namespace SR_UTILS_NS {
-    class UnicodeString {
+    class SR_COMMON_DLL_API UnicodeString {
     public:
         using CharType = char32_t;
         using Iterator = std::u32string::iterator;

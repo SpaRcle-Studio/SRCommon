@@ -29,7 +29,7 @@ namespace SR_UTILS_NS::Localization {
                      English,
                      Russian)*/
 
-    class LocalizationFile {
+    class SR_COMMON_DLL_API LocalizationFile {
     public:
         LocalizationFile() = default;
         ~LocalizationFile();

@@ -24,12 +24,13 @@ namespace SR_FLUX_NS {
         FixedUpdate
     );
 
-    struct FluxExecution {
+    struct SR_COMMON_DLL_API FluxExecution {
         FluxExecution() = default;
         FluxExecution(FluxExecution&& other) noexcept;
-        FluxExecution(const FluxExecution& other) = delete;
+        FluxExecution(const FluxExecution& other) noexcept;
         FluxExecution& operator=(FluxExecution&& other) noexcept;
-        FluxExecution& operator=(const FluxExecution& other) = delete;
+        FluxExecution& operator=(const FluxExecution& other) noexcept;
+        ~FluxExecution() = default;
 
         Vector<Reflection::Value> registers;
         Vector<Reflection::Value> valueStack;

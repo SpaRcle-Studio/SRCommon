@@ -9,7 +9,7 @@
 #include <Utils/TypeTraits/Factory.h>
 
 namespace SR_UTILS_NS {
-    class ResourceRefBase : public Serializable {
+    class SR_COMMON_DLL_API ResourceRefBase : public Serializable {
         SR_CLASS()
         using Super = Serializable;
     public:

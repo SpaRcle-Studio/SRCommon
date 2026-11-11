@@ -14,7 +14,7 @@ namespace SR_HTYPES_NS {
 namespace SR_UTILS_NS {
     class SRClass;
 
-    class SharedPtrBaseHolder {
+    class SR_COMMON_DLL_API SharedPtrBaseHolder {
     public:
         explicit SharedPtrBaseHolder(SR_HTYPES_NS::SharedPtrBase* pData);
         SharedPtrBaseHolder();

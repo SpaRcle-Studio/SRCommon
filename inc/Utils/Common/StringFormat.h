@@ -9,7 +9,7 @@
 
 namespace SR_UTILS_NS {
     namespace Details {
-        extern void StringFormatError(StringView msg, bool breakPoint);
+        SR_COMMON_DLL_API extern void StringFormatError(StringView msg, bool breakPoint);
     }
 
     template <class... Args> SR_NODISCARD String Format(const char* format_str, Args&&... args) {

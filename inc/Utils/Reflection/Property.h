@@ -18,7 +18,7 @@ namespace SR_UTILS_NS::Reflection {
     template<typename T>
     constexpr bool ContainsSRClassV = IsSRClassV<InnerTypeT<T>>;
 
-    class EditorPropertyParams {
+    class SR_COMMON_DLL_API EditorPropertyParams {
     public:
         using EnumFilterFn = bool(*)(SR_UTILS_NS::SRClass* pClass, SR_UTILS_NS::StringAtom enumValue);
         using RangeType = std::optional<std::pair<float_t, float_t>>;
@@ -88,7 +88,7 @@ namespace SR_UTILS_NS::Reflection {
 
     };
 
-    class Property {
+    class SR_COMMON_DLL_API Property {
         using SetCallbackFn = void(*)(SRClass* pOwner, const Value& value);
         using GetCallbackFn = Value(*)(SRClass* pOwner);
         using ChangeCallbackFn = void(*)(SRClass* pOwner);
@@ -160,8 +160,8 @@ namespace SR_UTILS_NS::Reflection {
         bool m_hasExplicitSetter = false;
     };
 
-    std::string_view MakeSerializePropertyName(std::string_view name);
-    SR_UTILS_NS::StringAtom MakeDisplayName(SR_UTILS_NS::StringAtom name);
+    SR_COMMON_DLL_API std::string_view MakeSerializePropertyName(std::string_view name);
+    SR_COMMON_DLL_API SR_UTILS_NS::StringAtom MakeDisplayName(SR_UTILS_NS::StringAtom name);
 }
 
 #endif //SR_ENGINE_UTILS_REFLECTION_PROPERTY_H

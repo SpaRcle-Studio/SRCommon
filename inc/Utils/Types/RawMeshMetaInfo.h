@@ -9,7 +9,7 @@
 #include <Utils/Resources/ResourceLoadMode.h>
 
 namespace SR_HTYPES_NS {
-    struct RawMeshMetaInfo : public SR_UTILS_NS::Serializable {
+    struct SR_COMMON_DLL_API RawMeshMetaInfo : public SR_UTILS_NS::Serializable {
         SR_STRUCT()
     public:
         bool operator==(const RawMeshMetaInfo& other) const {

@@ -372,6 +372,10 @@ else()
 endif()
 
 if (SR_TRACY_ENABLE)
+    if (NOT SR_COMMON_STATIC_LIBRARY)
+        target_compile_definitions(Utils PRIVATE TRACY_EXPORTS)
+        target_compile_definitions(Utils INTERFACE TRACY_IMPORTS)
+    endif()
     SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_SOURCE_DIR}/libs/tracy/public)
 endif()
 

@@ -10,7 +10,7 @@
 
 namespace SR_UTILS_NS {
     /// @category(Game) @onMovable @noCopyable
-    class CameraFlyMover : public Component {
+    class SR_COMMON_DLL_API CameraFlyMover : public Component {
         SR_CLASS()
         using Super = Component;
     public:

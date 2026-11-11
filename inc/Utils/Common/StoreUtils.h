@@ -10,7 +10,7 @@
 #include <Utils/Profile/TracyContext.h>
 
 namespace SR_UTILS_NS::StoreUtils {
-    class Storage : public Singleton<Storage> {
+    class SR_COMMON_DLL_API Storage : public Singleton<Storage> {
         SR_REGISTER_SINGLETON(Storage)
     public:
         enum class StorageType {
@@ -58,7 +58,7 @@ namespace SR_UTILS_NS::StoreUtils {
             }
         }
 
-        struct ValueHolder {
+        struct SR_COMMON_DLL_API ValueHolder {
             Value value;
             ValueType type;
 

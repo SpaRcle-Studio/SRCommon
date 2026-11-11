@@ -15,13 +15,13 @@
 namespace SR_UTILS_NS {
     SR_ENUM_NS_CLASS_T(CursorLockMode, uint8_t, Everywhere, Editor, PlayMode);
 
-    struct CursorLockInfo {
+    struct SR_COMMON_DLL_API CursorLockInfo {
         std::optional<SR_MATH_NS::FRect> lockRect;
         CursorLockMode lockMode = CursorLockMode::Everywhere;
         uint64_t id = 0;
     };
 
-    struct InputTextEvent {
+    struct SR_COMMON_DLL_API InputTextEvent {
         char text[256];
         uint8_t length = 0;
         void* pSource = nullptr;
@@ -34,7 +34,7 @@ namespace SR_UTILS_NS {
     static const StringAtom INPUT_TEXT_EVENT_ID = "InputTextEvent";
 
     /// @noCopyable @noMovable
-    class Input : public Singleton<Input>, public SubscriptionHolder, public SRClass {
+    class SR_COMMON_DLL_API Input : public Singleton<Input>, public SubscriptionHolder, public SRClass {
         SR_CLASS()
         SR_REGISTER_SINGLETON(Input)
     public:
@@ -121,7 +121,7 @@ namespace SR_UTILS_NS {
         KeyStates m_keys = {};
     };
 
-    class CursorLock : public Serializable {
+    class SR_COMMON_DLL_API CursorLock : public Serializable {
         using Super = Serializable;
         SR_CLASS()
     public:
@@ -146,7 +146,7 @@ namespace SR_UTILS_NS {
         bool m_isLock = false;
     };
 
-    class InputAccumulator {
+    class SR_COMMON_DLL_API InputAccumulator {
     public:
         InputAccumulator() = default;
         ~InputAccumulator() = default;

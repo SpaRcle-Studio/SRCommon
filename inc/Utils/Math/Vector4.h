@@ -190,16 +190,16 @@ namespace SR_MATH_NS {
         FVector3 direction;
     };
 
-    FColor KelvinToRGB(float_t K);
-    FColor Mix(const FColor& color1, const FColor& color2, float_t factor);
-    FVector4 BuildPlan(const FVector3& point, const FVector3& normal);
-    FVector4 BuildPlan(const FVector4& point, const FVector4& p_normal);
-    uint32_t RGBToHEX(const IVector3& color);
-    uint32_t BGRToHEX(const IVector3& color);
-    IVector3 HEXToRGB(uint32_t hex);
-    IVector3 HEXToBGR(uint32_t hex);
+    SR_COMMON_DLL_API FColor KelvinToRGB(float_t K);
+    SR_COMMON_DLL_API FColor Mix(const FColor& color1, const FColor& color2, float_t factor);
+    SR_COMMON_DLL_API FVector4 BuildPlan(const FVector3& point, const FVector3& normal);
+    SR_COMMON_DLL_API FVector4 BuildPlan(const FVector4& point, const FVector4& p_normal);
+    SR_COMMON_DLL_API uint32_t RGBToHEX(const IVector3& color);
+    SR_COMMON_DLL_API uint32_t BGRToHEX(const IVector3& color);
+    SR_COMMON_DLL_API IVector3 HEXToRGB(uint32_t hex);
+    SR_COMMON_DLL_API IVector3 HEXToBGR(uint32_t hex);
 
-    struct Plane {
+    struct SR_COMMON_DLL_API Plane {
         FVector3 normal;
         Unit distance = 0.f;
 

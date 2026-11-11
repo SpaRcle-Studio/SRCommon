@@ -18,7 +18,7 @@ namespace SR_UTILS_NS {
         SevenZip
     };
 
-    class Archive : public NonCopyable {
+    class SR_COMMON_DLL_API Archive : public NonCopyable {
     public:
         struct Entry {
             StringView name;

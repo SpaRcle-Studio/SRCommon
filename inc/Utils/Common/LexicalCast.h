@@ -11,8 +11,8 @@
 
 namespace SR_UTILS_NS {
     namespace Details {
-        extern void StringFormatError(StringView msg, bool breakPoint);
-        uint64_t StringFormatHashStrView(std::string_view sv);
+        SR_COMMON_DLL_API extern void StringFormatError(StringView msg, bool breakPoint);
+        SR_COMMON_DLL_API uint64_t StringFormatHashStrView(std::string_view sv);
     }
 
     static SR_INLINE double_t ParseDouble(std::string_view sv) {

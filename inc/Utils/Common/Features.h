@@ -31,7 +31,7 @@ namespace SR_UTILS_NS {
 
     };
 
-    class Features : public Singleton<Features> {
+    class SR_COMMON_DLL_API Features : public Singleton<Features> {
         SR_REGISTER_SINGLETON(Features);
     private:
         ~Features() override = default;

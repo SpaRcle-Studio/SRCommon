@@ -9,7 +9,7 @@
 #include <Utils/Types/Vector.h>
 
 namespace SR_UTILS_NS {
-    class AllocatorManager : public Singleton<AllocatorManager> {
+    class SR_COMMON_DLL_API AllocatorManager : public Singleton<AllocatorManager> {
         SR_REGISTER_SINGLETON(AllocatorManager)
         struct AllocatorInfo {
             StringAtom name;

@@ -8,7 +8,7 @@
 #include <Utils/Settings.h>
 
 namespace SR_UTILS_NS {
-    class TagManager : public GlobalSettings<TagManager> {
+    class SR_COMMON_DLL_API TagManager : public GlobalSettings<TagManager> {
         SR_REGISTER_SINGLETON(TagManager)
         friend class GlobalSettings<TagManager>;
         using Super = GlobalSettings<TagManager>;

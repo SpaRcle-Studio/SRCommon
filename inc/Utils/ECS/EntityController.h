@@ -10,7 +10,7 @@
 namespace SR_UTILS_NS {
     typedef SR_HTYPES_NS::Function<Entity::Ptr(void)> EntityAllocator;
 
-    class EntityController final : public SR_HTYPES_NS::SharedPtr<EntityController> {
+    class SR_COMMON_DLL_API EntityController final : public SR_HTYPES_NS::SharedPtr<EntityController> {
         using Super = SR_HTYPES_NS::SharedPtr<EntityController>;
         static std::atomic<EntityController*> ACTIVE_CONTROLLER;
     public:
@@ -45,7 +45,7 @@ namespace SR_UTILS_NS {
 
     };
 
-    class EntityIdList : public SR_UTILS_NS::NonCopyable {
+    class SR_COMMON_DLL_API EntityIdList : public SR_UTILS_NS::NonCopyable {
     public:
         using Optional = std::optional<EntityIdList>;
 

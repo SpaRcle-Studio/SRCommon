@@ -13,7 +13,7 @@
 namespace SR_UTILS_NS {
     class VFS;
 
-    class FileImpl : public NonCopyable {
+    class SR_COMMON_DLL_API FileImpl : public NonCopyable {
     public:
         virtual bool Open(StringView path, FileMode mode) = 0;
         virtual void Close() = 0;
@@ -44,7 +44,7 @@ namespace SR_UTILS_NS {
 
     };
 
-    class StreamFileImpl : public FileImpl {
+    class SR_COMMON_DLL_API StreamFileImpl : public FileImpl {
     public:
         bool Open(StringView path, FileMode mode) override;
         void Close() override;
@@ -65,7 +65,7 @@ namespace SR_UTILS_NS {
 
     };
 
-    class MappedFileImpl : public FileImpl {
+    class SR_COMMON_DLL_API MappedFileImpl : public FileImpl {
     public:
         bool Open(StringView path, FileMode mode) override;
         void Close() override;
@@ -88,7 +88,7 @@ namespace SR_UTILS_NS {
 
     /// Файл, целиком находящийся в памяти. Используется бекендами VFS, которые не имеют
     /// доступа к настоящей файловой системе (например, загрузка по сети).
-    class MemoryFileImpl : public FileImpl {
+    class SR_COMMON_DLL_API MemoryFileImpl : public FileImpl {
     public:
         MemoryFileImpl() = default;
         explicit MemoryFileImpl(String&& data);
@@ -112,7 +112,7 @@ namespace SR_UTILS_NS {
 
     };
 
-    class File : public SRClass {
+    class SR_COMMON_DLL_API File : public SRClass {
         SR_CLASS()
     public:
         File(FileImpl* pImpl, StringView path, FileMode mode);

@@ -10,7 +10,7 @@
 namespace SR_UTILS_NS {
     /// SpaRcle Assert serialization / deserialization
 
-    class SRAISerialization : public IBaseSerialization {
+    class SR_COMMON_DLL_API SRAISerialization : public IBaseSerialization {
     public:
         void SetUseTabs(const bool value) noexcept { m_isNeedUseTabs = value; }
         void SetUseNumericDepth(const bool value) noexcept { m_isNeedNumericDepth = value; }
@@ -34,7 +34,7 @@ namespace SR_UTILS_NS {
 
     class SRADeserializer;
 
-    class SRASerializer : public IBaseSerializer, public SRAISerialization {
+    class SR_COMMON_DLL_API SRASerializer : public IBaseSerializer, public SRAISerialization {
     public:
         SRASerializer();
 
@@ -46,7 +46,7 @@ namespace SR_UTILS_NS {
 
     };
 
-    class SRADeserializer : public IBaseDeserializer, public SRAISerialization {
+    class SR_COMMON_DLL_API SRADeserializer : public IBaseDeserializer, public SRAISerialization {
         friend SRASerializer;
     public:
         SR_NODISCARD bool LoadFromFile(const SR_UTILS_NS::Path& path) override;

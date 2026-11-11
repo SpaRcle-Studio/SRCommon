@@ -312,7 +312,7 @@ namespace SR_MATH_NS {
 
     constexpr IVector2 IVector2MAX = IVector2(SR_INT32_MAX);
 
-    SR_NODISCARD float_t DistanceToLineSegment(const FVector2& point, const FVector2& lineStart, const FVector2& lineEnd);
+    SR_NODISCARD SR_COMMON_DLL_API float_t DistanceToLineSegment(const FVector2& point, const FVector2& lineStart, const FVector2& lineEnd);
 }
 
 namespace std {

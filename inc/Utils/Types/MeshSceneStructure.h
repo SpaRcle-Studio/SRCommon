@@ -24,7 +24,7 @@ struct aiMesh;
 #endif
 
 namespace SR_HTYPES_NS {
-    struct MeshSceneStructure {
+    struct SR_COMMON_DLL_API MeshSceneStructure {
     #ifdef SR_UTILS_ASSIMP
         using AnimationMap = SR_HTYPES_NS::FlatHashMap<StringAtom, aiAnimation*>;
     #else
@@ -36,7 +36,7 @@ namespace SR_HTYPES_NS {
             SR_MATH_NS::Matrix4x4 offsetMatrix;
         };
         using BonesMap = SR_HTYPES_NS::FlatHashMap<StringAtom, BoneInfo>;
-        struct MeshData {
+        struct SR_COMMON_DLL_API MeshData {
             uint16_t meshId = SR_UINT16_MAX;
             Vector<VertexDataBuffer> vertexBuffers;
             SR_HTYPES_NS::FastMemoryArray<uint32_t> indices;
@@ -49,7 +49,7 @@ namespace SR_HTYPES_NS {
 
             SR_NODISCARD bool HasBones() const { return !bones.empty(); }
         };
-        struct SceneNode {
+        struct SR_COMMON_DLL_API SceneNode {
             StringAtom name;
             uint16_t index = SR_UINT16_MAX;
             std::optional<uint16_t> parent = SR_UINT16_MAX;

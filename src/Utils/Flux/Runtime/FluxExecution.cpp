@@ -15,6 +15,15 @@ namespace SR_FLUX_NS {
         other.instructionPointer = 0;
     }
 
+    FluxExecution::FluxExecution(const FluxExecution& other) noexcept
+        : registers(other.registers)
+        , valueStack(other.valueStack)
+        , callStack(other.callStack)
+        , instructionPointer(other.instructionPointer)
+        , state(other.state)
+        , emittedLabel(other.emittedLabel)
+    { }
+
     FluxExecution& FluxExecution::operator=(FluxExecution&& other) noexcept {
         if (this != &other) {
             registers = std::move(other.registers);
@@ -26,6 +35,18 @@ namespace SR_FLUX_NS {
 
             state = other.state;
             other.state = FluxExecutionState::None;
+        }
+        return *this;
+    }
+
+    FluxExecution& FluxExecution::operator=(const FluxExecution& other) noexcept {
+        if (this != &other) {
+            registers = other.registers;
+            valueStack = other.valueStack;
+            callStack = other.callStack;
+            instructionPointer = other.instructionPointer;
+            state = other.state;
+            emittedLabel = other.emittedLabel;
         }
         return *this;
     }

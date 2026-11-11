@@ -10,7 +10,7 @@
 
 namespace SR_UTILS_NS {
     /// @category(UI)
-    class LayoutElement final : public Component, public ILayoutElement {
+    class SR_COMMON_DLL_API LayoutElement final : public Component, public ILayoutElement {
         SR_CLASS()
         using Super = Component;
     public:

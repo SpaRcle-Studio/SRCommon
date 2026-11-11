@@ -46,11 +46,11 @@ namespace SR_UTILS_NS::LexerDetails {
         '_',
     };
 
-    bool IsIdentifier(SR_UTILS_NS::StringView token) noexcept;
-    bool IsOperator(SR_UTILS_NS::StringView operation) noexcept;
+    SR_COMMON_DLL_API bool IsIdentifier(SR_UTILS_NS::StringView token) noexcept;
+    SR_COMMON_DLL_API bool IsOperator(SR_UTILS_NS::StringView operation) noexcept;
 
     /// decodes escape sequences ('\n', '\t', '\"', '\\', '\xFF' and etc.) of the raw string lexem value
-    SR_NODISCARD SR_UTILS_NS::String UnescapeString(SR_UTILS_NS::StringView rawValue);
+    SR_NODISCARD SR_COMMON_DLL_API SR_UTILS_NS::String UnescapeString(SR_UTILS_NS::StringView rawValue);
 
     SR_ENUM_NS_CLASS_T(LexemKind, uint8_t,
         Unknown,
@@ -142,7 +142,7 @@ namespace SR_UTILS_NS::LexerDetails {
         WrongMacroName, IncludeNotExists, UnexceptedError, IncludeError, InvalidFunction, InvalidString
     );
 
-    struct LocationEntity {
+    struct SR_COMMON_DLL_API LocationEntity {
         LocationEntity() = default;
 
         LocationEntity(uint64_t offset, uint64_t length, uint16_t fileIndex, uint64_t line, uint64_t position)
@@ -160,7 +160,7 @@ namespace SR_UTILS_NS::LexerDetails {
         uint16_t fileIndex = 0;
     };
 
-    struct Lexem : public LocationEntity {
+    struct SR_COMMON_DLL_API Lexem : public LocationEntity {
         Lexem() = default;
 
         Lexem(uint64_t offset, uint64_t length, LexemKind kind, std::string_view value, uint16_t fileIndex, uint64_t line, uint64_t position)
@@ -181,7 +181,7 @@ namespace SR_UTILS_NS::LexerDetails {
         std::string_view value;
     };
 
-    struct LexerMessage {
+    struct SR_COMMON_DLL_API LexerMessage {
         LexerMessage(LexerReturnCode code) /** NOLINT */
             : code(code)
         { }
@@ -213,7 +213,7 @@ namespace SR_UTILS_NS::LexerDetails {
 
     };
 
-    struct LexerResult {
+    struct SR_COMMON_DLL_API LexerResult {
         LexerResult() = default;
 
         LexerResult(LexerReturnCode code) { /** NOLINT */
@@ -256,29 +256,6 @@ namespace SR_UTILS_NS::LexerDetails {
         SR_UTILS_NS::Vector<LexerMessage> warnings;
         SR_UTILS_NS::Vector<LexerMessage> errors;
     };
-
-    SR_MAYBE_UNUSED SR_INLINE_STATIC std::string LexemsToString(const std::vector<Lexem>& lexems) {
-        std::string code;
-
-        LexemKind previously = LexemKind::Unknown;
-        for (auto&& lexem : lexems) {
-            if (lexem.kind == previously && previously == LexemKind::Identifier) {
-                code += " ";
-            }
-            if (lexem.kind == LexemKind::String) {
-                /// the value is stored without quotes, but escape sequences are not decoded, so the string is restored as is
-                code += "\"";
-                code += lexem.value;
-                code += "\"";
-            }
-            else {
-                code += lexem.value;
-            }
-            previously = lexem.kind;
-        }
-
-        return code;
-    }
 }
 
 #endif //SR_ENGINE_SRSL_LEXERUTILS_H

@@ -30,7 +30,7 @@ namespace SR_UTILS_NS {
         GitHubAuthToken
     );
 
-    class CLIManager : public SR_UTILS_NS::Singleton<CLIManager> {
+    class SR_COMMON_DLL_API CLIManager : public SR_UTILS_NS::Singleton<CLIManager> {
         SR_REGISTER_SINGLETON(CLIManager);
     public:
         void Init(int argc, char** argv);

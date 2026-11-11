@@ -13,7 +13,7 @@ namespace SR_UTILS_NS {
         File, View, Memory
     };
 
-    class ArchiveVFSBackend : public IVFSBackend {
+    class SR_COMMON_DLL_API ArchiveVFSBackend : public IVFSBackend {
     public:
         ArchiveVFSBackend(StringView archive, ArchiveVFSBackendMode mode, uint64_t decompressedSize = 0);
         SR_NODISCARD bool IsValid() const { return m_isUnpacked; }

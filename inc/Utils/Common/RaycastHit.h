@@ -13,7 +13,7 @@ namespace SR_UTILS_NS {
     class Component;
     class SceneObject;
 
-    struct LayerMask : public Serializable {
+    struct SR_COMMON_DLL_API LayerMask : public Serializable {
         SR_STRUCT()
 
         LayerMask() = default;
@@ -27,7 +27,7 @@ namespace SR_UTILS_NS {
         }
     };
 
-    struct RayCastHit : public Serializable {
+    struct SR_COMMON_DLL_API RayCastHit : public Serializable {
         SR_STRUCT()
 
         SR_NODISCARD bool operator==(const RayCastHit& other) const {

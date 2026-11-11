@@ -95,7 +95,7 @@ namespace SR_UTILS_NS {
 
     VertexAttribute GetVertexAttributeByIndex(VertexAttribute attribute, uint8_t index);
 
-    struct VertexAttributeDescription {
+    struct SR_COMMON_DLL_API VertexAttributeDescription {
         VertexAttribute attribute = VertexAttribute::None;
         VertexAttributeFormat format = VertexAttributeFormat::None;
         uint8_t count = 0;
@@ -105,9 +105,9 @@ namespace SR_UTILS_NS {
         SR_NODISCARD uint8_t GetAttributeSizeInBytes() const;
     };
 
-    std::string_view VertexAttributeToName(VertexAttribute attribute);
+    SR_COMMON_DLL_API std::string_view VertexAttributeToName(VertexAttribute attribute);
 
-    struct VertexLayoutDescription {
+    struct SR_COMMON_DLL_API VertexLayoutDescription {
         VertexAttributeDescription attributes[SR_MAX_VERTEX_ATTRIBUTES] = {};
         uint8_t attributesCount = 0;
         uint64_t stride = 0;
@@ -139,7 +139,7 @@ namespace SR_UTILS_NS {
         VertexLayoutDescription& SetInstanced(bool isInstanced) { instanced = isInstanced; return *this; }
     };
 
-    struct VertexLayoutDescriptions {
+    struct SR_COMMON_DLL_API VertexLayoutDescriptions {
         using Layouts = SR_UTILS_NS::SmallVector<VertexLayoutDescription, 2>;
 
         SR_NODISCARD const Layouts& GetLayouts() const { return layouts; }
@@ -157,7 +157,7 @@ namespace SR_UTILS_NS {
         Layouts layouts;
     };
 
-    struct VertexLayoutDescriptionsRef {
+    struct SR_COMMON_DLL_API VertexLayoutDescriptionsRef {
         using Layouts = std::span<const VertexLayoutDescription>;
 
         VertexLayoutDescriptionsRef() = default;
@@ -181,13 +181,16 @@ namespace SR_UTILS_NS {
 
     constexpr uint64_t VERTEX_LAYOUT_DESCRIPTION_SIZE = sizeof(VertexLayoutDescription);
 
-    struct VertexDataBuffer : public NonCopyable {
+    struct SR_COMMON_DLL_API VertexDataBuffer : public NonCopyable {
         using Ptr = SR_UTILS_NS::RawPointerHolder<VertexDataBuffer>;
         using GetBoneIndexFn = SR_HTYPES_NS::Function<uint32_t(SR_UTILS_NS::StringAtom)>;
 
         VertexDataBuffer() = default;
         VertexDataBuffer(VertexDataBuffer&& other) noexcept;
         VertexDataBuffer& operator=(VertexDataBuffer&& other) noexcept;
+        VertexDataBuffer(const VertexDataBuffer& other) noexcept;
+        VertexDataBuffer& operator=(const VertexDataBuffer& other) noexcept;
+        ~VertexDataBuffer() override = default;
 
         SR_HTYPES_NS::FastMemoryArray<uint8_t> data;
         VertexLayoutDescription layout;
@@ -229,7 +232,7 @@ namespace SR_UTILS_NS {
     };
 
     namespace Details {
-        bool OptimizeVerticesImpl(
+        SR_COMMON_DLL_API bool OptimizeVerticesImpl(
             const void* vertices,
             uint64_t vertexSize,
             uint64_t verticesCount,

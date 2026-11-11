@@ -251,11 +251,26 @@ namespace SR_UTILS_NS {
         data = std::move(other.data);
     }
 
+    VertexDataBuffer::VertexDataBuffer(const VertexDataBuffer& other) noexcept {
+        vertexCount = other.vertexCount;
+        layout = other.layout;
+        data = other.data;
+    }
+
     VertexDataBuffer& VertexDataBuffer::operator=(VertexDataBuffer&& other) noexcept {
         if (this != &other) {
             vertexCount = other.vertexCount;
             layout = other.layout;
             data = std::move(other.data);
+        }
+        return *this;
+    }
+
+    VertexDataBuffer& VertexDataBuffer::operator=(const VertexDataBuffer& other) noexcept {
+        if (this != &other) {
+            vertexCount = other.vertexCount;
+            layout = other.layout;
+            data = other.data;
         }
         return *this;
     }

@@ -18,7 +18,7 @@ template<typename T> constexpr SR_UTILS_NS::SizeType GetEnumItemsCount(T) noexce
 namespace SR_UTILS_NS {
     class EnumReflector;
 
-    class EnumReflectorManager : public SR_UTILS_NS::NonCopyable {
+    class SR_COMMON_DLL_API EnumReflectorManager : public SR_UTILS_NS::NonCopyable {
         using Reflectors = SR_HTYPES_NS::FlatHashMap<SR_UTILS_NS::StringAtom, EnumReflector*>;
     public:
         EnumReflectorManager() = default;

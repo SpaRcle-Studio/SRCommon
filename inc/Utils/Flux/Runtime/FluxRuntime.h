@@ -21,7 +21,7 @@ namespace SR_FLUX_NS {
         Write,
     };
 
-    class FluxRuntime : public SR_HTYPES_NS::SharedPtr<FluxRuntime> {
+    class SR_COMMON_DLL_API FluxRuntime : public SR_HTYPES_NS::SharedPtr<FluxRuntime> {
         using Super = SR_HTYPES_NS::SharedPtr<FluxRuntime>;
         using OnInstructionExecutedCallback = SR_HTYPES_NS::Function<void(const FluxExecution&, const FluxInstruction&)>;
     public:

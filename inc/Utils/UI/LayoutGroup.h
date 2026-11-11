@@ -27,7 +27,7 @@ namespace SR_UTILS_NS {
     );
 
     /// @category(UI)
-    class LayoutGroup final : public SR_UTILS_NS::Component {
+    class SR_COMMON_DLL_API LayoutGroup final : public SR_UTILS_NS::Component {
         SR_CLASS()
         using Super = SR_UTILS_NS::Component;
     public:
