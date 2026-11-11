@@ -8,12 +8,17 @@
 #include <Utils/Platform/Stacktrace.h>
 #include <Utils/Common/Breakpoint.h>
 #include <Utils/FileSystem/FileSystem.h>
+#include <Utils/FileSystem/VFS.h>
+#ifdef SR_COMMON_ZLIB
+    #include <zlib/contrib/minizip/unzip.h>
+#endif
 #include <Utils/Input/InputSystem.h>
 
 #include <Utils/Input/KeyCodes.h>
 
 #include <emscripten/emscripten.h>
 #include <emscripten/html5.h>
+#include <emscripten/heap.h>
 #include <filesystem>
 
 #include "../Network/HTTP/EmscriptenHTTPClient.cpp"
@@ -53,6 +58,7 @@ EM_JS(int, SRWebIsEditableFocused, (), {
     if (!pElement) {
         return 0;
     }
+    if (pElement.dataset.srEngineInput) { return 0; }
     if (pElement.isContentEditable) {
         return 1;
     }
@@ -138,6 +144,41 @@ EM_JS(void, SRWebTakeCommandLineArgs, (char* pOut, int size), {
 
 EM_JS_DEPS(srengine_platform, "$lengthBytesUTF8,$stringToUTF8");
 
+EM_ASYNC_JS(int, SRWebDownloadFile, (const char* urlPointer, const char* pathPointer), {
+    const url = UTF8ToString(urlPointer);
+    const path = UTF8ToString(pathPointer);
+    const temporary = path + '.download-' + Date.now();
+    const controller = new AbortController();
+    const timer = setTimeout(function() { controller.abort(); }, 30000);
+    let stream;
+    try {
+        const response = await fetch(url, {signal: controller.signal});
+        if (!response.ok) throw new Error('HTTP ' + response.status);
+        FS.mkdirTree(path.slice(0, path.lastIndexOf('/')) || '.');
+        stream = FS.open(temporary, 'w');
+        if (response.body) {
+            const reader = response.body.getReader();
+            for (;;) {
+                const result = await reader.read();
+                if (result.done) break;
+                FS.write(stream, result.value, 0, result.value.length);
+            }
+        } else {
+            const data = new Uint8Array(await response.arrayBuffer());
+            FS.write(stream, data, 0, data.length);
+        }
+        FS.close(stream); stream = null;
+        FS.rename(temporary, path);
+        Module['srFlushStorage']?.();
+        return 1;
+    } catch (error) {
+        console.error('Download failed', url, error);
+        if (stream) FS.close(stream);
+        try { FS.unlink(temporary); } catch (_) {}
+        return 0;
+    } finally { clearTimeout(timer); }
+});
+
 namespace SR_PLATFORM_NS {
     struct EmscriptenMainLoopData {
         bool(*mainLoop)(void*);
@@ -145,6 +186,11 @@ namespace SR_PLATFORM_NS {
     };
 
     static EmscriptenMainLoopData g_mainLoopData;
+    static void(*g_shutdownCallback)() = nullptr;
+
+    void SetWebApplicationShutdownCallback(void(*callback)()) {
+        g_shutdownCallback = callback;
+    }
 
     namespace {
         MouseState g_webMouseState;
@@ -275,6 +321,20 @@ namespace SR_PLATFORM_NS {
         return SRWebIsEditableFocused() != 0;
     }
 
+    Vector<WebTouchPoint> GetWebTouchPoints() {
+        Vector<WebTouchPoint> points;
+        const int32_t count = EM_ASM_INT({ return Math.min(32, Module['srTouches']?.length || 0); });
+        for (int32_t i = 0; i < count; ++i) {
+            auto& point = points.emplace_back();
+            point.id = EM_ASM_INT({ return Module['srTouches'][$0].id; }, i);
+            const float_t x = static_cast<float_t>(EM_ASM_DOUBLE({ return Module['srTouches'][$0].x; }, i));
+            const float_t y = static_cast<float_t>(EM_ASM_DOUBLE({ return Module['srTouches'][$0].y; }, i));
+            point.position = WebClientToCanvasPos(x, y);
+            point.pressure = static_cast<float_t>(EM_ASM_DOUBLE({ return Module['srTouches'][$0].pressure; }, i));
+        }
+        return points;
+    }
+
     std::vector<std::string> GetWebCommandLineArgs() {
         const int size = SRWebPrepareCommandLineArgs();
         if (size <= 0) {
@@ -307,8 +367,20 @@ namespace SR_PLATFORM_NS {
     }
 
     void MainLoopProxy() {
-        if (!g_mainLoopData.mainLoop(g_mainLoopData.pApplication)) {
+        char text[256];
+        while (EM_ASM_INT({ return Module['srPollText']?.($0, $1, false) || 0; }, text, sizeof(text))) {
+            SR_UTILS_NS::InputTextEvent event;
+            event.SetText(text);
+            SR_UTILS_NS::Input::Instance().AddTextEvent(std::move(event));
+        }
+        if (EM_ASM_INT({ return !!globalThis.srEngineFatalError; }) || !g_mainLoopData.mainLoop(g_mainLoopData.pApplication)) {
             emscripten_cancel_main_loop();
+            const auto shutdown = g_shutdownCallback;
+            g_shutdownCallback = nullptr;
+            g_mainLoopData = {};
+            if (shutdown) { shutdown(); }
+            EM_ASM({ Module['srDisposeBrowser']?.(); });
+            return;
         }
     }
 
@@ -383,7 +455,59 @@ namespace SR_PLATFORM_NS {
     }
 
     void Unzip(const SR_UTILS_NS::Path& source, const SR_UTILS_NS::Path& destination, bool replace) {
-        SRHaltOnce("Not yet implemented!");
+    #ifdef SR_COMMON_ZLIB
+        Path physicalSource = source;
+        VFS::Instance().ResolvePath(physicalSource, FileMode::Read);
+        const auto archive = unzOpen64(physicalSource.c_str());
+        if (!archive) { SR_ERROR("Cannot open ZIP archive {}", source); return; }
+        int32_t status = unzGoToFirstFile(archive);
+        std::array<uint8_t, 65536> buffer;
+        while (status == UNZ_OK) {
+            unz_file_info64 info{};
+            if (unzGetCurrentFileInfo64(archive, &info, nullptr, 0, nullptr, 0, nullptr, 0) != UNZ_OK || info.size_filename > 4096) { break; }
+            String name;
+            name.resize(info.size_filename + 1);
+            if (unzGetCurrentFileInfo64(archive, &info, name.data(), name.size(), nullptr, 0, nullptr, 0) != UNZ_OK) { break; }
+            name.resize(info.size_filename);
+            StringView remaining(name);
+            bool valid = !remaining.empty() && remaining[0] != '/' && remaining.find('\\') == StringView::npos
+                && remaining.find(':') == StringView::npos && remaining.find('\0') == StringView::npos
+                && ((info.external_fa >> 16) & 0170000) != 0120000;
+            while (valid && !remaining.empty()) {
+                const auto separator = remaining.find('/');
+                const auto component = remaining.substr(0, separator);
+                valid = component != ".." && component != "." && !component.empty();
+                if (separator == StringView::npos) { break; }
+                remaining.remove_prefix(separator + 1);
+            }
+            if (!valid) { SR_ERROR("Unsupported ZIP entry {}", name); break; }
+            const Path target = destination.Concat(name);
+            if (name.back() == '/') {
+                if (!target.CreateDirectories()) { break; }
+            }
+            else if (replace || !target.IsExists()) {
+                if (!target.GetFolder().CreateDirectories() || unzOpenCurrentFile(archive) != UNZ_OK) { break; }
+                bool success = true;
+                {
+                    auto file = VFS::Instance().OpenFile(target, FileMode::Write);
+                    int32_t count = 0;
+                    if (!file) { success = false; }
+                    while (success && (count = unzReadCurrentFile(archive, buffer.data(), buffer.size())) > 0) {
+                        success = file.Write(buffer.data(), count) == static_cast<uint64_t>(count);
+                        emscripten_sleep(0);
+                    }
+                    success &= count >= 0;
+                }
+                success &= unzCloseCurrentFile(archive) == UNZ_OK;
+                if (!success) { VFS::Instance().Delete(target.ToStringView()); break; }
+            }
+            status = unzGoToNextFile(archive);
+        }
+        unzClose(archive);
+        if (status != UNZ_END_OF_LIST_OF_FILE) { SR_ERROR("ZIP extraction did not complete: {}", source); }
+    #else
+        SR_ERROR("ZIP extraction requires SR_COMMON_ZLIB.");
+    #endif
     }
 
     void SetMousePos(const SR_MATH_NS::IVector2& pos) {
@@ -392,7 +516,7 @@ namespace SR_PLATFORM_NS {
     }
 
     void OpenFile(const SR_UTILS_NS::Path& path, const std::string& args) {
-        SRHaltOnce("Not implemented!");
+        OpenWithAssociatedApp(path);
     }
 
     bool IsRunningUnderDebugger() {
@@ -416,24 +540,44 @@ namespace SR_PLATFORM_NS {
     }
 
     SR_UTILS_NS::String CLIPBOARD_BUFFER;
+    SR_UTILS_NS::Vector<Path> FILE_CLIPBOARD;
 
     void TextToClipboard(const std::string &text) {
         CLIPBOARD_BUFFER = text;
+        EM_ASM({ Module['srWriteClipboard']?.(UTF8ToString($0)); }, text.c_str());
     }
 
     void CopyFilesToClipboard(std::list<SR_UTILS_NS::Path> paths) {
-        SRHaltOnce("Not implemented!");
+        FILE_CLIPBOARD.clear();
+        for (const auto& path : paths) { FILE_CLIPBOARD.emplace_back(path); }
     }
 
     void SetCurrentProcessDirectory(const SR_UTILS_NS::Path& directory) {
-        SRHaltOnce("Not implemented!");
+        if (chdir(directory.c_str()) != 0) { SR_ERROR("Failed to change browser working directory to {}", directory); }
     }
 
     void PasteFilesFromClipboard(const SR_UTILS_NS::Path &topath) {
-        SRHaltOnce("Not implemented!");
+        for (const auto& source : FILE_CLIPBOARD) {
+            const Path target = topath.Concat(StringView(source.GetBaseNameAndExtView()));
+            const auto sourceView = source.ToStringView();
+            const auto targetView = target.ToStringView();
+            const bool nested = source.IsDir() && targetView.starts_with(sourceView) && targetView.size() > sourceView.size()
+                && targetView[sourceView.size()] == '/';
+            if (target == source || nested) {
+                SR_ERROR("Cannot paste a browser file into itself: {}", source);
+                continue;
+            }
+            if (!VFS::Instance().Copy(source.ToStringView(), target.ToStringView())) {
+                SR_ERROR("Failed to paste {} to {}", source, target);
+            }
+        }
     }
 
     std::string GetClipboardText() {
+        const int32_t size = EM_ASM_INT({ return lengthBytesUTF8(Module['srReadClipboard']?.() || ''); });
+        CLIPBOARD_BUFFER.resize(size + 1);
+        EM_ASM({ stringToUTF8(Module['srReadClipboard']?.() || '', $0, $1); }, CLIPBOARD_BUFFER.data(), size + 1);
+        CLIPBOARD_BUFFER.resize(size);
         return CLIPBOARD_BUFFER;
     }
 
@@ -443,11 +587,20 @@ namespace SR_PLATFORM_NS {
     }
 
     void DeInitializePlatform() {
-
+        emscripten_exit_pointerlock();
+        emscripten_html5_remove_all_event_listeners();
+        g_webInputInstalled = false;
+        g_webKeyboardState = {};
+        g_webMouseState = {};
+        g_webCursorLockActive = false;
+        g_webCursorLockRequested = false;
+        EM_ASM({ Module['srFlushStorage']?.(); });
     }
 
     void ClearClipboard() {
         CLIPBOARD_BUFFER.clear();
+        FILE_CLIPBOARD.clear();
+        EM_ASM({ Module['srWriteClipboard']?.(''); });
     }
 
     SR_MATH_NS::FVector2 GetMousePos() {
@@ -458,11 +611,12 @@ namespace SR_PLATFORM_NS {
     }
 
     uint64_t GetProcessUsedMemory() {
-        return 0;
+        // Browser process RSS is unavailable; report the committed WASM heap capacity.
+        return emscripten_get_heap_size();
     }
 
     void SetThreadPriority(void *nativeHandle, ThreadPriority priority) {
-        SRHaltOnce("Not implemented!");
+        // Browser scheduling does not expose thread priorities.
     }
 
     void Terminate(bool isError) {
@@ -470,7 +624,9 @@ namespace SR_PLATFORM_NS {
     }
 
     void OpenWithAssociatedApp(const Path &filepath) {
-        SRHaltOnce("Not implemented!");
+        Path physicalPath = filepath;
+        VFS::Instance().ResolvePath(physicalPath, FileMode::Read);
+        EM_ASM({ Module['srDownloadFile']?.(UTF8ToString($0)); }, physicalPath.c_str());
     }
 
     Path GetApplicationPath() {
@@ -482,15 +638,15 @@ namespace SR_PLATFORM_NS {
     }
 
     std::optional<Path> GetApplicationCachePath() {
-        return std::nullopt;
+        return Path("/Persistent/Cache");
     }
 
     std::optional<Path> GetApplicationDataPath() {
-        return std::nullopt;
+        return Path("/Persistent/Data");
     }
 
     std::optional<Path> GetApplicationLogPath() {
-        return std::nullopt;
+        return Path("/Persistent/Logs");
     }
 
     String GetApplicationName() {
@@ -498,12 +654,12 @@ namespace SR_PLATFORM_NS {
     }
 
     bool FileIsHidden(const Path &path) {
-        SRHaltOnce("Not implemented!");
-        return false;
+        const StringView name(path.GetBaseNameView());
+        return !name.empty() && name[0] == '.';
     }
 
     void SelfOpen() {
-        SRHaltOnce("Not suitable for web platform!");
+        SR_ERROR("Process relaunch is unavailable in the browser. Use the page restart action.");
     }
 
     bool IsAbsolutePath(const StringView path) {
@@ -511,13 +667,11 @@ namespace SR_PLATFORM_NS {
     }
 
     SR_MATH_NS::UVector2 GetScreenResolution() {
-        SRHaltOnce("Not implemented!");
-        return SR_MATH_NS::UVector2();
+        return {static_cast<uint32_t>(EM_ASM_INT({ return screen.width; })), static_cast<uint32_t>(EM_ASM_INT({ return screen.height; }))};
     }
 
     double_t GetScreenDPI() {
-        SRHaltOnce("Not implemented!");
-        return 0.0;
+        return 96.0 * emscripten_get_device_pixel_ratio();
     }
 
     void SetEnvironmentVar(const std::string_view& name, const std::string_view& value) {
@@ -525,21 +679,22 @@ namespace SR_PLATFORM_NS {
     }
 
     std::string ExecuteCommand(const std::string& command, const std::vector<std::string>& env) {
-        SRHaltOnce("Not implemented!");
-        return std::string();
+        SR_ERROR("Native command execution is unavailable in the browser.");
+        return {};
     }
 
     bool DownloadFile(const std::string& url, const Path& outputPath) {
-        SRHaltOnce("Not implemented!");
-        return false;
+        Path physicalPath = outputPath;
+        VFS::Instance().ResolvePath(physicalPath, FileMode::Write);
+        return SRWebDownloadFile(url.c_str(), physicalPath.c_str()) != 0;
     }
 
     void ConfineCursor() {
-        SRHaltOnce("Not implemented!");
+        SetCursorLockActive(true);
     }
 
     void ReleaseCursorConfinement() {
-        SRHaltOnce("Not implemented!");
+        SetCursorLockActive(false);
     }
 
     void ShowWindow(void* pHandle, ShowWindowActionType action) {
@@ -551,22 +706,21 @@ namespace SR_PLATFORM_NS {
     }
 
     void* LoadLibraryModule(const Path& path) {
-        SRHaltOnce("Not implemented!");
+        SR_ERROR("Native libraries cannot be loaded in the browser: {}", path);
         return nullptr;
     }
 
     bool UnloadLibraryModule(void* pLibrary) {
-        SRHaltOnce("Not implemented!");
+        SR_ERROR("Native library unloading is unavailable in the browser.");
         return false;
     }
 
     void* GetLibraryFunctionAddress(void* pLibrary, const char* pFunctionName) {
-        SRHaltOnce("Not implemented!");
+        SR_ERROR("Native library symbols are unavailable in the browser: {}", pFunctionName);
         return nullptr;
     }
 
     bool IsLibraryModuleLoaded(const Path& path) {
-        SRHaltOnce("Not implemented!");
         return false;
     }
 

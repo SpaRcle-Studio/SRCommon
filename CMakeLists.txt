@@ -272,6 +272,7 @@ if (SR_COMMON_ZLIB)
     if (NOT SR_COMMON_ASSIMP)
         list(APPEND SR_UTILS_MINIZIP_SOURCES
             ${CMAKE_CURRENT_SOURCE_DIR}/libs/zlib/contrib/minizip/ioapi.c
+            ${CMAKE_CURRENT_SOURCE_DIR}/libs/zlib/contrib/minizip/unzip.c
         )
     endif()
     add_library(SRUtilsMinizip STATIC

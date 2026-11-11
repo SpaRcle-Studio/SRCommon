@@ -34,7 +34,7 @@ namespace SR_NETWORK_NS {
 
     SR_HTYPES_NS::SharedPtr<Context> Context::CreateAndRun() {
         auto&& pContext = Create();
-        if (!pContext->Run()) {
+        if (!pContext || !pContext->Run()) {
             SR_ERROR("Context::CreateAndRun() : failed to run context!");
             return nullptr;
         }

@@ -5,6 +5,9 @@
 #include <Utils/Types/Thread.h>
 #include <Utils/Platform/Platform.h>
 #include <Utils/Profile/TracyContext.h>
+#ifdef SR_EMSCRIPTEN
+    #include <emscripten/emscripten.h>
+#endif
 
 namespace SR_HTYPES_NS {
     Thread::Factory::Factory()
@@ -300,6 +303,9 @@ namespace SR_HTYPES_NS {
 
     void Thread::Factory::ManuallyUpdateThreads() {
         SR_LOCK_GUARD;
+    #ifdef SR_EMSCRIPTEN
+        double_t budgetStart = emscripten_get_now();
+    #endif
 
         for (auto&& [id, pThread] : m_threads) {
             if (!pThread || GetMainThread() == pThread) {
@@ -308,6 +314,12 @@ namespace SR_HTYPES_NS {
 
             if (auto&& executor = pThread->GetImpl().threadBody) {
                 executor();
+            #ifdef SR_EMSCRIPTEN
+                if (emscripten_get_now() - budgetStart >= 4.0) {
+                    emscripten_sleep(0);
+                    budgetStart = emscripten_get_now();
+                }
+            #endif
             }
         }
     }

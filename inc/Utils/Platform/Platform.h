@@ -172,6 +172,13 @@ namespace SR_UTILS_NS::Platform {
     SR_COMMON_DLL_API extern bool IsCursorLockActive();
 
 #ifdef SR_EMSCRIPTEN
+    SR_COMMON_DLL_API extern void SetWebApplicationShutdownCallback(void(*callback)());
+    struct WebTouchPoint {
+        uint32_t id = 0;
+        SR_MATH_NS::FVector2 position;
+        float_t pressure = 0.f;
+    };
+    SR_COMMON_DLL_API extern Vector<WebTouchPoint> GetWebTouchPoints();
     /// The engine canvas is an ordinary DOM element, so it is not necessarily placed at the
     /// top-left corner of the page. Browser events report viewport ("client") coordinates,
     /// which must be mapped into canvas-local space before they can be used as input.

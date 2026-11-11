@@ -84,7 +84,7 @@ namespace SR_PLATFORM_NS {
             }
             return Path();
         #elif defined(SR_EMSCRIPTEN)
-            return Path("/UserData");
+            return Path("/Persistent/UserData");
         #else
             #error "Unsupported platform"
             return Path();
