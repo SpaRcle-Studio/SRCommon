@@ -51,7 +51,7 @@ namespace SR_UTILS_NS::Platform {
         uint64_t lastWriteTime = SR_UINT64_MAX;
     };
 
-    struct KeyboardState {
+    struct SR_COMMON_DLL_API KeyboardState {
         bool keyStates[256]{false};
         void Set(KeyCode key, bool isPressed);
         bool Get(KeyCode key) const;
