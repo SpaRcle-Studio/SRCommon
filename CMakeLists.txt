@@ -52,6 +52,7 @@ option(SR_COMMON_STATIC_LIBRARY "" ON)
 option(SR_COMMON_EMBED_RESOURCES "" OFF)
 option(SR_COMMON_CI_BUILD "" OFF)
 option(SR_COMMON_USE_MINHOOK "" OFF)
+option(SR_TRACY_ALLOCATION_DIAGNOSTICS "Enable allocation tracking, diagnostic logs, and breakpoints for Tracy" OFF)
 option(SR_COMMON_USE_NATIVE_WAYLAND "" ON)
 option(SR_COMMON_GLFW "" OFF)
 
@@ -349,6 +350,13 @@ if (SR_COMMON_ZLIB)
 endif()
 
 SR_COPY_STATIC_LIBRARY_TO_LIBRARY_FOLDER(Utils)
+
+if (SR_TRACY_ALLOCATION_DIAGNOSTICS)
+    if (NOT SR_TRACY_ENABLE)
+        message(FATAL_ERROR "SR_TRACY_ALLOCATION_DIAGNOSTICS requires SR_TRACY_ENABLE")
+    endif()
+    target_compile_definitions(Utils PUBLIC SR_TRACY_ALLOCATION_DIAGNOSTICS)
+endif()
 
 if (SR_COMMON_USE_MINHOOK AND MSVC AND NOT SR_COMMON_USE_CLANG_EMULATION)
     message(STATUS "MinHook will be included in the build.")

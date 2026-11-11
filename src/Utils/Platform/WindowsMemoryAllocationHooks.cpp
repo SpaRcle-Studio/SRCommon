@@ -4,6 +4,7 @@
 
 #include <Utils/Platform/WindowsMemoryAllocationHooks.h>
 #include <Utils/Profile/TracyContext.h>
+#include <Utils/Memory/TracyAllocationDiagnostics.h>
 
 #ifdef SR_COMMON_USE_MINHOOK
 
@@ -75,6 +76,11 @@ namespace SR_UTILS_NS {
         }
 
         void __cdecl hook_free(void* p) {
+        #ifdef SR_TRACY_ALLOCATION_DIAGNOSTICS
+            if (g_TracyAllocatorInitialized) {
+                TracyAllocationDiagnostics::OnCrtFree(p);
+            }
+        #endif
             SR_UTILS_NS::OnMemoryFreed(p ? _msize(p) : 0);
             if (g_TracyAllocatorInitialized && !IgnoreTrace()) {
                 SR_TRACY_ZONE;
@@ -134,6 +140,9 @@ namespace SR_UTILS_NS {
             MH_CreateHook(freeAddr, &MemoryHookDetails::hook_free, reinterpret_cast<void**>(&MemoryHookDetails::real_free));
             MH_EnableHook(mallocAddr);
             MH_EnableHook(freeAddr);
+        #ifdef SR_TRACY_ALLOCATION_DIAGNOSTICS
+            TracyAllocationDiagnostics::InitializeCrtHooks(crt);
+        #endif
 
             /// VirtualAlloc/Free
             MH_CreateHook(&VirtualAlloc, &MemoryHookDetails::hook_VirtualAlloc, reinterpret_cast<void**>(&MemoryHookDetails::real_VirtualAlloc));
@@ -190,6 +199,9 @@ namespace SR_UTILS_NS {
 
     void InitMemoryHooks() {
         //_CrtSetAllocHook(&DebugAllocHook);
+    #ifdef SR_TRACY_ALLOCATION_DIAGNOSTICS
+        SR_PLATFORM_NS::WriteConsoleError("InitMemoryHooks() : CRT allocation diagnostics hooks are disabled; MinHook is not compiled in.\n");
+    #endif
     }
 
     void DeInitMemoryHooks() { }

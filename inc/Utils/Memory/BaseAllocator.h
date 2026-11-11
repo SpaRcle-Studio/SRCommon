@@ -75,6 +75,8 @@ template<typename T> void SRDelete(T* pObject) {
 
 void* operator new(SR_UTILS_NS::SizeType size);
 void operator delete(void* pMemory) noexcept;
+void operator delete(void* pMemory, SR_UTILS_NS::SizeType size) noexcept;
 void* operator new[](SR_UTILS_NS::SizeType size);
 void operator delete[](void* pMemory) noexcept;
+void operator delete[](void* pMemory, SR_UTILS_NS::SizeType size) noexcept;
 

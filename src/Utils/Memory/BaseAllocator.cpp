@@ -5,6 +5,7 @@
 #include <Utils/Memory/AllocatorManager.h>
 #include <Utils/Memory/Allocator.h>
 #include <Utils/Profile/TracyContext.h>
+#include <Utils/Memory/TracyAllocationDiagnostics.h>
 
 bool g_TracyAllocatorInitialized = false;
 SR_THREAD_LOCAL SR_UTILS_NS::IAllocator* g_ThreadLocalAllocator = nullptr;
@@ -46,6 +47,9 @@ void* SRMalloc(SR_UTILS_NS::SizeType size) {
         if (!pAllocation) {
             SRHalt("SRMalloc() : failed to allocate memory! Size: {}Mb", size / (1024 * 1024));
         }
+    #ifdef SR_TRACY_ALLOCATION_DIAGNOSTICS
+        SR_UTILS_NS::TracyAllocationDiagnostics::OnAllocation(pAllocation, size);
+    #endif
         SR_TRACY_ALLOC(pAllocation, size);
         return pAllocation;
     }
@@ -68,38 +72,13 @@ void SRFree(void* pMemory) {
     if (g_TracyAllocatorInitialized) {
         SR_TRACY_ZONE;
         SR_TRACY_ZONE_COLOR(0xFFFF0000);
+    #ifdef SR_TRACY_ALLOCATION_DIAGNOSTICS
+        SR_UTILS_NS::TracyAllocationDiagnostics::OnFree(pMemory);
+    #endif
         SR_TRACY_FREE(pMemory);
         return std::free(pMemory);
     }
     std::free(pMemory);
-}
-
-void* operator new(SR_UTILS_NS::SizeType size) {
-    if (g_ThreadLocalAllocator) {
-        return g_ThreadLocalAllocator->Allocate(size);
-    }
-    return SRMalloc(size);
-}
-
-void operator delete(void* pMemory) noexcept {
-    if (g_ThreadLocalAllocator) {
-        return g_ThreadLocalAllocator->Free(pMemory);
-    }
-    SRFree(pMemory);
-}
-
-void* operator new[](SR_UTILS_NS::SizeType size) {
-    if (g_ThreadLocalAllocator) {
-        return g_ThreadLocalAllocator->Allocate(size);
-    }
-    return SRMalloc(size);
-}
-
-void operator delete[](void* pMemory) noexcept {
-    if (g_ThreadLocalAllocator) {
-        return g_ThreadLocalAllocator->Free(pMemory);
-    }
-    SRFree(pMemory);
 }
 
 void* SRZLibAlloc(void* opaque, unsigned int items, unsigned int size) {

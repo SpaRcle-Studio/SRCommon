@@ -1,0 +1,6 @@
+#ifndef SR_ENGINE_GLOBAL_MEMORY_OPERATORS_H
+#define SR_ENGINE_GLOBAL_MEMORY_OPERATORS_H
+
+#include <Utils/Memory/Allocator.h>
+
+#endif // SR_ENGINE_GLOBAL_MEMORY_OPERATORS_H
