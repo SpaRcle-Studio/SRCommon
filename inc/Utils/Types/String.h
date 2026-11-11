@@ -147,6 +147,7 @@ namespace SR_UTILS_NS {
         void resize(SizeType newSize);
         void resize(SizeType newSize, char fillChar);
         void clear();
+        void shrink_to_fit();
 
         void ToLowerInPlace();
         void ToUpperInPlace();

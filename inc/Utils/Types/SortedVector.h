@@ -8,7 +8,7 @@
 #include <Utils/Types/Stack.h>
 #include <Utils/Profile/TracyContext.h>
 
-namespace SR_HTYPES_NS {
+namespace SR_UTILS_NS {
     template<typename T, typename Predicate = std::less<T>> class SortedVector {
     public:
         using Iterator = typename SR_UTILS_NS::Vector<T>::iterator;

@@ -14,7 +14,7 @@ namespace SR_UTILS_NS {
     class Entity;
     struct AliveEntityDebuggerInfo {
         Optional<bool> enabled;
-        SR_HTYPES_NS::SortedVector<Entity*> aliveEntities;
+        SR_UTILS_NS::SortedVector<Entity*> aliveEntities;
     };
 
     extern SR_COMMON_DLL_API const AliveEntityDebuggerInfo& GetAliveEntityDebuggerInfo();

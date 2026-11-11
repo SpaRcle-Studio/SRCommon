@@ -113,7 +113,7 @@ namespace SR_UTILS_NS {
             m_enumerateAllocator = (IAllocator*)new MonotonicAllocator(32_KB);
         }
 
-        SR_HTYPES_NS::SortedVector<StringView> paths(m_enumerateAllocator.Get());
+        SR_UTILS_NS::SortedVector<StringView> paths(m_enumerateAllocator.Get());
 
         auto&& callbackWrapper = [&](const VFSEntry& entry) {
             if (paths.Contains(entry.relativePath)) {
@@ -252,7 +252,7 @@ namespace SR_UTILS_NS {
         });
     }
 
-    void VFS::ResolvePath(String& path, FileMode mode) const {
+    bool VFS::ResolvePath(String& path, FileMode mode) const {
         SR_TRACY_ZONE;
         SR_LOCK_GUARD;
 
@@ -275,21 +275,23 @@ namespace SR_UTILS_NS {
                 if (SR_PLATFORM_NS::GetPathType(path) == FSItemType::Undefined) {
                     continue;
                 }
-                return;
+                return true;
             }
         }
 
         SR_ERROR("VFS::ResolvePath() : no applicable backend found for virtual path \"{}\"!", path);
         path.clear();
+        return false;
     }
 
-    void VFS::ResolvePath(Path& path, FileMode mode) const {
+    bool VFS::ResolvePath(Path& path, FileMode mode) const {
         SR_TRACY_ZONE;
         SR_LOCK_GUARD;
         static String resolvedPath;
         resolvedPath = path.ToStringView();
-        ResolvePath(resolvedPath, mode);
+        const bool res = ResolvePath(resolvedPath, mode);
         path = resolvedPath;
+        return res;
     }
 
     bool VFS::Copy(StringView from, StringView to) {

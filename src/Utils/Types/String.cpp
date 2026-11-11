@@ -487,6 +487,46 @@ namespace SR_UTILS_NS {
         m_size = 0;
     }
 
+    void String::shrink_to_fit() {
+        if (m_capacity == m_size) {
+            return;
+        }
+
+        if (m_size == 0) {
+            if (m_data) {
+                if (m_allocator) {
+                    m_allocator->Free(m_data, m_capacity + 1);
+                }
+                else {
+                    SRFree(m_data);
+                }
+            }
+
+            m_data = nullptr;
+            m_capacity = 0;
+            return;
+        }
+
+        char* newData = (char*)(m_allocator ? m_allocator->Allocate(m_size + 1) : SRMalloc(m_size + 1));
+        if (!newData) {
+            SRHalt("Failed to allocate!");
+            return;
+        }
+
+        memcpy(newData, m_data, m_size);
+        newData[m_size] = '\0';
+
+        if (m_allocator) {
+            m_allocator->Free(m_data, m_capacity + 1);
+        }
+        else {
+            SRFree(m_data);
+        }
+
+        m_data = newData;
+        m_capacity = m_size;
+    }
+
     void String::ToLowerInPlace() {
         for (SizeType i = 0; i < m_size; ++i) {
             m_data[i] = static_cast<char>(tolower(static_cast<unsigned char>(m_data[i])));

@@ -39,8 +39,8 @@ namespace SR_UTILS_NS {
         void Delete(StringView path);
         bool Copy(StringView from, StringView to);
 
-        void ResolvePath(String& path, FileMode mode) const;
-        void ResolvePath(Path& path, FileMode mode) const;
+        bool ResolvePath(String& path, FileMode mode) const;
+        bool ResolvePath(Path& path, FileMode mode) const;
 
         void UnResolvePath(String& path) const;
         void UnResolvePath(Path& path) const;
@@ -64,7 +64,7 @@ namespace SR_UTILS_NS {
         mutable bool m_isEnumerating = false;
         mutable RawPointerHolder<IAllocator> m_enumerateAllocator;
         Vector<VFSMount> m_mounts;
-        SR_HTYPES_NS::SortedVector<FileImpl*> m_handles;
+        SR_UTILS_NS::SortedVector<FileImpl*> m_handles;
 
     };
 }

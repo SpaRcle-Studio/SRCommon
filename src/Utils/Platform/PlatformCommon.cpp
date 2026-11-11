@@ -132,6 +132,11 @@ namespace SR_PLATFORM_NS {
             return false;
         }
 
+        if (path == "/Users" || path == "/Windows" || path == "/Resources" || path == "/Cache" || path == "/" || path == "C:/" || path == "C:") {
+            SRHaltTerminate("Detected destructive path! {}", path);
+            return false;
+        }
+
         static SR_THREAD_LOCAL String current;
         current.clear();
 
@@ -247,7 +252,7 @@ namespace SR_PLATFORM_NS {
             return defaultFlatpakPath;
         }
 
-        SR_LOG("Platform::GetApplicationResourcesPath() : resources folder was not found in any of the potential paths. Please specify the resources folder using --resources option or reinstall the application.");
+        SR_ERROR("Platform::GetApplicationResourcesPath() : resources folder was not found in any of the potential paths. Please specify the resources folder using --resources option or reinstall the application.");
         return SR_UTILS_NS::Path();
     }
 
