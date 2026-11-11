@@ -84,8 +84,7 @@ namespace SR_PLATFORM_NS {
             }
             return Path();
         #elif defined(SR_EMSCRIPTEN)
-            // Emscripten не имеет файловой системы, поэтому возвращаем пустой путь
-            return Path();
+            return Path("/UserData");
         #else
             #error "Unsupported platform"
             return Path();
