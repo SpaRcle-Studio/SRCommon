@@ -10,6 +10,7 @@
 #include <Utils/Debug.h>
 #include <Utils/Common/StringAtomLiterals.h>
 #include <Utils/Profile/TracyContext.h>
+#include <Utils/Types/Vector.h>
 
 #include <Windows.h>
 #include <Psapi.h>
@@ -218,67 +219,56 @@ namespace SR_UTILS_NS::Platform {
 
         InitMemoryHooks();
 
-        HKEY hKey;
-        LPCTSTR lpSubKey = TEXT("Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\ComDlg32\\LastVisitedPidlMRU");
-
-        /// Очистка последних открытых папок в диалогах открытия/сохранения файлов
-        {
-            const LONG lResult = RegOpenKeyEx(HKEY_CURRENT_USER, lpSubKey, 0, KEY_READ, &hKey);
-
-            if (lResult != ERROR_SUCCESS) {
-                SR_PLATFORM_NS::WriteConsoleError("InitializePlatform() : failed to open registry key!");
-                return;
-            }
-        }
-
         SetUnhandledExceptionFilter(SRCustomExceptionHandler);
-
         SetPriorityClass(GetCurrentProcess(), REALTIME_PRIORITY_CLASS);
 
-        DWORD dwIndex = 0;
+        HKEY hKey = nullptr;
+        constexpr const wchar_t* subKey = L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\ComDlg32\\LastVisitedPidlMRU";
+        const LSTATUS openResult = RegOpenKeyExW(HKEY_CURRENT_USER, subKey, 0, KEY_QUERY_VALUE | KEY_SET_VALUE, &hKey);
+        if (openResult != ERROR_SUCCESS) {
+            if (openResult != ERROR_FILE_NOT_FOUND && openResult != ERROR_PATH_NOT_FOUND) {
+                SR_PLATFORM_NS::WriteConsoleLog("InitializePlatform() : skipping recent folder cleanup, registry error: {}\n"_format(openResult));
+            }
+            return;
+        }
 
-        TCHAR szValueName[2048];
-        DWORD dwValueNameSize = 2048;
+        const auto appName = SR_PLATFORM_NS::GetApplicationName();
+        const int32_t wideNameSize = MultiByteToWideChar(CP_ACP, 0, appName.c_str(), -1, nullptr, 0);
+        Vector<wchar_t> wideName;
+        if (wideNameSize <= 1) {
+            RegCloseKey(hKey);
+            return;
+        }
+        wideName.resize(wideNameSize);
+        if (MultiByteToWideChar(CP_ACP, 0, appName.c_str(), -1, wideName.data(), wideNameSize) != wideNameSize) {
+            RegCloseKey(hKey);
+            return;
+        }
+        const SizeType nameBytes = static_cast<SizeType>(wideNameSize - 1) * sizeof(wchar_t);
 
-        BYTE lpData[2048];
-        DWORD dwDataSize = 2048;
-
-        DWORD dwType;
-
-        std::vector<std::pair<std::string, std::wstring>> values;
-
-        while (true) {
-            const LSTATUS code = RegEnumValue(hKey, dwIndex, szValueName, &dwValueNameSize, NULL, &dwType, lpData, &dwDataSize);
-            if (code == ERROR_NO_MORE_ITEMS) {
+        for (DWORD index = 0; ; ++index) {
+            std::array<wchar_t, 2048> valueName{};
+            std::array<BYTE, 2048> data{};
+            DWORD valueNameSize = static_cast<DWORD>(valueName.size());
+            DWORD dataSize = static_cast<DWORD>(data.size());
+            DWORD type = 0;
+            const LSTATUS result = RegEnumValueW(hKey, index, valueName.data(), &valueNameSize, nullptr, &type, data.data(), &dataSize);
+            if (result == ERROR_NO_MORE_ITEMS) {
+                break;
+            }
+            if (result == ERROR_MORE_DATA) {
+                continue;
+            }
+            if (result != ERROR_SUCCESS) {
+                SR_PLATFORM_NS::WriteConsoleLog("InitializePlatform() : skipping recent folder cleanup, enumeration error: {}\n"_format(result));
                 break;
             }
 
-            if (dwType == REG_BINARY) {
-                std::wstring strData;
-                for (DWORD i = 0; i < dwDataSize; i += 2) {
-                    const auto ch = static_cast<wchar_t>(lpData[i]);
-                    strData.push_back(ch);
+            if (type == REG_BINARY && dataSize >= nameBytes && memcmp(data.data(), wideName.data(), nameBytes) == 0) {
+                const LSTATUS clearResult = RegSetValueExW(hKey, valueName.data(), 0, REG_BINARY, nullptr, 0);
+                if (clearResult != ERROR_SUCCESS) {
+                    SR_PLATFORM_NS::WriteConsoleLog("InitializePlatform() : skipping recent folder cleanup, write error: {}\n"_format(clearResult));
                 }
-
-                values.emplace_back(std::string(szValueName, szValueName + dwValueNameSize), strData);
-            }
-
-            dwValueNameSize = 2048;
-            dwDataSize = 2048;
-            ++dwIndex;
-        }
-
-        auto&& appName = SR_PLATFORM_NS::GetApplicationName();
-        auto&& appNameW = ConvertToUnicode(appName.c_str());
-
-        for (const auto& [name, data] : values) {
-            if (data.find(appNameW) == 0) {
-                LONG lResult = RegSetKeyValue(HKEY_CURRENT_USER, lpSubKey,  const_cast<char*>(name.c_str()), REG_BINARY, NULL, 0);
-
-                if (lResult != ERROR_SUCCESS) {
-                    SR_PLATFORM_NS::WriteConsoleError("InitializePlatform() : failed to delete register value!");
-                }
-
                 break;
             }
         }
