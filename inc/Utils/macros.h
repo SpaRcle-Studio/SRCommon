@@ -358,8 +358,6 @@
     #define SR_STATIC_ASSERT(msg) static_assert(false, msg)
 #endif
 
-#define SR_CORE_DLL_API
-
 #if defined(SR_ANDROID) || defined(SR_EMSCRIPTEN)
     #define SR_DLL_API_IMPORT
     #define SR_DLL_API_EXPORT

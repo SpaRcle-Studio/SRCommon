@@ -28,9 +28,9 @@ namespace SR_MATH_NS {
     template<class T_IndexFunc> double_t NoiseTemplate(T_IndexFunc idxfunc, double_t x, double_t y, double_t z);
     template<class T_IndexFunc> double_t NoiseTemplate(T_IndexFunc idxfunc, double_t x, double_t y, double_t z, double_t t);
 
-    double_t SNoise(double_t x, double_t y);
-    double_t SNoise(double_t x, double_t y, double_t z);
-    double_t SNoise(double_t x, double_t y, double_t z, double_t t);
+    SR_COMMON_DLL_API double_t SNoise(double_t x, double_t y);
+    SR_COMMON_DLL_API double_t SNoise(double_t x, double_t y, double_t z);
+    SR_COMMON_DLL_API double_t SNoise(double_t x, double_t y, double_t z, double_t t);
 }
 
 namespace SR_MATH_NS {
