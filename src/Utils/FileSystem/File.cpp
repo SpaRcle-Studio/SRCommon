@@ -143,6 +143,9 @@ namespace SR_UTILS_NS {
             openMode |= std::ios::out;
         }
         m_stream.open(path.data(), openMode);
+        if (m_stream.is_open()) {
+            m_physicalPath = path;
+        }
         return m_stream.is_open();
     }
 
@@ -150,6 +153,7 @@ namespace SR_UTILS_NS {
         if (m_stream.is_open()) {
             m_stream.close();
         }
+        m_physicalPath.clear();
     }
 
     uint64_t StreamFileImpl::GetSize() const {
@@ -232,12 +236,14 @@ namespace SR_UTILS_NS {
             return false;
         }
         m_mappedFile = std::move(mappedFile);
+        m_physicalPath = path;
         return true;
     }
 
     void MappedFileImpl::Close() {
         m_mappedFile.Close();
         m_position = 0;
+        m_physicalPath.clear();
     }
 
     uint64_t MappedFileImpl::GetSize() const {

@@ -318,19 +318,15 @@ namespace SR_UTILS_NS {
                     return false;
                 }
             }
+            const Path physicalSource(sourceFile.GetPhysicalPath());
+            const Path physicalDestination(destinationFile.GetPhysicalPath());
+
             /// файлы нужно закрыть до копирования прав, иначе Windows не даст открыть их повторно
             sourceFile = File();
             destinationFile = File();
 
-            /// CopyPermissions работает с настоящей файловой системой, поэтому пути нужно развернуть
-            String resolvedSource = source;
-            ResolvePath(resolvedSource, FileMode::Read);
-
-            String resolvedDestination = destination;
-            ResolvePath(resolvedDestination, FileMode::Write);
-
-            if (!resolvedSource.empty() && !resolvedDestination.empty()) {
-                SR_PLATFORM_NS::CopyPermissions(resolvedSource, resolvedDestination);
+            if (!physicalSource.empty() && !physicalDestination.empty()) {
+                SR_PLATFORM_NS::CopyPermissions(physicalSource, physicalDestination);
             }
 
             return true;

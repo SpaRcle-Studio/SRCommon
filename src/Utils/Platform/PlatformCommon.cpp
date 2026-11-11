@@ -68,10 +68,14 @@ namespace SR_PLATFORM_NS {
         return Path();
     #elif defined(SR_LINUX)
         const char* xdgDataHome = getenv("XDG_DATA_HOME");
-            if (xdgDataHome) {
-                return Path(xdgDataHome);
-            }
-            return Path();
+        if (xdgDataHome && xdgDataHome[0] == '/') {
+            return Path(xdgDataHome);
+        }
+        const char* homeDirectory = getenv("HOME");
+        if (homeDirectory && homeDirectory[0] == '/') {
+            return Path(homeDirectory).Concat(".local/share");
+        }
+        return Path();
         #elif defined(SR_MACOS)
             const char* homeDir = getenv("HOME");
             if (homeDir) {

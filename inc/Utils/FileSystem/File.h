@@ -19,6 +19,7 @@ namespace SR_UTILS_NS {
         virtual void Close() = 0;
 
         SR_NODISCARD FileMode GetMode() const { return m_mode; }
+        SR_NODISCARD StringView GetPhysicalPath() const { return m_physicalPath; }
         SR_NODISCARD virtual uint64_t GetSize() const = 0;
         SR_NODISCARD virtual uint64_t GetPosition() const = 0;
 
@@ -36,6 +37,7 @@ namespace SR_UTILS_NS {
 
     protected:
         FileMode m_mode = FileMode::None;
+        String m_physicalPath;
 
     private:
         std::atomic<uint32_t> m_useCount = 0;
@@ -123,6 +125,8 @@ namespace SR_UTILS_NS {
 
     public:
         SR_NODISCARD bool IsOpen() const;
+        /// Empty for files without a native filesystem path.
+        SR_NODISCARD StringView GetPhysicalPath() const { return m_pImpl ? m_pImpl->GetPhysicalPath() : StringView(); }
         SR_NODISCARD FileMode GetMode() const;
         SR_NODISCARD uint64_t GetSize() const;
         SR_NODISCARD uint64_t GetPosition() const;
