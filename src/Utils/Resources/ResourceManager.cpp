@@ -9,10 +9,13 @@
 #include <Utils/Resources/FileWatcher.h>
 #include <Utils/Resources/Asset.h>
 #include <Utils/FileSystem/VFS.h>
+#include <Utils/FileSystem/DirectoryVFSBackend.h>
 #include <Utils/Common/Features.h>
 #include <Utils/Common/StringFormat.h>
 #include <Utils/Common/StringUtils.h>
 #include <Utils/TypeTraits/Factory.h>
+#include <Utils/Common/StoreUtils.h>
+#include <Utils/Common/CLIManager.h>
 
 #include <Codegen/ResourceManager.generated.hpp>
 
@@ -37,13 +40,17 @@ namespace SR_UTILS_NS {
         m_destroyQueue.reserve(256);
         m_defaultReloader = new DefaultResourceReloader();
 
-        Path resourcesWatchFolder = GetResPath();
-        VFS::Instance().ResolvePath(resourcesWatchFolder, FileMode::Read);
-        SR_LOG("ResourceManager::Initialize() : starting file system watcher for \"{}\"...", resourcesWatchFolder);
         m_fileSystemWatcher.AutoFree();
         m_fileSystemWatcher = FileSystemWatcher::MakeShared();
-        m_fileSystemWatcher->AddListener(resourcesWatchFolder);
-        m_fileSystemWatcher->StartAsyncWatch();
+        const bool embeddedResources = StoreUtils::Temp::GetBool("ApplicationHasEmbeddedResources", false);
+        if (!embeddedResources || CLIManager::Instance().GetProjectPath()) {
+            Path resourcesWatchFolder = GetResPath();
+            if (VFS::Instance().ResolvePath(resourcesWatchFolder, embeddedResources ? FileMode::Write : FileMode::Read)) {
+                SR_LOG("ResourceManager::Initialize() : starting file system watcher for \"{}\"...", resourcesWatchFolder);
+                m_fileSystemWatcher->AddListener(resourcesWatchFolder);
+                m_fileSystemWatcher->StartAsyncWatch();
+            }
+        }
 
         m_resources.max_load_factor(0.9f);
 
@@ -554,18 +561,21 @@ namespace SR_UTILS_NS {
     }
 
     bool ResourceManager::InitCache() {
+        Path physicalCachePath;
         if (auto&& cache = SR_PLATFORM_NS::GetApplicationCachePath()) {
-            m_cacheFolder = cache->Concat("Cache");
+            physicalCachePath = cache->Concat("Cache");
         }
         else {
-            m_cacheFolder = "Resources/Cache";
+            physicalCachePath = SR_PLATFORM_NS::GetApplicationUserDataDirectory().Concat("AppCache");
         }
+        m_cacheFolder = GetResPath().Concat("Cache");
+        VFS::Instance().Mount(*m_cacheFolder, new DirectoryVFSBackend(physicalCachePath.ToStringView()), 200);
         if (!SR_UTILS_NS::VFS::Instance().CreateDirectories(*m_cacheFolder)) {
             SR_ERROR("ResourceManager::InitCache() : failed to create cache folder!");
             m_cacheFolder.reset();
             return false;
         }
-        SR_LOG("ResourceManager::InitCache() : cache folder is: \"{}\"", *m_cacheFolder);
+        SR_LOG("ResourceManager::InitCache() : cache folder is: \"{}\" -> \"{}\"", *m_cacheFolder, physicalCachePath);
         return true;
     }
 

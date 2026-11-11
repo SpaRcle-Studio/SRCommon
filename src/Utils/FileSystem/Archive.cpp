@@ -183,16 +183,19 @@ namespace SR_UTILS_NS {
             return false;
         }
 
-        zip_fileinfo info = { };
         for (auto&& entry : entries) {
             if (entry.name.empty()) {
                 continue;
             }
-            const int32_t openResult = zipOpenNewFileInZip64(
+            zip_fileinfo info = { };
+            info.external_fa = (entry.isDirectory ? 0040755UL : entry.isExecutable ? 0100755UL : 0100644UL) << 16;
+            const int32_t openResult = zipOpenNewFileInZip4_64(
                 archive, SR_UTILS_NS::String(entry.name).c_str(), &info,
                 nullptr, 0, nullptr, 0, nullptr,
                 entry.isDirectory ? 0 : Z_DEFLATED,
                 entry.isDirectory ? 0 : Z_BEST_COMPRESSION,
+                0, -MAX_WBITS, DEF_MEM_LEVEL, Z_DEFAULT_STRATEGY,
+                nullptr, 0, (3 << 8) | 20, 0,
                 entry.data.size() >= SR_UINT32_MAX ? 1 : 0
             );
             if (openResult != ZIP_OK) {

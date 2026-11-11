@@ -48,6 +48,12 @@ namespace SR_PLATFORM_NS {
     }
 #endif
 
+    Path GetApplicationUserDataDirectory() {
+        return SR_PLATFORM_NS::GetUserDataDirectory()
+            .Concat(SR_PLATFORM_NS::GetApplicationInfo().organization)
+            .Concat(SR_PLATFORM_NS::GetApplicationInfo().name);
+    }
+
 #if defined(SR_WIN32) || defined(SR_LINUX) || defined(SR_MACOS) || defined(SR_EMSCRIPTEN)
     Path GetUserDataDirectory() {
     #if defined(SR_WIN32)
@@ -198,6 +204,7 @@ namespace SR_PLATFORM_NS {
         if (!g_applicationInfo) {
             g_applicationInfo = ApplicationInfo();
             g_applicationInfo->name = "SREngine";
+            g_applicationInfo->project = "EngineDevelopment";
             g_applicationInfo->organization = "SpaRcle-Studio";
             g_applicationInfo->version = SR_ENGINE_VERSION;
             g_applicationInfo->engineVersion = SR_ENGINE_VERSION;

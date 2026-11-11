@@ -193,6 +193,9 @@ namespace SR_UTILS_NS {
     }
 
     Path Path::Concat(const StringView path) const {
+        if (path.empty()) {
+            return *this;
+        }
         auto&& normalized = GetNormalized();
         if ((!normalized.empty() && normalized.back() != '/') && (!path.empty() && path.front() != '/')) {
             return (normalized + "/") + path;

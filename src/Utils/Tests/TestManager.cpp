@@ -7,6 +7,8 @@
 #include <Utils/Debug.h>
 #include <Utils/FileSystem/VFS.h>
 #include <Utils/FileSystem/DirectoryVFSBackend.h>
+#include <Utils/FileSystem/ArchiveVFSBackend.h>
+#include <Utils/Common/StoreUtils.h>
 
 #include <Codegen/TestManager.generated.hpp>
 
@@ -29,9 +31,25 @@ namespace SR_UTILS_NS {
             SR_UTILS_NS::VFS::Instance().Mount("", new SR_UTILS_NS::ReadOnlyDirectoryVFSBackend(appFolder), -50);
         }
 
-        auto&& engineResourcesPath = SR_PLATFORM_NS::GetApplicationResourcesPath();
-        auto&& resourcesPath = SR_UTILS_NS::ResourceManager::Instance().GetResPath();
-        SR_UTILS_NS::VFS::Instance().Mount(resourcesPath, new SR_UTILS_NS::DirectoryVFSBackend(engineResourcesPath), 0);
+        bool embeddedResources = false;
+    #if defined(SR_WIN32) || defined(SR_LINUX)
+        auto* pArchive = new ArchiveVFSBackend(SR_PLATFORM_NS::GetApplicationPath().ToStringView(), ArchiveVFSBackendMode::File);
+        if (pArchive->IsValid()) {
+            VFS::Instance().Mount("", pArchive, 0);
+            embeddedResources = true;
+        }
+        else {
+            delete pArchive;
+        }
+    #endif
+        StoreUtils::Temp::SetBool("ApplicationHasEmbeddedResources", embeddedResources);
+        if (!embeddedResources) {
+            const auto engineResourcesPath = SR_PLATFORM_NS::GetApplicationResourcesPath();
+            const auto resourcesPath = ResourceManager::Instance().GetResPath();
+            VFS::Instance().Mount(resourcesPath, new DirectoryVFSBackend(engineResourcesPath), 0);
+        }
+        const auto userDataPath = SR_PLATFORM_NS::GetApplicationUserDataDirectory();
+        VFS::Instance().Mount(userDataPath, new DirectoryVFSBackend(userDataPath), 0);
 
         if (!SR_UTILS_NS::ResourceManager::Instance().IsInitialized()) {
             SR_UTILS_NS::ResourceManager::Instance().Initialize();
@@ -47,6 +65,10 @@ namespace SR_UTILS_NS {
         SRAssert(!m_pTestManagerAsset);
         m_pTestManagerAsset = SR_UTILS_NS::Asset::Load<TestManagerAsset>("Engine/ModuleTests/TestManagerAsset.sras");
         if (!m_pTestManagerAsset) {
+            if (embeddedResources) {
+                SR_ERROR("TestManager::RunAll() : embedded TestManagerAsset not found!");
+                return TestExecutionResult::Fatal;
+            }
             SR_LOG_TEST("TestManager::RunAll() : TestManagerAsset not found, creating a new one...");
             m_pTestManagerAsset = SR_UTILS_NS::Asset::CreateNew<TestManagerAsset>("Engine/ModuleTests/TestManagerAsset.sras");
             if (!m_pTestManagerAsset) {
@@ -68,7 +90,7 @@ namespace SR_UTILS_NS {
             SR_LOG_TEST("TestManager::RunAll() : no tests found to run!");
             m_pTestManagerAsset->RemoveUsePoint();
             m_pTestManagerAsset.Reset();
-            return TestExecutionResult::Success;
+            return embeddedResources ? TestExecutionResult::Fatal : TestExecutionResult::Success;
         }
 
         SR_LOG_TEST("TestManager::RunAll() : running {} tests...", totalTests);

@@ -41,7 +41,11 @@ namespace SR_UTILS_NS::StoreUtils {
             }
         }
 
-        SR_UTILS_NS::Path path = SR_UTILS_NS::ResourceManager::Instance().GetCachePath().Concat("User/UserData.xml");
+        SR_UTILS_NS::Path path = SR_PLATFORM_NS::GetApplicationUserDataDirectory()
+            .Concat("User")
+            .Concat(SR_PLATFORM_NS::GetApplicationInfo().project)
+            .Concat("UserData.xml");
+
         if (!document.Save(path)) {
             SRHalt("Storage::Save() : failed to save YAML document to file \"{}\"!", path);
         }
@@ -52,7 +56,12 @@ namespace SR_UTILS_NS::StoreUtils {
 
     void Storage::Load() {
         SR_TRACY_ZONE;
-        SR_UTILS_NS::Path path = SR_UTILS_NS::ResourceManager::Instance().GetCachePath().Concat("User/UserData.xml");
+
+        SR_UTILS_NS::Path path = SR_PLATFORM_NS::GetApplicationUserDataDirectory()
+            .Concat("User")
+            .Concat(SR_PLATFORM_NS::GetApplicationInfo().project)
+            .Concat("UserData.xml");
+
         if (!path.IsFile()) {
             return;
         }

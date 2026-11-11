@@ -7,6 +7,8 @@
 #include <Utils/Common/SubscriptionMessage.h>
 #include <Utils/Common/Bind.h>
 #include <Utils/FileSystem/VFS.h>
+#include <Utils/Common/StoreUtils.h>
+#include <Utils/Common/CLIManager.h>
 
 namespace SR_UTILS_NS {
     FileWatcher::FileWatcher(SR_UTILS_NS::Path path)
@@ -14,7 +16,22 @@ namespace SR_UTILS_NS {
         , m_path(std::move(path))
         , m_name("Unnamed")
     {
-        SR_UTILS_NS::VFS::Instance().ResolvePath(m_path, FileMode::Read);
+        if (!StoreUtils::Temp::GetBool("ApplicationHasEmbeddedResources", false)) {
+            SR_UTILS_NS::VFS::Instance().ResolvePath(m_path, FileMode::Read);
+        }
+        else if (CLIManager::Instance().GetProjectPath()) {
+            const auto resourcesPath = ResourceManager::Instance().GetResPath();
+            if (m_path.ToStringView().starts_with(resourcesPath.ToStringView()) &&
+                m_path.size() > resourcesPath.size() && m_path[resourcesPath.size()] == '/') {
+                Path physicalResourcesPath = resourcesPath;
+                if (VFS::Instance().ResolvePath(physicalResourcesPath, FileMode::Write)) {
+                    m_path = physicalResourcesPath.Concat(m_path.ToStringView().substr(resourcesPath.size() + 1));
+                }
+            }
+            else {
+                VFS::Instance().ResolvePath(m_path, FileMode::Read);
+            }
+        }
         Subscribe();
     }
 

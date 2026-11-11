@@ -6,6 +6,7 @@
 #define SR_ENGINE_COMMON_ARCHIVE_VFS_BACKEND_H
 
 #include <Utils/FileSystem/IVFSBackend.h>
+#include <Utils/Types/Vector.h>
 
 namespace SR_UTILS_NS {
     enum class ArchiveVFSBackendMode {
@@ -15,6 +16,7 @@ namespace SR_UTILS_NS {
     class ArchiveVFSBackend : public IVFSBackend {
     public:
         ArchiveVFSBackend(StringView archive, ArchiveVFSBackendMode mode, uint64_t decompressedSize = 0);
+        SR_NODISCARD bool IsValid() const { return m_isUnpacked; }
 
     public:
         SR_NODISCARD bool ReadSupports() const override { return true; }
@@ -28,6 +30,7 @@ namespace SR_UTILS_NS {
 
     private:
         bool UnpackData();
+        bool IndexData();
 
     private:
         uint64_t m_decompressedSize = 0;
@@ -36,6 +39,11 @@ namespace SR_UTILS_NS {
         String m_archivePath;
         String m_archiveDataMemory;
         StringView m_archiveData;
+        struct Entry {
+            String name;
+            StringView data;
+        };
+        Vector<Entry> m_entries;
 
     };
 }

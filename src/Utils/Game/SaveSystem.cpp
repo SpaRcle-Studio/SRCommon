@@ -47,10 +47,7 @@ namespace SR_UTILS_NS {
 
     const Path& SaveSystem::GetSaveDirectory() const noexcept {
         if (m_saveDirectory.empty()) {
-            m_saveDirectory =
-                SR_PLATFORM_NS::GetUserDataDirectory()
-                .Concat(SR_PLATFORM_NS::GetApplicationInfo().organization)
-                .Concat(SR_PLATFORM_NS::GetApplicationInfo().name);
+            m_saveDirectory = SR_PLATFORM_NS::GetApplicationUserDataDirectory().Concat("Saves");
         }
         return m_saveDirectory;
     }

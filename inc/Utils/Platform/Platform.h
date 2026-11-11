@@ -59,6 +59,7 @@ namespace SR_UTILS_NS::Platform {
 
     struct ApplicationInfo {
         String name;
+        String project;
         String organization;
         String version;
         String engineVersion;
@@ -142,6 +143,7 @@ namespace SR_UTILS_NS::Platform {
     SR_COMMON_DLL_API extern Path GetApplicationResourcesPath();
     SR_COMMON_DLL_API extern Path GetApplicationPath();
     SR_COMMON_DLL_API extern Path GetApplicationDirectory();
+    SR_COMMON_DLL_API extern Path GetApplicationUserDataDirectory();
     SR_COMMON_DLL_API extern Path GetUserDataDirectory();
     SR_COMMON_DLL_API extern String GetApplicationName();
     SR_COMMON_DLL_API extern SR_MATH_NS::UVector2 GetScreenResolution();
