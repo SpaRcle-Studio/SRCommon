@@ -51,8 +51,8 @@ namespace SR_UTILS_NS {
         Ptr
     );
 
-    SR_MAYBE_UNUSED uint64_t GetTypeSize(const StandardType& type);
-    SR_MAYBE_UNUSED bool IsNumber(const StandardType& type);
+    SR_MAYBE_UNUSED SR_COMMON_DLL_API uint64_t GetTypeSize(const StandardType& type);
+    SR_MAYBE_UNUSED SR_COMMON_DLL_API bool IsNumber(const StandardType& type);
 
     //specialize a type for all of the STL containers.
 //    namespace is_stl_container_impl{

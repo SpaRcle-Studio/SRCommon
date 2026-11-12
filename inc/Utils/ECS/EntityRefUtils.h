@@ -18,7 +18,7 @@ namespace SR_UTILS_NS {
 }
 
 namespace SR_UTILS_NS::EntityRefUtils {
-    struct OwnerRef final {
+    struct SR_COMMON_DLL_API OwnerRef final {
         OwnerRef() = default;
         SR_MAYBE_UNUSED OwnerRef(const SR_HTYPES_NS::SharedPtr<Entity>& ptr); /// NOLINT
         SR_MAYBE_UNUSED OwnerRef(const SR_HTYPES_NS::SharedPtr<SR_WORLD_NS::Scene>& ptr); /// NOLINT
@@ -31,7 +31,7 @@ namespace SR_UTILS_NS::EntityRefUtils {
         Action_Parent, Action_Child, Action_Component
     );
 
-    struct PathItem final : public SR_UTILS_NS::Serializable {
+    struct SR_COMMON_DLL_API PathItem final : public SR_UTILS_NS::Serializable {
         SR_STRUCT()
 
         PathItem() = default;
@@ -56,14 +56,14 @@ namespace SR_UTILS_NS::EntityRefUtils {
 
     typedef std::vector<PathItem> RefPath;
 
-    SR_MAYBE_UNUSED SR_HTYPES_NS::SharedPtr<SR_WORLD_NS::Scene> GetSceneFromOwner(const OwnerRef& owner);
+    SR_MAYBE_UNUSED SR_COMMON_DLL_API SR_HTYPES_NS::SharedPtr<SR_WORLD_NS::Scene> GetSceneFromOwner(const OwnerRef& owner);
 
-    SR_MAYBE_UNUSED SR_HTYPES_NS::SharedPtr<Entity> GetEntity(const OwnerRef& owner, const RefPath& path);
+    SR_MAYBE_UNUSED SR_COMMON_DLL_API SR_HTYPES_NS::SharedPtr<Entity> GetEntity(const OwnerRef& owner, const RefPath& path);
 
-    SR_MAYBE_UNUSED RefPath CalculatePath(const OwnerRef& from);
+    SR_MAYBE_UNUSED SR_COMMON_DLL_API RefPath CalculatePath(const OwnerRef& from);
 
-    SR_MAYBE_UNUSED bool IsOwnerValid(const OwnerRef& owner);
-    SR_MAYBE_UNUSED bool IsTargetInitialized(const OwnerRef& owner);
+    SR_MAYBE_UNUSED SR_COMMON_DLL_API bool IsOwnerValid(const OwnerRef& owner);
+    SR_MAYBE_UNUSED SR_COMMON_DLL_API bool IsTargetInitialized(const OwnerRef& owner);
 }
 
 #endif //SR_ENGINE_UTILS_ENTITY_REF_UTILS_H

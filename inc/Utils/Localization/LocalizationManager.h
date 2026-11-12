@@ -56,7 +56,7 @@ namespace SR_UTILS_NS::Localization {
         std::list<LocalizationFile> m_locFiles = { };
     };*/
 
-    class LocalizationManager {
+    class SR_COMMON_DLL_API LocalizationManager {
         ///using LocalizedTextComponent = SR_GTYPES_NS::ITextComponent*;
     public:
         ///void RegisterTextComponent(std::string& id, SR_GTYPES_NS::ITextComponent* textComponent);

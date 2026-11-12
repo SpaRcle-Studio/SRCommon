@@ -19,7 +19,7 @@ namespace SR_UTILS_NS::Web {
 	class HTMLPage;
 
 #ifdef SR_COMMON_LITEHTML
-    class HTMLContainerInterface : public SR_HTYPES_NS::SharedPtr<HTMLContainerInterface>, public litehtml::document_container {
+    class SR_COMMON_DLL_API HTMLContainerInterface : public SR_HTYPES_NS::SharedPtr<HTMLContainerInterface>, public litehtml::document_container {
     	using Super = SR_HTYPES_NS::SharedPtr<HTMLContainerInterface>;
     public:
 	    using Ptr = SR_HTYPES_NS::SharedPtr<HTMLContainerInterface>;
@@ -80,12 +80,12 @@ namespace SR_UTILS_NS::Web {
 
     };
 #else
-	class HTMLContainerInterface : public SR_HTYPES_NS::SharedPtr<HTMLContainerInterface> {
+	class SR_COMMON_DLL_API HTMLContainerInterface : public SR_HTYPES_NS::SharedPtr<HTMLContainerInterface> {
 
 	};
 #endif
 
-    class HTMLPage final : public SR_HTYPES_NS::SharedPtr<HTMLPage> {
+    class SR_COMMON_DLL_API HTMLPage final : public SR_HTYPES_NS::SharedPtr<HTMLPage> {
         using Super = SR_HTYPES_NS::SharedPtr<HTMLPage>;
     private:
         HTMLPage();

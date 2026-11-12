@@ -9,7 +9,7 @@
 #include <Utils/Network/Server.h>
 
 namespace SR_NETWORK_NS {
-    class Client : public SR_HTYPES_NS::SharedPtr<Client> {
+    class SR_COMMON_DLL_API Client : public SR_HTYPES_NS::SharedPtr<Client> {
         using Super = SR_HTYPES_NS::SharedPtr<Client>;
     public:
         Client(SocketType type, int32_t domain, int32_t service, int32_t protocol, int32_t port, uint64_t interface);

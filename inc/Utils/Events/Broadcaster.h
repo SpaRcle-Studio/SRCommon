@@ -9,7 +9,7 @@
 #include <Utils/Common/SubscriptionHolder.h>
 
 namespace SR_UTILS_NS {
-    class Broadcaster : public Singleton<Broadcaster>, public SR_UTILS_NS::SubscriptionHolder {
+    class SR_COMMON_DLL_API Broadcaster : public Singleton<Broadcaster>, public SR_UTILS_NS::SubscriptionHolder {
         SR_REGISTER_SINGLETON(Broadcaster);
     public:
 
