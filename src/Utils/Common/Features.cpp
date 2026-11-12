@@ -143,7 +143,7 @@ namespace SR_UTILS_NS {
 
     bool Features::Register(StringAtom group, StringAtom name, bool value) {
         if (auto&& pIt = m_features.find(group); pIt == m_features.end()) {
-            m_features.insert(std::make_pair(group, FeatureGroup()));
+            m_features.emplace(group, FeatureGroup());
         }
 
         return m_features.at(group).Register(name, value);

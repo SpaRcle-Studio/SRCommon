@@ -19,7 +19,8 @@ namespace SR_UTILS_NS {
         Headless           = 1 << 3,
         Validation         = 1 << 4,
         ErrorWarnAsAssert  = 1 << 5,
-        DisableEditor      = 1 << 6
+        DisableEditor      = 1 << 6,
+        NoGpuAssist        = 1 << 7
     );
 
     SR_ENUM_NS_STRUCT_T(CLIOptions, uint32_t,
