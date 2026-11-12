@@ -48,6 +48,10 @@ namespace SR_UTILS_NS {
         StringView GetViewFromPath(const Path& path);
         /// @method @evaluate
         String PathToString(const Path& path);
+        /// @method @evaluate
+        String FloatToString(float_t value, uint32_t precision);
+        /// @method @evaluate
+        String IntToString(int64_t value);
 
         void Base64Decode(StringView source, String& base64);
         void Base64Encode(StringView base64, String& result);

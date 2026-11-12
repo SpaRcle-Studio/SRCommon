@@ -39,6 +39,8 @@ namespace SR_FLUX_NS {
 
     private:
         /// @property
+        /// @customArgs(pick: enabled, filter name: Flux, relative: resources)
+        /// @customArg(filter value: flux)
         ResourceRef<FluxGraphAsset> m_graph;
         /// @property
         Map<StringAtom, Reflection::Value> m_variables;

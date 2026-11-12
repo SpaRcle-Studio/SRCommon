@@ -11,6 +11,8 @@
 #include <Utils/Common/Breakpoint.h>
 
 #include <Utils/Platform/AndroidNativeAppGlue.h>
+#include <Utils/Platform/AndroidInput.h>
+#include <Utils/Platform/AndroidLifecycle.h>
 
 #include <android/log.h>
 #include <android/native_activity.h>
@@ -35,7 +37,10 @@ namespace SR_UTILS_NS::Platform {
     }
 
     KeyboardState GetSystemKeyboardState() {
-        return KeyboardState();
+        if (auto&& overridden = GetOverriddenKeyboardState()) {
+            return *overridden;
+        }
+        return GetAndroidKeyboardState();
     }
 
     bool IsConsoleFocused() {
@@ -43,6 +48,7 @@ namespace SR_UTILS_NS::Platform {
     }
 
     void SetInstance(void* pInstance) {
+        ResetAndroidLifecycle();
         WriteConsoleLog("Platform::SetInstance() : setting Android instance...");
         pAndroidInstance = reinterpret_cast<android_app*>(pInstance);
     }
@@ -52,8 +58,10 @@ namespace SR_UTILS_NS::Platform {
     }
 
     MouseState GetMouseState() {
-        MouseState state;
-        return state;
+        if (auto&& overridden = GetOverriddenMouseState()) {
+            return *overridden;
+        }
+        return GetAndroidMouseState();
     }
 
     void Unzip(const SR_UTILS_NS::Path& source, const SR_UTILS_NS::Path& destination, bool replace) {
@@ -178,6 +186,7 @@ namespace SR_UTILS_NS::Platform {
     }
 
     void InitializePlatform() {
+        ResetAndroidInput();
         SR_PLATFORM_NS::WriteConsoleLog("Platform::InitializePlatform() : initializing Android platform...\n");
     }
 
@@ -186,7 +195,7 @@ namespace SR_UTILS_NS::Platform {
     }
 
     SR_MATH_NS::FVector2 GetMousePos() {
-        return SR_MATH_NS::FVector2();
+        return GetMouseState().position;
     }
 
     void Sleep(uint64_t milliseconds) {
@@ -307,8 +316,17 @@ namespace SR_UTILS_NS::Platform {
     }
 
     SR_MATH_NS::UVector2 GetScreenResolution() {
-        SRHaltOnce("Not implemented!");
-        return SR_MATH_NS::UVector2();
+        const auto state = AcquireAndroidWindowSnapshot();
+        SR_MATH_NS::UVector2 size(0, 0);
+        if (state.window) {
+            const int32_t width = ANativeWindow_getWidth(state.window);
+            const int32_t height = ANativeWindow_getHeight(state.window);
+            if (width > 0 && height > 0) {
+                size = SR_MATH_NS::UVector2(width, height);
+            }
+        }
+        ReleaseAndroidWindow(state.window);
+        return size;
     }
 
     double_t GetScreenDPI() {
@@ -367,24 +385,11 @@ namespace SR_UTILS_NS::Platform {
     }
 
     std::vector<SR_MATH_NS::UVector2> GetScreenResolutions() {
-        if (!pAndroidInstance) {
-            SR_ERROR("PlatformAndroid::GetScreenResolutions() : pAndroidInstance is nullptr!");
-            return { SR_MATH_NS::UVector2(400, 400) };
+        const auto size = GetScreenResolution();
+        if (size.HasZero()) {
+            return {};
         }
-
-        if (!pAndroidInstance->window) {
-            SR_ERROR("PlatformAndroid::GetScreenResolutions() : ANativeWindow is nullptr!");
-            return { SR_MATH_NS::UVector2(400, 400) };
-        }
-
-        auto&& resolutions = std::vector<SR_MATH_NS::UVector2>();
-
-        resolutions.emplace_back(SR_MATH_NS::UVector2(
-                static_cast<uint32_t>(ANativeWindow_getWidth(pAndroidInstance->window)),
-                static_cast<uint32_t>(ANativeWindow_getHeight(pAndroidInstance->window))
-        ));
-
-        return resolutions;
+        return {size};
     }
 }
 

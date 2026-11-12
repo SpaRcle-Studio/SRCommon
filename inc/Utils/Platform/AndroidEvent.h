@@ -8,6 +8,7 @@
 #include <Utils/Common/Singleton.h>
 
 #include <android/sensor.h>
+#include <android/native_window.h>
 
 namespace SR_UTILS_NS {
     struct AndroidEvent {
@@ -16,11 +17,20 @@ namespace SR_UTILS_NS {
             Key,
             Lifecycle,
             Window,
-            Sensor
+            Sensor,
+            InputReset
         } type;
 
         union {
-            struct { int32_t action; float x, y; int32_t pointerId; } motion;
+            struct {
+                int32_t action;
+                float_t x, y;
+                int32_t pointerId;
+                int32_t source;
+                int32_t buttons;
+                float_t scrollX, scrollY;
+                float_t pressure;
+            } motion;
             struct { int32_t keyCode; int32_t action; } key;
             struct { int32_t command; } lifecycle;
             struct { ANativeWindow* window; } windowEvent;
@@ -35,7 +45,10 @@ namespace SR_UTILS_NS {
         bool PopEvent(AndroidEvent &event);
 
     private:
-        std::list<AndroidEvent> m_events;
+        static constexpr uint32_t Capacity = 2048;
+        std::array<AndroidEvent, Capacity> m_events;
+        uint32_t m_head = 0;
+        uint32_t m_count = 0;
 
     };
 }

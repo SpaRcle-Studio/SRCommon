@@ -503,7 +503,7 @@ namespace SR_FLUX_NS {
                 auto&& pBase = (SR_HTYPES_NS::SharedPtrBase*)typeInfo.vtable.pGetTypeController(callable.GetStorage());
                 pCallable = pBase->GetSRClass();
                 if (!pCallable) {
-                    SR_ERROR("FluxRuntime::CallMethod() : failed to get callable type from SharedPtr!");
+                    SR_ERROR("FluxRuntime::CallMethod() : failed to get callable type from SharedPtr! Next type: {}", typeInfo.pNext[0]->detailedType);
                     execution.state = FluxExecutionState::Error;
                     return false;
                 }

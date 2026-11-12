@@ -9,6 +9,9 @@
 #include <Utils/Platform/Platform.h>
 #include <Utils/Profile/TracyContext.h>
 #include <Utils/Types/Thread.h>
+#ifdef SR_ANDROID
+    #include <Utils/Platform/AndroidInput.h>
+#endif
 
 #include <Codegen/InputSystem.generated.hpp>
 
@@ -62,6 +65,13 @@ namespace SR_UTILS_NS {
                 }
                 /// Cursor visibility is managed by WaylandWindow
             }
+        #elif defined(SR_ANDROID)
+            const bool newTouch = mouseState.buttonStates[0] &&
+                (m_keys[0] == State::UnPressed || m_keys[0] == State::Up);
+            m_mousePrev = m_mouse;
+            m_mouse = mouseState.position;
+            m_mouseDrag = !m_isLocked || newTouch ? SR_MATH_NS::FVector2(0, 0) : m_mouse - m_mousePrev;
+            m_isLocked = true;
         #elif defined(SR_EMSCRIPTEN)
             if (SR_PLATFORM_NS::IsCursorLockActive()) {
                 if (!m_isLocked) {
@@ -146,6 +156,12 @@ namespace SR_UTILS_NS {
         SR_TRACY_ZONE;
 
         if (!IsAppFocused()) {
+        #ifdef SR_ANDROID
+            for (uint16_t i = 5; i < 256; ++i) {
+                const bool pressed = m_keys[i] == State::Down || m_keys[i] == State::Pressed;
+                SetState(i, pressed ? State::Up : State::UnPressed);
+            }
+        #endif
             return;
         }
 
@@ -190,6 +206,9 @@ namespace SR_UTILS_NS {
         }
         m_textEvents.clear();
 
+    #ifdef SR_ANDROID
+        SR_PLATFORM_NS::BeginAndroidInputFrame();
+    #endif
         UpdateMouse(dt);
         UpdateKeyboard();
     }

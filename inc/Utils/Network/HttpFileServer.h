@@ -1,3 +1,7 @@
+//
+// Created by OpenAI Codex on 12.11.2026.
+//
+
 #ifndef SR_UTILS_HTTP_FILE_SERVER_H
 #define SR_UTILS_HTTP_FILE_SERVER_H
 

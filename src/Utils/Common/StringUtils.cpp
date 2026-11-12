@@ -749,6 +749,14 @@ namespace SR_UTILS_NS {
         return path.View();
     }
 
+    String StringUtils::FloatToString(float_t value, uint32_t precision) {
+        return "{:.{}f}"_format(value, precision);
+    }
+
+    String StringUtils::IntToString(int64_t value) {
+        return "{}"_format(value);
+    }
+
     String GetErrorString(int err) {
         char buf[256]{};
     #ifdef _WIN32

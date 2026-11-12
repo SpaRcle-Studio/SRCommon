@@ -1,3 +1,7 @@
+//
+// Created by OpenAI Codex on 12.11.2026.
+//
+
 #include <Utils/Platform/AndroidManifest.h>
 #include <Utils/Types/Vector.h>
 

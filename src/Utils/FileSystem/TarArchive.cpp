@@ -1,3 +1,7 @@
+//
+// Created by OpenAI Codex on 12.11.2026.
+//
+
 #include <Utils/FileSystem/ArchiveExtract.h>
 #include <Utils/FileSystem/VFS.h>
 #include <Utils/Platform/Platform.h>
