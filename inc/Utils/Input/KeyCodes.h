@@ -245,9 +245,9 @@ namespace SR_UTILS_NS {
     constexpr size_t KeyCodesCount = sizeof(KeyCodes) / sizeof(KeyCodes[0]);
     constexpr size_t MouseCodesCount = sizeof(MouseCodes) / sizeof(MouseCodes[0]);
 
-    extern bool IsPrintableKeyCode(KeyCode code);
-    extern SR_UTILS_NS::KeyCode KeyCodeFromEvdev(uint32_t keysym);
-    extern SR_UTILS_NS::KeyCode KeyCodeFromXkbKeysym(uint32_t keysym);
+    extern SR_COMMON_DLL_API bool IsPrintableKeyCode(KeyCode code);
+    extern SR_COMMON_DLL_API SR_UTILS_NS::KeyCode KeyCodeFromEvdev(uint32_t keysym);
+    extern SR_COMMON_DLL_API SR_UTILS_NS::KeyCode KeyCodeFromXkbKeysym(uint32_t keysym);
 }
 
 #endif //SR_ENGINE_KEYCODES_H
