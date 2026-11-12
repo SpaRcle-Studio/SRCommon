@@ -11,7 +11,7 @@
 #include <Utils/Common/SubscriptionHolder.h>
 
 namespace SR_UTILS_NS {
-    class FileSystemWatcher final : public SR_HTYPES_NS::SharedPtr<FileSystemWatcher>, public SubscriptionHolder {
+    class SR_COMMON_DLL_API FileSystemWatcher final : public SR_HTYPES_NS::SharedPtr<FileSystemWatcher>, public SubscriptionHolder {
         using Super = SR_HTYPES_NS::SharedPtr<FileSystemWatcher>;
     public:
         static const inline StringAtom MODIFIED_EVENT_ID = "Modified";

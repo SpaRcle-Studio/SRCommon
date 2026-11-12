@@ -338,12 +338,13 @@ else()
 
     if (UNIX)
         target_compile_options(Utils PRIVATE -fPIC)
-        if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-            target_link_libraries(Utils atomic)
-        endif()
     endif()
 
     SR_COPY_SHARED_MODULE_TO_EXECUTABLE_FOLDER(Utils)
+endif()
+
+if (UNIX AND NOT APPLE AND NOT SR_EMSCRIPTEN)
+    target_link_libraries(Utils atomic)
 endif()
 
 if (SR_COMMON_ZLIB)
