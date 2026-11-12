@@ -21,6 +21,9 @@ namespace SR_UTILS_NS {
 
     bool FeatureGroup::Register(StringAtom name, bool value) {
         if (m_values.count(name)) {
+            if (m_values[name] == value) {
+                return true;
+            }
             SR_LOG("FeatureGroup::Register() : overriding feature \"{}\" from {} to {}!", name, m_values[name], value);
         }
 
