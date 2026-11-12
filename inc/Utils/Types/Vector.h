@@ -809,9 +809,9 @@ namespace SR_UTILS_NS {
         }
     }
 
-    extern template class Vector<int32_t>;
-    extern template class Vector<uint32_t>;
-    extern template class Vector<StringAtom>;
+    extern template class SR_COMMON_DLL_API Vector<int32_t>;
+    extern template class SR_COMMON_DLL_API Vector<uint32_t>;
+    extern template class SR_COMMON_DLL_API Vector<StringAtom>;
 }
 
 namespace std {
