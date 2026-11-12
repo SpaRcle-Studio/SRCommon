@@ -266,17 +266,24 @@ if (SR_COMMON_ZLIB)
     # the C++ Utils target makes CMake generate the precompiled header as C.
     set(SR_UTILS_MINIZIP_SOURCES
         ${CMAKE_CURRENT_SOURCE_DIR}/libs/zlib/contrib/minizip/zip.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/libs/zlib/contrib/minizip/ioapi.c
     )
-    # Assimp already compiles and exports minizip's ioapi.c. Avoid defining
-    # those symbols twice when Assimp is enabled.
     if (NOT SR_COMMON_ASSIMP)
         list(APPEND SR_UTILS_MINIZIP_SOURCES
-            ${CMAKE_CURRENT_SOURCE_DIR}/libs/zlib/contrib/minizip/ioapi.c
             ${CMAKE_CURRENT_SOURCE_DIR}/libs/zlib/contrib/minizip/unzip.c
         )
     endif()
     add_library(SRUtilsMinizip STATIC
         ${SR_UTILS_MINIZIP_SOURCES}
+    )
+    # Assimp's minizip uses incompatible file function structures.
+    target_compile_definitions(SRUtilsMinizip PRIVATE
+        call_zopen64=SRUtilsMinizip_call_zopen64
+        call_zseek64=SRUtilsMinizip_call_zseek64
+        call_ztell64=SRUtilsMinizip_call_ztell64
+        fill_zlib_filefunc64_32_def_from_filefunc32=SRUtilsMinizip_fill_zlib_filefunc64_32_def_from_filefunc32
+        fill_fopen_filefunc=SRUtilsMinizip_fill_fopen_filefunc
+        fill_fopen64_filefunc=SRUtilsMinizip_fill_fopen64_filefunc
     )
     target_include_directories(SRUtilsMinizip PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/libs/zlib
@@ -411,7 +418,7 @@ if (NOT ANDROID_NDK AND UNIX AND NOT APPLE AND NOT SR_EMSCRIPTEN)
 endif()
 
 if (WIN32)
-    target_link_libraries(Utils wininet)
+    target_link_libraries(Utils wininet ws2_32 shell32)
 endif()
 
 if (SR_COMMON_MYHTML)

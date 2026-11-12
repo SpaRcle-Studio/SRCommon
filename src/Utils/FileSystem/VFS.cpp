@@ -296,7 +296,6 @@ namespace SR_UTILS_NS {
 
     bool VFS::Copy(StringView from, StringView to) {
         SR_TRACY_ZONE;
-        SR_LOCK_GUARD;
 
         SR_LOG("VFS::Copy() : copying from \"{}\" to \"{}\"...", from, to);
 
@@ -336,18 +335,20 @@ namespace SR_UTILS_NS {
             return copyFile(from, to);
         }
         else if (IsFolderExists(from)) {
-            bool haveErrors = false;
+            Vector<Pair<Path, Path>> files;
             Enumerate(from, [&](const VFSEntry& entry) {
-                if (!haveErrors && entry.type == FSItemType::File) {
-                    static String destinationPath;
-                    destinationPath = to;
+                if (entry.type == FSItemType::File) {
+                    String destinationPath(to);
                     destinationPath += entry.relativePath.substr(from.size());
-                    if (!copyFile(entry.fullPath, destinationPath)) {
-                        haveErrors = true;
-                    }
+                    files.emplace_back(Path(entry.fullPath), Path(destinationPath));
                 }
             }, true);
-            return !haveErrors;
+            for (const auto& file : files) {
+                if (!copyFile(file.first.ToStringView(), file.second.ToStringView())) {
+                    return false;
+                }
+            }
+            return true;
         }
         SR_ERROR("VFS::Copy() : source path does not exist!\n\tSource: {}\n\tDestination: {}", from, to);
         return false;

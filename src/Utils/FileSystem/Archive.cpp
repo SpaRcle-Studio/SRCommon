@@ -78,13 +78,14 @@ namespace SR_UTILS_NS {
 
         static bool Inflate(const uint8_t* compressedData, size_t compressedSize, uint8_t* outputData, size_t outputSize) {
             z_stream stream{};
+            uint8_t emptyOutput = 0;
 
             stream.zalloc = SRZLibAlloc;
             stream.zfree = SRZLibFree;
             stream.next_in = const_cast<Bytef*>( reinterpret_cast<const Bytef*>(compressedData));
             stream.avail_in = static_cast<uInt>(compressedSize);
-            stream.next_out = reinterpret_cast<Bytef*>(outputData);
-            stream.avail_out = static_cast<uInt>(outputSize);
+            stream.next_out = outputSize != 0 ? reinterpret_cast<Bytef*>(outputData) : &emptyOutput;
+            stream.avail_out = outputSize != 0 ? static_cast<uInt>(outputSize) : 1;
 
             /*
              * ZIP использует raw DEFLATE.
@@ -192,7 +193,7 @@ namespace SR_UTILS_NS {
             const int32_t openResult = zipOpenNewFileInZip4_64(
                 archive, SR_UTILS_NS::String(entry.name).c_str(), &info,
                 nullptr, 0, nullptr, 0, nullptr,
-                entry.isDirectory ? 0 : Z_DEFLATED,
+                entry.isDirectory || !entry.compress ? 0 : Z_DEFLATED,
                 entry.isDirectory ? 0 : Z_BEST_COMPRESSION,
                 0, -MAX_WBITS, DEF_MEM_LEVEL, Z_DEFAULT_STRATEGY,
                 nullptr, 0, (3 << 8) | 20, 0,
@@ -200,7 +201,7 @@ namespace SR_UTILS_NS {
             );
             if (openResult != ZIP_OK) {
                 zipClose(archive, nullptr);
-                SR_ERROR("Archive::SaveZip() : failed to add entry: {}", entry.name);
+                SR_ERROR("Archive::SaveZip() : failed to add entry: {}, error: {}", entry.name, openResult);
                 return false;
             }
             if (!entry.isDirectory && !entry.data.empty() &&
@@ -335,7 +336,8 @@ namespace SR_UTILS_NS {
 
                 centralPosition += centralEntrySize;
             }
-            m_unpackedData.resize(totalDataSize);
+            m_unpackedData.clear();
+            m_unpackedData.reserve(totalDataSize);
         }
 
         SizeType centralPosition = 0;
@@ -506,6 +508,7 @@ namespace SR_UTILS_NS {
         #endif
 
             Entry& entry = m_entries[entryIndex];
+            entry.isExecutable = ((Zip::ReadU32(header + 38) >> 16) & 0111) != 0;
             m_unpackedData += pathTemp;
             entry.name = StringView(m_unpackedData.data() + m_unpackedData.size() - pathTemp.size(), pathTemp.size());
             const SizeType dataOffset = m_unpackedData.size();

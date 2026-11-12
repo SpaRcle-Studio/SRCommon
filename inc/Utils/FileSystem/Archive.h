@@ -25,6 +25,7 @@ namespace SR_UTILS_NS {
             StringView data;
             bool isDirectory = false;
             bool isExecutable = false;
+            bool compress = true;
         };
         using EnumerateCallback = SR_HTYPES_NS::Function<void(const Entry&)>;
     public:

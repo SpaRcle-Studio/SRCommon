@@ -15,6 +15,7 @@
 #include <android/log.h>
 #include <android/native_activity.h>
 #include <android/configuration.h>
+#include <cstdlib>
 
 /// чтобы компилировался PhysX под android
 extern "C" uint32_t android_getCpuCount() {
@@ -214,7 +215,10 @@ namespace SR_UTILS_NS::Platform {
     }
 
     void Terminate(bool isError) {
-        SRHaltOnce("Not implemented!");
+        if (isError) {
+            std::abort();
+        }
+        std::exit(EXIT_SUCCESS);
     }
 
     void OpenWithAssociatedApp(const Path &filepath) {
