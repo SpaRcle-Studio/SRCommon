@@ -5,7 +5,6 @@
 #include <Utils/Game/LookAtComponent.h>
 #include <Utils/ECS/Transform3D.h>
 #include <Utils/ECS/GameObject.h>
-#include <Utils/ECS/ComponentManager.h>
 
 #include <Codegen/LookAtComponent.generated.hpp>
 

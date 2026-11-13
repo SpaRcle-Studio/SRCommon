@@ -52,6 +52,57 @@
         </Expand>
     </Type>
 
+    <Type Name="SpaRcle::Utils::Map&lt;*,*,*&gt;">
+        <DisplayString Condition="m_size == 0">empty</DisplayString>
+        <DisplayString Condition="m_size != 0">size={m_size}</DisplayString>
+        <Expand>
+            <Synthetic Name="[size]">
+                <DisplayString>{m_size}</DisplayString>
+            </Synthetic>
+            <CustomListItems>
+                <Variable Name="p" InitialValue="m_pMin" />
+                <Variable Name="nil" InitialValue="m_nil" />
+                <Variable Name="parent" InitialValue="m_nil" />
+                <Size>m_size</Size>
+                <Loop>
+                    <Break Condition="p == nil" />
+                    <Item Name="[{p->kv.first}]">p->kv.second</Item>
+                    <If Condition="p->pRight != nil">
+                        <Exec>p = p->pRight</Exec>
+                        <Loop Condition="p->pLeft != nil">
+                            <Exec>p = p->pLeft</Exec>
+                        </Loop>
+                    </If>
+                    <Else>
+                        <Exec>parent = p->pParent</Exec>
+                        <Loop Condition="parent != nil &amp;&amp; p == parent->pRight">
+                            <Exec>p = parent</Exec>
+                            <Exec>parent = parent->pParent</Exec>
+                        </Loop>
+                        <Exec>p = parent</Exec>
+                    </Else>
+                </Loop>
+            </CustomListItems>
+        </Expand>
+    </Type>
+
+    <Type Name="SpaRcle::Utils::Set&lt;*,*&gt;">
+        <DisplayString Condition="m_size == 0">empty</DisplayString>
+        <DisplayString Condition="m_size != 0">size={m_size}</DisplayString>
+        <Expand>
+            <Synthetic Name="[size]">
+                <DisplayString>{m_size}</DisplayString>
+            </Synthetic>
+            <TreeItems Condition="m_size != 0 &amp;&amp; m_nil != 0">
+                <Size>m_size</Size>
+                <HeadPointer>m_nil->pParent</HeadPointer>
+                <LeftPointer>pLeft</LeftPointer>
+                <RightPointer>pRight</RightPointer>
+                <ValueNode Condition="pLeft != this">value</ValueNode>
+            </TreeItems>
+        </Expand>
+    </Type>
+
     <!-- ska::flat_hash_map / ska::flat_hash_set (Malte Skarupke "ska" containers) -->
     <Type Name="ska::flat_hash_map&lt;*,*,*,*,*&gt;">
         <DisplayString Condition="num_elements == 0">empty</DisplayString>

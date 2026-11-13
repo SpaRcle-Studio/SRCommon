@@ -170,12 +170,12 @@ namespace SR_UTILS_NS::Reflection {
             using Type = std::remove_cv_t<std::remove_reference_t<T>>;
             if constexpr (IsReflectedValueEmbeddable<Type>) {
                 ReflectedValue::Storage inlineData{};
-                new (&inlineData) Type(std::forward<Type>(value));
+                new (&inlineData) Type(std::forward<T>(value));
                 v.m_storage = ReflectedValue::MakeFromInlineData(inlineData, ReflectedValueStorageType::Embedded);
             }
             else {
                 char* buffer = static_cast<char*>(v.m_allocator->Allocate(sizeof(Type), alignof(Type)));
-                new (buffer) Type(std::forward<Type>(value));
+                new (buffer) Type(std::forward<T>(value));
                 v.m_storage = ReflectedValue::MakeFromPointer(buffer, ReflectedValueStorageType::Dynamic);
             }
             v.m_typeInfo = pTypeInfo;

@@ -11,10 +11,10 @@
 #include <Utils/Types/RawPointerHolder.h>
 #include <Utils/Types/SharedPtr.h>
 #include <Utils/Types/ArrayVector.h>
+#include <Utils/Types/Function.h>
+#include <Utils/Reflection/Value.h>
 
 namespace SR_UTILS_NS::Reflection {
-    class Value;
-
     template<typename T>
     constexpr bool ContainsSRClassV = IsSRClassV<InnerTypeT<T>>;
 
@@ -94,10 +94,13 @@ namespace SR_UTILS_NS::Reflection {
         using ChangeCallbackFn = void(*)(SRClass* pOwner);
         using PropertyActiveCallbackFn = bool(*)(SRClass* pOwner);
     public:
-        Property() = default;
+        Property();
 
         SR_NODISCARD Value Get(SRClass* pOwner) const noexcept;
-        void Set(SRClass* pOwner, const Value& value) const noexcept { m_setCallback(pOwner, value); }
+        void Set(SRClass* pOwner, const Value& value) const noexcept {
+            if (m_dynamicSetter) { m_dynamicSetter(pOwner, value); }
+            else { m_setCallback(pOwner, value); }
+        }
 
         void OnChanged(SRClass* pOwner) const noexcept {
             if (m_onChangeCallback) {
@@ -137,6 +140,8 @@ namespace SR_UTILS_NS::Reflection {
         Property& SetPublicity(PropertyPublicity publicity) noexcept { m_publicity = publicity; return *this; }
         Property& SetSetter(SetCallbackFn callback) noexcept { m_setCallback = callback; return *this; }
         Property& SetGetter(GetCallbackFn callback) noexcept { m_getCallback = callback; return *this; }
+        Property& SetDynamicGetter(const SR_HTYPES_NS::Function<Value(SRClass*)>& callback);
+        Property& SetDynamicSetter(const SR_HTYPES_NS::Function<void(SRClass*, const Value&)>& callback) { m_dynamicSetter = callback; return *this; }
         Property& SetDefaultValue(Value&& value) noexcept;
         Property& SetChangeCallback(ChangeCallbackFn callback) noexcept { m_onChangeCallback = callback; return *this; }
         Property& SetResetValue(Value&& value) noexcept;
@@ -155,6 +160,8 @@ namespace SR_UTILS_NS::Reflection {
         PropertyPublicity m_publicity = PropertyPublicity::Public;
         SetCallbackFn m_setCallback = nullptr;
         GetCallbackFn m_getCallback = nullptr;
+        SR_HTYPES_NS::Function<Value(SRClass*)> m_dynamicGetter;
+        SR_HTYPES_NS::Function<void(SRClass*, const Value&)> m_dynamicSetter;
         ChangeCallbackFn m_onChangeCallback = nullptr;
         PropertyActiveCallbackFn m_propertyActiveCallback = nullptr;
         bool m_hasExplicitSetter = false;

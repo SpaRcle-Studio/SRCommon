@@ -23,6 +23,13 @@ namespace SR_UTILS_NS::Reflection {
         return displayName;
     }
 
+    Property::Property() = default;
+
+    Property& Property::SetDynamicGetter(const SR_HTYPES_NS::Function<Value(SRClass*)>& callback) {
+        m_dynamicGetter = callback;
+        return *this;
+    }
+
     StringAtom Property::GetDisplayName() const noexcept {
         if (m_displayName.empty()) {
             SR_TRACY_ZONE;
@@ -39,6 +46,7 @@ namespace SR_UTILS_NS::Reflection {
     }
 
     Value Property::Get(SRClass* pOwner) const noexcept {
+        if (m_dynamicGetter) { return m_dynamicGetter(pOwner); }
         return m_getCallback(pOwner);
     }
 
