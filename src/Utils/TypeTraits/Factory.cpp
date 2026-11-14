@@ -103,6 +103,7 @@ namespace SR_UTILS_NS {
     }
 
     void Factory::ForEachClass(const SR_HTYPES_NS::Function<void(const SRClassMeta*)>& func) const noexcept {
+        SR_TRACY_ZONE;
         for (auto&& [name, info] : m_types) {
             if (auto&& pMeta = info.metaGetter()) {
                 func(pMeta);

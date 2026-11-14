@@ -7,6 +7,7 @@
 #include <Utils/TypeTraits/SRClass.h>
 #include <Utils/TypeTraits/SRClassMeta.h>
 #include <Utils/Types/StringAtom.h>
+#include <Utils/Profile/TracyContext.h>
 
 namespace SR_UTILS_NS {
     SRClassMeta::~SRClassMeta() = default;
@@ -45,6 +46,7 @@ namespace SR_UTILS_NS {
     }
 
     void SRClassMeta::ForEachProperty(const SR_HTYPES_NS::Function<void(const Reflection::Property& property, uint64_t index)>& func, uint64_t* pIndex) const {
+        SR_TRACY_ZONE;
     	uint64_t index = 0;
     	if (!pIndex) {
     		pIndex = &index;
@@ -61,6 +63,7 @@ namespace SR_UTILS_NS {
     }
 
     void SRClassMeta::ForEachMethod(const SR_HTYPES_NS::Function<void(const Reflection::Method& method, uint64_t index)>& func, uint64_t* pIndex) const {
+        SR_TRACY_ZONE;
     	uint64_t index = 0;
     	if (!pIndex) {
     		pIndex = &index;

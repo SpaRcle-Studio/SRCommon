@@ -35,6 +35,8 @@ namespace SR_MATH_NS {
         /// @method @evaluate
         float_t ClampFloat(float_t value, float_t min, float_t max) const;
         /// @method @evaluate
+        float_t LerpAngle(float_t a, float_t b, float_t t) const;
+        /// @method @evaluate
         float_t SumFloat(float_t a, float_t b) const { return a + b; }
         /// @method @evaluate
         uint64_t SumInt(uint64_t a, uint64_t b) const { return a + b; }

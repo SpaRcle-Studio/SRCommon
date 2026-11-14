@@ -41,6 +41,18 @@ namespace SR_MATH_NS {
         return Clamp(value, min, max);
     }
 
+    float_t MathUtils::LerpAngle(float_t a, float_t b, float_t t) const {
+        auto delta = std::fmod(b - a, 360.f);
+        if (delta > 180.f) {
+            delta -= 360.f;
+        }
+        else if (delta < -180.f) {
+            delta += 360.f;
+        }
+
+        return a + delta * t;
+    }
+
     Quaternion MathUtils::QuaternionFromEulerAngles(float_t pitch, float_t yaw, float_t roll) const {
         return Quaternion::FromEulerAngles(FVector3(pitch, yaw, roll));
     }
