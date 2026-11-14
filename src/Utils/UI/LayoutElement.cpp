@@ -3,8 +3,6 @@
 //
 
 #include <Utils/UI/LayoutElement.h>
-#include <Utils/UI/LayoutGroup.h>
-#include <Utils/ECS/GameObject.h>
 
 #include <Codegen/LayoutElement.generated.hpp>
 
@@ -78,16 +76,6 @@ namespace SR_UTILS_NS {
     }
 
     void LayoutElement::OnLayoutPropertyChanged() {
-        if (!IsAttached()) return;
-
-        auto&& pGameObject = GetGameObject();
-        if (!pGameObject) return;
-
-        auto&& pParent = pGameObject->GetParent();
-        if (!pParent) return;
-
-        if (auto&& pLayoutGroup = pParent->GetComponent<LayoutGroup>()) {
-            pLayoutGroup->SetLayoutDirty();
-        }
+        SetLayoutDirty();
     }
 }

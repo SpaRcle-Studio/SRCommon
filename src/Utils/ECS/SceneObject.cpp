@@ -6,6 +6,7 @@
 #include <Utils/ECS/LayerManager.h>
 #include <Utils/ECS/Prefab.h>
 #include <Utils/ECS/SceneObject.h>
+#include <Utils/UI/LayoutRebuilder.h>
 #include <Utils/ECS/GameObject.h>
 #include <Utils/Reflection/SRClassUtils.h>
 #include <Utils/World/SceneUpdater.h>
@@ -395,6 +396,9 @@ namespace SR_UTILS_NS {
     }
 
     bool SceneObject::SetDirty(bool dirty) {
+        if (dirty) {
+            LayoutRebuilder::MarkDirty(*this);
+        }
         if (IsDirty() == dirty) {
             return dirty;
         }
@@ -860,6 +864,9 @@ namespace SR_UTILS_NS {
         SR_TRACY_ZONE;
 
         const SceneObject::Ptr pOldParent = m_parent;
+        if (pOldParent) {
+            LayoutRebuilder::MarkDirty(*pOldParent);
+        }
         m_parent = pParent;
 
         OnParentChanged(pOldParent);
@@ -872,6 +879,7 @@ namespace SR_UTILS_NS {
 
         if (!m_isDestroyed) {
             OnHierarchyChanged();
+            LayoutRebuilder::MarkDirty(*this);
         }
 
         return true;
@@ -885,6 +893,7 @@ namespace SR_UTILS_NS {
         for (uint16_t i = 0; i < m_children.size(); ++i) {
             if (pChild == m_children[i]) {
                 m_children.erase(m_children.begin() + i);
+                SetDirty(true);
                 return;
             }
         }

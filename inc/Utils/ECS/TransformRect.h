@@ -21,15 +21,15 @@ namespace SR_UTILS_NS {
         { }
 
         SR_NODISCARD static RectAnchors Fill() { return RectAnchors(SR_MATH_NS::FVector2(0, 0), SR_MATH_NS::FVector2(1, 1)); }
-        SR_NODISCARD static RectAnchors TopLeft() { return RectAnchors(SR_MATH_NS::FVector2(0, 0), SR_MATH_NS::FVector2(0, 0)); }
-        SR_NODISCARD static RectAnchors TopCenter() { return RectAnchors(SR_MATH_NS::FVector2(0.5f, 0), SR_MATH_NS::FVector2(0.5f, 0)); }
-        SR_NODISCARD static RectAnchors TopRight() { return RectAnchors(SR_MATH_NS::FVector2(1, 0), SR_MATH_NS::FVector2(1, 0)); }
+        SR_NODISCARD static RectAnchors TopLeft() { return RectAnchors(SR_MATH_NS::FVector2(0, 1), SR_MATH_NS::FVector2(0, 1)); }
+        SR_NODISCARD static RectAnchors TopCenter() { return RectAnchors(SR_MATH_NS::FVector2(0.5f, 1), SR_MATH_NS::FVector2(0.5f, 1)); }
+        SR_NODISCARD static RectAnchors TopRight() { return RectAnchors(SR_MATH_NS::FVector2(1, 1), SR_MATH_NS::FVector2(1, 1)); }
         SR_NODISCARD static RectAnchors MiddleLeft() { return RectAnchors(SR_MATH_NS::FVector2(0, 0.5f), SR_MATH_NS::FVector2(0, 0.5f)); }
         SR_NODISCARD static RectAnchors MiddleCenter() { return RectAnchors(SR_MATH_NS::FVector2(0.5f, 0.5f), SR_MATH_NS::FVector2(0.5f, 0.5f)); }
         SR_NODISCARD static RectAnchors MiddleRight() { return RectAnchors(SR_MATH_NS::FVector2(1, 0.5f), SR_MATH_NS::FVector2(1, 0.5f)); }
-        SR_NODISCARD static RectAnchors BottomLeft() { return RectAnchors(SR_MATH_NS::FVector2(0, 1), SR_MATH_NS::FVector2(0, 1)); }
-        SR_NODISCARD static RectAnchors BottomCenter() { return RectAnchors(SR_MATH_NS::FVector2(0.5f, 1), SR_MATH_NS::FVector2(0.5f, 1)); }
-        SR_NODISCARD static RectAnchors BottomRight() { return RectAnchors(SR_MATH_NS::FVector2(1, 1), SR_MATH_NS::FVector2(1, 1)); }
+        SR_NODISCARD static RectAnchors BottomLeft() { return RectAnchors(SR_MATH_NS::FVector2(0, 0), SR_MATH_NS::FVector2(0, 0)); }
+        SR_NODISCARD static RectAnchors BottomCenter() { return RectAnchors(SR_MATH_NS::FVector2(0.5f, 0), SR_MATH_NS::FVector2(0.5f, 0)); }
+        SR_NODISCARD static RectAnchors BottomRight() { return RectAnchors(SR_MATH_NS::FVector2(1, 0), SR_MATH_NS::FVector2(1, 0)); }
 
         /// @property @resetValue(SR_MATH_NS::FVector2(0.5f, 0.5f))
         SR_MATH_NS::FVector2 min = SR_MATH_NS::FVector2(0.5f, 0.5f);
@@ -58,6 +58,7 @@ namespace SR_UTILS_NS {
 
     public:
         TransformRect();
+        bool Load(IDeserializer& deserializer) override;
 
     public:
         void SetAnchoredPosition(const SR_MATH_NS::FVector2& position);
@@ -68,6 +69,7 @@ namespace SR_UTILS_NS {
         void SetScale(const SR_MATH_NS::FVector3& scale) override;
         void SetSkew(const SR_MATH_NS::FVector3& skew) override;
         void SetSize(const SR_MATH_NS::FVector2& size);
+        void SetSizeWithCurrentAnchors(bool horizontal, float_t size);
         void SetPivot(const SR_MATH_NS::FVector2& pivot);
         void SetAnchors(const RectAnchors& anchors);
         void SetCanvasSize(const SR_MATH_NS::FVector2& size);
@@ -91,11 +93,11 @@ namespace SR_UTILS_NS {
         SR_NODISCARD SR_MATH_NS::FVector3 GetRotation() const override { return m_rotation; }
         SR_NODISCARD SR_MATH_NS::FVector3 GetScale() const override { return m_scale; }
         SR_NODISCARD SR_MATH_NS::FVector3 GetSkew() const override { return m_skew; }
-        SR_NODISCARD SR_MATH_NS::FVector2 GetSize() const { return m_size; }
+        SR_NODISCARD SR_MATH_NS::FVector2 GetSize() const { return GetSizeDelta(); }
         SR_NODISCARD SR_MATH_NS::FVector2 GetPivot() const { return m_pivot; }
         SR_NODISCARD const RectAnchors& GetAnchors() const { return m_anchors; }
-        SR_NODISCARD SR_MATH_NS::FVector2 GetOffsetMin() const { return m_offsetMin; }
-        SR_NODISCARD SR_MATH_NS::FVector2 GetOffsetMax() const { return m_offsetMax; }
+        SR_NODISCARD SR_MATH_NS::FVector2 GetOffsetMin() const;
+        SR_NODISCARD SR_MATH_NS::FVector2 GetOffsetMax() const;
         SR_NODISCARD SR_MATH_NS::FVector2 GetAnchoredPosition() const;
         SR_NODISCARD SR_MATH_NS::FVector2 GetSizeDelta() const;
         SR_NODISCARD bool AreAnchorsTogetherX() const;
@@ -129,6 +131,7 @@ namespace SR_UTILS_NS {
         void UpdateMaskInfoTree();
 
     protected:
+        bool m_loadingLayout = false;
         mutable SR_MATH_NS::Matrix4x4 m_localMatrix = SR_MATH_NS::Matrix4x4::Identity();
         mutable SR_MATH_NS::Matrix4x4 m_matrix = SR_MATH_NS::Matrix4x4::Identity();
         mutable SR_MATH_NS::Quaternion m_globalRotation = SR_MATH_NS::Quaternion::Identity();
@@ -151,12 +154,12 @@ namespace SR_UTILS_NS {
 
         /// @property @setter(SetTranslation)
         SR_MATH_NS::FVector3 m_translation = SR_MATH_NS::FVector3::Zero();
-        /// @property @setter(SetSize)
+        /// @property @getter(GetSize) @setter(SetSize)
         SR_MATH_NS::FVector2 m_size = SR_MATH_NS::FVector2(100.0f, 100.0f);
 
-        /// @property @setter(SetOffsetMin) @onChanged(UpdateTree)
+        /// @property @getter(GetOffsetMin) @setter(SetOffsetMin) @onChanged(UpdateTree) @dontClone
         SR_MATH_NS::FVector2 m_offsetMin; // Left, Bottom
-        /// @property @setter(SetOffsetMax) @onChanged(UpdateTree)
+        /// @property @getter(GetOffsetMax) @setter(SetOffsetMax) @onChanged(UpdateTree) @dontClone
         SR_MATH_NS::FVector2 m_offsetMax; // Right, Top
 
         /// @property @onChanged(UpdateTree) @setter(SetAnchors)

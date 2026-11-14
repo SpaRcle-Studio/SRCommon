@@ -269,6 +269,20 @@ namespace SR_UTILS_NS {
         SetRotation(lookAt.GetQuat());
     }
 
+    SR_MATH_NS::FVector3 Transform3D::GetGlobalScale() const {
+        if (m_dirtyScale) SR_UNLIKELY_ATTRIBUTE {
+            if (auto&& pParent = GetParentTransform()) {
+                m_globalScale = pParent->GetGlobalScale() * m_scale;
+            }
+            else {
+                m_globalScale = m_scale;
+            }
+
+            m_dirtyScale = false;
+        }
+        return m_globalScale;
+    }
+
     SR_MATH_NS::Quaternion Transform3D::GetGlobalRotation() const {
         if (m_dirtyRotation) SR_UNLIKELY_ATTRIBUTE {
             if (auto&& pParent = GetParentTransform()) SR_LIKELY_ATTRIBUTE {

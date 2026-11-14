@@ -30,6 +30,9 @@ namespace SR_UTILS_NS {
     class Transform3D;
     class Transform;
     class GameObject;
+    class ILayoutElement;
+    class ILayoutController;
+    class ILayoutIgnorer;
 
     class SR_COMMON_DLL_API Component : public Entity {
         SR_CLASS()
@@ -50,6 +53,12 @@ namespace SR_UTILS_NS {
         virtual void OnMatrixDirty();
         virtual void OnMaskDirty();
         virtual void OnPriorityChanged();
+        void OnPostLoad() override;
+
+        SR_NODISCARD virtual ILayoutElement* GetLayoutElement() noexcept { return nullptr; }
+        SR_NODISCARD virtual ILayoutController* GetLayoutController() noexcept { return nullptr; }
+        SR_NODISCARD virtual const ILayoutIgnorer* GetLayoutIgnorer() const noexcept { return nullptr; }
+        void SetLayoutDirty() noexcept;
 
         /// Вызывается после добавления компонента к игровому объекту
         virtual void OnAttached();

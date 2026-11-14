@@ -242,6 +242,9 @@ namespace SR_UTILS_NS {
             auto&& node = GetImpl().GetWalkNode();
             for (auto&& child : node.children) {
                 if (child.id.GetHash() == name.GetHash()) {
+                    if (child.type == SerializationDataType::Integer) {
+                        value = static_cast<T>(child.data.integer);
+                    }
                     if (child.type == SerializationDataType::Floating) {
                         value = static_cast<T>(child.data.floating);
                     }
@@ -257,6 +260,9 @@ namespace SR_UTILS_NS {
             auto&& node = GetImpl().GetWalkNode();
             for (auto&& child : node.children) {
                 if (child.id.GetHash() == name.GetHash()) {
+                    if (child.type == SerializationDataType::Integer) {
+                        value = static_cast<T>(child.data.integer);
+                    }
                     if (child.type == SerializationDataType::Double) {
                         value = static_cast<T>(child.data.floatingDouble);
                     }

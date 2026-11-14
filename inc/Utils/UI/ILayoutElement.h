@@ -9,9 +9,17 @@
 #include <Utils/stdInclude.h>
 
 namespace SR_UTILS_NS {
+    class ILayoutIgnorer {
+    public:
+        virtual ~ILayoutIgnorer() = default;
+        virtual bool IsLayoutIgnored() const = 0;
+    };
+
     class ILayoutElement {
     public:
         virtual ~ILayoutElement() = default;
+
+        virtual void CalculateLayoutInput(bool horizontal) { }
 
         virtual bool IsLayoutIgnored() const { return false; }
         virtual float GetMinWidth() const = 0;
@@ -21,6 +29,21 @@ namespace SR_UTILS_NS {
         virtual float GetPreferredHeight() const = 0;
         virtual float GetFlexibleHeight() const = 0;
         virtual int32_t GetLayoutPriority() const = 0;
+    };
+
+    class ILayoutController {
+    public:
+        virtual ~ILayoutController() = default;
+        virtual bool IsSelfController() const { return false; }
+        virtual void SetLayout(bool horizontal) = 0;
+        bool MarkConflictReported() {
+            const bool first = !m_conflictReported;
+            m_conflictReported = true;
+            return first;
+        }
+
+    private:
+        bool m_conflictReported = false;
     };
 }
 

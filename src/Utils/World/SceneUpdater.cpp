@@ -9,6 +9,8 @@
 #include <Utils/Input/InputSystem.h>
 #include <Utils/Types/Function.h>
 #include <Utils/Profile/TracyContext.h>
+#include <Utils/UI/LayoutRebuilder.h>
+#include <Utils/ECS/TransformRect.h>
 
 namespace SR_WORLD_NS {
     SceneUpdater::SceneUpdater(Scene *pScene)
@@ -108,6 +110,71 @@ namespace SR_WORLD_NS {
 
             pComponent->LateUpdate();
         }
+
+        RebuildDirtyLayouts();
+    }
+
+    void SceneUpdater::MarkLayoutDirty(SR_UTILS_NS::SceneObject& object, const bool fromTransform) {
+        SR_TRACY_ZONE;
+        if ((fromTransform && m_rebuildingLayout) || object.IsDestroyed()
+            || object.GetMeta() != SR_UTILS_NS::GameObject::GetMetaStatic()) {
+            return;
+        }
+        auto&& pObject = static_cast<SR_UTILS_NS::GameObject*>(&object);
+        auto&& pTransform = pObject->TryGetTransform();
+        if (!pTransform || !pTransform->GetMeta()->IsSameOrInherited(SR_UTILS_NS::TransformRect::GetClassStaticName())) {
+            return;
+        }
+
+        SR_UTILS_NS::SceneObject* pRoot = pObject;
+        while (auto pParent = pRoot->GetParent()) {
+            if (pParent->GetMeta() != SR_UTILS_NS::GameObject::GetMetaStatic()) {
+                break;
+            }
+            auto&& pParentObject = static_cast<SR_UTILS_NS::GameObject*>(pParent.Get());
+            auto&& pParentTransform = pParentObject->TryGetTransform();
+            if (!pParentTransform || !pParentTransform->GetMeta()->IsSameOrInherited(SR_UTILS_NS::TransformRect::GetClassStaticName())) {
+                break;
+            }
+            pRoot = pParentObject;
+        }
+        if (m_queuedLayoutRoots.insert(pRoot).second) {
+            m_dirtyLayoutRoots.emplace_back(pRoot);
+        }
+    }
+
+    void SceneUpdater::RebuildDirtyLayouts() {
+        if (m_rebuildingLayout || m_dirtyLayoutRoots.empty()) {
+            return;
+        }
+        SR_TRACY_ZONE;
+        m_dirtyLayoutRoots.swap(m_layoutRootsToRebuild);
+        m_queuedLayoutRoots.clear();
+        m_layoutRootsInPass.clear();
+        for (auto&& pRoot : m_layoutRootsToRebuild) {
+            if (pRoot && !pRoot->IsDestroyed() && pRoot->IsActive()) {
+                m_layoutRootsInPass.insert(pRoot.Get());
+            }
+        }
+        m_rebuildingLayout = true;
+        for (auto&& pRoot : m_layoutRootsToRebuild) {
+            if (pRoot && !pRoot->IsDestroyed() && pRoot->IsActive()) {
+                bool coveredByAncestor = false;
+                for (auto pParent = pRoot->GetParent(); pParent; pParent = pParent->GetParent()) {
+                    if (m_layoutRootsInPass.contains(pParent.Get())) {
+                        coveredByAncestor = true;
+                        break;
+                    }
+                }
+                if (coveredByAncestor) {
+                    continue;
+                }
+                SR_UTILS_NS::LayoutRebuilder::Rebuild(*pRoot, m_layoutContext);
+                ++m_layoutRebuildCount;
+            }
+        }
+        m_rebuildingLayout = false;
+        m_layoutRootsToRebuild.clear();
     }
 
     void SceneUpdater::SetDirty() {
@@ -115,6 +182,9 @@ namespace SR_WORLD_NS {
     }
 
     void SceneUpdater::RegisterComponent(SR_UTILS_NS::Component* pComponent) {
+        if (pComponent->GetLayoutElement() || pComponent->GetLayoutController() || pComponent->GetLayoutIgnorer()) {
+            pComponent->SetLayoutDirty();
+        }
         SetDirty();
 
         SRAssert2(pComponent->GetIndexInSceneUpdater() == SR_ID_INVALID, "Double component registration!");
@@ -133,6 +203,9 @@ namespace SR_WORLD_NS {
     }
 
     void SceneUpdater::UnRegisterComponent(SR_UTILS_NS::Component* pComponent) {
+        if (pComponent->GetLayoutElement() || pComponent->GetLayoutController() || pComponent->GetLayoutIgnorer()) {
+            pComponent->SetLayoutDirty();
+        }
         SetDirty();
 
         auto&& index = pComponent->GetIndexInSceneUpdater();

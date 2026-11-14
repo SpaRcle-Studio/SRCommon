@@ -42,6 +42,7 @@ namespace SR_UTILS_NS {
 
         SR_NODISCARD SR_MATH_NS::Quaternion GetQuaternion() const override { return m_quaternion; }
         SR_NODISCARD SR_MATH_NS::Quaternion GetGlobalRotation() const override;
+        SR_NODISCARD SR_MATH_NS::FVector3 GetGlobalScale() const override;
 
         SR_NODISCARD SR_MATH_NS::FVector3 GetTranslation() const override { return m_translation; }
         SR_NODISCARD SR_MATH_NS::FVector3 GetRotation() const override {
@@ -69,6 +70,7 @@ namespace SR_UTILS_NS {
         mutable SR_MATH_NS::Matrix4x4 m_localMatrix = SR_MATH_NS::Matrix4x4::Identity();
         mutable SR_MATH_NS::Matrix4x4 m_matrix = SR_MATH_NS::Matrix4x4::Identity();
         mutable SR_MATH_NS::Quaternion m_globalRotation = SR_MATH_NS::Quaternion::Identity();
+        mutable SR_MATH_NS::FVector3 m_globalScale = SR_MATH_NS::FVector3::One();
 
         /// @property @setter(SetTranslation) @defaultValue(SR_MATH_NS::FVector3::Zero()) @drag(0.01f)
         SR_MATH_NS::FVector3 m_translation = SR_MATH_NS::FVector3::Zero();

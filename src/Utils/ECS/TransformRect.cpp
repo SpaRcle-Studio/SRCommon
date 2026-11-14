@@ -13,6 +13,22 @@ namespace SR_UTILS_NS {
         : Transform()
     { }
 
+    bool TransformRect::Load(IDeserializer& deserializer) {
+        SR_TRACY_ZONE;
+        m_loadingLayout = true;
+        const bool loaded = Super::Load(deserializer);
+        m_loadingLayout = false;
+        if (!loaded) {
+            return false;
+        }
+        m_size = GetSizeDelta();
+        const auto position = GetAnchoredPosition();
+        m_translation.x = position.x;
+        m_translation.y = position.y;
+        UpdateTree();
+        return true;
+    }
+
     void TransformRect::SetAnchoredPosition(const SR_MATH_NS::FVector2& position) {
         SetTranslation(SR_MATH_NS::FVector3(position.x, position.y, m_translation.z));
     }
@@ -24,11 +40,23 @@ namespace SR_UTILS_NS {
 
         m_translation = translation;
 
+        if (!m_loadingLayout) {
+            const auto delta = GetSizeDelta();
+            if (!AreAnchorsTogetherX()) {
+                m_offsetMin.x = translation.x - delta.x * m_pivot.x;
+                m_offsetMax.x = translation.x + delta.x * (1.f - m_pivot.x);
+            }
+            if (!AreAnchorsTogetherY()) {
+                m_offsetMin.y = translation.y - delta.y * m_pivot.y;
+                m_offsetMax.y = translation.y + delta.y * (1.f - m_pivot.y);
+            }
+        }
+
         UpdateTree();
     }
 
     void TransformRect::SetTranslationAndRotation(const SR_MATH_NS::FVector3& translation, const SR_MATH_NS::FVector3& euler) {
-        m_translation = translation;
+        SetTranslation(translation);
         m_quaternion = euler.Radians().ToQuat();
         m_rotation = m_quaternion.EulerAngle();
 
@@ -48,11 +76,55 @@ namespace SR_UTILS_NS {
     }
 
     void TransformRect::SetSize(const SR_MATH_NS::FVector2& size) {
-        if (size == m_size) {
+        if (!m_loadingLayout && size == GetSizeDelta()) {
             return;
         }
+        const auto position = GetAnchoredPosition();
         m_size = size;
+        if (!m_loadingLayout) {
+            if (!AreAnchorsTogetherX()) {
+                m_offsetMin.x = position.x - size.x * m_pivot.x;
+                m_offsetMax.x = position.x + size.x * (1.f - m_pivot.x);
+            }
+            if (!AreAnchorsTogetherY()) {
+                m_offsetMin.y = position.y - size.y * m_pivot.y;
+                m_offsetMax.y = position.y + size.y * (1.f - m_pivot.y);
+            }
+        }
         UpdateTree();
+    }
+
+    void TransformRect::SetSizeWithCurrentAnchors(const bool horizontal, const float_t size) {
+        const auto rect = GetLayoutRect();
+        auto newSize = GetSize();
+        auto offsetMin = GetOffsetMin();
+        auto offsetMax = GetOffsetMax();
+        if (horizontal) {
+            if (AreAnchorsTogetherX()) {
+                newSize.x = size;
+                SetSize(newSize);
+            }
+            else {
+                const float_t delta = size - rect.Width();
+                offsetMin.x -= delta * m_pivot.x;
+                offsetMax.x += delta * (1.f - m_pivot.x);
+                SetOffsetMin(offsetMin);
+                SetOffsetMax(offsetMax);
+            }
+        }
+        else {
+            if (AreAnchorsTogetherY()) {
+                newSize.y = size;
+                SetSize(newSize);
+            }
+            else {
+                const float_t delta = size - rect.Height();
+                offsetMin.y -= delta * m_pivot.y;
+                offsetMax.y += delta * (1.f - m_pivot.y);
+                SetOffsetMin(offsetMin);
+                SetOffsetMax(offsetMax);
+            }
+        }
     }
 
     void TransformRect::SetScale(const SR_MATH_NS::FVector3& rawScale) {
@@ -135,7 +207,7 @@ namespace SR_UTILS_NS {
             ==============================================================*/
             const Transform* pParentTransform = GetParentTransform();
             const TransformRect* pParent =
-                (pParentTransform && pParentTransform->GetMeasurement() == Measurement::Space2D)
+                (pParentTransform && pParentTransform->GetMeta()->IsSameOrInherited(TransformRect::GetClassStaticName()))
                 ? static_cast<const TransformRect*>(pParentTransform)
                 : nullptr;
 
@@ -186,7 +258,7 @@ namespace SR_UTILS_NS {
             else {
                 // Якоря врозь по X: используем Left и Right offsets
                 left = anchorMinPos.x + m_offsetMin.x;
-                right = anchorMaxPos.x - m_offsetMax.x;
+                right = anchorMaxPos.x + m_offsetMax.x;
                 width = right - left;
                 pivotPos.x = left + width * m_pivot.x;
             }
@@ -201,7 +273,7 @@ namespace SR_UTILS_NS {
             else {
                 // Якоря врозь по Y: используем Bottom и Top offsets
                 bottom = anchorMinPos.y + m_offsetMin.y;
-                top = anchorMaxPos.y - m_offsetMax.y;
+                top = anchorMaxPos.y + m_offsetMax.y;
                 height = top - bottom;
                 pivotPos.y = bottom + height * m_pivot.y;
             }
@@ -273,7 +345,7 @@ namespace SR_UTILS_NS {
 
             matrix = pParent->GetMatrix().Inverse() * matrix;
 
-            m_translation = matrix.GetTranslate();
+            SetTranslation(matrix.GetTranslate());
 
             UpdateTree();
         }
@@ -309,8 +381,9 @@ namespace SR_UTILS_NS {
         }
 
         if (m_relativePriority) {
-            if (auto&& pParentTransform = dynamic_cast<TransformRect*>(GetParentTransform())) {
-                m_priority = m_localPriority + pParentTransform->GetPriority();
+            auto&& pParentTransform = GetParentTransform();
+            if (pParentTransform && pParentTransform->GetMeta()->IsSameOrInherited(TransformRect::GetClassStaticName())) {
+                m_priority = m_localPriority + static_cast<const TransformRect*>(pParentTransform)->GetPriority();
             }
             else {
                 m_priority = m_localPriority;
@@ -366,7 +439,19 @@ namespace SR_UTILS_NS {
         if (pivot == m_pivot) {
             return;
         }
+        const auto position = GetAnchoredPosition();
+        const auto size = GetSizeDelta();
         m_pivot = pivot;
+        if (!m_loadingLayout) {
+            if (!AreAnchorsTogetherX()) {
+                m_offsetMin.x = position.x - size.x * pivot.x;
+                m_offsetMax.x = position.x + size.x * (1.f - pivot.x);
+            }
+            if (!AreAnchorsTogetherY()) {
+                m_offsetMin.y = position.y - size.y * pivot.y;
+                m_offsetMax.y = position.y + size.y * (1.f - pivot.y);
+            }
+        }
         UpdateTree();
     }
 
@@ -379,30 +464,67 @@ namespace SR_UTILS_NS {
     }
 
     void TransformRect::SetAnchors(const RectAnchors& anchors) {
-        RectAnchors clampedAnchors;
-        clampedAnchors.min = anchors.min.Clamp(SR_MATH_NS::FVector2::Zero(), SR_MATH_NS::FVector2::One());
-        clampedAnchors.max = anchors.max.Clamp(SR_MATH_NS::FVector2::Zero(), SR_MATH_NS::FVector2::One());
-
-        if (clampedAnchors == m_anchors) {
+        if (anchors == m_anchors) {
             return;
         }
-        m_anchors = clampedAnchors;
+        const auto size = GetSizeDelta();
+        const auto position = GetAnchoredPosition();
+        m_anchors = anchors;
+        if (!m_loadingLayout) {
+            m_size = size;
+            m_offsetMin = position - size * m_pivot;
+            m_offsetMax = position + size * (SR_MATH_NS::FVector2::One() - m_pivot);
+            m_translation.x = position.x;
+            m_translation.y = position.y;
+        }
         UpdateTree();
     }
 
     void TransformRect::SetOffsetMin(const SR_MATH_NS::FVector2& offset) {
-        if (offset == m_offsetMin) {
+        if (!m_loadingLayout && offset == GetOffsetMin()) {
             return;
         }
+        if (!m_loadingLayout) {
+            const auto delta = offset - GetOffsetMin();
+            if (AreAnchorsTogetherX()) {
+                m_size.x -= delta.x;
+                m_translation.x += delta.x * (1.f - m_pivot.x);
+            }
+            if (AreAnchorsTogetherY()) {
+                m_size.y -= delta.y;
+                m_translation.y += delta.y * (1.f - m_pivot.y);
+            }
+        }
         m_offsetMin = offset;
+        if (!m_loadingLayout) {
+            const auto position = GetAnchoredPosition();
+            m_translation.x = position.x;
+            m_translation.y = position.y;
+        }
         UpdateTree();
     }
 
     void TransformRect::SetOffsetMax(const SR_MATH_NS::FVector2& offset) {
-        if (offset == m_offsetMax) {
+        if (!m_loadingLayout && offset == GetOffsetMax()) {
             return;
         }
+        if (!m_loadingLayout) {
+            const auto delta = offset - GetOffsetMax();
+            if (AreAnchorsTogetherX()) {
+                m_size.x += delta.x;
+                m_translation.x += delta.x * m_pivot.x;
+            }
+            if (AreAnchorsTogetherY()) {
+                m_size.y += delta.y;
+                m_translation.y += delta.y * m_pivot.y;
+            }
+        }
         m_offsetMax = offset;
+        if (!m_loadingLayout) {
+            const auto position = GetAnchoredPosition();
+            m_translation.x = position.x;
+            m_translation.y = position.y;
+        }
         UpdateTree();
     }
 
@@ -415,11 +537,34 @@ namespace SR_UTILS_NS {
     }
 
     SR_MATH_NS::FVector2 TransformRect::GetAnchoredPosition() const {
-        return m_translation.XY();
+        auto result = m_translation.XY();
+        const auto size = GetSizeDelta();
+        if (!AreAnchorsTogetherX()) {
+            result.x = m_offsetMin.x + size.x * m_pivot.x;
+        }
+        if (!AreAnchorsTogetherY()) {
+            result.y = m_offsetMin.y + size.y * m_pivot.y;
+        }
+        return result;
     }
 
     SR_MATH_NS::FVector2 TransformRect::GetSizeDelta() const {
-        return m_offsetMax - m_offsetMin;
+        auto result = m_size;
+        if (!AreAnchorsTogetherX()) {
+            result.x = m_offsetMax.x - m_offsetMin.x;
+        }
+        if (!AreAnchorsTogetherY()) {
+            result.y = m_offsetMax.y - m_offsetMin.y;
+        }
+        return result;
+    }
+
+    SR_MATH_NS::FVector2 TransformRect::GetOffsetMin() const {
+        return GetAnchoredPosition() - GetSizeDelta() * m_pivot;
+    }
+
+    SR_MATH_NS::FVector2 TransformRect::GetOffsetMax() const {
+        return GetAnchoredPosition() + GetSizeDelta() * (SR_MATH_NS::FVector2::One() - m_pivot);
     }
 
     SR_MATH_NS::Quaternion TransformRect::GetGlobalRotation() const {
@@ -476,7 +621,7 @@ namespace SR_UTILS_NS {
         if (m_maskInfoDirty) SR_UNLIKELY_ATTRIBUTE {
             const Transform* pParentTransform = GetParentTransform();
             const TransformRect* pParent =
-                (pParentTransform && pParentTransform->GetMeasurement() == Measurement::Space2D)
+                (pParentTransform && pParentTransform->GetMeta()->IsSameOrInherited(TransformRect::GetClassStaticName()))
                 ? static_cast<const TransformRect*>(pParentTransform)
                 : nullptr;
 

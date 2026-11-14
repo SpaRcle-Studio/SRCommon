@@ -34,6 +34,7 @@ namespace SR_UTILS_NS {
 
         /// @method @evaluate
         SR_NODISCARD const SR_HTYPES_NS::SharedPtr<Transform>& GetTransform() const noexcept;
+        SR_NODISCARD const SR_HTYPES_NS::SharedPtr<Transform>& TryGetTransform() const noexcept { return m_transform; }
         /// @method @evaluate
         SR_NODISCARD const SR_HTYPES_NS::SharedPtr<Transform>& GetParentTransform() const noexcept;
         /// @method

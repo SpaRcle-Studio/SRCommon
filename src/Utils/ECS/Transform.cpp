@@ -5,6 +5,7 @@
 #include <Utils/ECS/Transform.h>
 #include <Utils/ECS/GameObject.h>
 #include <Utils/Profile/TracyContext.h>
+#include <Utils/UI/LayoutRebuilder.h>
 
 #include <Codegen/Transform.generated.hpp>
 
@@ -178,6 +179,13 @@ namespace SR_UTILS_NS {
     }
 
     void Transform::UpdateTree() {
+        if (m_gameObject && GetMeasurement() == Measurement::Space2D) {
+            LayoutRebuilder::MarkDirty(*m_gameObject, true);
+        }
+        UpdateTreeRecursive();
+    }
+
+    void Transform::UpdateTreeRecursive() {
         if (!m_gameObject) SR_UNLIKELY_ATTRIBUTE {
             return;
         }
@@ -200,7 +208,7 @@ namespace SR_UTILS_NS {
                 continue;
             }
 
-            static_cast<GameObject*>(pChild.Get())->GetTransform()->UpdateTree();
+            static_cast<GameObject*>(pChild.Get())->GetTransform()->UpdateTreeRecursive();
         }
     }
 

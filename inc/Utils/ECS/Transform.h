@@ -147,6 +147,7 @@ namespace SR_UTILS_NS {
         virtual void OnHierarchyChanged();
 
     protected:
+        void UpdateTreeRecursive();
         GameObject* m_gameObject = nullptr;
         mutable bool m_dirtyRotation : 4 = false;
         mutable bool m_dirtyScale    : 2 = false;

@@ -8,6 +8,7 @@
 #include <Utils/World/Scene.h>
 #include <Utils/World/SceneUpdater.h>
 #include <Utils/Serialization/SRASerialization.h>
+#include <Utils/UI/LayoutRebuilder.h>
 
 #include <Codegen/Component.generated.hpp>
 
@@ -20,6 +21,19 @@ namespace SR_UTILS_NS {
         /// если срабатывает ассерт, значит, вероятнее всего, какой-то игровой объект до сих пор удерживает компонент,
         /// а значит, будет падение.
         SRAssert(!HasParent());
+    }
+
+    void Component::SetLayoutDirty() noexcept {
+        if (m_parent && m_parent->GetMeta() == GameObject::GetMetaStatic()) {
+            LayoutRebuilder::MarkDirty(*static_cast<GameObject*>(m_parent));
+        }
+    }
+
+    void Component::OnPostLoad() {
+        Super::OnPostLoad();
+        if (GetLayoutElement() || GetLayoutController() || GetLayoutIgnorer()) {
+            SetLayoutDirty();
+        }
     }
 
     void Component::SetParent(IComponentable* pParent) {

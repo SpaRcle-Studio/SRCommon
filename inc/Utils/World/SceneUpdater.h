@@ -7,9 +7,13 @@
 
 #include <Utils/Common/NonCopyable.h>
 #include <Utils/Types/Time.h>
+#include <Utils/Types/SharedPtr.h>
+#include <Utils/Types/FlatHashMap.h>
+#include <Utils/UI/LayoutRebuilder.h>
 
 namespace SR_UTILS_NS {
     class Component;
+    class SceneObject;
 }
 
 namespace SR_WORLD_NS {
@@ -27,6 +31,9 @@ namespace SR_WORLD_NS {
         void LateUpdate(bool isPaused);
 
         void SetDirty();
+        void MarkLayoutDirty(SR_UTILS_NS::SceneObject& object, bool fromTransform = false);
+        void RebuildDirtyLayouts();
+        SR_NODISCARD uint64_t GetLayoutRebuildCount() const noexcept { return m_layoutRebuildCount; }
 
         void RegisterComponent(SR_UTILS_NS::Component* pComponent);
         void UnRegisterComponent(SR_UTILS_NS::Component* pComponent);
@@ -44,8 +51,15 @@ namespace SR_WORLD_NS {
         bool m_isPaused = false;
 
         uint32_t m_componentsPoolSize = 0;
-        std::vector<SR_UTILS_NS::Component*> m_updatableComponents;
-        std::vector<uint32_t> m_freeComponentIds;
+        SR_UTILS_NS::Vector<SR_UTILS_NS::Component*> m_updatableComponents;
+        SR_UTILS_NS::Vector<uint32_t> m_freeComponentIds;
+        SR_UTILS_NS::Vector<SR_HTYPES_NS::SharedPtr<SR_UTILS_NS::SceneObject>> m_dirtyLayoutRoots;
+        SR_UTILS_NS::Vector<SR_HTYPES_NS::SharedPtr<SR_UTILS_NS::SceneObject>> m_layoutRootsToRebuild;
+        SR_HTYPES_NS::FlatHashSet<SR_UTILS_NS::SceneObject*> m_queuedLayoutRoots;
+        SR_HTYPES_NS::FlatHashSet<SR_UTILS_NS::SceneObject*> m_layoutRootsInPass;
+        SR_UTILS_NS::LayoutRebuilder::Context m_layoutContext;
+        bool m_rebuildingLayout = false;
+        uint64_t m_layoutRebuildCount = 0;
 
     };
 }

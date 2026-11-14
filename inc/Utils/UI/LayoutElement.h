@@ -10,11 +10,13 @@
 
 namespace SR_UTILS_NS {
     /// @category(UI)
-    class SR_COMMON_DLL_API LayoutElement final : public Component, public ILayoutElement {
+    class SR_COMMON_DLL_API LayoutElement final : public Component, public ILayoutElement, public ILayoutIgnorer {
         SR_CLASS()
         using Super = Component;
     public:
         LayoutElement() = default;
+        ILayoutElement* GetLayoutElement() noexcept override { return this; }
+        const ILayoutIgnorer* GetLayoutIgnorer() const noexcept override { return this; }
 
         void OnAttached() override;
         void OnDetached() override;
@@ -56,7 +58,7 @@ namespace SR_UTILS_NS {
         float m_preferredHeight = -1.f;
         /// @property @onChanged(OnLayoutPropertyChanged)
         float m_flexibleWidth = -1.f;
-        /// @property @@onChanged(OnLayoutPropertyChanged)
+        /// @property @onChanged(OnLayoutPropertyChanged)
         float m_flexibleHeight = -1.f;
         /// @property @onChanged(OnLayoutPropertyChanged)
         int32_t m_layoutPriority = 1;
