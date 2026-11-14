@@ -57,6 +57,8 @@ namespace SR_UTILS_NS::StoreUtils {
     void Storage::Load() {
         SR_TRACY_ZONE;
 
+        m_storage.erase(StorageType::User);
+
         SR_UTILS_NS::Path path = SR_PLATFORM_NS::GetApplicationUserDataDirectory()
             .Concat("User")
             .Concat(SR_PLATFORM_NS::GetApplicationInfo().project)

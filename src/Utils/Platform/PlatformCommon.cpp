@@ -203,6 +203,10 @@ namespace SR_PLATFORM_NS {
         g_applicationInfo = info;
     }
 
+    void ResetApplicationInfo() {
+        g_applicationInfo.reset();
+    }
+
     const ApplicationInfo& GetApplicationInfo() {
         if (!g_applicationInfo) {
             g_applicationInfo = ApplicationInfo();

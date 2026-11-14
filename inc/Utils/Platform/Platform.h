@@ -87,6 +87,7 @@ namespace SR_UTILS_NS::Platform {
     extern std::mutex g_platformLogMutex;
 
     SR_COMMON_DLL_API extern void SetApplicationInfo(const ApplicationInfo& info);
+    SR_COMMON_DLL_API extern void ResetApplicationInfo();
     SR_COMMON_DLL_API extern const ApplicationInfo& GetApplicationInfo();
     SR_COMMON_DLL_API extern void SetOverriddenMouseState(const std::optional<MouseState>& mouseState);
     SR_COMMON_DLL_API extern std::optional<MouseState> GetOverriddenMouseState();
