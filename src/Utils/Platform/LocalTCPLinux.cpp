@@ -45,6 +45,16 @@ namespace SR_NETWORK_NS::LocalTCP {
         return client;
     }
 
+    int32_t WaitReadable(Handle socket, uint32_t milliseconds) {
+        pollfd pending{static_cast<int32_t>(socket), POLLIN, 0};
+        const auto result = poll(&pending, 1, static_cast<int32_t>(milliseconds));
+        if (result <= 0) {
+            return result;
+        }
+
+        return (pending.revents & (POLLIN | POLLHUP)) ? 1 : -1;
+    }
+
     int32_t Receive(Handle socket, char* buffer, uint32_t size) {
         return static_cast<int32_t>(recv(static_cast<int32_t>(socket), buffer, size, 0));
     }

@@ -51,6 +51,14 @@ namespace SR_NETWORK_NS::LocalTCP {
         return client;
     }
 
+    int32_t WaitReadable(Handle socket, uint32_t milliseconds) {
+        fd_set pending;
+        FD_ZERO(&pending);
+        FD_SET(socket, &pending);
+        timeval interval{static_cast<long>(milliseconds / 1000), static_cast<long>((milliseconds % 1000) * 1000)};
+        return select(0, &pending, nullptr, nullptr, &interval);
+    }
+
     int32_t Receive(Handle socket, char* buffer, uint32_t size) {
         return recv(socket, buffer, static_cast<int32_t>(size), 0);
     }

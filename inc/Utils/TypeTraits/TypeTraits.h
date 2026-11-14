@@ -27,6 +27,9 @@ namespace SR_UTILS_NS {
 		SR_CONSTEXPR SerializationId() noexcept = default;
 		SR_CONSTEXPR ~SerializationId() noexcept = default;
 
+		bool operator==(const SerializationId& id) const;
+		bool operator!=(const SerializationId& id) const;
+
 		template<uint64_t S> static constexpr SerializationId Create(const char (&text)[S]) noexcept {
 			SerializationId id;
 			for (uint64_t i = 0; i < S - 1; ++i) {

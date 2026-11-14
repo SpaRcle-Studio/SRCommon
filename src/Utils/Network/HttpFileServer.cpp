@@ -123,6 +123,10 @@ namespace SR_NETWORK_NS {
 
 #if !defined(SR_WIN32) && !defined(SR_LINUX)
 namespace SR_NETWORK_NS::LocalTCP {
+    int32_t WaitReadable(Handle socket, uint32_t milliseconds) {
+        return -1;
+    }
+
     Handle Listen(uint16_t& port) {
         return InvalidHandle;
     }

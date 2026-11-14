@@ -24,7 +24,7 @@ namespace SR_UTILS_NS {
     /// Элементы массива не имеют имён в JSON, поэтому идентификаторы Item-узлов не сохраняются,
     /// а JsonDeserializer::BeginItem() не сверяет их при чтении.
 
-    class JsonISerialization : public IBaseSerialization {
+    class SR_COMMON_DLL_API JsonISerialization : public IBaseSerialization {
     public:
         void SetPrettyPrint(const bool value) noexcept { m_isPrettyPrint = value; }
         SR_NODISCARD bool IsPrettyPrint() const noexcept { return m_isPrettyPrint; }
@@ -47,9 +47,9 @@ namespace SR_UTILS_NS {
 
     };
 
-    class JsonDeserializer;
+    class SR_COMMON_DLL_API JsonDeserializer;
 
-    class JsonSerializer : public IBaseSerializer, public JsonISerialization {
+    class SR_COMMON_DLL_API JsonSerializer : public IBaseSerializer, public JsonISerialization {
     public:
         JsonSerializer();
 
@@ -61,7 +61,7 @@ namespace SR_UTILS_NS {
 
     };
 
-    class JsonDeserializer : public IBaseDeserializer, public JsonISerialization {
+    class SR_COMMON_DLL_API JsonDeserializer : public IBaseDeserializer, public JsonISerialization {
         friend JsonSerializer;
     public:
         SR_NODISCARD bool LoadFromFile(const SR_UTILS_NS::Path& path) override;
