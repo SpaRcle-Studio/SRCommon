@@ -241,9 +241,12 @@ namespace SR_HTYPES_NS {
     void Thread::Factory::SetMainThread() {
         SR_LOCK_GUARD;
 
-        SRAssert2(!m_main, "Main thread already initialized!");
-
         SR_LOG("Thread::Factory::SetMainThread() : initializing main thread...");
+
+        if (m_main) {
+            delete m_main;
+            m_main = nullptr;
+        }
 
         m_main = new Thread(SR_UTILS_NS::GetThisThreadId());
 
