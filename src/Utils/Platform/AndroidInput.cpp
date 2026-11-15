@@ -5,6 +5,7 @@
 #ifdef SR_ANDROID
 #include <Utils/Platform/AndroidInput.h>
 #include <Utils/Input/InputSystem.h>
+#include <Utils/Input/PointerInput.h>
 #include <Utils/Input/KeyCodes.h>
 
 namespace SR_UTILS_NS::Platform {
@@ -38,20 +39,21 @@ namespace SR_UTILS_NS::Platform {
 
     void ResetAndroidInput() {
         std::lock_guard lock(g_inputMutex);
+        PointerInput::Instance().CancelAll();
         g_mouse = {};
         g_frameMouse = {};
         g_keyboard = {};
         g_frameKeyboard = {};
-        for (auto& pressed : g_mousePressed) {
+        for (auto&& pressed : g_mousePressed) {
             pressed = false;
         }
-        for (auto& pressed : g_keyPressed) {
+        for (auto&& pressed : g_keyPressed) {
             pressed = false;
         }
-        for (auto& pressed : g_nativeKeys) {
+        for (auto&& pressed : g_nativeKeys) {
             pressed = false;
         }
-        for (auto& count : g_keyHolds) {
+        for (auto&& count : g_keyHolds) {
             count = 0;
         }
         g_touches.clear();
@@ -88,22 +90,49 @@ namespace SR_UTILS_NS::Platform {
         if (event.type != AndroidEvent::Motion) {
             return;
         }
-        const auto& motion = event.motion;
+        auto&& motion = event.motion;
         const SR_MATH_NS::FVector2 position(motion.x, motion.y);
+        PointerEvent pointer;
+        pointer.pointerId = motion.pointerId;
+        pointer.space = PointerSpace::Client;
+        pointer.position = position;
+        pointer.pressure = motion.pressure;
         if ((motion.source & AINPUT_SOURCE_MOUSE) == AINPUT_SOURCE_MOUSE) {
+            pointer.pointerId = 0;
+            pointer.phase = PointerPhase::Move;
+            PointerInput::Instance().Submit(pointer);
             g_mouse.position = position;
             const int32_t buttons[5] = {AMOTION_EVENT_BUTTON_PRIMARY, AMOTION_EVENT_BUTTON_SECONDARY,
                 AMOTION_EVENT_BUTTON_TERTIARY, AMOTION_EVENT_BUTTON_BACK, AMOTION_EVENT_BUTTON_FORWARD};
             for (uint32_t i = 0; i < 5; ++i) {
+                const bool pressed = (motion.buttons & buttons[i]) != 0;
+                if (pressed != g_mouse.buttonStates[i]) {
+                    pointer.button = static_cast<PointerButton>(i);
+                    pointer.phase = pressed ? PointerPhase::Down : PointerPhase::Up;
+                    PointerInput::Instance().Submit(pointer);
+                }
                 SetMouseButton(i, (motion.buttons & buttons[i]) != 0);
             }
             if (motion.action == AMOTION_EVENT_ACTION_SCROLL) {
                 g_scroll += SR_MATH_NS::FVector2(motion.scrollX, motion.scrollY);
+                pointer.phase = PointerPhase::Scroll;
+                pointer.scroll = { motion.scrollX, motion.scrollY };
+                PointerInput::Instance().Submit(pointer);
             }
+            return;
+        }
+        if ((motion.source & AINPUT_SOURCE_STYLUS) == AINPUT_SOURCE_STYLUS
+            && (motion.action == AMOTION_EVENT_ACTION_HOVER_ENTER || motion.action == AMOTION_EVENT_ACTION_HOVER_MOVE || motion.action == AMOTION_EVENT_ACTION_HOVER_EXIT)) {
+            pointer.device = PointerDevice::Pen;
+            pointer.phase = motion.action == AMOTION_EVENT_ACTION_HOVER_EXIT ? PointerPhase::Cancel : PointerPhase::Move;
+            PointerInput::Instance().Submit(pointer);
             return;
         }
         const bool down = motion.action == AMOTION_EVENT_ACTION_DOWN || motion.action == AMOTION_EVENT_ACTION_POINTER_DOWN;
         const bool up = motion.action == AMOTION_EVENT_ACTION_UP || motion.action == AMOTION_EVENT_ACTION_POINTER_UP;
+        if (down) {
+            pointer.dragThreshold = std::max(4.f, static_cast<float_t>(GetScreenDPI()) * 8.f / 160.f);
+        }
         if (!down && !up && motion.action != AMOTION_EVENT_ACTION_MOVE) {
             return;
         }
@@ -129,6 +158,10 @@ namespace SR_UTILS_NS::Platform {
         }
         point->position = position;
         point->pressure = motion.pressure;
+        pointer.device = (motion.source & AINPUT_SOURCE_STYLUS) == AINPUT_SOURCE_STYLUS ? PointerDevice::Pen : PointerDevice::Touch;
+        pointer.button = PointerButton::Primary;
+        pointer.phase = down ? PointerPhase::Down : up ? PointerPhase::Up : PointerPhase::Move;
+        PointerInput::Instance().Submit(pointer);
         if (motion.pointerId == g_primaryTouch) {
             g_mouse.position = position;
             if (down || up) {

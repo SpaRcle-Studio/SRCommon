@@ -6,6 +6,7 @@
 #include <Utils/Common/StringAtomLiterals.h>
 #include <Utils/Common/SubscriptionMessage.h>
 #include <Utils/Input/InputSystem.h>
+#include <Utils/Input/PointerInput.h>
 #include <Utils/Platform/Platform.h>
 #include <Utils/Profile/TracyContext.h>
 #include <Utils/Types/Thread.h>
@@ -199,7 +200,7 @@ namespace SR_UTILS_NS {
             m_init = true;
         }
 
-        for (auto& event : m_textEvents) {
+        for (auto&& event : m_textEvents) {
             SubscriptionMessage msg;
             msg.SetPointer(INPUT_TEXT_EVENT_DATA_ID, &event);
             Broadcast(INPUT_TEXT_EVENT_ID, msg);
@@ -211,6 +212,13 @@ namespace SR_UTILS_NS {
     #endif
         UpdateMouse(dt);
         UpdateKeyboard();
+    #if !defined(SR_ANDROID)
+        PointerInput::Instance().CollectMouse();
+    #endif
+        if (!IsAppFocused()) {
+            PointerInput::Instance().CancelAll();
+        }
+        PointerInput::Instance().BeginFrame();
     }
 
     bool Input::GetKeyDown(KeyCode key) { return SR_MATH_NS::IsMaskIncludedSubMask(m_keys[(int)key], State::Down); }

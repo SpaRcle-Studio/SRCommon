@@ -28,6 +28,7 @@ namespace SR_UTILS_NS::Platform {
             case AKEYCODE_ENTER:
             case AKEYCODE_NUMPAD_ENTER: return static_cast<int32_t>(KeyCode::Enter);
             case AKEYCODE_SPACE: return static_cast<int32_t>(KeyCode::Space);
+            case AKEYCODE_BACK:
             case AKEYCODE_ESCAPE: return static_cast<int32_t>(KeyCode::Escape);
             case AKEYCODE_DPAD_LEFT: return static_cast<int32_t>(KeyCode::LeftArrow);
             case AKEYCODE_DPAD_RIGHT: return static_cast<int32_t>(KeyCode::RightArrow);

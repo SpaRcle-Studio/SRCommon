@@ -125,6 +125,7 @@ namespace SR_UTILS_NS {
         bool AddChild(const SceneObject::Ptr& pChild, int32_t index = SR_ID_INVALID);
         void ForEachChild(const SR_HTYPES_NS::Function<void(SceneObject::Ptr&)>& fn);
         void ForEachChild(const SR_HTYPES_NS::Function<void(const SceneObject::Ptr&)>& fn) const;
+        /// @method
         bool SetParent(const SceneObject::Ptr& parent);
         bool Contains(const SceneObject::Ptr& pChild);
         void SetIdInScene(uint64_t id);
@@ -145,6 +146,7 @@ namespace SR_UTILS_NS {
         bool SetDirty(bool value) override;
 
         /// Ставит объект на очередь уничтожения, если есть сцена. Если сцены нет - сразу уничтожает.
+        /// @method
         void Destroy();
 
         virtual void OnParentChanged(const SceneObject::Ptr& pOldParent) { }

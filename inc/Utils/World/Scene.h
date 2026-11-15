@@ -73,6 +73,8 @@ namespace SR_WORLD_NS {
         SR_NODISCARD Path GetAbsPath() const;
         SR_NODISCARD bool IsPrefab() const noexcept override;
         SR_NODISCARD SR_INLINE SceneUpdater* GetSceneUpdater() const { return m_sceneUpdater; }
+        /// @method @evaluate
+        SR_NODISCARD bool IsUIInputConsumed() const;
         SR_NODISCARD SceneLogicPtr GetLogicBase() const;
         SR_NODISCARD const SR_HTYPES_NS::SharedPtr<SR_UTILS_NS::EntityController>& GetEntityController() const;
         SR_NODISCARD ISceneModule* GetModule(StringView name) const;

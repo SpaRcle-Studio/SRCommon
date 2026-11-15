@@ -61,6 +61,7 @@ namespace SR_UTILS_NS {
         bool Load(IDeserializer& deserializer) override;
 
     public:
+        /// @method
         void SetAnchoredPosition(const SR_MATH_NS::FVector2& position);
         void SetTranslation(const SR_MATH_NS::FVector3& translation) override;
         void SetTranslationAndRotation(const SR_MATH_NS::FVector3& translation, const SR_MATH_NS::FVector3& euler) override;
@@ -68,9 +69,12 @@ namespace SR_UTILS_NS {
         void SetRotation(const SR_MATH_NS::Quaternion& quaternion) override;
         void SetScale(const SR_MATH_NS::FVector3& scale) override;
         void SetSkew(const SR_MATH_NS::FVector3& skew) override;
+        /// @method
         void SetSize(const SR_MATH_NS::FVector2& size);
         void SetSizeWithCurrentAnchors(bool horizontal, float_t size);
+        /// @method
         void SetPivot(const SR_MATH_NS::FVector2& pivot);
+        /// @method
         void SetAnchors(const RectAnchors& anchors);
         void SetCanvasSize(const SR_MATH_NS::FVector2& size);
         void SetOffsetMin(const SR_MATH_NS::FVector2& offset);
@@ -98,8 +102,12 @@ namespace SR_UTILS_NS {
         SR_NODISCARD const RectAnchors& GetAnchors() const { return m_anchors; }
         SR_NODISCARD SR_MATH_NS::FVector2 GetOffsetMin() const;
         SR_NODISCARD SR_MATH_NS::FVector2 GetOffsetMax() const;
+        /// @method @evaluate
         SR_NODISCARD SR_MATH_NS::FVector2 GetAnchoredPosition() const;
+        /// @method @evaluate
         SR_NODISCARD SR_MATH_NS::FVector2 GetSizeDelta() const;
+        /// @method @evaluate
+        SR_NODISCARD SR_MATH_NS::FVector2 GetLayoutSize() const { return GetLayoutRect().Size(); }
         SR_NODISCARD bool AreAnchorsTogetherX() const;
         SR_NODISCARD bool AreAnchorsTogetherY() const;
 

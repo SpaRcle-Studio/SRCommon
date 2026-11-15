@@ -10,6 +10,7 @@
 #include <Utils/Types/SharedPtr.h>
 #include <Utils/Types/FlatHashMap.h>
 #include <Utils/UI/LayoutRebuilder.h>
+#include <Utils/UI/UIInputRouter.h>
 
 namespace SR_UTILS_NS {
     class Component;
@@ -41,6 +42,7 @@ namespace SR_WORLD_NS {
         SR_NODISCARD SR_UTILS_NS::TimePointType GetLastBuildTime() const { return m_lastBuildTimePoint; }
         /// Сцена не запущена или на паузе, обновляются только компоненты с ExecuteInEditMode
         SR_NODISCARD bool IsPaused() const noexcept { return m_isPaused; }
+        SR_NODISCARD bool IsUIInputConsumed() const noexcept { return m_uiInputRouter.IsConsumed(); }
 
     private:
         std::recursive_mutex m_mutex;
@@ -49,6 +51,7 @@ namespace SR_WORLD_NS {
         SR_UTILS_NS::TimePointType m_lastBuildTimePoint;
         bool m_dirty = false;
         bool m_isPaused = false;
+        SR_UTILS_NS::UIInputRouter m_uiInputRouter;
 
         uint32_t m_componentsPoolSize = 0;
         SR_UTILS_NS::Vector<SR_UTILS_NS::Component*> m_updatableComponents;

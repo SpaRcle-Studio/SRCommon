@@ -10,6 +10,7 @@
 #include <Utils/Types/Function.h>
 #include <Utils/Profile/TracyContext.h>
 #include <Utils/UI/LayoutRebuilder.h>
+#include <Utils/UI/UIInputAdapter.h>
 #include <Utils/ECS/TransformRect.h>
 
 namespace SR_WORLD_NS {
@@ -62,6 +63,14 @@ namespace SR_WORLD_NS {
 
         m_isPaused = isPaused;
 
+        m_uiInputRouter.Prepare(isPaused);
+
+        if (!isPaused) {
+            RebuildDirtyLayouts();
+            m_uiInputRouter.AfterLayout(false);
+            m_uiInputRouter.Process(*m_scene, SR_UTILS_NS::PointerInput::Instance().GetEvents(), SR_UTILS_NS::UIInputAdapter::ReadKeyboard());
+        }
+
         for (uint32_t i = 0; i < m_componentsPoolSize; ++i) {
             auto&& pComponent = m_updatableComponents[i];
             if (!pComponent) {
@@ -112,6 +121,7 @@ namespace SR_WORLD_NS {
         }
 
         RebuildDirtyLayouts();
+        m_uiInputRouter.AfterLayout(isPaused);
     }
 
     void SceneUpdater::MarkLayoutDirty(SR_UTILS_NS::SceneObject& object, const bool fromTransform) {
@@ -182,6 +192,7 @@ namespace SR_WORLD_NS {
     }
 
     void SceneUpdater::RegisterComponent(SR_UTILS_NS::Component* pComponent) {
+        m_uiInputRouter.Register(*pComponent);
         if (pComponent->GetLayoutElement() || pComponent->GetLayoutController() || pComponent->GetLayoutIgnorer()) {
             pComponent->SetLayoutDirty();
         }
@@ -203,6 +214,7 @@ namespace SR_WORLD_NS {
     }
 
     void SceneUpdater::UnRegisterComponent(SR_UTILS_NS::Component* pComponent) {
+        m_uiInputRouter.Unregister(*pComponent);
         if (pComponent->GetLayoutElement() || pComponent->GetLayoutController() || pComponent->GetLayoutIgnorer()) {
             pComponent->SetLayoutDirty();
         }

@@ -25,6 +25,10 @@
 #include <Codegen/Scene.generated.hpp>
 
 namespace SR_WORLD_NS {
+    bool Scene::IsUIInputConsumed() const {
+        return m_sceneUpdater && m_sceneUpdater->IsUIInputConsumed();
+    }
+
     Scene::Scene()
         : Super()
         , m_sceneUpdater(new SR_WORLD_NS::SceneUpdater(this))

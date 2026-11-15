@@ -102,8 +102,8 @@ namespace SR_UTILS_NS {
         SR_NODISCARD const CursorLockInfo* GetActiveLock() const;
 
     private:
-        std::array<std::vector<CursorLockInfo>, 3> m_cursorLocks;
-        std::vector<InputTextEvent> m_textEvents;
+        std::array<Vector<CursorLockInfo>, 3> m_cursorLocks;
+        Vector<InputTextEvent> m_textEvents;
 
         SR_MATH_NS::FVector2 m_mouseDrag;
         SR_MATH_NS::FVector2 m_mouse;

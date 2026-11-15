@@ -44,6 +44,8 @@ namespace SR_UTILS_NS {
 		static SerializationId CreateFromCStr(const char* text) noexcept;
 		static SerializationId CreateFromString(StringView text) noexcept;
 
+        static constexpr uint64_t GetMaxNameLength() noexcept { return MaxNameLength; }
+
 		SR_NODISCARD uint64_t GetSize() const noexcept { return sizeof(name); }
 		SR_NODISCARD const char* GetName() const noexcept { return name; }
 		SR_NODISCARD uint64_t GetHash() const noexcept { return hash; }

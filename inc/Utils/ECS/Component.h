@@ -76,6 +76,7 @@ namespace SR_UTILS_NS {
         virtual void FixedUpdate();
         virtual void LateUpdate();
 
+
         virtual void OnBeforeLayerChanged();
         virtual void OnLayerChanged();
 

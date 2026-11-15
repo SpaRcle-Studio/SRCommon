@@ -30,6 +30,7 @@ namespace SR_UTILS_NS {
         Integer,
         Floating,
         Double,
+        Null,
     };
 
     struct SR_COMMON_DLL_API SerializationNode {

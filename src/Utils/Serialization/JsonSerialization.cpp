@@ -8,6 +8,33 @@
 #include <Utils/Serialization/JsonSerialization.h>
 
 namespace SR_UTILS_NS {
+    String JsonISerialization::ToJsonValue() const noexcept {
+        SR_TRACY_ZONE;
+        String result;
+        result.reserve(AnalyzeByteSize(m_root, 0));
+        SerializeValue(result, m_root, 0);
+        return result;
+    }
+
+    bool JsonDeserializer::LoadValueFromStringView(StringView str) {
+        SR_TRACY_ZONE;
+        m_root.Clear();
+        m_data = str;
+        m_position = 0;
+        m_isFailed = false;
+        if (m_data.size() >= 3 && static_cast<uint8_t>(m_data[0]) == 0xEF && static_cast<uint8_t>(m_data[1]) == 0xBB && static_cast<uint8_t>(m_data[2]) == 0xBF) {
+            m_position = 3;
+        }
+        bool result = ParseValue(m_root, 0);
+        SkipWhitespaces();
+        if (result && HasData()) {
+            ReportParseError("unexpected data after the JSON value");
+            result = false;
+        }
+        m_data = {};
+        return result;
+    }
+
     String JsonISerialization::ToStringBase() const noexcept {
         SR_TRACY_ZONE;
 
@@ -76,6 +103,9 @@ namespace SR_UTILS_NS {
                 SerializeFloatingPoint(result, SerializeDouble(node.data.floatingDouble, buffer, sizeof(buffer)));
                 return;
             }
+            case SerializationDataType::Null:
+                result += "null";
+                return;
             case SerializationDataType::Unknown:
             default:
                 SRHalt("JsonISerialization::ToString() : unknown type!");
@@ -421,9 +451,7 @@ namespace SR_UTILS_NS {
                 if (!ParseLiteral("null")) {
                     return false;
                 }
-                /// null не имеет аналога в дереве узлов, поэтому трактуется как пустая строка
-                node.type = SerializationDataType::String;
-                node.string = String(GetStringsPool());
+                node.type = SerializationDataType::Null;
                 return true;
             default:
                 return ParseNumber(node);
@@ -450,6 +478,11 @@ namespace SR_UTILS_NS {
             SkipWhitespaces();
 
             if (!ParseStringValue(key)) {
+                return false;
+            }
+
+            if (key.size() >= SerializationId::GetMaxNameLength()) {
+                ReportParseError("object key exceeds the serialization name limit");
                 return false;
             }
 

@@ -30,6 +30,7 @@ namespace SR_UTILS_NS {
         SR_NODISCARD bool IsPrettyPrint() const noexcept { return m_isPrettyPrint; }
 
         SR_NODISCARD String ToStringBase() const noexcept override;
+        SR_NODISCARD String ToJsonValue() const noexcept;
 
     private:
         void SerializeValue(String& result, const SerializationNode& node, uint64_t depth) const;
@@ -67,6 +68,7 @@ namespace SR_UTILS_NS {
         SR_NODISCARD bool LoadFromFile(const SR_UTILS_NS::Path& path) override;
         SR_NODISCARD bool LoadFromString(const std::string& str) override;
         SR_NODISCARD bool LoadFromStringView(StringView str);
+        SR_NODISCARD bool LoadValueFromStringView(StringView str);
         SR_NODISCARD bool LoadFromNode(SR_UTILS_NS::SerializationNode&& node);
 
         SR_NODISCARD bool ShouldSetDefaults(const SerializationId& /* name */) const noexcept override { return true; }
