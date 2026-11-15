@@ -18,6 +18,7 @@ namespace SR_HTYPES_NS {
 }
 
 namespace SR_ANIMATIONS_NS {
+    /// @dontScript
     struct SR_COMMON_DLL_API SkeletonRigBoneInfo : public SR_UTILS_NS::Serializable {
         SR_STRUCT()
 
@@ -35,6 +36,7 @@ namespace SR_ANIMATIONS_NS {
         }
     };
 
+    /// @dontScript
     struct SR_COMMON_DLL_API SkeletonRigBoneChain : public SR_UTILS_NS::Serializable {
         SR_STRUCT()
 
@@ -42,6 +44,7 @@ namespace SR_ANIMATIONS_NS {
         SR_UTILS_NS::Vector<SkeletonRigBoneInfo> bones;
     };
 
+    /// @dontScript
     struct SR_COMMON_DLL_API SkeletonAutoRigRules : public SR_UTILS_NS::Serializable {
         SR_STRUCT()
 
@@ -108,10 +111,10 @@ namespace SR_ANIMATIONS_NS {
         /// @property @tooltip(Настройки мирового пространства скелета, то, как скелет надо трансформировать, чтобы он соответствовал координатной системе мира)
         SkeletonWorldSettings m_worldSettings;
 
-        /// @property @condition(This.m_skeletonType == SkeletonType::Humanoid)
+        /// @property @condition(This.m_skeletonType == SkeletonType::Humanoid) @dontScript
         SkeletonAutoRigRules m_autoRigRules;
 
-        /// @property
+        /// @property @dontScript
         SR_UTILS_NS::Map<SR_UTILS_NS::StringAtom, SkeletonRigBoneChain> m_mapping;
 
     };

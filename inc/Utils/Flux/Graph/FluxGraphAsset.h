@@ -10,7 +10,7 @@
 #include <Utils/Flux/IR/FluxProgram.h>
 
 namespace SR_FLUX_NS {
-    /// @extension(flux)
+    /// @dontScript @extension(flux)
     class SR_COMMON_DLL_API FluxGraphAsset : public Asset {
         using Super = Asset;
         SR_CLASS()

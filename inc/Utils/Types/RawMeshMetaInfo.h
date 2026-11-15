@@ -9,6 +9,7 @@
 #include <Utils/Resources/ResourceLoadMode.h>
 
 namespace SR_HTYPES_NS {
+    /// @dontScript
     struct SR_COMMON_DLL_API RawMeshMetaInfo : public SR_UTILS_NS::Serializable {
         SR_STRUCT()
     public:

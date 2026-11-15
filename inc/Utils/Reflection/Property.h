@@ -116,6 +116,7 @@ namespace SR_UTILS_NS::Reflection {
         SR_NODISCARD const Value& GetResetValue() const noexcept;
         SR_NODISCARD const EditorPropertyParams& GetEditorParams() const noexcept { return m_editorParams; }
         SR_NODISCARD bool HasExplicitSetter() const noexcept { return m_hasExplicitSetter; }
+        SR_NODISCARD bool IsDontScript() const noexcept { return m_dontScript; }
 
         SR_NODISCARD bool IsActive(SRClass& owner) const noexcept {
             if (m_propertyActiveCallback) {
@@ -148,6 +149,7 @@ namespace SR_UTILS_NS::Reflection {
         Property& SetEditorParams(const EditorPropertyParams& params) noexcept { m_editorParams = params; return *this; }
         Property& SetPropertyCondition(PropertyActiveCallbackFn callback) noexcept { m_propertyActiveCallback = callback; return *this; }
         Property& SetHasExplicitSetter(bool hasExplicitSetter) noexcept { m_hasExplicitSetter = hasExplicitSetter; return *this; }
+        Property& SetDontScript(bool dontScript) noexcept { m_dontScript = dontScript; return *this; }
         Property& SetDisplayName(const StringAtom& displayName) noexcept { m_displayName = displayName; return *this; }
 
     private:
@@ -164,7 +166,8 @@ namespace SR_UTILS_NS::Reflection {
         SR_HTYPES_NS::Function<void(SRClass*, const Value&)> m_dynamicSetter;
         ChangeCallbackFn m_onChangeCallback = nullptr;
         PropertyActiveCallbackFn m_propertyActiveCallback = nullptr;
-        bool m_hasExplicitSetter = false;
+        bool m_hasExplicitSetter : 4 = false;
+        bool m_dontScript : 4 = false;
     };
 
     SR_COMMON_DLL_API std::string_view MakeSerializePropertyName(std::string_view name);

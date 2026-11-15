@@ -54,6 +54,7 @@ namespace SR_UTILS_NS {
         SR_NODISCARD virtual bool IsAbstract() const noexcept;
         SR_NODISCARD virtual bool IsHidden() const noexcept;
         SR_NODISCARD virtual bool IsEditorOnly() const noexcept;
+        SR_NODISCARD virtual bool IsDontScript() const noexcept;
         SR_NODISCARD virtual std::span<const SRClassMeta*> GetBaseMetas() const noexcept;
         SR_NODISCARD virtual std::span<const SR_UTILS_NS::Reflection::Property> GetProperties() const noexcept;
         SR_NODISCARD virtual std::span<const SR_UTILS_NS::Reflection::Method> GetMethods() const noexcept;

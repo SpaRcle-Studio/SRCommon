@@ -38,11 +38,11 @@ namespace SR_FLUX_NS {
         void InitializeRuntime();
 
     private:
-        /// @property
+        /// @property @dontScript
         /// @customArgs(pick: enabled, filter name: Flux, relative: resources)
         /// @customArg(filter value: flux)
         ResourceRef<FluxGraphAsset> m_graph;
-        /// @property
+        /// @property @dontScript
         Map<StringAtom, Reflection::Value> m_variables;
 
     private:

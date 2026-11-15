@@ -13,7 +13,7 @@ namespace SR_FLUX_NS {
     struct FluxProgram;
     class FluxRuntime;
 
-    /// @category(Scripting)
+    /// @dontScript @category(Scripting)
     class FluxIRExecutor : public SR_UTILS_NS::Component {
         using Super = Component;
         SR_CLASS()

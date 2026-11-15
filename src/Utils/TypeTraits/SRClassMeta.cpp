@@ -149,6 +149,15 @@ namespace SR_UTILS_NS {
         return false;
     }
 
+    bool SRClassMeta::IsDontScript() const noexcept {
+        for (auto&& pBase : GetBaseMetas()) {
+            if (pBase->IsDontScript()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     bool SRClassMeta::IsEditorOnly() const noexcept {
         return false;
     }
