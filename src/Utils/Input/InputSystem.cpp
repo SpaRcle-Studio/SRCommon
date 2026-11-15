@@ -17,6 +17,8 @@
 #include <Codegen/InputSystem.generated.hpp>
 
 namespace SR_UTILS_NS {
+    SR_MAYBE_UNUSED_VAR Input::Instance();
+
     std::string_view InputTextEvent::GetText() const { return std::string_view(text, length); }
 
     uint8_t KeyStateToIndex(Input::State state) {

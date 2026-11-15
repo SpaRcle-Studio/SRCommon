@@ -330,8 +330,20 @@ namespace SR_UTILS_NS::Platform {
     }
 
     double_t GetScreenDPI() {
-        SRHaltOnce("Not implemented!");
-        return 0.0;
+        AConfiguration* config = AConfiguration_new();
+        AConfiguration_fromAssetManager(
+            config,
+            pAndroidInstance->activity->assetManager
+        );
+
+        const int32_t dpi = AConfiguration_getDensity(config);
+        AConfiguration_delete(config);
+
+        if (dpi == ACONFIGURATION_DENSITY_DEFAULT || dpi == ACONFIGURATION_DENSITY_ANY) {
+            return 160.0;
+        }
+
+        return static_cast<double_t>(dpi);
     }
 
     void SetEnvironmentVar(const std::string_view& name, const std::string_view& value) {
