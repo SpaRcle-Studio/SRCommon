@@ -27,9 +27,9 @@ function(SR_COMMON_ASSIMP_SOURCES_MODIFY_HOOK value)
     set(assimp_src_updated ${cxx_files} CACHE INTERNAL "" FORCE )
 
     if (result EQUAL "0")
-        message(STATUS "Assimp sources modified successfully:\n${output}")
+        message(STATUS "[SpaRcle Engine] Assimp sources modified successfully:\n${output}")
     else()
-        message(FATAL_ERROR "Assimp sources modification failed with error:\n${error_output}")
+        message(FATAL_ERROR "[SpaRcle Engine] Assimp sources modification failed with error:\n${error_output}")
     endif()
 endfunction()
 

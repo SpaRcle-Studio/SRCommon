@@ -16,13 +16,13 @@ def write_if_changed(path: Path, content: str):
         with open(path, "r", encoding="utf-8") as f:
             old = f.read()
         if old == content:
-            print(f"BuildGenerator.py: no changes in {path}, skipping write.")
+            print(f"[SpaRcle Engine] BuildGenerator: no changes in {path}, skipping write.")
             return False  # не изменили
     except FileNotFoundError:
         pass
 
     with open(path, "w", encoding="utf-8") as f:
-        print(f"BuildGenerator.py: file {path} outdated or missing, writing new content.")
+        print(f"[SpaRcle Engine] BuildGenerator: file {path} outdated or missing, writing new content.")
         f.write(content)
     return True  # изменили
 
@@ -97,13 +97,13 @@ def gather_cpp_files(src_dir: Path, config):
                     collected_files.append(file_path)
 
     except Exception as e:
-        print(f'Error during file collection: {e}')
+        print(f'[SpaRcle Engine] BuildGenerator: Error during file collection: {e}')
 
     return collected_files
 
 
 if __name__ == "__main__":
-    print("BuildGenerator.py: started")
+    print("[SpaRcle Engine] BuildGenerator: started")
     timer_start = perf_counter()
 
     parser = argparse.ArgumentParser(description="SpaRcle Code generator")
@@ -131,10 +131,10 @@ if __name__ == "__main__":
     out_directory = Path(args.out).joinpath(config["module_name"])
 
     print(
-        f"BuildGenerator.py: generating build files for project at:\n\t\t{project_path}"
+        f"[SpaRcle Engine] BuildGenerator: generating build files for project at:\n\t\t{project_path}"
     )
-    print(f"BuildGenerator.py: output directory is:\n\t\t{out_directory}")
-    print(f"BuildGenerator.py: unity build is {args.unity}")
+    print(f"[SpaRcle Engine] BuildGenerator: output directory is:\n\t\t{out_directory}")
+    print(f"[SpaRcle Engine] BuildGenerator: unity build is {args.unity}")
 
     if not os.path.exists(out_directory):
         os.makedirs(out_directory)
@@ -150,7 +150,7 @@ if __name__ == "__main__":
     timer_stop = perf_counter()
 
     print(
-        "BuildGenerator.py: finished. Elapsed time: ",
+        "[SpaRcle Engine] BuildGenerator: finished. Elapsed time: ",
         timer_stop - timer_start,
         " seconds",
     )

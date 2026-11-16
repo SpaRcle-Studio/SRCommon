@@ -21,7 +21,7 @@ if (MSVC)
         add_compile_definitions(SR_COMMON_USE_CLANG_EMULATION)
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DSR_COMMON_USE_CLANG_EMULATION")
 
-        message(STATUS "Using Clang compiler emulation for MSVC")
+        message(STATUS "[SpaRcle Engine] Using Clang compiler emulation for MSVC")
     endif()
 endif()
 
@@ -65,9 +65,9 @@ if (NOT ANDROID_NDK AND UNIX AND NOT APPLE AND NOT SR_EMSCRIPTEN AND NOT WIN32)
         set(SR_COMMON_USE_NATIVE_WAYLAND_SUPPORTED OFF)
         if (SR_WAYLAND_HAS_XDG_SHELL AND SR_WAYLAND_HAS_FRACTIONAL_SCALE AND SR_WAYLAND_HAS_XDG_DECORATION)
             set(SR_COMMON_USE_NATIVE_WAYLAND_SUPPORTED ON CACHE INTERNAL "" FORCE)
-            message(STATUS "Native Wayland support is available and the backend is turned on.")
+            message(STATUS "[SpaRcle Engine] Native Wayland support is available and the backend is turned on.")
         else()
-            message(WARNING "Native Wayland support is not fully available. Falling back to GLFW.")
+            message(WARNING "[SpaRcle Engine] Native Wayland support is not fully available. Falling back to GLFW.")
         endif()
     endif()
 
@@ -101,7 +101,7 @@ if (UNIX)
 endif()
 
 if (SR_COMMON_ZLIB)
-    message(STATUS "SRCommon will be using zlib")
+    message(STATUS "[SpaRcle Engine] SRCommon will be using zlib")
 
     add_compile_definitions(SR_COMMON_ZLIB)
     set(ZLIB_BUILD_EXAMPLES OFF)
@@ -112,9 +112,9 @@ if (SR_COMMON_ZLIB)
     add_subdirectory(libs/zlib)
 
     if (ZLIB_ONLY_STATIC)
-        message(STATUS "Zlib will be built as a static library")
+        message(STATUS "[SpaRcle Engine] Zlib will be built as a static library")
     else()
-        message(STATUS "Zlib will be built as a shared library")
+        message(STATUS "[SpaRcle Engine] Zlib will be built as a shared library")
     endif()
 endif()
 
@@ -134,11 +134,11 @@ endif()
 
 if (SR_COMMON_ZLIB)
     set(SR_COMMON_ZLIB_INCLUDE_DIRS ${ZLIB_INCLUDE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/libs/zlib ${CMAKE_CURRENT_BINARY_DIR}/libs/zlib CACHE INTERNAL "" FORCE)
-    message(STATUS "SRCommon ZLib include directories: ${SR_COMMON_ZLIB_INCLUDE_DIRS}")
+    message(STATUS "[SpaRcle Engine] SRCommon ZLib include directories: ${SR_COMMON_ZLIB_INCLUDE_DIRS}")
 endif()
 
 if (SR_COMMON_LIBPNG AND SR_COMMON_ZLIB)
-    message(STATUS "SRCommon will be using libpng")
+    message(STATUS "[SpaRcle Engine] SRCommon will be using libpng")
 
     add_compile_definitions(SR_COMMON_LIBPNG)
     set(PNG_STATIC ON CACHE INTERNAL "" FORCE)
@@ -182,7 +182,7 @@ if (NOT ANDROID_NDK AND UNIX AND NOT SR_EMSCRIPTEN)
     set(SR_COMMON_CPPTRACE_ENABLED ON)
 
     if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-        message(WARNING "Clang compiler is used. Stack tracing will not work.")
+        message(WARNING "[SpaRcle Engine] Clang compiler is used. Stack tracing will not work.")
         set(CPPTRACE_UNWIND_WITH_NOTHING ON)
     endif()
 
@@ -222,7 +222,7 @@ endif()
 add_subdirectory(libs/glm)
 
 if (SR_COMMON_MESHOPTIMIZER)
-    message(STATUS "SRCommon will be using meshoptimizer")
+    message(STATUS "[SpaRcle Engine] SRCommon will be using meshoptimizer")
 
     add_compile_definitions(SR_COMMON_MESHOPTIMIZER)
 
@@ -472,19 +472,19 @@ if (SR_COMMON_CPPTRACE_ENABLED)
 endif()
 
 get_property(SR_UTILS_INCLUDE_DIRECTORIES_CONTENT GLOBAL PROPERTY SR_UTILS_INCLUDE_DIRECTORIES)
-message("SRCommon include directories: ${SR_UTILS_INCLUDE_DIRECTORIES_CONTENT}")
+message("[SpaRcle Engine] SRCommon include directories: ${SR_UTILS_INCLUDE_DIRECTORIES_CONTENT}")
 target_include_directories(Utils PUBLIC ${SR_UTILS_INCLUDE_DIRECTORIES_CONTENT})
 
 set(SR_UTILS_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR} CACHE INTERNAL "" FORCE)
 set(SR_UTILS_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR} CACHE INTERNAL "" FORCE)
 
 if (SR_COMMON_DLL_EXPORTS)
-    message("SRCommon will be using DLL exports")
+    message("[SpaRcle Engine] SRCommon will be using DLL exports")
     target_compile_definitions(Utils PUBLIC SR_COMMON_DLL_EXPORTS)
 endif()
 
 if (SR_COMMON_CI_BUILD)
-    message("SRCommon is built as a part of CI build.")
+    message("[SpaRcle Engine] SRCommon is built as a part of CI build.")
 
     file(WRITE cmake/main.cpp "int main() { return 0; }")
     add_executable(SR_UTILS_CI cmake/main.cpp)

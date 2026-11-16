@@ -1,6 +1,6 @@
 project(TinyFileDialogs)
 
-message(STATUS "SpaRcle Engine: SRCommon library will be using TinyFileDialogs")
+message(STATUS "[SpaRcle Engine] SRCommon library will be using TinyFileDialogs")
 
 add_library(TinyFileDialogs STATIC tinyfiledialogs.c)
 

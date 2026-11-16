@@ -4,7 +4,7 @@ from time import perf_counter
 from collections import defaultdict
 
 if __name__ == "__main__":
-    print("AssimpUnityBuild.py: started")
+    print("[SpaRcle Engine] AssimpUnityBuild: started")
 
     parser = argparse.ArgumentParser(description="SpaRcle Code generator")
     parser.add_argument("--sources", required=True)
@@ -84,12 +84,12 @@ if __name__ == "__main__":
                 old_text = file.read()
 
             if old_text == file_text:
-                print(f"AssimpUnityBuild.py: file '{file_name}' is already up to date, skipping")
+                print(f"[SpaRcle Engine] AssimpUnityBuild: file '{file_name}' is already up to date, skipping")
                 used_files.add(file_name)
                 continue
 
         with open(group_file_path, "w") as file:
-            print(f"AssimpUnityBuild.py: creating cxx file for group '{group}' at '{group_file_path}'")
+            print(f"[SpaRcle Engine] AssimpUnityBuild: creating cxx file for group '{group}' at '{group_file_path}'")
             used_files.add(file_name)
             file.write(file_text)
 
@@ -98,7 +98,7 @@ if __name__ == "__main__":
             file_name = file.replace('\\', '/').split('/')[-1]
             if file_name in used_files:
                 continue
-            print(f"AssimpUnityBuild.py: removing file '{file_name}', because it was not used in any group")
+            print(f"[SpaRcle Engine] AssimpUnityBuild: removing file '{file_name}', because it was not used in any group")
             os.remove(file)
 
-    print("AssimpUnityBuild.py: finished")
+    print("[SpaRcle Engine] AssimpUnityBuild: finished")
