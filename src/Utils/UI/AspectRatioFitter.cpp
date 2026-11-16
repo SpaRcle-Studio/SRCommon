@@ -61,6 +61,15 @@ namespace SR_UTILS_NS {
 
                 const float_t parentAspect = parentSize.x / parentSize.y;
 
+                if (m_mode == AspectRatioMode::FitInParent && m_referenceSize.x > 0.f && m_referenceSize.y > 0.f) {
+                    const float_t scale = SR_MIN(parentSize.x / m_referenceSize.x, parentSize.y / m_referenceSize.y);
+                    pTransformRect->SetAnchors(RectAnchors(SR_MATH_NS::FVector2(0.5f), SR_MATH_NS::FVector2(0.5f)));
+                    pTransformRect->SetAnchoredPosition(SR_MATH_NS::FVector2::Zero());
+                    pTransformRect->SetSize(m_referenceSize);
+                    pTransformRect->SetScale(SR_MATH_NS::FVector3(scale, scale, 1.f));
+                    break;
+                }
+
                 bool fitWidth;
 
                 if (m_mode == AspectRatioMode::FitInParent) {

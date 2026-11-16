@@ -33,6 +33,13 @@ namespace SR_UTILS_NS {
         SetTranslation(SR_MATH_NS::FVector3(position.x, position.y, m_translation.z));
     }
 
+    void TransformRect::SetVisualOffset(const SR_MATH_NS::FVector2& offset) {
+        if (m_visualOffset != offset) {
+            m_visualOffset = offset;
+            UpdateTreeRecursive();
+        }
+    }
+
     void TransformRect::SetTranslation(const SR_MATH_NS::FVector3& translation) {
         if (translation == m_translation) {
             return;
@@ -308,7 +315,7 @@ namespace SR_UTILS_NS {
             ==============================================================*/
 
             m_localMatrix =
-                SR_MATH_NS::Matrix4x4::FromTranslate({ pivotPos.x, pivotPos.y, 0.f }) *
+                SR_MATH_NS::Matrix4x4::FromTranslate({ pivotPos.x + m_visualOffset.x, pivotPos.y + m_visualOffset.y, 0.f }) *
                 SR_MATH_NS::Matrix4x4::FromQuaternion(GetQuaternion()) *
                 SR_MATH_NS::Matrix4x4::FromScale(GetScale()) *
                 SR_MATH_NS::Matrix4x4::FromTranslate({

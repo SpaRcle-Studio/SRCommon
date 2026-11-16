@@ -8,6 +8,10 @@
 #include <Utils/World/Scene.h>
 
 namespace SR_UTILS_NS {
+    void UIInputRouter::RequestFocus(UIComponent& component) {
+        m_requestedFocus = &component;
+    }
+
     void UIInputRouter::Register(Component& component) {
         if (auto&& pUI = UIComponent::TryGet(&component)) {
             m_components.emplace_back(pUI);
@@ -299,6 +303,12 @@ namespace SR_UTILS_NS {
             m_targets[j] = pTarget;
         }
         RefreshModal();
+        if (m_requestedFocus) {
+            if (Contains(m_requestedFocus) && m_requestedFocus->GetUIInputTarget()->IsFocusable()) {
+                m_focus = m_requestedFocus;
+            }
+            m_requestedFocus = nullptr;
+        }
         for (auto&& pointer : m_pointers) {
             if (pointer.pCapture && (!Contains(pointer.pCapture) || !pointer.pCapture->GetUIInputTarget()->IsInteractable())) {
                 pointer.pCapture->GetUIInputTarget()->PointerCancel(pointer.last);

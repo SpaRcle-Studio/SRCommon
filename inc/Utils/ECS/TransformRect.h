@@ -63,6 +63,8 @@ namespace SR_UTILS_NS {
     public:
         /// @method
         void SetAnchoredPosition(const SR_MATH_NS::FVector2& position);
+        /// @method
+        void SetVisualOffset(const SR_MATH_NS::FVector2& offset);
         void SetTranslation(const SR_MATH_NS::FVector3& translation) override;
         void SetTranslationAndRotation(const SR_MATH_NS::FVector3& translation, const SR_MATH_NS::FVector3& euler) override;
         void SetRotation(const SR_MATH_NS::FVector3& euler) override;
@@ -140,6 +142,7 @@ namespace SR_UTILS_NS {
 
     protected:
         bool m_loadingLayout = false;
+        SR_MATH_NS::FVector2 m_visualOffset;
         mutable SR_MATH_NS::Matrix4x4 m_localMatrix = SR_MATH_NS::Matrix4x4::Identity();
         mutable SR_MATH_NS::Matrix4x4 m_matrix = SR_MATH_NS::Matrix4x4::Identity();
         mutable SR_MATH_NS::Quaternion m_globalRotation = SR_MATH_NS::Quaternion::Identity();

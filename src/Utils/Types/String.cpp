@@ -92,6 +92,9 @@ namespace SR_UTILS_NS {
                 SRFree(m_data);
             }
         }
+        m_data = nullptr;
+        m_size = 0;
+        m_capacity = 0;
     }
 
     String& String::operator=(const char* str) {

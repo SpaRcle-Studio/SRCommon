@@ -21,6 +21,7 @@ namespace SR_UTILS_NS {
         void AfterLayout(bool paused);
         void Process(SR_WORLD_NS::Scene& scene, std::span<const PointerEvent> events, const UINavigationState& navigation);
         SR_NODISCARD bool IsConsumed() const noexcept { return m_consumed; }
+        void RequestFocus(UIComponent& component);
 
     private:
         void Collect(SceneObject& object);
@@ -47,6 +48,7 @@ namespace SR_UTILS_NS {
         Vector<SR_HTYPES_NS::SharedPtr<UIComponent>> m_targets;
         Vector<PointerState> m_pointers;
         SR_HTYPES_NS::SharedPtr<UIComponent> m_focus;
+        SR_HTYPES_NS::SharedPtr<UIComponent> m_requestedFocus;
         SR_HTYPES_NS::SharedPtr<UIComponent> m_modal;
         bool m_consumed = false;
     };

@@ -43,6 +43,7 @@ namespace SR_WORLD_NS {
         /// Сцена не запущена или на паузе, обновляются только компоненты с ExecuteInEditMode
         SR_NODISCARD bool IsPaused() const noexcept { return m_isPaused; }
         SR_NODISCARD bool IsUIInputConsumed() const noexcept { return m_uiInputRouter.IsConsumed(); }
+        void RequestUIFocus(SR_UTILS_NS::UIComponent& component) { m_uiInputRouter.RequestFocus(component); }
 
     private:
         std::recursive_mutex m_mutex;
