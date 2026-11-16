@@ -274,8 +274,10 @@ namespace std {
     };
 
     template<> struct less<SR_UTILS_NS::String> {
-        bool operator()(const SR_UTILS_NS::String& lhs, const SR_UTILS_NS::String& rhs) const noexcept {
-            return lhs.view() < rhs.view();
+        typedef void is_transparent;
+
+        bool operator()(SR_UTILS_NS::StringView lhs, SR_UTILS_NS::StringView rhs) const noexcept {
+            return static_cast<std::string_view>(lhs) < static_cast<std::string_view>(rhs);
         }
     };
 

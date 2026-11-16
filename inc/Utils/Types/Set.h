@@ -19,6 +19,14 @@ namespace SR_UTILS_NS {
     //
     // Complexity: O(log n) insert / erase / find / lower_bound / upper_bound.
     // =========================================================================
+    template<typename Compare, typename T, typename K>
+    concept SetTransparentLookup = requires {
+        typename Compare::is_transparent;
+    } && requires(const Compare& cmp, const T& stored, const K& key) {
+        { cmp(stored, key) } -> std::convertible_to<bool>;
+        { cmp(key, stored) } -> std::convertible_to<bool>;
+    };
+
     template<
         typename T,
         typename Compare = std::less<T>
@@ -111,6 +119,10 @@ namespace SR_UTILS_NS {
         bool operator!=(const Set& other) const noexcept { return !(*this == other); }
 
     public:
+        // Heterogeneous lookup is enabled only for transparent comparators.
+        // The comparator must compare T and K directly without allocating.
+
+
         // lookup
         SR_NODISCARD Iterator      find(const T& value)        noexcept;
         SR_NODISCARD ConstIterator find(const T& value)  const noexcept;
@@ -120,6 +132,23 @@ namespace SR_UTILS_NS {
         SR_NODISCARD ConstIterator lower_bound(const T& value) const noexcept;
         SR_NODISCARD Iterator      upper_bound(const T& value) noexcept;
         SR_NODISCARD ConstIterator upper_bound(const T& value) const noexcept;
+
+        template<typename K> requires (SetTransparentLookup<Compare, T, K>)
+        SR_NODISCARD Iterator find(const K& value) noexcept;
+        template<typename K> requires (SetTransparentLookup<Compare, T, K>)
+        SR_NODISCARD ConstIterator find(const K& value) const noexcept;
+        template<typename K> requires (SetTransparentLookup<Compare, T, K>)
+        SR_NODISCARD bool contains(const K& value) const noexcept;
+        template<typename K> requires (SetTransparentLookup<Compare, T, K>)
+        SR_NODISCARD uint32_t count(const K& value) const noexcept { return contains(value) ? 1 : 0; }
+        template<typename K> requires (SetTransparentLookup<Compare, T, K>)
+        SR_NODISCARD Iterator lower_bound(const K& value) noexcept;
+        template<typename K> requires (SetTransparentLookup<Compare, T, K>)
+        SR_NODISCARD ConstIterator lower_bound(const K& value) const noexcept;
+        template<typename K> requires (SetTransparentLookup<Compare, T, K>)
+        SR_NODISCARD Iterator upper_bound(const K& value) noexcept;
+        template<typename K> requires (SetTransparentLookup<Compare, T, K>)
+        SR_NODISCARD ConstIterator upper_bound(const K& value) const noexcept;
 
         // capacity
         SR_NODISCARD bool     empty() const noexcept { return m_size == 0; }
@@ -175,7 +204,8 @@ namespace SR_UTILS_NS {
         void EraseFixup(Node* x, Node* xp) noexcept;
         void Transplant(Node* u, Node* v) noexcept;
 
-        SR_NODISCARD Node* LB(const T& value) const noexcept;
+        template<typename K>
+        SR_NODISCARD Node* LB(const K& value) const noexcept;
         std::pair<Node*, bool> InsertAt(Node* z) noexcept;
 
         Node* CloneSubtree(Node* src, Node* srcNil, Node* parent);
@@ -432,7 +462,8 @@ namespace SR_UTILS_NS {
     // ---- LB / InsertAt ------------------------------------------------------
 
     template<typename T, typename C>
-    typename Set<T,C>::Node* Set<T,C>::LB(const T& value) const noexcept {
+    template<typename K>
+    typename Set<T,C>::Node* Set<T,C>::LB(const K& value) const noexcept {
         Node* x = Root(), *lb = m_nil;
         while (x != m_nil) {
             if (!m_cmp(x->value, value)) { lb = x; x = x->pLeft; }
@@ -562,6 +593,70 @@ namespace SR_UTILS_NS {
         while (x != m_nil) {
             if (m_cmp(value, x->value)) { ub = x; x = x->pLeft; }
             else                         { x = x->pRight; }
+        }
+        return { ub, m_nil };
+    }
+
+    // ---- transparent heterogeneous lookup -----------------------------------
+
+    template<typename T, typename C>
+    template<typename K> requires (SetTransparentLookup<C, T, K>)
+    typename Set<T,C>::Iterator Set<T,C>::find(const K& value) noexcept {
+        if (!m_nil) return end();
+        Node* x = LB(value);
+        return (x != m_nil && !m_cmp(value, x->value)) ? Iterator{ x, m_nil } : end();
+    }
+
+    template<typename T, typename C>
+    template<typename K> requires (SetTransparentLookup<C, T, K>)
+    typename Set<T,C>::ConstIterator Set<T,C>::find(const K& value) const noexcept {
+        if (!m_nil) return end();
+        Node* x = LB(value);
+        return (x != m_nil && !m_cmp(value, x->value)) ? ConstIterator{ x, m_nil } : end();
+    }
+
+    template<typename T, typename C>
+    template<typename K> requires (SetTransparentLookup<C, T, K>)
+    bool Set<T,C>::contains(const K& value) const noexcept {
+        if (!m_nil) return false;
+        Node* x = LB(value);
+        return x != m_nil && !m_cmp(value, x->value);
+    }
+
+    template<typename T, typename C>
+    template<typename K> requires (SetTransparentLookup<C, T, K>)
+    typename Set<T,C>::Iterator Set<T,C>::lower_bound(const K& value) noexcept {
+        if (!m_nil) return end();
+        return { LB(value), m_nil };
+    }
+
+    template<typename T, typename C>
+    template<typename K> requires (SetTransparentLookup<C, T, K>)
+    typename Set<T,C>::ConstIterator Set<T,C>::lower_bound(const K& value) const noexcept {
+        if (!m_nil) return end();
+        return { LB(value), m_nil };
+    }
+
+    template<typename T, typename C>
+    template<typename K> requires (SetTransparentLookup<C, T, K>)
+    typename Set<T,C>::Iterator Set<T,C>::upper_bound(const K& value) noexcept {
+        if (!m_nil) return end();
+        Node* x = Root(), *ub = m_nil;
+        while (x != m_nil) {
+            if (m_cmp(value, x->value)) { ub = x; x = x->pLeft; }
+            else { x = x->pRight; }
+        }
+        return { ub, m_nil };
+    }
+
+    template<typename T, typename C>
+    template<typename K> requires (SetTransparentLookup<C, T, K>)
+    typename Set<T,C>::ConstIterator Set<T,C>::upper_bound(const K& value) const noexcept {
+        if (!m_nil) return end();
+        Node* x = Root(), *ub = m_nil;
+        while (x != m_nil) {
+            if (m_cmp(value, x->value)) { ub = x; x = x->pLeft; }
+            else { x = x->pRight; }
         }
         return { ub, m_nil };
     }
