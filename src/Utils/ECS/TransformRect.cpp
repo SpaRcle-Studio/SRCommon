@@ -611,7 +611,7 @@ namespace SR_UTILS_NS {
     }
 
     void TransformRect::UpdateMaskInfoTree() {
-        if (!m_gameObject || m_maskInfoDirty) {
+        if (!m_gameObject) {
             return;
         }
         m_maskInfoDirty = true;

@@ -54,6 +54,7 @@ namespace SR_UTILS_NS {
         void ResetMouse();
         void SetMouseDrag(const SR_MATH_NS::FVector2& drag);
         void SetKeyStates(const KeyStates& states);
+        void SetCustomCursorActive(const void* pOwner, bool active);
 
         /// @method @evaluate
         SR_NODISCARD SR_MATH_NS::FVector2 GetMouseDrag();
@@ -104,6 +105,7 @@ namespace SR_UTILS_NS {
     private:
         std::array<Vector<CursorLockInfo>, 3> m_cursorLocks;
         Vector<InputTextEvent> m_textEvents;
+        Vector<const void*> m_customCursors;
 
         SR_MATH_NS::FVector2 m_mouseDrag;
         SR_MATH_NS::FVector2 m_mouse;

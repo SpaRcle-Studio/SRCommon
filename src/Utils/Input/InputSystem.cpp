@@ -120,7 +120,7 @@ namespace SR_UTILS_NS {
         #ifdef SR_EMSCRIPTEN
             SR_PLATFORM_NS::SetCursorLockActive(false);
         #endif
-            SetCursorVisible(true);
+            SetCursorVisible(m_customCursors.empty() || !IsAppFocused());
             m_mouseDrag = (m_mouse - m_mousePrev);
         }
 
@@ -286,6 +286,18 @@ namespace SR_UTILS_NS {
             m_isVisible = isVisible;
             SR_PLATFORM_NS::SetCursorVisible(isVisible);
         }
+    }
+
+    void Input::SetCustomCursorActive(const void* pOwner, bool active) {
+        SR_LOCK_GUARD;
+        auto&& pIt = m_customCursors.find(pOwner);
+        if (active && pIt == m_customCursors.end()) {
+            m_customCursors.emplace_back(pOwner);
+        }
+        else if (!active && pIt != m_customCursors.end()) {
+            m_customCursors.erase(pIt);
+        }
+        SetCursorVisible(!IsAppFocused() || (!m_isLocked && m_customCursors.empty()));
     }
 
     void Input::LockCursor(CursorLockInfo& info) {
