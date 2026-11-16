@@ -62,8 +62,8 @@
 #define SR_ATAN2(y, x) (SR_MATH_NS::Atan2(y, x))
 
 #define SR_ABS(x) (SR_MATH_NS::Abs(x))
-#define SR_MAX(a, b) (a > b ? a : b)
-#define SR_MIN(a, b) (a < b ? a : b)
+#define SR_MAX(a, b) ((a > b) ? (a) : (b))
+#define SR_MIN(a, b) ((a < b) ? (a) : (b))
 #define SR_CLAMP(x, lower, upper) SR_MATH_NS::Clamp(x, lower, upper)
 #define SR_CLAMP01(x) SR_MATH_NS::Clamp(x, static_cast<decltype(x)>(0), static_cast<decltype(x)>(1))
 

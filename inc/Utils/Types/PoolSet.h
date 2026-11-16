@@ -26,18 +26,32 @@ namespace SR_HTYPES_NS {
         }
 
         void Set(uint32_t index, T value) {
+            const SizeType required = static_cast<SizeType>(index) + 1;
+
+            if (required > m_capacity) SR_UNLIKELY_ATTRIBUTE {
+                const SizeType newCapacity = SR_MAX(
+                    required,
+                    (m_capacity > 0 ? (m_capacity + m_capacity / 2) : SizeType(16))
+                );
+
+                T* newPool = new T[newCapacity]{};
+
+                if (m_maskPool) {
+                    std::memcpy(
+                        newPool,
+                        m_maskPool,
+                        m_capacity * sizeof(T)
+                    );
+                }
+
+                delete[] m_maskPool;
+
+                m_maskPool = newPool;
+                m_capacity = newCapacity;
+            }
+
             m_min = SR_MIN(m_min, index);
             m_max = SR_MAX(m_max, index);
-
-            if (m_maskPool == nullptr) SR_UNLIKELY_ATTRIBUTE {
-                m_maskPool = new T[index + 1];
-            }
-            else if (index >= m_max) SR_UNLIKELY_ATTRIBUTE {
-                T* newPool = new T[index + 1];
-                memcpy(newPool, m_maskPool, m_max * sizeof(T));
-                delete[] m_maskPool;
-                m_maskPool = newPool;
-            }
 
             m_maskPool[index] = value;
         }
@@ -57,8 +71,9 @@ namespace SR_HTYPES_NS {
         }
 
     private:
-        uint32_t m_min = SR_UINT32_MAX;
-        uint32_t m_max = 0;
+        SizeType m_capacity = 0;
+        SizeType m_min = SR_UINT32_MAX;
+        SizeType m_max = 0;
         T* m_maskPool = nullptr;
 
     };
