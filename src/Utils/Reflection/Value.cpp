@@ -134,7 +134,7 @@ namespace SR_UTILS_NS::Reflection {
     }
 
     void Value::Destroy() {
-        SR_TRACY_ZONE;
+        SR_TRACY_ZONE_MAYBE_NO_INIT;
         if (m_typeInfo) {
             if (m_storage.storageType == ReflectedValueStorageType::Dynamic || m_storage.storageType == ReflectedValueStorageType::Embedded) {
                 if (auto&& pDestructor = m_typeInfo->vtable.pDestructor) {
