@@ -62,19 +62,19 @@ namespace SR_UTILS_NS::Platform {
         return &result[0];
     }
 
-    void WriteConsoleLog(const std::string& msg) {
+    void WriteConsoleLog(StringView msg) {
         std::lock_guard lock(g_platformLogMutex);
-        std::cout << msg << std::flush;
+        std::cout << msg.c_str() << std::flush;
     }
 
-    void WriteConsoleError(const std::string& msg) {
+    void WriteConsoleError(StringView msg) {
         std::lock_guard lock(g_platformLogMutex);
-        std::cerr << msg << std::flush;
+        std::cerr << msg.c_str() << std::flush;
     }
 
-    void WriteConsoleWarn(const std::string& msg) {
+    void WriteConsoleWarn(StringView msg) {
         std::lock_guard lock(g_platformLogMutex);
-        std::cout << msg << std::flush;
+        std::cout << msg.c_str() << std::flush;
     }
 
     std::string GetLastErrorAsString()

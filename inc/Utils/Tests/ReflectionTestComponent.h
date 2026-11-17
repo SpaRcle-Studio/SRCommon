@@ -11,6 +11,7 @@
 #include <Utils/Types/Vector.h>
 
 namespace SR_UTILS_NS::Tests {
+    /// @dontScript
     struct ReflectionTestComponentAssociative : public SR_UTILS_NS::Serializable {
         SR_STRUCT()
 
@@ -35,6 +36,7 @@ namespace SR_UTILS_NS::Tests {
 
     };
 
+    /// @dontScript
     struct ReflectionTestComponentDataBase : public SR_UTILS_NS::Serializable {
         SR_STRUCT()
 
@@ -68,6 +70,7 @@ namespace SR_UTILS_NS::Tests {
         }
     };
 
+    /// @dontScript
     class ReflectionTestComponentLogicBase : public SR_UTILS_NS::Serializable, public SR_HTYPES_NS::SharedPtr<ReflectionTestComponentLogicBase> {
         SR_CLASS()
     public:
@@ -106,7 +109,7 @@ namespace SR_UTILS_NS::Tests {
 
     };
 
-    /// @category(Debug)
+    /// @dontScript @category(Debug)
     class ReflectionTestComponent : public SR_UTILS_NS::Component {
         using Super = Component;
         SR_CLASS()

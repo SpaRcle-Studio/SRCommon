@@ -9,7 +9,6 @@
 #include <Utils/Common/Singleton.h>
 #include <Utils/Common/Enumerations.h>
 #include <Utils/Common/StringFormat.h>
-#include <Utils/Common/CastUtils.h>
 #include <Utils/Common/AssertFwd.h>
 
 namespace SR_UTILS_NS {
@@ -87,6 +86,11 @@ namespace SR_UTILS_NS {
         bool m_ColorThemeIsEnabled = false;
 
         Theme m_theme = Theme::Light;
+
+        String m_messageBuffer;
+        String m_messagePrefixBuffer;
+        String m_messageMemoryBuffer;
+        String m_messageFormatBuffer;
 
         std::atomic<bool> m_isInit = false;
         Path m_logPath;

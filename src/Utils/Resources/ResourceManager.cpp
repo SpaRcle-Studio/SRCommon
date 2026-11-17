@@ -16,6 +16,7 @@
 #include <Utils/TypeTraits/Factory.h>
 #include <Utils/Common/StoreUtils.h>
 #include <Utils/Common/CLIManager.h>
+#include <Utils/Platform/Platform.h>
 
 #include <Codegen/ResourceManager.generated.hpp>
 

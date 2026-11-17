@@ -117,9 +117,9 @@ namespace SR_UTILS_NS::Platform {
     SR_COMMON_DLL_API extern void PasteFilesFromClipboard(const SR_UTILS_NS::Path& topath);
     SR_COMMON_DLL_API extern void ClearClipboard();
     SR_COMMON_DLL_API extern void Sleep(uint64_t milliseconds);
-    SR_COMMON_DLL_API extern void WriteConsoleLog(const std::string& msg);
-    SR_COMMON_DLL_API extern void WriteConsoleError(const std::string& msg);
-    SR_COMMON_DLL_API extern void WriteConsoleWarn(const std::string& msg);
+    SR_COMMON_DLL_API extern void WriteConsoleLog(StringView msg);
+    SR_COMMON_DLL_API extern void WriteConsoleError(StringView msg);
+    SR_COMMON_DLL_API extern void WriteConsoleWarn(StringView msg);
     SR_COMMON_DLL_API extern void SelfOpen();
     SR_COMMON_DLL_API extern void OpenFile(const SR_UTILS_NS::Path& path, const std::string& args);
     SR_COMMON_DLL_API extern void Unzip(const SR_UTILS_NS::Path& source, const SR_UTILS_NS::Path& destination, bool replace = true);

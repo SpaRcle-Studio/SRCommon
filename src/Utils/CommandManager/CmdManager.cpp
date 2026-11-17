@@ -5,6 +5,7 @@
 #include <Utils/CommandManager/CmdManager.h>
 #include <Utils/Profile/TracyContext.h>
 #include <Utils/Events/Broadcaster.h>
+#include <Utils/Types/LockGuard.h>
 
 namespace SR_UTILS_NS {
     CmdManager::~CmdManager() {

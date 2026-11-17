@@ -527,16 +527,16 @@ namespace SR_PLATFORM_NS {
         return nullptr;
     }
 
-    void WriteConsoleLog(const std::string& msg) {
-        std::cout << msg << std::endl;
+    void WriteConsoleLog(StringView msg) {
+        std::cout << msg.c_str() << std::endl;
     }
 
-    void WriteConsoleError(const std::string& msg) {
-        std::cerr << msg << std::endl;
+    void WriteConsoleError(StringView msg) {
+        std::cerr << msg.c_str() << std::endl;
     }
 
-    void WriteConsoleWarn(const std::string& msg) {
-        std::cerr << msg << std::endl;
+    void WriteConsoleWarn(StringView msg) {
+        std::cerr << msg.c_str() << std::endl;
     }
 
     SR_UTILS_NS::String CLIPBOARD_BUFFER;

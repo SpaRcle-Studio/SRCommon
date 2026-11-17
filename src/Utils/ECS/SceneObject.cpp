@@ -31,6 +31,14 @@ namespace SR_UTILS_NS {
         static constexpr SerializationId objectDataId = SerializationId::Create("objectData");
     }
 
+    uint32_t SceneObject::GetHierarchyObjectCount() const {
+        uint32_t count = 1;
+        for (auto&& pChild : m_children) {
+            count += pChild->GetHierarchyObjectCount();
+        }
+        return count;
+    }
+
     SceneObject::SceneObject()
         : Super()
     {

@@ -11,6 +11,7 @@
 #include <Utils/Platform/Stacktrace.h>
 #include <Utils/Platform/Platform.h>
 #include <Utils/Common/Breakpoint.h>
+#include <Utils/Memory/MemoryLiterals.h>
 
 #ifdef SR_COMMON_GIT_METADATA
     #include <git.h>
@@ -48,56 +49,64 @@ namespace SR_UTILS_NS {
             }
         }
 
-        String msg = rawMsg;
+        m_messageBuffer = rawMsg;
 
     #ifndef SR_EMSCRIPTEN
         if (type == DebugLogType::Assert) {
-            msg.append("\nStack trace:\n").append(GetStacktrace());
+            m_messageBuffer.append("\nStack trace:\n").append(GetStacktrace());
         }
     #endif
 
-        msg.append("\n");
+        m_messageBuffer.append("\n");
 
         auto&& threadName = SR_UTILS_NS::GetThisThreadId();
 
-        auto&& prefix = SR_FORMAT("[{}] [{}]", SR_UTILS_NS::EnumReflector::ToStringAtom(type), threadName);
-        auto&& memoryUsage = m_showUseMemory ? SR_FORMAT("<{} MB> ", static_cast<uint32_t>(SR_PLATFORM_NS::GetProcessUsedMemory() / 1024 / 1024)) : String();
+        m_messagePrefixBuffer.clear();
+        m_messageMemoryBuffer.clear();
+
+        FormatTo(m_messagePrefixBuffer, "[{}] [{}]", SR_UTILS_NS::EnumReflector::ToStringAtom(type), threadName);
+        if (m_showUseMemory) {
+            FormatTo(m_messageMemoryBuffer, "<{} MB> ", static_cast<uint32_t>(SR_PLATFORM_NS::GetProcessUsedMemory() / 1024 / 1024));
+        }
 
         {
             if (SR_PLATFORM_NS::GetType() == PlatformType::Android) {
                 std::lock_guard lock(SR_PLATFORM_NS::g_platformLogMutex);
                 try {
+                    m_messageFormatBuffer.clear();
+                    m_messageFormatBuffer += m_messagePrefixBuffer;
+                    m_messageFormatBuffer += m_messageBuffer;
                     if (IsErrorLogType(type)) {
-                        SR_PLATFORM_NS::WriteConsoleError(fmt::vformat("{} {}",fmt::make_format_args(prefix, msg)));
+                        SR_PLATFORM_NS::WriteConsoleError(m_messageFormatBuffer);
                     }
                     else if (IsWarningLogType(type)) {
-                        SR_PLATFORM_NS::WriteConsoleWarn(fmt::vformat("{} {}",fmt::make_format_args(prefix, msg)));
+                        SR_PLATFORM_NS::WriteConsoleWarn(m_messageFormatBuffer);
                     }
                     else {
-                        SR_PLATFORM_NS::WriteConsoleLog(fmt::vformat("{} {}",fmt::make_format_args(prefix, msg)));
+                        SR_PLATFORM_NS::WriteConsoleLog(m_messageFormatBuffer);
                     }
                 }
                 catch (const std::exception& ex) {
-                    std::cout << " Error while printing message: " << ex.what() << "\nMessage: " << msg << std::endl;
+                    std::cout << " Error while printing message: " << ex.what() << "\nMessage: " << m_messageBuffer << std::endl;
                 }
             }
             else {
-                fmt::print(fmt::fg(fmt::color::dark_gray) | fmt::emphasis::faint, fmt::runtime(memoryUsage));
-                fmt::print(GetTextStyleColorByLogType(type), fmt::runtime(prefix));
+                fmt::print(fmt::fg(fmt::color::dark_gray) | fmt::emphasis::faint, fmt::runtime(m_messageMemoryBuffer));
+                fmt::print(GetTextStyleColorByLogType(type), fmt::runtime(m_messagePrefixBuffer));
 
                 std::lock_guard lock(SR_PLATFORM_NS::g_platformLogMutex);
                 try {
-                    fmt::print(fmt::emphasis::bold, " {}", msg);
+                    fmt::print(fmt::emphasis::bold, " {}", m_messageBuffer);
                 }
                 catch (const std::exception& ex) {
-                    std::cout << " Error while printing message: " << ex.what() << "\nMessage: " << msg << std::endl;
+                    std::cout << " Error while printing message: " << ex.what() << "\nMessage: " << m_messageBuffer << std::endl;
                 }
             }
 
             std::cout << std::flush;
 
             if (m_file) {
-                m_file << memoryUsage << prefix << " " << msg;
+                m_file << m_messageMemoryBuffer << m_messagePrefixBuffer << " " << m_messageBuffer;
                 m_file.Flush();
             }
         }

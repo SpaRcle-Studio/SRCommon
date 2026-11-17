@@ -5,7 +5,6 @@
 #ifndef SR_ENGINE_UTILS_CMDMANAGER_H
 #define SR_ENGINE_UTILS_CMDMANAGER_H
 
-#include <Utils/Types/Thread.h>
 #include <Utils/CommandManager/ReversibleCommand.h>
 
 namespace SR_UTILS_NS {

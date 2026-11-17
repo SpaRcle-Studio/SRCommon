@@ -137,7 +137,7 @@ namespace SR_UTILS_NS::Platform {
         return true;
     }*/
 
-    void WriteMessage(int log, const std::string& msg) {
+    void WriteMessage(int log, StringView msg) {
         const size_t maxLen = 1024;
         size_t len = msg.size();
         for (size_t i = 0; i < len; i += maxLen) {
@@ -148,15 +148,15 @@ namespace SR_UTILS_NS::Platform {
         }
     }
 
-    void WriteConsoleLog(const std::string& msg) {
+    void WriteConsoleLog(StringView msg) {
         WriteMessage(ANDROID_LOG_INFO, msg);
     }
 
-    void WriteConsoleError(const std::string& msg) {
+    void WriteConsoleError(StringView msg) {
         WriteMessage(ANDROID_LOG_ERROR, msg);
     }
 
-    void WriteConsoleWarn(const std::string& msg) {
+    void WriteConsoleWarn(StringView msg) {
         WriteMessage(ANDROID_LOG_WARN, msg);
     }
 

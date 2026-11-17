@@ -3,75 +3,76 @@
 //
 
 #include <Utils/Common/AssertFwd.h>
+#include <Utils/Platform/Platform.h>
 #include <Utils/Debug.h>
 
 namespace SR_UTILS_NS::LogDetails {
-    bool AssertFwd(const std::string& msg) {
+    bool AssertFwd(StringView msg) {
         return SR_UTILS_NS::Debug::Instance().Assert(msg);
     }
 
-    void AssertTerminateFwd(const std::string& msg) {
+    void AssertTerminateFwd(StringView msg) {
         SR_UTILS_NS::Debug::Instance().Assert(msg);
         SR_PLATFORM_NS::Terminate();
     }
 
-    bool AssertOnceCheckFwd(const std::string& msg) {
+    bool AssertOnceCheckFwd(StringView msg) {
         return SR_UTILS_NS::Debug::Instance().AssertOnceCheck(msg);
     }
 
-    void LogFwd(const std::string& msg) {
+    void LogFwd(StringView msg) {
         SR_UTILS_NS::Debug::Instance().Print(msg, DebugLogType::Log);
     }
 
-    void LogTestFwd(const std::string& msg) {
+    void LogTestFwd(StringView msg) {
         SR_UTILS_NS::Debug::Instance().Print(msg, DebugLogType::Test);
     }
 
-    void WarnFwd(const std::string& msg) {
+    void WarnFwd(StringView msg) {
         SR_UTILS_NS::Debug::Instance().Print(msg, DebugLogType::Warn);
     }
 
-    void InfoFwd(const std::string& msg) {
+    void InfoFwd(StringView msg) {
         SR_UTILS_NS::Debug::Instance().Print(msg, DebugLogType::Info);
     }
 
-    void ErrorFwd(const std::string& msg) {
+    void ErrorFwd(StringView msg) {
         SR_UTILS_NS::Debug::Instance().Print(msg, DebugLogType::Error);
     }
 
-    void GraphLogFwd(const std::string& msg) {
+    void GraphLogFwd(StringView msg) {
         SR_UTILS_NS::Debug::Instance().Print(msg, DebugLogType::Graph);
     }
 
-    void SuccessFwd(const std::string& msg) {
+    void SuccessFwd(StringView msg) {
         SR_UTILS_NS::Debug::Instance().Print(msg, DebugLogType::Success);
     }
 
-    void ShaderFwd(const std::string& msg) {
+    void ShaderFwd(StringView msg) {
         SR_UTILS_NS::Debug::Instance().Print(msg, DebugLogType::Shader);
     }
 
-    void ShaderLogFwd(const std::string& msg) {
+    void ShaderLogFwd(StringView msg) {
         SR_UTILS_NS::Debug::Instance().Print(msg, DebugLogType::Shader);
     }
 
-    void SystemLogFwd(const std::string& msg) {
+    void SystemLogFwd(StringView msg) {
         SR_UTILS_NS::Debug::Instance().Print(msg, DebugLogType::System);
     }
 
-    void VulkanMsgFwd(const std::string& msg) {
+    void VulkanMsgFwd(StringView msg) {
         SR_UTILS_NS::Debug::Instance().Print(msg, DebugLogType::Vulkan);
     }
 
-    void VulkanLogFwd(const std::string& msg) {
+    void VulkanLogFwd(StringView msg) {
         SR_UTILS_NS::Debug::Instance().Print(msg, DebugLogType::VulkanLog);
     }
 
-    void VulkanErrorFwd(const std::string& msg) {
+    void VulkanErrorFwd(StringView msg) {
         SR_UTILS_NS::Debug::Instance().Print(msg, DebugLogType::VulkanError);
     }
 
-    void DebugLogFwd(const std::string& msg) {
+    void DebugLogFwd(StringView msg) {
         SR_UTILS_NS::Debug::Instance().Print(msg, DebugLogType::Debug);
     }
 }

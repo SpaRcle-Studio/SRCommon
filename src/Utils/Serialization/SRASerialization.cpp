@@ -298,6 +298,8 @@ namespace SR_UTILS_NS {
             return false;
         }
 
+        m_stack.reserve(128);
+
         static const SR_UTILS_NS::StringAtom RESTORE_MODE_TAG = "SRARestoreMode";
         bool restoreMode = SR_UTILS_NS::Features::Instance().Enabled(RESTORE_MODE_TAG, false);
         bool numericDepth = true; /// for compatibility with old versions of the format, we will use numeric depth by default

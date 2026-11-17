@@ -5,7 +5,7 @@
 #if !defined(SR_ENGINE_COMMON_TYPES_PAIR_H) && defined(SR_ENGINE_COMMON_PCH_FOR_BASE_CODE)
 #define SR_ENGINE_COMMON_TYPES_PAIR_H
 
-#include <Utils/Common/AssertFwd.h>
+#include <Utils/stdInclude.h>
 
 namespace SR_UTILS_NS {
     template<typename T1, typename T2> struct Pair {

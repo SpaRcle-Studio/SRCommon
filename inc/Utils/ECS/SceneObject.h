@@ -92,6 +92,8 @@ namespace SR_UTILS_NS {
 
         /// @method
         SR_NODISCARD SceneObject::Ptr CloneSceneObject() const;
+        /// @method @evaluate
+        SR_NODISCARD uint32_t GetHierarchyObjectCount() const;
 
         SR_NODISCARD bool IsPrefab() const noexcept override { return m_prefabInfo.pPrefab; }
 

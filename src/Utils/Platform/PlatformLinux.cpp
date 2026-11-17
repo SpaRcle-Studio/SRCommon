@@ -262,20 +262,20 @@ namespace SR_PLATFORM_NS {
         std::system(command.c_str());
     }
 
-    void WriteConsoleLog(const std::string& msg) {
+    void WriteConsoleLog(StringView msg) {
         std::lock_guard lock(g_platformLogMutex);
-        std::cout << msg << std::flush;
+        std::cout << msg.c_str() << std::flush;
     }
 
-    void WriteConsoleError(const std::string& msg) {
+    void WriteConsoleError(StringView msg) {
         std::lock_guard lock(g_platformLogMutex);
-        std::cerr << msg << std::flush;
+        std::cerr << msg.c_str() << std::flush;
         ;
     }
 
-    void WriteConsoleWarn(const std::string& msg) {
+    void WriteConsoleWarn(StringView msg) {
         std::lock_guard lock(g_platformLogMutex);
-        std::cerr << msg << std::flush;
+        std::cerr << msg.c_str() << std::flush;
     }
 
     void TextToClipboard(const std::string& text) { SRHaltOnce("Not implemented!"); }

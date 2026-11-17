@@ -6,6 +6,7 @@
 #include <Utils/Common/ToString.h>
 #include <Utils/Resources/ResourceManager.h>
 #include <Utils/Resources/Xml.h>
+#include <Utils/Platform/Platform.h>
 
 namespace SR_UTILS_NS::StoreUtils {
     void Storage::Save() {
