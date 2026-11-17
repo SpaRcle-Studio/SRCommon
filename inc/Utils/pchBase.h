@@ -10,6 +10,7 @@
 #include <array>
 #include <cstdint>
 #include <cstdlib>
+#include <cmath>
 
 #ifdef __cpp_lib_concepts
     #define SR_COMPILER_CPP17_ENABLED
@@ -43,7 +44,6 @@
     #include <queue>
     #include <mutex>
     #include <cassert>
-    #include <cmath>
     #include <ranges>
     #include <atomic>
     #include <utility>
