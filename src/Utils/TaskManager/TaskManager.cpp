@@ -59,12 +59,15 @@ namespace SR_UTILS_NS {
     }
 
     bool Task::Run() {
-        if (m_state->load() != State::Waiting || !m_function || (m_thread && m_thread->Joinable())) {
+        if (!m_function || (m_thread && m_thread->Joinable())) {
             SRHalt("Task::Run() : task is already running or completed!");
             return false;
         }
 
-        m_state->store(State::Launched);
+        State expectedState = State::Waiting;
+        if (!m_state->compare_exchange_strong(expectedState, State::Launched)) {
+            return false;
+        }
 
         if (m_createThread) {
             SR_HTYPES_NS::Thread::Factory::Instance().Create(m_thread, m_function, m_state);
@@ -138,7 +141,7 @@ namespace SR_UTILS_NS {
         m_tasks.clear();
         m_ids.clear();
 
-        SRAssert(!m_thread);
+        SRAssert(m_threads.empty());
     }
 
     uint64_t TaskManager::GetUniqueId() const {
@@ -153,97 +156,131 @@ namespace SR_UTILS_NS {
         }
 
         m_isRun.store(true);
+        m_isInited.store(false);
 
-        SR_INFO("TaskManager::InitSingleton() : run task manager thread...");
+        uint32_t threadCount = 1;
+    #ifdef SR_THREADS_ALLOWED
+        const uint32_t coreCount = std::thread::hardware_concurrency();
+        threadCount = coreCount > 2 ? SR_MIN(coreCount - 2, 4u) : 1;
+    #endif
 
-        SR_HTYPES_NS::Thread::Factory::Instance().Create(m_thread, [this]() -> bool {
-            if (!m_isRun.load()) {
-                return false;
-            }
+        SR_INFO("TaskManager::InitSingleton() : run {} task manager threads...", threadCount);
 
-            SR_TRACY_ZONE_N("TaskManager");
-
-            bool isEmpty = false;
-            {
-                SR_LOCK_GUARD;
-                isEmpty = m_tasks.empty();
-            }
-
-            if (isEmpty) {
-                SR_TRACY_ZONE_COLOR(0x000088);
-                m_delayedTasks.clear();
-                SR_PLATFORM_NS::Sleep(5);
-                return true;
-            }
-
-            SR_TRACY_ZONE_COLOR(0x008800);
-
-            TaskPriority highestPriority = TaskPriority::Unknown;
-            Task::Ptr pTaskWithHighestPriority = nullptr;
-
-            {
-                SR_LOCK_GUARD;
-                if (!m_waitIds.empty()) {
-                    for (auto&& id : m_waitIds) {
-                        if (auto&& pIt = m_tasks.find_if([id](auto&& pTask) { return pTask->GetId() == id; }); pIt != m_tasks.end()) {
-                            pTaskWithHighestPriority = *pIt;
-                        }
-                    }
-                }
-            }
-
-            if (!pTaskWithHighestPriority) {
-                SR_LOCK_GUARD;
-
-                for (auto&& pTask : m_tasks) {
-                    if (pTask->IsWaiting() && pTask->GetPriority() > highestPriority && !m_delayedTasks.count(pTask.get())) {
-                        highestPriority = pTask->GetPriority();
-                    }
-                }
-
-                if (highestPriority == TaskPriority::Unknown) {
-                    m_delayedTasks.clear();
+        for (uint32_t threadIndex = 0; threadIndex < threadCount; ++threadIndex) {
+            SR_HTYPES_NS::Thread::Ptr pThread = nullptr;
+            SR_HTYPES_NS::Thread::Factory::Instance().Create(pThread, [this, threadIndex]() -> bool {
+                if (!m_isInited.load()) {
                     return true;
                 }
 
-                for (auto&& pTask : m_tasks) {
-                    if (pTask->IsWaiting() && pTask->GetPriority() == highestPriority && !m_delayedTasks.count(pTask.get())) {
-                        pTaskWithHighestPriority = pTask;
-                        break;
+                if (!m_isRun.load()) {
+                    return false;
+                }
+
+                m_threads[threadIndex]->Synchronize();
+
+                SR_TRACY_ZONE_N("TaskManager");
+
+                bool isEmpty = false;
+                {
+                    SR_LOCK_GUARD;
+                    isEmpty = m_tasks.empty();
+                }
+
+                if (isEmpty) {
+                    SR_TRACY_ZONE_COLOR(0x000088);
+                    SR_PLATFORM_NS::Sleep(5);
+                    return true;
+                }
+
+                SR_TRACY_ZONE_COLOR(0x008800);
+
+                TaskPriority highestPriority = TaskPriority::Unknown;
+                Task::Ptr pTaskWithHighestPriority = nullptr;
+
+                {
+                    SR_LOCK_GUARD;
+                    bool canRunDiscardable = threadIndex == 0;
+                    for (auto&& pTask : m_tasks) {
+                        if (pTask->GetPriority() == TaskPriority::Discardable && pTask->IsLaunched()) {
+                            canRunDiscardable = false;
+                            break;
+                        }
+                    }
+
+                    if (!m_waitIds.empty()) {
+                        for (auto&& id : m_waitIds) {
+                            if (auto&& pIt = m_tasks.find_if([id](auto&& pTask) { return pTask->GetId() == id; }); pIt != m_tasks.end()) {
+                                if ((*pIt)->IsWaiting() && !m_runningTasks.count((*pIt).get()) &&
+                                    (canRunDiscardable || (*pIt)->GetPriority() != TaskPriority::Discardable)) {
+                                    pTaskWithHighestPriority = *pIt;
+                                }
+                            }
+                        }
+                    }
+                    if (!pTaskWithHighestPriority) {
+
+                        for (auto&& pTask : m_tasks) {
+                            if (pTask->IsWaiting() && pTask->GetPriority() > highestPriority && !m_delayedTasks.count(pTask.get()) &&
+                                !m_runningTasks.count(pTask.get()) && (canRunDiscardable || pTask->GetPriority() != TaskPriority::Discardable)) {
+                                highestPriority = pTask->GetPriority();
+                            }
+                        }
+
+                        if (highestPriority == TaskPriority::Unknown) {
+                            m_delayedTasks.clear();
+                            return true;
+                        }
+
+                        for (auto&& pTask : m_tasks) {
+                            if (pTask->IsWaiting() && pTask->GetPriority() == highestPriority && !m_delayedTasks.count(pTask.get()) &&
+                                !m_runningTasks.count(pTask.get()) && (canRunDiscardable || pTask->GetPriority() != TaskPriority::Discardable)) {
+                                pTaskWithHighestPriority = pTask;
+                                break;
+                            }
+                        }
+                    }
+                    if (pTaskWithHighestPriority) {
+                        m_runningTasks.insert(pTaskWithHighestPriority.get());
                     }
                 }
-            }
 
-            if (pTaskWithHighestPriority) {
-                pTaskWithHighestPriority->Run();
-                if (pTaskWithHighestPriority->IsCompleted()) {
+                if (pTaskWithHighestPriority) {
+                    pTaskWithHighestPriority->Run();
                     SR_LOCK_GUARD;
-                    m_results.insert(SR_UTILS_NS::MakePair(pTaskWithHighestPriority->GetId(), pTaskWithHighestPriority->GetResult()));
-                    m_ids.erase(pTaskWithHighestPriority->GetId());
-                    auto&& pIt = std::ranges::find(m_tasks, pTaskWithHighestPriority); /// удаляем задачу из списка задач, так как она уже завершилась
-                    if (pIt != m_tasks.end()) {
-                        m_tasks.erase(pIt);
+                    m_runningTasks.erase(pTaskWithHighestPriority.get());
+                    if (pTaskWithHighestPriority->IsCompleted()) {
+                        m_delayedTasks.erase(pTaskWithHighestPriority.get());
+                        m_results.insert(SR_UTILS_NS::MakePair(pTaskWithHighestPriority->GetId(), pTaskWithHighestPriority->GetResult()));
+                        m_ids.erase(pTaskWithHighestPriority->GetId());
+                        auto&& pIt = m_tasks.find_if([&pTaskWithHighestPriority](auto&& pTask) { return pTask == pTaskWithHighestPriority; });
+                        if (pIt != m_tasks.end()) {
+                            m_tasks.erase(pIt);
+                        }
+                        else if (!pTaskWithHighestPriority->IsStopped()) {
+                            SRHalt("TaskManager::InitSingleton() : task is completed, but not found in the list of tasks!");
+                        }
                     }
-                    else if (!pTaskWithHighestPriority->IsStopped()) {
-                        SRHalt("TaskManager::InitSingleton() : task is completed, but not found in the list of tasks!");
+                    else {
+                        m_delayedTasks.insert(pTaskWithHighestPriority.get());
                     }
                 }
                 else {
-                    m_delayedTasks.insert(pTaskWithHighestPriority.get());
+                    SR_LOCK_GUARD;
+                    m_delayedTasks.clear();
                 }
+
+                return true;
+            });
+
+            pThread->SetName("Task manager {}"_format(threadIndex));
+            m_threads.emplace_back(pThread);
+
+            if (!pThread->Joinable()) {
+                SR_ERROR("TaskManager::InitSingleton() : failed to run a thread!");
             }
-            else {
-                m_delayedTasks.clear();
-            }
-
-            return true;
-        });
-
-        m_thread->SetName("Task manager");
-
-        if (!m_thread->Joinable()) {
-            SR_ERROR("TaskManager::InitSingleton() : failed to run a thread!");
         }
+        m_isInited.store(true);
 
         Singleton::InitSingleton();
     }
@@ -287,6 +324,7 @@ namespace SR_UTILS_NS {
     }
 
     Task::State SR_UTILS_NS::TaskManager::GetResult(uint64_t taskId) const {
+        SR_LOCK_GUARD;
         if (m_ids.count(taskId) == 1) {
             return Task::State::Launched;
         }
@@ -299,11 +337,11 @@ namespace SR_UTILS_NS {
 
         SR_LOG("TaskManager::OnSingletonDestroy() : stopping task manager...");
 
-        if (m_thread) {
-            m_thread->TryJoin();
-            m_thread->Free();
-            m_thread = nullptr;
+        for (auto&& pThread : m_threads) {
+            pThread->TryJoin();
+            pThread->Free();
         }
+        m_threads.clear();
 
         Singleton::OnSingletonDestroy();
     }
@@ -349,7 +387,7 @@ namespace SR_UTILS_NS {
                         return;
                     }
 
-                    if (pTask->IsWaiting()) {
+                    if (pTask->IsWaiting() && !m_runningTasks.count(pTask.get())) {
                         pCriticalTask = pTask;
                         m_tasks.erase(pIt);
                         break;
@@ -415,6 +453,7 @@ namespace SR_UTILS_NS {
                 }
 
                 SR_LOG("TaskManager::RemoveDiscardable() : remove discardable task with id {}...", pTask->GetId());
+                m_delayedTasks.erase(pTask.get());
                 m_ids.erase(pTask->GetId());
                 pIt = m_tasks.erase(pIt);
             }
@@ -452,7 +491,8 @@ namespace SR_UTILS_NS {
                     if (pTask->GetPriority() == TaskPriority::Discardable && pTask->IsLaunched()) {
                         /// discardable task may be very long, so we need to manually execute our task
                         auto&& pIt = m_tasks.find_if([taskId](auto&& pTask) { return pTask->GetId() == taskId; });
-                        if (pIt != m_tasks.end()) {
+                        if (pIt != m_tasks.end() && (*pIt)->IsWaiting() && !m_runningTasks.count((*pIt).get()) &&
+                            (*pIt)->GetPriority() != TaskPriority::Discardable) {
                             SR_LOG("TaskManager::Wait() : forced run task with id {} in main thread, because discardable task executing and locked the thread...", taskId);
                             (*pIt)->Run();
                             m_delayedTasks.erase((*pIt).get());

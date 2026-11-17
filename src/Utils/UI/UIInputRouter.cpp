@@ -13,12 +13,14 @@ namespace SR_UTILS_NS {
     }
 
     void UIInputRouter::Register(Component& component) {
+        SR_TRACY_ZONE;
         if (auto&& pUI = UIComponent::TryGet(&component)) {
             m_components.emplace_back(pUI);
         }
     }
 
     void UIInputRouter::Unregister(Component& component) {
+        SR_TRACY_ZONE;
         for (auto it = m_components.begin(); it != m_components.end(); ++it) {
             if (it->Get() == &component) {
                 m_components.erase(it);
@@ -28,6 +30,7 @@ namespace SR_UTILS_NS {
     }
 
     void UIInputRouter::Prepare(bool paused) {
+        SR_TRACY_ZONE;
         for (uint32_t i = 0; i < m_components.size(); ++i) {
             const auto pUI = m_components[i];
             if (pUI && pUI->IsActive() && (!paused || pUI->ExecuteInEditMode())) {
@@ -37,6 +40,7 @@ namespace SR_UTILS_NS {
     }
 
     void UIInputRouter::AfterLayout(bool paused) {
+        SR_TRACY_ZONE;
         for (uint32_t i = 0; i < m_components.size(); ++i) {
             const auto pUI = m_components[i];
             if (pUI && pUI->IsActive() && (!paused || pUI->ExecuteInEditMode())) {
@@ -62,6 +66,7 @@ namespace SR_UTILS_NS {
     }
 
     bool UIInputRouter::IsEnabled(const SR_HTYPES_NS::SharedPtr<UIComponent>& pComponent) const {
+        SR_TRACY_ZONE;
         if (!pComponent || !pComponent->IsEnabled() || !pComponent->IsComponentValid()) {
             return false;
         }
@@ -87,6 +92,7 @@ namespace SR_UTILS_NS {
     }
 
     bool UIInputRouter::Contains(const SR_HTYPES_NS::SharedPtr<UIComponent>& pComponent) const {
+        SR_TRACY_ZONE;
         if (!IsEnabled(pComponent) || !pComponent->IsActive()) {
             return false;
         }
@@ -106,6 +112,7 @@ namespace SR_UTILS_NS {
     }
 
     SR_HTYPES_NS::SharedPtr<UIComponent> UIInputRouter::HitTest(const PointerEvent& event) const {
+        SR_TRACY_ZONE;
         for (auto it = m_targets.rbegin(); it != m_targets.rend(); ++it) {
             if (Contains(*it) && (*it)->GetUIInputTarget()->HitTest(event)) {
                 return *it;
@@ -115,6 +122,7 @@ namespace SR_UTILS_NS {
     }
 
     void UIInputRouter::ResetPointers() {
+        SR_TRACY_ZONE;
         for (auto&& pointer : m_pointers) {
             if (pointer.pCapture && pointer.pCapture->IsComponentValid()) {
                 pointer.pCapture->GetUIInputTarget()->PointerCancel(pointer.last);
@@ -136,9 +144,13 @@ namespace SR_UTILS_NS {
         }
 
         uint32_t index = 0;
-        while (index < m_pointers.size() && (m_pointers[index].id != event.pointerId || m_pointers[index].device != event.device)) {
-            ++index;
+        {
+            SR_TRACY_ZONE_N("Calculate index");
+            while (index < m_pointers.size() && (m_pointers[index].id != event.pointerId || m_pointers[index].device != event.device)) {
+                ++index;
+            }
         }
+
         if (index == m_pointers.size()) {
             if (event.phase != PointerPhase::Down && !(event.phase == PointerPhase::Move && event.device != PointerDevice::Touch)) {
                 return;
@@ -147,6 +159,7 @@ namespace SR_UTILS_NS {
             pointer.id = event.pointerId;
             pointer.device = event.device;
         }
+
         auto&& pointer = m_pointers[index];
         pointer.last = event;
         if (pointer.pCapture && (!Contains(pointer.pCapture) || !pointer.pCapture->GetUIInputTarget()->IsInteractable())) {
@@ -291,66 +304,87 @@ namespace SR_UTILS_NS {
         m_targets.clear();
         m_modal = nullptr;
         m_consumed = false;
+
         for (auto&& pRoot : scene.GetRootSceneObjects()) {
             Collect(*pRoot);
         }
 
-        // Stable insertion sort retains sibling order without a temporary allocation.
-        for (uint32_t i = 1; i < m_targets.size(); ++i) {
-            const auto pTarget = m_targets[i];
-            const auto priority = pTarget->GetUIInputTarget()->GetInputPriority();
-            uint32_t j = i;
-            while (j > 0 && m_targets[j - 1]->GetUIInputTarget()->GetInputPriority() > priority) {
-                m_targets[j] = m_targets[j - 1];
-                --j;
+        /// Stable insertion sort retains sibling order without a temporary allocation.
+        {
+            SR_TRACY_ZONE_N("Sort");
+            for (uint32_t i = 1; i < m_targets.size(); ++i) {
+                const auto pTarget = m_targets[i];
+                const auto priority = pTarget->GetUIInputTarget()->GetInputPriority();
+                uint32_t j = i;
+                while (j > 0 && m_targets[j - 1]->GetUIInputTarget()->GetInputPriority() > priority) {
+                    m_targets[j] = m_targets[j - 1];
+                    --j;
+                }
+                m_targets[j] = pTarget;
             }
-            m_targets[j] = pTarget;
         }
+
         RefreshModal();
+
         if (m_requestedFocus) {
             if (Contains(m_requestedFocus) && m_requestedFocus->GetUIInputTarget()->IsFocusable()) {
                 m_focus = m_requestedFocus;
             }
             m_requestedFocus = nullptr;
         }
-        for (auto&& pointer : m_pointers) {
-            if (pointer.pCapture && (!Contains(pointer.pCapture) || !pointer.pCapture->GetUIInputTarget()->IsInteractable())) {
-                pointer.pCapture->GetUIInputTarget()->PointerCancel(pointer.last);
-                pointer.pCapture = nullptr;
-                pointer.pDragCandidate = nullptr;
+
+        {
+            SR_TRACY_ZONE_N("Process pointer cancel");
+            for (auto&& pointer : m_pointers) {
+                if (pointer.pCapture && (!Contains(pointer.pCapture) || !pointer.pCapture->GetUIInputTarget()->IsInteractable())) {
+                    pointer.pCapture->GetUIInputTarget()->PointerCancel(pointer.last);
+                    pointer.pCapture = nullptr;
+                    pointer.pDragCandidate = nullptr;
+                }
+                m_consumed |= pointer.pCapture.Valid();
             }
-            m_consumed |= pointer.pCapture.Valid();
         }
+
         if (!navigation.focused) {
             ResetPointers();
             m_focus = nullptr;
         }
         else {
-            for (auto&& event : events) {
-                RefreshModal();
-                ProcessPointer(event);
+            {
+                SR_TRACY_ZONE_N("Process events");
+                for (auto&& event : events) {
+                    RefreshModal();
+                    ProcessPointer(event);
+                }
             }
             RefreshModal();
             ProcessNavigation(navigation);
             RefreshModal();
         }
 
-        for (auto&& pointer : m_pointers) {
-            pointer.pHover = pointer.device != PointerDevice::Touch ? HitTest(pointer.last) : nullptr;
+        {
+            SR_TRACY_ZONE_N("Process hover");
+            for (auto&& pointer : m_pointers) {
+                pointer.pHover = pointer.device != PointerDevice::Touch ? HitTest(pointer.last) : nullptr;
+            }
         }
 
-        for (auto&& pTarget : m_targets) {
-            if (!pTarget || !pTarget->IsComponentValid()) {
-                continue;
+        {
+            SR_TRACY_ZONE_N("Process input state");
+            for (auto&& pTarget : m_targets) {
+                if (!pTarget || !pTarget->IsComponentValid()) {
+                    continue;
+                }
+                bool hovered = false;
+                bool pressed = false;
+                for (auto&& pointer : m_pointers) {
+                    hovered |= pointer.pHover == pTarget;
+                    pressed |= pointer.pCapture == pTarget && Contains(pTarget);
+                }
+                pTarget->GetUIInputTarget()->SetInputState(navigation.focused && hovered, pressed, Contains(pTarget) && m_focus == pTarget);
             }
-            bool hovered = false;
-            bool pressed = false;
-            for (auto&& pointer : m_pointers) {
-                hovered |= pointer.pHover == pTarget;
-                pressed |= pointer.pCapture == pTarget && Contains(pTarget);
-            }
-            pTarget->GetUIInputTarget()->SetInputState(navigation.focused && hovered, pressed, Contains(pTarget) && m_focus == pTarget);
         }
+
         m_targets.clear();
     }
 }

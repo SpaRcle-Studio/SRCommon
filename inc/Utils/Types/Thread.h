@@ -82,6 +82,7 @@ namespace SR_HTYPES_NS {
     public:
         SR_NODISCARD bool Joinable() const;
         SR_NODISCARD ThreadId GetId() const;
+        SR_NODISCARD StringView GetName() const;
 
         void SetName(StringView name);
 
@@ -103,7 +104,7 @@ namespace SR_HTYPES_NS {
 
     private:
         ThreadId m_id;
-        String m_name;
+        String m_name = "Unnamed thread";
         mutable ThreadImpl* m_impl = nullptr;
 
     };

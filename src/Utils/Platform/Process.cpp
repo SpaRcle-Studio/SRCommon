@@ -16,6 +16,7 @@ namespace SR_UTILS_NS::Platform {
     }
 
     bool Process::Start(ProcessInfo info) {
+        SR_TRACY_ZONE;
         Stop();
         if (!m_impl || info.input.size() > 4096) {
             return false;

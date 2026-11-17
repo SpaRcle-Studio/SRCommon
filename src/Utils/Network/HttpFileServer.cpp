@@ -11,6 +11,7 @@ namespace SR_NETWORK_NS {
     }
 
     bool HttpFileServer::Start(const SR_UTILS_NS::Path& root, SR_UTILS_NS::String index) {
+        SR_TRACY_ZONE;
         Stop();
         m_index = std::move(index);
         m_port = 0;

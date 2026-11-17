@@ -92,7 +92,7 @@ namespace SR_HTYPES_NS {
         SR_SCOPED_LOCK;
 
         SRAssert2(pThread, "Thread::Factory::Remove() : thread is null!");
-        SR_LOG("Thread::Free() : free \"{}\" thread...", pThread->GetId().c_str());
+        SR_LOG("Thread::Free() : free \"{}\" (\"{}\") thread...", pThread->GetName(), pThread->GetId());
 
         if (pThread == m_main) {
             delete m_main;
@@ -106,6 +106,10 @@ namespace SR_HTYPES_NS {
     Thread::ThreadId Thread::GetId() const {
         std::lock_guard lock(GetImpl().mutex);
         return m_id;
+    }
+
+    StringView Thread::GetName() const {
+        return m_name;
     }
 
     void Thread::Free() {

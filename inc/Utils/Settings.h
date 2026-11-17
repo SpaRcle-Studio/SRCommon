@@ -80,6 +80,7 @@ namespace SR_UTILS_NS {
     template<typename T> bool GlobalSettings<T>::IsSingletonCanBeDestroyed() const { return false; }
 
     template<typename T> SR_MAYBE_UNUSED void GlobalSettings<T>::DestroySettings() {
+        SR_TRACY_ZONE;
         if (!Singleton<T>::IsSingletonInitialized()) {
             return;
         }
@@ -95,9 +96,7 @@ namespace SR_UTILS_NS {
         if (pSettings->RemoveUsePoint() == IResource::RemoveUPResult::Success) {
             pSettings->ForceDestroy();
         }
-
-        /// Форсированно уничтожаем этот ресурс, чтобы не ждать пока закончится время жизни
-        ResourceManager::Instance().Synchronize(true);
+        SR_UTILS_NS::ResourceManager::Instance().Update(true);
     }
 
     template<typename T> void GlobalSettings<T>::OnSingletonDestroy() {

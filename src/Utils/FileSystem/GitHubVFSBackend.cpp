@@ -30,10 +30,19 @@ namespace SR_UTILS_NS {
     GitHubVFSBackend::~GitHubVFSBackend() = default;
 
     bool GitHubVFSBackend::IsTreeLoaded() const {
-        return m_pDownloader && !m_pDownloader->GetTree(m_branch).empty();
+        if (m_treeLoaded.load(std::memory_order_acquire)) {
+            return true;
+        }
+
+        std::lock_guard lock(m_treeMutex);
+        if (!m_treeLoaded.load(std::memory_order_relaxed)) {
+            m_treeLoaded.store(m_pDownloader && !m_pDownloader->GetTree(m_branch).empty(), std::memory_order_release);
+        }
+        return m_treeLoaded.load(std::memory_order_relaxed);
     }
 
     void GitHubVFSBackend::ClearCache() {
+        std::lock_guard lock(m_cacheMutex);
         m_cache.clear();
     }
 
@@ -59,7 +68,7 @@ namespace SR_UTILS_NS {
     }
 
     void GitHubVFSBackend::ResolveVirtualPath(StringView virtualPath, String& outRealPath) const {
-        static String repositoryPathBuffer;
+        static SR_THREAD_LOCAL String repositoryPathBuffer;
         ResolveRepositoryPath(virtualPath, repositoryPathBuffer);
 
         outRealPath = GITHUB_PREFIX;
@@ -76,7 +85,7 @@ namespace SR_UTILS_NS {
             return FSItemType::Undefined;
         }
 
-        static String repositoryPathBuffer;
+        static SR_THREAD_LOCAL String repositoryPathBuffer;
         ResolveRepositoryPath(path, repositoryPathBuffer);
 
         if (repositoryPathBuffer.empty()) {
@@ -114,7 +123,7 @@ namespace SR_UTILS_NS {
             return File();
         }
 
-        static String repositoryPathBuffer;
+        static SR_THREAD_LOCAL String repositoryPathBuffer;
         ResolveRepositoryPath(path, repositoryPathBuffer);
 
         if (repositoryPathBuffer.empty()) {
@@ -130,6 +139,7 @@ namespace SR_UTILS_NS {
             return File();
         }
 
+        std::lock_guard lock(m_cacheMutex);
         auto&& pCacheIt = m_cache.find(repositoryPathBuffer);
         if (pCacheIt == m_cache.end()) {
             String data;
@@ -156,11 +166,11 @@ namespace SR_UTILS_NS {
             return;
         }
 
-        String rootPath;
+        static SR_THREAD_LOCAL String rootPath;
         ResolveRepositoryPath(directory, rootPath);
 
-        static String fullPathBuffer;
-        static String relativePathBuffer;
+        static SR_THREAD_LOCAL String fullPathBuffer;
+        static SR_THREAD_LOCAL String relativePathBuffer;
 
         /// дерево запрашивается рекурсивно, поэтому ключи - это полные пути от корня репозитория
         for (auto&& [repositoryPath, entry] : m_pDownloader->GetTree(m_branch)) {

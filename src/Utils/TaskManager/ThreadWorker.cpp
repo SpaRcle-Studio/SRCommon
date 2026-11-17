@@ -118,6 +118,7 @@ namespace SR_UTILS_NS {
     }
 
     void ThreadWorker::Start() {
+        SR_TRACY_ZONE;
         SRAssert(!m_isActive);
         m_isActive = true;
 

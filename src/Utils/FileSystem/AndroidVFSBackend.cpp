@@ -205,7 +205,7 @@ namespace SR_UTILS_NS {
     #ifdef SR_ANDROID
         SR_TRACY_ZONE;
 
-        static String assetPathBuffer;
+        static SR_THREAD_LOCAL String assetPathBuffer;
         ResolveAssetPath(path, assetPathBuffer);
 
         if (assetPathBuffer.empty()) {
@@ -241,7 +241,7 @@ namespace SR_UTILS_NS {
             return File();
         }
 
-        static String assetPathBuffer;
+        static SR_THREAD_LOCAL String assetPathBuffer;
         ResolveAssetPath(path, assetPathBuffer);
 
         if (assetPathBuffer.empty()) {

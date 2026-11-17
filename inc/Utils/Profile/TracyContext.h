@@ -35,7 +35,6 @@ namespace SR_UTILS_NS {
     public:
         TracyContextManager();
 
-        void InitSingleton() override;
         TracyContextPtr& GetContext(TracyType type, IdentifierPtr pIdentifier);
 
         void Destroy(TracyType type);

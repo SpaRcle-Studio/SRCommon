@@ -95,10 +95,6 @@ namespace SR_UTILS_NS {
         return m_contexts[type][pIdentifier];
     }
 
-    void TracyContextManager::InitSingleton() {
-        Super::InitSingleton();
-    }
-
     void StartupEngineProfiler() {
         tracy::StartupProfiler();
 

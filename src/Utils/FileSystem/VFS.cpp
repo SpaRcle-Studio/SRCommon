@@ -15,7 +15,7 @@
 namespace SR_UTILS_NS {
     bool VFS::IsExists(StringView path) const {
         SR_TRACY_ZONE;
-        SR_LOCK_GUARD;
+        std::shared_lock lock(m_mountsMutex);
         return std::ranges::any_of(m_mounts, [&](const VFSMount& mount) {
             return mount.pBackend->IsApplicable(path) && mount.pBackend->GetType(path) != FSItemType::Undefined;
         });
@@ -23,14 +23,15 @@ namespace SR_UTILS_NS {
 
     bool VFS::IsFileExists(StringView path) const {
         SR_TRACY_ZONE;
-        SR_LOCK_GUARD;
+        std::shared_lock lock(m_mountsMutex);
         return std::ranges::any_of(m_mounts, [&](const VFSMount& mount) {
             return mount.pBackend->IsApplicable(path) && mount.pBackend->GetType(path) == FSItemType::File;
         });
     }
 
     bool VFS::IsFolderExists(StringView path) const {
-        SR_LOCK_GUARD;
+        SR_TRACY_ZONE;
+        std::shared_lock lock(m_mountsMutex);
         return std::ranges::any_of(m_mounts, [&](const VFSMount& mount) {
             return mount.pBackend->IsApplicable(path) && mount.pBackend->GetType(path) == FSItemType::Folder;
         });
@@ -46,10 +47,18 @@ namespace SR_UTILS_NS {
 
     File VFS::OpenFile(StringView path, FileMode mode) {
         SR_TRACY_ZONE;
-        SR_LOCK_GUARD;
 
         const bool isRead = SR_MATH_NS::IsMaskIncludedSubMask(mode, FileMode::Read);
         const bool isWrite = SR_MATH_NS::IsMaskIncludedSubMask(mode, FileMode::Write);
+
+        std::shared_lock readLock(m_mountsMutex, std::defer_lock);
+        std::unique_lock writeLock(m_mountsMutex, std::defer_lock);
+        if (isWrite) {
+            writeLock.lock();
+        }
+        else {
+            readLock.lock();
+        }
 
         IVFSBackend* pFirstWritable = nullptr;
 
@@ -102,45 +111,74 @@ namespace SR_UTILS_NS {
 
     void VFS::Enumerate(StringView directory, const SR_HTYPES_NS::Function<void(const VFSEntry&)>& callback, bool recursive) const {
         SR_TRACY_ZONE;
-        SR_LOCK_GUARD;
+        struct EnumerationCache {
+            MonotonicAllocator allocator{8_KB};
+            EnumerationCache* pNested = nullptr;
+            bool active = false;
 
-        if (m_isEnumerating) {
-            SRHaltTerminate("VFS::Enumerate() : recursive enumerate is not allowed!");
-        }
-        m_isEnumerating = true;
-
-        if (!m_enumerateAllocator) {
-            m_enumerateAllocator = (IAllocator*)new MonotonicAllocator(32_KB);
-        }
-
-        SR_UTILS_NS::SortedVector<StringView> paths(m_enumerateAllocator.Get());
-
-        auto&& callbackWrapper = [&](const VFSEntry& entry) {
-            if (paths.Contains(entry.relativePath)) {
-                return;
+            ~EnumerationCache() {
+                delete pNested;
             }
-
-            String relativePath(m_enumerateAllocator.Get());
-            relativePath = entry.relativePath;
-
-            paths.Add(relativePath);
-            callback(entry);
         };
 
-        for (auto&& mount : m_mounts) {
-            if (mount.pBackend->IsApplicable(directory)) {
-                mount.pBackend->Enumerate(directory, callbackWrapper, recursive);
+        static SR_THREAD_LOCAL EnumerationCache cache;
+        auto&& pCache = &cache;
+        while (pCache->active) {
+            if (!pCache->pNested) {
+                pCache->pNested = new EnumerationCache();
+            }
+            pCache = pCache->pNested;
+        }
+
+        struct EnumerationScope {
+            EnumerationCache& cache;
+
+            ~EnumerationScope() {
+                cache.allocator.ResetMemory();
+                cache.active = false;
+            }
+        } scope{*pCache};
+        pCache->active = true;
+
+        struct EnumerationData {
+            MonotonicAllocator& allocator;
+            Vector<VFSEntry> entries{&allocator};
+            SortedVector<StringView> paths{&allocator};
+        } data{pCache->allocator};
+        {
+            std::shared_lock lock(m_mountsMutex);
+            auto&& callbackWrapper = [&data](const VFSEntry& entry) {
+                SR_TRACY_ZONE_N("Callback wrapper");
+                if (data.paths.Contains(entry.relativePath)) {
+                    return;
+                }
+
+                VFSEntry item;
+                item.name = String(entry.name, &data.allocator);
+                item.extension = String(entry.extension, &data.allocator);
+                item.fullPath = String(entry.fullPath, &data.allocator);
+                item.relativePath = String(entry.relativePath, &data.allocator);
+                item.type = entry.type;
+                data.paths.Add(item.relativePath);
+                data.entries.emplace_back(item);
+            };
+
+            for (auto&& mount : m_mounts) {
+                if (mount.pBackend->IsApplicable(directory)) {
+                    mount.pBackend->Enumerate(directory, callbackWrapper, recursive);
+                }
             }
         }
 
-        paths = {};
-        m_enumerateAllocator->ResetMemory();
-        m_isEnumerating = false;
+        for (const VFSEntry& entry : data.entries) {
+            SR_TRACY_ZONE_N("Callback");
+            callback(entry);
+        }
     }
 
     void VFS::Delete(StringView path) {
         SR_TRACY_ZONE;
-        SR_LOCK_GUARD;
+        std::unique_lock lock(m_mountsMutex);
 
         SR_LOG("VFS::Delete() : deleting path \"{}\"...", path);
 
@@ -159,7 +197,7 @@ namespace SR_UTILS_NS {
 
     void VFS::Mount(StringView virtualPath, IVFSBackend* pBackend, int32_t priority, bool permanent) {
         SR_TRACY_ZONE;
-        SR_LOCK_GUARD;
+        std::unique_lock lock(m_mountsMutex);
 
         String modeLog = "R{}/W{}"_format(pBackend->ReadSupports() ? "+" : "-", pBackend->WriteSupports() ? "+" : "-");
 
@@ -190,7 +228,7 @@ namespace SR_UTILS_NS {
 
     void VFS::Unmount(IVFSBackend* pBackend) {
         SR_TRACY_ZONE;
-        SR_LOCK_GUARD;
+        std::unique_lock lock(m_mountsMutex);
         SR_LOG("VFS::Unmount() : unmounting virtual path \"{}\" (\"{}\")...", pBackend->GetVirtualPath(), pBackend->GetRealPath());
         for (auto&& it = m_mounts.begin(); it != m_mounts.end(); ++it) {
             if (it->pBackend == pBackend) {
@@ -203,6 +241,7 @@ namespace SR_UTILS_NS {
 
     void VFS::DeInitialize() {
         SR_TRACY_ZONE;
+        std::unique_lock lock(m_mountsMutex);
         SR_LOCK_GUARD;
 
         for (auto&& mount : m_mounts) {
@@ -229,24 +268,21 @@ namespace SR_UTILS_NS {
 
     void VFS::UnmountAll() {
         SR_TRACY_ZONE;
-        SR_LOCK_GUARD;
+        std::unique_lock lock(m_mountsMutex);
         SR_LOG("VFS::UnmountAll() : unmounting all mounts...");
-        Vector<IVFSBackend*> unmountable;
-        unmountable.reserve(m_mounts.size());
-        for (auto&& mount : m_mounts) {
-            if (!mount.permanent) {
-                unmountable.emplace_back(mount.pBackend);
+        for (auto&& iterator = m_mounts.begin(); iterator != m_mounts.end();) {
+            if (iterator->permanent) {
+                ++iterator;
+                continue;
             }
-        }
-        for (auto&& pBackend : unmountable) {
-            SR_LOG("VFS::UnmountAll() : unmounting \"{}\" mount...", pBackend->GetVirtualPath());
-            Unmount(pBackend);
+            SR_LOG("VFS::UnmountAll() : unmounting \"{}\" mount...", iterator->pBackend->GetVirtualPath());
+            iterator = m_mounts.erase(iterator);
         }
     }
 
     bool VFS::HaveMount(StringView virtualPath) const {
         SR_TRACY_ZONE;
-        SR_LOCK_GUARD;
+        std::shared_lock lock(m_mountsMutex);
         return std::ranges::any_of(m_mounts, [&](const VFSMount& mount) {
             return virtualPath == mount.pBackend->GetVirtualPath();
         });
@@ -254,9 +290,9 @@ namespace SR_UTILS_NS {
 
     bool VFS::ResolvePath(String& path, FileMode mode) const {
         SR_TRACY_ZONE;
-        SR_LOCK_GUARD;
+        std::shared_lock lock(m_mountsMutex);
 
-        static String virtualPath;
+        static SR_THREAD_LOCAL String virtualPath;
         virtualPath = path;
 
         for (auto&& mount : m_mounts) {
@@ -286,8 +322,7 @@ namespace SR_UTILS_NS {
 
     bool VFS::ResolvePath(Path& path, FileMode mode) const {
         SR_TRACY_ZONE;
-        SR_LOCK_GUARD;
-        static String resolvedPath;
+        static SR_THREAD_LOCAL String resolvedPath;
         resolvedPath = path.ToStringView();
         const bool res = ResolvePath(resolvedPath, mode);
         path = resolvedPath;
@@ -356,14 +391,14 @@ namespace SR_UTILS_NS {
 
     bool VFS::CreateDirectories(StringView path) const {
         SR_TRACY_ZONE;
-        SR_LOCK_GUARD;
+        std::unique_lock lock(m_mountsMutex);
 
         for (auto&& mount : m_mounts) {
             if (!mount.pBackend->WriteSupports()) {
                 continue;
             }
             if (mount.pBackend->IsApplicable(path)) {
-                static String gVFSResolvedPathBuffer;
+                static SR_THREAD_LOCAL String gVFSResolvedPathBuffer;
                 mount.pBackend->ResolveVirtualPath(path, gVFSResolvedPathBuffer);
                 if (SR_PLATFORM_NS::CreateDirectories(gVFSResolvedPathBuffer)) {
                     return true;
@@ -381,7 +416,7 @@ namespace SR_UTILS_NS {
 
     void VFS::UnResolvePath(String& path) const {
         SR_TRACY_ZONE;
-        SR_LOCK_GUARD;
+        std::shared_lock lock(m_mountsMutex);
 
         for (auto&& mount : m_mounts) {
             if (mount.pBackend->IsApplicable(path)) {
@@ -406,8 +441,7 @@ namespace SR_UTILS_NS {
 
     void VFS::UnResolvePath(Path& path) const {
         SR_TRACY_ZONE;
-        SR_LOCK_GUARD;
-        static String unresolvedPath;
+        static SR_THREAD_LOCAL String unresolvedPath;
         unresolvedPath = path.ToStringView();
         UnResolvePath(unresolvedPath);
         path = unresolvedPath;
@@ -415,7 +449,7 @@ namespace SR_UTILS_NS {
 
     bool VFS::IsWritable(StringView path) const {
         SR_TRACY_ZONE;
-        SR_LOCK_GUARD;
+        std::shared_lock lock(m_mountsMutex);
 
         for (auto&& mount : m_mounts) {
             if (!mount.pBackend->WriteSupports()) {
@@ -433,7 +467,6 @@ namespace SR_UTILS_NS {
 
     void VFS::GetFilesInDirectory(Vector<Path>& files, StringView directory, bool recursive) {
         SR_TRACY_ZONE;
-        SR_LOCK_GUARD;
         files.clear();
         Enumerate(directory, [&files](const VFSEntry& entry) {
             if (entry.type == FSItemType::File) {

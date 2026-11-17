@@ -77,7 +77,7 @@ namespace SR_UTILS_NS {
     MonotonicAllocator::~MonotonicAllocator() {
         if (g_TracyAllocatorInitialized) {
             SR_TRACY_ZONE;
-            Chunk *current = m_current;
+            Chunk *current = m_head;
             while (current) {
                 Chunk *next = current->next;
                 SRFree(current->memory);
@@ -87,7 +87,7 @@ namespace SR_UTILS_NS {
             }
         }
         else {
-            Chunk *current = m_current;
+            Chunk *current = m_head;
             while (current) {
                 Chunk *next = current->next;
                 SRFree(current->memory);
@@ -102,6 +102,10 @@ namespace SR_UTILS_NS {
         for (;;) {
             if (void* pMemory = m_current->TryAllocate(size, alignment)) {
                 return pMemory;
+            }
+            if (m_current->next) {
+                m_current = m_current->next;
+                continue;
             }
             Grow(m_current, std::max(m_chunkSize, size + alignment));
         }
@@ -157,6 +161,7 @@ namespace SR_UTILS_NS {
             current->offset = 0;
             current = current->next;
         }
+        m_current = m_head;
     }
 
     SizeType MonotonicAllocator::GetUsedMemory() const {

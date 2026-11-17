@@ -35,6 +35,7 @@ namespace SR_UTILS_NS {
     }
 
     void LayerManager::InitSingleton() {
+        SR_TRACY_ZONE;
         SR_LOG("LayerManager::InitSingleton() : initializing layer manager...");
 
         m_pSettings = CoreResLoader::Load<LayerManagerSettings>(LAYER_MANAGER_SETTINGS_PATH);
@@ -53,6 +54,7 @@ namespace SR_UTILS_NS {
     }
 
     void LayerManager::ReloadSettings() {
+        SR_TRACY_ZONE;
         SR_LOCK_GUARD;
 
         SR_INFO("LayerManager::ReloadSettings() : reloading settings...");

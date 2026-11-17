@@ -555,6 +555,7 @@ namespace SR_UTILS_NS {
     }
 
     void StringUtils::ConvertToUTF8(const wchar_t* pSource, uint32_t size, String& result) {
+        SR_TRACY_ZONE;
         result.clear();
 
         if (!pSource || size == 0)

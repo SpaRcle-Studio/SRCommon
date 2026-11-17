@@ -91,8 +91,9 @@ namespace SR_UTILS_NS {
 
     private:
         Vector<Function<void()>> m_nextFrameTasks;
-        SR_HTYPES_NS::Thread::Ptr m_thread = nullptr;
-        std::atomic<bool> m_isRun;
+        Vector<SR_HTYPES_NS::Thread::Ptr> m_threads;
+        std::atomic<bool> m_isRun = false;
+        std::atomic<bool> m_isInited = false;
         Vector<Task::Ptr> m_tasks;
         /// Предполагается, что задач не будет слишком много,
         /// и не будет надобности в unordered set/map
@@ -100,6 +101,7 @@ namespace SR_UTILS_NS {
         mutable Set<TaskId> m_waitIds;
         mutable Map<TaskId, Task::State> m_results;
         Set<Task*> m_delayedTasks;
+        Set<Task*> m_runningTasks;
 
     };
 }

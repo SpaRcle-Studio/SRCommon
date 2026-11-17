@@ -64,17 +64,12 @@ namespace SR_UTILS_NS {
 
         m_isRun = true;
 
-        if (!SR_HTYPES_NS::Thread::Factory::Instance().Create(m_thread, &ResourceManager::Thread, this)) {
-            SRHalt("ResourceManager::Initialize() : failed to create thread!");
-            return false;
-        }
-
-        m_thread->SetName("Resources manager");
-
         return true;
     }
 
     void ResourceManager::DeInitialize() {
+        SR_TRACY_ZONE;
+
         if (!m_isInit) {
             SRHalt("ResourceManager::DeInitialize() : is not initialized!");
             return;
@@ -97,18 +92,14 @@ namespace SR_UTILS_NS {
             });
         }
 
-        Synchronize(true);
+        for (uint8_t i = 0; i < 128; i++) {
+            Update(true);
+        }
 
         m_isInit = false;
         m_isRun = false;
 
         SR_INFO("ResourceManager::DeInitialize() : stopping thread...");
-
-        if (m_thread) {
-            m_thread->TryJoin();
-            m_thread->Free();
-            m_thread = nullptr;
-        }
 
         PrintMemoryDump();
 
@@ -171,34 +162,24 @@ namespace SR_UTILS_NS {
         return resPath;
     }
 
-    bool ResourceManager::Thread() {
+    void ResourceManager::Update(const bool force) {
         SR_TRACY_ZONE;
 
-        m_thread->Synchronize();
+        m_force = force;
 
-    #ifdef SR_THREADS_ALLOWED
-        SR_PLATFORM_NS::Sleep(5);
-    #endif
-
-        auto time = clock();
+        const auto time = clock();
         m_deltaTime = static_cast<uint64_t>(time - m_lastTime); /// miliseconds
         m_lastTime = time;
 
         m_GCDt += m_deltaTime;
 
-        if (m_GCDt > (m_force ? 100 : 500) /** ms */) {
+        if (m_force || m_GCDt > 500 /** ms */) {
             /** если какой-то ресурс больше не используется, то уничтожаем его.
              * все происходящее в GC должно быть потоко-безопасным, то есть при освобождении
              * ресурсов не должны блокироваться другие потоки, иначе будут проблемы. */
             GC();
             m_GCDt = 0;
         }
-
-        if (m_isRun) {
-            return true;
-        }
-        SR_LOG("ResourceManager::Thread() : thread is stopped.");
-        return false;
     }
 
     void ResourceManager::GC() {
@@ -420,40 +401,6 @@ namespace SR_UTILS_NS {
         return nullptr;
     }
 
-    void ResourceManager::Synchronize(bool force) {
-        SR_TRACY_ZONE;
-
-        {
-            SR_SCOPED_LOCK;
-            m_force = true;
-        }
-
-        /// TODO: добавить таймер, по истечению которого поток будет умирать, чтобы не стоять в deadlock'е
-
-        for (uint8_t i = 0; i < 255; ++i) 
-        {
-            for (;;)
-            {
-                {
-                    SR_SCOPED_LOCK;
-                    if (m_destroyQueue.empty()) {
-                        break;
-                    }
-                }
-
-                if (!m_thread->Joinable()) {
-                    SR_ERROR("ResourceManager::Synchronize() : thread is dead!");
-                    break;
-                }
-            }
-        }
-
-        {
-            SR_LOCK_GUARD;
-            m_force = false;
-        }
-    }
-
     void ResourceManager::Execute(const SR_HTYPES_NS::Function<void()>& fun) {
         SR_TRACY_ZONE;
         SR_LOCK_GUARD;
@@ -585,6 +532,13 @@ namespace SR_UTILS_NS {
     }
 
     Path ResourceManager::GetCachePath() const {
+        if (!m_cacheFolder) {
+            SRHaltTerminate("ResourceManager::GetCachePath() : cache is not initialized!");
+        }
+        return m_cacheFolder.value();
+    }
+
+    const Path& ResourceManager::GetCachePathRef() const {
         if (!m_cacheFolder) {
             SRHaltTerminate("ResourceManager::GetCachePath() : cache is not initialized!");
         }

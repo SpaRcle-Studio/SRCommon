@@ -4,7 +4,9 @@
 
 #include <Utils/FileSystem/ArchiveVFSBackend.h>
 #include <Utils/FileSystem/File.h>
+#include <Utils/Profile/TracyContext.h>
 #include <Utils/Types/Set.h>
+
 #include <zlib/zlib.h>
 
 namespace SR_UTILS_NS {
@@ -141,6 +143,7 @@ namespace SR_UTILS_NS {
     }
 
     void ArchiveVFSBackend::Enumerate(StringView directory, const EnumerateCallback& callback, bool recursive) const {
+        SR_TRACY_ZONE;
         String prefix(directory);
         if (!prefix.empty() && !prefix.ends_with('/')) {
             prefix += '/';

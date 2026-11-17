@@ -52,6 +52,9 @@ namespace SR_UTILS_NS {
         RawPointerHolder<SR_NETWORK_NS::GitHubDownloader> m_pDownloader;
         String m_branch;
         mutable Cache m_cache;
+        mutable std::mutex m_cacheMutex;
+        mutable std::mutex m_treeMutex;
+        mutable std::atomic<bool> m_treeLoaded = false;
 
     };
 }

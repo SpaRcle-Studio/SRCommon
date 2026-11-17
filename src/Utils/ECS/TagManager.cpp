@@ -34,6 +34,7 @@ namespace SR_UTILS_NS {
     }
 
     bool TagManager::LoadSettings(const Xml::Node &node) {
+        SR_TRACY_ZONE;
         SR_LOCK_GUARD;
 
         m_tags.clear();

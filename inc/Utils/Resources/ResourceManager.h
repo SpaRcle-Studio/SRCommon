@@ -37,9 +37,11 @@ namespace SR_UTILS_NS {
         /// @method @evaluate
         SR_NODISCARD Path GetResPath() const;
         /// @method @evaluate
+        SR_NODISCARD Path GetCachePath() const;
+        /// @method @evaluate
         SR_NODISCARD const Path& GetResPathRef() const;
         /// @method @evaluate
-        SR_NODISCARD Path GetCachePath() const;
+        SR_NODISCARD const Path& GetCachePathRef() const;
 
         SR_NODISCARD IResource::Ptr Find(StringAtom id, StringAtom typeName, const IResourceVariant* pVariant) const;
         SR_NODISCARD IResource::Ptr FindAnyType(StringAtom id, const IResourceVariant* pVariant) const;
@@ -48,8 +50,6 @@ namespace SR_UTILS_NS {
 
         template<typename T> SR_NODISCARD SR_HTYPES_NS::SharedPtr<T> Find(StringAtom id, const IResourceVariant* pVariant);
         template<typename T> SR_NODISCARD SR_HTYPES_NS::SharedPtr<T> Find(const Path& path, const IResourceVariant* pVariant);
-
-        void Synchronize(bool force);
 
         void ReloadResource(const IResource::Ptr& pResource);
         void ReloadResource(StringAtom id, StringAtom typeName);
@@ -66,9 +66,9 @@ namespace SR_UTILS_NS {
 
         bool ReviveResource(const IResource::Ptr& pResource);
 
-        bool IsSingletonCanBeDestroyed() const override { return false; }
-
     public:
+        void Update(bool force);
+
         bool Initialize();
         void DeInitialize();
 
@@ -80,12 +80,14 @@ namespace SR_UTILS_NS {
         void PrintMemoryDump();
         void EnableStackTraceProfiling();
 
+    protected:
+        bool IsSingletonCanBeDestroyed() const override { return false; }
+
     private:
         SR_NODISCARD ResourceType* GetOrCreateResourceType(StringAtom typeName);
 
         void Remove(const IResource::Ptr& pResource);
         void GC();
-        bool Thread();
 
     private:
         Vector<IResource::Ptr> m_destroyQueue;
@@ -106,7 +108,6 @@ namespace SR_UTILS_NS {
 
         std::optional<Path> m_cacheFolder;
 
-        SR_HTYPES_NS::Thread::Ptr m_thread = nullptr;
         uint64_t m_lastTime = 0;
         uint64_t m_deltaTime = 0;
 
@@ -144,6 +145,7 @@ struct CoreResLoader {
     SR_NODISCARD static SR_UTILS_NS::Path GetResPath() { return SR_UTILS_NS::ResourceManager::Instance().GetResPath(); }
     SR_NODISCARD static SR_UTILS_NS::Path GetCachePath() { return SR_UTILS_NS::ResourceManager::Instance().GetCachePath(); }
     SR_NODISCARD static const SR_UTILS_NS::Path& GetResPathRef() { return SR_UTILS_NS::ResourceManager::Instance().GetResPathRef(); }
+    SR_NODISCARD static const SR_UTILS_NS::Path& GetCachePathRef() { return SR_UTILS_NS::ResourceManager::Instance().GetCachePathRef(); }
 };
 
 #endif //SR_ENGINE_COMMON_RESOURCE_MANAGER_H

@@ -159,9 +159,10 @@ namespace SR_UTILS_NS {
         return false;
     }
 
-    static String gResolvedPathBuffer;
+    static SR_THREAD_LOCAL String gResolvedPathBuffer;
 
     void DirectoryVFSBackend::ResolveVirtualPath(StringView virtualPath, String& outRealPath) const {
+        SR_TRACY_ZONE;
         if (virtualPath == GetVirtualPath()) {
             outRealPath = m_realPath;
             return;
@@ -207,9 +208,9 @@ namespace SR_UTILS_NS {
     }
 
     void DirectoryVFSBackend::Enumerate(StringView directory, const IVFSBackend::EnumerateCallback& callback, bool recursive) const {
-        SR_GLOBAL_LOCK;
+        SR_TRACY_ZONE;
 
-        static String gEnumerateResolvedPathBuffer;
+        static SR_THREAD_LOCAL String gEnumerateResolvedPathBuffer;
         ResolveVirtualPath(directory, gEnumerateResolvedPathBuffer);
         if (gEnumerateResolvedPathBuffer.empty()) {
             SRHalt("DirectoryVFSBackend::Enumerate() : resolved path is empty!");
@@ -222,27 +223,26 @@ namespace SR_UTILS_NS {
             return;
         }
 
-        static String fullPathBuffer;
-        static String relativePathBuffer;
+        static SR_THREAD_LOCAL String fullPathBuffer;
+        static SR_THREAD_LOCAL String relativePathBuffer;
 
         std::error_code errorCode;
 
         auto&& processEntry = [&](const std::filesystem::directory_entry& entry) {
+            SR_TRACY_ZONE_N("Process entry");
             const bool isFile = entry.is_regular_file(errorCode);
             const bool isDirectory = entry.is_directory(errorCode);
             if (!isFile && !isDirectory) {
-                return ;
+                return;
             }
 
-            using PathString = std::filesystem::path::string_type;
-            const PathString& native = entry.path().native();
-            std::basic_string_view<PathString::value_type> view(native.data(), native.size());
+            auto&& native = entry.path().native();
 
-            if constexpr (std::is_same_v<PathString::value_type, char>) {
-                fullPathBuffer = StringView(reinterpret_cast<const char*>(view.data()), view.size());
+            if constexpr (std::is_same_v<std::filesystem::path::value_type, char>) {
+                fullPathBuffer = StringView(reinterpret_cast<const char*>(native.data()), native.size());
             }
             else {
-                StringUtils::Instance().ConvertToUTF8(reinterpret_cast<const wchar_t*>(view.data()), view.size(), fullPathBuffer);
+                StringUtils::Instance().ConvertToUTF8(reinterpret_cast<const wchar_t*>(native.data()), native.size(), fullPathBuffer);
             }
 
             std::ranges::replace(fullPathBuffer, '\\', '/');
@@ -277,54 +277,76 @@ namespace SR_UTILS_NS {
             vfsEntry.relativePath = relativePathBuffer;
             vfsEntry.type = isFile ? FSItemType::File : FSItemType::Folder;
 
-            callback(vfsEntry);
+            {
+                SR_TRACY_ZONE_N("Callback");
+                callback(vfsEntry);
+            }
         };
 
-        static SR_UTILS_NS::MonotonicAllocator gEnumerateAllocator(8_KB);
-        gEnumerateAllocator.ResetMemory();
-        SR_UTILS_NS::SetThreadLocalAllocator(&gEnumerateAllocator);
+        static SR_THREAD_LOCAL MonotonicAllocator enumerateAllocator(8_KB);
+        struct AllocatorScope {
+            IAllocator* pPrevious = GetThreadLocalAllocator();
 
-        Vector<std::filesystem::directory_entry> entries(&gEnumerateAllocator);
-        entries.reserve(16);
+            explicit AllocatorScope(IAllocator* pAllocator) {
+                SetThreadLocalAllocator(pAllocator);
+            }
+
+            ~AllocatorScope() {
+                SetThreadLocalAllocator(pPrevious);
+            }
+        };
+
+        struct EnumerationStorage {
+            MonotonicAllocator& allocator;
+            Vector<std::filesystem::directory_entry> entries{&allocator};
+
+            ~EnumerationStorage() {
+                AllocatorScope scope(&allocator);
+                entries = {};
+                allocator.ResetMemory();
+            }
+        } storage{enumerateAllocator};
+        auto&& entries = storage.entries;
+        entries.reserve(512);
 
         bool hasError = false;
 
-        if (recursive) {
-            for (const auto& entry : std::filesystem::recursive_directory_iterator(gEnumerateResolvedPathBuffer.view(), errorCode)) {
-                if (errorCode) {
-                    hasError = true;
-                    break;
+        {
+            SR_TRACY_ZONE_N("Collect");
+            AllocatorScope scope(&enumerateAllocator);
+            if (recursive) {
+                auto&& iterator = std::filesystem::recursive_directory_iterator(gEnumerateResolvedPathBuffer.view(), errorCode);
+                for (const auto& entry : iterator) {
+                    if (errorCode) {
+                        hasError = true;
+                        break;
+                    }
+                    entries.emplace_back(entry);
                 }
-                entries.emplace_back(entry);
+            }
+            else {
+                auto&& iterator = std::filesystem::directory_iterator(gEnumerateResolvedPathBuffer.view(), errorCode);
+                for (const auto& entry : iterator) {
+                    if (errorCode) {
+                        hasError = true;
+                        break;
+                    }
+                    entries.emplace_back(entry);
+                }
             }
         }
-        else {
-            for (const auto& entry : std::filesystem::directory_iterator(gEnumerateResolvedPathBuffer.view(), errorCode)) {
-                if (errorCode) {
-                    hasError = true;
-                    break;
-                }
-                entries.emplace_back(entry);
-            }
-        }
-
-        SR_UTILS_NS::SetThreadLocalAllocator(nullptr);
 
         if (hasError) {
             SR_ERROR("DirectoryVFSBackend::Enumerate() : failed to enumerate directory \"{}\"! Error: {}", gEnumerateResolvedPathBuffer, errorCode.message());
-            SR_UTILS_NS::SetThreadLocalAllocator(&gEnumerateAllocator);
-            entries = {};
-            SR_UTILS_NS::SetThreadLocalAllocator(nullptr);
             return;
         }
 
-        for (const auto& entry : entries) {
-            processEntry(entry);
+        {
+            SR_TRACY_ZONE_N("Process entries");
+            for (const auto& entry : entries) {
+                processEntry(entry);
+            }
         }
-
-        SR_UTILS_NS::SetThreadLocalAllocator(&gEnumerateAllocator);
-        entries = {};
-        SR_UTILS_NS::SetThreadLocalAllocator(nullptr);
     }
 
     void DirectoryVFSBackend::Delete(StringView path) const {
