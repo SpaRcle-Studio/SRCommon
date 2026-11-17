@@ -76,6 +76,7 @@ namespace SR_UTILS_NS::Reflection {
     }
 
     void Method::InvokeVoid(Owner& owner) const {
+        SR_TRACY_ZONE;
         if (!m_pReturnTypeInfo && GetParamsCount() == 0) {
             m_noReturnNoParams(owner);
         }
@@ -85,6 +86,7 @@ namespace SR_UTILS_NS::Reflection {
     }
 
     void Method::InvokeVoid(Owner& owner, const Params& params) const {
+        SR_TRACY_ZONE;
         if (!m_pReturnTypeInfo && GetParamsCount() > 0) {
             m_noReturnWithParams(owner, params);
         }
@@ -94,6 +96,7 @@ namespace SR_UTILS_NS::Reflection {
     }
 
     Value Method::Invoke(Owner& owner, const Params& params) const {
+        SR_TRACY_ZONE;
         if (m_pReturnTypeInfo && GetParamsCount() > 0) {
             return m_withReturnWithParams(owner, params);
         }
@@ -104,6 +107,7 @@ namespace SR_UTILS_NS::Reflection {
     }
 
     Value Method::Invoke(Owner& owner) const {
+        SR_TRACY_ZONE;
         if (m_pReturnTypeInfo && GetParamsCount() == 0) {
             return m_withReturnNoParams(owner);
         }

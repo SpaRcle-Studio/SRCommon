@@ -46,6 +46,7 @@ namespace SR_UTILS_NS {
     }
 
     void UIInputRouter::Collect(SceneObject& object) {
+        SR_TRACY_ZONE;
         if (object.IsDestroyed()) {
             return;
         }
@@ -73,6 +74,7 @@ namespace SR_UTILS_NS {
     }
 
     void UIInputRouter::RefreshModal() {
+        SR_TRACY_ZONE;
         if (m_modal && !IsEnabled(m_modal)) {
             return; // Keep the closing modal's input barrier until the next frame.
         }
@@ -122,6 +124,7 @@ namespace SR_UTILS_NS {
     }
 
     void UIInputRouter::ProcessPointer(const PointerEvent& event) {
+        SR_TRACY_ZONE;
         if (event.phase == PointerPhase::Reset) {
             ResetPointers();
             m_consumed = true;
@@ -244,6 +247,7 @@ namespace SR_UTILS_NS {
     }
 
     void UIInputRouter::ProcessNavigation(const UINavigationState& navigation) {
+        SR_TRACY_ZONE;
         if (!Contains(m_focus) || (m_focus && !m_focus->GetUIInputTarget()->IsInteractable())) {
             m_focus = nullptr;
         }

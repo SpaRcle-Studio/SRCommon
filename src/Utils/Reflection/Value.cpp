@@ -196,6 +196,7 @@ namespace SR_UTILS_NS::Reflection {
     }
 
     Value Value::Copy() const {
+        SR_TRACY_ZONE;
         Value result;
         result.m_allocator = m_allocator;
         result.m_typeInfo = CopyTypeInfo(m_typeInfo);
@@ -342,6 +343,7 @@ namespace SR_UTILS_NS::Reflection {
     }
 
     Value Value::CreateDefault(TypeInfo* pTypeInfo) {
+        SR_TRACY_ZONE;
         Value value;
         value.m_allocator = IAllocator::GetDefaultAllocator();
         value.m_typeInfo = CopyTypeInfo(pTypeInfo);

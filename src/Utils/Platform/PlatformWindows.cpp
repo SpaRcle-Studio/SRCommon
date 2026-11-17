@@ -21,6 +21,7 @@
 #include <shlobj.h>
 #include <ImageHlp.h>
 #include <csignal>
+#include <cwchar>
 #include <sddl.h>
 #include <wininet.h>
 #include <shobjidl.h>
@@ -165,9 +166,66 @@ namespace SR_UTILS_NS::Platform {
         return WindowProtocolType::WinAPI;
     }
 
-    LONG WINAPI SRCustomExceptionHandler(EXCEPTION_POINTERS* ExceptionInfo) {
-        char buffer[256];
-        std::snprintf(buffer, sizeof(buffer), "SRCustomExceptionHandler() : SEH exception: code = 0x%08lX", ExceptionInfo->ExceptionRecord->ExceptionCode);
+    LONG WINAPI SRCustomExceptionHandler(EXCEPTION_POINTERS* pExceptionInfo) {
+        static volatile LONG handlingException = 0;
+        if (InterlockedCompareExchange(&handlingException, 1, 0) != 0) {
+            return EXCEPTION_EXECUTE_HANDLER;
+        }
+
+        char buffer[1024];
+        auto&& pRecord = pExceptionInfo->ExceptionRecord;
+        std::snprintf(buffer, sizeof(buffer), "SRCustomExceptionHandler() : SEH exception: code = 0x%08lX, instruction = %p, thread = %lu\n",
+            pRecord->ExceptionCode, pRecord->ExceptionAddress, ::GetCurrentThreadId());
+        SR_PLATFORM_NS::WriteConsoleError(buffer);
+
+        if (pRecord->ExceptionCode == EXCEPTION_ACCESS_VIOLATION && pRecord->NumberParameters >= 2) {
+            std::snprintf(buffer, sizeof(buffer), "SRCustomExceptionHandler() : access violation: operation = %llu (0=read, 1=write, 8=execute), address = %p\n",
+                static_cast<uint64_t>(pRecord->ExceptionInformation[0]), reinterpret_cast<void*>(pRecord->ExceptionInformation[1]));
+            SR_PLATFORM_NS::WriteConsoleError(buffer);
+        }
+
+        HMODULE pModule = nullptr;
+        if (GetModuleHandleExA(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+            reinterpret_cast<LPCSTR>(pRecord->ExceptionAddress), &pModule))
+        {
+            char modulePath[MAX_PATH] = {};
+            GetModuleFileNameA(pModule, modulePath, MAX_PATH);
+            std::snprintf(buffer, sizeof(buffer), "SRCustomExceptionHandler() : module = %s, offset = 0x%llX\n", modulePath,
+                static_cast<uint64_t>(reinterpret_cast<uintptr_t>(pRecord->ExceptionAddress) - reinterpret_cast<uintptr_t>(pModule)));
+            SR_PLATFORM_NS::WriteConsoleError(buffer);
+        }
+
+        wchar_t tempPath[MAX_PATH] = {};
+        const DWORD pathLength = GetTempPathW(MAX_PATH, tempPath);
+        if (pathLength == 0 || pathLength >= MAX_PATH) {
+            return EXCEPTION_EXECUTE_HANDLER;
+        }
+
+        wchar_t dumpPath[MAX_PATH] = {};
+        const int32_t written = std::swprintf(dumpPath, MAX_PATH, L"%lsSREngine-crash-%lu.dmp", tempPath, ::GetCurrentProcessId());
+        if (written < 0 || written >= MAX_PATH) {
+            return EXCEPTION_EXECUTE_HANDLER;
+        }
+
+        HANDLE pFile = CreateFileW(dumpPath, GENERIC_WRITE, 0, nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
+        if (pFile == INVALID_HANDLE_VALUE) {
+            std::snprintf(buffer, sizeof(buffer), "SRCustomExceptionHandler() : failed to create crash dump, Windows error = %lu\n", ::GetLastError());
+            SR_PLATFORM_NS::WriteConsoleError(buffer);
+            return EXCEPTION_EXECUTE_HANDLER;
+        }
+
+        MINIDUMP_EXCEPTION_INFORMATION exceptionInfo = {};
+        exceptionInfo.ThreadId = ::GetCurrentThreadId();
+        exceptionInfo.ExceptionPointers = pExceptionInfo;
+        exceptionInfo.ClientPointers = FALSE;
+        const BOOL saved = MiniDumpWriteDump(::GetCurrentProcess(), ::GetCurrentProcessId(), pFile,
+            static_cast<MINIDUMP_TYPE>(MiniDumpWithIndirectlyReferencedMemory | MiniDumpWithThreadInfo | MiniDumpWithUnloadedModules),
+            &exceptionInfo, nullptr, nullptr);
+        const DWORD dumpError = saved ? ERROR_SUCCESS : ::GetLastError();
+        CloseHandle(pFile);
+
+        std::snprintf(buffer, sizeof(buffer), "SRCustomExceptionHandler() : crash dump %s, path = %ls, Windows error = %lu\n",
+            saved ? "saved" : "failed", dumpPath, dumpError);
         SR_PLATFORM_NS::WriteConsoleError(buffer);
         return EXCEPTION_EXECUTE_HANDLER;
     }
