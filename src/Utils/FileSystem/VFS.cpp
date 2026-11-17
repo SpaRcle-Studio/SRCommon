@@ -13,6 +13,25 @@
 #include <Codegen/VFS.generated.hpp>
 
 namespace SR_UTILS_NS {
+    struct VFSThreadLocal {
+        struct EnumerationCache {
+            MonotonicAllocator allocator{8_KB};
+            EnumerationCache* pNested = nullptr;
+            bool active = false;
+
+            ~EnumerationCache() {
+                delete pNested;
+            }
+        };
+
+        EnumerationCache cache;
+        String resolvePathVirtualPath;
+        String resolvePathResolvedPath;
+        String resolvedPathBuffer;
+        String unresolvedPath;
+    };
+    static SR_THREAD_LOCAL VFSThreadLocal gVFSThreadLocal;
+
     bool VFS::IsExists(StringView path) const {
         SR_TRACY_ZONE;
         std::shared_lock lock(m_mountsMutex);
@@ -111,27 +130,16 @@ namespace SR_UTILS_NS {
 
     void VFS::Enumerate(StringView directory, const SR_HTYPES_NS::Function<void(const VFSEntry&)>& callback, bool recursive) const {
         SR_TRACY_ZONE;
-        struct EnumerationCache {
-            MonotonicAllocator allocator{8_KB};
-            EnumerationCache* pNested = nullptr;
-            bool active = false;
-
-            ~EnumerationCache() {
-                delete pNested;
-            }
-        };
-
-        static SR_THREAD_LOCAL EnumerationCache cache;
-        auto&& pCache = &cache;
+        auto&& pCache = &gVFSThreadLocal.cache;
         while (pCache->active) {
             if (!pCache->pNested) {
-                pCache->pNested = new EnumerationCache();
+                pCache->pNested = new VFSThreadLocal::EnumerationCache();
             }
             pCache = pCache->pNested;
         }
 
         struct EnumerationScope {
-            EnumerationCache& cache;
+            VFSThreadLocal::EnumerationCache& cache;
 
             ~EnumerationScope() {
                 cache.allocator.ResetMemory();
@@ -288,12 +296,10 @@ namespace SR_UTILS_NS {
         });
     }
 
-    bool VFS::ResolvePath(String& path, FileMode mode) const {
+    bool VFS::ResolvePath(String& path, FileMode mode, bool reportError) const {
         SR_TRACY_ZONE;
         std::shared_lock lock(m_mountsMutex);
-
-        static SR_THREAD_LOCAL String virtualPath;
-        virtualPath = path;
+        gVFSThreadLocal.resolvePathVirtualPath = path;
 
         for (auto&& mount : m_mounts) {
             const bool isRead = SR_MATH_NS::IsMaskIncludedSubMask(mode, FileMode::Read);
@@ -306,8 +312,8 @@ namespace SR_UTILS_NS {
                 continue;
             }
 
-            if (mount.pBackend->IsApplicable(virtualPath)) {
-                mount.pBackend->ResolveVirtualPath(virtualPath, path);
+            if (mount.pBackend->IsApplicable(gVFSThreadLocal.resolvePathVirtualPath)) {
+                mount.pBackend->ResolveVirtualPath(gVFSThreadLocal.resolvePathVirtualPath, path);
                 if (SR_PLATFORM_NS::GetPathType(path) == FSItemType::Undefined) {
                     continue;
                 }
@@ -315,16 +321,18 @@ namespace SR_UTILS_NS {
             }
         }
 
-        SR_ERROR("VFS::ResolvePath() : no applicable backend found for virtual path \"{}\"!", path);
+        if (reportError) {
+            SR_ERROR("VFS::ResolvePath() : no applicable backend found for virtual path \"{}\"!", path);
+        }
         path.clear();
         return false;
     }
 
-    bool VFS::ResolvePath(Path& path, FileMode mode) const {
+    bool VFS::ResolvePath(Path& path, FileMode mode, bool reportError) const {
         SR_TRACY_ZONE;
-        static SR_THREAD_LOCAL String resolvedPath;
+        auto&& resolvedPath = gVFSThreadLocal.resolvePathResolvedPath;
         resolvedPath = path.ToStringView();
-        const bool res = ResolvePath(resolvedPath, mode);
+        const bool res = ResolvePath(resolvedPath, mode, reportError);
         path = resolvedPath;
         return res;
     }
@@ -398,9 +406,8 @@ namespace SR_UTILS_NS {
                 continue;
             }
             if (mount.pBackend->IsApplicable(path)) {
-                static SR_THREAD_LOCAL String gVFSResolvedPathBuffer;
-                mount.pBackend->ResolveVirtualPath(path, gVFSResolvedPathBuffer);
-                if (SR_PLATFORM_NS::CreateDirectories(gVFSResolvedPathBuffer)) {
+                mount.pBackend->ResolveVirtualPath(path, gVFSThreadLocal.resolvedPathBuffer);
+                if (SR_PLATFORM_NS::CreateDirectories(gVFSThreadLocal.resolvedPathBuffer)) {
                     return true;
                 }
                 else {
@@ -441,7 +448,7 @@ namespace SR_UTILS_NS {
 
     void VFS::UnResolvePath(Path& path) const {
         SR_TRACY_ZONE;
-        static SR_THREAD_LOCAL String unresolvedPath;
+        auto&& unresolvedPath = gVFSThreadLocal.unresolvedPath;
         unresolvedPath = path.ToStringView();
         UnResolvePath(unresolvedPath);
         path = unresolvedPath;
