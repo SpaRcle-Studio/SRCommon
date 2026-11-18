@@ -126,6 +126,8 @@ namespace SR_WORLD_NS {
 
     void SceneUpdater::MarkLayoutDirty(SR_UTILS_NS::SceneObject& object, const bool fromTransform) {
         SR_TRACY_ZONE;
+        // Non-transform dirtiness can also change component or sibling traversal order.
+        m_uiInputRouter.Invalidate(!fromTransform);
         if ((fromTransform && m_rebuildingLayout) || object.IsDestroyed()
             || object.GetMeta() != SR_UTILS_NS::GameObject::GetMetaStatic()) {
             return;
@@ -189,6 +191,7 @@ namespace SR_WORLD_NS {
 
     void SceneUpdater::SetDirty() {
         m_dirty = true;
+        m_uiInputRouter.Invalidate(true);
     }
 
     void SceneUpdater::RegisterComponent(SR_UTILS_NS::Component* pComponent) {

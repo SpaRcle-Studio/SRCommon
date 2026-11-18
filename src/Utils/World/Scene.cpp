@@ -311,6 +311,9 @@ namespace SR_WORLD_NS {
 
     void Scene::OnChanged() {
         m_isHierarchyChanged = true;
+        if (m_sceneUpdater) {
+            m_sceneUpdater->InvalidateUIInput(true);
+        }
     }
 
     bool Scene::SaveScene() {

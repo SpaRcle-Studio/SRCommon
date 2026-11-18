@@ -44,6 +44,9 @@ namespace SR_WORLD_NS {
         SR_NODISCARD bool IsPaused() const noexcept { return m_isPaused; }
         SR_NODISCARD bool IsUIInputConsumed() const noexcept { return m_uiInputRouter.IsConsumed(); }
         void RequestUIFocus(SR_UTILS_NS::UIComponent& component) { m_uiInputRouter.RequestFocus(component); }
+        void InvalidateUIInput(bool targetsDirty = false) { m_uiInputRouter.Invalidate(targetsDirty); }
+        SR_NODISCARD uint64_t GetUIInputTargetsRevision() const noexcept { return m_uiInputRouter.GetTargetsRevision(); }
+        SR_NODISCARD uint64_t GetUIInputRevision() const noexcept { return m_uiInputRouter.GetRevision(); }
 
     private:
         std::recursive_mutex m_mutex;

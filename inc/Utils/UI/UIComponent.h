@@ -18,6 +18,11 @@ namespace SR_UTILS_NS {
 
         virtual void PrepareUIInput();
         virtual void AfterLayout();
+        void InvalidateUIInput(bool targetsDirty = false);
+        void OnMatrixDirty() override;
+        void OnMaskDirty() override;
+        void OnPriorityChanged() override;
+        void OnPostLoad() override;
         SR_NODISCARD virtual IUIInputTarget* GetUIInputTarget() noexcept {
             return nullptr;
         }

@@ -30,6 +30,8 @@ namespace SR_UTILS_NS {
         virtual bool Navigate(int32_t direction) { return false; }
         virtual bool Scroll(const SR_MATH_NS::FVector2& delta) { return false; }
         virtual int32_t GetInputPriority() const { return 0; }
+        // Custom targets keep polling until all input-affecting changes notify the router.
+        virtual bool RequiresInputPolling() const { return true; }
     };
 }
 

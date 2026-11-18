@@ -8,6 +8,14 @@
 #include <Utils/World/Scene.h>
 
 namespace SR_UTILS_NS {
+    void UIInputRouter::Invalidate(bool targetsDirty) {
+        ++m_revision;
+        m_targetsDirty |= targetsDirty;
+        if (targetsDirty) {
+            ++m_targetsRevision;
+        }
+    }
+
     void UIInputRouter::RequestFocus(UIComponent& component) {
         m_requestedFocus = &component;
     }
@@ -16,6 +24,7 @@ namespace SR_UTILS_NS {
         SR_TRACY_ZONE;
         if (auto&& pUI = UIComponent::TryGet(&component)) {
             m_components.emplace_back(pUI);
+            Invalidate(true);
         }
     }
 
@@ -24,6 +33,7 @@ namespace SR_UTILS_NS {
         for (auto it = m_components.begin(); it != m_components.end(); ++it) {
             if (it->Get() == &component) {
                 m_components.erase(it);
+                Invalidate(true);
                 return;
             }
         }
@@ -35,6 +45,9 @@ namespace SR_UTILS_NS {
             const auto pUI = m_components[i];
             if (pUI && pUI->IsActive() && (!paused || pUI->ExecuteInEditMode())) {
                 pUI->PrepareUIInput();
+                if (pUI && bool(pUI->GetUIInputTarget()) != m_targetMembership.contains(pUI.Get())) {
+                    Invalidate(true);
+                }
             }
         }
     }
@@ -50,7 +63,6 @@ namespace SR_UTILS_NS {
     }
 
     void UIInputRouter::Collect(SceneObject& object) {
-        SR_TRACY_ZONE;
         if (object.IsDestroyed()) {
             return;
         }
@@ -58,6 +70,8 @@ namespace SR_UTILS_NS {
             auto&& pUI = UIComponent::TryGet(pComponent ? pComponent->BaseComponent() : nullptr);
             if (pUI && pUI->GetUIInputTarget()) {
                 m_targets.emplace_back(pUI);
+                m_targetMembership.insert(pUI);
+                m_requiresPolling |= pUI->GetUIInputTarget()->RequiresInputPolling();
             }
         }
         for (auto&& pChild : object.GetChildrenRef()) {
@@ -65,26 +79,68 @@ namespace SR_UTILS_NS {
         }
     }
 
-    bool UIInputRouter::IsEnabled(const SR_HTYPES_NS::SharedPtr<UIComponent>& pComponent) const {
-        SR_TRACY_ZONE;
-        if (!pComponent || !pComponent->IsEnabled() || !pComponent->IsComponentValid()) {
-            return false;
+    void UIInputRouter::RefreshQueryCache() const {
+        if (m_queryRevision != m_revision) {
+            m_queryRevision = m_revision;
+            m_enabledObjects.clear();
+            m_enabledTargets.clear();
+            m_availableTargets.clear();
         }
-        for (auto pObject = pComponent->GetSceneObject(); pObject; pObject = pObject->GetParent()) {
-            if (!pObject->IsEnabled() || pObject->IsDestroyed()) {
-                return false;
+        if (m_pQueryModal != m_modal.Get()) {
+            m_pQueryModal = m_modal.Get();
+            m_availableTargets.clear();
+        }
+    }
+
+    bool UIInputRouter::IsObjectEnabled(const SceneObject& object) const {
+        if (!m_requiresPolling) {
+            if (auto&& found = m_enabledObjects.find(&object); found != m_enabledObjects.end()) {
+                return found->second;
             }
         }
-        return true;
+        const bool enabled = object.IsEnabled() && !object.IsDestroyed()
+            && (!object.GetParent() || IsObjectEnabled(*object.GetParent()));
+        if (!m_requiresPolling) {
+            m_enabledObjects.emplace(&object, enabled);
+        }
+        return enabled;
+    }
+
+    bool UIInputRouter::IsEnabled(const SR_HTYPES_NS::SharedPtr<UIComponent>& pComponent) const {
+        if (!pComponent || !pComponent->IsComponentValid()) {
+            return false;
+        }
+        RefreshQueryCache();
+        if (!m_requiresPolling) {
+            if (auto&& found = m_enabledTargets.find(pComponent.Get()); found != m_enabledTargets.end()) {
+                return found->second;
+            }
+        }
+        SR_TRACY_ZONE;
+        const auto pObject = pComponent->GetSceneObject();
+        const bool enabled = pComponent->IsEnabled() && (!pObject || IsObjectEnabled(*pObject));
+        if (!m_requiresPolling) {
+            m_enabledTargets.emplace(pComponent.Get(), enabled);
+        }
+        return enabled;
     }
 
     void UIInputRouter::RefreshModal() {
+        if (!m_requiresPolling && m_modalRefreshed && m_modalRevision == m_revision) {
+            m_consumed |= m_modal.Valid();
+            return;
+        }
         SR_TRACY_ZONE;
+        m_modalRefreshed = true;
+        m_modalRevision = m_revision;
         if (m_modal && !IsEnabled(m_modal)) {
             return; // Keep the closing modal's input barrier until the next frame.
         }
         for (auto&& pTarget : m_targets) {
-            if (IsEnabled(pTarget) && pTarget->GetUIInputTarget()->IsModal()) {
+            const bool modal = m_requiresPolling
+                ? IsEnabled(pTarget) && pTarget->GetUIInputTarget()->IsModal()
+                : pTarget && pTarget->IsComponentValid() && pTarget->GetUIInputTarget()->IsModal() && IsEnabled(pTarget);
+            if (modal) {
                 m_modal = pTarget;
             }
         }
@@ -92,33 +148,57 @@ namespace SR_UTILS_NS {
     }
 
     bool UIInputRouter::Contains(const SR_HTYPES_NS::SharedPtr<UIComponent>& pComponent) const {
-        SR_TRACY_ZONE;
-        if (!IsEnabled(pComponent) || !pComponent->IsActive()) {
+        if (!pComponent || !pComponent->IsComponentValid()) {
             return false;
         }
-        if (m_targets.find(pComponent) == m_targets.end()) {
-            return false;
-        }
-        if (!m_modal) {
-            return true;
-        }
-        const auto pModalObject = m_modal->GetSceneObject();
-        for (auto pObject = pComponent->GetSceneObject(); pObject; pObject = pObject->GetParent()) {
-            if (pObject == pModalObject) {
-                return true;
+        RefreshQueryCache();
+        if (!m_requiresPolling) {
+            if (auto&& found = m_availableTargets.find(pComponent.Get()); found != m_availableTargets.end()) {
+                return found->second;
             }
         }
-        return false;
+        SR_TRACY_ZONE;
+        bool available = m_targetMembership.contains(pComponent.Get()) && IsEnabled(pComponent) && pComponent->IsActive();
+        if (available && m_modal) {
+            available = false;
+            const auto pModalObject = m_modal->GetSceneObject();
+            for (auto pObject = pComponent->GetSceneObject(); pObject; pObject = pObject->GetParent()) {
+                if (pObject == pModalObject) {
+                    available = true;
+                    break;
+                }
+            }
+        }
+        if (!m_requiresPolling) {
+            m_availableTargets.emplace(pComponent.Get(), available);
+        }
+        return available;
     }
 
     SR_HTYPES_NS::SharedPtr<UIComponent> UIInputRouter::HitTest(const PointerEvent& event) const {
+        if (!m_requiresPolling && m_hitValid && m_hitRevision == m_revision && m_pHitModal == m_modal.Get()
+            && m_hitEvent.pointerId == event.pointerId && m_hitEvent.device == event.device
+            && m_hitEvent.phase == event.phase && m_hitEvent.button == event.button && m_hitEvent.space == event.space
+            && m_hitEvent.position == event.position && m_hitEvent.scroll == event.scroll
+            && SR_EQUALS(m_hitEvent.pressure, event.pressure) && SR_EQUALS(m_hitEvent.dragThreshold, event.dragThreshold)
+            && (!m_pHit.Get() || (m_pHit && m_pHit->IsComponentValid()))) {
+            return m_pHit;
+        }
         SR_TRACY_ZONE;
+        const uint64_t revision = m_revision;
+        SR_HTYPES_NS::SharedPtr<UIComponent> pHit;
         for (auto it = m_targets.rbegin(); it != m_targets.rend(); ++it) {
             if (Contains(*it) && (*it)->GetUIInputTarget()->HitTest(event)) {
-                return *it;
+                pHit = *it;
+                break;
             }
         }
-        return nullptr;
+        m_pHit = pHit;
+        m_hitEvent = event;
+        m_hitRevision = revision;
+        m_pHitModal = m_modal.Get();
+        m_hitValid = !m_requiresPolling;
+        return pHit;
     }
 
     void UIInputRouter::ResetPointers() {
@@ -299,28 +379,87 @@ namespace SR_UTILS_NS {
         }
     }
 
+    bool UIInputRouter::HasPointerChanges(std::span<const PointerEvent> events) const {
+        for (auto&& pointer : m_pointers) {
+            // Preserve per-frame capture validation and stationary drag callbacks.
+            if (pointer.pCapture) {
+                return true;
+            }
+        }
+        for (auto&& event : events) {
+            if (event.phase != PointerPhase::Move || event.device != PointerDevice::Mouse) {
+                return true;
+            }
+            bool unchanged = false;
+            for (auto&& pointer : m_pointers) {
+                auto&& last = pointer.last;
+                if (pointer.id == event.pointerId && pointer.device == event.device) {
+                    unchanged = last.position == event.position && last.space == event.space
+                        && SR_EQUALS(last.pressure, event.pressure) && last.button == event.button
+                        && last.scroll == event.scroll && SR_EQUALS(last.dragThreshold, event.dragThreshold);
+                    break;
+                }
+            }
+            if (!unchanged) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     void UIInputRouter::Process(SR_WORLD_NS::Scene& scene, std::span<const PointerEvent> events, const UINavigationState& navigation) {
         SR_TRACY_ZONE;
-        m_targets.clear();
+        if (m_processedRevision == m_revision && !m_requiresPolling && !m_requestedFocus
+            && m_windowFocused == navigation.focused && !navigation.nextFocus && !navigation.previousFocus
+            && !navigation.submit && !navigation.cancel && navigation.direction == 0
+            && (!navigation.focused || !HasPointerChanges(events))) {
+            // Consumption caused by an event belongs only to its frame.
+            m_consumed = m_modal.Valid();
+            return;
+        }
+        const uint64_t revision = m_revision;
+        m_windowFocused = navigation.focused;
         m_modal = nullptr;
+        m_modalRefreshed = false;
         m_consumed = false;
 
-        for (auto&& pRoot : scene.GetRootSceneObjects()) {
-            Collect(*pRoot);
+        const bool rebuildTargets = m_targetsDirty || m_requiresPolling;
+        if (rebuildTargets) {
+            SR_TRACY_ZONE_N("Collect targets");
+            m_targetsDirty = false;
+            m_requiresPolling = false;
+            m_targets.clear();
+            m_targetMembership.clear();
+            for (auto&& pRoot : scene.GetRootSceneObjects()) {
+                Collect(*pRoot);
+            }
         }
 
-        /// Stable insertion sort retains sibling order without a temporary allocation.
-        {
+        if (rebuildTargets) {
             SR_TRACY_ZONE_N("Sort");
-            for (uint32_t i = 1; i < m_targets.size(); ++i) {
-                const auto pTarget = m_targets[i];
-                const auto priority = pTarget->GetUIInputTarget()->GetInputPriority();
-                uint32_t j = i;
-                while (j > 0 && m_targets[j - 1]->GetUIInputTarget()->GetInputPriority() > priority) {
-                    m_targets[j] = m_targets[j - 1];
-                    --j;
+            m_targetStates.clear();
+            m_targetStates.resize(m_targets.size(), static_cast<uint8_t>(0xff));
+            m_targetOrder.clear();
+            m_targetOrder.reserve(m_targets.size());
+            bool ordered = true;
+            for (uint32_t i = 0; i < m_targets.size(); ++i) {
+                const int32_t priority = m_targets[i]->GetUIInputTarget()->GetInputPriority();
+                if (i > 0 && m_targetOrder.back().priority > priority) {
+                    ordered = false;
                 }
-                m_targets[j] = pTarget;
+                m_targetOrder.emplace_back(TargetOrder{ priority, i });
+            }
+            if (!ordered) {
+                // The traversal index preserves the previous stable ordering for equal priorities.
+                std::sort(m_targetOrder.begin(), m_targetOrder.end(), [](const TargetOrder& left, const TargetOrder& right) {
+                    return left.priority < right.priority || (left.priority == right.priority && left.index < right.index);
+                });
+                m_sortedTargets.reserve(m_targets.size());
+                for (auto&& order : m_targetOrder) {
+                    m_sortedTargets.emplace_back(std::move(m_targets[order.index]));
+                }
+                m_targets.swap(m_sortedTargets);
+                m_sortedTargets.clear();
             }
         }
 
@@ -371,7 +510,9 @@ namespace SR_UTILS_NS {
 
         {
             SR_TRACY_ZONE_N("Process input state");
-            for (auto&& pTarget : m_targets) {
+            const bool forceStates = m_requiresPolling || m_processedRevision != revision;
+            for (uint32_t i = 0; i < m_targets.size(); ++i) {
+                auto&& pTarget = m_targets[i];
                 if (!pTarget || !pTarget->IsComponentValid()) {
                     continue;
                 }
@@ -381,10 +522,17 @@ namespace SR_UTILS_NS {
                     hovered |= pointer.pHover == pTarget;
                     pressed |= pointer.pCapture == pTarget && Contains(pTarget);
                 }
-                pTarget->GetUIInputTarget()->SetInputState(navigation.focused && hovered, pressed, Contains(pTarget) && m_focus == pTarget);
+                const bool focused = m_focus == pTarget && Contains(pTarget);
+                hovered &= navigation.focused;
+                const uint8_t state = static_cast<uint8_t>((hovered ? 1 : 0) | (pressed ? 2 : 0) | (focused ? 4 : 0));
+                if (forceStates || m_revision != revision || m_targetStates[i] != state) {
+                    m_targetStates[i] = state;
+                    pTarget->GetUIInputTarget()->SetInputState(hovered, pressed, focused);
+                }
             }
         }
 
-        m_targets.clear();
+        // Changes made by callbacks must still wake the next frame.
+        m_processedRevision = revision;
     }
 }
