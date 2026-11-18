@@ -6,6 +6,7 @@
 #define SR_ENGINE_SCENE_PREFAB_LOGIC_H
 
 #include <Utils/World/SceneLogic.h>
+#include <Utils/Serialization/Deserializer.h>
 
 namespace SR_WORLD_NS {
     class SR_COMMON_DLL_API ScenePrefabLogic : public SceneLogic {
