@@ -222,39 +222,39 @@ namespace SR_UTILS_NS {
         }
 
         SR_MAYBE_UNUSED SR_INLINE_STATIC std::string SR_FASTCALL LoadShortStr(SR_HTYPES_NS::Stream& stream) {
-            std::string str;
             uint16_t size;
             stream.read((char*)&size, sizeof(uint16_t));
             SRAssert(size < SR_UINT16_MAX);
             if (size >= SR_UINT16_MAX) {
-                return str;
+                return {};
             }
+            std::string str;
             str.resize(size);
             stream.read((char*)&str[0], size * sizeof(char));
             return str;
         }
 
         SR_MAYBE_UNUSED SR_INLINE_STATIC UnicodeString SR_FASTCALL LoadUnicodeString(SR_HTYPES_NS::Stream& stream) {
-            UnicodeString str;
             uint16_t size;
             stream.read((char*)&size, sizeof(uint16_t));
             SRAssert(size < SR_UINT16_MAX);
             if (size >= SR_UINT16_MAX) {
-                return str;
+                return {};
             }
+            UnicodeString str;
             str.resize(size);
             stream.read((char*)&str[0], size * sizeof(UnicodeString::CharType));
             return str;
         }
 
         SR_MAYBE_UNUSED SR_INLINE_STATIC std::string SR_FASTCALL LoadStr(SR_HTYPES_NS::Stream& stream) {
-            std::string str;
             uint64_t size;
             stream.read((char*)&size, sizeof(uint64_t));
             SRAssert(size < SR_UINT16_MAX);
             if (size >= SR_UINT16_MAX) {
                 return std::string(); /// NOLINT
             }
+            std::string str;
             str.resize(size);
             stream.read((char*)&str[0], size * sizeof(char));
             return str;

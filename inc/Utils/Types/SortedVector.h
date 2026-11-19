@@ -152,7 +152,7 @@ namespace SR_UTILS_NS {
             return it != m_data.end() && *it == value;
         }
 
-        SR_NODISCARD const T* Find(const T& value) const {
+        template<typename Y> SR_NODISCARD const T* Find(const Y& value) const {
             if (m_data.empty()) {
                 return nullptr;
             }
@@ -176,7 +176,7 @@ namespace SR_UTILS_NS {
             return nullptr;
         }
 
-        SR_NODISCARD T* Find(const T& value) {
+         template<typename Y> SR_NODISCARD T* Find(const Y& value) {
             return const_cast<T*>(static_cast<const SortedVector&>(*this).Find(value));
         }
 
