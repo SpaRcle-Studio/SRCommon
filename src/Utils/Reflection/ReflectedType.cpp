@@ -12,6 +12,7 @@
 #include <Utils/Common/EnumReflector.h>
 
 #include <Enum/ReflectedCategoryType.hpp>
+#include <Enum/SizeMetric.hpp>
 
 namespace SR_UTILS_NS::Reflection {
     ReflectedValue ReflectedValue::MakeFromPointer(void* pData, ReflectedValueStorageType storageType) {
@@ -370,7 +371,6 @@ namespace SR_UTILS_NS::Reflection {
 
         auto&& pTypeInfo = new TypeInfo();
         pTypeInfo->kind = key.kind;
-        pTypeInfo->category = GetTypeKindCategory(key.kind);
         pTypeInfo->detailedSize = key.detailedSize;
         pTypeInfo->name = BuildTypeName(key);
         pTypeInfo->pNext[0] = key.pNext[0];
@@ -389,7 +389,16 @@ namespace SR_UTILS_NS::Reflection {
     }
 
     void ResolveTypeInfoLocked(TypeInfo& typeInfo, const TypeInfoVTable& vtable, const void* pOwnerModule) {
+        if (!typeInfo.pFields && vtable.fieldsCount > 0) {
+            auto&& pFields = new FieldInfo[vtable.fieldsCount];
+            for (uint32_t i = 0; i < vtable.fieldsCount; ++i) {
+                pFields[i] = vtable.pFields[i];
+            }
+            typeInfo.pFields = pFields;
+            typeInfo.fieldsCount = vtable.fieldsCount;
+        }
         typeInfo.vtable = vtable;
+        typeInfo.vtable.pFields = typeInfo.pFields;
         typeInfo.pOwnerModule = pOwnerModule;
         typeInfo.isResolved.store(true, std::memory_order_release);
     }
@@ -827,32 +836,119 @@ namespace SR_UTILS_NS::Reflection {
         }
         else if constexpr (std::is_same_v<T, SR_MATH_NS::FColor>) {
             key.kind = TypeKind::Color;
+            static const FieldInfo fields[] = {
+                { "r", TypeOf<SR_MATH_NS::Unit>(), offsetof(T, r) },
+                { "g", TypeOf<SR_MATH_NS::Unit>(), offsetof(T, g) },
+                { "b", TypeOf<SR_MATH_NS::Unit>(), offsetof(T, b) },
+                { "a", TypeOf<SR_MATH_NS::Unit>(), offsetof(T, a) }
+            };
+            vtable.pFields = fields;
+            vtable.fieldsCount = 4;
         }
         else if constexpr (std::is_same_v<T, SR_MATH_NS::Quaternion>) {
             key.kind = TypeKind::Quaternion;
+            static const FieldInfo fields[] = {
+                { "x", TypeOf<float_t>(), offsetof(T, x) },
+                { "y", TypeOf<float_t>(), offsetof(T, y) },
+                { "z", TypeOf<float_t>(), offsetof(T, z) },
+                { "w", TypeOf<float_t>(), offsetof(T, w) }
+            };
+            vtable.pFields = fields;
+            vtable.fieldsCount = 4;
         }
         else if constexpr (std::is_same_v<T, SR_MATH_NS::AABB>) {
             key.kind = TypeKind::AABB;
+            static const FieldInfo fields[] = {
+                { "min", TypeOf<SR_MATH_NS::FVector3>(), offsetof(T, min) },
+                { "max", TypeOf<SR_MATH_NS::FVector3>(), offsetof(T, max) }
+            };
+            vtable.pFields = fields;
+            vtable.fieldsCount = 2;
         }
         else if constexpr (std::is_same_v<T, SR_MATH_NS::Matrix3x3>) {
             key.kind = TypeKind::Matrix3x3;
+            static const FieldInfo fields[] = {
+                { "m00", TypeOf<SR_MATH_NS::Unit>(), offsetof(T, m) },
+                { "m01", TypeOf<SR_MATH_NS::Unit>(), offsetof(T, m) + sizeof(SR_MATH_NS::Unit) },
+                { "m02", TypeOf<SR_MATH_NS::Unit>(), offsetof(T, m) + 2 * sizeof(SR_MATH_NS::Unit) },
+                { "m10", TypeOf<SR_MATH_NS::Unit>(), offsetof(T, m) + 3 * sizeof(SR_MATH_NS::Unit) },
+                { "m11", TypeOf<SR_MATH_NS::Unit>(), offsetof(T, m) + 4 * sizeof(SR_MATH_NS::Unit) },
+                { "m12", TypeOf<SR_MATH_NS::Unit>(), offsetof(T, m) + 5 * sizeof(SR_MATH_NS::Unit) },
+                { "m20", TypeOf<SR_MATH_NS::Unit>(), offsetof(T, m) + 6 * sizeof(SR_MATH_NS::Unit) },
+                { "m21", TypeOf<SR_MATH_NS::Unit>(), offsetof(T, m) + 7 * sizeof(SR_MATH_NS::Unit) },
+                { "m22", TypeOf<SR_MATH_NS::Unit>(), offsetof(T, m) + 8 * sizeof(SR_MATH_NS::Unit) }
+            };
+            vtable.pFields = fields;
+            vtable.fieldsCount = 9;
         }
         else if constexpr (std::is_same_v<T, SR_MATH_NS::Matrix4x4>) {
             key.kind = TypeKind::Matrix4x4;
+            static const FieldInfo fields[] = {
+                { "m00", TypeOf<float_t>(), offsetof(T, m00) }, { "m01", TypeOf<float_t>(), offsetof(T, m01) },
+                { "m02", TypeOf<float_t>(), offsetof(T, m02) }, { "m03", TypeOf<float_t>(), offsetof(T, m03) },
+                { "m10", TypeOf<float_t>(), offsetof(T, m10) }, { "m11", TypeOf<float_t>(), offsetof(T, m11) },
+                { "m12", TypeOf<float_t>(), offsetof(T, m12) }, { "m13", TypeOf<float_t>(), offsetof(T, m13) },
+                { "m20", TypeOf<float_t>(), offsetof(T, m20) }, { "m21", TypeOf<float_t>(), offsetof(T, m21) },
+                { "m22", TypeOf<float_t>(), offsetof(T, m22) }, { "m23", TypeOf<float_t>(), offsetof(T, m23) },
+                { "m30", TypeOf<float_t>(), offsetof(T, m30) }, { "m31", TypeOf<float_t>(), offsetof(T, m31) },
+                { "m32", TypeOf<float_t>(), offsetof(T, m32) }, { "m33", TypeOf<float_t>(), offsetof(T, m33) }
+            };
+            vtable.pFields = fields;
+            vtable.fieldsCount = 16;
         }
         else if constexpr (IsTypeMathRectTemplateV<T>) {
             key.kind = TypeKind::MathRect;
             key.pNext[0] = TypeOf<typename T::ValueType>();
+            static const FieldInfo fields[] = {
+                { "x", key.pNext[0], offsetof(T, x) }, { "y", key.pNext[0], offsetof(T, y) },
+                { "w", key.pNext[0], offsetof(T, w) }, { "h", key.pNext[0], offsetof(T, h) }
+            };
+            vtable.pFields = fields;
+            vtable.fieldsCount = 4;
         }
         else if constexpr (IsTypeMathSizeTemplateV<T>) {
             key.kind = TypeKind::MathSize;
             key.pNext[0] = TypeOf<typename T::ValueType>();
             key.detailedSize = T::Dimensions();
+            if constexpr (T::Dimensions() == 1) {
+                static const FieldInfo fields[] = {
+                    { "value", key.pNext[0], offsetof(T, value) },
+                    { "metric", TypeOf<SR_MATH_NS::SizeMetric>(), offsetof(T, metric) }
+                };
+                vtable.pFields = fields;
+            }
+            else {
+                static const FieldInfo fields[] = {
+                    { "width", TypeOf<SR_MATH_NS::Size<typename T::ValueType>>(), offsetof(T, width) },
+                    { "height", TypeOf<SR_MATH_NS::Size<typename T::ValueType>>(), offsetof(T, height) }
+                };
+                vtable.pFields = fields;
+            }
+            vtable.fieldsCount = 2;
         }
         else if constexpr (IsTypeMathVectorTemplateV<T>) {
             key.kind = TypeKind::MathVector;
             key.pNext[0] = TypeOf<typename T::ValueType>();
             key.detailedSize = T::Dimensions();
+            static const Vector<FieldInfo> fields = [&key]() {
+                Vector<FieldInfo> result = {
+                    { "x", key.pNext[0], offsetof(T, x) },
+                    { "y", key.pNext[0], offsetof(T, y) }
+                };
+                if constexpr (T::Dimensions() >= 3) {
+                    result.emplace_back(FieldInfo{ "z", key.pNext[0], offsetof(T, z) });
+                }
+                if constexpr (T::Dimensions() >= 4) {
+                    result.emplace_back(FieldInfo{ "w", key.pNext[0], offsetof(T, w) });
+                }
+                if constexpr (T::Dimensions() == 6) {
+                    result.emplace_back(FieldInfo{ "v", key.pNext[0], offsetof(T, v) });
+                    result.emplace_back(FieldInfo{ "u", key.pNext[0], offsetof(T, u) });
+                }
+                return result;
+            }();
+            vtable.pFields = fields.data();
+            vtable.fieldsCount = static_cast<uint32_t>(fields.size());
         }
         else if constexpr (std::is_same_v<T, String> || std::is_same_v<T, StringView> || std::is_same_v<T, StringAtom> || std::is_same_v<T, Path> || std::is_same_v<T, UnicodeString>) {
             if constexpr (std::is_same_v<T, String>) {

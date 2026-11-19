@@ -123,6 +123,10 @@ namespace SR_UTILS_NS::Tests {
 
     private:
         /// @property
+        SR_UTILS_NS::Pair<String, int32_t> pair1;
+        /// @property
+        SR_UTILS_NS::Pair<SR_UTILS_NS::Pair<SR_MATH_NS::FColor, float_t>, int32_t> pair2;
+        /// @property
         bool m_SOMEstrangeNaMe = false;
         /// @property @onChanged(OnChanged)
         ReflectionTestComponentAssociative m_associative;
@@ -162,6 +166,8 @@ namespace SR_UTILS_NS::Tests {
         SR_MATH_NS::FSize m_size;
         /// @property @onChanged(OnChanged)
         SR_MATH_NS::FSize2 m_size2;
+        /// @property @onChanged(OnChanged)
+        SR_MATH_NS::Quaternion quat;
         /// @property @getter(GetTest)
         SR_UTILS_NS::Vector<float> m_test;
         /// @property

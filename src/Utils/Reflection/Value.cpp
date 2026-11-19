@@ -206,11 +206,11 @@ namespace SR_UTILS_NS::Reflection {
 
     ReflectedCategoryType Value::GetType() const {
         SR_TRACY_ZONE;
-        return m_typeInfo ? m_typeInfo->category : ReflectedCategoryType::Unknown;
+        return m_typeInfo ? SR_UTILS_NS::Reflection::GetTypeKindCategory(m_typeInfo->kind) : ReflectedCategoryType::Unknown;
     }
 
     bool Value::IsValid() const {
-        return m_typeInfo && m_typeInfo->category != ReflectedCategoryType::Unknown;
+        return m_typeInfo && m_typeInfo->kind != TypeKind::Unknown;
     }
 
     IAllocator* Value::GetAllocator() const {

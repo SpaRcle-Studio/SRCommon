@@ -211,6 +211,12 @@ namespace SR_UTILS_NS::Reflection {
     class Value;
     struct TypeInfo;
 
+    struct FieldInfo {
+        StringAtom name;
+        const TypeInfo* pType = nullptr;
+        uint32_t offset = 0;
+    };
+
     /// Структурное описание типа, по которому реестр находит или создаёт единственный TypeInfo.
     /// Вложенные типы уже интернированы, поэтому сравниваются по указателю.
     struct SR_COMMON_DLL_API TypeInfoKey {
@@ -236,12 +242,13 @@ namespace SR_UTILS_NS::Reflection {
         TypeInfo& operator=(const TypeInfo&) = delete;
 
         TypeKind kind = TypeKind::Unknown;
-        ReflectedCategoryType category = ReflectedCategoryType::Unknown;
         uint8_t detailedSize = 0;
         /// каноническое имя: "float", "FVector3", "KeyCode", "Map<String, int32>"; оно же пишется при сериализации
         StringAtom name;
         const TypeInfo* pNext[2] = { nullptr, nullptr };
         TypeInfoVTable vtable;
+        const FieldInfo* pFields = nullptr;
+        uint32_t fieldsCount = 0;
         SRHashType hash = 0;
         const void* pOwnerModule = nullptr;
         std::atomic<bool> isResolved = false;

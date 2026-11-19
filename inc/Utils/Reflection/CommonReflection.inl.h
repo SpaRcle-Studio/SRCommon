@@ -113,21 +113,6 @@ namespace SR_UTILS_NS::Reflection {
         }
     }
 
-    template<typename T> ReflectedValue ReflectedTypePairGetValue(ReflectedValue& value, bool first) {
-        auto pPair = static_cast<T*>(value.GetData());
-        ReflectedValue reflectedValue;
-        if (first) {
-            reflectedValue.SetData((void*)(&pPair->first));
-        }
-        else {
-            reflectedValue.SetData((void*)(&pPair->second));
-        }
-        reflectedValue.storageType = value.storageType == ReflectedValueStorageType::ConstReference ?
-            ReflectedValueStorageType::ConstReference :
-            ReflectedValueStorageType::Reference;
-        return reflectedValue;
-    }
-
     /// ================================================================================================================
 
     /// Арифметика и enum хранятся во встроенном буфере Value, обнулённом конструктором,
@@ -267,7 +252,13 @@ namespace SR_UTILS_NS::Reflection {
             key.pNext[1] = TypeOf<T2>();
             FillLifecycle<Pair<T1, T2>>(vtable);
             vtable.pSizeOfAlign = &ReflectedTypeTemplateSizeOfAlign<Pair<T1, T2>>;
-            vtable.pairVTable.pGetPairValue = &ReflectedTypePairGetValue<Pair<T1, T2>>;
+            using PairType = Pair<T1, T2>;
+            static const FieldInfo fields[] = {
+                { "first", key.pNext[0], static_cast<uint32_t>(offsetof(PairType, first)) },
+                { "second", key.pNext[1], static_cast<uint32_t>(offsetof(PairType, second)) }
+            };
+            vtable.pFields = fields;
+            vtable.fieldsCount = 2;
         }
     };
 }

@@ -261,6 +261,18 @@ namespace SR_UTILS_NS::Reflection {
     void SerializeValue(const Value& value, ISerializer& serializer) { /// NOLINT(misc-no-recursion)
         auto&& typeInfo = value.GetTypeInfo();
 
+        if (typeInfo.fieldsCount > 0) {
+            serializer.BeginObject(SerializationId::Create("fields"));
+            for (uint32_t i = 0; i < typeInfo.fieldsCount; ++i) {
+                auto&& field = typeInfo.pFields[i];
+                serializer.BeginObject(SerializationId::CreateFromString(field.name.ToStringView()));
+                SerializeValue(ValueRef(field.pType, const_cast<uint8_t*>(static_cast<const uint8_t*>(value.Data())) + field.offset, true).ToValue(), serializer);
+                serializer.EndObject();
+            }
+            serializer.EndObject();
+            return;
+        }
+
         if (typeInfo.IsArithmetic()) {
             switch (typeInfo.kind) {
                 case TypeKind::Bool:
@@ -369,18 +381,6 @@ namespace SR_UTILS_NS::Reflection {
             case TypeKind::String:
                 serializer.WriteString(*value.Cast<String>(), SerializationId::Create("string"));
                 break;
-            case TypeKind::MathVector: {
-                const auto componentSize = typeInfo.pNext[0] ? typeInfo.pNext[0]->GetScalarSize() : 0;
-                if (componentSize == 0) {
-                    SR_WARN("SerializeValue() : unknown component type of {}", typeInfo.name);
-                    return;
-                }
-                auto&& pData = static_cast<const uint8_t*>(value.Data());
-                for (uint8_t i = 0; i < typeInfo.detailedSize; ++i) {
-                    serializer.WriteInt(ReadIntegralBits(pData + i * componentSize, componentSize, false), SERIALIZE_AXIS_ID[i]);
-                }
-                break;
-            }
             case TypeKind::EntityRef:
             case TypeKind::ResourceRef: {
                 if (auto&& pSerializable = dynamic_cast<Serializable*>(value.GetSRClass())) {
@@ -393,22 +393,6 @@ namespace SR_UTILS_NS::Reflection {
                     pClass->GetMeta()->Save(serializer, *dynamic_cast<Serializable*>(pClass));
                 }
                 break;
-            case TypeKind::Quaternion: {
-                auto&& pQuat = value.Cast<SR_MATH_NS::Quaternion>();
-                serializer.WriteFloat(pQuat->x, SerializationId::Create("x"));
-                serializer.WriteFloat(pQuat->y, SerializationId::Create("y"));
-                serializer.WriteFloat(pQuat->z, SerializationId::Create("z"));
-                serializer.WriteFloat(pQuat->w, SerializationId::Create("w"));
-                break;
-            }
-            case TypeKind::Color: {
-                auto&& pColor = value.Cast<SR_MATH_NS::FColor>();
-                serializer.WriteFloat(pColor->r, SerializationId::Create("r"));
-                serializer.WriteFloat(pColor->g, SerializationId::Create("g"));
-                serializer.WriteFloat(pColor->b, SerializationId::Create("b"));
-                serializer.WriteFloat(pColor->a, SerializationId::Create("a"));
-                break;
-            }
             default:
                 SRHalt("SerializeValue() : unsupported reflected type: {}", typeInfo.name);
                 return;
@@ -417,6 +401,20 @@ namespace SR_UTILS_NS::Reflection {
 
     bool DeserializeValue(Value& value, IDeserializer& deserializer) { /// NOLINT(misc-no-recursion)
         auto&& typeInfo = value.GetTypeInfo();
+
+        if (typeInfo.fieldsCount > 0 && deserializer.BeginObject(SerializationId::Create("fields"))) {
+            bool success = true;
+            for (uint32_t i = 0; i < typeInfo.fieldsCount; ++i) {
+                auto&& field = typeInfo.pFields[i];
+                if (deserializer.BeginObject(SerializationId::CreateFromString(field.name.ToStringView()))) {
+                    Value child = ValueRef(field.pType, static_cast<uint8_t*>(value.Data()) + field.offset, false).ToValue();
+                    success &= DeserializeValue(child, deserializer);
+                    deserializer.EndObject();
+                }
+            }
+            deserializer.EndObject();
+            return success;
+        }
 
         if (typeInfo.IsArithmetic()) {
             switch (typeInfo.kind) {

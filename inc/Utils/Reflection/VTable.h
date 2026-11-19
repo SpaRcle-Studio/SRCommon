@@ -8,6 +8,7 @@
 namespace SR_UTILS_NS::Reflection {
     struct ReflectedValue;
     struct TypeInfo;
+    struct FieldInfo;
 
     struct SR_COMMON_DLL_API LifecycleVTable {
         SizeType size = 0;
@@ -51,11 +52,6 @@ namespace SR_UTILS_NS::Reflection {
         void(*pForEach)(void* pMap, bool(*pVisit)(void* pUserData, const void* pKey, void* pValue), void* pUserData) = nullptr;
     };
 
-    struct SR_COMMON_DLL_API PairVTable {
-        using GetPairValue = ReflectedValue(*)(ReflectedValue&, bool isFirst);
-        GetPairValue pGetPairValue;
-    };
-
     struct SR_COMMON_DLL_API TypeInfoVTable {
         /// any type functions
         using SizeOfAlignFn = Pair<SizeType, SizeType>(*)(const TypeInfo&);
@@ -67,7 +63,8 @@ namespace SR_UTILS_NS::Reflection {
 
         ArrayVTable arrayVTable = {};
         MapVTable mapVTable = {};
-        PairVTable pairVTable = {};
+        const FieldInfo* pFields = nullptr;
+        uint32_t fieldsCount = 0;
         GetTypeController pGetTypeController = nullptr;
     };
 
