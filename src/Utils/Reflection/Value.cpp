@@ -13,110 +13,6 @@
 #include <Enum/ReflectedCategoryType.hpp>
 
 namespace SR_UTILS_NS::Reflection {
-    ReflectedValue STUB_STORAGE;
-
-    /// ----------------------------------------------------------------------------------------------------------------
-
-    BaseContainerValueRef::BaseContainerValueRef(Value* pValue)
-        : m_value(pValue)
-    { }
-
-    SizeType BaseContainerValueRef::Size() const {
-        auto&& vtable = m_value->GetTypeInfo().vtable.containerVTable;
-        if (!vtable.pSize) {
-            return 0;
-        }
-        return vtable.pSize(m_value->GetStorage());
-    }
-
-    bool BaseContainerValueRef::Empty() const {
-        return Size() == 0;
-    }
-
-    void BaseContainerValueRef::Clear() {
-        auto&& vtable = m_value->GetTypeInfo().vtable.containerVTable;
-        vtable.pClear(m_value->GetStorage());
-    }
-
-    ReflectedContainerIterator BaseContainerValueRef::Begin() const {
-        auto&& vtable = m_value->GetTypeInfo().vtable.containerVTable;
-        ReflectedContainerIterator pIt = vtable.pBegin(m_value->GetStorage());
-        pIt.pContainer = m_value;
-        return pIt;
-    }
-
-    ReflectedContainerIterator BaseContainerValueRef::End() const {
-        auto&& vtable = m_value->GetTypeInfo().vtable.containerVTable;
-        ReflectedContainerIterator pIt = vtable.pEnd(m_value->GetStorage());
-        pIt.pContainer = m_value;
-        return pIt;
-    }
-
-    ReflectedContainerIterator BaseContainerValueRef::Erase(ReflectedContainerIterator pIt) {
-        auto&& vtable = m_value->GetTypeInfo().vtable.containerVTable;
-        auto newIt = vtable.pErase(m_value->GetStorage(), pIt);
-        newIt.pContainer = m_value;
-        return newIt;
-    }
-
-    /// ----------------------------------------------------------------------------------------------------------------
-
-    SequenceContainerValueRef::SequenceContainerValueRef(Value* pValue)
-        : BaseContainerValueRef(pValue)
-    { }
-
-    void SequenceContainerValueRef::Resize(SizeType newSize) {
-        auto&& vtable = m_value->GetTypeInfo().vtable.containerVTable;
-        vtable.pResize(m_value->GetStorage(), newSize, false);
-    }
-
-    void SequenceContainerValueRef::Reserve(SizeType newSize) {
-        auto&& vtable = m_value->GetTypeInfo().vtable.containerVTable;
-        vtable.pResize(m_value->GetStorage(), newSize, true);
-    }
-
-    Value SequenceContainerValueRef::Back() {
-        if (Size() == 0) {
-            SRHalt("SequenceContainerValueRef::Back() : container is empty!");
-            return Value();
-        }
-        return *(Begin() + (Size() - 1));
-    }
-
-    ReflectedContainerIterator SequenceContainerValueRef::Insert(ReflectedContainerIterator pIt, const Value& value) {
-        auto&& vtable = m_value->GetTypeInfo().vtable.containerVTable;
-        auto newIt = vtable.pInsert(m_value->GetStorage(), pIt, value.GetStorage(), STUB_STORAGE);
-        newIt.pContainer = m_value;
-        return newIt;
-    }
-
-    void SequenceContainerValueRef::PushBack(const Value& value) {
-        auto&& vtable = m_value->GetTypeInfo().vtable.containerVTable;
-        auto pIt = vtable.pEnd(m_value->GetStorage());
-        vtable.pInsert(m_value->GetStorage(), pIt, value.GetStorage(), STUB_STORAGE);
-    }
-
-    void SequenceContainerValueRef::PushFront(const Value& value) {
-        auto&& vtable = m_value->GetTypeInfo().vtable.containerVTable;
-        auto pIt = vtable.pBegin(m_value->GetStorage());
-        vtable.pInsert(m_value->GetStorage(), pIt, value.GetStorage(), STUB_STORAGE);
-    }
-
-    /// ----------------------------------------------------------------------------------------------------------------
-
-    AssociativeContainerValueRef::AssociativeContainerValueRef(Value* pValue)
-        : BaseContainerValueRef(pValue)
-    { }
-
-    ReflectedContainerIterator AssociativeContainerValueRef::Insert(const Value& key, const Value& value) {
-        auto&& vtable = m_value->GetTypeInfo().vtable.containerVTable;
-        auto newIt = vtable.pInsert(m_value->GetStorage(), ReflectedContainerIterator(), key.GetStorage(), value.GetStorage());
-        newIt.pContainer = m_value;
-        return newIt;
-    }
-
-    /// ----------------------------------------------------------------------------------------------------------------
-
     Value::Value() {
         m_allocator = IAllocator::GetDefaultAllocator();
     }
@@ -125,12 +21,19 @@ namespace SR_UTILS_NS::Reflection {
         Destroy();
     }
 
-    SequenceContainerValueRef Value::AsSequenceContainer() {
-        return SequenceContainerValueRef(this);
+    ValueRef Value::AsRef() const {
+        if (!m_typeInfo) {
+            return ValueRef();
+        }
+        return ValueRef(m_typeInfo, const_cast<void*>(m_storage.GetData()), IsConst());
     }
 
-    AssociativeContainerValueRef Value::AsAssociativeContainer() {
-        return AssociativeContainerValueRef(this);
+    ArrayView Value::AsArray() const {
+        return ArrayView(AsRef());
+    }
+
+    MapView Value::AsMap() const {
+        return MapView(AsRef());
     }
 
     void Value::Destroy() {
@@ -142,7 +45,6 @@ namespace SR_UTILS_NS::Reflection {
                 }
             }
         }
-        FreeTypeInfo(m_typeInfo);
         m_storage = {};
         m_typeInfo = nullptr;
         m_allocator = nullptr;
@@ -159,7 +61,7 @@ namespace SR_UTILS_NS::Reflection {
     Value& Value::operator=(const Value& other) noexcept {
         if (this != &other) {
             Destroy();
-            m_typeInfo = CopyTypeInfo(other.m_typeInfo);
+            m_typeInfo = other.m_typeInfo;
             m_allocator = other.m_allocator;
 
             if (other.IsRef()) {
@@ -200,7 +102,7 @@ namespace SR_UTILS_NS::Reflection {
         SR_TRACY_ZONE;
         Value result;
         result.m_allocator = m_allocator;
-        result.m_typeInfo = CopyTypeInfo(m_typeInfo);
+        result.m_typeInfo = m_typeInfo;
         if (GetTypeInfo().vtable.pConstructor) {
             result.m_storage = GetTypeInfo().vtable.pConstructor(*m_allocator);
             if (auto&& pCopy = GetTypeInfo().vtable.pCopy) {
@@ -252,16 +154,15 @@ namespace SR_UTILS_NS::Reflection {
     }
 
     bool Value::IsSigned() const {
-        return IsReflectedTypeSigned(GetTypeInfo().detailedType);
+        return GetTypeInfo().IsSigned();
     }
 
     bool Value::IsIntegral() const {
-        return IsReflectedTypeIntegral(GetTypeInfo().detailedType);
+        return GetTypeInfo().IsIntegral();
     }
 
     bool Value::IsSharedPtr() const {
-        auto&& typeInfo = GetTypeInfo();
-        return typeInfo.category == ReflectedCategoryType::Container && typeInfo.detailedType == "SharedPtr";
+        return GetTypeInfo().kind == TypeKind::SharedPtr;
     }
 
     const void* Value::Data() const {
@@ -273,61 +174,23 @@ namespace SR_UTILS_NS::Reflection {
     }
 
     SRClass* Value::GetSRClass() const {
-        if (SR_HTYPES_NS::SharedPtrBase* pShared = GetSharedPtrBase()) {
-            if (!pShared->GetPtrData()) {
-                return nullptr;
-            }
-            return pShared->GetSRClass();
-        }
-        auto&& typeInfo = GetTypeInfo();
-        if (!typeInfo.vtable.pGetTypeController) {
-            return nullptr;
-        }
-        if (typeInfo.category == ReflectedCategoryType::Container) {
-            if (typeInfo.detailedType == "EntityRef") {
-                auto&& pController = typeInfo.vtable.pGetTypeController(const_cast<ReflectedValue&>(m_storage));
-                return static_cast<EntityRefBase*>(pController);
-            }
-            if (typeInfo.detailedType == "ResourceRef") {
-                auto&& pController = typeInfo.vtable.pGetTypeController(const_cast<ReflectedValue&>(m_storage));
-                return static_cast<ResourceRefBase*>(pController);
-            }
-        }
-        if (typeInfo.category != ReflectedCategoryType::Object) {
-            return nullptr;
-        }
-        void* pController = typeInfo.vtable.pGetTypeController(const_cast<ReflectedValue&>(m_storage));
-        return static_cast<SRClass*>(pController);
+        return AsRef().GetSRClass();
     }
 
     StringAtom Value::GetEnumType() const {
-        return GetTypeInfo().detailedType;
+        return GetTypeInfo().name;
     }
 
     SR_HTYPES_NS::SharedPtrBase* Value::GetSharedPtrBase() const {
-        auto&& typeInfo = GetTypeInfo();
-        if (typeInfo.category != ReflectedCategoryType::Container || typeInfo.detailedType != "SharedPtr") {
-            return nullptr;
-        }
-        if (!typeInfo.vtable.pGetTypeController) {
-            return nullptr;
-        }
-        auto&& pController = typeInfo.vtable.pGetTypeController(const_cast<ReflectedValue&>(m_storage));
-        return static_cast<SR_HTYPES_NS::SharedPtrBase*>(pController);
+        return AsRef().GetSharedPtrBase();
     }
 
     SR_UTILS_NS::OptionalBase* Value::GetOptionalBase() const {
-        auto&& typeInfo = GetTypeInfo();
-        if (typeInfo.category != ReflectedCategoryType::Container || typeInfo.detailedType != "Optional") {
-            return nullptr;
-        }
-        auto&& pController = GetTypeInfo().vtable.pGetTypeController(const_cast<ReflectedValue&>(m_storage));
-        return static_cast<SR_UTILS_NS::OptionalBase*>(pController);
+        return AsRef().GetOptionalBase();
     }
 
     const TypeInfo& Value::GetTypeInfo() const {
-        static TypeInfo unknownTypeInfo;
-        return m_typeInfo ? *m_typeInfo : unknownTypeInfo;
+        return m_typeInfo ? *m_typeInfo : *GetUnknownTypeInfo();
     }
 
     ReflectedCategoryType Value::GetType() const {
@@ -343,11 +206,11 @@ namespace SR_UTILS_NS::Reflection {
         return m_allocator;
     }
 
-    Value Value::CreateDefault(TypeInfo* pTypeInfo) {
+    Value Value::CreateDefault(const TypeInfo* pTypeInfo) {
         SR_TRACY_ZONE;
         Value value;
         value.m_allocator = IAllocator::GetDefaultAllocator();
-        value.m_typeInfo = CopyTypeInfo(pTypeInfo);
+        value.m_typeInfo = pTypeInfo;
         if (pTypeInfo && pTypeInfo->vtable.pConstructor) {
             value.m_storage = pTypeInfo->vtable.pConstructor(*value.m_allocator);
         }
@@ -357,7 +220,7 @@ namespace SR_UTILS_NS::Reflection {
     Value Value::Ref() const {
         Value value;
         value.m_allocator = m_allocator;
-        value.m_typeInfo = CopyTypeInfo(m_typeInfo);
+        value.m_typeInfo = m_typeInfo;
         if (IsRef()) {
             value.m_storage = m_storage;
         }

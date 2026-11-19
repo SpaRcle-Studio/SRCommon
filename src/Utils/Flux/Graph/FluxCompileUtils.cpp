@@ -19,8 +19,8 @@ namespace SR_FLUX_NS {
         return IsSingletonCallable(callable) ? objectPin : objectPin + 1;
     }
 
-    Reflection::Value MakeDefaultValue(Reflection::TypeInfo* pTypeInfo) {
-        if (!pTypeInfo || (!pTypeInfo->vtable.pConstructor && !Reflection::FindVTable(*pTypeInfo))) {
+    Reflection::Value MakeDefaultValue(const Reflection::TypeInfo* pTypeInfo) {
+        if (!pTypeInfo || !pTypeInfo->vtable.pConstructor) {
             return {};
         }
         return Reflection::Value::CreateDefault(pTypeInfo);

@@ -50,6 +50,20 @@ namespace SR_UTILS_NS::Reflection {
         return m_getCallback(pOwner);
     }
 
+    ValueRef Property::GetRef(SRClass* pOwner) const noexcept {
+        if (m_getRefCallback) {
+            return m_getRefCallback(pOwner);
+        }
+        return ValueRef();
+    }
+
+    const TypeInfo& Property::GetTypeInfo() const noexcept {
+        if (m_pTypeInfo) {
+            return *m_pTypeInfo;
+        }
+        return GetDefaultValue().GetTypeInfo();
+    }
+
     Property& Property::SetDefaultValue(Value&& value) noexcept {
         m_defaultValue = new Value(value);
         SRAssert(m_defaultValue->IsValid());

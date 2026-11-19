@@ -271,7 +271,7 @@ namespace SR_UTILS_NS {
                 SR_WARN("SceneObject::ApplyPrefabPropertyOverrides() : empty pointer value for target {}!", prefabOverride.targetId);
                 continue;
             }
-            if (pProperty->Get(pPropertyOwner).GetTypeInfo() != prefabOverride.value.GetTypeInfo()) {
+            if (pProperty->GetTypeInfo() != prefabOverride.value.GetTypeInfo()) {
                 SR_WARN("SceneObject::ApplyPrefabPropertyOverrides() : type mismatch for target {}!", prefabOverride.targetId);
                 continue;
             }

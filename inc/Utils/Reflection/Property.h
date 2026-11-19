@@ -97,6 +97,8 @@ namespace SR_UTILS_NS::Reflection {
         Property();
 
         SR_NODISCARD Value Get(SRClass* pOwner) const noexcept;
+        /// Ссылка на поле без создания Value. Пустая, если у свойства нет адреса: геттер возвращает значение или свойство динамическое
+        SR_NODISCARD ValueRef GetRef(SRClass* pOwner) const noexcept;
         void Set(SRClass* pOwner, const Value& value) const noexcept {
             if (m_dynamicSetter) { m_dynamicSetter(pOwner, value); }
             else { m_setCallback(pOwner, value); }
@@ -114,6 +116,7 @@ namespace SR_UTILS_NS::Reflection {
         SR_NODISCARD PropertyPublicity GetPublicity() const noexcept { return m_publicity; }
         SR_NODISCARD const Value& GetDefaultValue() const noexcept;
         SR_NODISCARD const Value& GetResetValue() const noexcept;
+        SR_NODISCARD const TypeInfo& GetTypeInfo() const noexcept;
         SR_NODISCARD const EditorPropertyParams& GetEditorParams() const noexcept { return m_editorParams; }
         SR_NODISCARD bool HasExplicitSetter() const noexcept { return m_hasExplicitSetter; }
         SR_NODISCARD bool IsDontScript() const noexcept { return m_dontScript; }
@@ -141,6 +144,8 @@ namespace SR_UTILS_NS::Reflection {
         Property& SetPublicity(PropertyPublicity publicity) noexcept { m_publicity = publicity; return *this; }
         Property& SetSetter(SetCallbackFn callback) noexcept { m_setCallback = callback; return *this; }
         Property& SetGetter(GetCallbackFn callback) noexcept { m_getCallback = callback; return *this; }
+        Property& SetRefGetter(ValueRef(*callback)(SRClass* pOwner)) noexcept { m_getRefCallback = callback; return *this; }
+        Property& SetTypeInfo(const TypeInfo* pTypeInfo) noexcept { m_pTypeInfo = pTypeInfo; return *this; }
         Property& SetDynamicGetter(const SR_HTYPES_NS::Function<Value(SRClass*)>& callback);
         Property& SetDynamicSetter(const SR_HTYPES_NS::Function<void(SRClass*, const Value&)>& callback) { m_dynamicSetter = callback; return *this; }
         Property& SetDefaultValue(Value&& value) noexcept;
@@ -162,6 +167,9 @@ namespace SR_UTILS_NS::Reflection {
         PropertyPublicity m_publicity = PropertyPublicity::Public;
         SetCallbackFn m_setCallback = nullptr;
         GetCallbackFn m_getCallback = nullptr;
+        ValueRef(*m_getRefCallback)(SRClass* pOwner) = nullptr;
+        /// nullptr - тип берётся из значения по умолчанию
+        const TypeInfo* m_pTypeInfo = nullptr;
         SR_HTYPES_NS::Function<Value(SRClass*)> m_dynamicGetter;
         SR_HTYPES_NS::Function<void(SRClass*, const Value&)> m_dynamicSetter;
         ChangeCallbackFn m_onChangeCallback = nullptr;

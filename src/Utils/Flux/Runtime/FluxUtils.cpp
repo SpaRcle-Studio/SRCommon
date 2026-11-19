@@ -26,10 +26,21 @@ namespace SR_FLUX_NS {
     }
 
     uint64_t FluxUtils::GetContainerSize(const Reflection::Value& value) const {
-        return const_cast<Reflection::Value&>(value).AsSequenceContainer().Size();
+        if (const auto array = value.AsArray()) {
+            return array.Size();
+        }
+        if (const auto map = value.AsMap()) {
+            return map.Size();
+        }
+        return 0;
     }
 
     Reflection::Value FluxUtils::VectorAt(const Reflection::Value& vector, uint64_t index) const {
-        return (const_cast<Reflection::Value&>(vector).AsSequenceContainer().Begin() + index).First();
+        const auto array = vector.AsArray();
+        if (!array || index >= array.Size()) {
+            SR_WARN("FluxUtils::VectorAt() : index {} is out of range or value is not a vector!", index);
+            return Reflection::Value();
+        }
+        return array.At(index).ToValue();
     }
 }

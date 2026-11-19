@@ -7,50 +7,6 @@
 #include <Utils/Profile/TracyContext.h>
 
 namespace SR_UTILS_NS::Reflection {
-    Method::Method(const Method& other)
-        : m_name(other.m_name)
-        , m_displayName(other.m_displayName)
-        , m_isEditorButton(other.m_isEditorButton)
-        , m_isEvaluate(other.m_isEvaluate)
-        , m_methodActiveCallback(other.m_methodActiveCallback)
-        , m_noReturnNoParams(other.m_noReturnNoParams)
-    {
-        m_params.reserve(other.m_params.size());
-        for (auto&& param : other.m_params) {
-            m_params.emplace_back(Parameter{ param.name, CopyTypeInfo(param.pTypeInfo), param.isReference, param.isConst });
-        }
-        m_pReturnTypeInfo = CopyTypeInfo(other.m_pReturnTypeInfo);
-    }
-
-    Method& Method::operator=(const Method& other) {
-        if (this != &other) {
-            m_name = other.m_name;
-            m_displayName = other.m_displayName;
-            m_pReturnTypeInfo = CopyTypeInfo(other.m_pReturnTypeInfo);
-            m_isEditorButton = other.m_isEditorButton;
-            m_isEvaluate = other.m_isEvaluate;
-            m_methodActiveCallback = other.m_methodActiveCallback;
-            m_noReturnNoParams = other.m_noReturnNoParams;
-
-            for (auto&& param : m_params) {
-                FreeTypeInfo(param.pTypeInfo);
-            }
-            m_params.clear();
-
-            m_params.reserve(other.m_params.size());
-            for (auto&& param : other.m_params) {
-                m_params.emplace_back(Parameter{ param.name, CopyTypeInfo(param.pTypeInfo), param.isReference, param.isConst });
-            }
-        }
-        return *this;
-    }
-
-    Method::~Method() {
-        for (auto&& param : m_params) {
-            FreeTypeInfo(param.pTypeInfo);
-        }
-    }
-
     StringAtom Method::GetName() const {
         return m_name;
     }
@@ -160,7 +116,7 @@ namespace SR_UTILS_NS::Reflection {
         return true;
     }
 
-    Method& Method::AddParam(StringAtom name, TypeInfo* pTypeInfo, const bool isReference, const bool isConst) {
+    Method& Method::AddParam(StringAtom name, const TypeInfo* pTypeInfo, const bool isReference, const bool isConst) {
         m_params.emplace_back(Parameter{ name, pTypeInfo, isReference, isConst });
         return *this;
     }
@@ -187,7 +143,7 @@ namespace SR_UTILS_NS::Reflection {
         return index < m_params.size() && m_params[index].IsOutput();
     }
 
-    Method& Method::SetReturnType(TypeInfo* pReturnTypeInfo) {
+    Method& Method::SetReturnType(const TypeInfo* pReturnTypeInfo) {
         m_pReturnTypeInfo = pReturnTypeInfo;
         return *this;
     }

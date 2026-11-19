@@ -15,7 +15,7 @@
 /// way in every translation unit. A forward declaration used to make it depend on the include order.
 #include <Utils/TypeTraits/SRClass.h>
 
-//#define SR_SHARED_PTR_TRACE
+/// #define SR_SHARED_PTR_TRACE
 
 #ifdef SR_SHARED_PTR_TRACE
     #include <Utils/Platform/Stacktrace.h>

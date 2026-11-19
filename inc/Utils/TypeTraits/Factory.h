@@ -145,8 +145,9 @@ namespace SR_UTILS_NS {
 
             m_nameTypeId[std::string_view(typeid(T*).name())] = name;
 
+            /// SharedPtr<T> может прийти из сериализованных данных раньше, чем C++ код запросит его тип
             if constexpr (std::is_base_of_v<SR_HTYPES_NS::SharedPtrBase, T>) {
-                Reflection::SwitchTypeRegister<SR_HTYPES_NS::SharedPtr<T>>(true);
+                Reflection::TypeOf<SR_HTYPES_NS::SharedPtr<T>>();
             }
 
             return true;
@@ -169,9 +170,7 @@ namespace SR_UTILS_NS {
                 WriteLog("Factory::Unregister() : unregistering type \"{}\""_format(name));
             }
 
-            if constexpr (std::is_base_of_v<SR_HTYPES_NS::SharedPtrBase, T>) {
-                Reflection::SwitchTypeRegister<SR_HTYPES_NS::SharedPtr<T>>(false);
-            }
+            Reflection::UnregisterObjectTypes(name);
 
             m_types.erase(pIt);
             return true;

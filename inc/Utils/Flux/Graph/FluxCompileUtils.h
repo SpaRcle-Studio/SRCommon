@@ -8,7 +8,7 @@
 #include <Utils/stdInclude.h>
 
 namespace SR_UTILS_NS::Reflection {
-    class TypeInfo;
+    struct TypeInfo;
     class Method;
     class Value;
 }
@@ -30,7 +30,7 @@ namespace SR_FLUX_NS {
 
     /// Значение по умолчанию для типа параметра. Используется, когда входной пин выходного
     /// аргумента не подключен
-    SR_NODISCARD extern SR_COMMON_DLL_API Reflection::Value MakeDefaultValue(Reflection::TypeInfo* pTypeInfo);
+    SR_NODISCARD extern SR_COMMON_DLL_API Reflection::Value MakeDefaultValue(const Reflection::TypeInfo* pTypeInfo);
 
     /// Является ли выходной пин узла пином данных, а не потока исполнения
     SR_NODISCARD extern SR_COMMON_DLL_API bool IsDataOutputPin(FluxGraphNodeType type, uint32_t pinIndex);

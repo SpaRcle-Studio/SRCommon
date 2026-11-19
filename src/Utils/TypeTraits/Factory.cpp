@@ -153,11 +153,11 @@ namespace SR_UTILS_NS {
     void Factory::InitNotNulls(SRClass* pClass) const noexcept {
         pClass->GetMeta()->ForEachProperty([&](const Reflection::Property& property, auto&&) {
             if (property.GetEditorParams().IsNotNull() && !property.GetEditorParams().IsDontInitNull()) {
-                auto&& typeInfo = property.GetDefaultValue().GetTypeInfo();
-                if (typeInfo.category != Reflection::ReflectedCategoryType::Container || typeInfo.detailedType != "SharedPtr") {
+                auto&& typeInfo = property.GetTypeInfo();
+                if (typeInfo.kind != Reflection::TypeKind::SharedPtr) {
                     return;
                 }
-                auto type = typeInfo.pNext[0]->detailedType;
+                auto type = typeInfo.pNext[0]->name;
                 if (IsAbstract(type)) {
                     type = GetFirstNonAbstractClass(type);
                 }

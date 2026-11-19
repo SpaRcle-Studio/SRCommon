@@ -13,11 +13,17 @@
 #include <Enum/ReflectedCategoryType.hpp>
 
 namespace SR_UTILS_NS::Reflection {
+    /// Новый формат - каноническое имя типа: "float", "FVector3", "KeyCode", "Map<String, Vector<int32>>".
+    /// Старый формат - "Category.name(size)[[arg],[arg]]", например "MathVector.float(3)", "Container.Vector[[Arithmetic.float]]".
     struct TypeParser {
         StringView source;
         SizeType pos = 0;
 
-        void SkipSpaces();
+        void SkipSpaces() {
+            while (pos < source.size() && std::isspace(static_cast<unsigned char>(source[pos]))) {
+                ++pos;
+            }
+        }
 
         bool Consume(char c) {
             SkipSpaces();
@@ -30,62 +36,141 @@ namespace SR_UTILS_NS::Reflection {
             return false;
         }
 
-        StringView ReadBaseType() {
+        StringView ReadUntil(StringView stopChars) {
+            SkipSpaces();
+
             const SizeType start = pos;
-
-            while (pos < source.size()) {
-                const char c = source[pos];
-
-                if (c == '[' || c == '(' || c == ')' || c == ']' || c == ',') {
-                    break;
-                }
-
+            while (pos < source.size() && stopChars.find(source[pos]) == StringView::npos && !std::isspace(static_cast<unsigned char>(source[pos]))) {
                 ++pos;
             }
 
             return source.substr(start, pos - start);
         }
 
-        TypeInfo* ParseType();
+        SR_NODISCARD bool IsLegacyFormat() const {
+            for (SizeType i = 0; i < source.size(); ++i) {
+                const char c = source[i];
+                if (c == '.') {
+                    return true;
+                }
+                if (c == '<' || c == '(' || c == ',' || c == '>') {
+                    return false;
+                }
+            }
+            return false;
+        }
+
+        const TypeInfo* ParseType();
+        const TypeInfo* ParseLegacyType();
     };
 
-    void TypeParser::SkipSpaces() {
-        while (pos < source.size() && std::isspace(static_cast<unsigned char>(source[pos]))) {
-            ++pos;
+    const TypeInfo* TypeParser::ParseType() { /// NOLINT(misc-no-recursion)
+        const StringView identifier = ReadUntil("<>,");
+        if (identifier.empty()) {
+            return nullptr;
+        }
+
+        if (!Consume('<')) {
+            return FindTypeInfoByName(identifier);
+        }
+
+        const TypeInfo* pArguments[2] = { nullptr, nullptr };
+        uint32_t count = 0;
+
+        do {
+            if (count >= 2) {
+                return nullptr;
+            }
+            pArguments[count] = ParseType();
+            if (!pArguments[count]) {
+                return nullptr;
+            }
+            ++count;
+        } while (Consume(','));
+
+        if (!Consume('>')) {
+            return nullptr;
+        }
+
+        const TypeKind kind = FindTypeKindByTemplateName(identifier);
+        if (kind == TypeKind::Unknown || GetTypeKindArgumentsCount(kind) != count) {
+            return nullptr;
+        }
+
+        return ResolveTemplateTypeInfo(kind, pArguments[0], pArguments[1]);
+    }
+
+    const TypeInfo* ResolveLegacyTypeInfo(ReflectedCategoryType category, StringView name, uint8_t detailedSize, const TypeInfo* const (&pChildren)[2]) {
+        TypeInfoKey key;
+
+        switch (category) {
+            case ReflectedCategoryType::Unknown:
+                return GetUnknownTypeInfo();
+            case ReflectedCategoryType::Value:
+                return TypeOf<Value>();
+            case ReflectedCategoryType::Arithmetic:
+            case ReflectedCategoryType::String:
+                return FindTypeInfoByName(name);
+            case ReflectedCategoryType::MathObject:
+                return FindTypeInfoByName(name == "Color" ? StringView("FColor") : name);
+            case ReflectedCategoryType::Enum:
+                key.kind = TypeKind::Enum;
+                key.name = name;
+                return ResolveTypeInfo(key);
+            case ReflectedCategoryType::Object:
+                key.kind = TypeKind::Object;
+                key.name = name;
+                return ResolveTypeInfo(key);
+            case ReflectedCategoryType::MathVector:
+            case ReflectedCategoryType::MathRect:
+            case ReflectedCategoryType::MathSize: {
+                key.kind = category == ReflectedCategoryType::MathVector ? TypeKind::MathVector :
+                    category == ReflectedCategoryType::MathRect ? TypeKind::MathRect : TypeKind::MathSize;
+                key.detailedSize = detailedSize;
+                key.pNext[0] = FindTypeInfoByName(name);
+                return key.pNext[0] ? ResolveTypeInfo(key) : nullptr;
+            }
+            case ReflectedCategoryType::Container:
+                /// в старом формате у Map уже записан хранимый аргумент Pair<K, V>
+                key.kind = FindTypeKindByTemplateName(name);
+                if (key.kind == TypeKind::Unknown) {
+                    return nullptr;
+                }
+                key.pNext[0] = pChildren[0];
+                key.pNext[1] = pChildren[1];
+                return ResolveTypeInfo(key);
+            default:
+                return nullptr;
         }
     }
 
-    TypeInfo* TypeParser::ParseType() {
+    const TypeInfo* TypeParser::ParseLegacyType() { /// NOLINT(misc-no-recursion)
         SkipSpaces();
 
         const bool wrapped = Consume('[');
 
-        TypeInfo* pTypeInfo = AllocateTypeInfo();
-        StringView baseType = ReadBaseType();
+        const StringView baseType = ReadUntil("[()],");
 
         const SizeType dotPos = baseType.find('.');
         if (dotPos == StringView::npos) {
             return nullptr;
         }
 
-        pTypeInfo->category = EnumReflector::FromString<ReflectedCategoryType>(
-            baseType.substr(0, dotPos)
-        );
-        pTypeInfo->detailedType = baseType.substr(dotPos + 1);
+        const auto category = EnumReflector::FromString<ReflectedCategoryType>(baseType.substr(0, dotPos));
+        const StringView name = baseType.substr(dotPos + 1);
+        uint8_t detailedSize = 0;
+        const TypeInfo* pChildren[2] = { nullptr, nullptr };
 
         if (Consume('(')) {
             SkipSpaces();
 
-            const SizeType start = pos;
-            while (pos < source.size() &&
-                   std::isdigit(static_cast<unsigned char>(source[pos]))) {
+            uint32_t size = 0;
+            while (pos < source.size() && std::isdigit(static_cast<unsigned char>(source[pos]))) {
+                size = size * 10 + static_cast<uint32_t>(source[pos] - '0');
                 ++pos;
             }
 
-            StringView sizeStr = source.substr(start, pos - start);
-            pTypeInfo->detailedSize = static_cast<uint8_t>(
-                std::stoull(std::string(sizeStr))
-            );
+            detailedSize = static_cast<uint8_t>(size);
 
             if (!Consume(')')) {
                 return nullptr;
@@ -100,9 +185,9 @@ namespace SR_UTILS_NS::Reflection {
                     return nullptr;
                 }
 
-                pTypeInfo->pNext[index++] = ParseType();
+                pChildren[index++] = ParseLegacyType();
 
-                if (!pTypeInfo->pNext[index - 1]) {
+                if (!pChildren[index - 1]) {
                     return nullptr;
                 }
 
@@ -122,52 +207,19 @@ namespace SR_UTILS_NS::Reflection {
             return nullptr;
         }
 
-        return pTypeInfo;
+        return ResolveLegacyTypeInfo(category, name, detailedSize, pChildren);
     }
 
-    TypeInfo* LoadTypeInfo(StringView type) {
+    const TypeInfo* LoadTypeInfo(StringView type) {
         TypeParser parser{ type };
-        return parser.ParseType();
-    }
-
-    void SaveTypeInfoInternal(String& type, const TypeInfo* pTypeInfo) { /// NOLINT(misc-no-recursion)
-        if (!pTypeInfo) {
-            return;
-        }
-
-        type += EnumReflector::ToStringAtom(pTypeInfo->category).ToStringView();
-        type += '.';
-        type += pTypeInfo->detailedType.ToStringView();
-
-        if (pTypeInfo->detailedSize > 0) {
-            type += '(';
-            FormatTo(type, "{}", pTypeInfo->detailedSize);
-            type += ')';
-        }
-
-        if (pTypeInfo->pNext[0] || pTypeInfo->pNext[1]) {
-            type += '[';
-
-            for (uint32_t i = 0; i < 2; ++i) {
-                if (pTypeInfo->pNext[i]) {
-                    type += '[';
-                    SaveTypeInfoInternal(type, pTypeInfo->pNext[i]);
-                    type += ']';
-                }
-
-                if (i == 0 && pTypeInfo->pNext[1]) {
-                    type += ',';
-                }
-            }
-
-            type += ']';
-        }
+        return parser.IsLegacyFormat() ? parser.ParseLegacyType() : parser.ParseType();
     }
 
     void SaveTypeInfo(String& type, const TypeInfo* pTypeInfo) {
         type.clear();
-        type.reserve(64);
-        SaveTypeInfoInternal(type, pTypeInfo);
+        if (pTypeInfo) {
+            type += pTypeInfo->name.ToStringView();
+        }
     }
 
     static SerializationId SERIALIZE_AXIS_ID[6] = {
@@ -179,28 +231,74 @@ namespace SR_UTILS_NS::Reflection {
         SerializationId::Create("v")
     };
 
-    void SerializeValue(const Value& value, ISerializer& serializer) {
+    /// Целые и компоненты векторов хранятся как int64 независимо от размера типа,
+    /// поэтому при чтении и записи используется ровно size байт поля, без выхода за его границы.
+    int64_t ReadIntegralBits(const void* pData, const SizeType size, const bool isSigned) {
+        switch (size) {
+            case 1: return isSigned ? static_cast<int64_t>(*static_cast<const int8_t*>(pData)) : static_cast<int64_t>(*static_cast<const uint8_t*>(pData));
+            case 2: return isSigned ? static_cast<int64_t>(*static_cast<const int16_t*>(pData)) : static_cast<int64_t>(*static_cast<const uint16_t*>(pData));
+            case 4: return isSigned ? static_cast<int64_t>(*static_cast<const int32_t*>(pData)) : static_cast<int64_t>(*static_cast<const uint32_t*>(pData));
+            case 8: return *static_cast<const int64_t*>(pData);
+            default:
+                SRHalt("ReadIntegralBits() : unsupported size {}!", size);
+                return 0;
+        }
+    }
+
+    void WriteIntegralBits(void* pData, const SizeType size, const int64_t value) {
+        switch (size) {
+            case 1: *static_cast<uint8_t*>(pData) = static_cast<uint8_t>(value); break;
+            case 2: *static_cast<uint16_t*>(pData) = static_cast<uint16_t>(value); break;
+            case 4: *static_cast<uint32_t*>(pData) = static_cast<uint32_t>(value); break;
+            case 8: *static_cast<int64_t*>(pData) = value; break;
+            default:
+                SRHalt("WriteIntegralBits() : unsupported size {}!", size);
+                break;
+        }
+    }
+
+    void SerializeValue(const Value& value, ISerializer& serializer) { /// NOLINT(misc-no-recursion)
         auto&& typeInfo = value.GetTypeInfo();
-        switch (typeInfo.category) {
-            case ReflectedCategoryType::Value: {
+
+        if (typeInfo.IsArithmetic()) {
+            switch (typeInfo.kind) {
+                case TypeKind::Bool:
+                    serializer.WriteBool(*value.Cast<bool>(), SerializationId::Create("bool"));
+                    break;
+                case TypeKind::Float:
+                    serializer.WriteFloat(*value.Cast<float_t>(), SerializationId::Create("float"));
+                    break;
+                case TypeKind::Double:
+                    serializer.WriteDouble(*value.Cast<double_t>(), SerializationId::Create("double"));
+                    break;
+                default:
+                    serializer.WriteInt(ReadIntegralBits(value.Data(), typeInfo.GetScalarSize(), typeInfo.IsSigned()), SerializationId::Create("int"));
+                    break;
+            }
+            return;
+        }
+
+        switch (typeInfo.kind) {
+            case TypeKind::Value: {
                 auto&& pValue = value.Cast<Value>();
                 if (pValue && pValue->IsValid()) {
                     SerializeValue(*pValue, serializer);
                 }
                 return;
             }
-            case ReflectedCategoryType::Enum: {
-                auto&& pReflector = EnumReflectorManager::Instance().TryGetReflector(typeInfo.detailedType);
+            case TypeKind::Enum: {
+                auto&& pReflector = EnumReflectorManager::Instance().TryGetReflector(typeInfo.name);
                 if (!pReflector) {
-                    SR_WARN("SerializeValue() : unknown enum type: {}", typeInfo.detailedType);
+                    SR_WARN("SerializeValue() : unknown enum type: {}", typeInfo.name);
                     return;
                 }
+                const int64_t enumValue = pReflector->ReadEnumValueFromPointerInternal(value.Data());
                 if (pReflector->GetEnumVariantInternal() == EnumVariant::Flags) {
                     /// save names separated by '|'
                     SR_THREAD_LOCAL static String enumStr;
                     enumStr.clear();
                     for (uint64_t i = 0; i < 64; ++i) {
-                        if ((*value.Cast<int64_t>() & (1LL << i)) != 0) {
+                        if ((enumValue & (1LL << i)) != 0) {
                             if (!enumStr.empty()) {
                                 enumStr += '|';
                             }
@@ -210,299 +308,313 @@ namespace SR_UTILS_NS::Reflection {
                     serializer.WriteString(enumStr, SerializationId::Create("enum"));
                 }
                 else {
-                    serializer.WriteString(pReflector->ToStringInternal(*value.Cast<int64_t>()).value(), SerializationId::Create("enum"));
+                    serializer.WriteString(pReflector->ToStringInternal(enumValue).value(), SerializationId::Create("enum"));
                 }
                 break;
             }
-            case ReflectedCategoryType::Container: {
-                if (typeInfo.detailedType == "Vector") {
-                    auto&& container = const_cast<Value&>(value).AsSequenceContainer();
-                    serializer.BeginArray(container.Size(), SerializationId::Create("vector"));
-                    for (auto pIt = container.Begin(); pIt != container.End(); ++pIt) {
-                        serializer.BeginItem(SerializationId::Create("item"));
-                        SerializeValue(pIt.First(), serializer);
-                        serializer.EndItem();
-                    }
-                    serializer.EndArray();
+            case TypeKind::Vector: {
+                const auto array = value.AsArray();
+                const auto size = array.Size();
+                serializer.BeginArray(size, SerializationId::Create("vector"));
+                for (SizeType i = 0; i < size; ++i) {
+                    serializer.BeginItem(SerializationId::Create("item"));
+                    SerializeValue(array.At(i).ToValue(), serializer);
+                    serializer.EndItem();
                 }
-                else if (typeInfo.detailedType == "Map") {
-                    auto&& container = const_cast<Value&>(value).AsAssociativeContainer();
-                    serializer.BeginArray(container.Size(), SerializationId::Create("map"));
-                    for (auto pIt = container.Begin(); pIt != container.End(); ++pIt) {
-                        serializer.BeginItem(SerializationId::Create("item"));
-                        serializer.BeginObject(SerializationId::Create("pair"));
-                        SerializeValue(pIt.First(), serializer);
-                        SerializeValue(pIt.Second(), serializer);
-                        serializer.EndObject();
-                        serializer.EndItem();
-                    }
-                    serializer.EndArray();
-                }
-                else if (typeInfo.detailedType == "Set") {
-                    auto&& container = const_cast<Value&>(value).AsAssociativeContainer();
-                    serializer.BeginArray(container.Size(), SerializationId::Create("set"));
-                    for (auto pIt = container.Begin(); pIt != container.End(); ++pIt) {
-                        serializer.BeginItem(SerializationId::Create("item"));
-                        SerializeValue(pIt.First(), serializer);
-                        serializer.EndItem();
-                    }
-                    serializer.EndArray();
-                }
-                else {
-                    SRHalt("SerializeValue() : unknown container type: {}", typeInfo.detailedType);
-                }
+                serializer.EndArray();
                 break;
             }
-            case ReflectedCategoryType::String: {
-                if (typeInfo.detailedType == "Path") {
-                    serializer.WriteString(value.Cast<Path>()->View(), SerializationId::Create("path"));
-                }
-                else if (typeInfo.detailedType == "StringView") {
-                    serializer.WriteString(*value.Cast<StringView>(), SerializationId::Create("view"));
-                }
-                else if (typeInfo.detailedType == "StringAtom") {
-                    serializer.WriteString(*value.Cast<StringAtom>(), SerializationId::Create("atom"));
-                }
-                else if (typeInfo.detailedType == "UnicodeString") {
-                    serializer.WriteString(*value.Cast<UnicodeString>(), SerializationId::Create("unicode"));
-                }
-                else if (typeInfo.detailedType == "String") {
-                    serializer.WriteString(*value.Cast<String>(), SerializationId::Create("string"));
-                }
-                else {
-                    SR_WARN("SerializeValue() : unknown string type: {}", typeInfo.detailedType);
-                }
+            case TypeKind::Map:
+            case TypeKind::FlatHashMap: {
+                const auto map = value.AsMap();
+                serializer.BeginArray(map.Size(), SerializationId::Create("map"));
+                map.ForEach([&serializer](const ValueRef& key, const ValueRef& mapped) {
+                    serializer.BeginItem(SerializationId::Create("item"));
+                    serializer.BeginObject(SerializationId::Create("key"));
+                    SerializeValue(key.ToValue(), serializer);
+                    serializer.EndObject();
+                    serializer.BeginObject(SerializationId::Create("value"));
+                    SerializeValue(mapped.ToValue(), serializer);
+                    serializer.EndObject();
+                    serializer.EndItem();
+                });
+                serializer.EndArray();
                 break;
             }
-            case ReflectedCategoryType::Arithmetic:
-                if (typeInfo.detailedType == "bool") {
-                    serializer.WriteBool(*value.Cast<bool>(), SerializationId::Create("bool"));
-                }
-                else if (typeInfo.detailedType == "float") {
-                    serializer.WriteFloat(*value.Cast<float>(), SerializationId::Create("float"));
-                }
-                else if (typeInfo.detailedType == "double") {
-                    serializer.WriteDouble(*value.Cast<double>(), SerializationId::Create("double"));
-                }
-                else {
-                    serializer.WriteInt(*value.Cast<int64_t>(), SerializationId::Create("int"));
-                }
+            case TypeKind::Set:
+            case TypeKind::FlatHashSet: {
+                const auto set = value.AsMap();
+                serializer.BeginArray(set.Size(), SerializationId::Create("set"));
+                set.ForEach([&serializer](const ValueRef& key, const ValueRef&) {
+                    serializer.BeginItem(SerializationId::Create("item"));
+                    SerializeValue(key.ToValue(), serializer);
+                    serializer.EndItem();
+                });
+                serializer.EndArray();
                 break;
-            case ReflectedCategoryType::MathVector: {
+            }
+            case TypeKind::Path:
+                serializer.WriteString(value.Cast<Path>()->View(), SerializationId::Create("path"));
+                break;
+            case TypeKind::StringView:
+                serializer.WriteString(*value.Cast<StringView>(), SerializationId::Create("view"));
+                break;
+            case TypeKind::StringAtom:
+                serializer.WriteString(*value.Cast<StringAtom>(), SerializationId::Create("atom"));
+                break;
+            case TypeKind::UnicodeString:
+                serializer.WriteString(*value.Cast<UnicodeString>(), SerializationId::Create("unicode"));
+                break;
+            case TypeKind::String:
+                serializer.WriteString(*value.Cast<String>(), SerializationId::Create("string"));
+                break;
+            case TypeKind::MathVector: {
+                const auto componentSize = typeInfo.pNext[0] ? typeInfo.pNext[0]->GetScalarSize() : 0;
+                if (componentSize == 0) {
+                    SR_WARN("SerializeValue() : unknown component type of {}", typeInfo.name);
+                    return;
+                }
+                auto&& pData = static_cast<const uint8_t*>(value.Data());
                 for (uint8_t i = 0; i < typeInfo.detailedSize; ++i) {
-                    serializer.WriteInt(value.Cast<int64_t>()[i], SERIALIZE_AXIS_ID[i]);
+                    serializer.WriteInt(ReadIntegralBits(pData + i * componentSize, componentSize, false), SERIALIZE_AXIS_ID[i]);
                 }
                 break;
             }
-            case ReflectedCategoryType::Object:
+            case TypeKind::Object:
                 if (auto&& pClass = value.GetSRClass()) {
                     pClass->GetMeta()->Save(serializer, *dynamic_cast<Serializable*>(pClass));
                 }
                 break;
-            case ReflectedCategoryType::MathObject:
-                if (typeInfo.detailedType == "Quaternion") {
-                    auto&& pQuat = value.Cast<SR_MATH_NS::Quaternion>();
-                    serializer.WriteFloat(pQuat->x, SerializationId::Create("x"));
-                    serializer.WriteFloat(pQuat->y, SerializationId::Create("y"));
-                    serializer.WriteFloat(pQuat->z, SerializationId::Create("z"));
-                    serializer.WriteFloat(pQuat->w, SerializationId::Create("w"));
-                }
-                else if (typeInfo.detailedType == "Color") {
-                    auto&& pColor = value.Cast<SR_MATH_NS::FColor>();
-                    serializer.WriteFloat(pColor->r, SerializationId::Create("r"));
-                    serializer.WriteFloat(pColor->g, SerializationId::Create("g"));
-                    serializer.WriteFloat(pColor->b, SerializationId::Create("b"));
-                    serializer.WriteFloat(pColor->a, SerializationId::Create("a"));
-                }
+            case TypeKind::Quaternion: {
+                auto&& pQuat = value.Cast<SR_MATH_NS::Quaternion>();
+                serializer.WriteFloat(pQuat->x, SerializationId::Create("x"));
+                serializer.WriteFloat(pQuat->y, SerializationId::Create("y"));
+                serializer.WriteFloat(pQuat->z, SerializationId::Create("z"));
+                serializer.WriteFloat(pQuat->w, SerializationId::Create("w"));
                 break;
+            }
+            case TypeKind::Color: {
+                auto&& pColor = value.Cast<SR_MATH_NS::FColor>();
+                serializer.WriteFloat(pColor->r, SerializationId::Create("r"));
+                serializer.WriteFloat(pColor->g, SerializationId::Create("g"));
+                serializer.WriteFloat(pColor->b, SerializationId::Create("b"));
+                serializer.WriteFloat(pColor->a, SerializationId::Create("a"));
+                break;
+            }
             default:
-                SRHalt("SerializeValue() : unknown reflected type: {}", typeInfo.category);
+                SRHalt("SerializeValue() : unsupported reflected type: {}", typeInfo.name);
                 return;
         }
     }
 
-    bool DeserializeValue(Value& value, IDeserializer& deserializer) {
+    bool DeserializeValue(Value& value, IDeserializer& deserializer) { /// NOLINT(misc-no-recursion)
         auto&& typeInfo = value.GetTypeInfo();
-        switch (typeInfo.category) {
-            case ReflectedCategoryType::Value: {
+
+        if (typeInfo.IsArithmetic()) {
+            switch (typeInfo.kind) {
+                case TypeKind::Bool:
+                    deserializer.ReadBool(*value.Cast<bool>(), SerializationId::Create("bool"));
+                    break;
+                case TypeKind::Float:
+                    deserializer.ReadFloat(*value.Cast<float_t>(), SerializationId::Create("float"));
+                    break;
+                case TypeKind::Double:
+                    deserializer.ReadDouble(*value.Cast<double_t>(), SerializationId::Create("double"));
+                    break;
+                default: {
+                    int64_t integral = 0;
+                    deserializer.ReadInt(integral, SerializationId::Create("int"));
+                    WriteIntegralBits(value.Data(), typeInfo.GetScalarSize(), integral);
+                    break;
+                }
+            }
+            return true;
+        }
+
+        switch (typeInfo.kind) {
+            case TypeKind::Value: {
                 auto&& pValue = value.Cast<Value>();
                 if (pValue && pValue->IsValid()) {
                     return DeserializeValue(*pValue, deserializer);
                 }
                 return false;
             }
-            case ReflectedCategoryType::Enum: {
-                auto&& pReflector = EnumReflectorManager::Instance().GetReflector(typeInfo.detailedType);
+            case TypeKind::Enum: {
+                auto&& pReflector = EnumReflectorManager::Instance().TryGetReflector(typeInfo.name);
                 if (!pReflector) {
-                    SR_WARN("DeserializeValue() : unknown enum type: {}", typeInfo.detailedType);
+                    SR_WARN("DeserializeValue() : unknown enum type: {}", typeInfo.name);
                     return false;
                 }
                 SR_THREAD_LOCAL static String enumStr;
                 enumStr.clear();
                 deserializer.ReadString(enumStr, SerializationId::Create("enum"));
+                int64_t enumValue = 0;
                 if (pReflector->GetEnumVariantInternal() == EnumVariant::Flags) {
-                    int64_t valueInt = 0;
                     SR_THREAD_LOCAL static Vector<StringView> parts;
                     parts.clear();
                     StringUtils::Instance().SplitView(enumStr, "|", parts);
                     for (const auto& part : parts) {
-                        valueInt |= pReflector->FromStringInternal(part).value_or(0);
+                        enumValue |= pReflector->FromStringInternal(part).value_or(0);
                     }
-                    *value.Cast<int64_t>() = valueInt;
                 }
                 else {
-                    *value.Cast<int64_t>() = pReflector->FromStringInternal(enumStr).value_or(0);
+                    enumValue = pReflector->FromStringInternal(enumStr).value_or(0);
+                }
+                pReflector->WriteEnumValueToPointerInternal(value.Data(), enumValue);
+                return true;
+            }
+            case TypeKind::SharedPtr: {
+                if (!typeInfo.vtable.pGetTypeController || !typeInfo.pNext[0]) {
+                    SRHalt("DeserializeValue() : SharedPtr type is not resolved: {}", typeInfo.name);
+                    return false;
+                }
+                auto&& pSharedPtr = (SR_HTYPES_NS::SharedPtrBase*)typeInfo.vtable.pGetTypeController(value.GetStorage());
+                auto&& pNewObject = Factory::Instance().CreateBase(typeInfo.pNext[0]->name);
+                if (!pNewObject) {
+                    SRHalt("DeserializeValue() : failed to create object of type: {}", typeInfo.pNext[0]->name);
+                    return false;
+                }
+                auto&& pNewObjectShared = dynamic_cast<SR_HTYPES_NS::SharedPtrBase*>(pNewObject);
+                if (!pNewObjectShared) {
+                    SRHalt("DeserializeValue() : failed to cast object of type: {} to SharedPtrBase", typeInfo.pNext[0]->name);
+                    delete pNewObject;
+                    return false;
+                }
+                pSharedPtr->SetPointerFromBase(pNewObjectShared);
+                if (auto&& pSerializable = dynamic_cast<Serializable*>(pNewObjectShared)) {
+                    return pSerializable->Load(deserializer);
                 }
                 return true;
             }
-            case ReflectedCategoryType::Container: {
-                if (typeInfo.detailedType == "SharedPtr") {
-                    if (!value.GetTypeInfo().vtable.pGetTypeController) {
-                        SRHalt("DeserializeValue() : SharedPtr type controller is null for type: {}", typeInfo.detailedType);
-                        return false;
-                    }
-                    auto&& pSharedPtr = (SR_HTYPES_NS::SharedPtrBase*)value.GetTypeInfo().vtable.pGetTypeController(value.GetStorage());
-                    auto&& pNewObject = Factory::Instance().CreateBase(typeInfo.pNext[0]->detailedType);
-                    if (!pNewObject) {
-                        SRHalt("DeserializeValue() : failed to create object of type: {}", typeInfo.pNext[0]->detailedType);
-                        return false;
-                    }
-                    auto&& pNewObjectShared = dynamic_cast<SR_HTYPES_NS::SharedPtrBase*>(pNewObject);
-                    if (!pNewObjectShared) {
-                        SRHalt("DeserializeValue() : failed to cast object of type: {} to SharedPtrBase", typeInfo.pNext[0]->detailedType);
-                        delete pNewObject;
-                        return false;
-                    }
-                    pSharedPtr->SetPointerFromBase(pNewObjectShared);
-                    if (auto&& pSerializable = dynamic_cast<Serializable*>(pNewObjectShared)) {
-                        return pSerializable->Load(deserializer);
-                    }
-                    return true;
+            case TypeKind::Map:
+            case TypeKind::FlatHashMap: {
+                auto&& pKeyType = typeInfo.GetArgument(0);
+                auto&& pMappedType = typeInfo.GetArgument(1);
+                if (!pKeyType || !pMappedType) {
+                    SR_WARN("DeserializeValue() : map element type is not resolved: {}", typeInfo.name);
+                    return false;
                 }
-                else if (typeInfo.detailedType == "Map") {
-                    if (!value.GetTypeInfo().vtable.pGetTypeController) {
-                        SRHalt("DeserializeValue() : Map type controller is null for type: {}", typeInfo.detailedType);
-                        return false;
-                    }
-                    auto&& container = const_cast<Value&>(value).AsAssociativeContainer();
-                    if (uint64_t size = deserializer.BeginArray(SerializationId::Create("map")); size > 0) {
-                        container.Clear();
-                        uint64_t index = 0;
-                        while (deserializer.BeginItem(SerializationId::Create("item"), index)) {
-                            Value key;
-                            Value val;
+                const auto map = value.AsMap();
+                map.Clear();
+                if (uint64_t size = deserializer.BeginArray(SerializationId::Create("map")); size > 0) {
+                    uint64_t index = 0;
+                    while (deserializer.BeginItem(SerializationId::Create("item"), index)) {
+                        Value key = Value::CreateDefault(pKeyType);
+                        if (deserializer.BeginObject(SerializationId::Create("key"))) {
                             DeserializeValue(key, deserializer);
-                            DeserializeValue(val, deserializer);
-                            container.Insert(key, val);
-                            deserializer.EndItem();
-                            index++;
+                            deserializer.EndObject();
                         }
-                        deserializer.EndArray();
-                    }
-                    return true;
-                }
-                else if (typeInfo.detailedType == "Vector") {
-                    if (!value.GetTypeInfo().vtable.pGetTypeController) {
-                        SRHalt("DeserializeValue() : Vector type controller is null for type: {}", typeInfo.detailedType);
-                        return false;
-                    }
-                    auto&& container = const_cast<Value&>(value).AsSequenceContainer();
-                    if (uint64_t size = deserializer.BeginArray(SerializationId::Create("vector")); size > 0) {
-                        container.Clear();
-                        container.Reserve(size);
-                        uint64_t index = 0;
-                        while (deserializer.BeginItem(SerializationId::Create("item"), index)) {
-                            Value item;
-                            DeserializeValue(item, deserializer);
-                            container.PushBack(item);
-                            deserializer.EndItem();
-                            index++;
+                        if (deserializer.BeginObject(SerializationId::Create("value"))) {
+                            Value mapped = map.FindOrAdd(key.AsRef()).ToValue();
+                            DeserializeValue(mapped, deserializer);
+                            deserializer.EndObject();
                         }
-                        deserializer.EndArray();
+                        else {
+                            map.FindOrAdd(key.AsRef());
+                        }
+                        deserializer.EndItem();
+                        index++;
                     }
-                    return true;
-                }
-                else {
-                    SRHalt("DeserializeValue() : unknown container type: {}", typeInfo.detailedType);
-                    return false;
-                }
-            }
-            case ReflectedCategoryType::String: {
-                if (typeInfo.detailedType == "Path") {
-                    Path& path = *value.Cast<Path>();
-                    deserializer.ReadString(path, SerializationId::Create("path"));
-                }
-                else if (typeInfo.detailedType == "StringView") {
-                    String& str = *value.Cast<String>();
-                    deserializer.ReadString(str, SerializationId::Create("view"));
-                }
-                else if (typeInfo.detailedType == "StringAtom") {
-                    StringAtom& str = *value.Cast<StringAtom>();
-                    deserializer.ReadString(str, SerializationId::Create("atom"));
-                }
-                else if (typeInfo.detailedType == "UnicodeString") {
-                    UnicodeString& str = *value.Cast<UnicodeString>();
-                    deserializer.ReadString(str, SerializationId::Create("unicode"));
-                }
-                else if (typeInfo.detailedType == "String") {
-                    String& str = *value.Cast<String>();
-                    deserializer.ReadString(str, SerializationId::Create("string"));
-                }
-                else {
-                    SRHalt("DeserializeValue() : unknown string type: {}", typeInfo.detailedType);
-                    return false;
+                    deserializer.EndArray();
                 }
                 return true;
             }
-            case ReflectedCategoryType::Arithmetic: {
-                if (typeInfo.detailedType == "bool") {
-                    deserializer.ReadBool(*value.Cast<bool>(), SerializationId::Create("bool"));
+            case TypeKind::Set:
+            case TypeKind::FlatHashSet: {
+                if (!typeInfo.pNext[0]) {
+                    return false;
                 }
-                else if (typeInfo.detailedType == "float") {
-                    deserializer.ReadFloat(*value.Cast<float>(), SerializationId::Create("float"));
-                }
-                else if (typeInfo.detailedType == "double") {
-                    deserializer.ReadDouble(*value.Cast<double>(), SerializationId::Create("double"));
-                }
-                else {
-                    deserializer.ReadInt(*value.Cast<int64_t>(), SerializationId::Create("int"));
+                const auto set = value.AsMap();
+                set.Clear();
+                if (uint64_t size = deserializer.BeginArray(SerializationId::Create("set")); size > 0) {
+                    uint64_t index = 0;
+                    while (deserializer.BeginItem(SerializationId::Create("item"), index)) {
+                        Value key = Value::CreateDefault(typeInfo.pNext[0]);
+                        DeserializeValue(key, deserializer);
+                        set.InsertOrAssign(key.AsRef(), ValueRef());
+                        deserializer.EndItem();
+                        index++;
+                    }
+                    deserializer.EndArray();
                 }
                 return true;
             }
-            case ReflectedCategoryType::MathVector: {
+            case TypeKind::Vector: {
+                if (!typeInfo.pNext[0]) {
+                    return false;
+                }
+                const auto array = value.AsArray();
+                array.Clear();
+                if (uint64_t size = deserializer.BeginArray(SerializationId::Create("vector")); size > 0) {
+                    array.Reserve(size);
+                    uint64_t index = 0;
+                    while (deserializer.BeginItem(SerializationId::Create("item"), index)) {
+                        /// элемент читается на месте, без временного Value и копирования
+                        array.Resize(index + 1);
+                        Value item = array.At(index).ToValue();
+                        DeserializeValue(item, deserializer);
+                        deserializer.EndItem();
+                        index++;
+                    }
+                    deserializer.EndArray();
+                }
+                return true;
+            }
+            case TypeKind::Path:
+                deserializer.ReadString(*value.Cast<Path>(), SerializationId::Create("path"));
+                return true;
+            case TypeKind::StringView:
+                deserializer.ReadString(*value.Cast<String>(), SerializationId::Create("view"));
+                return true;
+            case TypeKind::StringAtom:
+                deserializer.ReadString(*value.Cast<StringAtom>(), SerializationId::Create("atom"));
+                return true;
+            case TypeKind::UnicodeString:
+                deserializer.ReadString(*value.Cast<UnicodeString>(), SerializationId::Create("unicode"));
+                return true;
+            case TypeKind::String:
+                deserializer.ReadString(*value.Cast<String>(), SerializationId::Create("string"));
+                return true;
+            case TypeKind::MathVector: {
+                const auto componentSize = typeInfo.pNext[0] ? typeInfo.pNext[0]->GetScalarSize() : 0;
+                if (componentSize == 0) {
+                    SR_WARN("DeserializeValue() : unknown component type of {}", typeInfo.name);
+                    return false;
+                }
+                auto&& pData = static_cast<uint8_t*>(value.Data());
                 for (uint8_t i = 0; i < typeInfo.detailedSize; ++i) {
-                    deserializer.ReadInt(value.Cast<int64_t>()[i], SERIALIZE_AXIS_ID[i]);
+                    int64_t component = 0;
+                    deserializer.ReadInt(component, SERIALIZE_AXIS_ID[i]);
+                    WriteIntegralBits(pData + i * componentSize, componentSize, component);
                 }
                 return true;
             }
-            case ReflectedCategoryType::Object:
+            case TypeKind::Object:
                 if (auto&& pClass = value.GetSRClass()) {
                     pClass->GetMeta()->Load(deserializer, *dynamic_cast<Serializable*>(pClass));
                     return true;
                 }
                 break;
-            case ReflectedCategoryType::MathObject:
-                if (typeInfo.detailedType == "Quaternion") {
-                    auto&& pQuat = value.Cast<SR_MATH_NS::Quaternion>();
-                    deserializer.ReadFloat(pQuat->x, SerializationId::Create("x"));
-                    deserializer.ReadFloat(pQuat->y, SerializationId::Create("y"));
-                    deserializer.ReadFloat(pQuat->z, SerializationId::Create("z"));
-                    deserializer.ReadFloat(pQuat->w, SerializationId::Create("w"));
-                    return true;
-                }
-                if (typeInfo.detailedType == "Color") {
-                    auto&& pColor = value.Cast<SR_MATH_NS::FColor>();
-                    deserializer.ReadFloat(pColor->r, SerializationId::Create("r"));
-                    deserializer.ReadFloat(pColor->g, SerializationId::Create("g"));
-                    deserializer.ReadFloat(pColor->b, SerializationId::Create("b"));
-                    deserializer.ReadFloat(pColor->a, SerializationId::Create("a"));
-                    return true;
-                }
-                break;
+            case TypeKind::Quaternion: {
+                auto&& pQuat = value.Cast<SR_MATH_NS::Quaternion>();
+                deserializer.ReadFloat(pQuat->x, SerializationId::Create("x"));
+                deserializer.ReadFloat(pQuat->y, SerializationId::Create("y"));
+                deserializer.ReadFloat(pQuat->z, SerializationId::Create("z"));
+                deserializer.ReadFloat(pQuat->w, SerializationId::Create("w"));
+                return true;
+            }
+            case TypeKind::Color: {
+                auto&& pColor = value.Cast<SR_MATH_NS::FColor>();
+                deserializer.ReadFloat(pColor->r, SerializationId::Create("r"));
+                deserializer.ReadFloat(pColor->g, SerializationId::Create("g"));
+                deserializer.ReadFloat(pColor->b, SerializationId::Create("b"));
+                deserializer.ReadFloat(pColor->a, SerializationId::Create("a"));
+                return true;
+            }
             default:
                 break;
         }
-        SR_WARN("DeserializeValue() : unknown reflected type: {}", typeInfo.category);
+        SR_WARN("DeserializeValue() : unsupported reflected type: {}", typeInfo.name);
         return false;
     }
 }

@@ -274,7 +274,7 @@ namespace SR_FLUX_NS {
                 auto&& conditionValue = GetResultRegister(execution);
                 auto&& type = conditionValue.GetTypeInfo();
                 if (m_validation) SR_UNLIKELY_ATTRIBUTE {
-                    if (type.category != Reflection::ReflectedCategoryType::Arithmetic || type.detailedType != "bool") {
+                    if (type.kind != Reflection::TypeKind::Bool) {
                         SR_ERROR("FluxRuntime::ExecuteInstruction() : branch condition must be a boolean type!");
                         if (!m_continueOnError) {
                             execution.state = FluxExecutionState::Error;
@@ -496,14 +496,14 @@ namespace SR_FLUX_NS {
             Reflection::Value& callable = GetRegister(execution, instruction.operands[0], callableType, RegisterOperation::Read);
 
             auto&& typeInfo = callable.GetTypeInfo();
-            if (typeInfo.category == Reflection::ReflectedCategoryType::Object) {
+            if (typeInfo.kind == Reflection::TypeKind::Object) {
                 pCallable = (SRClass*)typeInfo.vtable.pGetTypeController(callable.GetStorage());
             }
-            else if (typeInfo.category == Reflection::ReflectedCategoryType::Container && typeInfo.detailedType == "SharedPtr") {
+            else if (typeInfo.kind == Reflection::TypeKind::SharedPtr) {
                 auto&& pBase = (SR_HTYPES_NS::SharedPtrBase*)typeInfo.vtable.pGetTypeController(callable.GetStorage());
                 pCallable = pBase->GetSRClass();
                 if (!pCallable) {
-                    SR_ERROR("FluxRuntime::CallMethod() : failed to get callable type from SharedPtr! Next type: {}", typeInfo.pNext[0]->detailedType);
+                    SR_ERROR("FluxRuntime::CallMethod() : failed to get callable type from SharedPtr! Next type: {}", typeInfo.pNext[0]->name);
                     execution.state = FluxExecutionState::Error;
                     return false;
                 }
@@ -662,14 +662,12 @@ namespace SR_FLUX_NS {
     }
 
     Reflection::Value FluxRuntime::LoadFluxVariable(const FluxVariable& variable) {
-        Reflection::TypeInfo* pTypeInfo = Reflection::LoadTypeInfo(variable.type);
-        if (!pTypeInfo || !Reflection::FindVTable(*pTypeInfo)) {
+        const Reflection::TypeInfo* pTypeInfo = Reflection::LoadTypeInfo(variable.type);
+        if (!pTypeInfo || !pTypeInfo->IsResolved()) {
             SR_ERROR("FluxRuntime::LoadFluxVariable() : failed to load type info for \"{}\"!", variable.type);
-            Reflection::FreeTypeInfo(pTypeInfo);
             return Reflection::Value();
         }
         Reflection::Value value = Reflection::Value::CreateDefault(pTypeInfo);
-        Reflection::FreeTypeInfo(pTypeInfo);
         if (!variable.value.empty()) {
             JsonDeserializer deserializer;
             if (!deserializer.LoadFromStringView(variable.value)) {

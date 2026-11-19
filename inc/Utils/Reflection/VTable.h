@@ -7,37 +7,30 @@
 
 namespace SR_UTILS_NS::Reflection {
     struct ReflectedValue;
-    struct ReflectedContainerIterator;
 
-    struct IteratorVTable {
-        using GetValueFn = ReflectedValue(*)(ReflectedValue&, ReflectedContainerIterator);
-        using OffsetFn = ReflectedContainerIterator(*)(ReflectedContainerIterator, int64_t);
-
-        OffsetFn pOffset;
-        GetValueFn pGetValue;
+    /// Операции над Vector. Индексы не проверяются, это делает ArrayView
+    struct SR_COMMON_DLL_API ArrayVTable {
+        SizeType(*pSize)(const void* pArray) = nullptr;
+        void*(*pAt)(void* pArray, SizeType index) = nullptr;
+        void(*pResize)(void* pArray, SizeType size) = nullptr;
+        void(*pReserve)(void* pArray, SizeType capacity) = nullptr;
+        void(*pInsert)(void* pArray, SizeType index, const void* pValue) = nullptr;
+        void(*pErase)(void* pArray, SizeType index) = nullptr;
+        void(*pClear)(void* pArray) = nullptr;
     };
 
-    struct SR_COMMON_DLL_API ContainerVTable {
-        using BeginFn = ReflectedContainerIterator(*)(ReflectedValue&);
-        using EndFn = ReflectedContainerIterator(*)(ReflectedValue&);
-        using FindFn = ReflectedContainerIterator(*)(ReflectedValue&, const ReflectedValue&);
-        using InsertFn = ReflectedContainerIterator(*)(ReflectedValue&, ReflectedContainerIterator, const ReflectedValue&, const ReflectedValue&);
-        using EraseFn = ReflectedContainerIterator(*)(ReflectedValue&, ReflectedContainerIterator);
-
-        using SizeFn = SizeType(*)(ReflectedValue&);
-        using ClearFn = void(*)(ReflectedValue&);
-        using ResizeFn = void(*)(ReflectedValue&, SizeType, bool reserve);
-
-        BeginFn pBegin;
-        EndFn pEnd;
-        InsertFn pInsert;
-        EraseFn pErase;
-        FindFn pFind;
-
-        SizeFn pSize;
-        ClearFn pClear;
-        ResizeFn pResize;
-
+    /// Операции над Map, FlatHashMap, Set и FlatHashSet.
+    /// У множеств нет значения: pValue в pVisit равен nullptr, pFind и pFindOrAdd возвращают сам ключ.
+    struct SR_COMMON_DLL_API MapVTable {
+        SizeType(*pSize)(const void* pMap) = nullptr;
+        void(*pClear)(void* pMap) = nullptr;
+        void*(*pFind)(void* pMap, const void* pKey) = nullptr;
+        void*(*pFindOrAdd)(void* pMap, const void* pKey) = nullptr;
+        /// true, если ключ добавлен; у существующего ключа значение перезаписывается
+        bool(*pInsertOrAssign)(void* pMap, const void* pKey, const void* pValue) = nullptr;
+        bool(*pErase)(void* pMap, const void* pKey) = nullptr;
+        /// pVisit возвращает false, чтобы остановить обход
+        void(*pForEach)(void* pMap, bool(*pVisit)(void* pUserData, const void* pKey, void* pValue), void* pUserData) = nullptr;
     };
 
     struct SR_COMMON_DLL_API PairVTable {
@@ -64,16 +57,16 @@ namespace SR_UTILS_NS::Reflection {
         /// for SRClass and other containers (except Vector, Map and Set)
         using GetTypeController = void*(*)(ReflectedValue&);
 
-        ContainerVTable containerVTable;
-        IteratorVTable iteratorVTable;
-        PairVTable pairVTable;
-        GetTypeController pGetTypeController;
+        ArrayVTable arrayVTable = {};
+        MapVTable mapVTable = {};
+        PairVTable pairVTable = {};
+        GetTypeController pGetTypeController = nullptr;
     };
 
-    extern SR_COMMON_DLL_API void RegisterVTable(TypeInfo& typeInfo);
-    extern SR_COMMON_DLL_API void UnregisterVTable(TypeInfo& typeInfo);
-    extern SR_COMMON_DLL_API bool FindVTable(TypeInfo& typeInfo);
-    extern SR_COMMON_DLL_API uint64_t GetVTableSize();
+    struct TypeInfoKey;
+
+    /// vtable для категорий, которые строятся без шаблона конкретного типа: enum по рефлектору, SRClass по фабрике
+    extern SR_COMMON_DLL_API bool ResolveBuiltinVTable(const TypeInfoKey& key, TypeInfoVTable& vtable);
 }
 
 #endif //SR_ENGINE_COMMON_REFLECTION_VTABLE_H

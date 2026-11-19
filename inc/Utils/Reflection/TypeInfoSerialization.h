@@ -16,7 +16,10 @@ namespace SR_UTILS_NS::Reflection {
     struct TypeInfo;
     struct Value;
 
-    extern SR_COMMON_DLL_API TypeInfo* LoadTypeInfo(StringView type);
+    /// Читает каноническое имя типа и старый формат "Category.name[...]".
+    /// nullptr при ошибке разбора или неизвестном имени; шаблон с незарегистрированной комбинацией аргументов
+    /// возвращается нерешённым, см. TypeInfo::IsResolved()
+    extern SR_COMMON_DLL_API const TypeInfo* LoadTypeInfo(StringView type);
     extern SR_COMMON_DLL_API void SaveTypeInfo(String& type, const TypeInfo* pTypeInfo);
 
     extern SR_COMMON_DLL_API void SerializeValue(const Value& value, ISerializer& serializer);

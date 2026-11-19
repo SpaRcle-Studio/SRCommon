@@ -13,7 +13,7 @@ namespace SR_UTILS_NS::Reflection {
     class SR_COMMON_DLL_API Method {
         struct Parameter {
             StringAtom name;
-            TypeInfo* pTypeInfo = nullptr;
+            const TypeInfo* pTypeInfo = nullptr;
             /// TypeInfo хранит тип со снятыми cv-квалификаторами и ссылкой, поэтому способ
             /// передачи параметра приходится запоминать отдельно
             bool isReference = false;
@@ -32,11 +32,11 @@ namespace SR_UTILS_NS::Reflection {
         using MethodActiveCallbackFn = bool(*)(SRClass* pOwner);
     public:
         Method() = default;
-        Method(const Method& other);
+        Method(const Method& other) = default;
         Method(Method&& other) noexcept = default;
-        Method& operator=(const Method& other);
+        Method& operator=(const Method& other) = default;
         Method& operator=(Method&& other) noexcept = default;
-        ~Method();
+        ~Method() = default;
 
         SR_NODISCARD const Parameter& GetParam(uint32_t index) const;
         SR_NODISCARD StringAtom GetName() const;
@@ -60,10 +60,10 @@ namespace SR_UTILS_NS::Reflection {
         Method& SetWithReturnNoParams(const FunctorWithReturnNoParams& func);
         Method& SetWithReturnWithParams(const FunctorWithReturnWithParams& func);
         Method& SetName(StringAtom name);
-        Method& SetReturnType(TypeInfo* pReturnTypeInfo);
+        Method& SetReturnType(const TypeInfo* pReturnTypeInfo);
         Method& SetEditorButton();
         Method& SetCondition(MethodActiveCallbackFn condition);
-        Method& AddParam(StringAtom name, TypeInfo* pTypeInfo, bool isReference = false, bool isConst = false);
+        Method& AddParam(StringAtom name, const TypeInfo* pTypeInfo, bool isReference = false, bool isConst = false);
         Method& SetEvaluate();
 
     private:
@@ -78,7 +78,7 @@ namespace SR_UTILS_NS::Reflection {
         StringAtom m_name;
         Vector<Parameter> m_params;
         mutable StringAtom m_displayName;
-        TypeInfo* m_pReturnTypeInfo = nullptr;
+        const TypeInfo* m_pReturnTypeInfo = nullptr;
         bool m_isEditorButton = false;
         bool m_isEvaluate = false;
 

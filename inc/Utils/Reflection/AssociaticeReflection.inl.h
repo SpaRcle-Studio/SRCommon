@@ -3,147 +3,158 @@
 //
 
 namespace SR_UTILS_NS::Reflection {
-    /// ================================================================================================================
-
-    template<typename T> ReflectedContainerIterator ReflectedTypeMapFind(ReflectedValue& value, const ReflectedValue& key) {
-        auto pContainer = static_cast<T*>(value.GetData());
-        auto pKey = static_cast<const T::KeyType*>(key.GetData());
-        auto it = pContainer->find(*pKey);
-        ReflectedContainerIterator iterator;
-        memcpy(&iterator.data, &it, sizeof(typename T::Iterator));
-        return iterator;
+    template<typename T> SizeType ReflectedMapSize(const void* pMap) {
+        return static_cast<const T*>(pMap)->size();
     }
 
-    template<typename T> ReflectedContainerIterator ReflectedTypeMapInsert(ReflectedValue& value, ReflectedContainerIterator, const ReflectedValue& key, const ReflectedValue& val) {
-        auto pContainer = static_cast<T*>(value.GetData());
-        auto pKey = static_cast<const T::KeyType*>(key.GetData());
-        auto pVal = static_cast<const T::MappedType*>(val.GetData());
-        auto [it, inserted] = pContainer->insert(*pKey, *pVal);
-        ReflectedContainerIterator iterator;
-        memcpy(&iterator.data, &it, sizeof(typename T::Iterator));
-        return iterator;
+    template<typename T> void ReflectedMapClear(void* pMap) {
+        static_cast<T*>(pMap)->clear();
+    }
+
+    template<typename T> bool ReflectedMapErase(void* pMap, const void* pKey) {
+        return static_cast<T*>(pMap)->erase(*static_cast<const typename T::KeyType*>(pKey));
+    }
+
+    /// ================================================================================================================
+
+    template<typename T> void* ReflectedMapFind(void* pMap, const void* pKey) {
+        auto&& map = *static_cast<T*>(pMap);
+        auto&& pIt = map.find(*static_cast<const typename T::KeyType*>(pKey));
+        if (pIt == map.end()) {
+            return nullptr;
+        }
+        return &pIt->second;
+    }
+
+    template<typename T> void* ReflectedMapFindOrAdd(void* pMap, const void* pKey) {
+        return &(*static_cast<T*>(pMap))[*static_cast<const typename T::KeyType*>(pKey)];
+    }
+
+    template<typename T> bool ReflectedMapInsertOrAssign(void* pMap, const void* pKey, const void* pValue) {
+        auto&& map = *static_cast<T*>(pMap);
+        auto&& key = *static_cast<const typename T::KeyType*>(pKey);
+        auto&& value = *static_cast<const typename T::MappedType*>(pValue);
+        if (auto&& pIt = map.find(key); pIt != map.end()) {
+            pIt->second = value;
+            return false;
+        }
+        map[key] = value;
+        return true;
+    }
+
+    template<typename T> void ReflectedMapForEach(void* pMap, bool(*pVisit)(void* pUserData, const void* pKey, void* pValue), void* pUserData) {
+        auto&& map = *static_cast<T*>(pMap);
+        for (auto&& pIt = map.begin(); pIt != map.end(); ++pIt) {
+            if (!pVisit(pUserData, &pIt->first, &pIt->second)) {
+                return;
+            }
+        }
+    }
+
+    template<typename T> void FillMapVTable(TypeInfoVTable& vtable) {
+        vtable.pSizeOfAlign = &ReflectedTypeTemplateSizeOfAlign<T>;
+        vtable.pConstructor = &ReflectedTypeTemplateConstructor<T>;
+        vtable.pDestructor = &ReflectedTypeTemplateDestructor<T>;
+        vtable.pCopy = &ReflectedTypeTemplateCopy<T>;
+        vtable.pMove = &ReflectedTypeTemplateMove<T>;
+        vtable.mapVTable.pSize = &ReflectedMapSize<T>;
+        vtable.mapVTable.pClear = &ReflectedMapClear<T>;
+        vtable.mapVTable.pFind = &ReflectedMapFind<T>;
+        vtable.mapVTable.pFindOrAdd = &ReflectedMapFindOrAdd<T>;
+        vtable.mapVTable.pInsertOrAssign = &ReflectedMapInsertOrAssign<T>;
+        vtable.mapVTable.pErase = &ReflectedMapErase<T>;
+        vtable.mapVTable.pForEach = &ReflectedMapForEach<T>;
     }
 
     template<typename Key, typename Value, typename Compare> struct DetermineTypeInfoAccessor<Map<Key, Value, Compare>> {
         static constexpr bool Supported = true;
-        static void Determine(TypeInfo* pTypeInfo) {
-            static const StringAtom detailedType = "Map";
-            using Type = Map<Key, Value, Compare>;
-            pTypeInfo->detailedType = detailedType;
-            pTypeInfo->category = ReflectedCategoryType::Container;
-            pTypeInfo->pNext[0] = AllocateTypeInfo();
-            DetermineTypeInfoAccessor<Pair<Key, Value>>::Determine(pTypeInfo->pNext[0]);
-            pTypeInfo->vtable.pConstructor = &ReflectedTypeTemplateConstructor<Type>;
-            pTypeInfo->vtable.pDestructor = &ReflectedTypeTemplateDestructor<Type>;
-            pTypeInfo->vtable.pCopy = &ReflectedTypeTemplateCopy<Type>;
-            pTypeInfo->vtable.pMove = &ReflectedTypeTemplateMove<Type>;
-            pTypeInfo->vtable.containerVTable.pClear = &ReflectedTypeContainerClear<Type>;
-            pTypeInfo->vtable.containerVTable.pSize = &ReflectedTypeContainerSize<Type>;
-            pTypeInfo->vtable.containerVTable.pBegin = &ReflectedTypeContainerBegin<Type>;
-            pTypeInfo->vtable.containerVTable.pEnd = &ReflectedTypeContainerEnd<Type>;
-            pTypeInfo->vtable.containerVTable.pInsert = &ReflectedTypeMapInsert<Type>;
-            pTypeInfo->vtable.containerVTable.pErase = &ReflectedTypeContainerErase<Type>;
-            pTypeInfo->vtable.containerVTable.pFind = &ReflectedTypeMapFind<Type>;
-            pTypeInfo->vtable.iteratorVTable.pGetValue = &ReflectedTypeContainerIteratorGetValue<Type>;
-            pTypeInfo->vtable.iteratorVTable.pOffset = &ReflectedTypeContainerIteratorOffset<Type>;
+        static void Determine(TypeInfoKey& key, TypeInfoVTable& vtable) {
+            key.kind = TypeKind::Map;
+            key.pNext[0] = TypeOf<Pair<Key, Value>>();
+            FillMapVTable<Map<Key, Value, Compare>>(vtable);
         }
     };
 
     template<typename Key, typename Value> struct DetermineTypeInfoAccessor<SR_HTYPES_NS::FlatHashMap<Key, Value>> {
         static constexpr bool Supported = true;
-        static void Determine(TypeInfo* pTypeInfo) {
-            static const StringAtom detailedType = "FlatHashMap";
-            using Type = SR_HTYPES_NS::FlatHashMap<Key, Value>;
-            pTypeInfo->detailedType = detailedType;
-            pTypeInfo->category = ReflectedCategoryType::Container;
-            pTypeInfo->pNext[0] = AllocateTypeInfo();
-            DetermineTypeInfoAccessor<Pair<Key, Value>>::Determine(pTypeInfo->pNext[0]);
-            pTypeInfo->vtable.pSizeOfAlign = &ReflectedTypeTemplateSizeOfAlign<Type>;
-            pTypeInfo->vtable.pConstructor = &ReflectedTypeTemplateConstructor<Type>;
-            pTypeInfo->vtable.pDestructor = &ReflectedTypeTemplateDestructor<Type>;
-            pTypeInfo->vtable.pCopy = &ReflectedTypeTemplateCopy<Type>;
-            pTypeInfo->vtable.pMove = &ReflectedTypeTemplateMove<Type>;
-            pTypeInfo->vtable.containerVTable.pClear = &ReflectedTypeContainerClear<Type>;
-            pTypeInfo->vtable.containerVTable.pSize = &ReflectedTypeContainerSize<Type>;
-            pTypeInfo->vtable.containerVTable.pBegin = &ReflectedTypeContainerBegin<Type>;
-            pTypeInfo->vtable.containerVTable.pEnd = &ReflectedTypeContainerEnd<Type>;
-            pTypeInfo->vtable.containerVTable.pInsert = &ReflectedTypeMapInsert<Type>;
-            pTypeInfo->vtable.containerVTable.pErase = &ReflectedTypeContainerErase<Type>;
-            pTypeInfo->vtable.containerVTable.pFind = &ReflectedTypeMapFind<Type>;
-            pTypeInfo->vtable.iteratorVTable.pGetValue = &ReflectedTypeContainerIteratorGetValue<Type>;
-            pTypeInfo->vtable.iteratorVTable.pOffset = &ReflectedTypeContainerIteratorOffset<Type>;
+        static void Determine(TypeInfoKey& key, TypeInfoVTable& vtable) {
+            key.kind = TypeKind::FlatHashMap;
+            key.pNext[0] = TypeOf<Pair<Key, Value>>();
+            FillMapVTable<SR_HTYPES_NS::FlatHashMap<Key, Value>>(vtable);
         }
     };
 
     /// ================================================================================================================
 
-    template<typename T> ReflectedContainerIterator ReflectedTypeSetFind(ReflectedValue& value, const ReflectedValue& key) {
-        auto pContainer = static_cast<T*>(value.GetData());
-        auto pKey = static_cast<const T::KeyType*>(key.GetData());
-        auto it = pContainer->find(*pKey);
-        ReflectedContainerIterator iterator;
-        memcpy(&iterator.data, &it, sizeof(typename T::Iterator));
-        return iterator;
+    template<typename T, typename Key> SizeType ReflectedSetSize(const void* pSet) {
+        return static_cast<const T*>(pSet)->size();
     }
 
-    template<typename T> ReflectedContainerIterator ReflectedTypeSetInsert(ReflectedValue& value, ReflectedContainerIterator, const ReflectedValue& key, const ReflectedValue&) {
-        auto pContainer = static_cast<T*>(value.GetData());
-        auto pKey = static_cast<const T::KeyType*>(key.GetData());
-        auto [it, inserted] = pContainer->insert(*pKey);
-        ReflectedContainerIterator iterator;
-        memcpy(&iterator.data, &it, sizeof(typename T::Iterator));
-        return iterator;
+    template<typename T, typename Key> void ReflectedSetClear(void* pSet) {
+        static_cast<T*>(pSet)->clear();
+    }
+
+    template<typename T, typename Key> bool ReflectedSetErase(void* pSet, const void* pKey) {
+        return static_cast<T*>(pSet)->erase(*static_cast<const Key*>(pKey));
+    }
+
+    template<typename T, typename Key> void* ReflectedSetFind(void* pSet, const void* pKey) {
+        auto&& set = *static_cast<T*>(pSet);
+        auto&& pIt = set.find(*static_cast<const Key*>(pKey));
+        if (pIt == set.end()) {
+            return nullptr;
+        }
+        return const_cast<Key*>(&*pIt);
+    }
+
+    template<typename T, typename Key> void* ReflectedSetFindOrAdd(void* pSet, const void* pKey) {
+        auto&& result = static_cast<T*>(pSet)->insert(*static_cast<const Key*>(pKey));
+        return const_cast<Key*>(&*result.first);
+    }
+
+    template<typename T, typename Key> bool ReflectedSetInsertOrAssign(void* pSet, const void* pKey, const void*) {
+        return static_cast<T*>(pSet)->insert(*static_cast<const Key*>(pKey)).second;
+    }
+
+    template<typename T, typename Key> void ReflectedSetForEach(void* pSet, bool(*pVisit)(void* pUserData, const void* pKey, void* pValue), void* pUserData) {
+        auto&& set = *static_cast<T*>(pSet);
+        for (auto&& pIt = set.begin(); pIt != set.end(); ++pIt) {
+            if (!pVisit(pUserData, &*pIt, nullptr)) {
+                return;
+            }
+        }
+    }
+
+    template<typename T, typename Key> void FillSetVTable(TypeInfoVTable& vtable) {
+        vtable.pSizeOfAlign = &ReflectedTypeTemplateSizeOfAlign<T>;
+        vtable.pConstructor = &ReflectedTypeTemplateConstructor<T>;
+        vtable.pDestructor = &ReflectedTypeTemplateDestructor<T>;
+        vtable.pCopy = &ReflectedTypeTemplateCopy<T>;
+        vtable.pMove = &ReflectedTypeTemplateMove<T>;
+        vtable.mapVTable.pSize = &ReflectedSetSize<T, Key>;
+        vtable.mapVTable.pClear = &ReflectedSetClear<T, Key>;
+        vtable.mapVTable.pFind = &ReflectedSetFind<T, Key>;
+        vtable.mapVTable.pFindOrAdd = &ReflectedSetFindOrAdd<T, Key>;
+        vtable.mapVTable.pInsertOrAssign = &ReflectedSetInsertOrAssign<T, Key>;
+        vtable.mapVTable.pErase = &ReflectedSetErase<T, Key>;
+        vtable.mapVTable.pForEach = &ReflectedSetForEach<T, Key>;
     }
 
     template<typename T, typename Compare> struct DetermineTypeInfoAccessor<Set<T, Compare>> {
         static constexpr bool Supported = true;
-        static void Determine(TypeInfo* pTypeInfo) {
-            static const StringAtom detailedType = "Set";
-            using Type = Set<T, Compare>;
-            pTypeInfo->detailedType = detailedType;
-            pTypeInfo->category = ReflectedCategoryType::Container;
-            pTypeInfo->pNext[0] = AllocateTypeInfo();
-            DetermineTypeInfoAccessor<T>::Determine(pTypeInfo->pNext[0]);
-            pTypeInfo->vtable.pSizeOfAlign = &ReflectedTypeTemplateSizeOfAlign<Type>;
-            pTypeInfo->vtable.pConstructor = &ReflectedTypeTemplateConstructor<Type>;
-            pTypeInfo->vtable.pDestructor = &ReflectedTypeTemplateDestructor<Type>;
-            pTypeInfo->vtable.pCopy = &ReflectedTypeTemplateCopy<Type>;
-            pTypeInfo->vtable.pMove = &ReflectedTypeTemplateMove<Type>;
-            pTypeInfo->vtable.containerVTable.pClear = &ReflectedTypeContainerClear<Type>;
-            pTypeInfo->vtable.containerVTable.pSize = &ReflectedTypeContainerSize<Type>;
-            pTypeInfo->vtable.containerVTable.pBegin = &ReflectedTypeContainerBegin<Type>;
-            pTypeInfo->vtable.containerVTable.pEnd = &ReflectedTypeContainerEnd<Type>;
-            pTypeInfo->vtable.containerVTable.pInsert = &ReflectedTypeSetInsert<Type>;
-            pTypeInfo->vtable.containerVTable.pErase = &ReflectedTypeContainerErase<Type>;
-            pTypeInfo->vtable.containerVTable.pFind = &ReflectedTypeSetFind<Type>;
-            pTypeInfo->vtable.iteratorVTable.pGetValue = &ReflectedTypeContainerIteratorGetValue<Type>;
-            pTypeInfo->vtable.iteratorVTable.pOffset = &ReflectedTypeContainerIteratorOffset<Type>;
+        static void Determine(TypeInfoKey& key, TypeInfoVTable& vtable) {
+            key.kind = TypeKind::Set;
+            key.pNext[0] = TypeOf<T>();
+            FillSetVTable<Set<T, Compare>, T>(vtable);
         }
     };
 
     template<typename T> struct DetermineTypeInfoAccessor<SR_HTYPES_NS::FlatHashSet<T>> {
         static constexpr bool Supported = true;
-        static void Determine(TypeInfo* pTypeInfo) {
-            static const StringAtom detailedType = "FlatHashSet";
-            using Type = SR_HTYPES_NS::FlatHashSet<T>;
-            pTypeInfo->detailedType = detailedType;
-            pTypeInfo->category = ReflectedCategoryType::Container;
-            pTypeInfo->pNext[0] = AllocateTypeInfo();
-            DetermineTypeInfoAccessor<T>::Determine(pTypeInfo->pNext[0]);
-            pTypeInfo->vtable.pSizeOfAlign = &ReflectedTypeTemplateSizeOfAlign<Type>;
-            pTypeInfo->vtable.pConstructor = &ReflectedTypeTemplateConstructor<Type>;
-            pTypeInfo->vtable.pDestructor = &ReflectedTypeTemplateDestructor<Type>;
-            pTypeInfo->vtable.pCopy = &ReflectedTypeTemplateCopy<Type>;
-            pTypeInfo->vtable.pMove = &ReflectedTypeTemplateMove<Type>;
-            pTypeInfo->vtable.containerVTable.pClear = &ReflectedTypeContainerClear<Type>;
-            pTypeInfo->vtable.containerVTable.pSize = &ReflectedTypeContainerSize<Type>;
-            pTypeInfo->vtable.containerVTable.pBegin = &ReflectedTypeContainerBegin<Type>;
-            pTypeInfo->vtable.containerVTable.pEnd = &ReflectedTypeContainerEnd<Type>;
-            pTypeInfo->vtable.containerVTable.pInsert = &ReflectedTypeSetInsert<Type>;
-            pTypeInfo->vtable.containerVTable.pErase = &ReflectedTypeContainerErase<Type>;
-            pTypeInfo->vtable.containerVTable.pFind = &ReflectedTypeSetFind<Type>;
-            pTypeInfo->vtable.iteratorVTable.pGetValue = &ReflectedTypeContainerIteratorGetValue<Type>;
-            pTypeInfo->vtable.iteratorVTable.pOffset = &ReflectedTypeContainerIteratorOffset<Type>;
+        static void Determine(TypeInfoKey& key, TypeInfoVTable& vtable) {
+            key.kind = TypeKind::FlatHashSet;
+            key.pNext[0] = TypeOf<T>();
+            FillSetVTable<SR_HTYPES_NS::FlatHashSet<T>, T>(vtable);
         }
     };
 }

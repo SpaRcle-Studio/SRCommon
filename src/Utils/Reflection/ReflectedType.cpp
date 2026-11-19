@@ -8,139 +8,12 @@
 #include <Utils/Types/UnicodeString.h>
 #include <Utils/FileSystem/Path.h>
 #include <Utils/Memory/Allocator.h>
-#include <Utils/Platform/Platform.h>
-#include <Utils/Platform/Stacktrace.h>
-#include <Utils/Common/Breakpoint.h>
 #include <Utils/TypeTraits/Factory.h>
 #include <Utils/Common/EnumReflector.h>
 
+#include <Enum/ReflectedCategoryType.hpp>
+
 namespace SR_UTILS_NS::Reflection {
-    Value ReflectedContainerIterator::operator*() const {
-        auto pNonConstContainer = const_cast<Value*>(pContainer);
-        ReflectedValue reflectedValue = pContainer->GetTypeInfo().vtable.iteratorVTable.pGetValue(pNonConstContainer->GetStorage(), *this);
-        Value value;
-        value.m_storage = reflectedValue;
-        value.m_typeInfo = CopyTypeInfo(pContainer->GetTypeInfo().pNext[0]);
-        return value;
-    }
-
-    Value ReflectedContainerIterator::operator->() const {
-        return **this;
-    }
-
-    ReflectedContainerIterator ReflectedContainerIterator::operator+(int64_t offset) const {
-        ReflectedContainerIterator pIt = pContainer->GetTypeInfo().vtable.iteratorVTable.pOffset(*this, offset);
-        pIt.pContainer = pContainer;
-        return pIt;
-    }
-
-    ReflectedContainerIterator& ReflectedContainerIterator::operator++() {
-        *this = *this + 1;
-        return *this;
-    }
-
-    ReflectedContainerIterator ReflectedContainerIterator::operator-(int64_t offset) const {
-        ReflectedContainerIterator pIt = pContainer->GetTypeInfo().vtable.iteratorVTable.pOffset(*this, -offset);
-        pIt.pContainer = pContainer;
-        return pIt;
-    }
-
-    ReflectedContainerIterator& ReflectedContainerIterator::operator--() {
-        *this = *this - 1;
-        return *this;
-    }
-
-    bool ReflectedContainerIterator::operator==(const ReflectedContainerIterator& other) const noexcept {
-        return memcmp(data, other.data, sizeof(data)) == 0;
-    }
-
-    bool ReflectedContainerIterator::operator!=(const ReflectedContainerIterator& other) const noexcept {
-        return !(*this == other);
-    }
-
-    Value ReflectedContainerIterator::First() const {
-        if (!IsMapIterator()) {
-            return **this;
-        }
-        auto&& iteratorValue = (**this);
-        auto&& pairVTable = pContainer->GetTypeInfo().pNext[0]->vtable.pairVTable;
-        ReflectedValue reflectedValue = pairVTable.pGetPairValue(iteratorValue.GetStorage(), true);
-        Value value;
-        value.m_storage = reflectedValue;
-        value.m_typeInfo = CopyTypeInfo(pContainer->GetTypeInfo().pNext[0]->pNext[0]);
-        return value;
-    }
-
-    Value ReflectedContainerIterator::Second() const {
-        if (!IsMapIterator()) {
-            SRHalt("ReflectedContainerIterator::Second() : not a map iterator!");
-            return Value();
-        }
-        auto&& iteratorValue = (**this);
-        auto&& pairVTable = pContainer->GetTypeInfo().pNext[0]->vtable.pairVTable;
-        ReflectedValue reflectedValue = pairVTable.pGetPairValue(iteratorValue.GetStorage(), false);
-        Value value;
-        value.m_storage = reflectedValue;
-        value.m_typeInfo = CopyTypeInfo(pContainer->GetTypeInfo().pNext[0]->pNext[1]);
-        return value;
-    }
-
-    bool ReflectedContainerIterator::IsMapIterator() const {
-        return pContainer && pContainer->GetTypeInfo().category == ReflectedCategoryType::Container &&
-               (pContainer->GetTypeInfo().detailedType == "Map" || pContainer->GetTypeInfo().detailedType == "FlatHashMap");
-    }
-
-    bool IsReflectedTypeSigned(StringView type) {
-        return type == "int8" || type == "int16" || type == "int32" || type == "int64";
-    }
-
-    bool IsReflectedTypeIntegral(StringView type) {
-        return type == "int8" || type == "int16" || type == "int32" || type == "int64" ||
-               type == "uint8" || type == "uint16" || type == "uint32" || type == "uint64";
-    }
-
-    SizeType GetReflectedTypeSize(StringView type) {
-        if (type == "int8" || type == "uint8") {
-            return sizeof(uint8_t);
-        }
-        else if (type == "int16" || type == "uint16") {
-            return sizeof(uint16_t);
-        }
-        else if (type == "int32" || type == "uint32") {
-            return sizeof(uint32_t);
-        }
-        else if (type == "int64" || type == "uint64") {
-            return sizeof(uint64_t);
-        }
-        else if (type == "float") {
-            return sizeof(float);
-        }
-        else if (type == "double") {
-            return sizeof(double);
-        }
-        else if (type == "bool") {
-            return sizeof(bool);
-        }
-        else if (type == "Path") {
-            return sizeof(Path);
-        }
-        else if (type == "String") {
-            return sizeof(String);
-        }
-        else if (type == "StringView") {
-            return sizeof(StringView);
-        }
-        else if (type == "StringAtom") {
-            return sizeof(StringAtom);
-        }
-        else if (type == "UnicodeString") {
-            return sizeof(UnicodeString);
-        }
-
-        SRHalt("GetReflectedTypeSize() : unknown reflected type: {}", type);
-        return 0;
-    }
-
     ReflectedValue ReflectedValue::MakeFromPointer(void* pData, ReflectedValueStorageType storageType) {
         ReflectedValue value;
         value.SetData(pData);
@@ -188,220 +61,575 @@ namespace SR_UTILS_NS::Reflection {
         *std::launder(reinterpret_cast<void**>(storage.data)) = pData;
     }
 
-    bool TypeInfo::operator==(const TypeInfo& other) const noexcept {
-        if (category != other.category || detailedType != other.detailedType || detailedSize != other.detailedSize) {
-            return false;
+    /// ================================================================================================================
+
+    ReflectedCategoryType GetTypeKindCategory(const TypeKind kind) {
+        if (IsTypeKindArithmetic(kind)) {
+            return ReflectedCategoryType::Arithmetic;
         }
-        for (size_t i = 0; i < 2; ++i) {
-            if (bool(pNext[i]) != bool(other.pNext[i])) {
-                return false;
-            }
-            if (pNext[i] && *pNext[i] != *other.pNext[i]) {
-                return false;
-            }
+        if (IsTypeKindString(kind)) {
+            return ReflectedCategoryType::String;
         }
-        return true;
+        if (IsTypeKindContainer(kind)) {
+            return ReflectedCategoryType::Container;
+        }
+
+        switch (kind) {
+            case TypeKind::Value: return ReflectedCategoryType::Value;
+            case TypeKind::Enum: return ReflectedCategoryType::Enum;
+            case TypeKind::Object: return ReflectedCategoryType::Object;
+            case TypeKind::MathVector: return ReflectedCategoryType::MathVector;
+            case TypeKind::MathRect: return ReflectedCategoryType::MathRect;
+            case TypeKind::MathSize: return ReflectedCategoryType::MathSize;
+            case TypeKind::Color:
+            case TypeKind::Quaternion:
+            case TypeKind::AABB:
+            case TypeKind::Matrix3x3:
+            case TypeKind::Matrix4x4:
+                return ReflectedCategoryType::MathObject;
+            default:
+                return ReflectedCategoryType::Unknown;
+        }
     }
 
-    bool TypeInfo::operator!=(const TypeInfo& other) const noexcept {
-        return !(*this == other);
+    /// Имя нешаблонного встроенного вида, пустое для enum, SRClass, математических шаблонов и контейнеров
+    StringView GetTypeKindBuiltinName(const TypeKind kind) {
+        switch (kind) {
+            case TypeKind::Unknown: return "Unknown";
+            case TypeKind::Value: return "Value";
+            case TypeKind::Bool: return "bool";
+            case TypeKind::Int8: return "int8";
+            case TypeKind::Int16: return "int16";
+            case TypeKind::Int32: return "int32";
+            case TypeKind::Int64: return "int64";
+            case TypeKind::UInt8: return "uint8";
+            case TypeKind::UInt16: return "uint16";
+            case TypeKind::UInt32: return "uint32";
+            case TypeKind::UInt64: return "uint64";
+            case TypeKind::Float: return "float";
+            case TypeKind::Double: return "double";
+            case TypeKind::String: return "String";
+            case TypeKind::StringView: return "StringView";
+            case TypeKind::StringAtom: return "StringAtom";
+            case TypeKind::Path: return "Path";
+            case TypeKind::UnicodeString: return "UnicodeString";
+            case TypeKind::Color: return "FColor";
+            case TypeKind::Quaternion: return "Quaternion";
+            case TypeKind::AABB: return "AABB";
+            case TypeKind::Matrix3x3: return "Matrix3x3";
+            case TypeKind::Matrix4x4: return "Matrix4x4";
+            default: return StringView();
+        }
     }
 
-    SRHashType TypeInfo::GetHash() const noexcept {
-        SRHashType hash = static_cast<SRHashType>(category);
-        hash = HashCombine(hash, detailedSize);
-        hash = HashCombine(hash, detailedType);
-        for (size_t i = 0; i < 2; ++i) {
-            if (pNext[i]) {
-                hash = HashCombine(hash, pNext[i]->GetHash());
+    StringAtom GetTypeKindTemplateName(const TypeKind kind) {
+        static const StringAtom vectorName = "Vector";
+        static const StringAtom setName = "Set";
+        static const StringAtom flatHashSetName = "FlatHashSet";
+        static const StringAtom mapName = "Map";
+        static const StringAtom flatHashMapName = "FlatHashMap";
+        static const StringAtom pairName = "Pair";
+        static const StringAtom optionalName = "Optional";
+        static const StringAtom sharedPtrName = "SharedPtr";
+        static const StringAtom entityRefName = "EntityRef";
+        static const StringAtom resourceRefName = "ResourceRef";
+
+        switch (kind) {
+            case TypeKind::Vector: return vectorName;
+            case TypeKind::Set: return setName;
+            case TypeKind::FlatHashSet: return flatHashSetName;
+            case TypeKind::Map: return mapName;
+            case TypeKind::FlatHashMap: return flatHashMapName;
+            case TypeKind::Pair: return pairName;
+            case TypeKind::Optional: return optionalName;
+            case TypeKind::SharedPtr: return sharedPtrName;
+            case TypeKind::EntityRef: return entityRefName;
+            case TypeKind::ResourceRef: return resourceRefName;
+            default: return StringAtom();
+        }
+    }
+
+    TypeKind FindTypeKindByTemplateName(const StringView name) {
+        for (auto kind = static_cast<uint8_t>(TypeKind::Vector); kind <= static_cast<uint8_t>(TypeKind::ResourceRef); ++kind) {
+            if (GetTypeKindTemplateName(static_cast<TypeKind>(kind)) == name) {
+                return static_cast<TypeKind>(kind);
             }
+        }
+        return TypeKind::Unknown;
+    }
+
+    struct MathTypePrefix {
+        TypeKind scalar;
+        StringView prefix;
+    };
+
+    /// Совпадает с псевдонимами из Utils/Math: FVector3, USVector2, IRect, USize2 и т.д.
+    static constexpr MathTypePrefix MATH_TYPE_PREFIXES[] = {
+        { TypeKind::Float, "F" },
+        { TypeKind::Double, "D" },
+        { TypeKind::Int16, "S" },
+        { TypeKind::Int32, "I" },
+        { TypeKind::Int64, "L" },
+        { TypeKind::UInt16, "US" },
+        { TypeKind::UInt32, "U" },
+        { TypeKind::UInt64, "UL" },
+        { TypeKind::Bool, "B" },
+    };
+
+    StringView GetMathTypePrefix(const TypeInfo* pScalar) {
+        if (!pScalar) {
+            return StringView();
+        }
+        for (auto&& prefix : MATH_TYPE_PREFIXES) {
+            if (prefix.scalar == pScalar->kind) {
+                return prefix.prefix;
+            }
+        }
+        return StringView();
+    }
+
+    /// Разбирает имена математических типов вида FVector3, USRect, ISize2
+    bool ParseMathTypeName(const StringView name, TypeInfoKey& key) {
+        for (auto&& prefix : MATH_TYPE_PREFIXES) {
+            if (name.size() <= prefix.prefix.size() || name.substr(0, prefix.prefix.size()) != prefix.prefix) {
+                continue;
+            }
+
+            const StringView rest = name.substr(prefix.prefix.size());
+
+            if (rest == "Rect") {
+                key.kind = TypeKind::MathRect;
+            }
+            else if (rest == "Size") {
+                key.kind = TypeKind::MathSize;
+                key.detailedSize = 1;
+            }
+            else if (rest == "Size2") {
+                key.kind = TypeKind::MathSize;
+                key.detailedSize = 2;
+            }
+            else if (rest.size() == 7 && rest.substr(0, 6) == "Vector" && rest[6] >= '2' && rest[6] <= '6') {
+                key.kind = TypeKind::MathVector;
+                key.detailedSize = static_cast<uint8_t>(rest[6] - '0');
+            }
+            else {
+                continue;
+            }
+
+            key.pNext[0] = GetScalarTypeInfo(prefix.scalar);
+            return true;
+        }
+
+        return false;
+    }
+
+    String BuildTypeName(const TypeInfoKey& key) {
+        if (key.kind == TypeKind::Enum || key.kind == TypeKind::Object) {
+            return String(key.name.ToStringView());
+        }
+
+        if (IsTypeKindContainer(key.kind)) {
+            String name(GetTypeKindTemplateName(key.kind).ToStringView());
+            name += '<';
+
+            const TypeInfo* pArguments[2] = { key.pNext[0], key.pNext[1] };
+            if (IsTypeKindMapLike(key.kind) && key.pNext[0] && key.pNext[0]->kind == TypeKind::Pair) {
+                pArguments[0] = key.pNext[0]->pNext[0];
+                pArguments[1] = key.pNext[0]->pNext[1];
+            }
+
+            for (uint32_t i = 0; i < 2; ++i) {
+                if (!pArguments[i]) {
+                    continue;
+                }
+                if (i > 0) {
+                    name += ", ";
+                }
+                name += pArguments[i]->name.ToStringView();
+            }
+
+            name += '>';
+            return name;
+        }
+
+        if (key.kind == TypeKind::MathVector || key.kind == TypeKind::MathRect || key.kind == TypeKind::MathSize) {
+            const StringView prefix = GetMathTypePrefix(key.pNext[0]);
+            String name(prefix.empty() ? StringView("?") : prefix);
+
+            if (key.kind == TypeKind::MathVector) {
+                FormatTo(name, "Vector{}", key.detailedSize);
+            }
+            else if (key.kind == TypeKind::MathRect) {
+                name += "Rect";
+            }
+            else {
+                name += key.detailedSize == 2 ? "Size2" : "Size";
+            }
+
+            return name;
+        }
+
+        return String(GetTypeKindBuiltinName(key.kind));
+    }
+
+    /// ================================================================================================================
+
+    SRHashType TypeInfoKey::GetHash() const noexcept {
+        SRHashType hash = HashCombine(static_cast<uint64_t>(kind));
+        hash = HashCombine(static_cast<uint64_t>(detailedSize), hash);
+        hash = HashCombine(name.GetHash(), hash);
+        for (auto&& pNextType : pNext) {
+            hash = HashCombine(reinterpret_cast<uintptr_t>(pNextType), hash);
         }
         return hash;
     }
 
-    template<typename T, typename Enable = void> struct DetermineTypeName {
-        static StringAtom Get() { return StringAtom(); }
-    };
-
-    template<> struct DetermineTypeName<int8_t> { static StringAtom Get() { static StringAtom name = "int8"; return name; } };
-    template<> struct DetermineTypeName<int16_t> { static StringAtom Get() { static StringAtom name = "int16"; return name; } };
-    template<> struct DetermineTypeName<int32_t> { static StringAtom Get() { static StringAtom name = "int32"; return name; } };
-    template<> struct DetermineTypeName<int64_t> { static StringAtom Get() { static StringAtom name = "int64"; return name; } };
-    template<> struct DetermineTypeName<uint8_t> { static StringAtom Get() { static StringAtom name = "uint8"; return name; } };
-    template<> struct DetermineTypeName<uint16_t> { static StringAtom Get() { static StringAtom name = "uint16"; return name; } };
-    template<> struct DetermineTypeName<uint32_t> { static StringAtom Get() { static StringAtom name = "uint32"; return name; } };
-    template<> struct DetermineTypeName<uint64_t> { static StringAtom Get() { static StringAtom name = "uint64"; return name; } };
-    template<> struct DetermineTypeName<float> { static StringAtom Get() { static StringAtom name = "float"; return name; } };
-    template<> struct DetermineTypeName<double> { static StringAtom Get() { static StringAtom name = "double"; return name; } };
-    template<> struct DetermineTypeName<bool> { static StringAtom Get() { static StringAtom name = "bool"; return name; } };
-    template<> struct DetermineTypeName<Path> { static StringAtom Get() { static StringAtom name = "Path"; return name; } };
-    template<> struct DetermineTypeName<String> { static StringAtom Get() { static StringAtom name = "String"; return name; } };
-    template<> struct DetermineTypeName<StringView> { static StringAtom Get() { static StringAtom name = "StringView"; return name; } };
-    template<> struct DetermineTypeName<StringAtom> { static StringAtom Get() { static StringAtom name = "StringAtom"; return name; } };
-    template<> struct DetermineTypeName<UnicodeString> { static StringAtom Get() { static StringAtom name = "UnicodeString"; return name; } };
-    template<> struct DetermineTypeName<SR_MATH_NS::FColor> { static StringAtom Get() { static StringAtom name = "Color"; return name; } };
-    template<> struct DetermineTypeName<SR_MATH_NS::Quaternion> { static StringAtom Get() { static StringAtom name = "Quaternion"; return name; } };
-    template<> struct DetermineTypeName<SR_MATH_NS::AABB> { static StringAtom Get() { static StringAtom name = "AABB"; return name; } };
-    template<> struct DetermineTypeName<SR_MATH_NS::Matrix3x3> { static StringAtom Get() { static StringAtom name = "Matrix3x3"; return name; } };
-    template<> struct DetermineTypeName<SR_MATH_NS::Matrix4x4> { static StringAtom Get() { static StringAtom name = "Matrix4x4"; return name; } };
-    template<> struct DetermineTypeName<SR_MATH_NS::FRect> { static StringAtom Get() { static StringAtom name = "float"; return name; } };
-    template<> struct DetermineTypeName<SR_MATH_NS::IRect> { static StringAtom Get() { static StringAtom name = "int32"; return name; } };
-    template<> struct DetermineTypeName<SR_MATH_NS::URect> { static StringAtom Get() { static StringAtom name = "uint32"; return name; } };
-    template<> struct DetermineTypeName<SR_MATH_NS::USRect> { static StringAtom Get() { static StringAtom name = "uint16"; return name; } };
-    template<> struct DetermineTypeName<SR_MATH_NS::FSize> { static StringAtom Get() { static StringAtom name = "float"; return name; } };
-    template<> struct DetermineTypeName<SR_MATH_NS::USize> { static StringAtom Get() { static StringAtom name = "uint32"; return name; } };
-    template<> struct DetermineTypeName<SR_MATH_NS::ISize> { static StringAtom Get() { static StringAtom name = "int32"; return name; } };
-    template<> struct DetermineTypeName<SR_MATH_NS::FSize2> { static StringAtom Get() { static StringAtom name = "float"; return name; } };
-    template<> struct DetermineTypeName<SR_MATH_NS::USize2> { static StringAtom Get() { static StringAtom name = "uint32"; return name; } };
-    template<> struct DetermineTypeName<SR_MATH_NS::ISize2> { static StringAtom Get() { static StringAtom name = "int32"; return name; } };
-    template<> struct DetermineTypeName<SR_MATH_NS::FVector2> { static StringAtom Get() { static StringAtom name = "float"; return name; } };
-    template<> struct DetermineTypeName<SR_MATH_NS::FVector3> { static StringAtom Get() { static StringAtom name = "float"; return name; } };
-    template<> struct DetermineTypeName<SR_MATH_NS::FVector4> { static StringAtom Get() { static StringAtom name = "float"; return name; } };
-    template<> struct DetermineTypeName<SR_MATH_NS::FVector6> { static StringAtom Get() { static StringAtom name = "float"; return name; } };
-    template<> struct DetermineTypeName<SR_MATH_NS::IVector2> { static StringAtom Get() { static StringAtom name = "int32"; return name; } };
-    template<> struct DetermineTypeName<SR_MATH_NS::IVector3> { static StringAtom Get() { static StringAtom name = "int32"; return name; } };
-    template<> struct DetermineTypeName<SR_MATH_NS::IVector4> { static StringAtom Get() { static StringAtom name = "int32"; return name; } };
-    template<> struct DetermineTypeName<SR_MATH_NS::IVector6> { static StringAtom Get() { static StringAtom name = "int32"; return name; } };
-    template<> struct DetermineTypeName<SR_MATH_NS::UVector2> { static StringAtom Get() { static StringAtom name = "uint32"; return name; } };
-    template<> struct DetermineTypeName<SR_MATH_NS::UVector3> { static StringAtom Get() { static StringAtom name = "uint32"; return name; } };
-    template<> struct DetermineTypeName<SR_MATH_NS::UVector4> { static StringAtom Get() { static StringAtom name = "uint32"; return name; } };
-    template<> struct DetermineTypeName<SR_MATH_NS::UVector6> { static StringAtom Get() { static StringAtom name = "uint32"; return name; } };
-    template<> struct DetermineTypeName<SR_MATH_NS::BVector2> { static StringAtom Get() { static StringAtom name = "bool"; return name; } };
-    template<> struct DetermineTypeName<SR_MATH_NS::BVector3> { static StringAtom Get() { static StringAtom name = "bool"; return name; } };
-    template<> struct DetermineTypeName<SR_MATH_NS::BVector4> { static StringAtom Get() { static StringAtom name = "bool"; return name; } };
-    template<> struct DetermineTypeName<SR_MATH_NS::BVector6> { static StringAtom Get() { static StringAtom name = "bool"; return name; } };
-
-    struct TypeInfoPool {
-        SR_UTILS_NS::MonotonicAllocator allocator;
-        Vector<TypeInfo*> available;
-        uint64_t allocatedCount = 0;
-        std::mutex mutex;
-        TypeInfoPool()
-            : allocator(sizeof(TypeInfo) * 1024)
-            , available()
-        { }
-        ~TypeInfoPool() = default;
-    };
-
-    TypeInfoPool* g_typeInfoPool = nullptr;
-
-    TypeInfo* AllocateTypeInfo() {
-        std::lock_guard<std::mutex> lock(g_typeInfoPool->mutex);
-
-        if (g_typeInfoPool->available.empty()) {
-            g_typeInfoPool->allocatedCount++;
-            auto pTypeInfo = g_typeInfoPool->allocator.Allocate(sizeof(TypeInfo), alignof(TypeInfo));
-            new (pTypeInfo) TypeInfo();
-            return reinterpret_cast<TypeInfo*>(pTypeInfo);
-        }
-        else {
-            auto pTypeInfo = g_typeInfoPool->available.back();
-            memset(pTypeInfo, 0, sizeof(TypeInfo));
-            g_typeInfoPool->available.pop_back();
-            return pTypeInfo;
-        }
+    bool TypeInfoKey::operator==(const TypeInfoKey& other) const noexcept {
+        return kind == other.kind &&
+               detailedSize == other.detailedSize &&
+               name == other.name &&
+               pNext[0] == other.pNext[0] &&
+               pNext[1] == other.pNext[1];
     }
 
-    void FreeTypeInfo(TypeInfo* pTypeInfo) {
-        if (!pTypeInfo) {
-            return;
-        }
-        if (!g_typeInfoPool) SR_UNLIKELY_ATTRIBUTE {
-            SR_PLATFORM_NS::WriteConsoleError("FreeTypeInfo() : TypeInfoPool is not initialized! Stack trace: {}"_format(GetStacktrace()));
-            Breakpoint();
-            return;
-        }
-        FreeTypeInfo(pTypeInfo->pNext[0]);
-        FreeTypeInfo(pTypeInfo->pNext[1]);
-        std::lock_guard<std::mutex> lock(g_typeInfoPool->mutex);
-        g_typeInfoPool->available.push_back(pTypeInfo);
+    bool TypeInfoKey::operator!=(const TypeInfoKey& other) const noexcept {
+        return !(*this == other);
     }
 
-    TypeInfo* CopyTypeInfo(TypeInfo* pTypeInfo) {
-        if (!pTypeInfo) {
+    TypeInfoKey TypeInfo::GetKey() const noexcept {
+        TypeInfoKey key;
+        key.kind = kind;
+        key.detailedSize = detailedSize;
+        if (kind == TypeKind::Enum || kind == TypeKind::Object) {
+            key.name = name;
+        }
+        key.pNext[0] = pNext[0];
+        key.pNext[1] = pNext[1];
+        return key;
+    }
+
+    const TypeInfo* TypeInfo::GetArgument(const uint32_t index) const noexcept {
+        if (index >= 2) {
             return nullptr;
         }
-        auto pNewTypeInfo = AllocateTypeInfo();
-        *pNewTypeInfo = *pTypeInfo;
-        pNewTypeInfo->pNext[0] = CopyTypeInfo(pTypeInfo->pNext[0]);
-        pNewTypeInfo->pNext[1] = CopyTypeInfo(pTypeInfo->pNext[1]);
-        return pNewTypeInfo;
+        if (IsMapLike()) {
+            return pNext[0] ? pNext[0]->pNext[index] : nullptr;
+        }
+        return pNext[index];
     }
 
-    using SwithTypeRegisterFunc = void(*)(bool);
-    SwithTypeRegisterFunc g_switchTypeRegisterFuncs[] = {
-        &SwitchTypeRegister<Path>,
-        &SwitchTypeRegister<String>,
-        &SwitchTypeRegister<StringView>,
-        &SwitchTypeRegister<StringAtom>,
-        &SwitchTypeRegister<UnicodeString>,
-        &SwitchTypeRegister<SR_MATH_NS::FColor>,
-        &SwitchTypeRegister<SR_MATH_NS::Quaternion>,
-        &SwitchTypeRegister<SR_MATH_NS::AABB>,
-        &SwitchTypeRegister<SR_MATH_NS::Matrix3x3>,
-        &SwitchTypeRegister<SR_MATH_NS::Matrix4x4>,
-        &SwitchTypeRegister<SR_MATH_NS::FRect>,
-        &SwitchTypeRegister<SR_MATH_NS::IRect>,
-        &SwitchTypeRegister<SR_MATH_NS::URect>,
-        &SwitchTypeRegister<SR_MATH_NS::USRect>,
-        &SwitchTypeRegister<SR_MATH_NS::FSize>,
-        &SwitchTypeRegister<SR_MATH_NS::USize>,
-        &SwitchTypeRegister<SR_MATH_NS::ISize>,
-        &SwitchTypeRegister<SR_MATH_NS::FSize2>,
-        &SwitchTypeRegister<SR_MATH_NS::USize2>,
-        &SwitchTypeRegister<SR_MATH_NS::ISize2>,
-        &SwitchTypeRegister<SR_MATH_NS::FVector2>,
-        &SwitchTypeRegister<SR_MATH_NS::FVector3>,
-        &SwitchTypeRegister<SR_MATH_NS::FVector4>,
-        &SwitchTypeRegister<SR_MATH_NS::FVector6>,
-        &SwitchTypeRegister<SR_MATH_NS::IVector2>,
-        &SwitchTypeRegister<SR_MATH_NS::IVector3>,
-        &SwitchTypeRegister<SR_MATH_NS::IVector4>,
-        &SwitchTypeRegister<SR_MATH_NS::IVector6>,
-        &SwitchTypeRegister<SR_MATH_NS::UVector2>,
-        &SwitchTypeRegister<SR_MATH_NS::UVector3>,
-        &SwitchTypeRegister<SR_MATH_NS::UVector4>,
-        &SwitchTypeRegister<SR_MATH_NS::UVector6>,
-        &SwitchTypeRegister<SR_MATH_NS::BVector2>,
-        &SwitchTypeRegister<SR_MATH_NS::BVector3>,
-        &SwitchTypeRegister<SR_MATH_NS::BVector4>,
-        &SwitchTypeRegister<SR_MATH_NS::BVector6>,
+    /// ================================================================================================================
 
-        &SwitchTypeRegister<Vector<Path>>,
-        &SwitchTypeRegister<Vector<String>>,
-        &SwitchTypeRegister<Vector<StringAtom>>
+    struct TypeInfoRegistry {
+        TypeInfoRegistry() {
+            unknownType.name = GetTypeKindBuiltinName(TypeKind::Unknown);
+            byName[unknownType.name] = &unknownType;
+        }
+
+        std::mutex mutex;
+        SR_HTYPES_NS::FlatHashMap<SRHashType, Vector<TypeInfo*>> buckets;
+        SR_HTYPES_NS::FlatHashMap<StringAtom, TypeInfo*> byName;
+        Vector<TypeInfo*> types;
+        TypeInfo unknownType;
+    };
+
+    TypeInfoRegistry& GetTypeInfoRegistry() {
+        /// намеренно не уничтожается: интернированные типы используются вплоть до статических деструкторов
+        static TypeInfoRegistry* pRegistry = new TypeInfoRegistry();
+        return *pRegistry;
+    }
+
+    TypeInfoKey NormalizeTypeInfoKey(const TypeInfoKey& key) {
+        TypeInfoKey normalized = key;
+        if (key.kind != TypeKind::Enum && key.kind != TypeKind::Object) {
+            normalized.name = StringAtom();
+        }
+        return normalized;
+    }
+
+    TypeInfo* FindTypeInfoLocked(TypeInfoRegistry& registry, const TypeInfoKey& key, const SRHashType hash) {
+        auto&& pIt = registry.buckets.find(hash);
+        if (pIt == registry.buckets.end()) {
+            return nullptr;
+        }
+
+        for (auto&& pTypeInfo : pIt->second) {
+            if (pTypeInfo->GetKey() == key) {
+                return pTypeInfo;
+            }
+        }
+
+        return nullptr;
+    }
+
+    TypeInfo* GetOrCreateTypeInfoLocked(TypeInfoRegistry& registry, const TypeInfoKey& key) {
+        const SRHashType hash = key.GetHash();
+        if (auto&& pExisting = FindTypeInfoLocked(registry, key, hash)) {
+            return pExisting;
+        }
+
+        auto&& pTypeInfo = new TypeInfo();
+        pTypeInfo->kind = key.kind;
+        pTypeInfo->category = GetTypeKindCategory(key.kind);
+        pTypeInfo->detailedSize = key.detailedSize;
+        pTypeInfo->name = BuildTypeName(key);
+        pTypeInfo->pNext[0] = key.pNext[0];
+        pTypeInfo->pNext[1] = key.pNext[1];
+        pTypeInfo->hash = hash;
+
+        registry.buckets[hash].emplace_back(pTypeInfo);
+        registry.types.emplace_back(pTypeInfo);
+
+        /// enum и SRClass с одинаковым именем: по имени находится первый зарегистрированный
+        if (registry.byName.find(pTypeInfo->name) == registry.byName.end()) {
+            registry.byName[pTypeInfo->name] = pTypeInfo;
+        }
+
+        return pTypeInfo;
+    }
+
+    void ResolveTypeInfoLocked(TypeInfo& typeInfo, const TypeInfoVTable& vtable, const void* pOwnerModule) {
+        typeInfo.vtable = vtable;
+        typeInfo.pOwnerModule = pOwnerModule;
+        typeInfo.isResolved.store(true, std::memory_order_release);
+    }
+
+    void UnresolveTypeInfoLocked(TypeInfo& typeInfo) {
+        typeInfo.isResolved.store(false, std::memory_order_release);
+        typeInfo.vtable = TypeInfoVTable();
+        typeInfo.pOwnerModule = nullptr;
+    }
+
+    bool IsTypeInfoContainsObject(const TypeInfo* pTypeInfo, const StringAtom className) { /// NOLINT(misc-no-recursion)
+        if (!pTypeInfo) {
+            return false;
+        }
+        if (pTypeInfo->kind == TypeKind::Object && pTypeInfo->name == className) {
+            return true;
+        }
+        return IsTypeInfoContainsObject(pTypeInfo->pNext[0], className) || IsTypeInfoContainsObject(pTypeInfo->pNext[1], className);
+    }
+
+    const TypeInfo* GetUnknownTypeInfo() {
+        return &GetTypeInfoRegistry().unknownType;
+    }
+
+    const TypeInfo* InternTypeInfo(const TypeInfoKey& key, const TypeInfoVTable& vtable, const void* pOwnerModule) {
+        const TypeInfoKey normalized = NormalizeTypeInfoKey(key);
+
+        auto&& registry = GetTypeInfoRegistry();
+        std::lock_guard lock(registry.mutex);
+
+        auto&& pTypeInfo = GetOrCreateTypeInfoLocked(registry, normalized);
+        if (!pTypeInfo->IsResolved()) {
+            ResolveTypeInfoLocked(*pTypeInfo, vtable, pOwnerModule);
+        }
+
+        return pTypeInfo;
+    }
+
+    const TypeInfo* ResolveTypeInfo(const TypeInfoKey& key) {
+        if (key.kind == TypeKind::Unknown) {
+            return GetUnknownTypeInfo();
+        }
+
+        const TypeInfoKey normalized = NormalizeTypeInfoKey(key);
+
+        auto&& registry = GetTypeInfoRegistry();
+        std::lock_guard lock(registry.mutex);
+
+        auto&& pTypeInfo = GetOrCreateTypeInfoLocked(registry, normalized);
+        if (!pTypeInfo->IsResolved()) {
+            TypeInfoVTable vtable;
+            if (ResolveBuiltinVTable(normalized, vtable)) {
+                ResolveTypeInfoLocked(*pTypeInfo, vtable, SR_REFLECTION_MODULE_ID);
+            }
+        }
+
+        return pTypeInfo;
+    }
+
+    const TypeInfo* ResolveTemplateTypeInfo(const TypeKind kind, const TypeInfo* pFirst, const TypeInfo* pSecond) {
+        const uint32_t argumentsCount = GetTypeKindArgumentsCount(kind);
+        if (argumentsCount == 0) {
+            SRHalt("ResolveTemplateTypeInfo() : type kind {} is not a template!", static_cast<uint32_t>(kind));
+            return GetUnknownTypeInfo();
+        }
+
+        TypeInfoKey key;
+        key.kind = kind;
+
+        if (IsTypeKindMapLike(kind)) {
+            key.pNext[0] = ResolveTemplateTypeInfo(TypeKind::Pair, pFirst, pSecond);
+        }
+        else {
+            key.pNext[0] = pFirst ? pFirst : GetUnknownTypeInfo();
+            if (argumentsCount > 1) {
+                key.pNext[1] = pSecond ? pSecond : GetUnknownTypeInfo();
+            }
+        }
+
+        return ResolveTypeInfo(key);
+    }
+
+    const TypeInfo* FindTypeInfoByName(const StringAtom name) {
+        if (name.empty()) {
+            return nullptr;
+        }
+
+        auto&& registry = GetTypeInfoRegistry();
+
+        const TypeInfo* pFound = nullptr;
+        {
+            std::lock_guard lock(registry.mutex);
+            if (auto&& pIt = registry.byName.find(name); pIt != registry.byName.end()) {
+                pFound = pIt->second;
+            }
+        }
+
+        if (pFound) {
+            /// enum или SRClass мог быть снят при выгрузке модуля, повторное разрешение вернёт ему vtable
+            if (!pFound->IsResolved() && (pFound->kind == TypeKind::Enum || pFound->kind == TypeKind::Object)) {
+                return ResolveTypeInfo(pFound->GetKey());
+            }
+            return pFound;
+        }
+
+        TypeInfoKey key;
+        if (EnumReflectorManager::Instance().TryGetReflector(name)) {
+            key.kind = TypeKind::Enum;
+            key.name = name;
+        }
+        else if (Factory::Instance().GetType(name)) {
+            key.kind = TypeKind::Object;
+            key.name = name;
+        }
+        else if (!ParseMathTypeName(name.ToStringView(), key)) {
+            return nullptr;
+        }
+
+        return ResolveTypeInfo(key);
+    }
+
+    const TypeInfo* GetScalarTypeInfo(const TypeKind kind) {
+        switch (kind) {
+            case TypeKind::Bool: return TypeOf<bool>();
+            case TypeKind::Int8: return TypeOf<int8_t>();
+            case TypeKind::Int16: return TypeOf<int16_t>();
+            case TypeKind::Int32: return TypeOf<int32_t>();
+            case TypeKind::Int64: return TypeOf<int64_t>();
+            case TypeKind::UInt8: return TypeOf<uint8_t>();
+            case TypeKind::UInt16: return TypeOf<uint16_t>();
+            case TypeKind::UInt32: return TypeOf<uint32_t>();
+            case TypeKind::UInt64: return TypeOf<uint64_t>();
+            case TypeKind::Float: return TypeOf<float_t>();
+            case TypeKind::Double: return TypeOf<double_t>();
+            default: return nullptr;
+        }
+    }
+
+    void UnregisterModuleTypes(const void* pOwnerModule) {
+        SR_TRACY_ZONE;
+
+        auto&& registry = GetTypeInfoRegistry();
+        std::lock_guard lock(registry.mutex);
+
+        for (auto&& pTypeInfo : registry.types) {
+            if (pTypeInfo->IsResolved() && pTypeInfo->pOwnerModule == pOwnerModule) {
+                UnresolveTypeInfoLocked(*pTypeInfo);
+            }
+        }
+    }
+
+    void UnregisterObjectTypes(const StringAtom className) {
+        SR_TRACY_ZONE;
+
+        auto&& registry = GetTypeInfoRegistry();
+        std::lock_guard lock(registry.mutex);
+
+        for (auto&& pTypeInfo : registry.types) {
+            if (pTypeInfo->IsResolved() && IsTypeInfoContainsObject(pTypeInfo, className)) {
+                UnresolveTypeInfoLocked(*pTypeInfo);
+            }
+        }
+    }
+
+    uint64_t GetTypeInfoCount() {
+        auto&& registry = GetTypeInfoRegistry();
+        std::lock_guard lock(registry.mutex);
+        return registry.types.size();
+    }
+
+    /// ================================================================================================================
+
+    using PreregisterTypeFn = const TypeInfo*(*)();
+    PreregisterTypeFn g_preregisteredTypes[] = {
+        &TypeOf<Value>,
+        &TypeOf<int8_t>,
+        &TypeOf<int16_t>,
+        &TypeOf<int32_t>,
+        &TypeOf<int64_t>,
+        &TypeOf<uint8_t>,
+        &TypeOf<uint16_t>,
+        &TypeOf<uint32_t>,
+        &TypeOf<uint64_t>,
+        &TypeOf<float>,
+        &TypeOf<double>,
+        &TypeOf<bool>,
+        &TypeOf<Path>,
+        &TypeOf<String>,
+        &TypeOf<StringView>,
+        &TypeOf<StringAtom>,
+        &TypeOf<UnicodeString>,
+        &TypeOf<SR_MATH_NS::FColor>,
+        &TypeOf<SR_MATH_NS::Quaternion>,
+        &TypeOf<SR_MATH_NS::AABB>,
+        &TypeOf<SR_MATH_NS::Matrix3x3>,
+        &TypeOf<SR_MATH_NS::Matrix4x4>,
+        &TypeOf<SR_MATH_NS::FRect>,
+        &TypeOf<SR_MATH_NS::IRect>,
+        &TypeOf<SR_MATH_NS::URect>,
+        &TypeOf<SR_MATH_NS::USRect>,
+        &TypeOf<SR_MATH_NS::FSize>,
+        &TypeOf<SR_MATH_NS::USize>,
+        &TypeOf<SR_MATH_NS::ISize>,
+        &TypeOf<SR_MATH_NS::FSize2>,
+        &TypeOf<SR_MATH_NS::USize2>,
+        &TypeOf<SR_MATH_NS::ISize2>,
+        &TypeOf<SR_MATH_NS::FVector2>,
+        &TypeOf<SR_MATH_NS::FVector3>,
+        &TypeOf<SR_MATH_NS::FVector4>,
+        &TypeOf<SR_MATH_NS::FVector6>,
+        &TypeOf<SR_MATH_NS::SVector2>,
+        &TypeOf<SR_MATH_NS::IVector2>,
+        &TypeOf<SR_MATH_NS::IVector3>,
+        &TypeOf<SR_MATH_NS::IVector4>,
+        &TypeOf<SR_MATH_NS::IVector6>,
+        &TypeOf<SR_MATH_NS::UVector2>,
+        &TypeOf<SR_MATH_NS::USVector2>,
+        &TypeOf<SR_MATH_NS::UVector3>,
+        &TypeOf<SR_MATH_NS::UVector4>,
+        &TypeOf<SR_MATH_NS::UVector6>,
+        &TypeOf<SR_MATH_NS::BVector2>,
+        &TypeOf<SR_MATH_NS::BVector3>,
+        &TypeOf<SR_MATH_NS::BVector4>,
+        &TypeOf<SR_MATH_NS::BVector6>,
+
+        &TypeOf<Vector<Path>>,
+        &TypeOf<Vector<String>>,
+        &TypeOf<Vector<StringAtom>>
     };
 
     void InitReflection() {
         SR_TRACY_ZONE;
 
-        if (!g_typeInfoPool) SR_UNLIKELY_ATTRIBUTE {
-            g_typeInfoPool = new TypeInfoPool();
-        }
-
-        for (auto&& func : g_switchTypeRegisterFuncs) {
-            func(true);
+        /// типы, которые могут прийти из сериализованных данных раньше, чем их запросит C++ код
+        for (auto&& pPreregister : g_preregisteredTypes) {
+            pPreregister();
         }
     }
 
-    void DeInitReflection() {
-        SR_TRACY_ZONE;
-
-        if (!g_typeInfoPool) {
-            return;
-        }
-
-        for (auto&& func : g_switchTypeRegisterFuncs) {
-            func(false);
-        }
-
-        if (auto&& size = GetVTableSize(); size > 0) {
-            SR_PLATFORM_NS::WriteConsoleError("DeInitReflection() : TypeInfoVTable is not empty! Count: {}"_format(size));
-        }
-
-        delete g_typeInfoPool;
-        g_typeInfoPool = nullptr;
-    }
+    /// ================================================================================================================
 
     void GetTypeNamesByCategory(ReflectedCategoryType category, Vector<StringAtom>& outNames) {
         SR_TRACY_ZONE;
@@ -436,15 +664,15 @@ namespace SR_UTILS_NS::Reflection {
                 break;
             case ReflectedCategoryType::MathObject:
                 outNames = {
-                    "Color", "Quaternion", "AABB", "Matrix3x3", "Matrix4x4"
+                    "FColor", "Quaternion", "AABB", "Matrix3x3", "Matrix4x4"
                 };
                 break;
             case ReflectedCategoryType::Value:
                 break;
             case ReflectedCategoryType::Container:
-                outNames = {
-                    "FlatHashSet", "FlatHashMap", "Vector", "Set", "Map", "SharedPtr", "EntityRef", "ResourceRef", "Pair", "Optional"
-                };
+                for (auto kind = static_cast<uint8_t>(TypeKind::Vector); kind <= static_cast<uint8_t>(TypeKind::ResourceRef); ++kind) {
+                    outNames.emplace_back(GetTypeKindTemplateName(static_cast<TypeKind>(kind)));
+                }
                 break;
             case ReflectedCategoryType::Object: {
                 auto&& factory = Factory::Instance();
@@ -468,7 +696,7 @@ namespace SR_UTILS_NS::Reflection {
         }
     }
 
-    void GetTypeDetailedSizes(ReflectedCategoryType category, StringAtom detailedType, Vector<uint8_t>& outSizes) {
+    void GetTypeDetailedSizes(ReflectedCategoryType category, Vector<uint8_t>& outSizes) {
         outSizes.clear();
         switch (category) {
             case ReflectedCategoryType::MathVector:
@@ -486,21 +714,77 @@ namespace SR_UTILS_NS::Reflection {
         }
     }
 
-    SizeType GetReflectedTypeNextCount(ReflectedCategoryType category, StringView type) {
-        if (category != ReflectedCategoryType::Container) {
-            return 0;
+    StringAtom GetTypeCategoryItemName(const TypeInfo& typeInfo) {
+        switch (typeInfo.kind) {
+            case TypeKind::MathVector:
+            case TypeKind::MathRect:
+            case TypeKind::MathSize:
+                return typeInfo.pNext[0] ? typeInfo.pNext[0]->name : StringAtom();
+            case TypeKind::Unknown:
+            case TypeKind::Value:
+                return StringAtom();
+            default:
+                break;
         }
 
-        if (type == "FlatHashSet" || type == "Vector" || type == "Set" || type == "SharedPtr" || type == "EntityRef" || type == "ResourceRef" || type == "Optional") {
-            return 1;
+        if (typeInfo.IsContainer()) {
+            return GetTypeKindTemplateName(typeInfo.kind);
         }
 
-        if (type == "FlatHashMap" || type == "Map" || type == "Pair") {
-            return 2;
-        }
-
-        return 0;
+        return typeInfo.name;
     }
+
+    const TypeInfo* ResolveTypeInfoByCategory(const ReflectedCategoryType category, const StringAtom itemName, const uint8_t detailedSize) {
+        TypeInfoKey key;
+
+        switch (category) {
+            case ReflectedCategoryType::Value:
+                return TypeOf<Value>();
+            case ReflectedCategoryType::Arithmetic:
+            case ReflectedCategoryType::String:
+            case ReflectedCategoryType::MathObject: {
+                auto&& pTypeInfo = FindTypeInfoByName(itemName);
+                return pTypeInfo ? pTypeInfo : GetUnknownTypeInfo();
+            }
+            case ReflectedCategoryType::Enum:
+                key.kind = TypeKind::Enum;
+                key.name = itemName;
+                return ResolveTypeInfo(key);
+            case ReflectedCategoryType::Object:
+                key.kind = TypeKind::Object;
+                key.name = itemName;
+                return ResolveTypeInfo(key);
+            case ReflectedCategoryType::MathVector:
+                key.kind = TypeKind::MathVector;
+                break;
+            case ReflectedCategoryType::MathRect:
+                key.kind = TypeKind::MathRect;
+                break;
+            case ReflectedCategoryType::MathSize:
+                key.kind = TypeKind::MathSize;
+                break;
+            case ReflectedCategoryType::Container: {
+                const TypeKind kind = FindTypeKindByTemplateName(itemName.ToStringView());
+                if (kind == TypeKind::Unknown) {
+                    return GetUnknownTypeInfo();
+                }
+                return ResolveTemplateTypeInfo(kind, GetUnknownTypeInfo(), GetUnknownTypeInfo());
+            }
+            default:
+                return GetUnknownTypeInfo();
+        }
+
+        key.pNext[0] = FindTypeInfoByName(itemName);
+        if (!key.pNext[0]) {
+            return GetUnknownTypeInfo();
+        }
+        if (key.kind != TypeKind::MathRect) {
+            key.detailedSize = detailedSize;
+        }
+        return ResolveTypeInfo(key);
+    }
+
+    /// ================================================================================================================
 
     template<typename T> void ReflectedTypeInlineCopy(const ReflectedValue& from, ReflectedValue& to) {
         auto pFrom = reinterpret_cast<const T*>(from.GetData());
@@ -533,55 +817,6 @@ namespace SR_UTILS_NS::Reflection {
         }
     }
 
-    template<typename T> void ReflectedTypeCopy(ReflectedValue& from, ReflectedValue& to) {
-        auto pFrom = static_cast<T*>(from.GetData());
-        auto pTo = static_cast<T*>(to.GetData());
-        *pTo = *pFrom;
-    }
-
-    template<typename T> void ReflectedTypeMove(ReflectedValue& from, ReflectedValue& to) {
-        auto pFrom = static_cast<T*>(from.GetData());
-        auto pTo = static_cast<T*>(to.GetData());
-        *pTo = std::move(*pFrom);
-    }
-
-    template<typename T> SizeType ReflectedTypeSize(ReflectedValue& value) {
-        auto pContainer = static_cast<T*>(value.GetData());
-        return pContainer->size();
-    }
-
-    template<typename T> void ReflectedTypeResize(ReflectedValue& value, SizeType size, bool reserve) {
-        auto pContainer = static_cast<T*>(value.GetData());
-        if (reserve)  {
-            pContainer->reserve(size);
-        }
-        else {
-            pContainer->resize(size);
-        }
-    }
-
-    template<typename T> void ReflectedTypeClear(ReflectedValue& value) {
-        auto pContainer = static_cast<T*>(value.GetData());
-        pContainer->clear();
-    }
-
-    ReflectedValue ArithmeticTypeConstructor(IAllocator&) {
-        return ReflectedValue::MakeFromNumeric(uint64_t(), ReflectedValueStorageType::Embedded);
-    }
-
-    void ArithmeticTypeCopy(const ReflectedValue& from, ReflectedValue& to) {
-        void* pFrom = const_cast<void*>(from.GetData());
-        void* pTo = to.GetData();
-        memcpy(pTo, pFrom, sizeof(uint64_t));
-    }
-
-    void ArithmeticTypeMove(ReflectedValue& from, ReflectedValue& to) {
-        void* pFrom = from.GetData();
-        void* pTo = to.GetData();
-        memcpy(pTo, pFrom, sizeof(uint64_t));
-        memset(pFrom, 0, sizeof(uint64_t));
-    }
-
     void ValueCopy(const ReflectedValue& from, ReflectedValue& to) {
         auto pFrom = static_cast<const Value*>(from.GetData());
         auto pTo = static_cast<Value*>(to.GetData());
@@ -594,189 +829,149 @@ namespace SR_UTILS_NS::Reflection {
         *pTo = std::move(*pFrom);
     }
 
-    template<typename T> void DetermineTypeInfoRegistered(TypeInfo* pTypeInfo) {
-        pTypeInfo->vtable.pSizeOfAlign = &ReflectedTypeTemplateSizeOfAlign<T>;
+    template<typename T> constexpr TypeKind GetArithmeticTypeKind() {
+        if constexpr (std::is_same_v<T, bool>) { return TypeKind::Bool; }
+        else if constexpr (std::is_floating_point_v<T> && sizeof(T) == sizeof(float_t)) { return TypeKind::Float; }
+        else if constexpr (std::is_floating_point_v<T>) { return TypeKind::Double; }
+        else if constexpr (std::is_signed_v<T> && sizeof(T) == 1) { return TypeKind::Int8; }
+        else if constexpr (std::is_signed_v<T> && sizeof(T) == 2) { return TypeKind::Int16; }
+        else if constexpr (std::is_signed_v<T> && sizeof(T) == 4) { return TypeKind::Int32; }
+        else if constexpr (std::is_signed_v<T>) { return TypeKind::Int64; }
+        else if constexpr (sizeof(T) == 1) { return TypeKind::UInt8; }
+        else if constexpr (sizeof(T) == 2) { return TypeKind::UInt16; }
+        else if constexpr (sizeof(T) == 4) { return TypeKind::UInt32; }
+        else { return TypeKind::UInt64; }
+    }
+
+    template<typename T> void FillInlineVTable(TypeInfoVTable& vtable) {
+        vtable.pConstructor = &ReflectedTypeConstructor<T>;
+        vtable.pDestructor = &ReflectedTypeDestructor<T>;
+        vtable.pCopy = &ReflectedTypeInlineCopy<T>;
+        vtable.pMove = &ReflectedTypeInlineMove<T>;
+    }
+
+    template<typename T> void DetermineTypeInfoRegistered(TypeInfoKey& key, TypeInfoVTable& vtable) {
+        vtable.pSizeOfAlign = &ReflectedTypeTemplateSizeOfAlign<T>;
 
         if constexpr (std::is_same_v<T, Value>) {
-            pTypeInfo->category = ReflectedCategoryType::Value;
-            pTypeInfo->detailedType = DetermineTypeName<T>::Get();
-            pTypeInfo->vtable.pConstructor = &ReflectedTypeConstructor<T>;
-            pTypeInfo->vtable.pDestructor = &ReflectedTypeDestructor<T>;
-            pTypeInfo->vtable.pCopy = &ValueCopy;
-            pTypeInfo->vtable.pMove = &ValueMove;
+            key.kind = TypeKind::Value;
+            vtable.pConstructor = &ReflectedTypeConstructor<T>;
+            vtable.pDestructor = &ReflectedTypeDestructor<T>;
+            vtable.pCopy = &ValueCopy;
+            vtable.pMove = &ValueMove;
         }
-        else if constexpr (std::is_integral_v<T> || std::is_floating_point_v<T> || std::is_same_v<T, bool>) {
-            pTypeInfo->category = ReflectedCategoryType::Arithmetic;
-            pTypeInfo->detailedType = DetermineTypeName<T>::Get();
-            pTypeInfo->vtable.pConstructor = &ArithmeticTypeConstructor;
-            pTypeInfo->vtable.pCopy = &ArithmeticTypeCopy;
-            pTypeInfo->vtable.pMove = &ArithmeticTypeMove;
+        else if constexpr (std::is_integral_v<T> || std::is_floating_point_v<T>) {
+            key.kind = GetArithmeticTypeKind<T>();
+            FillArithmeticVTable(vtable, sizeof(T));
         }
-        else if constexpr (std::is_same_v<T, SR_MATH_NS::Quaternion> || std::is_same_v<T, SR_MATH_NS::Matrix3x3> ||
-            std::is_same_v<T, SR_MATH_NS::Matrix4x4> || std::is_same_v<T, SR_MATH_NS::FColor> || std::is_same_v<T, SR_MATH_NS::AABB>
-        ) {
-            pTypeInfo->category = ReflectedCategoryType::MathObject;
-            pTypeInfo->detailedType = DetermineTypeName<T>::Get();
-            pTypeInfo->vtable.pConstructor = &ReflectedTypeConstructor<T>;
-            pTypeInfo->vtable.pDestructor = &ReflectedTypeDestructor<T>;
-            pTypeInfo->vtable.pCopy = &ReflectedTypeInlineCopy<T>;
-            pTypeInfo->vtable.pMove = &ReflectedTypeInlineMove<T>;
+        else if constexpr (std::is_same_v<T, SR_MATH_NS::FColor>) {
+            key.kind = TypeKind::Color;
+            FillInlineVTable<T>(vtable);
+        }
+        else if constexpr (std::is_same_v<T, SR_MATH_NS::Quaternion>) {
+            key.kind = TypeKind::Quaternion;
+            FillInlineVTable<T>(vtable);
+        }
+        else if constexpr (std::is_same_v<T, SR_MATH_NS::AABB>) {
+            key.kind = TypeKind::AABB;
+            FillInlineVTable<T>(vtable);
+        }
+        else if constexpr (std::is_same_v<T, SR_MATH_NS::Matrix3x3>) {
+            key.kind = TypeKind::Matrix3x3;
+            FillInlineVTable<T>(vtable);
+        }
+        else if constexpr (std::is_same_v<T, SR_MATH_NS::Matrix4x4>) {
+            key.kind = TypeKind::Matrix4x4;
+            FillInlineVTable<T>(vtable);
         }
         else if constexpr (IsTypeMathRectTemplateV<T>) {
-            pTypeInfo->category = ReflectedCategoryType::MathRect;
-            pTypeInfo->detailedType = DetermineTypeName<typename T::ValueType>::Get();
-            pTypeInfo->vtable.pConstructor = &ReflectedTypeConstructor<T>;
-            pTypeInfo->vtable.pDestructor = &ReflectedTypeDestructor<T>;
-            pTypeInfo->vtable.pCopy = &ReflectedTypeInlineCopy<T>;
-            pTypeInfo->vtable.pMove = &ReflectedTypeInlineMove<T>;
+            key.kind = TypeKind::MathRect;
+            key.pNext[0] = TypeOf<typename T::ValueType>();
+            FillInlineVTable<T>(vtable);
         }
         else if constexpr (IsTypeMathSizeTemplateV<T>) {
-            pTypeInfo->category = ReflectedCategoryType::MathSize;
-            pTypeInfo->detailedType = DetermineTypeName<typename T::ValueType>::Get();
-            pTypeInfo->detailedSize = T::Dimensions();
-            pTypeInfo->vtable.pConstructor = &ReflectedTypeConstructor<T>;
-            pTypeInfo->vtable.pDestructor = &ReflectedTypeDestructor<T>;
-            pTypeInfo->vtable.pCopy = &ReflectedTypeInlineCopy<T>;
-            pTypeInfo->vtable.pMove = &ReflectedTypeInlineMove<T>;
+            key.kind = TypeKind::MathSize;
+            key.pNext[0] = TypeOf<typename T::ValueType>();
+            key.detailedSize = T::Dimensions();
+            FillInlineVTable<T>(vtable);
         }
         else if constexpr (IsTypeMathVectorTemplateV<T>) {
-            pTypeInfo->category = ReflectedCategoryType::MathVector;
-            pTypeInfo->detailedType = DetermineTypeName<typename T::ValueType>::Get();
-            pTypeInfo->detailedSize = T::Dimensions();
-            pTypeInfo->vtable.pConstructor = &ReflectedTypeConstructor<T>;
-            pTypeInfo->vtable.pDestructor = &ReflectedTypeDestructor<T>;
-            pTypeInfo->vtable.pCopy = &ReflectedTypeInlineCopy<T>;
-            pTypeInfo->vtable.pMove = &ReflectedTypeInlineMove<T>;
+            key.kind = TypeKind::MathVector;
+            key.pNext[0] = TypeOf<typename T::ValueType>();
+            key.detailedSize = T::Dimensions();
+            FillInlineVTable<T>(vtable);
         }
         else if constexpr (std::is_same_v<T, String> || std::is_same_v<T, StringView> || std::is_same_v<T, StringAtom> || std::is_same_v<T, Path> || std::is_same_v<T, UnicodeString>) {
-            pTypeInfo->category = ReflectedCategoryType::String;
-            pTypeInfo->detailedType = DetermineTypeName<T>::Get();
-            pTypeInfo->vtable.pConstructor = &ReflectedTypeConstructor<T>;
-            pTypeInfo->vtable.pDestructor = &ReflectedTypeDestructor<T>;
-            pTypeInfo->vtable.pCopy = &ReflectedTypeInlineCopy<T>;
-            pTypeInfo->vtable.pMove = &ReflectedTypeInlineMove<T>;
-            pTypeInfo->vtable.containerVTable.pSize = &ReflectedTypeSize<T>;
-            if constexpr (std::is_same_v<T, String> || std::is_same_v<T, UnicodeString>) {
-                pTypeInfo->vtable.containerVTable.pResize = &ReflectedTypeResize<T>;
+            if constexpr (std::is_same_v<T, String>) {
+                key.kind = TypeKind::String;
             }
-            pTypeInfo->vtable.containerVTable.pClear = &ReflectedTypeClear<T>;
+            else if constexpr (std::is_same_v<T, StringView>) {
+                key.kind = TypeKind::StringView;
+            }
+            else if constexpr (std::is_same_v<T, StringAtom>) {
+                key.kind = TypeKind::StringAtom;
+            }
+            else if constexpr (std::is_same_v<T, Path>) {
+                key.kind = TypeKind::Path;
+            }
+            else {
+                key.kind = TypeKind::UnicodeString;
+            }
+            FillInlineVTable<T>(vtable);
         }
         else {
             static_assert(AlwaysFalseV<T>, "Type is not registered for reflection");
         }
     }
 
-    template void DetermineTypeInfoRegistered<Value>(TypeInfo* pTypeInfo);
-    template void DetermineTypeInfoRegistered<int8_t>(TypeInfo* pTypeInfo);
-    template void DetermineTypeInfoRegistered<int16_t>(TypeInfo* pTypeInfo);
-    template void DetermineTypeInfoRegistered<int32_t>(TypeInfo* pTypeInfo);
-    template void DetermineTypeInfoRegistered<int64_t>(TypeInfo* pTypeInfo);
-    template void DetermineTypeInfoRegistered<uint8_t>(TypeInfo* pTypeInfo);
-    template void DetermineTypeInfoRegistered<uint16_t>(TypeInfo* pTypeInfo);
-    template void DetermineTypeInfoRegistered<uint32_t>(TypeInfo* pTypeInfo);
-    template void DetermineTypeInfoRegistered<uint64_t>(TypeInfo* pTypeInfo);
-    template void DetermineTypeInfoRegistered<float>(TypeInfo* pTypeInfo);
-    template void DetermineTypeInfoRegistered<double>(TypeInfo* pTypeInfo);
-    template void DetermineTypeInfoRegistered<bool>(TypeInfo* pTypeInfo);
-    template void DetermineTypeInfoRegistered<Path>(TypeInfo* pTypeInfo);
-    template void DetermineTypeInfoRegistered<String>(TypeInfo* pTypeInfo);
-    template void DetermineTypeInfoRegistered<StringView>(TypeInfo* pTypeInfo);
-    template void DetermineTypeInfoRegistered<StringAtom>(TypeInfo* pTypeInfo);
-    template void DetermineTypeInfoRegistered<UnicodeString>(TypeInfo* pTypeInfo);
-    template void DetermineTypeInfoRegistered<SR_MATH_NS::FColor>(TypeInfo* pTypeInfo);
-    template void DetermineTypeInfoRegistered<SR_MATH_NS::Quaternion>(TypeInfo* pTypeInfo);
-    template void DetermineTypeInfoRegistered<SR_MATH_NS::AABB>(TypeInfo* pTypeInfo);
-    template void DetermineTypeInfoRegistered<SR_MATH_NS::Matrix3x3>(TypeInfo* pTypeInfo);
-    template void DetermineTypeInfoRegistered<SR_MATH_NS::Matrix4x4>(TypeInfo* pTypeInfo);
-    template void DetermineTypeInfoRegistered<SR_MATH_NS::FRect>(TypeInfo* pTypeInfo);
-    template void DetermineTypeInfoRegistered<SR_MATH_NS::IRect>(TypeInfo* pTypeInfo);
-    template void DetermineTypeInfoRegistered<SR_MATH_NS::URect>(TypeInfo* pTypeInfo);
-    template void DetermineTypeInfoRegistered<SR_MATH_NS::USRect>(TypeInfo* pTypeInfo);
-    template void DetermineTypeInfoRegistered<SR_MATH_NS::FSize>(TypeInfo* pTypeInfo);
-    template void DetermineTypeInfoRegistered<SR_MATH_NS::USize>(TypeInfo* pTypeInfo);
-    template void DetermineTypeInfoRegistered<SR_MATH_NS::ISize>(TypeInfo* pTypeInfo);
-    template void DetermineTypeInfoRegistered<SR_MATH_NS::FSize2>(TypeInfo* pTypeInfo);
-    template void DetermineTypeInfoRegistered<SR_MATH_NS::USize2>(TypeInfo* pTypeInfo);
-    template void DetermineTypeInfoRegistered<SR_MATH_NS::ISize2>(TypeInfo* pTypeInfo);
-    template void DetermineTypeInfoRegistered<SR_MATH_NS::FVector2>(TypeInfo* pTypeInfo);
-    template void DetermineTypeInfoRegistered<SR_MATH_NS::FVector3>(TypeInfo* pTypeInfo);
-    template void DetermineTypeInfoRegistered<SR_MATH_NS::FVector4>(TypeInfo* pTypeInfo);
-    template void DetermineTypeInfoRegistered<SR_MATH_NS::FVector6>(TypeInfo* pTypeInfo);
-    template void DetermineTypeInfoRegistered<SR_MATH_NS::SVector2>(TypeInfo* pTypeInfo);
-    template void DetermineTypeInfoRegistered<SR_MATH_NS::IVector2>(TypeInfo* pTypeInfo);
-    template void DetermineTypeInfoRegistered<SR_MATH_NS::IVector3>(TypeInfo* pTypeInfo);
-    template void DetermineTypeInfoRegistered<SR_MATH_NS::IVector4>(TypeInfo* pTypeInfo);
-    template void DetermineTypeInfoRegistered<SR_MATH_NS::IVector6>(TypeInfo* pTypeInfo);
-    template void DetermineTypeInfoRegistered<SR_MATH_NS::UVector2>(TypeInfo* pTypeInfo);
-    template void DetermineTypeInfoRegistered<SR_MATH_NS::USVector2>(TypeInfo* pTypeInfo);
-    template void DetermineTypeInfoRegistered<SR_MATH_NS::UVector3>(TypeInfo* pTypeInfo);
-    template void DetermineTypeInfoRegistered<SR_MATH_NS::UVector4>(TypeInfo* pTypeInfo);
-    template void DetermineTypeInfoRegistered<SR_MATH_NS::UVector6>(TypeInfo* pTypeInfo);
-    template void DetermineTypeInfoRegistered<SR_MATH_NS::BVector2>(TypeInfo* pTypeInfo);
-    template void DetermineTypeInfoRegistered<SR_MATH_NS::BVector3>(TypeInfo* pTypeInfo);
-    template void DetermineTypeInfoRegistered<SR_MATH_NS::BVector4>(TypeInfo* pTypeInfo);
-    template void DetermineTypeInfoRegistered<SR_MATH_NS::BVector6>(TypeInfo* pTypeInfo);
-
-    bool Test() {
-        Vector<uint32_t> values = { 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024 };
-        Optional<int> optionalValue = 42;
-        auto valuesRef = Reflection::ReflectedValue::MakeFromPointer(
-            &values,
-            Reflection::ReflectedValueStorageType::Reference
-        );
-
-        auto valueRef = Reflection::Value::CreateRef(values);
-        Vector<uint32_t>* pValues2 = valueRef.Cast<Vector<uint32_t>>();
-
-        Set<String> stringSet = { "Hello", "World", "!" };
-        Map<String, int> stringMap = { {"One", 1}, {"Two", 2}, {"Three", 3} };
-        auto mapRef = Reflection::ReflectedValue::MakeFromPointer(
-            &stringMap,
-            Reflection::ReflectedValueStorageType::Reference
-        );
-
-        String string = "Two";
-
-        IAllocator* pAllocator = IAllocator::GetDefaultAllocator();
-        TypeInfo* types[19] {
-            DetermineTypeInfoAlloc(values),
-            DetermineTypeInfoAlloc(optionalValue),
-            DetermineTypeInfoAlloc(2),
-            DetermineTypeInfoAlloc(true),
-            DetermineTypeInfoAlloc(String()),
-            DetermineTypeInfoAlloc(StringView()),
-            DetermineTypeInfoAlloc(StringAtom()),
-            DetermineTypeInfoAlloc(UnicodeString()),
-            DetermineTypeInfoAlloc(Path()),
-            DetermineTypeInfoAlloc(SR_MATH_NS::FSize2()),
-            DetermineTypeInfoAlloc(SR_MATH_NS::FRect()),
-            DetermineTypeInfoAlloc(SR_MATH_NS::Quaternion()),
-            DetermineTypeInfoAlloc(SR_MATH_NS::Matrix4x4()),
-            DetermineTypeInfoAlloc(SR_MATH_NS::UVector6()),
-            DetermineTypeInfoAlloc(ReflectedCategoryType()),
-            DetermineTypeInfoAlloc(Serializable()),
-            DetermineTypeInfoAlloc(SRClass()),
-            DetermineTypeInfoAlloc(stringSet),
-            DetermineTypeInfoAlloc(stringMap)
-        };
-
-        Vector<uint32_t>* pValues = reinterpret_cast<Vector<uint32_t>*>(valuesRef.GetData());
-        types[0]->vtable.containerVTable.pResize(valuesRef, 4, false);
-        ReflectedContainerIterator mapIt = types[18]->vtable.containerVTable.pFind(mapRef, ReflectedValue::MakeFromPointer(&string, ReflectedValueStorageType::Reference));
-        ReflectedValue mapValue = types[18]->vtable.iteratorVTable.pGetValue(mapRef, mapIt);
-        auto value = *static_cast<Pair<String, int>*>(mapValue.GetData());
-
-        Value vectorVal = Value::Create(Vector<int32_t>{ 1, 2, 3, 4, 5 });
-        Value vectorValCopy = vectorVal;
-        auto* vec = vectorVal.Cast<Vector<int32_t>>();
-        vectorVal = {};
-        auto* vecCopy = vectorValCopy.Cast<Vector<int32_t>>();
-
-        Value bigTypeVal = Value::Create(SR_MATH_NS::Matrix4x4());
-        auto* bigType = bigTypeVal.Cast<SR_MATH_NS::Matrix4x4>();
-        bigTypeVal = {};
-
-        return true;
-    }
-    //bool b = Test();
+    template void DetermineTypeInfoRegistered<Value>(TypeInfoKey& key, TypeInfoVTable& vtable);
+    template void DetermineTypeInfoRegistered<int8_t>(TypeInfoKey& key, TypeInfoVTable& vtable);
+    template void DetermineTypeInfoRegistered<int16_t>(TypeInfoKey& key, TypeInfoVTable& vtable);
+    template void DetermineTypeInfoRegistered<int32_t>(TypeInfoKey& key, TypeInfoVTable& vtable);
+    template void DetermineTypeInfoRegistered<int64_t>(TypeInfoKey& key, TypeInfoVTable& vtable);
+    template void DetermineTypeInfoRegistered<uint8_t>(TypeInfoKey& key, TypeInfoVTable& vtable);
+    template void DetermineTypeInfoRegistered<uint16_t>(TypeInfoKey& key, TypeInfoVTable& vtable);
+    template void DetermineTypeInfoRegistered<uint32_t>(TypeInfoKey& key, TypeInfoVTable& vtable);
+    template void DetermineTypeInfoRegistered<uint64_t>(TypeInfoKey& key, TypeInfoVTable& vtable);
+    template void DetermineTypeInfoRegistered<float>(TypeInfoKey& key, TypeInfoVTable& vtable);
+    template void DetermineTypeInfoRegistered<double>(TypeInfoKey& key, TypeInfoVTable& vtable);
+    template void DetermineTypeInfoRegistered<bool>(TypeInfoKey& key, TypeInfoVTable& vtable);
+    template void DetermineTypeInfoRegistered<Path>(TypeInfoKey& key, TypeInfoVTable& vtable);
+    template void DetermineTypeInfoRegistered<String>(TypeInfoKey& key, TypeInfoVTable& vtable);
+    template void DetermineTypeInfoRegistered<StringView>(TypeInfoKey& key, TypeInfoVTable& vtable);
+    template void DetermineTypeInfoRegistered<StringAtom>(TypeInfoKey& key, TypeInfoVTable& vtable);
+    template void DetermineTypeInfoRegistered<UnicodeString>(TypeInfoKey& key, TypeInfoVTable& vtable);
+    template void DetermineTypeInfoRegistered<SR_MATH_NS::FColor>(TypeInfoKey& key, TypeInfoVTable& vtable);
+    template void DetermineTypeInfoRegistered<SR_MATH_NS::Quaternion>(TypeInfoKey& key, TypeInfoVTable& vtable);
+    template void DetermineTypeInfoRegistered<SR_MATH_NS::AABB>(TypeInfoKey& key, TypeInfoVTable& vtable);
+    template void DetermineTypeInfoRegistered<SR_MATH_NS::Matrix3x3>(TypeInfoKey& key, TypeInfoVTable& vtable);
+    template void DetermineTypeInfoRegistered<SR_MATH_NS::Matrix4x4>(TypeInfoKey& key, TypeInfoVTable& vtable);
+    template void DetermineTypeInfoRegistered<SR_MATH_NS::FRect>(TypeInfoKey& key, TypeInfoVTable& vtable);
+    template void DetermineTypeInfoRegistered<SR_MATH_NS::IRect>(TypeInfoKey& key, TypeInfoVTable& vtable);
+    template void DetermineTypeInfoRegistered<SR_MATH_NS::URect>(TypeInfoKey& key, TypeInfoVTable& vtable);
+    template void DetermineTypeInfoRegistered<SR_MATH_NS::USRect>(TypeInfoKey& key, TypeInfoVTable& vtable);
+    template void DetermineTypeInfoRegistered<SR_MATH_NS::FSize>(TypeInfoKey& key, TypeInfoVTable& vtable);
+    template void DetermineTypeInfoRegistered<SR_MATH_NS::USize>(TypeInfoKey& key, TypeInfoVTable& vtable);
+    template void DetermineTypeInfoRegistered<SR_MATH_NS::ISize>(TypeInfoKey& key, TypeInfoVTable& vtable);
+    template void DetermineTypeInfoRegistered<SR_MATH_NS::FSize2>(TypeInfoKey& key, TypeInfoVTable& vtable);
+    template void DetermineTypeInfoRegistered<SR_MATH_NS::USize2>(TypeInfoKey& key, TypeInfoVTable& vtable);
+    template void DetermineTypeInfoRegistered<SR_MATH_NS::ISize2>(TypeInfoKey& key, TypeInfoVTable& vtable);
+    template void DetermineTypeInfoRegistered<SR_MATH_NS::FVector2>(TypeInfoKey& key, TypeInfoVTable& vtable);
+    template void DetermineTypeInfoRegistered<SR_MATH_NS::FVector3>(TypeInfoKey& key, TypeInfoVTable& vtable);
+    template void DetermineTypeInfoRegistered<SR_MATH_NS::FVector4>(TypeInfoKey& key, TypeInfoVTable& vtable);
+    template void DetermineTypeInfoRegistered<SR_MATH_NS::FVector6>(TypeInfoKey& key, TypeInfoVTable& vtable);
+    template void DetermineTypeInfoRegistered<SR_MATH_NS::SVector2>(TypeInfoKey& key, TypeInfoVTable& vtable);
+    template void DetermineTypeInfoRegistered<SR_MATH_NS::IVector2>(TypeInfoKey& key, TypeInfoVTable& vtable);
+    template void DetermineTypeInfoRegistered<SR_MATH_NS::IVector3>(TypeInfoKey& key, TypeInfoVTable& vtable);
+    template void DetermineTypeInfoRegistered<SR_MATH_NS::IVector4>(TypeInfoKey& key, TypeInfoVTable& vtable);
+    template void DetermineTypeInfoRegistered<SR_MATH_NS::IVector6>(TypeInfoKey& key, TypeInfoVTable& vtable);
+    template void DetermineTypeInfoRegistered<SR_MATH_NS::UVector2>(TypeInfoKey& key, TypeInfoVTable& vtable);
+    template void DetermineTypeInfoRegistered<SR_MATH_NS::USVector2>(TypeInfoKey& key, TypeInfoVTable& vtable);
+    template void DetermineTypeInfoRegistered<SR_MATH_NS::UVector3>(TypeInfoKey& key, TypeInfoVTable& vtable);
+    template void DetermineTypeInfoRegistered<SR_MATH_NS::UVector4>(TypeInfoKey& key, TypeInfoVTable& vtable);
+    template void DetermineTypeInfoRegistered<SR_MATH_NS::UVector6>(TypeInfoKey& key, TypeInfoVTable& vtable);
+    template void DetermineTypeInfoRegistered<SR_MATH_NS::BVector2>(TypeInfoKey& key, TypeInfoVTable& vtable);
+    template void DetermineTypeInfoRegistered<SR_MATH_NS::BVector3>(TypeInfoKey& key, TypeInfoVTable& vtable);
+    template void DetermineTypeInfoRegistered<SR_MATH_NS::BVector4>(TypeInfoKey& key, TypeInfoVTable& vtable);
+    template void DetermineTypeInfoRegistered<SR_MATH_NS::BVector6>(TypeInfoKey& key, TypeInfoVTable& vtable);
 }
