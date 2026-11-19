@@ -83,6 +83,16 @@ namespace SR_UTILS_NS {
                 });
             }
         });
+
+        auto&& pPropertiesObject = GetPropertiesObject();
+        if (pPropertiesObject && pPropertiesObject != this) {
+            pPropertiesObject->GetMeta()->ForEachProperty([&](const Reflection::Property& property, uint64_t) {
+                auto value = property.Get(pPropertiesObject);
+                if (ReplaceEntityReferences(value.AsRef(), replaceMap)) {
+                    property.Set(pPropertiesObject, value);
+                }
+            });
+        }
     }
 
     bool Entity::HasEditorFlags(EditorFlags flags) const noexcept {

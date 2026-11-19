@@ -43,6 +43,10 @@ namespace SR_UTILS_NS {
 
         virtual void CloneTo(SRClass& clone) const;
 
+        SR_NODISCARD virtual SRClass* GetPropertiesObject() const {
+            return const_cast<SRClass*>(this);
+        }
+
         /// SRClass и Serializable не могут иметь базовый оператор, так как иначе, наследники не определившие его,
         /// будут считаться равными.
         /// SR_NODISCARD bool operator==(const SRClass&) const = default;

@@ -55,7 +55,7 @@ namespace SR_UTILS_NS {
         void SetPrefabSourceId(EntityId id) noexcept { m_prefabSourceId = id; }
         void UnregisterEntity();
 
-        void OnEntityIdReplaced(const EntityReplaceMap& replaceMap);
+        virtual void OnEntityIdReplaced(const EntityReplaceMap& replaceMap);
 
         void OnPostLoad() override;
         void CloneTo(SRClass& clone) const override;

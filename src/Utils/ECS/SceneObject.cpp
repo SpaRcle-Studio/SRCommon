@@ -8,6 +8,7 @@
 #include <Utils/ECS/SceneObject.h>
 #include <Utils/UI/LayoutRebuilder.h>
 #include <Utils/ECS/GameObject.h>
+#include <Utils/ECS/EntityRef.h>
 #include <Utils/Reflection/SRClassUtils.h>
 #include <Utils/World/SceneUpdater.h>
 #include <Utils/World/Scene.h>
@@ -216,13 +217,26 @@ namespace SR_UTILS_NS {
         return nullptr;
     }
 
-    static const Reflection::Property* FindPropertyBySerializeName(SRClass* pOwner, StringAtom serializeName) {
+    static const Reflection::Property* FindPropertyBySerializeName(SRClass*& pOwner, StringAtom serializeName) {
         const Reflection::Property* pResult = nullptr;
         pOwner->GetMeta()->ForEachProperty([&](const Reflection::Property& property, uint64_t) {
             if (!pResult && property.GetSerializeName() == serializeName) {
                 pResult = &property;
             }
         });
+        if (!pResult) {
+            auto&& pPropertiesObject = pOwner->GetPropertiesObject();
+            if (pPropertiesObject && pPropertiesObject != pOwner) {
+                pPropertiesObject->GetMeta()->ForEachProperty([&](const Reflection::Property& property, uint64_t) {
+                    if (!pResult && property.GetSerializeName() == serializeName) {
+                        pResult = &property;
+                    }
+                });
+                if (pResult) {
+                    pOwner = pPropertiesObject;
+                }
+            }
+        }
         return pResult;
     }
 
@@ -244,16 +258,27 @@ namespace SR_UTILS_NS {
         return FindPropertyBySerializeName(pOwner, propertyPath.back());
     }
 
-    void SceneObject::ApplyPrefabPropertyOverrides() {
+    void SceneObject::OnEntityIdReplaced(const EntityReplaceMap& replaceMap) {
+        Super::OnEntityIdReplaced(replaceMap);
+        for (auto&& prefabOverride : m_prefabPropertyOverrides) {
+            ReplaceEntityReferences(prefabOverride.value.AsRef(), replaceMap);
+        }
+    }
+
+    void SceneObject::ApplyPrefabPropertyOverrides(const bool pendingOnly) {
         if (!IsPrefabOwner()) {
             return;
         }
-        for (const PrefabPropertyOverride& prefabOverride : m_prefabPropertyOverrides) {
+        for (PrefabPropertyOverride& prefabOverride : m_prefabPropertyOverrides) {
+            if (pendingOnly && !prefabOverride.isPending) {
+                continue;
+            }
+            prefabOverride.isPending = true;
             Entity* pTarget = FindPrefabEntity(prefabOverride.targetId);
             SRClass* pPropertyOwner = nullptr;
             const Reflection::Property* pProperty = ResolvePrefabProperty(pTarget, prefabOverride.propertyPath, pPropertyOwner);
             if (!pProperty) {
-                SR_WARN("SceneObject::ApplyPrefabPropertyOverrides() : unresolved override target {}!", prefabOverride.targetId);
+                SR_WARN("SceneObject::ApplyPrefabPropertyOverrides() : unresolved override target {}! Path: {}", prefabOverride.targetId, prefabOverride.propertyPath);
                 continue;
             }
             if (!prefabOverride.objectData.empty()) {
@@ -261,6 +286,7 @@ namespace SR_UTILS_NS {
                     SRADeserializer objectDeserializer;
                     if (objectDeserializer.LoadFromString(prefabOverride.objectData)) {
                         if (auto&& pSerializable = dynamic_cast<Serializable*>(pObject)) {
+                            prefabOverride.isPending = false;
                             Serialization::Load(objectDeserializer, *pSerializable, prefabOverrideObjectId);
                         }
                     }
@@ -275,6 +301,7 @@ namespace SR_UTILS_NS {
                 SR_WARN("SceneObject::ApplyPrefabPropertyOverrides() : type mismatch for target {}!", prefabOverride.targetId);
                 continue;
             }
+            prefabOverride.isPending = false;
             pProperty->Set(pPropertyOwner, prefabOverride.value);
             pProperty->OnChanged(pPropertyOwner);
         }
@@ -298,6 +325,7 @@ namespace SR_UTILS_NS {
         for (PrefabPropertyOverride& prefabOverride : pOwner->m_prefabPropertyOverrides) {
             if (prefabOverride.targetId == pTarget->GetPrefabSourceId() && prefabOverride.propertyPath == propertyPath) {
                 prefabOverride.value = property.Get(pPropertyOwner).Copy();
+                prefabOverride.isPending = false;
                 return;
             }
         }
@@ -319,6 +347,7 @@ namespace SR_UTILS_NS {
             if (prefabOverride.targetId == pTarget->GetPrefabSourceId() && prefabOverride.propertyPath == propertyPath) {
                 prefabOverride.value = Reflection::Value();
                 prefabOverride.objectData = objectSerializer.ToString();
+                prefabOverride.isPending = false;
                 return;
             }
         }

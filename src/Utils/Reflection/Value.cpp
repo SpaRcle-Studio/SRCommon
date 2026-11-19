@@ -13,9 +13,7 @@
 #include <Enum/ReflectedCategoryType.hpp>
 
 namespace SR_UTILS_NS::Reflection {
-    Value::Value() {
-        m_allocator = IAllocator::GetDefaultAllocator();
-    }
+    Value::Value() = default;
 
     Value::~Value() {
         Destroy();
@@ -36,18 +34,42 @@ namespace SR_UTILS_NS::Reflection {
         return MapView(AsRef());
     }
 
+    bool Value::AllocateStorage(const TypeInfo* pTypeInfo) {
+        if (!pTypeInfo || !pTypeInfo->IsResolved() || !pTypeInfo->vtable.lifecycle.size) {
+            return false;
+        }
+        auto&& lifecycle = pTypeInfo->vtable.lifecycle;
+        if ((lifecycle.isTriviallyRelocatable || (lifecycle.isNothrowMoveConstructible && lifecycle.pMoveConstructAt)) &&
+            lifecycle.size <= ReflectedValueStorageSize &&
+            lifecycle.alignment <= alignof(ReflectedValue::Storage)) {
+            m_storage = {};
+        }
+        else {
+            void* pData = IAllocator::GetDefaultAllocator()->Allocate(lifecycle.size, lifecycle.alignment);
+            if (!pData) {
+                return false;
+            }
+            m_storage = ReflectedValue::MakeFromPointer(pData, ReflectedValueStorageType::Dynamic);
+        }
+        m_typeInfo = pTypeInfo;
+        return true;
+    }
+
     void Value::Destroy() {
         SR_TRACY_ZONE_MAYBE_NO_INIT;
-        if (m_typeInfo) {
-            if (m_storage.storageType == ReflectedValueStorageType::Dynamic || m_storage.storageType == ReflectedValueStorageType::Embedded) {
-                if (auto&& pDestructor = m_typeInfo->vtable.pDestructor) {
-                    pDestructor(*m_allocator, m_storage);
-                }
-            }
+        if (m_typeInfo && !IsRef()) {
+            m_typeInfo->DestructAt(m_storage.GetData());
+        }
+        ReleaseStorage();
+    }
+
+    void Value::ReleaseStorage() {
+        if (m_typeInfo && IsDynamic()) {
+            auto&& lifecycle = m_typeInfo->vtable.lifecycle;
+            IAllocator::GetDefaultAllocator()->Free(m_storage.GetData(), lifecycle.size, lifecycle.alignment);
         }
         m_storage = {};
         m_typeInfo = nullptr;
-        m_allocator = nullptr;
     }
 
     Value::Value(const Value& other) {
@@ -61,25 +83,12 @@ namespace SR_UTILS_NS::Reflection {
     Value& Value::operator=(const Value& other) noexcept {
         if (this != &other) {
             Destroy();
-            m_typeInfo = other.m_typeInfo;
-            m_allocator = other.m_allocator;
-
             if (other.IsRef()) {
+                m_typeInfo = other.m_typeInfo;
                 m_storage = other.m_storage;
             }
-            else if (m_typeInfo) {
-                if (m_typeInfo->vtable.pConstructor) {
-                    m_storage = m_typeInfo->vtable.pConstructor(*m_allocator);
-                    if (auto&& pCopy = other.GetTypeInfo().vtable.pCopy) {
-                        pCopy(other.m_storage, m_storage);
-                    }
-                }
-                else {
-                    m_storage = {};
-                }
-            }
             else {
-                m_storage = {};
+                *this = other.Copy();
             }
         }
         return *this;
@@ -88,12 +97,16 @@ namespace SR_UTILS_NS::Reflection {
     Value& Value::operator=(Value&& other) noexcept {
         if (this != &other) {
             Destroy();
-            m_storage = other.m_storage;
             m_typeInfo = other.m_typeInfo;
-            m_allocator = other.m_allocator;
+            if (other.IsEmbedded() && m_typeInfo && !m_typeInfo->vtable.lifecycle.isTriviallyRelocatable) {
+                m_typeInfo->MoveConstructAt(m_storage.GetData(), other.m_storage.GetData());
+                m_typeInfo->DestructAt(other.m_storage.GetData());
+            }
+            else {
+                m_storage = other.m_storage;
+            }
             other.m_storage = {};
             other.m_typeInfo = nullptr;
-            other.m_allocator = nullptr;
         }
         return *this;
     }
@@ -101,16 +114,14 @@ namespace SR_UTILS_NS::Reflection {
     Value Value::Copy() const {
         SR_TRACY_ZONE;
         Value result;
-        result.m_allocator = m_allocator;
-        result.m_typeInfo = m_typeInfo;
-        if (GetTypeInfo().vtable.pConstructor) {
-            result.m_storage = GetTypeInfo().vtable.pConstructor(*m_allocator);
-            if (auto&& pCopy = GetTypeInfo().vtable.pCopy) {
-                pCopy(m_storage, result.m_storage);
+        if (m_typeInfo && m_typeInfo->CanCopy() && result.AllocateStorage(m_typeInfo)) {
+            SR_EXCEPTIONS_TRY {
+                m_typeInfo->CopyConstructAt(result.Data(), Data());
             }
-        }
-        else {
-            result.m_storage = {};
+            SR_EXCEPTIONS_CATCH(...) {
+                result.ReleaseStorage();
+                throw;
+            }
         }
         return result;
     }
@@ -203,23 +214,26 @@ namespace SR_UTILS_NS::Reflection {
     }
 
     IAllocator* Value::GetAllocator() const {
-        return m_allocator;
+        return IAllocator::GetDefaultAllocator();
     }
 
     Value Value::CreateDefault(const TypeInfo* pTypeInfo) {
         SR_TRACY_ZONE;
         Value value;
-        value.m_allocator = IAllocator::GetDefaultAllocator();
-        value.m_typeInfo = pTypeInfo;
-        if (pTypeInfo && pTypeInfo->vtable.pConstructor) {
-            value.m_storage = pTypeInfo->vtable.pConstructor(*value.m_allocator);
+        if (pTypeInfo && pTypeInfo->CanConstruct() && value.AllocateStorage(pTypeInfo)) {
+            SR_EXCEPTIONS_TRY {
+                pTypeInfo->ConstructAt(value.Data());
+            }
+            SR_EXCEPTIONS_CATCH(...) {
+                value.ReleaseStorage();
+                throw;
+            }
         }
         return value;
     }
 
     Value Value::Ref() const {
         Value value;
-        value.m_allocator = m_allocator;
         value.m_typeInfo = m_typeInfo;
         if (IsRef()) {
             value.m_storage = m_storage;

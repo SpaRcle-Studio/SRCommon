@@ -191,10 +191,6 @@ namespace SR_UTILS_NS::Reflection {
 
     constexpr inline SizeType ReflectedValueStorageSize = 64;
 
-    /// Storage копируется побайтно, а std::u32string внутри UnicodeString в libstdc++ хранит указатель на собственный SSO-буфер
-    template<typename T> constexpr inline bool IsReflectedValueEmbeddable =
-        sizeof(T) <= ReflectedValueStorageSize && !std::is_same_v<T, SR_UTILS_NS::UnicodeString>;
-
     struct SR_COMMON_DLL_API ReflectedValue {
         struct Storage { alignas(std::max_align_t) std::byte data[ReflectedValueStorageSize]; };
         static ReflectedValue MakeFromPointer(void* pData, ReflectedValueStorageType storageType);
@@ -253,6 +249,14 @@ namespace SR_UTILS_NS::Reflection {
         SR_NODISCARD SRHashType GetHash() const noexcept { return hash; }
         SR_NODISCARD bool IsResolved() const noexcept { return isResolved.load(std::memory_order_acquire); }
         SR_NODISCARD TypeInfoKey GetKey() const noexcept;
+        SR_NODISCARD bool CanConstruct() const;
+        SR_NODISCARD bool CanCopy() const;
+        SR_NODISCARD bool CanAssign() const;
+        void ConstructAt(void* pDst) const;
+        void CopyConstructAt(void* pDst, const void* pSrc) const;
+        void MoveConstructAt(void* pDst, void* pSrc) const;
+        void CopyAssign(void* pDst, const void* pSrc) const;
+        void DestructAt(void* pData) const;
 
         SR_NODISCARD bool IsSigned() const noexcept { return IsTypeKindSigned(kind); }
         SR_NODISCARD bool IsIntegral() const noexcept { return IsTypeKindIntegral(kind); }

@@ -24,6 +24,7 @@ namespace SR_UTILS_NS {
         Vector<StringAtom> propertyPath;
         Reflection::Value value;
         String objectData;
+        bool isPending = false;
     };
 
     SR_ENUM_NS_CLASS_T(SceneObjectType, int16_t,
@@ -104,6 +105,8 @@ namespace SR_UTILS_NS {
 
         bool Load(IDeserializer& deserializer) override;
         void Save(ISerializer& serializer) const override;
+        void OnEntityIdReplaced(const EntityReplaceMap& replaceMap) override;
+        void ApplyPrefabPropertyOverrides(bool pendingOnly = false);
 
         void SetPrefabPropertyOverride(Entity* pTarget, SRClass* pOwner, const Reflection::Property& property, const Vector<StringAtom>& propertyPath);
         void SetPrefabObjectOverride(Entity* pTarget, SRClass* pObject, const Vector<StringAtom>& propertyPath);
@@ -176,7 +179,6 @@ namespace SR_UTILS_NS {
         virtual void OnAttachedToParent() { }
 
         Entity* FindPrefabEntity(EntityId sourceId) noexcept;
-        void ApplyPrefabPropertyOverrides();
 
     private:
         struct PrefabInfo {

@@ -70,11 +70,12 @@ namespace SR_UTILS_NS::Reflection {
 
     private:
         void Destroy();
+        void ReleaseStorage();
+        bool AllocateStorage(const TypeInfo* pTypeInfo);
 
     private:
         ReflectedValue m_storage;
         const TypeInfo* m_typeInfo = nullptr;
-        IAllocator* m_allocator = nullptr;
 
     };
 
@@ -101,26 +102,41 @@ namespace SR_UTILS_NS::Reflection {
         }
         else {
             Value v;
-            v.m_allocator = SR_UTILS_NS::IAllocator::GetDefaultAllocator();
-            using Type = std::remove_cv_t<std::remove_reference_t<T>>;
-            if constexpr (IsReflectedValueEmbeddable<Type>) {
-                ReflectedValue::Storage inlineData{};
-                new (&inlineData) Type(std::forward<T>(value));
-                v.m_storage = ReflectedValue::MakeFromInlineData(inlineData, ReflectedValueStorageType::Embedded);
+            if (!pTypeInfo || !pTypeInfo->IsResolved()) {
+                return Value();
             }
-            else {
-                char* buffer = static_cast<char*>(v.m_allocator->Allocate(sizeof(Type), alignof(Type)));
-                new (buffer) Type(std::forward<T>(value));
-                v.m_storage = ReflectedValue::MakeFromPointer(buffer, ReflectedValueStorageType::Dynamic);
+            auto&& lifecycle = pTypeInfo->vtable.lifecycle;
+            if constexpr (std::is_const_v<std::remove_reference_t<T>>) {
+                if (!pTypeInfo->CanCopy()) {
+                    return Value();
+                }
             }
-            v.m_typeInfo = pTypeInfo;
+            else if (!lifecycle.isTriviallyRelocatable && !lifecycle.pMoveConstructAt && !pTypeInfo->CanCopy()) {
+                return Value();
+            }
+            if (!v.AllocateStorage(pTypeInfo)) {
+                return Value();
+            }
+
+            SR_EXCEPTIONS_TRY {
+                if constexpr (std::is_const_v<std::remove_reference_t<T>>) {
+                    pTypeInfo->CopyConstructAt(v.m_storage.GetData(), std::addressof(value));
+                }
+                else {
+                    pTypeInfo->MoveConstructAt(v.m_storage.GetData(), std::addressof(value));
+                }
+            }
+            SR_EXCEPTIONS_CATCH(...) {
+                v.ReleaseStorage();
+                throw;
+            }
+
             return v;
         }
     }
 
     template<typename T> Value Value::CreateRef(T& value, const TypeInfo* pTypeInfo) {
         Value v;
-        v.m_allocator = SR_UTILS_NS::IAllocator::GetDefaultAllocator();
         v.m_storage = ReflectedValue::MakeFromPointer(&value, ReflectedValueStorageType::Reference);
         v.m_typeInfo = pTypeInfo;
         return v;
@@ -128,7 +144,6 @@ namespace SR_UTILS_NS::Reflection {
 
     template<typename T> Value Value::CreateCRef(const T& value, const TypeInfo* pTypeInfo) {
         Value v;
-        v.m_allocator = SR_UTILS_NS::IAllocator::GetDefaultAllocator();
         v.m_storage = ReflectedValue::MakeFromPointer(const_cast<T*>(&value), ReflectedValueStorageType::ConstReference);
         v.m_typeInfo = pTypeInfo;
         return v;

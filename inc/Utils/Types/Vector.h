@@ -11,6 +11,13 @@
 #define SR_VECTOR_INITIAL_CAPACITY 4
 
 namespace SR_UTILS_NS {
+    struct ErasedVectorLayout {
+        void* pData = nullptr;
+        size_t size = 0;
+        size_t capacity = 0;
+        IAllocator* pAllocator = nullptr;
+    };
+
     template<typename T> class Vector {
     public:
         using SizeType = size_t;
@@ -31,6 +38,16 @@ namespace SR_UTILS_NS {
         using iterator_category = std::forward_iterator_tag;
 
     public:
+        static constexpr void ValidateErasedLayout() {
+            static_assert(std::is_standard_layout_v<Vector<T>>);
+            static_assert(sizeof(Vector<T>) == sizeof(ErasedVectorLayout));
+            static_assert(alignof(Vector<T>) == alignof(ErasedVectorLayout));
+            static_assert(offsetof(Vector<T>, m_data) == offsetof(ErasedVectorLayout, pData));
+            static_assert(offsetof(Vector<T>, m_size) == offsetof(ErasedVectorLayout, size));
+            static_assert(offsetof(Vector<T>, m_capacity) == offsetof(ErasedVectorLayout, capacity));
+            static_assert(offsetof(Vector<T>, m_allocator) == offsetof(ErasedVectorLayout, pAllocator));
+        }
+
         Vector() noexcept = default;
         Vector(std::nullptr_t) = delete;
         Vector(IAllocator* allocator) noexcept;

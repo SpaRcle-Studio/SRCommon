@@ -7,16 +7,34 @@
 
 namespace SR_UTILS_NS::Reflection {
     struct ReflectedValue;
+    struct TypeInfo;
+
+    struct SR_COMMON_DLL_API LifecycleVTable {
+        SizeType size = 0;
+        SizeType alignment = 0;
+        bool isTriviallyCopyable = false;
+        bool isTriviallyDestructible = false;
+        bool isTriviallyRelocatable = false;
+        bool isNothrowMoveConstructible = false;
+        void(*pConstructAt)(const TypeInfo&, void*) = nullptr;
+        void(*pCopyConstructAt)(const TypeInfo&, void*, const void*) = nullptr;
+        void(*pMoveConstructAt)(const TypeInfo&, void*, void*) = nullptr;
+        void(*pCopyAssign)(const TypeInfo&, void*, const void*) = nullptr;
+        void(*pDestructAt)(const TypeInfo&, void*) = nullptr;
+    };
+
+    struct TypeInfoVTable;
+    template<typename T, bool AllowCopy = true, bool AllowMove = true> void FillLifecycle(TypeInfoVTable& vtable);
 
     /// Операции над Vector. Индексы не проверяются, это делает ArrayView
     struct SR_COMMON_DLL_API ArrayVTable {
-        SizeType(*pSize)(const void* pArray) = nullptr;
-        void*(*pAt)(void* pArray, SizeType index) = nullptr;
-        void(*pResize)(void* pArray, SizeType size) = nullptr;
-        void(*pReserve)(void* pArray, SizeType capacity) = nullptr;
-        void(*pInsert)(void* pArray, SizeType index, const void* pValue) = nullptr;
-        void(*pErase)(void* pArray, SizeType index) = nullptr;
-        void(*pClear)(void* pArray) = nullptr;
+        SizeType(*pSize)(const TypeInfo& arrayType, const void* pArray) = nullptr;
+        void*(*pAt)(const TypeInfo& arrayType, void* pArray, SizeType index) = nullptr;
+        void(*pResize)(const TypeInfo& arrayType, void* pArray, SizeType size) = nullptr;
+        void(*pReserve)(const TypeInfo& arrayType, void* pArray, SizeType capacity) = nullptr;
+        void(*pInsert)(const TypeInfo& arrayType, void* pArray, SizeType index, const void* pValue) = nullptr;
+        void(*pErase)(const TypeInfo& arrayType, void* pArray, SizeType index) = nullptr;
+        void(*pClear)(const TypeInfo& arrayType, void* pArray) = nullptr;
     };
 
     /// Операции над Map, FlatHashMap, Set и FlatHashSet.
@@ -38,20 +56,10 @@ namespace SR_UTILS_NS::Reflection {
         GetPairValue pGetPairValue;
     };
 
-    struct TypeInfo;
-
     struct SR_COMMON_DLL_API TypeInfoVTable {
         /// any type functions
-        using ConstructorFn = ReflectedValue(*)(IAllocator&);
-        using DestructorFn = void(*)(IAllocator&, ReflectedValue&);
-        using CopyFn = void(*)(const ReflectedValue&, ReflectedValue&);
-        using MoveFn = void(*)(ReflectedValue&, ReflectedValue&);
         using SizeOfAlignFn = Pair<SizeType, SizeType>(*)(const TypeInfo&);
-
-        ConstructorFn pConstructor = nullptr;
-        DestructorFn pDestructor = nullptr;
-        CopyFn pCopy = nullptr;
-        MoveFn pMove = nullptr;
+        LifecycleVTable lifecycle;
         SizeOfAlignFn pSizeOfAlign = nullptr;
 
         /// for SRClass and other containers (except Vector, Map and Set)

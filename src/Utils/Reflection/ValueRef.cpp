@@ -88,25 +88,17 @@ namespace SR_UTILS_NS::Reflection {
         if (!IsValid()) {
             return Value();
         }
-        auto result = Value::CreateDefault(m_pTypeInfo);
-        if (auto&& pCopy = m_pTypeInfo->vtable.pCopy; pCopy && result.Data()) {
-            const auto source = ReflectedValue::MakeFromPointer(m_pData, ReflectedValueStorageType::ConstReference);
-            pCopy(source, result.GetStorage());
-        }
-        return result;
+        return ToValue().Copy();
     }
 
     bool ValueRef::Assign(const ValueRef& source) const {
         if (!IsValid() || !source.IsValid() || m_isConst || m_pTypeInfo != source.m_pTypeInfo) {
             return false;
         }
-        auto&& pCopy = m_pTypeInfo->vtable.pCopy;
-        if (!pCopy) {
+        if (!m_pTypeInfo->CanAssign()) {
             return false;
         }
-        const auto from = ReflectedValue::MakeFromPointer(source.m_pData, ReflectedValueStorageType::ConstReference);
-        auto to = ReflectedValue::MakeFromPointer(m_pData, ReflectedValueStorageType::Reference);
-        pCopy(from, to);
+        m_pTypeInfo->CopyAssign(m_pData, source.m_pData);
         return true;
     }
 
@@ -132,6 +124,9 @@ namespace SR_UTILS_NS::Reflection {
         if (!m_pVTable) {
             return false;
         }
+        if (!m_array.GetTypeInfo().CanConstruct() || !GetElementType() || !GetElementType()->IsResolved()) {
+            return false;
+        }
         if (m_array.IsConst()) {
             SR_ERROR("ArrayView::CanModify() : array \"{}\" is const!", m_array.GetTypeInfo().name.ToStringRef());
             return false;
@@ -140,7 +135,7 @@ namespace SR_UTILS_NS::Reflection {
     }
 
     SizeType ArrayView::Size() const {
-        return m_pVTable ? m_pVTable->pSize(m_array.Data()) : 0;
+        return m_pVTable ? m_pVTable->pSize(m_array.GetTypeInfo(), m_array.Data()) : 0;
     }
 
     ValueRef ArrayView::At(const SizeType index) const {
@@ -148,7 +143,7 @@ namespace SR_UTILS_NS::Reflection {
             SRHalt("ArrayView::At() : index {} out of range {}!", index, Size());
             return ValueRef();
         }
-        return ValueRef(GetElementType(), m_pVTable->pAt(m_array.Data(), index), m_array.IsConst());
+        return ValueRef(GetElementType(), m_pVTable->pAt(m_array.GetTypeInfo(), m_array.Data(), index), m_array.IsConst());
     }
 
     ValueRef ArrayView::Back() const {
@@ -162,19 +157,19 @@ namespace SR_UTILS_NS::Reflection {
 
     void ArrayView::Resize(const SizeType size) const {
         if (CanModify() && m_pVTable->pResize) {
-            m_pVTable->pResize(m_array.Data(), size);
+            m_pVTable->pResize(m_array.GetTypeInfo(), m_array.Data(), size);
         }
     }
 
     void ArrayView::Reserve(const SizeType capacity) const {
         if (CanModify() && m_pVTable->pReserve) {
-            m_pVTable->pReserve(m_array.Data(), capacity);
+            m_pVTable->pReserve(m_array.GetTypeInfo(), m_array.Data(), capacity);
         }
     }
 
     void ArrayView::Clear() const {
         if (CanModify() && m_pVTable->pClear) {
-            m_pVTable->pClear(m_array.Data());
+            m_pVTable->pClear(m_array.GetTypeInfo(), m_array.Data());
         }
     }
 
@@ -191,7 +186,7 @@ namespace SR_UTILS_NS::Reflection {
             SRHalt("ArrayView::Insert() : index {} out of range {}!", index, Size());
             return false;
         }
-        m_pVTable->pInsert(m_array.Data(), index, value.Data());
+        m_pVTable->pInsert(m_array.GetTypeInfo(), m_array.Data(), index, value.Data());
         return true;
     }
 
@@ -211,7 +206,7 @@ namespace SR_UTILS_NS::Reflection {
             SRHalt("ArrayView::Erase() : index {} out of range {}!", index, Size());
             return;
         }
-        m_pVTable->pErase(m_array.Data(), index);
+        m_pVTable->pErase(m_array.GetTypeInfo(), m_array.Data(), index);
     }
 
     void ArrayView::Move(const SizeType from, const SizeType to) const {
@@ -225,6 +220,9 @@ namespace SR_UTILS_NS::Reflection {
         }
         /// копия обязательна: после Erase ссылка на элемент указывает уже на соседний
         auto element = At(from).Copy();
+        if (!element || !m_pVTable->pInsert || !m_pVTable->pErase) {
+            return;
+        }
         Erase(from);
         Insert(to, element.AsRef());
     }

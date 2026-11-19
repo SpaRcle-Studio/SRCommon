@@ -191,6 +191,14 @@
 
 #define SR_NOEXCEPT noexcept
 
+#if 0 && (defined(__cpp_exceptions) || defined(_CPPUNWIND))
+    #define SR_EXCEPTIONS_TRY try
+    #define SR_EXCEPTIONS_CATCH(...) catch (__VA_ARGS__)
+#else
+    #define SR_EXCEPTIONS_TRY if (true)
+    #define SR_EXCEPTIONS_CATCH(...) else if (false)
+#endif
+
 #define SR_FALLTHROUGH [[fallthrough]]
 
 #ifndef SR_ANDROID

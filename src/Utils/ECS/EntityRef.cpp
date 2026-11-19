@@ -4,13 +4,57 @@
 
 #include <Utils/ECS/EntityRef.h>
 #include <Utils/ECS/EntityController.h>
+#include <Utils/Reflection/Value.h>
+#include <Utils/Types/Optional.h>
 
 #include <Codegen/EntityRef.generated.hpp>
 
 namespace SR_UTILS_NS {
+    bool ReplaceEntityReferences(const Reflection::ValueRef& value, const EntityReplaceMap& replaceMap) {
+        if (!value || value.IsConst() || replaceMap.empty()) {
+            return false;
+        }
+        SR_TRACY_ZONE;
+        if (value.GetTypeInfo().kind == Reflection::TypeKind::EntityRef) {
+            auto&& pReference = dynamic_cast<EntityRefBase*>(value.GetSRClass());
+            if (!pReference || replaceMap.find(pReference->GetEntityId()) == replaceMap.end()) {
+                return false;
+            }
+            pReference->OnEntityIdReplaced(replaceMap);
+            return true;
+        }
+        bool changed = false;
+        if (const auto array = value.AsArray()) {
+            for (SizeType i = 0; i < array.Size(); ++i) {
+                changed |= ReplaceEntityReferences(array.At(i), replaceMap);
+            }
+        }
+        else if (const auto map = value.AsMap()) {
+            map.ForEach([&](const Reflection::ValueRef&, const Reflection::ValueRef& mapped) {
+                changed |= ReplaceEntityReferences(mapped, replaceMap);
+            });
+        }
+        else if (auto&& pOptional = value.GetOptionalBase(); pOptional && pOptional->HasValue()) {
+            auto element = pOptional->GetReflectionValue();
+            changed = ReplaceEntityReferences(element.AsRef(), replaceMap);
+            if (changed) {
+                pOptional->SetValue(element);
+            }
+        }
+        else if (value.GetTypeInfo().kind == Reflection::TypeKind::Value) {
+            changed = ReplaceEntityReferences(value.Cast<Reflection::Value>()->AsRef(), replaceMap);
+        }
+        return changed;
+    }
+
     EntityRefBase::EntityRefBase()
         : Super()
     { }
+
+    void EntityRefBase::OnPostLoad() {
+        Super::OnPostLoad();
+        m_pEntity = nullptr;
+    }
 
     StringAtom EntityRefBase::GetTypeName() const noexcept {
         return StringAtom();

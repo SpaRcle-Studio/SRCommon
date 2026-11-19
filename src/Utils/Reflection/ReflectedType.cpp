@@ -396,7 +396,11 @@ namespace SR_UTILS_NS::Reflection {
 
     void UnresolveTypeInfoLocked(TypeInfo& typeInfo) {
         typeInfo.isResolved.store(false, std::memory_order_release);
+        const auto size = typeInfo.vtable.lifecycle.size;
+        const auto alignment = typeInfo.vtable.lifecycle.alignment;
         typeInfo.vtable = TypeInfoVTable();
+        typeInfo.vtable.lifecycle.size = size;
+        typeInfo.vtable.lifecycle.alignment = alignment;
         typeInfo.pOwnerModule = nullptr;
     }
 
@@ -422,7 +426,15 @@ namespace SR_UTILS_NS::Reflection {
 
         auto&& pTypeInfo = GetOrCreateTypeInfoLocked(registry, normalized);
         if (!pTypeInfo->IsResolved()) {
-            ResolveTypeInfoLocked(*pTypeInfo, vtable, pOwnerModule);
+            if (normalized.kind == TypeKind::Vector) {
+                TypeInfoVTable builtin;
+                if (ResolveBuiltinVTable(normalized, builtin)) {
+                    ResolveTypeInfoLocked(*pTypeInfo, builtin, SR_REFLECTION_MODULE_ID);
+                }
+            }
+            else {
+                ResolveTypeInfoLocked(*pTypeInfo, vtable, pOwnerModule);
+            }
         }
 
         return pTypeInfo;
@@ -535,7 +547,7 @@ namespace SR_UTILS_NS::Reflection {
         std::lock_guard lock(registry.mutex);
 
         for (auto&& pTypeInfo : registry.types) {
-            if (pTypeInfo->IsResolved() && pTypeInfo->pOwnerModule == pOwnerModule) {
+            if (pTypeInfo->IsResolved() && pTypeInfo->kind != TypeKind::Vector && pTypeInfo->pOwnerModule == pOwnerModule) {
                 UnresolveTypeInfoLocked(*pTypeInfo);
             }
         }
@@ -548,7 +560,7 @@ namespace SR_UTILS_NS::Reflection {
         std::lock_guard lock(registry.mutex);
 
         for (auto&& pTypeInfo : registry.types) {
-            if (pTypeInfo->IsResolved() && IsTypeInfoContainsObject(pTypeInfo, className)) {
+            if (pTypeInfo->IsResolved() && pTypeInfo->kind != TypeKind::Vector && IsTypeInfoContainsObject(pTypeInfo, className)) {
                 UnresolveTypeInfoLocked(*pTypeInfo);
             }
         }
@@ -786,49 +798,6 @@ namespace SR_UTILS_NS::Reflection {
 
     /// ================================================================================================================
 
-    template<typename T> void ReflectedTypeInlineCopy(const ReflectedValue& from, ReflectedValue& to) {
-        auto pFrom = reinterpret_cast<const T*>(from.GetData());
-        auto pTo = reinterpret_cast<T*>(to.GetData());
-        *pTo = *pFrom;
-    }
-
-    template<typename T> void ReflectedTypeInlineMove(ReflectedValue& from, ReflectedValue& to) {
-        auto pFrom = reinterpret_cast<T*>(from.GetData());
-        auto pTo = reinterpret_cast<T*>(to.GetData());
-        *pTo = std::move(*pFrom);
-    }
-
-    template<typename T> ReflectedValue ReflectedTypeConstructor(IAllocator& allocator) {
-        if constexpr (IsReflectedValueEmbeddable<T>) {
-            ReflectedValue reflectedValue;
-            new(&reflectedValue.storage.data) T();
-            return ReflectedValue::MakeFromInlineData(reflectedValue.storage, ReflectedValueStorageType::Embedded);
-        }
-        auto pValue = static_cast<T*>(allocator.Allocate(sizeof(T), alignof(T)));
-        new (pValue) T();
-        return ReflectedValue::MakeFromPointer(pValue, ReflectedValueStorageType::Dynamic);
-    }
-
-    template<typename T> void ReflectedTypeDestructor(IAllocator& allocator, ReflectedValue& value) {
-        auto pValue = static_cast<T*>(value.GetData());
-        pValue->~T();
-        if constexpr (!IsReflectedValueEmbeddable<T>) {
-            allocator.Free(pValue, sizeof(T), alignof(T));
-        }
-    }
-
-    void ValueCopy(const ReflectedValue& from, ReflectedValue& to) {
-        auto pFrom = static_cast<const Value*>(from.GetData());
-        auto pTo = static_cast<Value*>(to.GetData());
-        *pTo = *pFrom;
-    }
-
-    void ValueMove(ReflectedValue& from, ReflectedValue& to) {
-        auto pFrom = static_cast<Value*>(from.GetData());
-        auto pTo = static_cast<Value*>(to.GetData());
-        *pTo = std::move(*pFrom);
-    }
-
     template<typename T> constexpr TypeKind GetArithmeticTypeKind() {
         if constexpr (std::is_same_v<T, bool>) { return TypeKind::Bool; }
         else if constexpr (std::is_floating_point_v<T> && sizeof(T) == sizeof(float_t)) { return TypeKind::Float; }
@@ -843,22 +812,14 @@ namespace SR_UTILS_NS::Reflection {
         else { return TypeKind::UInt64; }
     }
 
-    template<typename T> void FillInlineVTable(TypeInfoVTable& vtable) {
-        vtable.pConstructor = &ReflectedTypeConstructor<T>;
-        vtable.pDestructor = &ReflectedTypeDestructor<T>;
-        vtable.pCopy = &ReflectedTypeInlineCopy<T>;
-        vtable.pMove = &ReflectedTypeInlineMove<T>;
-    }
-
     template<typename T> void DetermineTypeInfoRegistered(TypeInfoKey& key, TypeInfoVTable& vtable) {
+        if constexpr (!std::is_arithmetic_v<T>) {
+            FillLifecycle<T>(vtable);
+        }
         vtable.pSizeOfAlign = &ReflectedTypeTemplateSizeOfAlign<T>;
 
         if constexpr (std::is_same_v<T, Value>) {
             key.kind = TypeKind::Value;
-            vtable.pConstructor = &ReflectedTypeConstructor<T>;
-            vtable.pDestructor = &ReflectedTypeDestructor<T>;
-            vtable.pCopy = &ValueCopy;
-            vtable.pMove = &ValueMove;
         }
         else if constexpr (std::is_integral_v<T> || std::is_floating_point_v<T>) {
             key.kind = GetArithmeticTypeKind<T>();
@@ -866,40 +827,32 @@ namespace SR_UTILS_NS::Reflection {
         }
         else if constexpr (std::is_same_v<T, SR_MATH_NS::FColor>) {
             key.kind = TypeKind::Color;
-            FillInlineVTable<T>(vtable);
         }
         else if constexpr (std::is_same_v<T, SR_MATH_NS::Quaternion>) {
             key.kind = TypeKind::Quaternion;
-            FillInlineVTable<T>(vtable);
         }
         else if constexpr (std::is_same_v<T, SR_MATH_NS::AABB>) {
             key.kind = TypeKind::AABB;
-            FillInlineVTable<T>(vtable);
         }
         else if constexpr (std::is_same_v<T, SR_MATH_NS::Matrix3x3>) {
             key.kind = TypeKind::Matrix3x3;
-            FillInlineVTable<T>(vtable);
         }
         else if constexpr (std::is_same_v<T, SR_MATH_NS::Matrix4x4>) {
             key.kind = TypeKind::Matrix4x4;
-            FillInlineVTable<T>(vtable);
         }
         else if constexpr (IsTypeMathRectTemplateV<T>) {
             key.kind = TypeKind::MathRect;
             key.pNext[0] = TypeOf<typename T::ValueType>();
-            FillInlineVTable<T>(vtable);
         }
         else if constexpr (IsTypeMathSizeTemplateV<T>) {
             key.kind = TypeKind::MathSize;
             key.pNext[0] = TypeOf<typename T::ValueType>();
             key.detailedSize = T::Dimensions();
-            FillInlineVTable<T>(vtable);
         }
         else if constexpr (IsTypeMathVectorTemplateV<T>) {
             key.kind = TypeKind::MathVector;
             key.pNext[0] = TypeOf<typename T::ValueType>();
             key.detailedSize = T::Dimensions();
-            FillInlineVTable<T>(vtable);
         }
         else if constexpr (std::is_same_v<T, String> || std::is_same_v<T, StringView> || std::is_same_v<T, StringAtom> || std::is_same_v<T, Path> || std::is_same_v<T, UnicodeString>) {
             if constexpr (std::is_same_v<T, String>) {
@@ -917,7 +870,6 @@ namespace SR_UTILS_NS::Reflection {
             else {
                 key.kind = TypeKind::UnicodeString;
             }
-            FillInlineVTable<T>(vtable);
         }
         else {
             static_assert(AlwaysFalseV<T>, "Type is not registered for reflection");

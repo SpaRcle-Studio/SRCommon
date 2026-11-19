@@ -52,11 +52,8 @@ namespace SR_UTILS_NS::Reflection {
     }
 
     template<typename T> void FillMapVTable(TypeInfoVTable& vtable) {
+        FillLifecycle<T>(vtable);
         vtable.pSizeOfAlign = &ReflectedTypeTemplateSizeOfAlign<T>;
-        vtable.pConstructor = &ReflectedTypeTemplateConstructor<T>;
-        vtable.pDestructor = &ReflectedTypeTemplateDestructor<T>;
-        vtable.pCopy = &ReflectedTypeTemplateCopy<T>;
-        vtable.pMove = &ReflectedTypeTemplateMove<T>;
         vtable.mapVTable.pSize = &ReflectedMapSize<T>;
         vtable.mapVTable.pClear = &ReflectedMapClear<T>;
         vtable.mapVTable.pFind = &ReflectedMapFind<T>;
@@ -126,11 +123,8 @@ namespace SR_UTILS_NS::Reflection {
     }
 
     template<typename T, typename Key> void FillSetVTable(TypeInfoVTable& vtable) {
+        FillLifecycle<T>(vtable);
         vtable.pSizeOfAlign = &ReflectedTypeTemplateSizeOfAlign<T>;
-        vtable.pConstructor = &ReflectedTypeTemplateConstructor<T>;
-        vtable.pDestructor = &ReflectedTypeTemplateDestructor<T>;
-        vtable.pCopy = &ReflectedTypeTemplateCopy<T>;
-        vtable.pMove = &ReflectedTypeTemplateMove<T>;
         vtable.mapVTable.pSize = &ReflectedSetSize<T, Key>;
         vtable.mapVTable.pClear = &ReflectedSetClear<T, Key>;
         vtable.mapVTable.pFind = &ReflectedSetFind<T, Key>;

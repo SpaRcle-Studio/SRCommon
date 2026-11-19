@@ -7,6 +7,7 @@
 #include <Utils/Reflection/Value.h>
 #include <Utils/Serialization/Serializer.h>
 #include <Utils/Serialization/Deserializer.h>
+#include <Utils/Serialization/Serializable.h>
 #include <Utils/Common/StringUtils.h>
 #include <Utils/TypeTraits/Factory.h>
 
@@ -380,6 +381,13 @@ namespace SR_UTILS_NS::Reflection {
                 }
                 break;
             }
+            case TypeKind::EntityRef:
+            case TypeKind::ResourceRef: {
+                if (auto&& pSerializable = dynamic_cast<Serializable*>(value.GetSRClass())) {
+                    pSerializable->Save(serializer);
+                }
+                break;
+            }
             case TypeKind::Object:
                 if (auto&& pClass = value.GetSRClass()) {
                     pClass->GetMeta()->Save(serializer, *dynamic_cast<Serializable*>(pClass));
@@ -588,6 +596,11 @@ namespace SR_UTILS_NS::Reflection {
                     WriteIntegralBits(pData + i * componentSize, componentSize, component);
                 }
                 return true;
+            }
+            case TypeKind::EntityRef:
+            case TypeKind::ResourceRef: {
+                auto&& pSerializable = dynamic_cast<Serializable*>(value.GetSRClass());
+                return pSerializable && pSerializable->Load(deserializer);
             }
             case TypeKind::Object:
                 if (auto&& pClass = value.GetSRClass()) {

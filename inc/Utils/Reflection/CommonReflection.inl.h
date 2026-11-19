@@ -77,39 +77,41 @@ namespace SR_UTILS_NS::Reflection {
 
     /// ================================================================================================================
 
-    template<typename T> ReflectedValue ReflectedTypeTemplateConstructor(IAllocator& allocator) {
-        if constexpr (IsReflectedValueEmbeddable<T>) {
-            ReflectedValue reflectedValue;
-            new (&reflectedValue.storage.data) T();
-            reflectedValue.storageType = ReflectedValueStorageType::Embedded;
-            return reflectedValue;
+    template<typename T, bool AllowCopy, bool AllowMove> void FillLifecycle(TypeInfoVTable& vtable) {
+        auto&& lifecycle = vtable.lifecycle;
+        lifecycle = {};
+        lifecycle.size = sizeof(T);
+        lifecycle.alignment = alignof(T);
+        lifecycle.isTriviallyCopyable = AllowCopy && std::is_trivially_copyable_v<T>;
+        lifecycle.isTriviallyDestructible = std::is_trivially_destructible_v<T>;
+        lifecycle.isTriviallyRelocatable = AllowMove && std::is_trivially_copyable_v<T>;
+        lifecycle.isNothrowMoveConstructible = AllowMove && std::is_nothrow_move_constructible_v<T>;
+        if constexpr (std::is_default_constructible_v<T>) {
+            lifecycle.pConstructAt = [](const TypeInfo&, void* pDst) {
+                new (pDst) T();
+            };
         }
-        auto pValue = static_cast<T*>(allocator.Allocate(sizeof(T), alignof(T)));
-        new (pValue) T();
-        return ReflectedValue::MakeFromPointer(pValue, ReflectedValueStorageType::Dynamic);
-    }
-
-    template<typename T> void ReflectedTypeTemplateDestructor(IAllocator& allocator, ReflectedValue& value) {
-        auto pContainer = static_cast<T*>(value.GetData());
-        pContainer->~T();
-        if constexpr (!IsReflectedValueEmbeddable<T>) {
-            allocator.Free(pContainer, sizeof(T), alignof(T));
+        if constexpr (AllowCopy && std::is_copy_constructible_v<T>) {
+            lifecycle.pCopyConstructAt = [](const TypeInfo&, void* pDst, const void* pSrc) {
+                new (pDst) T(*static_cast<const T*>(pSrc));
+            };
+        }
+        if constexpr (AllowMove && std::is_move_constructible_v<T>) {
+            lifecycle.pMoveConstructAt = [](const TypeInfo&, void* pDst, void* pSrc) {
+                new (pDst) T(std::move(*static_cast<T*>(pSrc)));
+            };
+        }
+        if constexpr (AllowCopy && std::is_copy_assignable_v<T>) {
+            lifecycle.pCopyAssign = [](const TypeInfo&, void* pDst, const void* pSrc) {
+                *static_cast<T*>(pDst) = *static_cast<const T*>(pSrc);
+            };
+        }
+        if constexpr (std::is_destructible_v<T>) {
+            lifecycle.pDestructAt = [](const TypeInfo&, void* pData) {
+                static_cast<T*>(pData)->~T();
+            };
         }
     }
-
-    template<typename T> void ReflectedTypeTemplateCopy(const ReflectedValue& from, ReflectedValue& to) {
-        auto pFrom = static_cast<const T*>(from.GetData());
-        auto pTo = static_cast<T*>(to.GetData());
-        *pTo = *pFrom;
-    }
-
-    template<typename T> void ReflectedTypeTemplateMove(ReflectedValue& from, ReflectedValue& to) {
-        auto pFrom = static_cast<T*>(from.GetData());
-        auto pTo = static_cast<T*>(to.GetData());
-        *pTo = std::move(*pFrom);
-    }
-
-    /// ================================================================================================================
 
     template<typename T> ReflectedValue ReflectedTypePairGetValue(ReflectedValue& value, bool first) {
         auto pPair = static_cast<T*>(value.GetData());
@@ -130,7 +132,6 @@ namespace SR_UTILS_NS::Reflection {
 
     /// Арифметика и enum хранятся во встроенном буфере Value, обнулённом конструктором,
     /// а копируются ровно по размеру типа: Value может ссылаться на поле меньшего размера.
-    extern SR_COMMON_DLL_API ReflectedValue ArithmeticTypeConstructor(IAllocator&);
     extern SR_COMMON_DLL_API void FillArithmeticVTable(TypeInfoVTable& vtable, SizeType size);
 
     template<typename T> struct DetermineTypeInfoAccessor<T, std::enable_if_t<IsSREnumV<T>>> {
@@ -219,11 +220,8 @@ namespace SR_UTILS_NS::Reflection {
         static void Determine(TypeInfoKey& key, TypeInfoVTable& vtable) {
             key.kind = TypeKind::Optional;
             key.pNext[0] = TypeOf<T>();
+            FillLifecycle<Optional<T>>(vtable);
             vtable.pSizeOfAlign = &ReflectedTypeTemplateSizeOfAlign<Optional<T>>;
-            vtable.pConstructor = &ReflectedTypeTemplateConstructor<Optional<T>>;
-            vtable.pDestructor = &ReflectedTypeTemplateDestructor<Optional<T>>;
-            vtable.pCopy = &ReflectedTypeTemplateCopy<Optional<T>>;
-            vtable.pMove = &ReflectedTypeTemplateMove<Optional<T>>;
             vtable.pGetTypeController = &ReflectedTypeGetControllerOptional<T>;
         }
     };
@@ -233,11 +231,8 @@ namespace SR_UTILS_NS::Reflection {
         static void Determine(TypeInfoKey& key, TypeInfoVTable& vtable) {
             key.kind = TypeKind::EntityRef;
             key.pNext[0] = TypeOf<T>();
+            FillLifecycle<EntityRef<T>>(vtable);
             vtable.pSizeOfAlign = &ReflectedTypeTemplateSizeOfAlign<EntityRef<T>>;
-            vtable.pConstructor = &ReflectedTypeTemplateConstructor<EntityRef<T>>;
-            vtable.pDestructor = &ReflectedTypeTemplateDestructor<EntityRef<T>>;
-            vtable.pCopy = &ReflectedTypeTemplateCopy<EntityRef<T>>;
-            vtable.pMove = &ReflectedTypeTemplateMove<EntityRef<T>>;
             vtable.pGetTypeController = &ReflectedTypeGetControllerEntityRef<T>;
         }
     };
@@ -247,11 +242,8 @@ namespace SR_UTILS_NS::Reflection {
         static void Determine(TypeInfoKey& key, TypeInfoVTable& vtable) {
             key.kind = TypeKind::ResourceRef;
             key.pNext[0] = TypeOf<T>();
+            FillLifecycle<ResourceRef<T>>(vtable);
             vtable.pSizeOfAlign = &ReflectedTypeTemplateSizeOfAlign<ResourceRef<T>>;
-            vtable.pConstructor = &ReflectedTypeTemplateConstructor<ResourceRef<T>>;
-            vtable.pDestructor = &ReflectedTypeTemplateDestructor<ResourceRef<T>>;
-            vtable.pCopy = &ReflectedTypeTemplateCopy<ResourceRef<T>>;
-            vtable.pMove = &ReflectedTypeTemplateMove<ResourceRef<T>>;
             vtable.pGetTypeController = &ReflectedTypeGetControllerResourceRef<T>;
         }
     };
@@ -261,11 +253,8 @@ namespace SR_UTILS_NS::Reflection {
         static void Determine(TypeInfoKey& key, TypeInfoVTable& vtable) {
             key.kind = TypeKind::SharedPtr;
             key.pNext[0] = TypeOf<T>();
+            FillLifecycle<SR_HTYPES_NS::SharedPtr<T>>(vtable);
             vtable.pSizeOfAlign = &ReflectedTypeTemplateSizeOfAlign<SR_HTYPES_NS::SharedPtr<T>>;
-            vtable.pConstructor = &ReflectedTypeTemplateConstructor<SR_HTYPES_NS::SharedPtr<T>>;
-            vtable.pDestructor = &ReflectedTypeTemplateDestructor<SR_HTYPES_NS::SharedPtr<T>>;
-            vtable.pCopy = &ReflectedTypeTemplateCopy<SR_HTYPES_NS::SharedPtr<T>>;
-            vtable.pMove = &ReflectedTypeTemplateMove<SR_HTYPES_NS::SharedPtr<T>>;
             vtable.pGetTypeController = &ReflectedTypeGetControllerSharedPtr<T>;
         }
     };
@@ -276,11 +265,8 @@ namespace SR_UTILS_NS::Reflection {
             key.kind = TypeKind::Pair;
             key.pNext[0] = TypeOf<T1>();
             key.pNext[1] = TypeOf<T2>();
+            FillLifecycle<Pair<T1, T2>>(vtable);
             vtable.pSizeOfAlign = &ReflectedTypeTemplateSizeOfAlign<Pair<T1, T2>>;
-            vtable.pConstructor = &ReflectedTypeTemplateConstructor<Pair<T1, T2>>;
-            vtable.pDestructor = &ReflectedTypeTemplateDestructor<Pair<T1, T2>>;
-            vtable.pCopy = &ReflectedTypeTemplateCopy<Pair<T1, T2>>;
-            vtable.pMove = &ReflectedTypeTemplateMove<Pair<T1, T2>>;
             vtable.pairVTable.pGetPairValue = &ReflectedTypePairGetValue<Pair<T1, T2>>;
         }
     };

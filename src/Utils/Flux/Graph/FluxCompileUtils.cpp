@@ -20,7 +20,7 @@ namespace SR_FLUX_NS {
     }
 
     Reflection::Value MakeDefaultValue(const Reflection::TypeInfo* pTypeInfo) {
-        if (!pTypeInfo || !pTypeInfo->vtable.pConstructor) {
+        if (!pTypeInfo || !pTypeInfo->CanConstruct()) {
             return {};
         }
         return Reflection::Value::CreateDefault(pTypeInfo);

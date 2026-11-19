@@ -10,12 +10,19 @@
 #include <Utils/ECS/Entity.h>
 
 namespace SR_UTILS_NS {
+    namespace Reflection {
+        class ValueRef;
+    }
+
+    SR_COMMON_DLL_API bool ReplaceEntityReferences(const Reflection::ValueRef& value, const EntityReplaceMap& replaceMap);
+
     /// @inspector(EntityRefPropertyDrawer)
     class SR_COMMON_DLL_API EntityRefBase : public SR_UTILS_NS::Serializable {
         using Super = SR_UTILS_NS::Serializable;
         SR_CLASS()
     public:
         EntityRefBase();
+        void OnPostLoad() override;
 
     public:
         /// @method @evaluate
