@@ -7,7 +7,6 @@
 #include <Utils/Debug.h>
 
 namespace SR_UTILS_NS {
-    std::string StringAtom::DEFAULT = std::string();
     StringHashInfo* StringAtom::DEFAULT_STRING_INFO = SR_UTILS_NS::HashManager::Instance().GetOrAddInfo("");
 
     StringAtom::StringAtom() {
@@ -52,14 +51,6 @@ namespace SR_UTILS_NS {
         m_info = DEFAULT_STRING_INFO;
     }
 
-    StringAtom::operator const std::string&() const noexcept { /// NOLINT
-        return m_info ? m_info->data : DEFAULT;
-    }
-
-    StringAtom::operator String() const noexcept { /// NOLINT
-        return m_info ? m_info->data : DEFAULT;
-    }
-
     StringAtom::operator StringView() const noexcept { /// NOLINT
         return m_info ? StringView(m_info->data) : StringView();
     }
@@ -102,7 +93,7 @@ namespace SR_UTILS_NS {
     }
 
     char StringAtom::operator[](size_t index) const noexcept {
-        if (!m_info || index >= m_info->size) {
+        if (!m_info || index >= m_info->data.size()) {
             SRHalt("StringAtom::operator[] : index out of range!");
             return char();
         }
@@ -120,11 +111,11 @@ namespace SR_UTILS_NS {
         if (!m_info) {
             return nullptr;
         }
-        return m_info->data.c_str() + m_info->size;
+        return m_info->data.c_str() + m_info->data.size();
     }
 
     SR_NODISCARD uint64_t StringAtom::Size() const {
-        return m_info ? m_info->size : 0;
+        return m_info ? m_info->data.size() : 0;
     };
 
     SR_NODISCARD uint64_t StringAtom::size() const {
@@ -132,7 +123,7 @@ namespace SR_UTILS_NS {
     };
 
     SR_NODISCARD bool StringAtom::Empty() const {
-        return m_info == nullptr || m_info->size == 0;
+        return m_info == nullptr || m_info->data.empty();
     };
 
     SR_NODISCARD bool StringAtom::empty() const {
@@ -141,10 +132,6 @@ namespace SR_UTILS_NS {
 
     SR_NODISCARD uint64_t StringAtom::GetHash() const {
         return m_info ? m_info->hash : 0;
-    };
-
-    SR_NODISCARD std::string StringAtom::ToString() const {
-        return m_info ? m_info->data : DEFAULT;
     };
 
     SR_NODISCARD const char* StringAtom::ToCStr() const {
@@ -159,23 +146,22 @@ namespace SR_UTILS_NS {
         return ToCStr();
     };
 
-    SR_NODISCARD const std::string& StringAtom::ToStringRef() const {
-        return m_info ? m_info->data : DEFAULT;
-    };
-
     SR_NODISCARD StringView StringAtom::ToStringView() const {
-        return m_info ? m_info->data : DEFAULT;
+        return m_info ? m_info->data : StringView();
+    }
+
+    SR_NODISCARD StringView StringAtom::view() const {
+        return m_info ? m_info->data : StringView();
     }
 
     StringAtom::operator std::string_view() const noexcept {
-        return m_info ? m_info->data : DEFAULT;
+        return m_info ? m_info->data : StringView();
     }
 
     bool StringAtom::Contains(const char* str) const {
-        if (!m_info || m_info->size == 0) {
+        if (!m_info || m_info->data.empty()) {
             return false;
         }
-
         return m_info->data.find(str) != std::string::npos;
     }
 
@@ -206,11 +192,4 @@ namespace SR_UTILS_NS {
     StringAtom::operator uint64_t() const noexcept {
         return GetHash();
     }
-
-    //StringAtom ConstexprStringAtom::ToStringAtom() const {
-    //    if (!m_str) {
-    //        return StringAtom{};
-    //    }
-    //    return StringAtom(m_str);
-    //}
 }

@@ -134,7 +134,8 @@ namespace SR_UTILS_NS::LexerDetails {
         }
 
         if (lexemKind != LexemKind::Unknown) {
-            message += "\n" + std::string(tab, '\t') + "Lexem: " + SR_UTILS_NS::EnumReflector::ToStringAtom(lexemKind).ToStringRef();
+            message += "\n" + std::string(tab, '\t') + "Lexem: ";
+            message += SR_UTILS_NS::EnumReflector::ToStringAtom(lexemKind);
         }
 
         return message;

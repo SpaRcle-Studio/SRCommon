@@ -98,7 +98,8 @@ namespace SR_UTILS_NS {
             }
  
             std::smatch match;
-            if (std::regex_match(migratorName.ToStringRef(), match, pattern)) {
+            std::string name = migratorName.c_str();
+            if (std::regex_match(name, match, pattern)) {
                 const SR_UTILS_NS::StringAtom objectName = match[1].str();
                 const auto fromVersion = SR_UTILS_NS::LexicalCast<uint64_t>(match[2].str());
                 const auto toVersion = SR_UTILS_NS::LexicalCast<uint64_t>(match[3].str());

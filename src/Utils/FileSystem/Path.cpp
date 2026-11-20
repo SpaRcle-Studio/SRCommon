@@ -233,6 +233,10 @@ namespace SR_UTILS_NS {
         return ConcatExt(StringView(ext));
     }
 
+    Path Path::ConcatExt(const String& ext) const {
+        return ConcatExt(StringView(ext));
+    }
+
     Path Path::ConcatExt(std::string_view ext) const {
         return ConcatExt(StringView(ext));
     }

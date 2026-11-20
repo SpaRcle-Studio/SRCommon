@@ -72,7 +72,7 @@ namespace SR_WORLD_NS {
 
     GameObject::Ptr Scene::InstanceGameObject(SR_UTILS_NS::StringAtom name) {
         if (Debug::Instance().GetLevel() >= Debug::Level::High) {
-            SR_LOG("Scene::InstanceGameObject() : instance \"" + name.ToStringRef() + "\" game object at \"" + GetName() + "\" scene.");
+            SR_LOG("Scene::InstanceGameObject() : instance \"{}\" game object at \"{}\" scene.", name, GetName());
         }
 
         const GameObject::Ptr pGameObject = SRNew<GameObject>();

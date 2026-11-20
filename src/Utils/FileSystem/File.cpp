@@ -128,6 +128,7 @@ namespace SR_UTILS_NS {
     }
 
     void File::Flush() {
+        SR_TRACY_ZONE;
         if (m_pImpl) {
             m_pImpl->Flush();
         }

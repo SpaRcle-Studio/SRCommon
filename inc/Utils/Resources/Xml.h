@@ -349,7 +349,7 @@ namespace SR_UTILS_NS::Xml {
         template<typename T> bool AppendAttribute(const std::string &name, const T &value);
         template<typename T, typename U> bool AppendAttributeDef(const std::string &name, const T &value, const U& def);
 
-        Node AppendChild(const std::string &name);
+        Node AppendChild(StringView name);
         Node AppendChild(const Node &node);
 
         Node AppendNode(const std::string &name);

@@ -51,7 +51,8 @@ namespace SR_UTILS_NS {
         String& operator=(String&& other) noexcept;
 
         String& operator+=(const String& rhs);
-        String& operator+=(const StringView& rhs);
+        String& operator+=(StringView rhs);
+        String& operator+=(StringAtom rhs);
         String& operator+=(const char* rhs);
         String& operator+=(char rhs);
         String& operator+=(const std::string& rhs);

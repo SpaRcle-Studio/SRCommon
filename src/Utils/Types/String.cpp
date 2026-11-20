@@ -157,7 +157,8 @@ namespace SR_UTILS_NS {
     }
 
     String& String::operator+=(const String& rhs) { return *this += std::string_view(rhs.m_data, rhs.m_size); }
-    String& String::operator+=(const StringView& rhs) { return *this += std::string_view(rhs.data(), rhs.size()); }
+    String& String::operator+=(StringView rhs) { return *this += std::string_view(rhs.data(), rhs.size()); }
+    String& String::operator+=(StringAtom rhs) { return *this += std::string_view(rhs.data(), rhs.size()); }
     String& String::operator+=(const char* rhs) { return *this += std::string_view(rhs); }
     String& String::operator+=(const std::string& rhs) { return *this += std::string_view(rhs); }
     String& String::operator+=(const char rhs) {

@@ -88,6 +88,7 @@ namespace SR_UTILS_NS {
         SR_NODISCARD Path ConcatExt(const std::string& ext) const;
         SR_NODISCARD Path ConcatExt(std::string_view ext) const;
         SR_NODISCARD Path ConcatExt(StringView ext) const;
+        SR_NODISCARD Path ConcatExt(const String& ext) const;
         SR_NODISCARD Path ConcatExt(const char* ext) const;
         SR_NODISCARD Path ConcatExt(SR_UTILS_NS::StringAtom ext) const;
 

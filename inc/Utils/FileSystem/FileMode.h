@@ -13,6 +13,7 @@ namespace SR_UTILS_NS {
         Read = 1 << 0,
         Write = 1 << 1,
         Map = 1 << 2,
+        Lock = 1 << 3,
         ReadWrite = Read | Write,
         ReadMap = Read | Map,
         WriteMap = Write | Map,

@@ -72,7 +72,7 @@ namespace SR_UTILS_NS {
 
         std::shared_lock readLock(m_mountsMutex, std::defer_lock);
         std::unique_lock writeLock(m_mountsMutex, std::defer_lock);
-        if (isWrite) {
+        if (isWrite && SR_MATH_NS::IsMaskIncludedSubMask(mode, FileMode::Lock)) {
             writeLock.lock();
         }
         else {

@@ -694,7 +694,7 @@ namespace SR_UTILS_NS {
         SR_TRACY_ZONE;
 
         if (m_isDestroyed) {
-            SRHalt("SceneObject::Destroy() : \"" + m_name.ToString() + "\" game object already destroyed!");
+            SRHalt("SceneObject::Destroy() : \"{}\" game object already destroyed!", m_name);
             return;
         }
 

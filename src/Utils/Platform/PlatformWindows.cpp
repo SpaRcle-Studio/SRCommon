@@ -562,6 +562,7 @@ namespace SR_UTILS_NS::Platform {
     }
 
     uint64_t GetProcessUsedMemory() {
+        SR_TRACY_ZONE;
 #ifdef SR_MINGW
 #else
         PROCESS_MEMORY_COUNTERS pmc;

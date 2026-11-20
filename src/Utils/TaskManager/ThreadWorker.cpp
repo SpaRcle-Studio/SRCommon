@@ -100,9 +100,9 @@ namespace SR_UTILS_NS {
         FinalizeImpl();
     }
 
-    ThreadWorker::ThreadWorker(std::string name)
+    ThreadWorker::ThreadWorker(StringAtom name)
         : Super(this, SR_UTILS_NS::SharedPtrPolicy::Automatic)
-        , m_name(std::move(name))
+        , m_name(name)
     { }
 
     ThreadWorker::~ThreadWorker() = default;
@@ -364,7 +364,7 @@ namespace SR_UTILS_NS {
     ThreadWorkerState ThreadsWorker::GetState(SR_UTILS_NS::StringAtom name) const {
         auto&& pIt = m_states.find(name);
         if (pIt == m_states.end()) {
-            SR_ERROR("ThreadsWorker::GetState() : state \"{}\" not found!", name.ToStringRef());
+            SR_ERROR("ThreadsWorker::GetState() : state \"{}\" not found!", name);
             return ThreadWorkerState::Idle;
         }
 

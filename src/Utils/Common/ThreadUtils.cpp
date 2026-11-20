@@ -3,9 +3,11 @@
 //
 
 #include <Utils/Common/ThreadUtils.h>
+#include <Utils/Profile/TracyContext.h>
 
 namespace SR_UTILS_NS {
     SR_UTILS_NS::StringAtom GetThisThreadId() {
+        SR_TRACY_ZONE;
         static SR_THREAD_LOCAL SR_UTILS_NS::StringAtom threadId;
         static SR_THREAD_LOCAL bool initialized = false;
         if (!initialized) {

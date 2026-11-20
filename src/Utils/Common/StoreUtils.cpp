@@ -17,7 +17,7 @@ namespace SR_UTILS_NS::StoreUtils {
         auto&& pUserDataIt = m_storage.find(StorageType::User);
         if (pUserDataIt != m_storage.end()) {
             for (auto&& [key, value] : pUserDataIt->second) {
-                auto&& node = root.AppendChild(key.ToString());
+                auto&& node = root.AppendChild(key);
                 switch (value.type) {
                 case ValueType::Float:
                     node.AppendAttribute("Type", "Float");

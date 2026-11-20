@@ -78,11 +78,11 @@ namespace SR_HTYPES_NS {
         }
 
     #ifdef SR_DEBUG
-        SR_MAYBE_UNUSED std::string threads;
+        SR_MAYBE_UNUSED String threads;
         for (auto&& [id, pThread] : m_threads) {
-            threads.append("\tThread [" + id.ToStringRef() + "]\n");
+            threads += ("\tThread [" + String(id) + "]\n");
         }
-        SRHalt("Thread::Factory::GetThisThread() : unknown thread!\n" + threads);
+        SRHalt("Thread::Factory::GetThisThread() : unknown thread!\n{}", threads);
     #endif
 
         return nullptr;
@@ -264,17 +264,17 @@ namespace SR_HTYPES_NS {
             return;
         }
 
-        std::string log = "Thread::Factory::PrintThreads() : threads:\n";
+        String log = "Thread::Factory::PrintThreads() : threads:\n";
 
         for (auto&& [id, pThread] : m_threads) {
             if (pThread == m_main) {
                 log += "\tThread [Main]\n";
             }
             else if (!pThread->m_name.empty()) {
-                log += "\tThread [" + id.ToStringRef() + "] - " + pThread->m_name + "\n";
+                log += "\tThread [" + String(id) + "] - " + pThread->m_name + "\n";
             }
             else {
-                log += "\tThread [" + id.ToStringRef() + "]\n";
+                log += "\tThread [" + String(id) + "]\n";
             }
         }
 

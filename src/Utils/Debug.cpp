@@ -21,8 +21,8 @@
 
 namespace SR_UTILS_NS {
     void Debug::Print(StringView rawMsg, DebugLogType type) {
-        SR_LOCK_GUARD;
         SR_TRACY_ZONE;
+        SR_LOCK_GUARD;
 
         if (!m_isInit) {
             SR_PLATFORM_NS::WriteConsoleError("Debug::Print() : debugger isn't initialized!\n\tMessage: {}{}{}"_format(rawMsg, "\n", SR_UTILS_NS::GetStacktrace()));
@@ -59,12 +59,15 @@ namespace SR_UTILS_NS {
 
         m_messageBuffer.append("\n");
 
-        auto&& threadName = SR_UTILS_NS::GetThisThreadId();
-
         m_messagePrefixBuffer.clear();
         m_messageMemoryBuffer.clear();
 
-        FormatTo(m_messagePrefixBuffer, "[{}] [{}]", SR_UTILS_NS::EnumReflector::ToStringAtom(type), threadName);
+        m_messagePrefixBuffer += "[";
+        m_messagePrefixBuffer += SR_UTILS_NS::EnumReflector::ToStringAtom(type).ToStringView();
+        m_messagePrefixBuffer += "] [";
+        m_messagePrefixBuffer += SR_UTILS_NS::GetThisThreadId().ToStringView();
+        m_messagePrefixBuffer += "] ";
+
         if (m_showUseMemory) {
             FormatTo(m_messageMemoryBuffer, "<{} MB> ", static_cast<uint32_t>(SR_PLATFORM_NS::GetProcessUsedMemory() / 1024 / 1024));
         }
@@ -91,19 +94,22 @@ namespace SR_UTILS_NS {
                 }
             }
             else {
-                fmt::print(fmt::fg(fmt::color::dark_gray) | fmt::emphasis::faint, fmt::runtime(m_messageMemoryBuffer));
-                fmt::print(GetTextStyleColorByLogType(type), fmt::runtime(m_messagePrefixBuffer));
-
+                SR_TRACY_ZONE_N("Console");
                 std::lock_guard lock(SR_PLATFORM_NS::g_platformLogMutex);
                 try {
-                    fmt::print(fmt::emphasis::bold, " {}", m_messageBuffer);
+                    fmt::print(fmt::fg(fmt::color::dark_gray) | fmt::emphasis::faint, fmt::runtime(m_messageMemoryBuffer));
+                    fmt::print(GetTextStyleColorByLogType(type), fmt::runtime(m_messagePrefixBuffer));
+                    fmt::print(fmt::emphasis::bold, "{}", m_messageBuffer);
                 }
                 catch (const std::exception& ex) {
                     std::cout << " Error while printing message: " << ex.what() << "\nMessage: " << m_messageBuffer << std::endl;
                 }
             }
 
-            std::cout << std::flush;
+            {
+                SR_TRACY_ZONE_N("Console flush");
+                std::cout << std::flush;
+            }
 
             if (m_file) {
                 m_file << m_messageMemoryBuffer << m_messagePrefixBuffer << " " << m_messageBuffer;
@@ -124,6 +130,7 @@ namespace SR_UTILS_NS {
 
         m_isInit = true;
         m_showUseMemory = ShowUsedMemory;
+        m_messagePrefixBuffer.reserve(128);
 
     #ifndef SR_EMSCRIPTEN
         m_logPath = logPath;

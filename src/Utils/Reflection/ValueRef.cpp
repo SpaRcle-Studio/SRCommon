@@ -153,7 +153,7 @@ namespace SR_UTILS_NS::Reflection {
             return false;
         }
         if (m_array.IsConst()) {
-            SR_ERROR("ArrayView::CanModify() : array \"{}\" is const!", m_array.GetTypeInfo().name.ToStringRef());
+            SR_ERROR("ArrayView::CanModify() : array \"{}\" is const!", m_array.GetTypeInfo().name);
             return false;
         }
         return true;
@@ -204,7 +204,7 @@ namespace SR_UTILS_NS::Reflection {
         }
         if (!value.IsValid() || &value.GetTypeInfo() != GetElementType()) {
             SR_ERROR("ArrayView::Insert() : value type \"{}\" does not match element type of \"{}\"!",
-                value.GetTypeInfo().name.ToStringRef(), m_array.GetTypeInfo().name.ToStringRef());
+                value.GetTypeInfo().name, m_array.GetTypeInfo().name);
             return false;
         }
         if (index > Size()) {
@@ -282,7 +282,7 @@ namespace SR_UTILS_NS::Reflection {
             return false;
         }
         if (m_map.IsConst()) {
-            SR_ERROR("MapView::CanModify() : container \"{}\" is const!", m_map.GetTypeInfo().name.ToStringRef());
+            SR_ERROR("MapView::CanModify() : container \"{}\" is const!", m_map.GetTypeInfo().name);
             return false;
         }
         return true;
@@ -293,7 +293,7 @@ namespace SR_UTILS_NS::Reflection {
             return true;
         }
         SR_ERROR("MapView::IsKey() : key type \"{}\" does not match key type of \"{}\"!",
-            key.GetTypeInfo().name.ToStringRef(), m_map.GetTypeInfo().name.ToStringRef());
+            key.GetTypeInfo().name, m_map.GetTypeInfo().name);
         return false;
     }
 
@@ -342,7 +342,7 @@ namespace SR_UTILS_NS::Reflection {
         }
         if (!IsSet() && (!value.IsValid() || &value.GetTypeInfo() != m_pValueType)) {
             SR_ERROR("MapView::InsertOrAssign() : value type \"{}\" does not match value type of \"{}\"!",
-                value.GetTypeInfo().name.ToStringRef(), m_map.GetTypeInfo().name.ToStringRef());
+                value.GetTypeInfo().name, m_map.GetTypeInfo().name);
             return false;
         }
         return m_pVTable->pInsertOrAssign(m_map.Data(), key.Data(), IsSet() ? nullptr : value.Data());

@@ -272,7 +272,7 @@ namespace SR_UTILS_NS {
         return doc;
     }
 
-    Xml::Node Xml::Node::AppendChild(const std::string &name) {
+    Xml::Node Xml::Node::AppendChild(StringView name) {
         if (!m_valid) {
             SRAssert2(false,"Node::AppendChild() : node is not valid!");
             g_xml_last_error = -2;

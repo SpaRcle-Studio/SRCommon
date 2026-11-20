@@ -138,9 +138,7 @@ namespace SR_UTILS_NS {
         if (auto&& result = GetReflector<EnumType>()->FromStringInternal(value); result.has_value()) {
             return static_cast<EnumType>(result.value());
         }
-
-        ErrorInternal("EnumReflector::FromString() : unknown type! Value: " + value.ToStringRef());
-
+        ErrorInternal("EnumReflector::FromString() : unknown type! Value: " + String(value));
         return static_cast<EnumType>(0);
     }
 

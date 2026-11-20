@@ -10,12 +10,11 @@
 
 namespace SR_UTILS_NS {
     class StringAtom;
+    class IAllocator;
 
     struct StringHashInfo {
-        std::string data;
-        std::string_view view;
+        StringView data;
         uint64_t hash = SR_UINT64_MAX;
-        uint64_t size = 0; /// TODO: remove
     };
 
     /// Не можем наследоваться от Singleton
@@ -23,8 +22,8 @@ namespace SR_UTILS_NS {
         using Hash = uint64_t;
         using Storage = SR_HTYPES_NS::FlatHashMap<Hash, StringHashInfo*>;
     private:
-        HashManager() = default;
-        ~HashManager() override = default;
+        HashManager();
+        ~HashManager() override;
 
     public:
         SR_MAYBE_UNUSED static HashManager& Instance();
@@ -33,7 +32,7 @@ namespace SR_UTILS_NS {
         void Lock() const { m_mutex.lock(); }
         void Unlock() const { m_mutex.unlock(); }
 
-        SR_NODISCARD const std::string_view& HashToString(Hash hash) const;
+        SR_NODISCARD StringView HashToString(Hash hash) const;
         SR_NODISCARD StringAtom HashToStringAtom(Hash hash) const;
         SR_NODISCARD bool Exists(Hash hash) const;
 
@@ -42,7 +41,7 @@ namespace SR_UTILS_NS {
         SR_NODISCARD StringHashInfo* GetOrAddInfo(const std::string& str);
         SR_NODISCARD StringHashInfo* GetOrAddInfo(const String& str);
         SR_NODISCARD StringHashInfo* GetOrAddInfo(StringView str);
-        SR_NODISCARD StringHashInfo* GetOrAddInfo(const std::string_view& str);
+        SR_NODISCARD StringHashInfo* GetOrAddInfo(std::string_view str);
         SR_NODISCARD StringHashInfo* GetOrAddInfo(const char* str);
 
         Hash AddHash(const std::string& str);
@@ -50,11 +49,13 @@ namespace SR_UTILS_NS {
         Hash AddHash(const char* str);
 
     private:
-        SR_NODISCARD StringHashInfo* Register(std::string str, Hash hash);
+        SR_NODISCARD StringHashInfo* Register(StringView str, Hash hash);
 
     private:
         Storage m_strings; /// NOLINT
         mutable std::recursive_mutex m_mutex;
+        IAllocator* m_pStringAllocator = nullptr;
+        IAllocator* m_pInfoAllocator = nullptr;
 
     };
 

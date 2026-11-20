@@ -299,7 +299,9 @@ namespace SR_UTILS_NS {
 
         std::string wait;
         for (auto&& pResource : m_destroyQueue) {
-            wait += "\n\t\t" + pResource->GetResourceId().ToStringRef() + "; uses = " +std::to_string(pResource->GetCountUses());
+            wait += "\n\t\t";
+            wait += pResource->GetResourceId();
+            wait += "; uses = " + std::to_string(pResource->GetCountUses());
             ++count;
         }
 
@@ -496,7 +498,7 @@ namespace SR_UTILS_NS {
                 }
 
                 if (SR_UTILS_NS::Debug::Instance().GetLevel() >= SR_UTILS_NS::Debug::Level::Medium) {
-                    SR_LOG("ResourceManager::ReviveResource() : revive resource \"" + pResource->GetResourceId().ToStringRef() + "\"");
+                    SR_LOG("ResourceManager::ReviveResource() : revive resource \"{}\"", pResource->GetResourceId());
                 }
 
                 pResource->ReviveResource();

@@ -119,12 +119,17 @@ namespace SR_UTILS_NS {
             return false;
         }
 
-        std::string featuresList;
-        featuresList.reserve(1024);
+        String featuresList;
+        featuresList.reserve(2048);
         for (const auto& [groupName, group] : m_features) {
-            featuresList += "\n\t[" + groupName.ToString() + "]";
+            featuresList += "\n\t[";
+            featuresList += groupName;
+            featuresList += ']';
             for (const auto& [featureName, featureValue] : group.m_values) {
-                featuresList += "\n\t\t" + featureName.ToString() + " = " + (featureValue ? "true" : "false");
+                featuresList += "\n\t\t";
+                featuresList += featureName;
+                featuresList += " = ";
+                featuresList += featureValue ? "true" : "false";
             }
         }
         SR_LOG("Features::Reload() : features are successfully reloaded! Features: {}", featuresList);

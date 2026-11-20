@@ -69,7 +69,7 @@ namespace SR_UTILS_NS {
     class ThreadWorker final : public SR_HTYPES_NS::SharedPtr<ThreadWorker> {
         using Super = SR_HTYPES_NS::SharedPtr<ThreadWorker>;
     public:
-        explicit ThreadWorker(std::string name);
+        explicit ThreadWorker(StringAtom name);
         ~ThreadWorker() override;
 
         void AddState(ThreadWorkerStateBase::Ptr pState);
@@ -94,7 +94,7 @@ namespace SR_UTILS_NS {
         SR_HTYPES_NS::Thread* m_thread = nullptr;
         std::vector<ThreadWorkerStateBase::Ptr> m_states;
         uint32_t m_currentState = 0;
-        std::string m_name;
+        StringAtom m_name;
         std::atomic<bool> m_isActive = false;
         bool m_useThreads = true;
 

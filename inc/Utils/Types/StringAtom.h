@@ -11,7 +11,6 @@ namespace SR_UTILS_NS {
     struct StringHashInfo;
 
     class SR_COMMON_DLL_API StringAtom {
-        static std::string DEFAULT;
         static StringHashInfo* DEFAULT_STRING_INFO;
     public:
         /// @constructor
@@ -28,8 +27,6 @@ namespace SR_UTILS_NS {
         StringAtom(const char* str, SizeType length);
 
     public:
-        operator const std::string&() const noexcept; /// NOLINT
-        operator String() const noexcept; /// NOLINT
         operator std::string_view() const noexcept; /// NOLINT
         operator StringView() const noexcept; /// NOLINT
         /// @operator
@@ -66,11 +63,10 @@ namespace SR_UTILS_NS {
         SR_NODISCARD bool Empty() const;
         SR_NODISCARD bool empty() const;
         SR_NODISCARD uint64_t GetHash() const;
-        SR_NODISCARD std::string ToString() const;
         SR_NODISCARD const char* ToCStr() const;
         SR_NODISCARD const char* c_str() const;
         SR_NODISCARD const char* data() const;
-        SR_NODISCARD const std::string& ToStringRef() const;
+        SR_NODISCARD StringView view() const;
         SR_NODISCARD StringView ToStringView() const;
 
         void clear();

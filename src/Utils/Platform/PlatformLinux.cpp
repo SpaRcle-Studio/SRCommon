@@ -270,7 +270,6 @@ namespace SR_PLATFORM_NS {
     void WriteConsoleError(StringView msg) {
         std::lock_guard lock(g_platformLogMutex);
         std::cerr << msg.c_str() << std::flush;
-        ;
     }
 
     void WriteConsoleWarn(StringView msg) {
