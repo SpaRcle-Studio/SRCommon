@@ -20,6 +20,31 @@ namespace SR_UTILS_NS::Reflection {
         return m_pTypeInfo->vtable.pSizeOfAlign(*m_pTypeInfo).first;
     }
 
+    uint32_t ValueRef::FieldCount() const {
+        if (!IsValid()) {
+            return 0;
+        }
+        return m_pTypeInfo->vtable.pFieldCount ? m_pTypeInfo->vtable.pFieldCount(*m_pTypeInfo, m_pData) : m_pTypeInfo->fieldsCount;
+    }
+
+    StringAtom ValueRef::FieldName(uint32_t index) const {
+        if (index >= FieldCount()) {
+            return {};
+        }
+        return m_pTypeInfo->vtable.pFieldName ? m_pTypeInfo->vtable.pFieldName(*m_pTypeInfo, m_pData, index) : m_pTypeInfo->pFields[index].name;
+    }
+
+    ValueRef ValueRef::Field(uint32_t index) const {
+        if (index >= FieldCount()) {
+            return {};
+        }
+        if (m_pTypeInfo->vtable.pField) {
+            return m_pTypeInfo->vtable.pField(*m_pTypeInfo, m_pData, index, m_isConst);
+        }
+        auto&& field = m_pTypeInfo->pFields[index];
+        return ValueRef(field.pType, static_cast<uint8_t*>(m_pData) + field.offset, m_isConst);
+    }
+
     void* ValueRef::GetTypeController() const {
         if (!IsValid() || !m_pTypeInfo->vtable.pGetTypeController) {
             return nullptr;

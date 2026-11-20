@@ -115,6 +115,8 @@ namespace SR_UTILS_NS::Reflection {
 
         /// у Map и FlatHashMap единственный аргумент - Pair<Key, Value>, так же как тип элемента при итерации
         Vector, Set, FlatHashSet, Map, FlatHashMap, Pair, Optional, SharedPtr, EntityRef, ResourceRef,
+
+        ScriptObject, ScriptHandle,
     };
 
     SR_NODISCARD constexpr bool IsTypeKindSigned(const TypeKind kind) noexcept {

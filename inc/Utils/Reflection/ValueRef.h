@@ -41,6 +41,9 @@ namespace SR_UTILS_NS::Reflection {
         SR_NODISCARD bool IsValid() const noexcept { return m_pTypeInfo && m_pData; }
         SR_NODISCARD explicit operator bool() const noexcept { return IsValid(); }
         SR_NODISCARD SizeType SizeOf() const;
+        SR_NODISCARD uint32_t FieldCount() const;
+        SR_NODISCARD StringAtom FieldName(uint32_t index) const;
+        SR_NODISCARD ValueRef Field(uint32_t index) const;
 
         SR_NODISCARD SRClass* GetSRClass() const;
         SR_NODISCARD SR_HTYPES_NS::SharedPtrBase* GetSharedPtrBase() const;

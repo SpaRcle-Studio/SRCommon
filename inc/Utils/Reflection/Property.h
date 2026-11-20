@@ -119,6 +119,9 @@ namespace SR_UTILS_NS::Reflection {
         SR_NODISCARD const TypeInfo& GetTypeInfo() const noexcept;
         SR_NODISCARD const EditorPropertyParams& GetEditorParams() const noexcept { return m_editorParams; }
         SR_NODISCARD bool HasExplicitSetter() const noexcept { return m_hasExplicitSetter; }
+        SR_NODISCARD int32_t GetByteOffset() const noexcept {
+            return m_byteOffset;
+        }
         SR_NODISCARD bool IsDontScript() const noexcept { return m_dontScript; }
 
         SR_NODISCARD bool IsActive(SRClass& owner) const noexcept {
@@ -154,6 +157,10 @@ namespace SR_UTILS_NS::Reflection {
         Property& SetEditorParams(const EditorPropertyParams& params) noexcept { m_editorParams = params; return *this; }
         Property& SetPropertyCondition(PropertyActiveCallbackFn callback) noexcept { m_propertyActiveCallback = callback; return *this; }
         Property& SetHasExplicitSetter(bool hasExplicitSetter) noexcept { m_hasExplicitSetter = hasExplicitSetter; return *this; }
+        Property& SetByteOffset(int32_t offset) noexcept {
+            m_byteOffset = offset;
+            return *this;
+        }
         Property& SetDontScript(bool dontScript) noexcept { m_dontScript = dontScript; return *this; }
         Property& SetDisplayName(const StringAtom& displayName) noexcept { m_displayName = displayName; return *this; }
 
@@ -176,6 +183,7 @@ namespace SR_UTILS_NS::Reflection {
         PropertyActiveCallbackFn m_propertyActiveCallback = nullptr;
         bool m_hasExplicitSetter : 4 = false;
         bool m_dontScript : 4 = false;
+        int32_t m_byteOffset = INT32_MIN;
     };
 
     SR_COMMON_DLL_API std::string_view MakeSerializePropertyName(std::string_view name);

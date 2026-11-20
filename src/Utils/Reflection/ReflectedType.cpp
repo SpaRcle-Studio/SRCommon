@@ -79,6 +79,8 @@ namespace SR_UTILS_NS::Reflection {
             case TypeKind::Value: return ReflectedCategoryType::Value;
             case TypeKind::Enum: return ReflectedCategoryType::Enum;
             case TypeKind::Object: return ReflectedCategoryType::Object;
+            case TypeKind::ScriptObject:
+            case TypeKind::ScriptHandle: return ReflectedCategoryType::Object;
             case TypeKind::MathVector: return ReflectedCategoryType::MathVector;
             case TypeKind::MathRect: return ReflectedCategoryType::MathRect;
             case TypeKind::MathSize: return ReflectedCategoryType::MathSize;
@@ -225,7 +227,7 @@ namespace SR_UTILS_NS::Reflection {
     }
 
     String BuildTypeName(const TypeInfoKey& key) {
-        if (key.kind == TypeKind::Enum || key.kind == TypeKind::Object) {
+        if (key.kind == TypeKind::Enum || key.kind == TypeKind::Object || key.kind == TypeKind::ScriptObject || key.kind == TypeKind::ScriptHandle) {
             return String(key.name.ToStringView());
         }
 
@@ -301,7 +303,7 @@ namespace SR_UTILS_NS::Reflection {
         TypeInfoKey key;
         key.kind = kind;
         key.detailedSize = detailedSize;
-        if (kind == TypeKind::Enum || kind == TypeKind::Object) {
+        if (kind == TypeKind::Enum || kind == TypeKind::Object || kind == TypeKind::ScriptObject || kind == TypeKind::ScriptHandle) {
             key.name = name;
         }
         key.pNext[0] = pNext[0];
@@ -342,7 +344,7 @@ namespace SR_UTILS_NS::Reflection {
 
     TypeInfoKey NormalizeTypeInfoKey(const TypeInfoKey& key) {
         TypeInfoKey normalized = key;
-        if (key.kind != TypeKind::Enum && key.kind != TypeKind::Object) {
+        if (key.kind != TypeKind::Enum && key.kind != TypeKind::Object && key.kind != TypeKind::ScriptObject && key.kind != TypeKind::ScriptHandle) {
             normalized.name = StringAtom();
         }
         return normalized;

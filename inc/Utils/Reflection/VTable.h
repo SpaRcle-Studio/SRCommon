@@ -9,6 +9,7 @@ namespace SR_UTILS_NS::Reflection {
     struct ReflectedValue;
     struct TypeInfo;
     struct FieldInfo;
+    class ValueRef;
 
     struct SR_COMMON_DLL_API LifecycleVTable {
         SizeType size = 0;
@@ -66,6 +67,12 @@ namespace SR_UTILS_NS::Reflection {
         const FieldInfo* pFields = nullptr;
         uint32_t fieldsCount = 0;
         GetTypeController pGetTypeController = nullptr;
+        void* pRuntimeData = nullptr;
+        uint32_t(*pFieldCount)(const TypeInfo&, const void*) = nullptr;
+        StringAtom(*pFieldName)(const TypeInfo&, const void*, uint32_t) = nullptr;
+        ValueRef(*pField)(const TypeInfo&, void*, uint32_t, bool) = nullptr;
+        bool(*pIsNull)(const TypeInfo&, const void*) = nullptr;
+        void(*pCreate)(const TypeInfo&, void*) = nullptr;
     };
 
     struct TypeInfoKey;
