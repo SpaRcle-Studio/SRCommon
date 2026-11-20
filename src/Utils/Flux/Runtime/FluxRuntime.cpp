@@ -30,6 +30,11 @@ namespace SR_FLUX_NS {
         m_executions.clear();
         m_pendingExecutions.clear();
         m_callArguments.clear();
+        for (auto&& pPool : m_callResultPools) {
+            if (pPool) {
+                pPool->ReleaseOwner();
+            }
+        }
     }
 
     void FluxRuntime::Emit(StringView labelName, const Vector<Reflection::Value>& args, UpdateMode updateMode, bool ignoreExisting) {
@@ -442,6 +447,27 @@ namespace SR_FLUX_NS {
         m_storage.clear();
         m_constants.resize(m_program->constants.size());
         m_storage.resize(m_program->storage.size());
+        m_callResultPools.resize(m_program->instructions.size());
+        m_callMethods.resize(m_program->instructions.size());
+        for (SizeType i = 0; i < m_program->instructions.size(); ++i) {
+            auto&& instruction = m_program->instructions[i];
+            if (instruction.opcode != FluxOpcode::Call) {
+                continue;
+            }
+            auto&& pMethod = instruction.callable.FindMethodMeta();
+            if (!pMethod) {
+                SR_ERROR("FluxRuntime::Initialize() : method {} not found!", instruction.callable.function);
+                return false;
+            }
+            m_callMethods[i] = pMethod;
+            if (pMethod->HasReturn() && !pMethod->ReturnsReference() && !m_callResultPools[i]) {
+                m_callResultPools[i] = new Reflection::ValuePool(pMethod->GetReturnType(), m_maxExecutions * (m_maxRegisters + 1));
+            }
+        }
+        for (auto&& instruction : m_program->instructions) {
+            m_callArguments.reserve(instruction.operands.size());
+            m_callValues.reserve(instruction.operands.size());
+        }
 
         for (SizeType i = 0; i < m_program->constants.size(); ++i) {
             if (m_constants[i] = LoadFluxVariable(m_program->constants[i]); !m_constants[i].IsValid()) {
@@ -475,14 +501,16 @@ namespace SR_FLUX_NS {
         SR_TRACY_ZONE;
 
         m_callArguments.clear();
+        m_callValues.clear();
 
         SRClass* pCallable = SR_UTILS_NS::GetSingletonManager()->GetSingletonMeta(instruction.callable.object.GetHash());
         const bool isSingleton = pCallable;
 
-        for (auto&& operand : instruction.operands | std::views::drop(isSingleton ? 0 : 1)) {
+        for (SizeType i = isSingleton ? 0 : 1; i < instruction.operands.size(); ++i) {
+            const auto operand = instruction.operands[i];
             auto&& argType = GetRegisterType(execution, operand);
             auto&& pArgValue = GetRegister(execution, operand, argType, RegisterOperation::Read);
-            m_callArguments.emplace_back(&pArgValue);
+            m_callValues.emplace_back(&pArgValue);
         }
 
         if (!pCallable) {
@@ -516,7 +544,7 @@ namespace SR_FLUX_NS {
             }
         }
 
-        auto&& pFunction = pCallable->GetMeta()->FindMethod(instruction.callable.function);
+        auto&& pFunction = m_callMethods[execution.instructionPointer];
         if (!pFunction) {
             SR_ERROR("FluxRuntime::CallMethod() : method \"{}\" not found in class \"{}\"!", instruction.callable.function, pCallable->GetMeta()->GetFactoryName());
             execution.state = FluxExecutionState::Error;
@@ -526,21 +554,37 @@ namespace SR_FLUX_NS {
         const bool hasReturn = pFunction->HasReturn();
         const auto paramsCount = pFunction->GetParamsCount();
 
-        if (m_callArguments.size() != paramsCount) {
-            SR_ERROR("FluxRuntime::CallMethod() : method \"{}\" expects {} arguments, but {} were provided!", instruction.callable.function, paramsCount, m_callArguments.size());
+        if (m_callValues.size() != paramsCount) {
+            SR_ERROR("FluxRuntime::CallMethod() : method \"{}\" expects {} arguments, but {} were provided!", instruction.callable.function, paramsCount, m_callValues.size());
             execution.state = FluxExecutionState::Error;
             return false;
         }
 
+        for (uint32_t i = 0; i < paramsCount; ++i) {
+            m_callArguments.emplace_back(pFunction->GetArgumentData(*m_callValues[i], i));
+        }
+
         if (hasReturn) {
-            GetResultRegister(execution) = paramsCount > 0 ?
-                pFunction->Invoke(*pCallable, m_callArguments) :
-                pFunction->Invoke(*pCallable);
+            Reflection::Value result;
+            if (!pFunction->ReturnsReference()) {
+                result = m_callResultPools[execution.instructionPointer]->Acquire();
+                if (!result) {
+                    SR_ERROR("FluxRuntime::CallMethod() : prepared result storage exhausted! Method: {}", instruction.callable.function);
+                    execution.state = FluxExecutionState::Error;
+                    return false;
+                }
+            }
+            pFunction->InvokeInto(*pCallable, m_callArguments.data(), result);
+            if (pFunction->IsDontPack() && result && result.GetTypeInfo().kind == Reflection::TypeKind::Value) {
+                GetResultRegister(execution) = result.IsRef() ?
+                    *result.Cast<Reflection::Value>() : std::move(*result.Cast<Reflection::Value>());
+            }
+            else {
+                GetResultRegister(execution) = std::move(result);
+            }
         }
         else {
-            paramsCount > 0 ?
-                pFunction->InvokeVoid(*pCallable, m_callArguments) :
-                pFunction->InvokeVoid(*pCallable);
+            pFunction->InvokeRaw(*pCallable, m_callArguments.data(), nullptr);
         }
 
         return true;

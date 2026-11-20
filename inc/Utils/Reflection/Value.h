@@ -10,6 +10,7 @@
 // #define SR_COMMON_USE_ENTT
 
 namespace SR_UTILS_NS::Reflection {
+    class ValuePool;
     enum class ReflectedCategoryType : uint8_t;
 
     class SR_COMMON_DLL_API SR_NODISCARD Value {
@@ -69,6 +70,8 @@ namespace SR_UTILS_NS::Reflection {
         SR_NODISCARD operator bool() const noexcept; /// NOLINT
 
     private:
+        friend class Method;
+        friend class ValuePool;
         void Destroy();
         void ReleaseStorage();
         bool AllocateStorage(const TypeInfo* pTypeInfo);
@@ -76,6 +79,7 @@ namespace SR_UTILS_NS::Reflection {
     private:
         ReflectedValue m_storage;
         const TypeInfo* m_typeInfo = nullptr;
+        ValuePool* m_pPool = nullptr;
 
     };
 

@@ -25,10 +25,7 @@ namespace SR_UTILS_NS::Reflection {
     public:
         using Owner = SRClass;
         using Params = std::span<Value*>;
-        using FunctorNoReturnNoParams = void(*)(Owner&);
-        using FunctorNoReturnWithParams = void(*)(Owner&, const Params&);
-        using FunctorWithReturnNoParams = Value(*)(Owner&);
-        using FunctorWithReturnWithParams = Value(*)(Owner&, const Params&);
+        typedef void(*Thunk)(Owner&, void* const*, void*);
         using MethodActiveCallbackFn = bool(*)(SRClass* pOwner);
     public:
         Method() = default;
@@ -55,10 +52,29 @@ namespace SR_UTILS_NS::Reflection {
         Value Invoke(Owner& owner, const Params& params) const;
         Value Invoke(Owner& owner) const;
 
-        Method& SetNoReturnNoParams(const FunctorNoReturnNoParams& func);
-        Method& SetNoReturnWithParams(const FunctorNoReturnWithParams& func);
-        Method& SetWithReturnNoParams(const FunctorWithReturnNoParams& func);
-        Method& SetWithReturnWithParams(const FunctorWithReturnWithParams& func);
+        /// Value results are assigned into a live object; reference results write a const void*.
+        void InvokeRaw(Owner& owner, void* const* pArgs, void* pReturn) const;
+        void InvokeInto(Owner& owner, void* const* pArgs, Value& result) const;
+        SR_NODISCARD void* GetArgumentData(Value& value, uint32_t index) const;
+        SR_NODISCARD bool ReturnsReference() const { return m_returnsReference; }
+        SR_NODISCARD bool IsDontPack() const { return m_dontPack; }
+        Method& SetThunk(Thunk pThunk);
+        Method& SetReturnReference(bool isReference, bool isConst);
+        Method& SetDontPack();
+
+        template<typename R, typename F> static void StoreResult(void* pReturn, F&& function) {
+            if constexpr (std::is_reference_v<R>) {
+                *static_cast<const void**>(pReturn) = std::addressof(function());
+            }
+            else {
+                static_assert(std::is_default_constructible_v<std::remove_cv_t<R>>,
+                    "Reflected value returns require a default constructor.");
+                static_assert(std::is_assignable_v<std::remove_cv_t<R>&, R>,
+                    "Reflected value returns require assignment.");
+                *static_cast<std::remove_cv_t<R>*>(pReturn) = function();
+            }
+        }
+
         Method& SetName(StringAtom name);
         Method& SetReturnType(const TypeInfo* pReturnTypeInfo);
         Method& SetEditorButton();
@@ -67,12 +83,7 @@ namespace SR_UTILS_NS::Reflection {
         Method& SetEvaluate();
 
     private:
-        union {
-            FunctorNoReturnNoParams m_noReturnNoParams;
-            FunctorNoReturnWithParams m_noReturnWithParams;
-            FunctorWithReturnNoParams m_withReturnNoParams;
-            FunctorWithReturnWithParams m_withReturnWithParams;
-        };
+        Thunk m_pThunk = nullptr;
         MethodActiveCallbackFn m_methodActiveCallback = nullptr;
 
         StringAtom m_name;
@@ -81,6 +92,9 @@ namespace SR_UTILS_NS::Reflection {
         const TypeInfo* m_pReturnTypeInfo = nullptr;
         bool m_isEditorButton = false;
         bool m_isEvaluate = false;
+        bool m_returnsReference = false;
+        bool m_returnIsConst = false;
+        bool m_dontPack = false;
 
     };
 

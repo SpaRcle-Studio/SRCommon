@@ -7,6 +7,7 @@
 
 #include <Utils/Flux/Runtime/FluxExecution.h>
 #include <Utils/Input/InputSystem.h>
+#include <Utils/Reflection/ValuePool.h>
 
 namespace SR_FLUX_NS {
     enum class RegisterType : uint8_t {
@@ -78,7 +79,10 @@ namespace SR_FLUX_NS {
         Vector<FluxExecution> m_executions;
         Vector<FluxExecution> m_pendingExecutions;
         Vector<FluxExecution> m_poolExecutions;
-        Vector<Reflection::Value*> m_callArguments;
+        Vector<void*> m_callArguments;
+        Vector<Reflection::Value*> m_callValues;
+        Vector<Reflection::ValuePool*> m_callResultPools;
+        Vector<const Reflection::Method*> m_callMethods;
 
         OnInstructionExecutedCallback m_onInstructionExecutedCallback;
 

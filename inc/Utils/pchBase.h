@@ -67,6 +67,10 @@
     #include <future>
     #include <cstddef>
 
+    #ifdef SR_MSVC
+        #include <malloc.h>
+    #endif
+
     #define XXH_STATIC_LINKING_ONLY
     #include <xxHash/xxhash.h>
 
@@ -124,6 +128,12 @@
 
 #ifdef SR_ANDROID
     #pragma clang diagnostic pop
+#endif
+
+#ifdef SR_MSVC
+    #define SR_STACK_ALLOC(size) (_alloca(size))
+#else
+    #define SR_STACK_ALLOC(size) (__builtin_alloca(size))
 #endif
 
 inline std::string_view SRGetClassName(std::string_view func_signature) {

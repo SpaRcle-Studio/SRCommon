@@ -3,6 +3,7 @@
 //
 
 #include <Utils/Reflection/Value.h>
+#include <Utils/Reflection/ValuePool.h>
 #include <Utils/Reflection/ReflectedType.h>
 #include <Utils/Types/Optional.h>
 #include <Utils/ECS/EntityRef.h>
@@ -64,7 +65,11 @@ namespace SR_UTILS_NS::Reflection {
     }
 
     void Value::ReleaseStorage() {
-        if (m_typeInfo && IsDynamic()) {
+        if (m_pPool) {
+            m_pPool->Release(m_storage.GetData());
+            m_pPool = nullptr;
+        }
+        else if (m_typeInfo && IsDynamic()) {
             auto&& lifecycle = m_typeInfo->vtable.lifecycle;
             IAllocator::GetDefaultAllocator()->Free(m_storage.GetData(), lifecycle.size, lifecycle.alignment);
         }
@@ -98,6 +103,8 @@ namespace SR_UTILS_NS::Reflection {
         if (this != &other) {
             Destroy();
             m_typeInfo = other.m_typeInfo;
+            m_pPool = other.m_pPool;
+            other.m_pPool = nullptr;
             if (other.IsEmbedded() && m_typeInfo && !m_typeInfo->vtable.lifecycle.isTriviallyRelocatable) {
                 m_typeInfo->MoveConstructAt(m_storage.GetData(), other.m_storage.GetData());
                 m_typeInfo->DestructAt(other.m_storage.GetData());
