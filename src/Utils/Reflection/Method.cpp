@@ -57,7 +57,7 @@ namespace SR_UTILS_NS::Reflection {
             pArguments[i] = GetArgumentData(*params[i], i);
         }
         Value result;
-        if (HasReturn() && !ReturnsReference()) {
+        if (HasReturn() && !IsReturnsReference()) {
             result = Value::CreateDefault(m_pReturnTypeInfo);
         }
         InvokeInto(owner, pArguments, result);
@@ -86,6 +86,10 @@ namespace SR_UTILS_NS::Reflection {
             return &value;
         }
         return value.Data();
+    }
+
+    bool Method::IsReturnsConstReference() const {
+        return m_returnsReference && m_returnIsConst;
     }
 
     void Method::InvokeInto(Owner& owner, void* const* pArgs, Value& result) const {

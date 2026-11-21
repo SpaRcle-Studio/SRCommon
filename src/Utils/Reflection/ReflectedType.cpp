@@ -81,6 +81,7 @@ namespace SR_UTILS_NS::Reflection {
             case TypeKind::Object: return ReflectedCategoryType::Object;
             case TypeKind::ScriptObject:
             case TypeKind::ScriptHandle: return ReflectedCategoryType::Object;
+            case TypeKind::NativeHandle: return ReflectedCategoryType::Object;
             case TypeKind::MathVector: return ReflectedCategoryType::MathVector;
             case TypeKind::MathRect: return ReflectedCategoryType::MathRect;
             case TypeKind::MathSize: return ReflectedCategoryType::MathSize;
@@ -227,7 +228,7 @@ namespace SR_UTILS_NS::Reflection {
     }
 
     String BuildTypeName(const TypeInfoKey& key) {
-        if (key.kind == TypeKind::Enum || key.kind == TypeKind::Object || key.kind == TypeKind::ScriptObject || key.kind == TypeKind::ScriptHandle) {
+        if (key.kind == TypeKind::Enum || key.kind == TypeKind::Object || key.kind == TypeKind::ScriptObject || key.kind == TypeKind::ScriptHandle || key.kind == TypeKind::NativeHandle || key.kind == TypeKind::ScriptEnum) {
             return String(key.name.ToStringView());
         }
 
@@ -303,7 +304,7 @@ namespace SR_UTILS_NS::Reflection {
         TypeInfoKey key;
         key.kind = kind;
         key.detailedSize = detailedSize;
-        if (kind == TypeKind::Enum || kind == TypeKind::Object || kind == TypeKind::ScriptObject || kind == TypeKind::ScriptHandle) {
+        if (kind == TypeKind::Enum || kind == TypeKind::Object || kind == TypeKind::ScriptObject || kind == TypeKind::ScriptHandle || kind == TypeKind::NativeHandle || kind == TypeKind::ScriptEnum) {
             key.name = name;
         }
         key.pNext[0] = pNext[0];
@@ -344,7 +345,7 @@ namespace SR_UTILS_NS::Reflection {
 
     TypeInfoKey NormalizeTypeInfoKey(const TypeInfoKey& key) {
         TypeInfoKey normalized = key;
-        if (key.kind != TypeKind::Enum && key.kind != TypeKind::Object && key.kind != TypeKind::ScriptObject && key.kind != TypeKind::ScriptHandle) {
+        if (key.kind != TypeKind::Enum && key.kind != TypeKind::Object && key.kind != TypeKind::ScriptObject && key.kind != TypeKind::ScriptHandle && key.kind != TypeKind::NativeHandle && key.kind != TypeKind::ScriptEnum) {
             normalized.name = StringAtom();
         }
         return normalized;

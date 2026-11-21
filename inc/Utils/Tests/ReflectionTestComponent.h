@@ -11,6 +11,11 @@
 #include <Utils/Types/Vector.h>
 
 namespace SR_UTILS_NS::Tests {
+    SR_ENUM_NS_CLASS_T(ReflectionProbeWide, int64_t,
+        High = 1099511627776,
+        Negative = -1099511627776
+    );
+
     /// @dontScript
     struct ReflectionTestComponentAssociative : public SR_UTILS_NS::Serializable {
         SR_STRUCT()
@@ -36,7 +41,6 @@ namespace SR_UTILS_NS::Tests {
 
     };
 
-    /// @dontScript
     struct ReflectionTestComponentDataBase : public SR_UTILS_NS::Serializable {
         SR_STRUCT()
 
@@ -50,12 +54,52 @@ namespace SR_UTILS_NS::Tests {
 
         /// @property
         bool testField = false;
-        /// @property
+        /// @property @getter(GetVectorReference)
         SR_MATH_NS::FVector3 vector;
         /// @property
         int32_t m_width = 100;
         /// @property
         SR_UTILS_NS::Vector<float> m_test;
+
+        /// @method
+        int32_t& GetWidthReference() {
+            return m_width;
+        }
+
+        /// @method
+        const int32_t& GetConstWidthReference() const {
+            return m_width;
+        }
+
+        /// @method
+        SR_MATH_NS::FVector3& GetVectorReference() {
+            return vector;
+        }
+
+        /// @method
+        const SR_MATH_NS::FVector3& GetConstVectorReference() const {
+            return vector;
+        }
+
+        /// @method
+        const ReflectionTestComponentData& GetConstData() const {
+            return *this;
+        }
+
+        /// @method
+        ReflectionProbeWide EchoWide(ReflectionProbeWide value) const {
+            return value;
+        }
+
+        /// @method
+        void WriteWide(ReflectionProbeWide& value) const {
+            value = ReflectionProbeWide::Negative;
+        }
+
+        /// @method
+        SR_UTILS_NS::Vector<ReflectionProbeWide> EchoWideVector(const SR_UTILS_NS::Vector<ReflectionProbeWide>& values) const {
+            return values;
+        }
 
         bool operator==(const ReflectionTestComponentData& other) const {
             return baseField == other.baseField &&

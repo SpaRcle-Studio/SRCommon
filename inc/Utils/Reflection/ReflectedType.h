@@ -117,14 +117,18 @@ namespace SR_UTILS_NS::Reflection {
         Vector, Set, FlatHashSet, Map, FlatHashMap, Pair, Optional, SharedPtr, EntityRef, ResourceRef,
 
         ScriptObject, ScriptHandle,
+        /// Script VM storage for a native-object wrapper pointer; not the layout of Object or SharedPtr<T>.
+        NativeHandle,
+        /// An enum declared in a script; pNext[0] is its underlying scalar type.
+        ScriptEnum,
     };
 
     SR_NODISCARD constexpr bool IsTypeKindSigned(const TypeKind kind) noexcept {
-        return kind == TypeKind::Int8 || kind == TypeKind::Int16 || kind == TypeKind::Int32 || kind == TypeKind::Int64;
+        return kind == TypeKind::Int8 || kind == TypeKind::Int16 || kind == TypeKind::Int32 || kind == TypeKind::Int64 || kind == TypeKind::ScriptEnum;
     }
 
     SR_NODISCARD constexpr bool IsTypeKindIntegral(const TypeKind kind) noexcept {
-        return kind >= TypeKind::Int8 && kind <= TypeKind::UInt64;
+        return (kind >= TypeKind::Int8 && kind <= TypeKind::UInt64) || kind == TypeKind::ScriptEnum;
     }
 
     SR_NODISCARD constexpr bool IsTypeKindFloatingPoint(const TypeKind kind) noexcept {
@@ -132,7 +136,7 @@ namespace SR_UTILS_NS::Reflection {
     }
 
     SR_NODISCARD constexpr bool IsTypeKindArithmetic(const TypeKind kind) noexcept {
-        return kind >= TypeKind::Bool && kind <= TypeKind::Double;
+        return (kind >= TypeKind::Bool && kind <= TypeKind::Double) || kind == TypeKind::ScriptEnum;
     }
 
     SR_NODISCARD constexpr bool IsTypeKindString(const TypeKind kind) noexcept {
@@ -267,7 +271,9 @@ namespace SR_UTILS_NS::Reflection {
         void CopyAssign(void* pDst, const void* pSrc) const;
         void DestructAt(void* pData) const;
 
-        SR_NODISCARD bool IsSigned() const noexcept { return IsTypeKindSigned(kind); }
+        SR_NODISCARD bool IsSigned() const noexcept {
+            return kind == TypeKind::ScriptEnum && pNext[0] ? pNext[0]->IsSigned() : IsTypeKindSigned(kind);
+        }
         SR_NODISCARD bool IsIntegral() const noexcept { return IsTypeKindIntegral(kind); }
         SR_NODISCARD bool IsFloatingPoint() const noexcept { return IsTypeKindFloatingPoint(kind); }
         SR_NODISCARD bool IsArithmetic() const noexcept { return IsTypeKindArithmetic(kind); }
@@ -276,7 +282,9 @@ namespace SR_UTILS_NS::Reflection {
         SR_NODISCARD bool IsContainer() const noexcept { return IsTypeKindContainer(kind); }
         SR_NODISCARD bool IsMapLike() const noexcept { return IsTypeKindMapLike(kind); }
         SR_NODISCARD bool IsSetLike() const noexcept { return IsTypeKindSetLike(kind); }
-        SR_NODISCARD SizeType GetScalarSize() const noexcept { return GetTypeKindScalarSize(kind); }
+        SR_NODISCARD SizeType GetScalarSize() const noexcept {
+            return kind == TypeKind::ScriptEnum && pNext[0] ? pNext[0]->GetScalarSize() : GetTypeKindScalarSize(kind);
+        }
 
         /// Аргумент шаблона в порядке записи типа: для Map<K, V> это K и V, а не хранимый Pair<K, V>
         SR_NODISCARD const TypeInfo* GetArgument(uint32_t index) const noexcept;

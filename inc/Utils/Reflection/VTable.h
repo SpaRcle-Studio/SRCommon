@@ -5,6 +5,8 @@
 #ifndef SR_ENGINE_COMMON_REFLECTION_VTABLE_H
 #define SR_ENGINE_COMMON_REFLECTION_VTABLE_H
 
+#include <Utils/Types/StringAtom.h>
+
 namespace SR_UTILS_NS::Reflection {
     struct ReflectedValue;
     struct TypeInfo;
@@ -68,6 +70,9 @@ namespace SR_UTILS_NS::Reflection {
         uint32_t fieldsCount = 0;
         GetTypeController pGetTypeController = nullptr;
         void* pRuntimeData = nullptr;
+        StringAtom displayName;
+        uint32_t(*pEnumCount)(const TypeInfo&) = nullptr;
+        StringAtom(*pEnumValue)(const TypeInfo&, uint32_t, int64_t&) = nullptr;
         uint32_t(*pFieldCount)(const TypeInfo&, const void*) = nullptr;
         StringAtom(*pFieldName)(const TypeInfo&, const void*, uint32_t) = nullptr;
         ValueRef(*pField)(const TypeInfo&, void*, uint32_t, bool) = nullptr;

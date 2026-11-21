@@ -71,6 +71,7 @@ namespace SR_UTILS_NS::Reflection {
             case TypeKind::ResourceRef:
                 return static_cast<ResourceRefBase*>(GetTypeController());
             case TypeKind::Object:
+            case TypeKind::NativeHandle:
                 return static_cast<SRClass*>(GetTypeController());
             default:
                 return nullptr;

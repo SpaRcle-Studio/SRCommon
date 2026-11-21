@@ -56,8 +56,14 @@ namespace SR_UTILS_NS::Reflection {
         void InvokeRaw(Owner& owner, void* const* pArgs, void* pReturn) const;
         void InvokeInto(Owner& owner, void* const* pArgs, Value& result) const;
         SR_NODISCARD void* GetArgumentData(Value& value, uint32_t index) const;
-        SR_NODISCARD bool ReturnsReference() const { return m_returnsReference; }
+        SR_NODISCARD bool IsReturnsReference() const { return m_returnsReference; }
+        SR_NODISCARD bool IsReturnsConstReference() const;
         SR_NODISCARD bool IsDontPack() const { return m_dontPack; }
+        SR_NODISCARD bool IsConst() const noexcept { return m_isConst; }
+        Method& SetConstMethod(bool value) noexcept {
+            m_isConst = value;
+            return *this;
+        }
         Method& SetThunk(Thunk pThunk);
         Method& SetReturnReference(bool isReference, bool isConst);
         Method& SetDontPack();
@@ -95,6 +101,7 @@ namespace SR_UTILS_NS::Reflection {
         bool m_returnsReference = false;
         bool m_returnIsConst = false;
         bool m_dontPack = false;
+        bool m_isConst = false;
 
     };
 

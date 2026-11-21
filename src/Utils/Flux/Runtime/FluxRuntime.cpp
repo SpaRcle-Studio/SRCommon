@@ -460,7 +460,7 @@ namespace SR_FLUX_NS {
                 return false;
             }
             m_callMethods[i] = pMethod;
-            if (pMethod->HasReturn() && !pMethod->ReturnsReference() && !m_callResultPools[i]) {
+            if (pMethod->HasReturn() && !pMethod->IsReturnsReference() && !m_callResultPools[i]) {
                 m_callResultPools[i] = new Reflection::ValuePool(pMethod->GetReturnType(), m_maxExecutions * (m_maxRegisters + 1));
             }
         }
@@ -566,7 +566,7 @@ namespace SR_FLUX_NS {
 
         if (hasReturn) {
             Reflection::Value result;
-            if (!pFunction->ReturnsReference()) {
+            if (!pFunction->IsReturnsReference()) {
                 result = m_callResultPools[execution.instructionPointer]->Acquire();
                 if (!result) {
                     SR_ERROR("FluxRuntime::CallMethod() : prepared result storage exhausted! Method: {}", instruction.callable.function);
