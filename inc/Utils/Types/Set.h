@@ -6,6 +6,8 @@
 #define SR_COMMON_SET_H
 
 #include <Utils/Common/AssertFwd.h>
+#include <Utils/Types/MapCore.h>
+#include <Utils/Types/Pair.h>
 
 namespace SR_UTILS_NS {
     // =========================================================================
@@ -40,15 +42,25 @@ namespace SR_UTILS_NS {
         using key_type = T;
         static constexpr bool key_only = true;
 
-    private:
-        enum class Color : uint8_t { Red, Black };
+        static constexpr void ValidateErasedLayout() {
+            using SetType = Set<T, Compare>;
+            if constexpr (std::is_empty_v<Compare>) {
+                static_assert(sizeof(Set<T, Compare>) == sizeof(ErasedTreeMapLayout));
+                static_assert(alignof(Set<T, Compare>) == alignof(ErasedTreeMapLayout));
+                static_assert(offsetof(SetType, m_nil) == offsetof(ErasedTreeMapLayout, pNil));
+                static_assert(offsetof(SetType, m_pMin) == offsetof(ErasedTreeMapLayout, pMin));
+                static_assert(offsetof(SetType, m_size) == offsetof(ErasedTreeMapLayout, size));
+                static_assert(offsetof(SetType, m_allocator) == offsetof(ErasedTreeMapLayout, pAllocator));
+            }
+            static_assert(sizeof(Node) == CalculateSetNodeSize(sizeof(T), alignof(T)));
+            static_assert(offsetof(Node, value) == CalculateSetNodeValueOffset(alignof(T)));
+        }
 
-        struct Node {
-            T      value;
-            Node*  pLeft   = nullptr;
-            Node*  pRight  = nullptr;
-            Node*  pParent = nullptr;
-            Color  color   = Color::Red;
+    private:
+        using Color = RbTreeColor;
+
+        struct Node : public RbTreeNodeHeader {
+            T value;
 
             template<typename U>
             explicit Node(U&& v) : value(std::forward<U>(v)) { }
@@ -64,7 +76,10 @@ namespace SR_UTILS_NS {
             using value_type        = T;
             using reference         = const T&;
             using pointer           = const T*;
-            using difference_type = std::ptrdiff_t;
+            using difference_type   = std::ptrdiff_t;
+
+            Iterator prev() const noexcept { return Iterator(Prev(m_p, m_nil), m_nil); }
+            Iterator next() const noexcept { return Iterator(Next(m_p, m_nil), m_nil); }
 
             Iterator() noexcept = default;
             Iterator(const Iterator&) noexcept = default;
@@ -104,6 +119,7 @@ namespace SR_UTILS_NS {
 
         Set(std::initializer_list<T> init);
         Set(const Set& other);
+        Set(IAllocator* pAllocator, const Set& other);
         Set(Set&& other) noexcept;
         ~Set();
 
@@ -121,7 +137,6 @@ namespace SR_UTILS_NS {
     public:
         // Heterogeneous lookup is enabled only for transparent comparators.
         // The comparator must compare T and K directly without allocating.
-
 
         // lookup
         SR_NODISCARD Iterator      find(const T& value)        noexcept;
@@ -168,12 +183,12 @@ namespace SR_UTILS_NS {
         template<typename Predicate> SR_NODISCARD bool none_of(Predicate&& pred) const;
 
         // modifiers
-        std::pair<Iterator, bool> insert(const T& value);
-        std::pair<Iterator, bool> insert(T&& value);
+        Pair<Iterator, bool> insert(const T& value);
+        Pair<Iterator, bool> insert(T&& value);
         void insert(Iterator first, Iterator last);
 
         template<typename... Args>
-        std::pair<Iterator, bool> emplace(Args&&... args);
+        Pair<Iterator, bool> emplace(Args&&... args);
 
         bool     erase(const T& value) noexcept;
         Iterator erase(Iterator pos)   noexcept;
@@ -195,51 +210,34 @@ namespace SR_UTILS_NS {
         void FreeNil();
 
         // ---- tree helpers ---------------------------------------------------
-        SR_NODISCARD SR_FORCE_INLINE Node* Root()    const noexcept { return m_nil->pParent; }
-        SR_FORCE_INLINE void               SetRoot(Node* r) noexcept { m_nil->pParent = r; r->pParent = m_nil; }
-
-        SR_FORCE_INLINE void RotLeft(Node* x)  noexcept;
-        SR_FORCE_INLINE void RotRight(Node* x) noexcept;
-        void InsertFixup(Node* z) noexcept;
-        void EraseFixup(Node* x, Node* xp) noexcept;
-        void Transplant(Node* u, Node* v) noexcept;
+        SR_NODISCARD SR_FORCE_INLINE Node* Root()    const noexcept { return static_cast<Node*>(m_nil->pParent); }
+        SR_FORCE_INLINE void               SetRoot(Node* r) noexcept { MapCore::SetRoot(r, m_nil); }
 
         template<typename K>
         SR_NODISCARD Node* LB(const K& value) const noexcept;
-        std::pair<Node*, bool> InsertAt(Node* z) noexcept;
+        Pair<Node*, bool>  InsertAt(Node* z) noexcept;
 
-        Node* CloneSubtree(Node* src, Node* srcNil, Node* parent);
+        Node* CloneSubtree(const Node* src, const Node* srcNil, Node* parent);
         void  FreeSubtree(Node* x) noexcept;
 
         SR_NODISCARD SR_FORCE_INLINE static Node* Next(Node* x, Node* nil) noexcept {
-            if (x->pRight != nil) {
-                x = x->pRight;
-                while (x->pLeft != nil) x = x->pLeft;
-                return x;
-            }
-            Node* p = x->pParent;
-            while (p != nil && x == p->pRight) { x = p; p = p->pParent; }
-            return p;
+            return static_cast<Node*>(MapCore::Next(x, nil));
+        }
+        SR_NODISCARD SR_FORCE_INLINE static const Node* Next(const Node* x, const Node* nil) noexcept {
+            return static_cast<const Node*>(MapCore::Next(x, nil));
         }
         SR_NODISCARD SR_FORCE_INLINE static Node* Prev(Node* x, Node* nil) noexcept {
-            if (x == nil) {
-                x = nil->pParent;
-                while (x->pRight != nil) x = x->pRight;
-                return x;
-            }
-            if (x->pLeft != nil) {
-                x = x->pLeft;
-                while (x->pRight != nil) x = x->pRight;
-                return x;
-            }
-            Node* p = x->pParent;
-            while (p != nil && x == p->pLeft) { x = p; p = p->pParent; }
-            return p;
+            return static_cast<Node*>(MapCore::Prev(x, nil));
+        }
+        SR_NODISCARD SR_FORCE_INLINE static const Node* Prev(const Node* x, const Node* nil) noexcept {
+            return static_cast<const Node*>(MapCore::Prev(x, nil));
         }
 
         static Node* TreeMin(Node* x, Node* nil) noexcept {
-            while (x->pLeft != nil) x = x->pLeft;
-            return x;
+            return static_cast<Node*>(MapCore::TreeMin(x, nil));
+        }
+        static const Node* TreeMin(const Node* x, const Node* nil) noexcept {
+            return static_cast<const Node*>(MapCore::TreeMin(x, nil));
         }
 
     private:
@@ -287,7 +285,6 @@ namespace SR_UTILS_NS {
         return true;
     }
 
-
     template<typename T, typename C>
     void* Set<T,C>::RawAlloc(SizeType n) const {
         void* p = m_allocator ? m_allocator->Allocate(n) : SRMalloc(n);
@@ -304,10 +301,7 @@ namespace SR_UTILS_NS {
     template<typename T, typename C>
     void Set<T,C>::AllocNil() {
         m_nil = static_cast<Node*>(RawAlloc(sizeof(Node)));
-        m_nil->pLeft   = m_nil;
-        m_nil->pRight  = m_nil;
-        m_nil->pParent = m_nil;
-        m_nil->color   = Color::Black;
+        MapCore::InitNil(m_nil);
         m_pMin = m_nil;
     }
 
@@ -319,211 +313,50 @@ namespace SR_UTILS_NS {
         }
     }
 
-    // ---- rotations ----------------------------------------------------------
-
-    template<typename T, typename C>
-    SR_FORCE_INLINE void Set<T,C>::RotLeft(Node* x) noexcept {
-        Node* y   = x->pRight;
-        x->pRight = y->pLeft;
-        if (y->pLeft != m_nil) y->pLeft->pParent = x;
-        y->pParent = x->pParent;
-        if (x == Root())               SetRoot(y);
-        else if (x == x->pParent->pLeft)  x->pParent->pLeft  = y;
-        else                              x->pParent->pRight = y;
-        y->pLeft   = x;
-        x->pParent = y;
-    }
-
-    template<typename T, typename C>
-    SR_FORCE_INLINE void Set<T,C>::RotRight(Node* x) noexcept {
-        Node* y  = x->pLeft;
-        x->pLeft = y->pRight;
-        if (y->pRight != m_nil) y->pRight->pParent = x;
-        y->pParent = x->pParent;
-        if (x == Root())                SetRoot(y);
-        else if (x == x->pParent->pRight) x->pParent->pRight = y;
-        else                              x->pParent->pLeft  = y;
-        y->pRight  = x;
-        x->pParent = y;
-    }
-
-    // ---- InsertFixup --------------------------------------------------------
-
-    template<typename T, typename C>
-    void Set<T,C>::InsertFixup(Node* z) noexcept {
-        while (z->pParent->color == Color::Red) {
-            Node* gp = z->pParent->pParent;
-            if (z->pParent == gp->pLeft) {
-                Node* u = gp->pRight;
-                if (u->color == Color::Red) {
-                    z->pParent->color = Color::Black;
-                    u->color          = Color::Black;
-                    gp->color         = Color::Red;
-                    z = gp;
-                }
-                else {
-                    if (z == z->pParent->pRight) { z = z->pParent; RotLeft(z); }
-                    z->pParent->color          = Color::Black;
-                    z->pParent->pParent->color = Color::Red;
-                    RotRight(z->pParent->pParent);
-                }
-            }
-            else {
-                Node* u = gp->pLeft;
-                if (u->color == Color::Red) {
-                    z->pParent->color = Color::Black;
-                    u->color          = Color::Black;
-                    gp->color         = Color::Red;
-                    z = gp;
-                }
-                else {
-                    if (z == z->pParent->pLeft) { z = z->pParent; RotRight(z); }
-                    z->pParent->color          = Color::Black;
-                    z->pParent->pParent->color = Color::Red;
-                    RotLeft(z->pParent->pParent);
-                }
-            }
-        }
-        Root()->color = Color::Black;
-    }
-
-    // ---- Transplant ---------------------------------------------------------
-
-    template<typename T, typename C>
-    void Set<T,C>::Transplant(Node* u, Node* v) noexcept {
-        if (u == Root())                  SetRoot(v);
-        else if (u == u->pParent->pLeft)  u->pParent->pLeft  = v;
-        else                              u->pParent->pRight = v;
-        // Do not overwrite m_nil->pParent (which tracks root) when v is the sentinel.
-        if (v != m_nil) v->pParent = u->pParent;
-    }
-
-    // ---- EraseFixup ---------------------------------------------------------
-
-    template<typename T, typename C>
-    void Set<T,C>::EraseFixup(Node* x, Node* xp) noexcept {
-        while (x != Root() && x->color == Color::Black) {
-            if (x == xp->pLeft) {
-                Node* w = xp->pRight;
-                if (w->color == Color::Red) {
-                    w->color  = Color::Black;
-                    xp->color = Color::Red;
-                    RotLeft(xp);
-                    w = xp->pRight;
-                }
-                if (w->pLeft->color == Color::Black && w->pRight->color == Color::Black) {
-                    w->color = Color::Red;
-                    x = xp; xp = x->pParent;
-                }
-                else {
-                    if (w->pRight->color == Color::Black) {
-                        w->pLeft->color = Color::Black;
-                        w->color        = Color::Red;
-                        RotRight(w);
-                        w = xp->pRight;
-                    }
-                    w->color         = xp->color;
-                    xp->color        = Color::Black;
-                    w->pRight->color = Color::Black;
-                    RotLeft(xp);
-                    x = Root();
-                }
-            }
-            else {
-                Node* w = xp->pLeft;
-                if (w->color == Color::Red) {
-                    w->color  = Color::Black;
-                    xp->color = Color::Red;
-                    RotRight(xp);
-                    w = xp->pLeft;
-                }
-                if (w->pRight->color == Color::Black && w->pLeft->color == Color::Black) {
-                    w->color = Color::Red;
-                    x = xp; xp = x->pParent;
-                }
-                else {
-                    if (w->pLeft->color == Color::Black) {
-                        w->pRight->color = Color::Black;
-                        w->color         = Color::Red;
-                        RotLeft(w);
-                        w = xp->pLeft;
-                    }
-                    w->color        = xp->color;
-                    xp->color       = Color::Black;
-                    w->pLeft->color = Color::Black;
-                    RotRight(xp);
-                    x = Root();
-                }
-            }
-        }
-        x->color = Color::Black;
-    }
-
     // ---- LB / InsertAt ------------------------------------------------------
 
     template<typename T, typename C>
     template<typename K>
     typename Set<T,C>::Node* Set<T,C>::LB(const K& value) const noexcept {
-        Node* x = Root(), *lb = m_nil;
-        while (x != m_nil) {
-            if (!m_cmp(x->value, value)) { lb = x; x = x->pLeft; }
-            else                          { x = x->pRight; }
-        }
-        return lb;
+        return const_cast<Node*>(MapCore::LowerBound(m_nil, value, [](const Node* n) -> const T& { return n->value; }, m_cmp));
     }
 
     template<typename T, typename C>
-    std::pair<typename Set<T,C>::Node*, bool> Set<T,C>::InsertAt(Node* z) noexcept {
+    Pair<typename Set<T,C>::Node*, bool> Set<T,C>::InsertAt(Node* z) noexcept {
         if (!m_nil) SR_UNLIKELY_ATTRIBUTE {
             AllocNil();
         }
-        Node* parent = m_nil, *x = Root();
-        while (x != m_nil) {
-            parent = x;
-            if      (m_cmp(z->value, x->value)) x = x->pLeft;
-            else if (m_cmp(x->value, z->value)) x = x->pRight;
-            else                                 return { x, false };
-        }
-        z->pLeft = z->pRight = m_nil;
-        z->color = Color::Red;
-        if (parent == m_nil)                       SetRoot(z);
-        else if (m_cmp(z->value, parent->value))   parent->pLeft  = z;
-        else                                       parent->pRight = z;
-        z->pParent = parent;
-        InsertFixup(z);
-        ++m_size;
-        if (m_pMin == m_nil || m_cmp(z->value, m_pMin->value)) m_pMin = z;
-        return { z, true };
+        return MapCore::InsertNode(m_pMin, m_size, z, m_nil, [](const Node* n) -> const T& { return n->value; }, m_cmp);
     }
 
     // ---- public insert / emplace --------------------------------------------
 
     template<typename T, typename C>
-    std::pair<typename Set<T,C>::Iterator, bool> Set<T,C>::insert(const T& value) {
+    Pair<typename Set<T,C>::Iterator, bool> Set<T,C>::insert(const T& value) {
         Node* z = NewNode();
         new (z) Node(value);
         auto [n, ok] = InsertAt(z);
         if (!ok) { z->~Node(); DelNode(z); }
-        return { { n, m_nil }, ok };
+        return Pair<Iterator, bool>(Iterator(n, m_nil), ok);
     }
 
     template<typename T, typename C>
-    std::pair<typename Set<T,C>::Iterator, bool> Set<T,C>::insert(T&& value) {
+    Pair<typename Set<T,C>::Iterator, bool> Set<T,C>::insert(T&& value) {
         Node* z = NewNode();
         new (z) Node(std::move(value));
         auto [n, ok] = InsertAt(z);
         if (!ok) { z->~Node(); DelNode(z); }
-        return { { n, m_nil }, ok };
+        return Pair<Iterator, bool>(Iterator(n, m_nil), ok);
     }
 
     template<typename T, typename C>
     template<typename... Args>
-    std::pair<typename Set<T,C>::Iterator, bool> Set<T,C>::emplace(Args&&... args) {
+    Pair<typename Set<T,C>::Iterator, bool> Set<T,C>::emplace(Args&&... args) {
         Node* z = NewNode();
         new (z) Node(std::forward<Args>(args)...);
         auto [n, ok] = InsertAt(z);
         if (!ok) { z->~Node(); DelNode(z); }
-        return { { n, m_nil }, ok };
+        return Pair<Iterator, bool>(Iterator(n, m_nil), ok);
     }
 
     // ---- find / contains / bounds -------------------------------------------
@@ -576,12 +409,7 @@ namespace SR_UTILS_NS {
         if (!m_nil) SR_UNLIKELY_ATTRIBUTE {
             return end();
         }
-        Node* x = Root(), *ub = m_nil;
-        while (x != m_nil) {
-            if (m_cmp(value, x->value)) { ub = x; x = x->pLeft; }
-            else                         { x = x->pRight; }
-        }
-        return { ub, m_nil };
+        return { const_cast<Node*>(MapCore::UpperBound(m_nil, value, [](const Node* n) -> const T& { return n->value; }, m_cmp)), m_nil };
     }
 
     template<typename T, typename C>
@@ -589,12 +417,7 @@ namespace SR_UTILS_NS {
         if (!m_nil) SR_UNLIKELY_ATTRIBUTE {
             return end();
         }
-        Node* x = Root(), *ub = m_nil;
-        while (x != m_nil) {
-            if (m_cmp(value, x->value)) { ub = x; x = x->pLeft; }
-            else                         { x = x->pRight; }
-        }
-        return { ub, m_nil };
+        return { MapCore::UpperBound(m_nil, value, [](const Node* n) -> const T& { return n->value; }, m_cmp), m_nil };
     }
 
     // ---- transparent heterogeneous lookup -----------------------------------
@@ -641,24 +464,14 @@ namespace SR_UTILS_NS {
     template<typename K> requires (SetTransparentLookup<C, T, K>)
     typename Set<T,C>::Iterator Set<T,C>::upper_bound(const K& value) noexcept {
         if (!m_nil) return end();
-        Node* x = Root(), *ub = m_nil;
-        while (x != m_nil) {
-            if (m_cmp(value, x->value)) { ub = x; x = x->pLeft; }
-            else { x = x->pRight; }
-        }
-        return { ub, m_nil };
+        return { const_cast<Node*>(MapCore::UpperBound(m_nil, value, [](const Node* n) -> const T& { return n->value; }, m_cmp)), m_nil };
     }
 
     template<typename T, typename C>
     template<typename K> requires (SetTransparentLookup<C, T, K>)
     typename Set<T,C>::ConstIterator Set<T,C>::upper_bound(const K& value) const noexcept {
         if (!m_nil) return end();
-        Node* x = Root(), *ub = m_nil;
-        while (x != m_nil) {
-            if (m_cmp(value, x->value)) { ub = x; x = x->pLeft; }
-            else { x = x->pRight; }
-        }
-        return { ub, m_nil };
+        return { MapCore::UpperBound(m_nil, value, [](const Node* n) -> const T& { return n->value; }, m_cmp), m_nil };
     }
 
     // ---- erase --------------------------------------------------------------
@@ -671,42 +484,12 @@ namespace SR_UTILS_NS {
         Node* z = LB(value);
         if (z == m_nil || m_cmp(value, z->value)) return false;
 
-        if (z == m_pMin) m_pMin = Next(z, m_nil);
-
-        Node* y  = z;
-        Color yc = y->color;
-        Node* x  = nullptr;
-        Node* xp = nullptr;
-
-        if (z->pLeft == m_nil) {
-            x = z->pRight; xp = z->pParent;
-            Transplant(z, z->pRight);
-        }
-        else if (z->pRight == m_nil) {
-            x = z->pLeft; xp = z->pParent;
-            Transplant(z, z->pLeft);
-        }
-        else {
-            y  = TreeMin(z->pRight, m_nil);
-            yc = y->color;
-            x  = y->pRight;
-            xp = (y->pParent == z) ? y : y->pParent;
-            if (y->pParent != z) {
-                Transplant(y, y->pRight);
-                y->pRight = z->pRight;
-                y->pRight->pParent = y;
-            }
-            Transplant(z, y);
-            y->pLeft = z->pLeft;
-            y->pLeft->pParent = y;
-            y->color = z->color;
-        }
+        MapCore::UnlinkNode(m_pMin, z, m_nil);
 
         z->~Node();
         DelNode(z);
         --m_size;
 
-        if (yc == Color::Black) EraseFixup(x, xp);
         if (m_size == 0) m_pMin = m_nil;
 
         return true;
@@ -728,13 +511,10 @@ namespace SR_UTILS_NS {
 
     template<typename T, typename C>
     void Set<T,C>::FreeSubtree(Node* x) noexcept {
-        while (x != m_nil) {
-            FreeSubtree(x->pRight);
-            Node* left = x->pLeft;
-            x->~Node();
-            DelNode(x);
-            x = left;
-        }
+        MapCore::DestroySubtree(x, m_nil, [this](Node* node) {
+            node->~Node();
+            DelNode(node);
+        });
     }
 
     template<typename T, typename C>
@@ -760,15 +540,12 @@ namespace SR_UTILS_NS {
 
     template<typename T, typename C>
     typename Set<T,C>::Node*
-    Set<T,C>::CloneSubtree(Node* src, Node* srcNil, Node* parent) {
-        if (src == srcNil) return m_nil;
-        Node* dst = NewNode();
-        new (dst) Node(src->value);
-        dst->color   = src->color;
-        dst->pParent = parent;
-        dst->pLeft   = CloneSubtree(src->pLeft,  srcNil, dst);
-        dst->pRight  = CloneSubtree(src->pRight, srcNil, dst);
-        return dst;
+    Set<T,C>::CloneSubtree(const Node* src, const Node* srcNil, Node* parent) {
+        return MapCore::CloneSubtree(src, srcNil, m_nil, parent, [this](const Node* s) {
+            Node* dst = NewNode();
+            new (dst) Node(s->value);
+            return dst;
+        });
     }
 
     // ---- constructors / assignment ------------------------------------------
@@ -781,6 +558,18 @@ namespace SR_UTILS_NS {
     template<typename T, typename C>
     Set<T,C>::Set(const Set& other) {
         m_allocator = other.m_allocator;
+        if (other.m_size > 0) {
+            AllocNil();
+            Node* root = CloneSubtree(other.Root(), other.m_nil, m_nil);
+            m_nil->pParent = root;
+            m_pMin = TreeMin(root, m_nil);
+        }
+        m_size = other.m_size;
+    }
+
+    template<typename T, typename C>
+    Set<T,C>::Set(IAllocator* pAllocator, const Set& other) {
+        m_allocator = pAllocator;
         if (other.m_size > 0) {
             AllocNil();
             Node* root = CloneSubtree(other.Root(), other.m_nil, m_nil);

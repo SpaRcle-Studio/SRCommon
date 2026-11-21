@@ -4,12 +4,23 @@
 
 #include <Utils/Reflection/VTable.h>
 #include <Utils/Reflection/ArrayOps.h>
+#include <Utils/Reflection/MapOps.h>
 #include <Utils/Reflection/ReflectedType.h>
 #include <Utils/TypeTraits/Factory.h>
 #include <Utils/Common/EnumReflector.h>
 
 namespace SR_UTILS_NS::Reflection {
     bool HasResolvedVectorElements(const TypeInfo& type) {
+        if (type.kind == TypeKind::Set) {
+            auto&& pKey = type.GetArgument(0);
+            return pKey && pKey->IsResolved() && HasResolvedVectorElements(*pKey);
+        }
+        if (type.kind == TypeKind::Map) {
+            auto&& pKey = type.GetArgument(0);
+            auto&& pValue = type.GetArgument(1);
+            return pKey && pValue && pKey->IsResolved() && pValue->IsResolved() &&
+                HasResolvedVectorElements(*pKey) && HasResolvedVectorElements(*pValue);
+        }
         if (type.kind != TypeKind::Vector) {
             return true;
         }
@@ -133,6 +144,9 @@ namespace SR_UTILS_NS::Reflection {
     }
 
     bool ResolveBuiltinVTable(const TypeInfoKey& key, TypeInfoVTable& vtable) {
+        if (key.kind == TypeKind::Map || key.kind == TypeKind::Set) {
+            return FillTreeMapVTable(key, vtable);
+        }
         if (key.kind == TypeKind::Vector) {
             return FillVectorVTable(key, vtable);
         }

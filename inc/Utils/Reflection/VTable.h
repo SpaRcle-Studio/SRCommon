@@ -44,21 +44,22 @@ namespace SR_UTILS_NS::Reflection {
     /// Операции над Map, FlatHashMap, Set и FlatHashSet.
     /// У множеств нет значения: pValue в pVisit равен nullptr, pFind и pFindOrAdd возвращают сам ключ.
     struct SR_COMMON_DLL_API MapVTable {
-        SizeType(*pSize)(const void* pMap) = nullptr;
-        void(*pClear)(void* pMap) = nullptr;
-        void*(*pFind)(void* pMap, const void* pKey) = nullptr;
-        void*(*pFindOrAdd)(void* pMap, const void* pKey) = nullptr;
+        SizeType(*pSize)(const TypeInfo&, const void* pMap) = nullptr;
+        void(*pClear)(const TypeInfo&, void* pMap) = nullptr;
+        void*(*pFind)(const TypeInfo&, void* pMap, const void* pKey) = nullptr;
+        void*(*pFindOrAdd)(const TypeInfo&, void* pMap, const void* pKey) = nullptr;
         /// true, если ключ добавлен; у существующего ключа значение перезаписывается
-        bool(*pInsertOrAssign)(void* pMap, const void* pKey, const void* pValue) = nullptr;
-        bool(*pErase)(void* pMap, const void* pKey) = nullptr;
+        bool(*pInsertOrAssign)(const TypeInfo&, void* pMap, const void* pKey, const void* pValue) = nullptr;
+        bool(*pErase)(const TypeInfo&, void* pMap, const void* pKey) = nullptr;
         /// pVisit возвращает false, чтобы остановить обход
-        void(*pForEach)(void* pMap, bool(*pVisit)(void* pUserData, const void* pKey, void* pValue), void* pUserData) = nullptr;
+        void(*pForEach)(const TypeInfo&, void* pMap, bool(*pVisit)(void* pUserData, const void* pKey, void* pValue), void* pUserData) = nullptr;
     };
 
     struct SR_COMMON_DLL_API TypeInfoVTable {
         /// any type functions
         using SizeOfAlignFn = Pair<SizeType, SizeType>(*)(const TypeInfo&);
         LifecycleVTable lifecycle;
+        bool(*pLess)(const void*, const void*) = nullptr;
         SizeOfAlignFn pSizeOfAlign = nullptr;
 
         /// for SRClass and other containers (except Vector, Map and Set)

@@ -299,12 +299,12 @@ namespace SR_UTILS_NS::Reflection {
     }
 
     SizeType MapView::Size() const {
-        return m_pVTable ? m_pVTable->pSize(m_map.Data()) : 0;
+        return m_pVTable ? m_pVTable->pSize(m_map.GetTypeInfo(), m_map.Data()) : 0;
     }
 
     void MapView::Clear() const {
         if (CanModify() && m_pVTable->pClear) {
-            m_pVTable->pClear(m_map.Data());
+            m_pVTable->pClear(m_map.GetTypeInfo(), m_map.Data());
         }
     }
 
@@ -316,7 +316,7 @@ namespace SR_UTILS_NS::Reflection {
         if (!m_pVTable || !m_pVTable->pFind || !IsKey(key)) {
             return ValueRef();
         }
-        auto&& pFound = m_pVTable->pFind(m_map.Data(), key.Data());
+        auto&& pFound = m_pVTable->pFind(m_map.GetTypeInfo(), m_map.Data(), key.Data());
         if (!pFound) {
             return ValueRef();
         }
@@ -330,7 +330,7 @@ namespace SR_UTILS_NS::Reflection {
         if (!CanModify() || !m_pVTable->pFindOrAdd || !IsKey(key)) {
             return ValueRef();
         }
-        auto&& pFound = m_pVTable->pFindOrAdd(m_map.Data(), key.Data());
+        auto&& pFound = m_pVTable->pFindOrAdd(m_map.GetTypeInfo(), m_map.Data(), key.Data());
         if (IsSet()) {
             return ValueRef(m_pKeyType, pFound, true);
         }
@@ -346,19 +346,19 @@ namespace SR_UTILS_NS::Reflection {
                 value.GetTypeInfo().name, m_map.GetTypeInfo().name);
             return false;
         }
-        return m_pVTable->pInsertOrAssign(m_map.Data(), key.Data(), IsSet() ? nullptr : value.Data());
+        return m_pVTable->pInsertOrAssign(m_map.GetTypeInfo(), m_map.Data(), key.Data(), IsSet() ? nullptr : value.Data());
     }
 
     bool MapView::Erase(const ValueRef& key) const {
         if (!CanModify() || !m_pVTable->pErase || !IsKey(key)) {
             return false;
         }
-        return m_pVTable->pErase(m_map.Data(), key.Data());
+        return m_pVTable->pErase(m_map.GetTypeInfo(), m_map.Data(), key.Data());
     }
 
     void MapView::ForEachRaw(bool(*pVisit)(void* pUserData, const void* pKey, void* pValue), void* pUserData) const {
         if (m_pVTable) {
-            m_pVTable->pForEach(m_map.Data(), pVisit, pUserData);
+            m_pVTable->pForEach(m_map.GetTypeInfo(), m_map.Data(), pVisit, pUserData);
         }
     }
 }

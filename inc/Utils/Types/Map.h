@@ -6,6 +6,7 @@
 #define SR_COMMON_MAP_H
 
 #include <Utils/Types/Pair.h>
+#include <Utils/Types/MapCore.h>
 
 namespace SR_UTILS_NS {
     // =========================================================================
@@ -39,15 +40,26 @@ namespace SR_UTILS_NS {
         using mapped_type = Value;
         static constexpr bool key_only = false;
 
-    private:
-        enum class Color : uint8_t { Red, Black };
+        static constexpr void ValidateErasedLayout() {
+            using MapType = Map<Key, Value, Compare>;
+            if constexpr (std::is_empty_v<Compare>) {
+                static_assert(sizeof(Map<Key, Value, Compare>) == sizeof(ErasedTreeMapLayout));
+                static_assert(alignof(Map<Key, Value, Compare>) == alignof(ErasedTreeMapLayout));
+                static_assert(offsetof(MapType, m_nil) == offsetof(ErasedTreeMapLayout, pNil));
+                static_assert(offsetof(MapType, m_pMin) == offsetof(ErasedTreeMapLayout, pMin));
+                static_assert(offsetof(MapType, m_size) == offsetof(ErasedTreeMapLayout, size));
+                static_assert(offsetof(MapType, m_allocator) == offsetof(ErasedTreeMapLayout, pAllocator));
+            }
+            static_assert(sizeof(Node) == CalculateMapNodeSize(sizeof(Key), alignof(Key), sizeof(Value), alignof(Value)));
+            static_assert(offsetof(Node, kv) + offsetof(ValueType, first) == CalculateMapNodeKeyOffset(alignof(Key), alignof(Value)));
+            static_assert(offsetof(Node, kv) + offsetof(ValueType, second) == CalculateMapNodeValueOffset(sizeof(Key), alignof(Key), alignof(Value)));
+        }
 
-        struct Node {
+    private:
+        using Color = RbTreeColor;
+
+        struct Node : public RbTreeNodeHeader {
             ValueType kv;
-            Node*  pLeft   = nullptr;
-            Node*  pRight  = nullptr;
-            Node*  pParent = nullptr;
-            Color  color   = Color::Red;
 
             template<typename K, typename V>
             Node(K&& k, V&& v)
@@ -224,8 +236,8 @@ namespace SR_UTILS_NS {
         void FreeNil();
 
         // ---- tree helpers ---------------------------------------------------
-        SR_NODISCARD SR_FORCE_INLINE Node* Root()    const noexcept { return m_nil->pParent; }
-        SR_FORCE_INLINE void               SetRoot(Node* r) noexcept { m_nil->pParent = r; r->pParent = m_nil; }
+        SR_NODISCARD SR_FORCE_INLINE Node* Root()    const noexcept { return static_cast<Node*>(m_nil->pParent); }
+        SR_FORCE_INLINE void               SetRoot(Node* r) noexcept { MapCore::SetRoot(r, m_nil); }
 
         SR_FORCE_INLINE void RotLeft(Node* x)  noexcept;
         SR_FORCE_INLINE void RotRight(Node* x) noexcept;
@@ -240,54 +252,25 @@ namespace SR_UTILS_NS {
         Pair<Node*, bool> InsertAt(Node* z) noexcept;
 
         // Subtree copy / destroy
-        Node* CloneSubtree(Node* src, Node* srcNil, Node* parent);
+        Node* CloneSubtree(const Node* src, const Node* srcNil, Node* parent);
         void  FreeSubtree(Node* x) noexcept;
 
         // In-order next / prev (static helpers used by iterators)
         SR_NODISCARD SR_FORCE_INLINE static Node* Next(Node* x, Node* nil) noexcept {
-            if (x->pRight != nil) {
-                x = x->pRight;
-                while (x->pLeft != nil) x = x->pLeft;
-                return x;
-            }
-            Node* p = x->pParent;
-            while (p != nil && x == p->pRight) { x = p; p = p->pParent; }
-            return p;
+            return static_cast<Node*>(MapCore::Next(x, nil));
         }
         SR_NODISCARD SR_FORCE_INLINE static const Node* Next(const Node* x, const Node* nil) noexcept {
-            if (x->pRight != nil) {
-                x = x->pRight;
-                while (x->pLeft != nil) x = x->pLeft;
-                return x;
-            }
-            const Node* p = x->pParent;
-            while (p != nil && x == p->pRight) { x = p; p = p->pParent; }
-            return p;
+            return static_cast<const Node*>(MapCore::Next(x, nil));
         }
         SR_NODISCARD SR_FORCE_INLINE static Node* Prev(Node* x, Node* nil) noexcept {
-            if (x == nil) {
-                // --end() → maximum of entire tree
-                // nil->pParent == root; walk right spine
-                x = nil->pParent;
-                while (x->pRight != nil) x = x->pRight;
-                return x;
-            }
-            if (x->pLeft != nil) {
-                x = x->pLeft;
-                while (x->pRight != nil) x = x->pRight;
-                return x;
-            }
-            Node* p = x->pParent;
-            while (p != nil && x == p->pLeft) { x = p; p = p->pParent; }
-            return p;
+            return static_cast<Node*>(MapCore::Prev(x, nil));
         }
         SR_NODISCARD SR_FORCE_INLINE static const Node* Prev(const Node* x, const Node* nil) noexcept {
-            return Prev(const_cast<Node*>(x), const_cast<Node*>(nil));
+            return static_cast<const Node*>(MapCore::Prev(x, nil));
         }
 
         static Node* TreeMin(Node* x, Node* nil) noexcept {
-            while (x->pLeft != nil) x = x->pLeft;
-            return x;
+            return static_cast<Node*>(MapCore::TreeMin(x, nil));
         }
 
     private:
@@ -353,12 +336,8 @@ namespace SR_UTILS_NS {
 
     template<typename K, typename V, typename C>
     void Map<K,V,C>::AllocNil() {
-        // Allocate raw memory — no constructor for kv, just set pointers / color
         m_nil = static_cast<Node*>(RawAlloc(sizeof(Node)));
-        m_nil->pLeft   = m_nil;
-        m_nil->pRight  = m_nil;
-        m_nil->pParent = m_nil;  // nil->pParent == root (empty tree → root == nil)
-        m_nil->color   = Color::Black;
+        MapCore::InitNil(m_nil);
         m_pMin = m_nil;
     }
 
@@ -373,159 +352,40 @@ namespace SR_UTILS_NS {
 
     template<typename K, typename V, typename C>
     SR_FORCE_INLINE void Map<K,V,C>::RotLeft(Node* x) noexcept {
-        Node* y   = x->pRight;
-        x->pRight = y->pLeft;
-        if (y->pLeft != m_nil) y->pLeft->pParent = x;
-        y->pParent = x->pParent;
-        if (x == Root())              SetRoot(y);
-        else if (x == x->pParent->pLeft) x->pParent->pLeft  = y;
-        else                              x->pParent->pRight = y;
-        y->pLeft   = x;
-        x->pParent = y;
+        MapCore::RotLeft(x, m_nil);
     }
 
     template<typename K, typename V, typename C>
     SR_FORCE_INLINE void Map<K,V,C>::RotRight(Node* x) noexcept {
-        Node* y  = x->pLeft;
-        x->pLeft = y->pRight;
-        if (y->pRight != m_nil) y->pRight->pParent = x;
-        y->pParent = x->pParent;
-        if (x == Root())               SetRoot(y);
-        else if (x == x->pParent->pRight) x->pParent->pRight = y;
-        else                               x->pParent->pLeft  = y;
-        y->pRight  = x;
-        x->pParent = y;
+        MapCore::RotRight(x, m_nil);
     }
 
     // ---- InsertFixup --------------------------------------------------------
 
     template<typename K, typename V, typename C>
     void Map<K,V,C>::InsertFixup(Node* z) noexcept {
-        while (z->pParent->color == Color::Red) {
-            Node* gp = z->pParent->pParent;
-            if (z->pParent == gp->pLeft) {
-                Node* u = gp->pRight;
-                if (u->color == Color::Red) {                   // Case 1: uncle red
-                    z->pParent->color = Color::Black;
-                    u->color          = Color::Black;
-                    gp->color         = Color::Red;
-                    z = gp;
-                }
-                else {
-                    if (z == z->pParent->pRight) {              // Case 2 → Case 3
-                        z = z->pParent;
-                        RotLeft(z);
-                    }
-                    z->pParent->color = Color::Black;            // Case 3
-                    z->pParent->pParent->color = Color::Red;
-                    RotRight(z->pParent->pParent);
-                }
-            }
-            else {
-                Node* u = gp->pLeft;
-                if (u->color == Color::Red) {
-                    z->pParent->color = Color::Black;
-                    u->color          = Color::Black;
-                    gp->color         = Color::Red;
-                    z = gp;
-                }
-                else {
-                    if (z == z->pParent->pLeft) {
-                        z = z->pParent;
-                        RotRight(z);
-                    }
-                    z->pParent->color = Color::Black;
-                    z->pParent->pParent->color = Color::Red;
-                    RotLeft(z->pParent->pParent);
-                }
-            }
-        }
-        Root()->color = Color::Black;
+        MapCore::InsertFixup(z, m_nil);
     }
 
     // ---- Transplant ---------------------------------------------------------
 
     template<typename K, typename V, typename C>
     void Map<K,V,C>::Transplant(Node* u, Node* v) noexcept {
-        if (u == Root())                   SetRoot(v);
-        else if (u == u->pParent->pLeft)   u->pParent->pLeft  = v;
-        else                               u->pParent->pRight = v;
-        // Do not overwrite m_nil->pParent (which tracks root) when v is the sentinel.
-        if (v != m_nil) v->pParent = u->pParent;
+        MapCore::Transplant(u, v, m_nil);
     }
 
     // ---- EraseFixup ---------------------------------------------------------
 
     template<typename K, typename V, typename C>
     void Map<K,V,C>::EraseFixup(Node* x, Node* xp) noexcept {
-        while (x != Root() && x->color == Color::Black) {
-            if (x == xp->pLeft) {
-                Node* w = xp->pRight;
-                if (w->color == Color::Red) {
-                    w->color   = Color::Black;
-                    xp->color  = Color::Red;
-                    RotLeft(xp);
-                    w = xp->pRight;
-                }
-                if (w->pLeft->color == Color::Black && w->pRight->color == Color::Black) {
-                    w->color = Color::Red;
-                    x = xp; xp = x->pParent;
-                }
-                else {
-                    if (w->pRight->color == Color::Black) {
-                        w->pLeft->color = Color::Black;
-                        w->color        = Color::Red;
-                        RotRight(w);
-                        w = xp->pRight;
-                    }
-                    w->color         = xp->color;
-                    xp->color        = Color::Black;
-                    w->pRight->color = Color::Black;
-                    RotLeft(xp);
-                    x = Root();
-                }
-            }
-            else {
-                Node* w = xp->pLeft;
-                if (w->color == Color::Red) {
-                    w->color   = Color::Black;
-                    xp->color  = Color::Red;
-                    RotRight(xp);
-                    w = xp->pLeft;
-                }
-                if (w->pRight->color == Color::Black && w->pLeft->color == Color::Black) {
-                    w->color = Color::Red;
-                    x = xp; xp = x->pParent;
-                }
-                else {
-                    if (w->pLeft->color == Color::Black) {
-                        w->pRight->color = Color::Black;
-                        w->color         = Color::Red;
-                        RotLeft(w);
-                        w = xp->pLeft;
-                    }
-                    w->color        = xp->color;
-                    xp->color       = Color::Black;
-                    w->pLeft->color = Color::Black;
-                    RotRight(xp);
-                    x = Root();
-                }
-            }
-        }
-        x->color = Color::Black;
+        MapCore::EraseFixup(x, xp, m_nil);
     }
 
     // ---- LB -----------------------------------------------------------------
 
     template<typename K, typename V, typename C>
     typename Map<K,V,C>::Node* Map<K,V,C>::LB(const K& key) const noexcept {
-        Node* x  = Root();
-        Node* lb = m_nil;
-        while (x != m_nil) {
-            if (!m_cmp(x->key(), key)) { lb = x; x = x->pLeft; }
-            else                        { x = x->pRight; }
-        }
-        return lb;
+        return MapCore::LowerBound(m_nil, key, [](const Node* n) -> const K& { return n->key(); }, m_cmp);
     }
 
     // ---- InsertAt -----------------------------------------------------------
@@ -535,24 +395,7 @@ namespace SR_UTILS_NS {
         if (!m_nil) SR_UNLIKELY_ATTRIBUTE {
             AllocNil();
         }
-        Node* parent = m_nil;
-        Node* x      = Root();
-        while (x != m_nil) {
-            parent = x;
-            if      (m_cmp(z->key(), x->key())) x = x->pLeft;
-            else if (m_cmp(x->key(), z->key())) x = x->pRight;
-            else                                 return Pair<Node*, bool>(x, false);   // duplicate
-        }
-        z->pLeft = z->pRight = m_nil;
-        z->color = Color::Red;
-        if (parent == m_nil)                     SetRoot(z);
-        else if (m_cmp(z->key(), parent->key())) parent->pLeft  = z;
-        else                                     parent->pRight = z;
-        z->pParent = parent;
-        InsertFixup(z);
-        ++m_size;
-        if (m_pMin == m_nil || m_cmp(z->key(), m_pMin->key())) m_pMin = z;
-        return Pair<Node*, bool>(z, true);
+        return MapCore::InsertNode(m_pMin, m_size, z, m_nil, [](const Node* n) -> const K& { return n->key(); }, m_cmp);
     }
 
     // ---- public insert ------------------------------------------------------
@@ -599,8 +442,8 @@ namespace SR_UTILS_NS {
         Node* x      = Root();
         while (x != m_nil) {
             parent = x;
-            if      (m_cmp(key, x->key())) x = x->pLeft;
-            else if (m_cmp(x->key(), key)) x = x->pRight;
+            if      (m_cmp(key, x->key())) x = static_cast<Node*>(x->pLeft);
+            else if (m_cmp(x->key(), key)) x = static_cast<Node*>(x->pRight);
             else                           return x->kv.second;
         }
         Node* z = NewNode();
@@ -625,8 +468,8 @@ namespace SR_UTILS_NS {
         Node* x      = Root();
         while (x != m_nil) {
             parent = x;
-            if      (m_cmp(key, x->key())) x = x->pLeft;
-            else if (m_cmp(x->key(), key)) x = x->pRight;
+            if      (m_cmp(key, x->key())) x = static_cast<Node*>(x->pLeft);
+            else if (m_cmp(x->key(), key)) x = static_cast<Node*>(x->pRight);
             else                           return x->kv.second;
         }
         Node* z = NewNode();
@@ -710,12 +553,7 @@ namespace SR_UTILS_NS {
         if (!m_nil) SR_UNLIKELY_ATTRIBUTE {
             return end();
         }
-        Node* x = Root(), *ub = m_nil;
-        while (x != m_nil) {
-            if (m_cmp(key, x->key())) { ub = x; x = x->pLeft; }
-            else                       { x = x->pRight; }
-        }
-        return { ub, m_nil };
+        return { MapCore::UpperBound(m_nil, key, [](const Node* n) -> const K& { return n->key(); }, m_cmp), m_nil };
     }
 
     template<typename K, typename V, typename C>
@@ -723,12 +561,7 @@ namespace SR_UTILS_NS {
         if (!m_nil) SR_UNLIKELY_ATTRIBUTE {
             return end();
         }
-        Node* x = Root(), *ub = m_nil;
-        while (x != m_nil) {
-            if (m_cmp(key, x->key())) { ub = x; x = x->pLeft; }
-            else                       { x = x->pRight; }
-        }
-        return { ub, m_nil };
+        return { MapCore::UpperBound(m_nil, key, [](const Node* n) -> const K& { return n->key(); }, m_cmp), m_nil };
     }
 
     // ---- erase --------------------------------------------------------------
@@ -741,42 +574,11 @@ namespace SR_UTILS_NS {
         Node* z = LB(key);
         if (z == m_nil || m_cmp(key, z->key())) return false;
 
-        if (z == m_pMin) m_pMin = Next(z, m_nil);
-
-        Node* y  = z;
-        Color yc = y->color;
-        Node* x  = nullptr;
-        Node* xp = nullptr;
-
-        if (z->pLeft == m_nil) {
-            x = z->pRight; xp = z->pParent;
-            Transplant(z, z->pRight);
-        }
-        else if (z->pRight == m_nil) {
-            x = z->pLeft; xp = z->pParent;
-            Transplant(z, z->pLeft);
-        }
-        else {
-            y  = TreeMin(z->pRight, m_nil);
-            yc = y->color;
-            x  = y->pRight;
-            xp = (y->pParent == z) ? y : y->pParent;
-            if (y->pParent != z) {
-                Transplant(y, y->pRight);
-                y->pRight = z->pRight;
-                y->pRight->pParent = y;
-            }
-            Transplant(z, y);
-            y->pLeft = z->pLeft;
-            y->pLeft->pParent = y;
-            y->color = z->color;
-        }
+        MapCore::UnlinkNode(m_pMin, z, m_nil);
 
         z->~Node();
         DelNode(z);
         --m_size;
-
-        if (yc == Color::Black) EraseFixup(x, xp);
 
         if (m_size == 0) m_pMin = m_nil;
 
@@ -799,14 +601,10 @@ namespace SR_UTILS_NS {
 
     template<typename K, typename V, typename C>
     void Map<K,V,C>::FreeSubtree(Node* x) noexcept {
-        // Iterative left-spine traversal to keep stack depth minimal
-        while (x != m_nil) {
-            FreeSubtree(x->pRight);
-            Node* left = x->pLeft;
-            x->~Node();
-            DelNode(x);
-            x = left;
-        }
+        MapCore::DestroySubtree(x, m_nil, [this](Node* node) {
+            node->~Node();
+            DelNode(node);
+        });
     }
 
     template<typename K, typename V, typename C>
@@ -832,15 +630,12 @@ namespace SR_UTILS_NS {
 
     template<typename K, typename V, typename C>
     typename Map<K,V,C>::Node*
-    Map<K,V,C>::CloneSubtree(Node* src, Node* srcNil, Node* parent) {
-        if (src == srcNil) return m_nil;
-        Node* dst = NewNode();
-        new (dst) Node(src->kv.first, src->kv.second);
-        dst->color   = src->color;
-        dst->pParent = parent;
-        dst->pLeft   = CloneSubtree(src->pLeft,  srcNil, dst);
-        dst->pRight  = CloneSubtree(src->pRight, srcNil, dst);
-        return dst;
+    Map<K,V,C>::CloneSubtree(const Node* src, const Node* srcNil, Node* parent) {
+        return MapCore::CloneSubtree(src, srcNil, m_nil, parent, [this](const Node* s) {
+            Node* dst = NewNode();
+            new (dst) Node(s->kv.first, s->kv.second);
+            return dst;
+        });
     }
 
     // ---- constructors / assignment ------------------------------------------

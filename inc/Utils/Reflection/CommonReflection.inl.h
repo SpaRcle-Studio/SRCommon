@@ -78,6 +78,13 @@ namespace SR_UTILS_NS::Reflection {
     /// ================================================================================================================
 
     template<typename T, bool AllowCopy, bool AllowMove> void FillLifecycle(TypeInfoVTable& vtable) {
+        if constexpr (!IsMapV<T> && !IsSetV<T> && !IsVectorV<T> && !IsTypeFromClassTemplateV<T, Pair>) {
+            if constexpr (requires (const T& a, const T& b) { static_cast<bool>(a < b); }) {
+                vtable.pLess = [](const void* pLeft, const void* pRight) {
+                    return static_cast<bool>(*static_cast<const T*>(pLeft) < *static_cast<const T*>(pRight));
+                };
+            }
+        }
         auto&& lifecycle = vtable.lifecycle;
         lifecycle = {};
         lifecycle.size = sizeof(T);
@@ -125,6 +132,9 @@ namespace SR_UTILS_NS::Reflection {
             key.kind = TypeKind::Enum;
             key.name = GetEnumName(T());
             FillArithmeticVTable(vtable, sizeof(T));
+            vtable.pLess = [](const void* pLeft, const void* pRight) {
+                return *static_cast<const T*>(pLeft) < *static_cast<const T*>(pRight);
+            };
         }
     };
 

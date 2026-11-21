@@ -3,21 +3,21 @@
 //
 
 namespace SR_UTILS_NS::Reflection {
-    template<typename T> SizeType ReflectedMapSize(const void* pMap) {
+    template<typename T> SizeType ReflectedMapSize(const TypeInfo&, const void* pMap) {
         return static_cast<const T*>(pMap)->size();
     }
 
-    template<typename T> void ReflectedMapClear(void* pMap) {
+    template<typename T> void ReflectedMapClear(const TypeInfo&, void* pMap) {
         static_cast<T*>(pMap)->clear();
     }
 
-    template<typename T> bool ReflectedMapErase(void* pMap, const void* pKey) {
+    template<typename T> bool ReflectedMapErase(const TypeInfo&, void* pMap, const void* pKey) {
         return static_cast<T*>(pMap)->erase(*static_cast<const typename T::KeyType*>(pKey));
     }
 
     /// ================================================================================================================
 
-    template<typename T> void* ReflectedMapFind(void* pMap, const void* pKey) {
+    template<typename T> void* ReflectedMapFind(const TypeInfo&, void* pMap, const void* pKey) {
         auto&& map = *static_cast<T*>(pMap);
         auto&& pIt = map.find(*static_cast<const typename T::KeyType*>(pKey));
         if (pIt == map.end()) {
@@ -26,11 +26,11 @@ namespace SR_UTILS_NS::Reflection {
         return &pIt->second;
     }
 
-    template<typename T> void* ReflectedMapFindOrAdd(void* pMap, const void* pKey) {
+    template<typename T> void* ReflectedMapFindOrAdd(const TypeInfo&, void* pMap, const void* pKey) {
         return &(*static_cast<T*>(pMap))[*static_cast<const typename T::KeyType*>(pKey)];
     }
 
-    template<typename T> bool ReflectedMapInsertOrAssign(void* pMap, const void* pKey, const void* pValue) {
+    template<typename T> bool ReflectedMapInsertOrAssign(const TypeInfo&, void* pMap, const void* pKey, const void* pValue) {
         auto&& map = *static_cast<T*>(pMap);
         auto&& key = *static_cast<const typename T::KeyType*>(pKey);
         auto&& value = *static_cast<const typename T::MappedType*>(pValue);
@@ -42,7 +42,7 @@ namespace SR_UTILS_NS::Reflection {
         return true;
     }
 
-    template<typename T> void ReflectedMapForEach(void* pMap, bool(*pVisit)(void* pUserData, const void* pKey, void* pValue), void* pUserData) {
+    template<typename T> void ReflectedMapForEach(const TypeInfo&, void* pMap, bool(*pVisit)(void* pUserData, const void* pKey, void* pValue), void* pUserData) {
         auto&& map = *static_cast<T*>(pMap);
         for (auto&& pIt = map.begin(); pIt != map.end(); ++pIt) {
             if (!pVisit(pUserData, &pIt->first, &pIt->second)) {
@@ -66,6 +66,7 @@ namespace SR_UTILS_NS::Reflection {
     template<typename Key, typename Value, typename Compare> struct DetermineTypeInfoAccessor<Map<Key, Value, Compare>> {
         static constexpr bool Supported = true;
         static void Determine(TypeInfoKey& key, TypeInfoVTable& vtable) {
+            Map<Key, Value, Compare>::ValidateErasedLayout();
             key.kind = TypeKind::Map;
             key.pNext[0] = TypeOf<Pair<Key, Value>>();
             FillMapVTable<Map<Key, Value, Compare>>(vtable);
@@ -83,19 +84,19 @@ namespace SR_UTILS_NS::Reflection {
 
     /// ================================================================================================================
 
-    template<typename T, typename Key> SizeType ReflectedSetSize(const void* pSet) {
+    template<typename T, typename Key> SizeType ReflectedSetSize(const TypeInfo&, const void* pSet) {
         return static_cast<const T*>(pSet)->size();
     }
 
-    template<typename T, typename Key> void ReflectedSetClear(void* pSet) {
+    template<typename T, typename Key> void ReflectedSetClear(const TypeInfo&, void* pSet) {
         static_cast<T*>(pSet)->clear();
     }
 
-    template<typename T, typename Key> bool ReflectedSetErase(void* pSet, const void* pKey) {
+    template<typename T, typename Key> bool ReflectedSetErase(const TypeInfo&, void* pSet, const void* pKey) {
         return static_cast<T*>(pSet)->erase(*static_cast<const Key*>(pKey));
     }
 
-    template<typename T, typename Key> void* ReflectedSetFind(void* pSet, const void* pKey) {
+    template<typename T, typename Key> void* ReflectedSetFind(const TypeInfo&, void* pSet, const void* pKey) {
         auto&& set = *static_cast<T*>(pSet);
         auto&& pIt = set.find(*static_cast<const Key*>(pKey));
         if (pIt == set.end()) {
@@ -104,16 +105,16 @@ namespace SR_UTILS_NS::Reflection {
         return const_cast<Key*>(&*pIt);
     }
 
-    template<typename T, typename Key> void* ReflectedSetFindOrAdd(void* pSet, const void* pKey) {
+    template<typename T, typename Key> void* ReflectedSetFindOrAdd(const TypeInfo&, void* pSet, const void* pKey) {
         auto&& result = static_cast<T*>(pSet)->insert(*static_cast<const Key*>(pKey));
         return const_cast<Key*>(&*result.first);
     }
 
-    template<typename T, typename Key> bool ReflectedSetInsertOrAssign(void* pSet, const void* pKey, const void*) {
+    template<typename T, typename Key> bool ReflectedSetInsertOrAssign(const TypeInfo&, void* pSet, const void* pKey, const void*) {
         return static_cast<T*>(pSet)->insert(*static_cast<const Key*>(pKey)).second;
     }
 
-    template<typename T, typename Key> void ReflectedSetForEach(void* pSet, bool(*pVisit)(void* pUserData, const void* pKey, void* pValue), void* pUserData) {
+    template<typename T, typename Key> void ReflectedSetForEach(const TypeInfo&, void* pSet, bool(*pVisit)(void* pUserData, const void* pKey, void* pValue), void* pUserData) {
         auto&& set = *static_cast<T*>(pSet);
         for (auto&& pIt = set.begin(); pIt != set.end(); ++pIt) {
             if (!pVisit(pUserData, &*pIt, nullptr)) {
@@ -137,6 +138,7 @@ namespace SR_UTILS_NS::Reflection {
     template<typename T, typename Compare> struct DetermineTypeInfoAccessor<Set<T, Compare>> {
         static constexpr bool Supported = true;
         static void Determine(TypeInfoKey& key, TypeInfoVTable& vtable) {
+            Set<T, Compare>::ValidateErasedLayout();
             key.kind = TypeKind::Set;
             key.pNext[0] = TypeOf<T>();
             FillSetVTable<Set<T, Compare>, T>(vtable);

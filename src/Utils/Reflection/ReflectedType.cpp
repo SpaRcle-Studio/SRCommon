@@ -836,6 +836,9 @@ namespace SR_UTILS_NS::Reflection {
         else if constexpr (std::is_integral_v<T> || std::is_floating_point_v<T>) {
             key.kind = GetArithmeticTypeKind<T>();
             FillArithmeticVTable(vtable, sizeof(T));
+            vtable.pLess = [](const void* pLeft, const void* pRight) {
+                return *static_cast<const T*>(pLeft) < *static_cast<const T*>(pRight);
+            };
         }
         else if constexpr (std::is_same_v<T, SR_MATH_NS::FColor>) {
             key.kind = TypeKind::Color;
