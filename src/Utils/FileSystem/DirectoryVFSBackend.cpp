@@ -188,6 +188,7 @@ namespace SR_UTILS_NS {
     }
 
     File DirectoryVFSBackend::OpenFile(StringView path, FileMode mode) const {
+        SR_TRACY_ZONE;
         ResolveVirtualPath(path, gResolvedPathBuffer);
         if (SR_MATH_NS::IsMaskIncludedSubMask(mode, FileMode::Write)) {
             SR_PLATFORM_NS::CreateDirectories(StringUtils::GetDirToFileFromFullPath(gResolvedPathBuffer));

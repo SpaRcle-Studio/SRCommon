@@ -3,11 +3,13 @@
 //
 
 #include <Utils/Reflection/ValuePool.h>
+#include <Utils/Profile/TracyContext.h>
 
 namespace SR_UTILS_NS::Reflection {
     ValuePool::ValuePool(const TypeInfo* pType, const SizeType capacity)
         : m_pType(pType)
     {
+        SR_TRACY_ZONE;
         m_slots.resize(capacity);
         auto&& lifecycle = m_pType->vtable.lifecycle;
         for (auto&& slot : m_slots) {

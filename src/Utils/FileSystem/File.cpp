@@ -135,6 +135,7 @@ namespace SR_UTILS_NS {
     }
 
     bool StreamFileImpl::Open(StringView path, FileMode mode) {
+        SR_TRACY_ZONE;
         m_mode = mode;
         std::ios::openmode openMode = std::ios::binary;
         if (SR_MATH_NS::IsMaskIncludedSubMask(mode, FileMode::Read)) {
@@ -231,6 +232,7 @@ namespace SR_UTILS_NS {
     }
 
     bool MappedFileImpl::Open(StringView path, FileMode mode) {
+        SR_TRACY_ZONE;
         m_mode = mode;
         MappedFile mappedFile = MappedFile::Open({}, path, SR_MATH_NS::IsMaskIncludedSubMask(mode, FileMode::Write));
         if (!mappedFile) {
@@ -314,6 +316,7 @@ namespace SR_UTILS_NS {
     { }
 
     bool MemoryFileImpl::Open(StringView path, FileMode mode) {
+        SR_TRACY_ZONE;
         m_mode = mode;
         m_position = 0;
         /// содержимое уже было передано в конструкторе, открывать нечего
