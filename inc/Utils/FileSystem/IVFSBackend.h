@@ -42,6 +42,7 @@ namespace SR_UTILS_NS {
         virtual void Enumerate(StringView directory, const EnumerateCallback& callback, bool recursive) const = 0;
         virtual void ResolveVirtualPath(StringView virtualPath, String& outRealPath) const = 0;
         virtual void Delete(StringView path) const = 0;
+        SR_NODISCARD virtual bool ReplaceFile(StringView source, StringView destination) const { return false; }
 
         SR_NODISCARD virtual bool IsApplicable(StringView path) const;
 

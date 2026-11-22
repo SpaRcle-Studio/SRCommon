@@ -12,6 +12,11 @@
 #include <filesystem>
 #include <system_error>
 
+#ifdef SR_WIN32
+    #include <Windows.h>
+    #undef ReplaceFile
+#endif
+
 namespace SR_UTILS_NS {
     bool IsDangerousDeletionPath(std::string_view rawPath) {
         SR_TRACY_ZONE;
@@ -160,6 +165,32 @@ namespace SR_UTILS_NS {
     }
 
     static SR_THREAD_LOCAL String gResolvedPathBuffer;
+
+    bool DirectoryVFSBackend::ReplaceFile(StringView source, StringView destination) const {
+        if (!WriteSupports() || !IsApplicable(source) || !IsApplicable(destination)) {
+            return false;
+        }
+        String sourcePath;
+        String destinationPath;
+        ResolveVirtualPath(source, sourcePath);
+        ResolveVirtualPath(destination, destinationPath);
+    #ifdef SR_WIN32
+        const int32_t sourceSize = MultiByteToWideChar(CP_UTF8, 0, sourcePath.c_str(), -1, nullptr, 0);
+        const int32_t destinationSize = MultiByteToWideChar(CP_UTF8, 0, destinationPath.c_str(), -1, nullptr, 0);
+        if (sourceSize <= 0 || destinationSize <= 0) {
+            return false;
+        }
+        Vector<wchar_t> wideSource(sourceSize);
+        Vector<wchar_t> wideDestination(destinationSize);
+        if (!MultiByteToWideChar(CP_UTF8, 0, sourcePath.c_str(), -1, wideSource.data(), sourceSize)
+            || !MultiByteToWideChar(CP_UTF8, 0, destinationPath.c_str(), -1, wideDestination.data(), destinationSize)) {
+            return false;
+        }
+        return MoveFileExW(wideSource.data(), wideDestination.data(), MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH) != 0;
+    #else
+        return std::rename(sourcePath.c_str(), destinationPath.c_str()) == 0;
+    #endif
+    }
 
     void DirectoryVFSBackend::ResolveVirtualPath(StringView virtualPath, String& outRealPath) const {
         SR_TRACY_ZONE;

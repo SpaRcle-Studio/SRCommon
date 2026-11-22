@@ -22,6 +22,7 @@ namespace SR_UTILS_NS {
 
         void Enumerate(StringView directory, const EnumerateCallback& callback, bool recursive) const override;
         void Delete(StringView path) const override;
+        bool ReplaceFile(StringView source, StringView destination) const override;
         void ResolveVirtualPath(StringView virtualPath, String& outRealPath) const override;
 
     };

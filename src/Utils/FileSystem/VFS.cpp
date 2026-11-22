@@ -337,6 +337,39 @@ namespace SR_UTILS_NS {
         return res;
     }
 
+    bool VFS::WriteFileAtomic(StringView path, StringView data) {
+        SR_TRACY_ZONE;
+        static std::atomic<uint64_t> sequence = 0;
+        const String temporary = "{}.tmp.{}.{}.{}"_format(path, reinterpret_cast<uintptr_t>(this),
+            std::chrono::steady_clock::now().time_since_epoch().count(), sequence.fetch_add(1));
+        auto file = OpenFile(temporary, FileMode::Write);
+        if (!file) {
+            return false;
+        }
+        const bool written = file.Write(data.data(), data.size()) == data.size();
+        file.Flush();
+        const bool sized = file.GetSize() == data.size();
+        file = File();
+        if (written && sized && ReplaceFile(temporary, path)) {
+            return true;
+        }
+        Delete(temporary);
+        SR_ERROR("VFS::WriteFileAtomic() : failed to publish {}", path);
+        return false;
+    }
+
+    bool VFS::ReplaceFile(StringView source, StringView destination) {
+        SR_TRACY_ZONE;
+        std::shared_lock lock(m_mountsMutex);
+        for (auto&& mount : m_mounts) {
+            if (mount.pBackend->WriteSupports() && mount.pBackend->IsApplicable(source)
+                && mount.pBackend->IsApplicable(destination) && mount.pBackend->GetType(source) == FSItemType::File) {
+                return mount.pBackend->ReplaceFile(source, destination);
+            }
+        }
+        return false;
+    }
+
     bool VFS::Copy(StringView from, StringView to) {
         SR_TRACY_ZONE;
 

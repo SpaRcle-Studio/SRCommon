@@ -38,6 +38,8 @@ namespace SR_UTILS_NS {
         void RegisterHandle(PassKey<File>, FileImpl* pImpl);
         void Delete(StringView path);
         bool Copy(StringView from, StringView to);
+        bool WriteFileAtomic(StringView path, StringView data);
+        bool ReplaceFile(StringView source, StringView destination);
 
         bool ResolvePath(String& path, FileMode mode, bool reportError = true) const;
 

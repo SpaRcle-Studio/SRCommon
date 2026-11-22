@@ -31,6 +31,7 @@ if (SR_COMMON_MESHOPTIMIZER)
 endif()
 
 if (SR_COMMON_ZLIB)
+    target_compile_definitions(Utils PUBLIC SR_COMMON_ZLIB)
     target_link_libraries(Utils zlibstatic)
 endif()
 
