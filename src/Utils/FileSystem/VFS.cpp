@@ -472,12 +472,12 @@ namespace SR_UTILS_NS {
         return false;
     }
 
-    void VFS::GetFilesInDirectory(Vector<Path>& files, StringView directory, bool recursive) {
+    void VFS::GetFilesInDirectory(Vector<Path>& files, StringView directory, bool recursive, bool relative) {
         SR_TRACY_ZONE;
         files.clear();
-        Enumerate(directory, [&files](const VFSEntry& entry) {
+        Enumerate(directory, [&files, relative](const VFSEntry& entry) {
             if (entry.type == FSItemType::File) {
-                files.emplace_back(entry.fullPath);
+                files.emplace_back(relative ? entry.relativePath : entry.fullPath);
             }
         }, recursive);
     }

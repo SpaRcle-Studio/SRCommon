@@ -44,6 +44,18 @@ namespace SR_UTILS_NS {
 
     };
 
+    class SR_COMMON_DLL_API ResourceRefDynamic : public ResourceRefBase {
+        SR_CLASS()
+    public:
+        ResourceRefDynamic();
+        explicit ResourceRefDynamic(StringAtom type);
+
+        SR_NODISCARD StringAtom GetResourceType() const noexcept override;
+
+    private:
+        StringAtom m_type;
+    };
+
     template<class T> class ResourceRef : public ResourceRefBase {
         using Super = ResourceRefBase;
     public:

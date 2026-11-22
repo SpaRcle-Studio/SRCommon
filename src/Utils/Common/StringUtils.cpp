@@ -512,6 +512,10 @@ namespace SR_UTILS_NS {
         return left.Concat(right);
     }
 
+    Path StringUtils::RemoveSubPath(const Path& path, const Path& subPath) {
+        return path.RemoveSubPath(subPath);
+    }
+
     bool StringUtils::CompareAnyCase(StringView left, StringView right) {
         if (left.size() != right.size()) {
             return false;

@@ -9,6 +9,16 @@
 #include <Codegen/ResourceRef.generated.hpp>
 
 namespace SR_UTILS_NS {
+    ResourceRefDynamic::ResourceRefDynamic() = default;
+
+    ResourceRefDynamic::ResourceRefDynamic(StringAtom type)
+        : m_type(type)
+    { }
+
+    StringAtom ResourceRefDynamic::GetResourceType() const noexcept {
+        return m_type;
+    }
+
     ResourceRefBase::ResourceRefBase(const ResourceRefBase& other)
         : Super(other)
     {

@@ -42,7 +42,7 @@ namespace SR_UTILS_NS {
     private:
         /// @property @onChanged(SetLayoutDirty)
         AspectRatioMode m_mode = AspectRatioMode::None;
-        /// @property @setter(SetAspectRatio)
+        /// @property @setter(SetAspectRatio) @onChanged(SetLayoutDirty)
         float_t m_aspectRatio = 1.f;
         /// @property @onChanged(SetLayoutDirty) @condition(This.m_mode == SR_UTILS_NS::AspectRatioMode::FitInParent)
         SR_MATH_NS::FVector2 m_referenceSize;

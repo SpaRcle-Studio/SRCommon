@@ -8,6 +8,8 @@
 #include <Utils/Reflection/ReflectedType.h>
 #include <Utils/TypeTraits/Factory.h>
 #include <Utils/Common/EnumReflector.h>
+#include <Utils/ECS/EntityRef.h>
+#include <Utils/Resources/ResourceRef.h>
 
 namespace SR_UTILS_NS::Reflection {
     bool HasResolvedVectorElements(const TypeInfo& type) {
@@ -144,6 +146,41 @@ namespace SR_UTILS_NS::Reflection {
     }
 
     bool ResolveBuiltinVTable(const TypeInfoKey& key, TypeInfoVTable& vtable) {
+        if (key.kind == TypeKind::ResourceRef && key.pNext[0] && key.pNext[0]->kind == TypeKind::Object) {
+            auto&& pMeta = Factory::Instance().GetType(key.pNext[0]->name);
+            if (!pMeta || !pMeta->IsSameOrInherited("IResource")) {
+                return false;
+            }
+            FillLifecycle<ResourceRefDynamic>(vtable);
+            vtable.pSizeOfAlign = [](const TypeInfo&) -> Pair<SizeType, SizeType> {
+                return { sizeof(ResourceRefDynamic), alignof(ResourceRefDynamic) };
+            };
+            vtable.lifecycle.pConstructAt = [](const TypeInfo& type, void* pDst) {
+                new(pDst) ResourceRefDynamic(type.pNext[0]->name);
+            };
+            vtable.pGetTypeController = [](ReflectedValue& value) -> void* {
+                return static_cast<ResourceRefBase*>(static_cast<ResourceRefDynamic*>(value.GetData()));
+            };
+            return true;
+        }
+        if (key.kind == TypeKind::EntityRef && key.pNext[0] && key.pNext[0]->kind == TypeKind::Object) {
+            auto&& pMeta = Factory::Instance().GetType(key.pNext[0]->name);
+            if (!pMeta || !pMeta->IsSameOrInherited("Entity")) {
+                return false;
+            }
+            FillLifecycle<EntityRefDynamic>(vtable);
+            vtable.pSizeOfAlign = [](const TypeInfo&) -> Pair<SizeType, SizeType> {
+                return { sizeof(EntityRefDynamic), alignof(EntityRefDynamic) };
+            };
+            vtable.lifecycle.pConstructAt = [](const TypeInfo& type, void* pDst) {
+                auto&& pReference = new(pDst) EntityRefDynamic();
+                pReference->SetTypeName(type.pNext[0]->name);
+            };
+            vtable.pGetTypeController = [](ReflectedValue& value) -> void* {
+                return static_cast<EntityRefBase*>(static_cast<EntityRefDynamic*>(value.GetData()));
+            };
+            return true;
+        }
         if (key.kind == TypeKind::Map || key.kind == TypeKind::Set) {
             return FillTreeMapVTable(key, vtable);
         }

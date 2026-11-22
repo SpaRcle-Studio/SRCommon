@@ -40,9 +40,13 @@ namespace SR_UTILS_NS {
         bool Copy(StringView from, StringView to);
 
         bool ResolvePath(String& path, FileMode mode, bool reportError = true) const;
+
+        /// @method
         bool ResolvePath(Path& path, FileMode mode, bool reportError = true) const;
 
         void UnResolvePath(String& path) const;
+
+        /// @method
         void UnResolvePath(Path& path) const;
 
         bool CreateDirectories(StringView path) const;
@@ -51,7 +55,7 @@ namespace SR_UTILS_NS {
         bool IsSingletonCanBeDestroyed() const override;
 
         /// @method @evaluate
-        void GetFilesInDirectory(Vector<Path>& files, StringView directory, bool recursive);
+        void GetFilesInDirectory(Vector<Path>& files, StringView directory, bool recursive, bool relative);
 
         void Enumerate(StringView directory, const SR_HTYPES_NS::Function<void(const VFSEntry&)>& callback, bool recursive) const;
 

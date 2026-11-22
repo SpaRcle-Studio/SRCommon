@@ -626,6 +626,7 @@ namespace SR_WORLD_NS {
     }
 
     bool Scene::PlayScene(const Path& path) {
+        SR_LOG("Scene::PlayScene() : play scene \"{}\"", path);
         StringView extension = path.GetExtensionView();
 
         auto&& runtimePath = CoreResLoader::GetCachePath().Concat(SR_WORLD_NS::Scene::RuntimeScenePath).ConcatExt(extension);

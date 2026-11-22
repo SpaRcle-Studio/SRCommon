@@ -35,6 +35,8 @@ namespace SR_UTILS_NS {
         /// @method @evaluate
         Path ConcatPath(const Path& left, const Path& right);
         /// @method @evaluate
+        Path RemoveSubPath(const Path& path, const Path& subPath);
+        /// @method @evaluate
         bool CompareAnyCase(StringView left, StringView right);
 
         /// @method @evaluate

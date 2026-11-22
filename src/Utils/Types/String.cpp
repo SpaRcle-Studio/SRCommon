@@ -291,7 +291,7 @@ namespace SR_UTILS_NS {
         return std::string_view(m_data ? m_data : "", m_size);
     }
 
-    const char* String::c_str() const { return m_data ? m_data : nullptr; }
+    const char* String::c_str() const { return m_data ? m_data : ""; }
 
     SizeType String::size() const { return m_size; }
     SizeType String::length() const { return m_size; }
