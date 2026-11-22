@@ -10,6 +10,10 @@
 #include <Utils/Types/Set.h>
 #include <Utils/FileSystem/FileMode.h>
 
+#ifdef ReplaceFile
+    #undef ReplaceFile
+#endif
+
 namespace SR_UTILS_NS {
     class File;
     class VFS;

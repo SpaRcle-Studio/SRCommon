@@ -7,6 +7,10 @@
 
 #include <Utils/FileSystem/IVFSBackend.h>
 
+#ifdef ReplaceFile
+    #undef ReplaceFile
+#endif
+
 namespace SR_UTILS_NS {
     class SR_COMMON_DLL_API DirectoryVFSBackend : public IVFSBackend {
     public:

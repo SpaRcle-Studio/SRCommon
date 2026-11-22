@@ -10,6 +10,10 @@
 #include <Utils/Types/SharedPtr.h>
 #include <Utils/Types/SortedVector.h>
 
+#ifdef ReplaceFile
+    #undef ReplaceFile
+#endif
+
 namespace SR_UTILS_NS {
     class IVFSBackend;
     struct VFSEntry;

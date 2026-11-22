@@ -125,6 +125,10 @@ if (SR_COMMON_ASSIMP)
     add_subdirectory(libs/assimp)
 
     target_compile_definitions(assimp PUBLIC ${SR_ASSIMP_DISABLED_IMPORTERS})
+    # Complete Assimp's stb_image symbol prefixing for thread-local PNG options.
+    target_compile_definitions(assimp PRIVATE
+        stbi_set_unpremultiply_on_load_thread=assimp_stbi_set_unpremultiply_on_load_thread
+        stbi_convert_iphone_png_to_rgb_thread=assimp_stbi_convert_iphone_png_to_rgb_thread)
 
     if (SR_COMMON_USE_CLANG_EMULATION)
         target_compile_options(assimp PRIVATE -Wno-deprecated-copy)
