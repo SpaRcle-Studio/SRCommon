@@ -13,7 +13,7 @@
 #include <system_error>
 
 namespace SR_UTILS_NS {
-    bool IsDangerousDeletionPath(std::string_view rawPath) {
+    bool IsDangerousDeletionPath(StringView rawPath) {
         SR_TRACY_ZONE;
 
         // 1. Пустые и подозрительно короткие пути
@@ -22,7 +22,7 @@ namespace SR_UTILS_NS {
         }
 
         // 2. Встроенный NUL: исключаем неоднозначную интерпретацию
-        if (rawPath.find('\0') != std::string_view::npos) {
+        if (rawPath.find('\0') != StringView::npos) {
             return true;
         }
 
@@ -35,7 +35,7 @@ namespace SR_UTILS_NS {
 
         // 4. Нормализация
         std::error_code ec;
-        std::filesystem::path path = std::filesystem::absolute(std::filesystem::path(rawPath), ec);
+        std::filesystem::path path = std::filesystem::absolute(std::filesystem::path(rawPath.begin(), rawPath.end()), ec);
 
         if (ec || path.empty()) {
             return true;
@@ -63,7 +63,7 @@ namespace SR_UTILS_NS {
         }
 
         // 7. Приведение к единому виду для сравнения
-        std::string normalized = path.generic_string();
+        String normalized = path.generic_string();
 
     #ifdef SR_WIN32
         std::transform(normalized.begin(), normalized.end(), normalized.begin(),
@@ -72,11 +72,11 @@ namespace SR_UTILS_NS {
     #endif
 
         while (normalized.size() > 1 && normalized.back() == '/') {
-            normalized.pop_back();
+            normalized.remove_suffix(1);
         }
 
         // 8. Системные и особо важные директории
-        static constexpr std::string_view dangerousPaths[] = {
+        static constexpr StringView dangerousPaths[] = {
         #ifdef SR_WIN32
             "c:/windows", "c:/users",
             "c:/program files", "c:/program files (x86)", "c:/programdata", "c:/recovery",
@@ -89,7 +89,7 @@ namespace SR_UTILS_NS {
         #endif
         };
 
-        for (std::string_view dangerous : dangerousPaths) {
+        for (StringView dangerous : dangerousPaths) {
             if (normalized == dangerous) {
                 return true;
             }
@@ -114,8 +114,8 @@ namespace SR_UTILS_NS {
                 }
 
             #ifdef SR_WIN32
-                std::string a = p->string();
-                std::string b = c->string();
+                String a = p->string();
+                String b = c->string();
                 std::transform(a.begin(), a.end(), a.begin(), [](unsigned char x) { return static_cast<char>(std::tolower(x)); });
                 std::transform(b.begin(), b.end(), b.begin(), [](unsigned char x) { return static_cast<char>(std::tolower(x)); });
                 if (a != b) {
@@ -151,6 +151,20 @@ namespace SR_UTILS_NS {
             if (IsSameOrParent(canonicalPath, cwd)) {
                 return true;
             }
+
+        #ifdef SR_ANDROID
+            // Android exposes the primary user's data through a system directory alias.
+            static const std::filesystem::path userDataPath("/data/user/0");
+            if (path != userDataPath && IsSameOrParent(userDataPath, path)) {
+                auto&& canonicalUserDataPath = std::filesystem::canonical(userDataPath, ec);
+                if (!ec && canonicalUserDataPath == std::filesystem::path("/data/data")) {
+                    auto&& expectedPath = canonicalUserDataPath / path.lexically_relative(userDataPath);
+                    if (canonicalPath == expectedPath) {
+                        return false;
+                    }
+                }
+            }
+        #endif
 
             // Консервативно запрещаем пути с переадресацией.
             return true;
@@ -367,7 +381,7 @@ namespace SR_UTILS_NS {
             SRHalt("DirectoryVFSBackend::Delete() : resolved path is empty!");
             return;
         }
-        std::string_view pathToDelete = gResolvedPathBuffer;
+        StringView pathToDelete(gResolvedPathBuffer);
         SR_LOG("DirectoryVFSBackend::Delete() : deleting path \"{}\"...", pathToDelete);
 
         if (IsDangerousDeletionPath(pathToDelete)) {
@@ -376,7 +390,7 @@ namespace SR_UTILS_NS {
         }
 
         std::error_code errorCode;
-        std::filesystem::remove_all(pathToDelete, errorCode);
+        std::filesystem::remove_all(std::filesystem::path(pathToDelete.begin(), pathToDelete.end()), errorCode);
         if (errorCode) {
             SR_ERROR("DirectoryVFSBackend::Delete() : failed to delete path \"{}\"! Error: {}", path, errorCode.message());
         }
