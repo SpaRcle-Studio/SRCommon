@@ -61,6 +61,10 @@ namespace SR_UTILS_NS {
         /// @method @evaluate
         SR_NODISCARD SR_MATH_NS::FVector2 GetMousePos() const;
         /// @method @evaluate
+        SR_NODISCARD bool HasDeviceGravity() const;
+        /// @method @evaluate
+        SR_NODISCARD SR_MATH_NS::FVector2 GetDeviceGravity() const;
+        /// @method @evaluate
         SR_NODISCARD bool IsPlayMode() const;
         /// @method @evaluate
         SR_NODISCARD bool IsAppFocused() const;

@@ -34,7 +34,7 @@ namespace SR_UTILS_NS {
             struct { int32_t keyCode; int32_t action; } key;
             struct { int32_t command; } lifecycle;
             struct { ANativeWindow* window; } windowEvent;
-            struct { ASensorEvent sensor; } sensorEvent;
+            struct { ASensorEvent sensor; int32_t displayRotation; } sensorEvent;
         };
     };
 

@@ -231,6 +231,22 @@ namespace SR_UTILS_NS {
 
     SR_MATH_NS::FVector2 Input::GetMouseDrag() { return m_mouseDrag; }
 
+    bool Input::HasDeviceGravity() const {
+    #ifdef SR_ANDROID
+        return SR_PLATFORM_NS::HasAndroidDeviceGravity();
+    #else
+        return false;
+    #endif
+    }
+
+    SR_MATH_NS::FVector2 Input::GetDeviceGravity() const {
+    #ifdef SR_ANDROID
+        return SR_PLATFORM_NS::GetAndroidDeviceGravity();
+    #else
+        return SR_MATH_NS::FVector2(0.f, 0.f);
+    #endif
+    }
+
     int32_t Input::GetMouseWheel() const { return m_mouseScroll.CastToInt().y; }
 
     bool Input::GetMouseDown(MouseCode code) { return GetKeyDown(static_cast<KeyCode>(code)); }

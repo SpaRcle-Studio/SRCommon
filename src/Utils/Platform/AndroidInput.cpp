@@ -23,6 +23,9 @@ namespace SR_UTILS_NS::Platform {
         uint16_t g_keyHolds[256] = {};
         SR_MATH_NS::FVector2 g_pressPosition;
         SR_MATH_NS::FVector2 g_scroll;
+        SR_MATH_NS::FVector2 g_deviceGravity;
+        bool g_hasDeviceGravity = false;
+        int32_t g_gravityRotation = -1;
         Vector<AndroidTouchPoint> g_touches;
         int32_t g_primaryTouch = -1;
 
@@ -59,6 +62,9 @@ namespace SR_UTILS_NS::Platform {
         g_touches.clear();
         g_primaryTouch = -1;
         g_scroll = {};
+        g_deviceGravity = {};
+        g_hasDeviceGravity = false;
+        g_gravityRotation = -1;
     }
 
     void ApplyAndroidInputEvent(const AndroidEvent& event) {
@@ -67,6 +73,30 @@ namespace SR_UTILS_NS::Platform {
             return;
         }
         std::lock_guard lock(g_inputMutex);
+        if (event.type == AndroidEvent::Sensor) {
+            auto&& sensor = event.sensorEvent.sensor;
+            if (sensor.type != ASENSOR_TYPE_ACCELEROMETER) {
+                return;
+            }
+            const float_t x = sensor.acceleration.x / 9.80665f;
+            const float_t y = sensor.acceleration.y / 9.80665f;
+            SR_MATH_NS::FVector2 gravity(x, y);
+            switch (event.sensorEvent.displayRotation) {
+                case 1: gravity = SR_MATH_NS::FVector2(-y, x); break;
+                case 2: gravity = SR_MATH_NS::FVector2(-x, -y); break;
+                case 3: gravity = SR_MATH_NS::FVector2(y, -x); break;
+                default: break;
+            }
+            if (!g_hasDeviceGravity || g_gravityRotation != event.sensorEvent.displayRotation) {
+                g_deviceGravity = gravity;
+            }
+            else {
+                g_deviceGravity += (gravity - g_deviceGravity) * 0.1f;
+            }
+            g_gravityRotation = event.sensorEvent.displayRotation;
+            g_hasDeviceGravity = true;
+            return;
+        }
         if (event.type == AndroidEvent::Key) {
             const int32_t native = event.key.keyCode;
             const int32_t key = AndroidKeyToEngine(native);
@@ -201,6 +231,16 @@ namespace SR_UTILS_NS::Platform {
         if (scroll.x != 0.f || scroll.y != 0.f) {
             Input::Instance().SetMouseScroll(scroll.x, scroll.y);
         }
+    }
+
+    bool HasAndroidDeviceGravity() {
+        std::lock_guard lock(g_inputMutex);
+        return g_hasDeviceGravity;
+    }
+
+    SR_MATH_NS::FVector2 GetAndroidDeviceGravity() {
+        std::lock_guard lock(g_inputMutex);
+        return g_deviceGravity;
     }
 
     MouseState GetAndroidMouseState() {

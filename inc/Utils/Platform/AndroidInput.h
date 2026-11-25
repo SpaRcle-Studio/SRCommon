@@ -22,6 +22,8 @@ namespace SR_UTILS_NS::Platform {
     SR_COMMON_DLL_API void ResetAndroidInput();
     SR_COMMON_DLL_API void BeginAndroidInputFrame();
     SR_COMMON_DLL_API MouseState GetAndroidMouseState();
+    SR_COMMON_DLL_API bool HasAndroidDeviceGravity();
+    SR_COMMON_DLL_API SR_MATH_NS::FVector2 GetAndroidDeviceGravity();
     SR_COMMON_DLL_API KeyboardState GetAndroidKeyboardState();
     SR_COMMON_DLL_API Vector<AndroidTouchPoint> GetAndroidTouchPoints();
 }
