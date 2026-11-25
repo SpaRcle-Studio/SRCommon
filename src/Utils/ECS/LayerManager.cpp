@@ -59,7 +59,6 @@ namespace SR_UTILS_NS {
 
         SR_INFO("LayerManager::ReloadSettings() : reloading settings...");
 
-        m_defaultLayer = StringAtom();
         m_layers.clear();
         m_layersInfo.clear();
 

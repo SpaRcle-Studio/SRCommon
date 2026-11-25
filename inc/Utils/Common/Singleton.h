@@ -92,6 +92,8 @@ namespace SR_UTILS_NS {
     private:
         static Singleton<T>* GetSingleton() noexcept;
 
+        std::atomic<bool> m_isSingletonInitialized = false;
+
     };
 
     /// =============================================== Implementation =================================================
@@ -121,7 +123,7 @@ namespace SR_UTILS_NS {
     template<typename T> T &Singleton<T>::Instance() noexcept {
         auto&& pSingleton = GetSingleton();
 
-        if (!pSingleton) {
+        if (!pSingleton || !pSingleton->m_isSingletonInitialized.load(std::memory_order_acquire)) {
             std::lock_guard lock(GetSingletonManager()->GetCreationMutex(T::GetStaticSingletonHashName()));
 
             pSingleton = GetSingleton();
@@ -130,6 +132,7 @@ namespace SR_UTILS_NS {
                 pSingleton = new T();
                 GetSingletonManager()->Register<T>(pSingleton);
                 pSingleton->InitSingleton();
+                pSingleton->m_isSingletonInitialized.store(true, std::memory_order_release);
                 return *static_cast<T*>(pSingleton);
             }
         }
