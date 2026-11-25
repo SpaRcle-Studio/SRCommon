@@ -125,6 +125,7 @@ namespace SR_UTILS_NS {
         /// @method
         void SetLayer(StringAtom layer);
 
+        /// @method
         bool MoveToTree(const SceneObject::Ptr& destination);
         void RemoveChild(const SceneObject::Ptr& pChild);
         bool AddChild(const SceneObject::Ptr& pChild, int32_t index = SR_ID_INVALID);

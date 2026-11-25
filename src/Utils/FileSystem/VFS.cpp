@@ -347,10 +347,10 @@ namespace SR_UTILS_NS {
             return false;
         }
         const bool written = file.Write(data.data(), data.size()) == data.size();
-        file.Flush();
+        const bool flushed = file.Flush();
         const bool sized = file.GetSize() == data.size();
         file = File();
-        if (written && sized && ReplaceFile(temporary, path)) {
+        if (written && flushed && sized && ReplaceFile(temporary, path)) {
             return true;
         }
         Delete(temporary);

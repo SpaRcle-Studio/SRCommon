@@ -10,6 +10,16 @@
 #include <Utils/Math/Vector2.h>
 #include <Utils/Platform/PlatformType.h>
 
+#ifdef SR_WIN32
+    #define SR_GMTIME(time, calendar) (gmtime_s(&(calendar), &(time)) == 0)
+    #define SR_LOCALTIME(time, calendar) (localtime_s(&(calendar), &(time)) == 0)
+    #define SR_TIMEGM(calendar) _mkgmtime(&(calendar))
+#else
+    #define SR_GMTIME(time, calendar) (gmtime_r(&(time), &(calendar)) != nullptr)
+    #define SR_LOCALTIME(time, calendar) (localtime_r(&(time), &(calendar)) != nullptr)
+    #define SR_TIMEGM(calendar) timegm(&(calendar))
+#endif
+
 namespace SR_UTILS_NS {
     enum class KeyCode : uint8_t;
 }
@@ -126,6 +136,10 @@ namespace SR_UTILS_NS::Platform {
     SR_COMMON_DLL_API extern void OpenWithAssociatedApp(const Path& filepath);
     SR_COMMON_DLL_API extern bool CreateDirectories(StringView path);
     SR_COMMON_DLL_API extern bool IsFileExists(StringView path);
+    SR_COMMON_DLL_API extern bool OpenFileStream(std::fstream& stream, StringView path, std::ios::openmode mode);
+    SR_COMMON_DLL_API extern bool FlushFileToDisk(StringView path);
+    SR_COMMON_DLL_API extern bool ReplaceFileAtomic(StringView source, StringView destination);
+    SR_COMMON_DLL_API extern String FormatLocalDateTime(const std::tm& calendar);
     SR_COMMON_DLL_API extern bool IsDirectoryExists(StringView path);
     SR_COMMON_DLL_API extern bool DownloadFile(const std::string& url, const SR_UTILS_NS::Path& outputPath);
     SR_COMMON_DLL_API extern void* LoadLibraryModule(const Path& path);

@@ -40,6 +40,84 @@
 #include "../Network/HTTP/WindowsHTTPClient.cpp"
 
 namespace SR_UTILS_NS::Platform {
+    bool OpenFileStream(std::fstream& stream, StringView path, std::ios::openmode mode) {
+        const String physicalPath(path);
+    #ifdef SR_MINGW
+        stream.open(physicalPath.c_str(), mode);
+    #else
+        const int32_t size = MultiByteToWideChar(CP_UTF8, 0, physicalPath.c_str(), -1, nullptr, 0);
+        if (size <= 0) {
+            return false;
+        }
+        Vector<wchar_t> widePath(size);
+        if (!MultiByteToWideChar(CP_UTF8, 0, physicalPath.c_str(), -1, widePath.data(), size)) {
+            return false;
+        }
+        stream.open(widePath.data(), mode);
+    #endif
+        return stream.is_open();
+    }
+
+    bool FlushFileToDisk(StringView path) {
+        const String physicalPath(path);
+        const int32_t size = MultiByteToWideChar(CP_UTF8, 0, physicalPath.c_str(), -1, nullptr, 0);
+        if (size <= 0) {
+            return false;
+        }
+        Vector<wchar_t> widePath(size);
+        if (!MultiByteToWideChar(CP_UTF8, 0, physicalPath.c_str(), -1, widePath.data(), size)) {
+            return false;
+        }
+        const HANDLE handle = CreateFileW(widePath.data(), GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE,
+            nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
+        if (handle == INVALID_HANDLE_VALUE) {
+            return false;
+        }
+        const bool result = FlushFileBuffers(handle) != 0;
+        CloseHandle(handle);
+        return result;
+    }
+
+    bool ReplaceFileAtomic(StringView source, StringView destination) {
+        const String sourcePath(source);
+        const String destinationPath(destination);
+        const int32_t sourceSize = MultiByteToWideChar(CP_UTF8, 0, sourcePath.c_str(), -1, nullptr, 0);
+        const int32_t destinationSize = MultiByteToWideChar(CP_UTF8, 0, destinationPath.c_str(), -1, nullptr, 0);
+        if (sourceSize <= 0 || destinationSize <= 0) {
+            return false;
+        }
+        Vector<wchar_t> wideSource(sourceSize);
+        Vector<wchar_t> wideDestination(destinationSize);
+        if (!MultiByteToWideChar(CP_UTF8, 0, sourcePath.c_str(), -1, wideSource.data(), sourceSize) ||
+            !MultiByteToWideChar(CP_UTF8, 0, destinationPath.c_str(), -1, wideDestination.data(), destinationSize)) {
+            return false;
+        }
+        return MoveFileExW(wideSource.data(), wideDestination.data(), MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH) != 0;
+    }
+
+    String FormatLocalDateTime(const std::tm& calendar) {
+        SYSTEMTIME local = {};
+        local.wYear = static_cast<WORD>(calendar.tm_year + 1900);
+        local.wMonth = static_cast<WORD>(calendar.tm_mon + 1);
+        local.wDay = static_cast<WORD>(calendar.tm_mday);
+        local.wHour = static_cast<WORD>(calendar.tm_hour);
+        local.wMinute = static_cast<WORD>(calendar.tm_min);
+        local.wSecond = static_cast<WORD>(calendar.tm_sec);
+        wchar_t date[128] = {};
+        wchar_t clock[128] = {};
+        if (!GetDateFormatEx(LOCALE_NAME_USER_DEFAULT, DATE_SHORTDATE, &local, nullptr, date, 128, nullptr) ||
+            !GetTimeFormatEx(LOCALE_NAME_USER_DEFAULT, 0, &local, nullptr, clock, 128)) {
+            return String();
+        }
+        char dateUtf8[512] = {};
+        char timeUtf8[512] = {};
+        if (!WideCharToMultiByte(CP_UTF8, 0, date, -1, dateUtf8, 512, nullptr, nullptr) ||
+            !WideCharToMultiByte(CP_UTF8, 0, clock, -1, timeUtf8, 512, nullptr, nullptr)) {
+            return String();
+        }
+        return "{} {}"_format(dateUtf8, timeUtf8);
+    }
+
     std::wstring ConvertToUnicode(const std::string& str) {
         UINT codePage = CP_ACP;
         DWORD flags = 0;

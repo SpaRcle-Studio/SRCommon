@@ -25,7 +25,7 @@ namespace SR_UTILS_NS {
         virtual uint64_t Write(const void* data, uint64_t size) = 0;
 
         virtual bool Seek(int64_t offset, SeekOrigin origin) = 0;
-        virtual void Flush() { }
+        virtual bool Flush() { return false; }
 
         SR_NODISCARD virtual StringView Data() = 0;
 
@@ -54,7 +54,7 @@ namespace SR_UTILS_NS {
         uint64_t Write(const void* data, uint64_t size) override;
 
         bool Seek(int64_t offset, SeekOrigin origin) override;
-        void Flush() override;
+        bool Flush() override;
 
         SR_NODISCARD StringView Data() override;
 
@@ -137,7 +137,7 @@ namespace SR_UTILS_NS {
         uint64_t Read(void* data, uint64_t size);
         uint64_t Write(const void* data, uint64_t size);
 
-        void Flush();
+        bool Flush();
         bool Seek(int64_t offset, SeekOrigin origin);
 
         SR_NODISCARD StringView Data();

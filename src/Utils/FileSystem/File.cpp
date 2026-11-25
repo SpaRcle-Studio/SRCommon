@@ -4,6 +4,7 @@
 
 #include <Utils/FileSystem/File.h>
 #include <Utils/FileSystem/VFS.h>
+#include <Utils/Platform/Platform.h>
 
 #include <Codegen/File.generated.hpp>
 
@@ -127,11 +128,9 @@ namespace SR_UTILS_NS {
         return *this;
     }
 
-    void File::Flush() {
+    bool File::Flush() {
         SR_TRACY_ZONE;
-        if (m_pImpl) {
-            m_pImpl->Flush();
-        }
+        return m_pImpl && m_pImpl->Flush();
     }
 
     bool StreamFileImpl::Open(StringView path, FileMode mode) {
@@ -144,7 +143,9 @@ namespace SR_UTILS_NS {
         if (SR_MATH_NS::IsMaskIncludedSubMask(mode, FileMode::Write)) {
             openMode |= std::ios::out;
         }
-        m_stream.open(path.data(), openMode);
+        if (!SR_PLATFORM_NS::OpenFileStream(m_stream, path, openMode)) {
+            return false;
+        }
         if (m_stream.is_open()) {
             m_physicalPath = path;
         }
@@ -225,10 +226,15 @@ namespace SR_UTILS_NS {
         return StringView();
     }
 
-    void StreamFileImpl::Flush() {
-        if (m_stream.is_open()) {
-            m_stream.flush();
+    bool StreamFileImpl::Flush() {
+        if (!m_stream.is_open()) {
+            return false;
         }
+        m_stream.flush();
+        if (!m_stream.good()) {
+            return false;
+        }
+        return SR_PLATFORM_NS::FlushFileToDisk(m_physicalPath);
     }
 
     bool MappedFileImpl::Open(StringView path, FileMode mode) {

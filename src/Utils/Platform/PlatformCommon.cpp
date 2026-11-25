@@ -12,6 +12,12 @@
 #include <filesystem>
 #include <sys/stat.h>
 #include <cerrno>
+#include <cstdio>
+
+#ifndef SR_WIN32
+    #include <fcntl.h>
+    #include <unistd.h>
+#endif
 
 #ifdef SR_WIN32
     #include <direct.h>
@@ -43,6 +49,35 @@ namespace SR_PLATFORM_NS {
     }
 
 #if !defined(SR_WIN32)
+    bool OpenFileStream(std::fstream& stream, StringView path, std::ios::openmode mode) {
+        const String physicalPath(path);
+        stream.open(physicalPath.c_str(), mode);
+        return stream.is_open();
+    }
+
+    bool FlushFileToDisk(StringView path) {
+        const String physicalPath(path);
+        const int descriptor = open(physicalPath.c_str(), O_WRONLY);
+        if (descriptor < 0) {
+            return false;
+        }
+        const bool result = fsync(descriptor) == 0;
+        close(descriptor);
+        return result;
+    }
+
+    bool ReplaceFileAtomic(StringView source, StringView destination) {
+        const String sourcePath(source);
+        const String destinationPath(destination);
+        return std::rename(sourcePath.c_str(), destinationPath.c_str()) == 0;
+    }
+
+    String FormatLocalDateTime(const std::tm& calendar) {
+        char buffer[128] = {};
+        std::strftime(buffer, sizeof(buffer), "%x %X", &calendar);
+        return String(buffer);
+    }
+
     void RegisterApplication() {
 
     }
