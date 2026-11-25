@@ -69,7 +69,7 @@ namespace SR_UTILS_NS::SaveProbeDetails {
 
     bool Revision(StringView id, int64_t revision, bool recovered = false) {
         auto pSlot = Fresh(id);
-        return pSlot && pSlot->GetState().ToJson() == State(revision).ToJson() && pSlot->WasRecovered() == recovered;
+        return pSlot && pSlot->GetState().ToJson() == State(revision).View().ToJson() && pSlot->WasRecovered() == recovered;
     }
 
     String CheckGenericStorage() {
@@ -81,7 +81,7 @@ namespace SR_UTILS_NS::SaveProbeDetails {
                 return "FAILED: default metadata/scalar/array state write";
             }
             pSlot = Fresh("values");
-            if (!pSlot || !pSlot->HasState() || pSlot->GetState().ToJson() != state.ToJson()) {
+            if (!pSlot || !pSlot->HasState() || pSlot->GetState().ToJson() != state.View().ToJson()) {
                 return "FAILED: scalar/array state round-trip";
             }
         }
@@ -111,7 +111,7 @@ namespace SR_UTILS_NS::SaveProbeDetails {
             return "FAILED: files-only import/default metadata/path validation";
         }
         pSlot = Fresh("files_only");
-        if (!pSlot || pSlot->HasState() || !pSlot->HasFile("empty.bin") || pSlot->EnumerateFiles().GetCount() != 2 ||
+        if (!pSlot || pSlot->HasState() || !pSlot->HasFile("empty.bin") || pSlot->EnumerateFiles().View().GetCount() != 2 ||
             pSlot->GetFile("attachments.test/payload.bin") != bytes || pSlot->GetMetadata().Get("schemaVersion").GetInt() != 999 ||
             !pSlot->ExportFile("attachments.test/payload.bin", exported)) {
             return "FAILED: files-only round-trip, application schema preservation or export";
@@ -234,11 +234,11 @@ namespace SR_UTILS_NS {
         future.Parse(originalMetadata);
         SaveStorage::SetInteger(future, "storageVersion", 999);
         if (!SaveStorage::Write(generationPath.Concat("state.json"), originalState) ||
-            !SaveStorage::Write(generationPath.Concat("metadata.json"), future.ToJson()) || SaveProbeDetails::Fresh("atomic")) {
+            !SaveStorage::Write(generationPath.Concat("metadata.json"), future.View().ToJson()) || SaveProbeDetails::Fresh("atomic")) {
             return trace + "FAILED: future schema accepted";
         }
         String unchanged;
-        if (!SaveStorage::Read(generationPath.Concat("metadata.json"), unchanged) || unchanged != future.ToJson()) {
+        if (!SaveStorage::Read(generationPath.Concat("metadata.json"), unchanged) || unchanged != future.View().ToJson()) {
             return trace + "FAILED: future schema overwritten";
         }
         trace += "future schema -> rejected, bytes preserved: PASS\n";
@@ -246,7 +246,7 @@ namespace SR_UTILS_NS {
             return trace + "FAILED: restore probe metadata";
         }
         SaveSystem::Instance().CloseSlot("probe", "atomic");
-        if (SaveSystem::Instance().EnumerateSlots("probe").GetCount() == 0 || !SaveProbeDetails::Revision("atomic", 4)) {
+        if (SaveSystem::Instance().EnumerateSlots("probe").View().GetCount() == 0 || !SaveProbeDetails::Revision("atomic", 4)) {
             return trace + "FAILED: disk enumeration after clearing process slots";
         }
         const auto generations = SaveStorage::Generations(path);
@@ -275,7 +275,7 @@ namespace SR_UTILS_NS {
     String SaveStorageProbe::VerifyRestart() {
         SR_TRACY_ZONE;
         SaveProbeDetails::ProbeScope scope;
-        if (!SaveProbeDetails::Revision("restart", 42) || SaveSystem::Instance().EnumerateSlots("probe").GetCount() == 0) {
+        if (!SaveProbeDetails::Revision("restart", 42) || SaveSystem::Instance().EnumerateSlots("probe").View().GetCount() == 0) {
             return "FAILED: restart payload/enumeration: " + SaveSystem::Instance().GetError();
         }
         return "RESTART_PAYLOAD_VALID: revision 42 and typed tree read from disk; process restart must be confirmed by operator";

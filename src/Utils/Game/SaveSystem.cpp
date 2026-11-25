@@ -29,11 +29,11 @@ namespace SR_UTILS_NS {
     }
 
     bool SaveSlot::SetState(const JsonValue& state) {
-        if (!state.IsValid()) {
+        if (!state.View().IsValid()) {
             m_error = "STATE: invalid JSON value";
             return false;
         }
-        m_state = state.Clone();
+        m_state = state.View().Clone();
         m_hasState = true;
         m_error.clear();
         return true;
@@ -138,15 +138,15 @@ namespace SR_UTILS_NS {
         String text;
         JsonValue metadata;
         if (!SaveStorage::Read(directory.Concat("metadata.json"), text, limit) || !metadata.Parse(text) ||
-            metadata.GetKind() != JsonValueKind::Object) {
+            metadata.View().GetKind() != JsonValueKind::Object) {
             m_error = "METADATA: unreadable, malformed or read budget exceeded";
             return false;
         }
-        if (!metadata.Has("storageVersion")) {
+        if (!metadata.View().Has("storageVersion")) {
             m_error = "METADATA: missing storage version";
             return false;
         }
-        const auto version = metadata.Get("storageVersion");
+        const auto version = metadata.View().Get("storageVersion");
         if (version.GetKind() != JsonValueKind::Integer) {
             m_error = "METADATA: storage version must be an integer";
             return false;
@@ -155,13 +155,13 @@ namespace SR_UTILS_NS {
             m_error = "SCHEMA: unsupported storage version";
             return false;
         }
-        if (metadata.Get("group").GetString() != m_groupName || metadata.Get("slotId").GetString() != m_slotName ||
-            metadata.Get("generation").GetInt() != static_cast<int64_t>(SaveStorage::GenerationId(generation))) {
+        if (metadata.View().Get("group").GetString() != m_groupName || metadata.View().Get("slotId").GetString() != m_slotName ||
+            metadata.View().Get("generation").GetInt() != static_cast<int64_t>(SaveStorage::GenerationId(generation))) {
             m_error = "METADATA: storage identity does not match";
             return false;
         }
 
-        const auto stateFlag = metadata.Get("hasState");
+        const auto stateFlag = metadata.View().Get("hasState");
         if (stateFlag.GetKind() != JsonValueKind::Boolean) {
             m_error = "METADATA: missing state presence flag";
             return false;
@@ -171,9 +171,9 @@ namespace SR_UTILS_NS {
         JsonValue candidate;
         if (hasState) {
             if (!SaveStorage::Read(directory.Concat("state.json"), text, limit) ||
-                metadata.Get("payloadLength").GetKind() != JsonValueKind::Integer ||
-                static_cast<int64_t>(text.size()) != metadata.Get("payloadLength").GetInt() ||
-                SaveStorage::Digest(text) != metadata.Get("payloadSha256").GetString()) {
+                metadata.View().Get("payloadLength").GetKind() != JsonValueKind::Integer ||
+                static_cast<int64_t>(text.size()) != metadata.View().Get("payloadLength").GetInt() ||
+                SaveStorage::Digest(text) != metadata.View().Get("payloadSha256").GetString()) {
                 m_error = "CHECKSUM: state length or SHA-256 mismatch, or read budget exceeded";
                 return false;
             }
@@ -185,14 +185,14 @@ namespace SR_UTILS_NS {
         }
 
         Map<String, String> files;
-        const auto manifest = metadata.Get("files");
+        const auto manifest = metadata.View().Get("files");
         if (manifest.GetKind() != JsonValueKind::Array) {
             m_error = "METADATA: missing file manifest";
             return false;
         }
         for (uint32_t i = 0; i < manifest.GetCount(); ++i) {
             const auto entry = manifest.At(i);
-            const auto name = entry.Get("path").GetString();
+            const String name(entry.Get("path").GetString());
             if (!SaveStorage::ValidFilePath(name)) {
                 m_error = "FILE: invalid path in file manifest";
                 return false;
@@ -215,8 +215,8 @@ namespace SR_UTILS_NS {
             files[name] = std::move(bytes);
         }
         m_hasState = hasState;
-        m_state = candidate.Clone();
-        m_metadata = metadata.Clone();
+        m_state = std::move(candidate);
+        m_metadata = std::move(metadata);
         m_files = std::move(files);
         m_error.clear();
         return true;
@@ -226,7 +226,7 @@ namespace SR_UTILS_NS {
         SR_TRACY_ZONE;
         m_error.clear();
         if (!SaveStorage::ValidId(m_groupName) || !SaveStorage::ValidId(m_slotName) ||
-            (m_hasState && !m_state.IsValid()) || !m_metadata.IsValid() || m_metadata.GetKind() != JsonValueKind::Object) {
+            (m_hasState && !m_state.View().IsValid()) || !m_metadata.View().IsValid() || m_metadata.View().GetKind() != JsonValueKind::Object) {
             m_error = "STATE: invalid slot, JSON value or metadata object";
             return false;
         }
@@ -244,7 +244,7 @@ namespace SR_UTILS_NS {
                 m_error = previous.GetError();
                 return false;
             }
-            previousGeneration = "gen_{}"_format(previous.m_metadata.Get("generation").GetInt());
+            previousGeneration = "gen_{}"_format(previous.m_metadata.View().Get("generation").GetInt());
             if (!SaveStorage::Write(path.Concat("published_" + previousGeneration), "1")) {
                 m_error = "WRITE: cannot preserve previous publication";
                 return false;
@@ -257,8 +257,8 @@ namespace SR_UTILS_NS {
         }
         const String generation = "gen_{}"_format(sequence);
         const auto directory = path.Concat(generation);
-        const String payload = m_hasState ? m_state.ToJson() : String();
-        JsonValue metadata = m_metadata.Clone();
+        const String payload = m_hasState ? m_state.View().ToJson() : String();
+        JsonValue metadata = m_metadata.View().Clone();
         SaveStorage::SetInteger(metadata, "storageVersion", 1);
         SaveStorage::SetText(metadata, "slotId", m_slotName);
         SaveStorage::SetText(metadata, "group", m_groupName);
@@ -298,7 +298,7 @@ namespace SR_UTILS_NS {
         }
         metadata.Set("files", manifest);
         if (SaveStorage::ConsumeFault("after_files") ||
-            !SaveStorage::Write(directory.Concat("metadata.json"), metadata.ToJson()) ||
+            !SaveStorage::Write(directory.Concat("metadata.json"), metadata.View().ToJson()) ||
             SaveStorage::ConsumeFault("after_metadata")) {
             m_error = "WRITE: failed to flush generation; previous save preserved";
             return false;
@@ -314,7 +314,7 @@ namespace SR_UTILS_NS {
             m_error = "PUBLISH: marker replacement failed; previous save preserved";
             return false;
         }
-        m_metadata = metadata.Clone();
+        m_metadata = std::move(metadata);
         m_recovered = false;
         if (SaveStorage::ConsumeFault("after_marker")) {
             SR_WARN("SaveSlot::Save() : injected interruption after marker replacement; generation committed");
@@ -500,8 +500,8 @@ namespace SR_UTILS_NS {
             slot.Init(group, entry.name);
             slot.SetReadLimit(m_readLimit);
             if (slot.Load(GetSaveDirectory().Concat(group).Concat(entry.name))) {
-                JsonValue metadata = slot.GetMetadata();
-                SaveStorage::SetText(metadata, "displayTime", SaveStorage::LocalTime(metadata.Get("createdUtc").GetString()));
+                JsonValue metadata = slot.GetMetadata().Clone();
+                SaveStorage::SetText(metadata, "displayTime", SaveStorage::LocalTime(metadata.View().Get("createdUtc").GetString()));
                 JsonValue recovered;
                 recovered.SetBool(slot.WasRecovered());
                 metadata.Set("recovered", recovered);

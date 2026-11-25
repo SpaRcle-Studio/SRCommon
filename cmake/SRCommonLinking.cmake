@@ -47,10 +47,6 @@ if (SR_COMMON_GIT_METADATA)
     target_link_libraries(Utils cmake_git_version_tracking)
 endif()
 
-if (SR_COMMON_JSON)
-    target_link_libraries(Utils nlohmann_json)
-endif()
-
 if (NOT ANDROID_NDK AND NOT SR_EMSCRIPTEN)
     target_link_libraries(Utils nfd) # nativefiledialog
     target_link_libraries(Utils TinyFileDialogs)

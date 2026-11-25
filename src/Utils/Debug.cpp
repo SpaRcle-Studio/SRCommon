@@ -49,7 +49,11 @@ namespace SR_UTILS_NS {
             }
         }
 
+        auto&& m_messageBuffer = m_message.text;
+        auto&& m_messagePrefixBuffer = m_message.prefix;
+        auto&& m_messageMemoryBuffer = m_message.memory;
         m_messageBuffer = rawMsg;
+        m_message.type = type;
 
     #ifndef SR_EMSCRIPTEN
         if (type == DebugLogType::Assert) {
@@ -71,6 +75,55 @@ namespace SR_UTILS_NS {
         if (m_showUseMemory) {
             FormatTo(m_messageMemoryBuffer, "<{} MB> ", static_cast<uint32_t>(SR_PLATFORM_NS::GetProcessUsedMemory() / 1024 / 1024));
         }
+
+        if (m_asyncOutput) {
+            {
+                std::lock_guard lock(m_queueMutex);
+                if (m_pendingMessageCount == m_pendingMessages.size()) {
+                    m_pendingMessages.emplace_back();
+                }
+                m_pendingMessages[m_pendingMessageCount] = m_message;
+                ++m_pendingMessageCount;
+            }
+            m_queueCondition.notify_one();
+        }
+        else {
+            WriteMessage(m_message);
+        }
+
+        volatile static bool enableBreakPoints = true;
+        if (type == DebugLogType::Assert && Platform::IsRunningUnderDebugger() && enableBreakPoints) {
+            Breakpoint();
+        }
+    }
+
+    bool Debug::ProcessMessages() {
+        SR_TRACY_ZONE;
+        SizeType outputMessageCount = 0;
+
+        {
+            std::unique_lock lock(m_queueMutex);
+            m_queueCondition.wait(lock, [this]() { return m_stopOutput || m_pendingMessageCount > 0; });
+            if (m_pendingMessageCount == 0 && m_stopOutput) {
+                return false;
+            }
+            m_pendingMessages.swap(m_outputMessages);
+            outputMessageCount = m_pendingMessageCount;
+            m_pendingMessageCount = 0;
+        }
+
+        for (SizeType messageIndex = 0; messageIndex < outputMessageCount; ++messageIndex) {
+            WriteMessage(m_outputMessages[messageIndex]);
+        }
+        return true;
+    }
+
+    void Debug::WriteMessage(const Message& message) {
+        SR_TRACY_ZONE;
+        auto&& m_messageBuffer = message.text;
+        auto&& m_messagePrefixBuffer = message.prefix;
+        auto&& m_messageMemoryBuffer = message.memory;
+        const auto type = message.type;
 
         {
             if (SR_PLATFORM_NS::GetType() == PlatformType::Android) {
@@ -97,8 +150,8 @@ namespace SR_UTILS_NS {
                 SR_TRACY_ZONE_N("Console");
                 std::lock_guard lock(SR_PLATFORM_NS::g_platformLogMutex);
                 try {
-                    fmt::print(fmt::fg(fmt::color::dark_gray) | fmt::emphasis::faint, fmt::runtime(m_messageMemoryBuffer));
-                    fmt::print(GetTextStyleColorByLogType(type), fmt::runtime(m_messagePrefixBuffer));
+                    fmt::print(fmt::fg(fmt::color::dark_gray) | fmt::emphasis::faint, "{}", m_messageMemoryBuffer);
+                    fmt::print(GetTextStyleColorByLogType(type), "{}", m_messagePrefixBuffer);
                     fmt::print(fmt::emphasis::bold, "{}", m_messageBuffer);
                 }
                 catch (const std::exception& ex) {
@@ -116,21 +169,20 @@ namespace SR_UTILS_NS {
                 m_file.Flush();
             }
         }
-
-        volatile static bool enableBreakPoints = true;
-        if (type == DebugLogType::Assert && Platform::IsRunningUnderDebugger() && enableBreakPoints) {
-            Breakpoint();
-        }
     }
 
     void Debug::Initialize(const Path& logPath, bool ShowUsedMemory, Theme colorTheme) {
+        if (m_isInit) {
+            return;
+        }
+
         m_theme = colorTheme;
 
         InitColorTheme();
 
         m_isInit = true;
         m_showUseMemory = ShowUsedMemory;
-        m_messagePrefixBuffer.reserve(128);
+        m_message.prefix.reserve(128);
 
     #ifndef SR_EMSCRIPTEN
         m_logPath = logPath;
@@ -142,20 +194,34 @@ namespace SR_UTILS_NS {
         if (!m_file) {
             SR_PLATFORM_NS::WriteConsoleError("Debug::Init() : failed to open log file!\n\tLog path: {}"_format(m_logPath));
         }
+    #endif
 
+    #ifdef SR_THREADS_ALLOWED
+        if (SR_PLATFORM_NS::IsSupportThreads()) {
+            m_stopOutput = false;
+            m_asyncOutput = true;
+            SR_HTYPES_NS::Thread::Factory::Instance().Create(m_pOutputThread, [this]() {
+                m_pOutputThread->Synchronize();
+                return ProcessMessages();
+            });
+            m_pOutputThread->SetName("Logger");
+        }
+    #endif
+
+    #ifndef SR_EMSCRIPTEN
         Print("Debugger has been initialized. \n\tLog path: {}"_format(m_logPath), DebugLogType::Debug);
     #endif
 
     #ifdef SR_COMMON_GIT_METADATA
-        std::string gitMetadata;
-        std::string dirty = git_AnyUncommittedChanges() ? "true" : "false";
+        StringView dirty = git_AnyUncommittedChanges() ? "true" : "false";
 
         std::time_t timestamp = std::stoll(git_CommitDate());
         std::tm* timeUTC = std::gmtime(&timestamp);
 
-        gitMetadata += "Build Info: '" + std::string(git_CommitSHA1()).substr(0, 7) + "' in '" + git_Branch() + "' (dirty: " + dirty + ") "
-            "by '" +
-            + git_AuthorName() + "' on\n\t" + std::asctime(timeUTC);
+        String gitMetadata = "Build Info: '{}' in '{}' (dirty: {}) by '{}' on\n\t{}"_format(
+            StringView(git_CommitSHA1()).substr(0, 7),
+            git_Branch(), dirty, git_AuthorName(), std::asctime(timeUTC)
+        );
 
         Print(gitMetadata, DebugLogType::Info);
     #endif
@@ -192,6 +258,18 @@ namespace SR_UTILS_NS {
         else {
             const auto msg = "Debugger has been stopped with errors!\n\tErrors count: {}\n\tWarnings count: {}"_format(m_countErrors, m_countWarnings);
             Print(msg, DebugLogType::Debug);
+        }
+
+        if (m_pOutputThread) {
+            {
+                std::lock_guard lock(m_queueMutex);
+                m_stopOutput = true;
+            }
+            m_queueCondition.notify_one();
+            m_pOutputThread->Join();
+            m_asyncOutput = false;
+            m_pOutputThread->Free();
+            m_pOutputThread = nullptr;
         }
 
         m_file = {};

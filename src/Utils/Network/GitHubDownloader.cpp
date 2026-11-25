@@ -8,8 +8,7 @@
 #include <Utils/Common/CLIManager.h>
 #include <Utils/Resources/ResourceManager.h>
 #include <Utils/FileSystem/VFS.h>
-
-#include <nlohmann/json.hpp>
+#include <Utils/Serialization/JsonValue.h>
 
 namespace SR_NETWORK_NS {
     bool GitHubRepo::IsValid() const {
@@ -112,11 +111,15 @@ namespace SR_NETWORK_NS {
         }
 
         try {
-            auto json = nlohmann::json::parse(m_responseBody.view());
-            for (const auto& branch : json) {
-                if (branch.contains("name")) {
-                    m_branches.emplace_back(branch["name"].get<std::string_view>());
+            if (auto json = JsonValue::ParseString(m_responseBody.view())) {
+                for (const auto& branch : json->View()) {
+                    if (branch.Contains("name")) {
+                        m_branches.emplace_back(branch["name"].GetString());
+                    }
                 }
+            }
+            else {
+                SR_ERROR("GitHubDownloader::GetBranches() : failed to parse JSON response!");
             }
         }
         catch (const std::exception& e) {
@@ -160,9 +163,13 @@ namespace SR_NETWORK_NS {
         }
 
         try {
-            auto json = nlohmann::json::parse(m_responseBody.view());
-            if (json.contains("default_branch")) {
-                m_defaultBranch = json["default_branch"].get<std::string>();
+            if (const auto json = JsonValue::ParseString(m_responseBody.view())) {
+                if (json->View().Has("default_branch")) {
+                    m_defaultBranch = json->View().Get("default_branch").GetString();
+                }
+            }
+            else {
+                SR_ERROR("GitHubDownloader::GetDefaultBranch() : failed to parse JSON response!");
             }
         }
         catch (const std::exception& e) {
@@ -263,22 +270,29 @@ namespace SR_NETWORK_NS {
         }
 
         try {
-            const auto json = nlohmann::json::parse(m_responseBody.view());
-            if (!json.contains("tree") || !json["tree"].is_array()) {
+            const auto json = JsonValue::ParseString(m_responseBody.view());
+            if (!json) {
+                SR_ERROR("GitHubDownloader::GetTree() : failed to parse JSON response!");
+                return m_tree;
+            }
+
+            JsonValueView view = json->View();
+
+            if (!view.Contains("tree") || !view["tree"].IsArray()) {
                 SR_ERROR("GitHubDownloader::GetTree() : invalid GitHub tree response!");
                 return m_tree;
             }
 
-            for (const auto& entry : json["tree"]) {
-                if (!entry.contains("type") || !entry.contains("path") || !entry.contains("sha") || !entry.contains("mode")) {
+            for (const auto& entry : view["tree"]) {
+                if (!entry.Contains("type") || !entry.Contains("path") || !entry.Contains("sha") || !entry.Contains("mode")) {
                     continue;
                 }
 
                 GitHubEntryInfo info;
 
-                info.sha = entry["sha"].get<std::string_view>();
-                info.mode = LexicalCast<uint32_t>(entry["mode"].get<std::string_view>());
-                StringView type = entry["type"].get<std::string_view>();
+                info.sha = entry["sha"].GetString();
+                info.mode = LexicalCast<uint32_t>(entry["mode"].GetString());
+                StringView type = entry["type"].GetString();
 
                 if (type == "blob") {
                     info.type = GitHubEntryType::Blob;
@@ -293,11 +307,11 @@ namespace SR_NETWORK_NS {
                     info.type = GitHubEntryType::Unknown;
                 }
 
-                if (entry.contains("size") && !entry["size"].is_null()) {
-                    info.size = entry["size"].get<uint64_t>();
+                if (entry.Contains("size") && !entry["size"].IsNull()) {
+                    info.size = entry["size"].GetInt();
                 }
 
-                m_tree.emplace(entry["path"].get<std::string_view>(), std::move(info));
+                m_tree.emplace(entry["path"].GetString(), std::move(info));
             }
         }
         catch (const std::exception& e) {

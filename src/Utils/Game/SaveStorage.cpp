@@ -44,6 +44,7 @@ namespace SR_UTILS_NS::SaveStorage {
     }
 
     bool Read(const Path& path, String& data, uint64_t limit) {
+        SR_TRACY_ZONE;
         if (!path.IsFile()) {
             return false;
         }

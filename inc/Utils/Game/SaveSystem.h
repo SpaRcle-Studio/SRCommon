@@ -40,16 +40,16 @@ namespace SR_UTILS_NS {
         /// @method
         void RemoveState();
         /// @method @evaluate
-        JsonValue GetState() const {
-            return m_state.Clone();
+        JsonValueView GetState() const {
+            return m_state.View();
         }
         /// @method
         void SetMetadata(const JsonValue& metadata) {
-            m_metadata = metadata.Clone();
+            m_metadata = metadata.View().Clone();
         }
         /// @method @evaluate
-        JsonValue GetMetadata() const {
-            return m_metadata.Clone();
+        JsonValueView GetMetadata() const {
+            return m_metadata.View();
         }
         /// @method
         bool SetFile(StringView relativePath, StringView bytes);

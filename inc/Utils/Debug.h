@@ -10,6 +10,8 @@
 #include <Utils/Common/Enumerations.h>
 #include <Utils/Common/StringFormat.h>
 #include <Utils/Common/AssertFwd.h>
+#include <Utils/Types/Thread.h>
+#include <Utils/Types/Vector.h>
 
 namespace SR_UTILS_NS {
     SR_ENUM_NS_CLASS_T(DebugLogType, uint8_t,
@@ -40,7 +42,16 @@ namespace SR_UTILS_NS {
         ~Debug() override;
 
     private:
+        struct Message {
+            String text;
+            String prefix;
+            String memory;
+            DebugLogType type = DebugLogType::Log;
+        };
+
         void InitColorTheme();
+        void WriteMessage(const Message& message);
+        bool ProcessMessages();
 
     public:
         void SetLevel(Level level);
@@ -87,10 +98,17 @@ namespace SR_UTILS_NS {
 
         Theme m_theme = Theme::Light;
 
-        String m_messageBuffer;
-        String m_messagePrefixBuffer;
-        String m_messageMemoryBuffer;
+        Message m_message;
         String m_messageFormatBuffer;
+
+        Vector<Message> m_pendingMessages;
+        Vector<Message> m_outputMessages;
+        SizeType m_pendingMessageCount = 0;
+        std::mutex m_queueMutex;
+        std::condition_variable m_queueCondition;
+        SR_HTYPES_NS::Thread* m_pOutputThread = nullptr;
+        bool m_asyncOutput = false;
+        bool m_stopOutput = false;
 
         std::atomic<bool> m_isInit = false;
         Path m_logPath;
