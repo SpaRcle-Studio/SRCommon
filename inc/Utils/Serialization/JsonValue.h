@@ -105,6 +105,8 @@ namespace SR_UTILS_NS {
         SR_NODISCARD String ToJson() const;
         /// @method @evaluate
         SR_NODISCARD JsonValue Clone() const;
+        /// @method @evaluate
+        SR_NODISCARD bool Equals(const JsonValueView& other) const;
 
         SR_NODISCARD bool IsArray() const noexcept;
         SR_NODISCARD bool IsNull() const noexcept;
@@ -116,6 +118,7 @@ namespace SR_UTILS_NS {
     private:
         friend class JsonValue;
         SR_NODISCARD bool Expect(JsonValueKind kind) const;
+        SR_NODISCARD bool EqualsInternal(const JsonValueView& other, uint32_t depth) const;
         void* m_value = nullptr;
     };
 

@@ -127,7 +127,7 @@ namespace SR_UTILS_NS {
         return true;
     }
 
-    bool SaveSlot::ReadGeneration(const Path& path, StringView generation) {
+    bool SaveSlot::ReadGeneration(const Path& path, StringView generation, bool metadataOnly) {
         SR_TRACY_ZONE;
         if (!SaveStorage::GenerationId(generation)) {
             m_error = "CURRENT: invalid generation ID";
@@ -159,6 +159,12 @@ namespace SR_UTILS_NS {
             metadata.View().Get("generation").GetInt() != static_cast<int64_t>(SaveStorage::GenerationId(generation))) {
             m_error = "METADATA: storage identity does not match";
             return false;
+        }
+
+        if (metadataOnly) {
+            m_metadata = std::move(metadata);
+            m_error.clear();
+            return true;
         }
 
         const auto stateFlag = metadata.View().Get("hasState");
@@ -314,6 +320,7 @@ namespace SR_UTILS_NS {
             m_error = "PUBLISH: marker replacement failed; previous save preserved";
             return false;
         }
+        SaveStorage::SetText(metadata, "displayTime", SaveStorage::LocalTime(metadata.View().Get("createdUtc").GetString()));
         m_metadata = std::move(metadata);
         m_recovered = false;
         if (SaveStorage::ConsumeFault("after_marker")) {
@@ -333,11 +340,19 @@ namespace SR_UTILS_NS {
     }
 
     bool SaveSlot::Load(const Path& path) {
+        return LoadInternal(path, false);
+    }
+
+    bool SaveSlot::LoadMetadata(const Path& path) {
+        return LoadInternal(path, true);
+    }
+
+    bool SaveSlot::LoadInternal(const Path& path, bool metadataOnly) {
         SR_TRACY_ZONE;
         m_error.clear();
         m_recovered = false;
         String current;
-        if (SaveStorage::Read(path.Concat("current"), current, 64) && ReadGeneration(path, current)) {
+        if (SaveStorage::Read(path.Concat("current"), current, 64) && ReadGeneration(path, current, metadataOnly)) {
             return true;
         }
         if (m_error.starts_with("SCHEMA:")) {
@@ -346,7 +361,7 @@ namespace SR_UTILS_NS {
         for (auto&& generation : SaveStorage::Generations(path)) {
             String receipt;
             if (generation != current && SaveStorage::Read(path.Concat("published_" + generation), receipt, 8) &&
-                receipt == "1" && ReadGeneration(path, generation)) {
+                receipt == "1" && ReadGeneration(path, generation, metadataOnly)) {
                 m_recovered = true;
                 SR_WARN("SaveSlot::Load() : recovered {}/{} from {}", m_groupName, m_slotName, generation);
                 return true;
@@ -483,6 +498,78 @@ namespace SR_UTILS_NS {
         for (auto&& pSlot : m_slots) {
             pSlot->SetReadLimit(bytes);
         }
+    }
+
+    JsonValue SaveSystem::EnumerateSlotPreviews(StringView group) {
+        SR_TRACY_ZONE;
+        JsonValue result;
+        result.MakeArray();
+        if (!ValidateIds(group, "enumerate")) {
+            return result;
+        }
+        VFS::Instance().Enumerate(GetSaveDirectory().Concat(group).ToStringView(), [&](const VFSEntry& entry) {
+            if (entry.type != FSItemType::Folder || !SaveStorage::ValidId(entry.name)) {
+                return;
+            }
+            SaveSlot slot;
+            slot.Init(group, entry.name);
+            slot.SetReadLimit(m_readLimit && m_readLimit < 1024 * 1024 ? m_readLimit : 1024 * 1024);
+            const auto path = GetSaveDirectory().Concat(group).Concat(entry.name);
+            if (slot.LoadMetadata(path)) {
+                JsonValue metadata = slot.GetMetadata().Clone();
+                SaveStorage::SetText(metadata, "displayTime", SaveStorage::LocalTime(metadata.View().Get("createdUtc").GetString()));
+                JsonValue recovered;
+                recovered.SetBool(slot.WasRecovered());
+                metadata.Set("recovered", recovered);
+                result.Append(metadata);
+            }
+            else if (SaveStorage::HasPublication(path)) {
+                m_error = slot.GetError();
+            }
+        }, false);
+        return result;
+    }
+
+    String SaveSystem::ReadSlotPreviewFile(StringView group, StringView slotName, StringView relativePath) {
+        SR_TRACY_ZONE;
+        if (!ValidateIds(group, slotName) || !SaveStorage::ValidFilePath(relativePath)) {
+            m_error = "FILE: invalid preview identity or relative path";
+            return String();
+        }
+        SaveSlot slot;
+        slot.Init(group, slotName);
+        slot.SetReadLimit(m_readLimit && m_readLimit < 1024 * 1024 ? m_readLimit : 1024 * 1024);
+        const auto path = GetSaveDirectory().Concat(group).Concat(slotName);
+        if (!slot.LoadMetadata(path)) {
+            m_error = slot.GetError();
+            return String();
+        }
+        const auto metadata = slot.GetMetadata();
+        if (!metadata.Has("files") || metadata.Get("files").GetKind() != JsonValueKind::Array) {
+            m_error = "METADATA: missing preview file manifest";
+            return String();
+        }
+        const auto manifest = metadata.Get("files");
+        const uint64_t limit = m_readLimit && m_readLimit < 4 * 1024 * 1024 ? m_readLimit : 4 * 1024 * 1024;
+        for (uint32_t i = 0; i < manifest.GetCount(); ++i) {
+            const auto entry = manifest.At(i);
+            if (!entry.Has("path") || entry.Get("path").GetString() != relativePath) {
+                continue;
+            }
+            String bytes;
+            const String generation = "gen_{}"_format(metadata.Get("generation").GetInt());
+            if (entry.Has("length") && entry.Has("sha256") &&
+                entry.Get("length").GetKind() == JsonValueKind::Integer &&
+                SaveStorage::Read(path.Concat(generation).Concat("files").Concat(relativePath), bytes, limit) &&
+                static_cast<int64_t>(bytes.size()) == entry.Get("length").GetInt() &&
+                SaveStorage::Digest(bytes) == entry.Get("sha256").GetString()) {
+                return bytes;
+            }
+            m_error = "CHECKSUM: preview file length or SHA-256 mismatch, or read budget exceeded";
+            return String();
+        }
+        m_error = "FILE: preview file is not present in the slot";
+        return String();
     }
 
     JsonValue SaveSystem::EnumerateSlots(StringView group) {

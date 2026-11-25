@@ -303,6 +303,59 @@ namespace SR_UTILS_NS {
         }
     }
 
+    bool JsonValueView::Equals(const JsonValueView& other) const {
+        SR_TRACY_ZONE;
+        return EqualsInternal(other, 0);
+    }
+
+    bool JsonValueView::EqualsInternal(const JsonValueView& other, uint32_t depth) const {
+        if (depth > 128 || !IsValid() || !other.IsValid() ||
+            GetKind() != other.GetKind() || GetCount() != other.GetCount()) {
+            return false;
+        }
+        const auto kind = GetKind();
+        const auto left = static_cast<yyjson_mut_val*>(m_value);
+        const auto right = static_cast<yyjson_mut_val*>(other.m_value);
+        if (kind == JsonValueKind::Object) {
+            auto iterator = yyjson_mut_obj_iter_with(left);
+            while (auto key = yyjson_mut_obj_iter_next(&iterator)) {
+                const auto value = yyjson_mut_obj_getn(right, yyjson_mut_get_str(key), yyjson_mut_get_len(key));
+                if (!value || !JsonValueView(yyjson_mut_obj_iter_get_val(key)).EqualsInternal(JsonValueView(value), depth + 1)) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        if (kind == JsonValueKind::Array) {
+            auto leftIterator = yyjson_mut_arr_iter_with(left);
+            auto rightIterator = yyjson_mut_arr_iter_with(right);
+            while (auto value = yyjson_mut_arr_iter_next(&leftIterator)) {
+                if (!JsonValueView(value).EqualsInternal(JsonValueView(yyjson_mut_arr_iter_next(&rightIterator)), depth + 1)) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        if (kind == JsonValueKind::String) {
+            return GetString() == other.GetString();
+        }
+        if (kind == JsonValueKind::Boolean) {
+            return GetBool() == other.GetBool();
+        }
+        if (kind == JsonValueKind::Integer) {
+            const bool leftNegative = yyjson_mut_is_sint(left) && yyjson_mut_get_sint(left) < 0;
+            const bool rightNegative = yyjson_mut_is_sint(right) && yyjson_mut_get_sint(right) < 0;
+            return leftNegative == rightNegative && yyjson_mut_get_uint(left) == yyjson_mut_get_uint(right);
+        }
+        if (kind == JsonValueKind::Number) {
+            // Exact comparison preserves signed zero without a floating-point tolerance.
+            const double_t leftNumber = yyjson_mut_get_real(left);
+            const double_t rightNumber = yyjson_mut_get_real(right);
+            return std::memcmp(&leftNumber, &rightNumber, sizeof(leftNumber)) == 0;
+        }
+        return kind == JsonValueKind::Null;
+    }
+
     bool JsonValueView::Expect(JsonValueKind kind) const {
         if (!IsValid() || GetKind() != kind) {
             SR_ERROR("JsonValueView::Expect() : expected {}, actual {}, valid={}", static_cast<uint8_t>(kind), static_cast<uint8_t>(GetKind()), IsValid());

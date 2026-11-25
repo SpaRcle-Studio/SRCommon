@@ -25,6 +25,7 @@ namespace SR_UTILS_NS {
         void Init(StringView groupName, StringView slotName);
         bool Save(const Path& path);
         bool Load(const Path& path);
+        bool LoadMetadata(const Path& path);
 
         /// @method @evaluate
         SR_NODISCARD StringView GetSlotName() const noexcept { return m_slotName; }
@@ -83,7 +84,8 @@ namespace SR_UTILS_NS {
         }
 
     private:
-        bool ReadGeneration(const Path& path, StringView generation);
+        bool ReadGeneration(const Path& path, StringView generation, bool metadataOnly = false);
+        bool LoadInternal(const Path& path, bool metadataOnly);
         JsonValue m_state;
         JsonValue m_metadata;
         Map<String, String> m_files;
@@ -128,6 +130,10 @@ namespace SR_UTILS_NS {
         String ComputeSha256(StringView text) const;
         /// @method @evaluate
         JsonValue EnumerateSlots(StringView group);
+        /// @method @evaluate
+        JsonValue EnumerateSlotPreviews(StringView group);
+        /// @method @evaluate
+        String ReadSlotPreviewFile(StringView group, StringView slotName, StringView relativePath);
         /// @method
         void SetReadLimit(uint64_t bytes);
         /// @method @evaluate
