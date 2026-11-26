@@ -103,7 +103,8 @@ namespace SR_UTILS_NS {
 
         Vector<Message> m_pendingMessages;
         Vector<Message> m_outputMessages;
-        SizeType m_pendingMessageCount = 0;
+        std::atomic<SizeType> m_pendingMessageCount = 0;
+        std::atomic<SizeType> m_processingMessageCount = 0;
         std::mutex m_queueMutex;
         std::condition_variable m_queueCondition;
         SR_HTYPES_NS::Thread* m_pOutputThread = nullptr;

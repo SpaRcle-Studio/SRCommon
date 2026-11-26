@@ -57,7 +57,7 @@ namespace SR_WORLD_NS {
         }
     }
 
-    void SceneUpdater::Update(float_t dt, bool isPaused) {
+    void SceneUpdater::Update(float_t dt, bool isPaused, bool updateLogic) {
         SR_TRACY_ZONE;
         SR_LOCK_GUARD;
 
@@ -69,6 +69,10 @@ namespace SR_WORLD_NS {
             RebuildDirtyLayouts();
             m_uiInputRouter.AfterLayout(false);
             m_uiInputRouter.Process(*m_scene, SR_UTILS_NS::PointerInput::Instance().GetEvents(), SR_UTILS_NS::UIInputAdapter::ReadKeyboard());
+        }
+
+        if (!updateLogic) {
+            return;
         }
 
         for (uint32_t i = 0; i < m_componentsPoolSize; ++i) {
@@ -103,21 +107,23 @@ namespace SR_WORLD_NS {
         }
     }
 
-    void SceneUpdater::LateUpdate(bool isPaused) {
+    void SceneUpdater::LateUpdate(bool isPaused, bool updateLogic) {
         SR_TRACY_ZONE;
         SR_LOCK_GUARD;
 
-        for (uint32_t i = 0; i < m_componentsPoolSize; ++i) {
-            auto&& pComponent = m_updatableComponents[i];
-            if (!pComponent) {
-                continue;
-            }
+        if (updateLogic) {
+            for (uint32_t i = 0; i < m_componentsPoolSize; ++i) {
+                auto&& pComponent = m_updatableComponents[i];
+                if (!pComponent) {
+                    continue;
+                }
 
-            if (isPaused && !pComponent->ExecuteInEditMode()) {
-                continue;
-            }
+                if (isPaused && !pComponent->ExecuteInEditMode()) {
+                    continue;
+                }
 
-            pComponent->LateUpdate();
+                pComponent->LateUpdate();
+            }
         }
 
         RebuildDirtyLayouts();

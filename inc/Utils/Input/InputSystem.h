@@ -170,6 +170,7 @@ namespace SR_UTILS_NS {
         SR_MATH_NS::FVector2 m_mouseDragAccumulated;
         SR_MATH_NS::FVector2 m_mouseDragOriginal;
         Input::KeyStates m_keyStatesOriginal;
+        bool m_isApplied = false;
 
     };
 } // namespace SR_UTILS_NS

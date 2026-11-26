@@ -382,7 +382,7 @@ namespace SR_UTILS_NS {
                 SR_ERROR("VFS::Copy() : failed to open source or destination file!\n\tSource: {}\n\tDestination: {}", source, destination);
                 return false;
             }
-            char buffer[8_KiB];
+            char buffer[32_KiB];
             while (true) {
                 auto bytesRead = sourceFile.Read(buffer, sizeof(buffer));
                 if (bytesRead == 0) {

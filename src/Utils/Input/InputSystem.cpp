@@ -479,6 +479,7 @@ namespace SR_UTILS_NS {
         auto&& input = Input::Instance();
         m_mouseDragOriginal = input.GetMouseDrag();
         m_keyStatesOriginal = input.GetKeyStates();
+        m_isApplied = true;
         m_mouseDragAccumulated += input.GetMouseDrag();
         input.SetMouseDrag(m_mouseDragAccumulated / static_cast<float_t>(frames));
 
@@ -499,11 +500,16 @@ namespace SR_UTILS_NS {
     void InputAccumulator::Reset() {
         ResetKeyboard();
         m_mouseDragAccumulated = SR_MATH_NS::FVector2(0, 0);
-        Input::Instance().SetMouseDrag(m_mouseDragOriginal);
+        if (m_isApplied) {
+            Input::Instance().SetMouseDrag(m_mouseDragOriginal);
+            m_isApplied = false;
+        }
     }
 
     void InputAccumulator::ResetKeyboard() {
         m_frameKeyStates.clear();
-        Input::Instance().SetKeyStates(m_keyStatesOriginal);
+        if (m_isApplied) {
+            Input::Instance().SetKeyStates(m_keyStatesOriginal);
+        }
     }
 } // namespace SR_UTILS_NS

@@ -27,9 +27,9 @@ namespace SR_WORLD_NS {
 
     public:
         void Build(bool isPaused);
-        void Update(float_t dt, bool isPaused);
+        void Update(float_t dt, bool isPaused, bool updateLogic = true);
         void FixedUpdate(bool isPaused);
-        void LateUpdate(bool isPaused);
+        void LateUpdate(bool isPaused, bool updateLogic = true);
 
         void SetDirty();
         void MarkLayoutDirty(SR_UTILS_NS::SceneObject& object, bool fromTransform = false);

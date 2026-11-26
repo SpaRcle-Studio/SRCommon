@@ -93,13 +93,15 @@ namespace SR_UTILS_NS {
 
         volatile static bool enableBreakPoints = true;
         if (type == DebugLogType::Assert && Platform::IsRunningUnderDebugger() && enableBreakPoints) {
+            while (m_processingMessageCount > 0 || m_pendingMessageCount > 0) {
+                SR_NOOP;
+            }
             Breakpoint();
         }
     }
 
     bool Debug::ProcessMessages() {
         SR_TRACY_ZONE;
-        SizeType outputMessageCount = 0;
 
         {
             std::unique_lock lock(m_queueMutex);
@@ -108,13 +110,14 @@ namespace SR_UTILS_NS {
                 return false;
             }
             m_pendingMessages.swap(m_outputMessages);
-            outputMessageCount = m_pendingMessageCount;
+            m_processingMessageCount.store(m_pendingMessageCount);
             m_pendingMessageCount = 0;
         }
 
-        for (SizeType messageIndex = 0; messageIndex < outputMessageCount; ++messageIndex) {
+        for (SizeType messageIndex = 0; messageIndex < m_processingMessageCount; ++messageIndex) {
             WriteMessage(m_outputMessages[messageIndex]);
         }
+        m_processingMessageCount = 0;
         return true;
     }
 
