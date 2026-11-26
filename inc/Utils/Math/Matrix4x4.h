@@ -10,8 +10,6 @@
 #include <Utils/Math/Vector4.h>
 #include <Utils/Math/AABB.h>
 
-#include <glm/gtx/matrix_decompose.hpp>
-
 namespace SR_MATH_NS {
     struct DecomposedMatrix {
         SR_MATH_NS::FVector3 translation;
@@ -20,11 +18,9 @@ namespace SR_MATH_NS {
     };
 
     class SR_COMMON_DLL_API Matrix4x4 {
-        SR_INLINE_STATIC constexpr glm::mat4 GLM_IDENTITY_MAT4X4 = glm::mat4(1); /** NOLINT */
     public:
         union {
             SR_MATH_NS::Vector4<float_t> value[4];
-            glm::mat4 self;
             struct {
                 SR_MATH_NS::Vector4<float_t> right, up, dir, position;
             } v;
@@ -41,8 +37,6 @@ namespace SR_MATH_NS {
         Matrix4x4() noexcept;
         Matrix4x4(FVector4 rows[4]) noexcept; /// NOLINT
         Matrix4x4(const Unit& scalar) noexcept; /// NOLINT
-        Matrix4x4(const glm::mat4& mat) noexcept; /// NOLINT
-        Matrix4x4(glm::mat4&& mat) noexcept; /// NOLINT
         Matrix4x4(const FVector3& translate, const Quaternion& rotation) noexcept;
         Matrix4x4(const FVector3& translate, const FVector3& scale) noexcept;
         Matrix4x4(const FVector3& translate, const Quaternion& rotation, const FVector3& scale) noexcept;
@@ -84,7 +78,6 @@ namespace SR_MATH_NS {
         SR_NODISCARD Matrix4x4 Rotate(const FVector3& angle) const;
         SR_NODISCARD Matrix4x4 Rotate(const SR_MATH_NS::Quaternion& q) const;
         SR_NODISCARD Matrix4x4 OrthogonalNormalize() const;
-        SR_NODISCARD const glm::mat4& ToGLM() const;
         SR_NODISCARD Matrix4x4 Translate(const FVector3& vec3) const;
         SR_NODISCARD FVector4 GetAxis(Axis axis) const;
         SR_NODISCARD FVector3 GetTranslate() const;
@@ -130,12 +123,12 @@ namespace SR_MATH_NS {
     SR_MAYBE_UNUSED SR_COMMON_DLL_API FVector4 CalcRotationPlanNormal(const SR_MATH_NS::FVector3& cameraDir, Axis axis);
 
     template<typename U> Vector4<U> Matrix4x4::operator*(const Vector4<U>& vector4) const {
-        const glm::vec4 v = self * glm::vec4(
-                static_cast<float>(vector4.x),
-                static_cast<float>(vector4.y),
-                static_cast<float>(vector4.z),
-                static_cast<float>(vector4.w)
-        );
+        const FVector4 v = TransformVector(FVector4(
+            static_cast<float_t>(vector4.x),
+            static_cast<float_t>(vector4.y),
+            static_cast<float_t>(vector4.z),
+            static_cast<float_t>(vector4.w)
+        ));
         return Vector4<U>(
                 static_cast<U>(v.x),
                 static_cast<U>(v.y),

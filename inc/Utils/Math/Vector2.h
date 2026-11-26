@@ -43,11 +43,6 @@ namespace SR_MATH_NS {
             y = p;
         }
 
-        constexpr SR_FORCE_INLINE Vector2(const glm::vec2 &vec2) {
-            x = static_cast<T>(vec2.x);
-            y = static_cast<T>(vec2.y);
-        }
-
         static constexpr Vector2<T> Zero() { return Vector2(static_cast<T>(0)); }
         static constexpr Vector2<T> One() { return Vector2(static_cast<T>(1)); }
 
@@ -279,10 +274,6 @@ namespace SR_MATH_NS {
         template<typename U> SR_NODISCARD bool Contains(const Vector2<U>& value) const {
             return (x >= static_cast<T>(value.x) && x <= static_cast<T>(value.y)) ||
                    (y >= static_cast<T>(value.x) && y <= static_cast<T>(value.y));
-        }
-
-        SR_NODISCARD SR_FORCE_INLINE glm::vec2 ToGLM() const noexcept {
-            return { static_cast<float_t>(x), static_cast<float_t>(y) };
         }
 
         SR_FORCE_INLINE const T &operator[](int p_axis) const {

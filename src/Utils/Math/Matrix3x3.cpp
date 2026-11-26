@@ -127,7 +127,7 @@ namespace SR_MATH_NS {
         Unit mult = static_cast<Unit>(0.25) / biggestVal;
 
         /// матрица хранится по строкам (m[row][column]), поэтому антисимметричные разности
-        /// берутся в порядке, обратном column-major реализации glm::quat_cast
+        /// берутся в порядке, обратном преобразования матрицы со столбцовым хранением
         switch(biggestIndex) {
             case 0:
                 return Quaternion::WXYZ(biggestVal, (m[2][1] - m[1][2]) * mult, (m[0][2] - m[2][0]) * mult, (m[1][0] - m[0][1]) * mult);

@@ -4,10 +4,9 @@
 
 #include <Utils/Math/Matrix4x4.h>
 #include <Utils/Math/Matrix4x4Utils.h>
+#include <Utils/Math/Matrix3x3.h>
 #include <Utils/Debug.h>
 #include <Utils/Profile/TracyContext.h>
-
-#include <glm/gtx/matrix_interpolation.hpp>
 
 #define SR_MATRIX_COMPOSE_COMPARE_ENABLED
 
@@ -17,33 +16,31 @@ namespace SR_MATH_NS {
     {
     #ifdef SR_MATRIX_COMPOSE_COMPARE_ENABLED
         if (!translate.IsZero()) {
-            GLMTranslateMat4x4(self, translate);
+            TranslateMat4x4(*this, translate);
         }
 
         if (!rotation.IsIdentity()) {
-            glm::quat q = glm::quat(rotation.w, rotation.x, rotation.y, rotation.z); /// glm принимает (w, x, y, z)
-            GLMRotateMat4x4_Fast(self, q);
+            RotateMat4x4(*this, rotation);
         }
 
         if (!scale.IsOne()) {
-            GLMScaleMat4x4(self, scale);
+            ScaleMat4x4(*this, scale);
         }
     #else
-        GLMTranslateMat4x4(self, translate);
-        GLMRotateMat4x4_Fast(self, glm::quat(rotation.w, rotation.x, rotation.y, rotation.z));
-        GLMScaleMat4x4(self, scale);
+        TranslateMat4x4(*this, translate);
+        RotateMat4x4(*this, rotation);
+        ScaleMat4x4(*this, scale);
     #endif
     }
 
     Matrix4x4::Matrix4x4(const FVector3& translate, const Quaternion& rotation, const FVector3& scale, const FVector3& skew) noexcept
         : Matrix4x4()
     {
-        GLMTranslateMat4x4(self, translate);
+        TranslateMat4x4(*this, translate);
 
-        glm::quat q = glm::quat(rotation.w, rotation.x, rotation.y, rotation.z); /// glm принимает (w, x, y, z)
-        GLMScaleMat4x4(self, skew);
-        GLMRotateMat4x4_Fast(self, q);
-        GLMScaleMat4x4(self, scale);
+        ScaleMat4x4(*this, skew);
+        RotateMat4x4(*this, rotation);
+        ScaleMat4x4(*this, scale);
     }
 
     Matrix4x4::Matrix4x4(float_t m00v, float_t m01v, float_t m02v, float_t m03v,
@@ -58,62 +55,52 @@ namespace SR_MATH_NS {
     }
 
     Matrix4x4 Matrix4x4::operator*(const Matrix4x4& mat) const {
-        return Matrix4x4(GLMMultiplyMat4x4(self, mat.self));
+        Matrix4x4 result(0.f);
+        MultiplyMat4x4(result, *this, mat);
+        return result;
     }
 
     Matrix4x4::Matrix4x4(const FVector3& translate, const Quaternion& rotation) noexcept
         : Matrix4x4()
     {
-        glm::quat q = glm::quat(rotation.w, rotation.x, rotation.y, rotation.z); /// glm принимает (w, x, y, z)
-        GLMTranslateMat4x4(self, translate);
-        GLMRotateMat4x4_Fast(self, q);
+        TranslateMat4x4(*this, translate);
+        RotateMat4x4(*this, rotation);
     }
 
     Matrix4x4::Matrix4x4(const FVector3& translate) noexcept
         : Matrix4x4()
     {
-        GLMTranslateMat4x4(self, translate);
+        TranslateMat4x4(*this, translate);
     }
 
     Matrix4x4::Matrix4x4(const Quaternion& rotation) noexcept
         : Matrix4x4()
     {
-        glm::quat q = glm::quat(rotation.w, rotation.x, rotation.y, rotation.z); /// glm принимает (w, x, y, z)
-        GLMRotateMat4x4_Fast(self, q);
+        RotateMat4x4(*this, rotation);
     }
 
     Matrix4x4::Matrix4x4(const FVector3& translate, const FVector3& scale) noexcept
         : Matrix4x4()
     {
-        GLMTranslateMat4x4(self, translate);
-        GLMScaleMat4x4(self, scale);
+        TranslateMat4x4(*this, translate);
+        ScaleMat4x4(*this, scale);
     }
 
     Matrix4x4::Matrix4x4(const Quaternion& rotation, const FVector3& scale) noexcept
         : Matrix4x4()
     {
-        glm::quat q = glm::quat(rotation.w, rotation.x, rotation.y, rotation.z); /// glm принимает (w, x, y, z)
-        GLMRotateMat4x4_Fast(self, q);
-        GLMScaleMat4x4(self, scale);
+        RotateMat4x4(*this, rotation);
+        ScaleMat4x4(*this, scale);
     }
 
     Matrix4x4 Matrix4x4::CreateViewMat(Unit pitch, Unit yaw, Unit roll)  {
-        auto matrix = glm::rotate(glm::mat4(1), (float_t)pitch, { 1, 0, 0 });
-        matrix = glm::rotate(matrix,            (float_t)yaw,   { 0, 1, 0 });
-        matrix = glm::rotate(matrix,            (float_t)roll,  { 0, 0, 1 });
-        return Matrix4x4(glm::translate(matrix, { 0, 0, 0 }));
+        return RotationAxis(FVector3(1.f, 0.f, 0.f), pitch)
+            * RotationAxis(FVector3(0.f, 1.f, 0.f), yaw)
+            * RotationAxis(FVector3(0.f, 0.f, 1.f), roll);
     }
 
     Matrix4x4::Matrix4x4() noexcept
-        : self(GLM_IDENTITY_MAT4X4)
-    { }
-
-    Matrix4x4::Matrix4x4(glm::mat4&& mat) noexcept
-        : self(mat)
-    { }
-
-    Matrix4x4::Matrix4x4(const glm::mat4& mat) noexcept
-        : self(mat)
+        : Matrix4x4(1.f)
     { }
 
     Matrix4x4::Matrix4x4(FVector4* rows) noexcept {
@@ -123,9 +110,13 @@ namespace SR_MATH_NS {
         value[3] = rows[3];
     }
 
-    Matrix4x4::Matrix4x4(const Unit &scalar) noexcept
-        : self(glm::mat4(static_cast<float_t>(scalar)))
-    { }
+    Matrix4x4::Matrix4x4(const Unit &scalar) noexcept {
+        for (int32_t column = 0; column < 4; ++column) {
+            for (int32_t row = 0; row < 4; ++row) {
+                m[column][row] = column == row ? static_cast<float_t>(scalar) : 0.f;
+            }
+        }
+    }
 
     Matrix4x4 Matrix4x4::Identity() {
         return Matrix4x4(1); /// NOLINT
@@ -136,7 +127,14 @@ namespace SR_MATH_NS {
     }
 
     Matrix4x4 Matrix4x4::Perspective(float_t FOV, float_t aspect, float_t nearValue, float_t farValue) {
-        return Matrix4x4(glm::perspective(FOV, aspect, nearValue, farValue)); /// NOLINT
+        const float_t tangent = tanf(FOV * 0.5f);
+        Matrix4x4 result(0.f);
+        result.m00 = 1.f / (aspect * tangent);
+        result.m11 = 1.f / tangent;
+        result.m22 = farValue / (nearValue - farValue);
+        result.m23 = -1.f;
+        result.m32 = -(farValue * nearValue) / (farValue - nearValue);
+        return result;
     }
 
     Matrix4x4 Matrix4x4::FromEulers(const FVector3& eulers) {
@@ -150,13 +148,8 @@ namespace SR_MATH_NS {
         Result[3][0] = - (right + left) / (right - left);
         Result[3][1] = - (top + bottom) / (top - bottom);
 
-#if GLM_DEPTH_CLIP_SPACE == GLM_DEPTH_ZERO_TO_ONE
         Result[2][2] = - static_cast<Unit>(1) / (zFar - zNear);
         Result[3][2] = - zNear / (zFar - zNear);
-#else
-        Result[2][2] = - static_cast<T>(2) / (zFar - zNear);
-        Result[3][2] = - (zFar + zNear) / (zFar - zNear);
-#endif
 
         return Result;
     }
@@ -166,10 +159,15 @@ namespace SR_MATH_NS {
     }
 
     Matrix4x4 Matrix4x4::LookAt(const SR_MATH_NS::FVector3& eye, const SR_MATH_NS::FVector3& center, const SR_MATH_NS::FVector3& up) {
-        const glm::vec3 eyeGLM = glm::vec3(eye.x, eye.y, eye.z);
-        const glm::vec3 centerGLM = glm::vec3(center.x, center.y, center.z);
-        const glm::vec3 upGLM = glm::vec3(up.x, up.y, up.z);
-        return Matrix4x4(glm::lookAtRH(eyeGLM, centerGLM, upGLM));
+        const FVector3 forward = (center - eye).Normalize();
+        const FVector3 right = forward.Cross(up).Normalize();
+        const FVector3 vertical = right.Cross(forward);
+        return Matrix4x4(
+            right.x, vertical.x, -forward.x, 0.f,
+            right.y, vertical.y, -forward.y, 0.f,
+            right.z, vertical.z, -forward.z, 0.f,
+            -right.Dot(eye), -vertical.Dot(eye), forward.Dot(eye), 1.f
+        );
     }
 
     Matrix4x4 Matrix4x4::FromQuaternion(const Quaternion& quaternion) {
@@ -342,24 +340,175 @@ namespace SR_MATH_NS {
     }
 
     Matrix4x4 Matrix4x4::FromScale(const FVector3& scale) {
-        return Matrix4x4(glm::scale(glm::mat4x4(1), glm::vec3(scale.x, scale.y, scale.z)));
+        Matrix4x4 result;
+        ScaleMat4x4(result, scale);
+        return result;
     }
 
     Matrix4x4 Matrix4x4::FromTranslate(const FVector3& translation) {
         return Matrix4x4(translation);
     }
 
-    SR_NODISCARD Matrix4x4 Matrix4x4::Inverse() const {
-        return Matrix4x4(glm::inverse(self));
+    Matrix4x4 Matrix4x4::Inverse() const {
+    #if SR_SIMD_SUPPORT
+        const __m128 columns[4] = {
+            _mm_loadu_ps(mm),
+            _mm_loadu_ps(mm + 4),
+            _mm_loadu_ps(mm + 8),
+            _mm_loadu_ps(mm + 12)
+        };
+        __m128 cofactors[4];
+        {
+            // Cyclic permutations of the three remaining columns preserve the minor's sign.
+            const __m128 first = columns[1];
+            const __m128 second = columns[2];
+            const __m128 third = columns[3];
+
+            // Each lane omits its own row: (1,2,3), (0,2,3), (0,1,3), (0,1,2).
+            const __m128 first0 = _mm_shuffle_ps(first, first, _MM_SHUFFLE(0, 0, 0, 1));
+            const __m128 first1 = _mm_shuffle_ps(first, first, _MM_SHUFFLE(1, 1, 2, 2));
+            const __m128 first2 = _mm_shuffle_ps(first, first, _MM_SHUFFLE(2, 3, 3, 3));
+            const __m128 second0 = _mm_shuffle_ps(second, second, _MM_SHUFFLE(0, 0, 0, 1));
+            const __m128 second1 = _mm_shuffle_ps(second, second, _MM_SHUFFLE(1, 1, 2, 2));
+            const __m128 second2 = _mm_shuffle_ps(second, second, _MM_SHUFFLE(2, 3, 3, 3));
+            const __m128 third0 = _mm_shuffle_ps(third, third, _MM_SHUFFLE(0, 0, 0, 1));
+            const __m128 third1 = _mm_shuffle_ps(third, third, _MM_SHUFFLE(1, 1, 2, 2));
+            const __m128 third2 = _mm_shuffle_ps(third, third, _MM_SHUFFLE(2, 3, 3, 3));
+
+            __m128 minors = _mm_mul_ps(first0, _mm_sub_ps(_mm_mul_ps(second1, third2), _mm_mul_ps(second2, third1)));
+            minors = _mm_sub_ps(minors, _mm_mul_ps(second0, _mm_sub_ps(_mm_mul_ps(first1, third2), _mm_mul_ps(first2, third1))));
+            minors = _mm_add_ps(minors, _mm_mul_ps(third0, _mm_sub_ps(_mm_mul_ps(first1, second2), _mm_mul_ps(first2, second1))));
+            const __m128 signs = _mm_set_ps(-1.f, 1.f, -1.f, 1.f);
+            cofactors[0] = _mm_mul_ps(minors, signs);
+        }
+
+        {
+            // Cyclic permutations of the three remaining columns preserve the minor's sign.
+            const __m128 first = columns[2];
+            const __m128 second = columns[3];
+            const __m128 third = columns[0];
+
+            // Each lane omits its own row: (1,2,3), (0,2,3), (0,1,3), (0,1,2).
+            const __m128 first0 = _mm_shuffle_ps(first, first, _MM_SHUFFLE(0, 0, 0, 1));
+            const __m128 first1 = _mm_shuffle_ps(first, first, _MM_SHUFFLE(1, 1, 2, 2));
+            const __m128 first2 = _mm_shuffle_ps(first, first, _MM_SHUFFLE(2, 3, 3, 3));
+            const __m128 second0 = _mm_shuffle_ps(second, second, _MM_SHUFFLE(0, 0, 0, 1));
+            const __m128 second1 = _mm_shuffle_ps(second, second, _MM_SHUFFLE(1, 1, 2, 2));
+            const __m128 second2 = _mm_shuffle_ps(second, second, _MM_SHUFFLE(2, 3, 3, 3));
+            const __m128 third0 = _mm_shuffle_ps(third, third, _MM_SHUFFLE(0, 0, 0, 1));
+            const __m128 third1 = _mm_shuffle_ps(third, third, _MM_SHUFFLE(1, 1, 2, 2));
+            const __m128 third2 = _mm_shuffle_ps(third, third, _MM_SHUFFLE(2, 3, 3, 3));
+
+            __m128 minors = _mm_mul_ps(first0, _mm_sub_ps(_mm_mul_ps(second1, third2), _mm_mul_ps(second2, third1)));
+            minors = _mm_sub_ps(minors, _mm_mul_ps(second0, _mm_sub_ps(_mm_mul_ps(first1, third2), _mm_mul_ps(first2, third1))));
+            minors = _mm_add_ps(minors, _mm_mul_ps(third0, _mm_sub_ps(_mm_mul_ps(first1, second2), _mm_mul_ps(first2, second1))));
+            const __m128 signs = _mm_set_ps(1.f, -1.f, 1.f, -1.f);
+            cofactors[1] = _mm_mul_ps(minors, signs);
+        }
+
+        {
+            // Cyclic permutations of the three remaining columns preserve the minor's sign.
+            const __m128 first = columns[3];
+            const __m128 second = columns[0];
+            const __m128 third = columns[1];
+
+            // Each lane omits its own row: (1,2,3), (0,2,3), (0,1,3), (0,1,2).
+            const __m128 first0 = _mm_shuffle_ps(first, first, _MM_SHUFFLE(0, 0, 0, 1));
+            const __m128 first1 = _mm_shuffle_ps(first, first, _MM_SHUFFLE(1, 1, 2, 2));
+            const __m128 first2 = _mm_shuffle_ps(first, first, _MM_SHUFFLE(2, 3, 3, 3));
+            const __m128 second0 = _mm_shuffle_ps(second, second, _MM_SHUFFLE(0, 0, 0, 1));
+            const __m128 second1 = _mm_shuffle_ps(second, second, _MM_SHUFFLE(1, 1, 2, 2));
+            const __m128 second2 = _mm_shuffle_ps(second, second, _MM_SHUFFLE(2, 3, 3, 3));
+            const __m128 third0 = _mm_shuffle_ps(third, third, _MM_SHUFFLE(0, 0, 0, 1));
+            const __m128 third1 = _mm_shuffle_ps(third, third, _MM_SHUFFLE(1, 1, 2, 2));
+            const __m128 third2 = _mm_shuffle_ps(third, third, _MM_SHUFFLE(2, 3, 3, 3));
+
+            __m128 minors = _mm_mul_ps(first0, _mm_sub_ps(_mm_mul_ps(second1, third2), _mm_mul_ps(second2, third1)));
+            minors = _mm_sub_ps(minors, _mm_mul_ps(second0, _mm_sub_ps(_mm_mul_ps(first1, third2), _mm_mul_ps(first2, third1))));
+            minors = _mm_add_ps(minors, _mm_mul_ps(third0, _mm_sub_ps(_mm_mul_ps(first1, second2), _mm_mul_ps(first2, second1))));
+            const __m128 signs = _mm_set_ps(-1.f, 1.f, -1.f, 1.f);
+            cofactors[2] = _mm_mul_ps(minors, signs);
+        }
+
+        {
+            // Cyclic permutations of the three remaining columns preserve the minor's sign.
+            const __m128 first = columns[0];
+            const __m128 second = columns[1];
+            const __m128 third = columns[2];
+
+            // Each lane omits its own row: (1,2,3), (0,2,3), (0,1,3), (0,1,2).
+            const __m128 first0 = _mm_shuffle_ps(first, first, _MM_SHUFFLE(0, 0, 0, 1));
+            const __m128 first1 = _mm_shuffle_ps(first, first, _MM_SHUFFLE(1, 1, 2, 2));
+            const __m128 first2 = _mm_shuffle_ps(first, first, _MM_SHUFFLE(2, 3, 3, 3));
+            const __m128 second0 = _mm_shuffle_ps(second, second, _MM_SHUFFLE(0, 0, 0, 1));
+            const __m128 second1 = _mm_shuffle_ps(second, second, _MM_SHUFFLE(1, 1, 2, 2));
+            const __m128 second2 = _mm_shuffle_ps(second, second, _MM_SHUFFLE(2, 3, 3, 3));
+            const __m128 third0 = _mm_shuffle_ps(third, third, _MM_SHUFFLE(0, 0, 0, 1));
+            const __m128 third1 = _mm_shuffle_ps(third, third, _MM_SHUFFLE(1, 1, 2, 2));
+            const __m128 third2 = _mm_shuffle_ps(third, third, _MM_SHUFFLE(2, 3, 3, 3));
+
+            __m128 minors = _mm_mul_ps(first0, _mm_sub_ps(_mm_mul_ps(second1, third2), _mm_mul_ps(second2, third1)));
+            minors = _mm_sub_ps(minors, _mm_mul_ps(second0, _mm_sub_ps(_mm_mul_ps(first1, third2), _mm_mul_ps(first2, third1))));
+            minors = _mm_add_ps(minors, _mm_mul_ps(third0, _mm_sub_ps(_mm_mul_ps(first1, second2), _mm_mul_ps(first2, second1))));
+            const __m128 signs = _mm_set_ps(1.f, -1.f, 1.f, -1.f);
+            cofactors[3] = _mm_mul_ps(minors, signs);
+        }
+
+        _MM_TRANSPOSE4_PS(cofactors[0], cofactors[1], cofactors[2], cofactors[3]);
+        const __m128 products = _mm_mul_ps(_mm_set_ps(m30, m20, m10, m00), cofactors[0]);
+        __m128 determinant = _mm_add_ss(products, _mm_shuffle_ps(products, products, _MM_SHUFFLE(1, 1, 1, 1)));
+        determinant = _mm_add_ss(determinant, _mm_shuffle_ps(products, products, _MM_SHUFFLE(2, 2, 2, 2)));
+        determinant = _mm_add_ss(determinant, _mm_shuffle_ps(products, products, _MM_SHUFFLE(3, 3, 3, 3)));
+        const __m128 divisor = _mm_shuffle_ps(determinant, determinant, _MM_SHUFFLE(0, 0, 0, 0));
+
+        Matrix4x4 result(0.f);
+        _mm_storeu_ps(result.mm, _mm_div_ps(cofactors[0], divisor));
+        _mm_storeu_ps(result.mm + 4, _mm_div_ps(cofactors[1], divisor));
+        _mm_storeu_ps(result.mm + 8, _mm_div_ps(cofactors[2], divisor));
+        _mm_storeu_ps(result.mm + 12, _mm_div_ps(cofactors[3], divisor));
+        return result;
+    #else
+        Matrix4x4 cofactors(0.f);
+        for (int32_t column = 0; column < 4; ++column) {
+            for (int32_t row = 0; row < 4; ++row) {
+                float_t minor[9];
+                int32_t index = 0;
+                for (int32_t sourceRow = 0; sourceRow < 4; ++sourceRow) {
+                    if (sourceRow == row) {
+                        continue;
+                    }
+                    for (int32_t sourceColumn = 0; sourceColumn < 4; ++sourceColumn) {
+                        if (sourceColumn != column) {
+                            minor[index++] = m[sourceColumn][sourceRow];
+                        }
+                    }
+                }
+
+                const float_t determinant = minor[0] * (minor[4] * minor[8] - minor[5] * minor[7])
+                    - minor[1] * (minor[3] * minor[8] - minor[5] * minor[6])
+                    + minor[2] * (minor[3] * minor[7] - minor[4] * minor[6]);
+                cofactors.m[column][row] = ((column + row) % 2) ? -determinant : determinant;
+            }
+        }
+
+        const float_t determinant = m[0][0] * cofactors.m[0][0] + m[1][0] * cofactors.m[1][0]
+            + m[2][0] * cofactors.m[2][0] + m[3][0] * cofactors.m[3][0];
+        Matrix4x4 result(0.f);
+        for (int32_t column = 0; column < 4; ++column) {
+            for (int32_t row = 0; row < 4; ++row) {
+                result.m[column][row] = cofactors.m[row][column] / determinant;
+            }
+        }
+        return result;
+    #endif
     }
 
     SR_NODISCARD Matrix4x4 Matrix4x4::RotateAxis(const FVector3& axis, const double& angle) const {
-        return Matrix4x4(glm::rotate(self, glm::radians((float)angle), glm::vec3(axis.x, axis.y, axis.z)));
+        return *this * RotationAxis(axis, SR_RAD(static_cast<float_t>(angle)));
     }
 
     SR_NODISCARD Matrix4x4 Matrix4x4::Rotate(const FVector3& angle) const {
-        Quaternion q = angle.ToQuat();
-        return Matrix4x4(self * mat4_cast(glm::quat(q.w, q.x, q.y, q.z))); /// glm принимает (w, x, y, z)
+        return Rotate(angle.ToQuat());
     }
 
     SR_NODISCARD Matrix4x4 Matrix4x4::Rotate(const SR_MATH_NS::Quaternion& q) const {
@@ -375,12 +524,10 @@ namespace SR_MATH_NS {
         return copy;
     }
 
-    SR_NODISCARD const glm::mat4& Matrix4x4::ToGLM() const {
-        return self;
-    }
-
     SR_NODISCARD Matrix4x4 Matrix4x4::Translate(const FVector3& vec3) const {
-        return Matrix4x4(glm::translate(self, glm::vec3(vec3.x, vec3.y, vec3.z)));
+        Matrix4x4 result = *this;
+        TranslateMat4x4(result, vec3);
+        return result;
     }
 
     SR_NODISCARD FVector4 Matrix4x4::GetAxis(Axis axis) const {
@@ -411,127 +558,146 @@ namespace SR_MATH_NS {
     }
 
     SR_NODISCARD bool Matrix4x4::IsFinite() const {
-        return value[0].IsFinite() && value[1].IsFinite() && value[2].IsFinite() && value[3].IsFinite();
+        for (int32_t i = 0; i < 16; ++i) {
+            if (!std::isfinite(mm[i])) {
+                return false;
+            }
+        }
+        return true;
     }
 
     bool Matrix4x4::Decompose(FVector3& translation, Quaternion& quaternion, FVector3& scale) const {
-        translation = value[3].XYZ();
+        translation = GetTranslation();
+        scale = GetScale();
+        if (scale.x <= SR_FLT_EPSILON || scale.y <= SR_FLT_EPSILON || scale.z <= SR_FLT_EPSILON || !IsFinite()) {
+            return false;
+        }
 
-        scale[0] = glm::length(glm::vec3(self[0]));
-        scale[1] = glm::length(glm::vec3(self[1]));
-        scale[2] = glm::length(glm::vec3(self[2]));
-
-        const glm::mat3 rotMtx(
-                glm::vec3(self[0]) / static_cast<float>(scale[0]),
-                glm::vec3(self[1]) / static_cast<float>(scale[1]),
-                glm::vec3(self[2]) / static_cast<float>(scale[2]));
-
-        glm::quat q = glm::quat_cast(rotMtx);
-        quaternion = Quaternion(q.x, q.y, q.z, q.w);
-
+        const FVector3 right = value[0].XYZ() / scale.x;
+        const FVector3 up = value[1].XYZ() / scale.y;
+        const FVector3 forward = value[2].XYZ() / scale.z;
+        quaternion = Matrix3x3(
+            FVector3(right.x, up.x, forward.x),
+            FVector3(right.y, up.y, forward.y),
+            FVector3(right.z, up.z, forward.z)
+        ).ToQuaternion();
         return true;
     }
 
     bool Matrix4x4::Decompose(FVector3& translation, Quaternion& quaternion) const {
-        translation = value[3].XYZ();
-
-        auto&& scaleX = glm::length(glm::vec3(self[0]));
-        auto&& scaleY = glm::length(glm::vec3(self[1]));
-        auto&& scaleZ = glm::length(glm::vec3(self[2]));
-
-        const glm::mat3 rotMtx(
-                glm::vec3(self[0]) / static_cast<float_t>(scaleX),
-                glm::vec3(self[1]) / static_cast<float_t>(scaleY),
-                glm::vec3(self[2]) / static_cast<float_t>(scaleZ)
-        );
-
-        glm::quat q = glm::quat_cast(rotMtx);
-        quaternion = Quaternion(q.x, q.y, q.z, q.w);
-
-        return true;
+        FVector3 scale;
+        return Decompose(translation, quaternion, scale);
     }
 
     bool Matrix4x4::Decompose(FVector3& translation, FVector3& eulers, FVector3& scale) const {
-        translation = value[3].XYZ();
-
-        scale[0] = glm::length(glm::vec3(self[0]));
-        scale[1] = glm::length(glm::vec3(self[1]));
-        scale[2] = glm::length(glm::vec3(self[2]));
-
-        const glm::mat3 rotMtx(
-                glm::vec3(self[0]) / static_cast<float>(scale[0]),
-                glm::vec3(self[1]) / static_cast<float>(scale[1]),
-                glm::vec3(self[2]) / static_cast<float>(scale[2]));
-
-        glm::vec3 glmEulers = glm::eulerAngles(glm::normalize(glm::quat_cast(rotMtx)));
-        eulers = FVector3(glmEulers.x, glmEulers.y, glmEulers.z);
-        eulers = eulers.Degrees();
-
+        Quaternion rotation;
+        if (!Decompose(translation, rotation, scale)) {
+            return false;
+        }
+        rotation = rotation.Normalize();
+        eulers = FVector3(rotation.Pitch(), rotation.Yaw(), rotation.Roll()).Degrees();
         return true;
     }
 
     bool Matrix4x4::Decompose(FVector3& translation, FVector3& eulers, FVector3& scale, FVector3& /* skew */) const {
-        translation = value[3].XYZ();
-
-        scale[0] = glm::length(glm::vec3(self[0]));
-        scale[1] = glm::length(glm::vec3(self[1]));
-        scale[2] = glm::length(glm::vec3(self[2]));
-
-        const glm::mat3 rotMtx(
-                glm::vec3(self[0]) / static_cast<float>(scale[0]),
-                glm::vec3(self[1]) / static_cast<float>(scale[1]),
-                glm::vec3(self[2]) / static_cast<float>(scale[2]));
-
-        glm::vec3 glmEulers = glm::eulerAngles(glm::normalize(glm::quat_cast(rotMtx)));
-        eulers = FVector3(glmEulers.x, glmEulers.y, glmEulers.z);
-        eulers = eulers.Degrees();
-
-        return true;
+        return Decompose(translation, eulers, scale);
     }
 
     bool Matrix4x4::Decompose(FVector3& translation, Quaternion& rotation, FVector3& scale, FVector3& skew) const {
-        glm::vec3 _scale;
-        glm::quat _rotation;
-        glm::vec3 _translation;
-
-        glm::vec3 _skew;
-        glm::vec4 _perspective;
-
-        if (glm::decompose(self, _scale, _rotation, _translation, _skew, _perspective)) {
-            translation = FVector3(_translation.x, _translation.y, _translation.z);
-            rotation = Quaternion(_rotation.x, _rotation.y, _rotation.z, _rotation.w);
-            scale = FVector3(_scale.x, _scale.y, _scale.z);
-            skew = FVector3(_skew.x, _skew.y, _skew.z);
-            return true;
+        if (!IsFinite() || fabsf(m33) <= SR_FLT_EPSILON) {
+            return false;
         }
 
-        return false;
+        const float_t inverseW = 1.f / m33;
+        FVector3 right = value[0].XYZ() * inverseW;
+        FVector3 up = value[1].XYZ() * inverseW;
+        FVector3 forward = value[2].XYZ() * inverseW;
+        const float_t determinant = right.Dot(up.Cross(forward));
+        if (fabsf(determinant) <= SR_FLT_EPSILON) {
+            return false;
+        }
+
+        scale.x = right.Length();
+        right /= scale.x;
+        skew.z = right.Dot(up);
+        up -= right * skew.z;
+        scale.y = up.Length();
+        up /= scale.y;
+        skew.z /= scale.y;
+
+        skew.y = right.Dot(forward);
+        forward -= right * skew.y;
+        skew.x = up.Dot(forward);
+        forward -= up * skew.x;
+        scale.z = forward.Length();
+        forward /= scale.z;
+        skew.y /= scale.z;
+        skew.x /= scale.z;
+
+        if (right.Dot(up.Cross(forward)) < 0.f) {
+            scale = -scale;
+            right = -right;
+            up = -up;
+            forward = -forward;
+        }
+
+        translation = value[3].XYZ() * inverseW;
+        rotation = Matrix3x3(
+            FVector3(right.x, up.x, forward.x),
+            FVector3(right.y, up.y, forward.y),
+            FVector3(right.z, up.z, forward.z)
+        ).ToQuaternion();
+        return true;
     }
 
     SR_NODISCARD FVector4 Matrix4x4::TransformPoint(const FVector3& point) const {
         FVector4 out;
+    #if SR_SIMD_SUPPORT
+        __m128 transformed = _mm_mul_ps(_mm_loadu_ps(mm), _mm_set1_ps(point.x));
+        transformed = _mm_add_ps(transformed, _mm_mul_ps(_mm_loadu_ps(mm + 4), _mm_set1_ps(point.y)));
+        transformed = _mm_add_ps(transformed, _mm_mul_ps(_mm_loadu_ps(mm + 8), _mm_set1_ps(point.z)));
+        transformed = _mm_add_ps(transformed, _mm_loadu_ps(mm + 12));
+        _mm_storeu_ps(out.coord, transformed);
+    #else
         out.x = point.x * m00 + point.y * m10 + point.z * m20 + m30;
         out.y = point.x * m01 + point.y * m11 + point.z * m21 + m31;
         out.z = point.x * m02 + point.y * m12 + point.z * m22 + m32;
         out.w = point.x * m03 + point.y * m13 + point.z * m23 + m33;
+    #endif
         return out;
     }
 
     SR_NODISCARD FVector4 Matrix4x4::TransformVector(const FVector3& point) const {
         FVector4 out;
+    #if SR_SIMD_SUPPORT
+        __m128 transformed = _mm_mul_ps(_mm_loadu_ps(mm), _mm_set1_ps(point.x));
+        transformed = _mm_add_ps(transformed, _mm_mul_ps(_mm_loadu_ps(mm + 4), _mm_set1_ps(point.y)));
+        transformed = _mm_add_ps(transformed, _mm_mul_ps(_mm_loadu_ps(mm + 8), _mm_set1_ps(point.z)));
+        _mm_storeu_ps(out.coord, transformed);
+    #else
         out.x = point.x * m00 + point.y * m10 + point.z * m20;
         out.y = point.x * m01 + point.y * m11 + point.z * m21;
         out.z = point.x * m02 + point.y * m12 + point.z * m22;
         out.w = point.x * m03 + point.y * m13 + point.z * m23;
+    #endif
         return out;
     }
 
     SR_NODISCARD FVector4 Matrix4x4::TransformVector(const FVector4& point) const {
         FVector4 out;
+    #if SR_SIMD_SUPPORT
+        const __m128 input = _mm_loadu_ps(point.coord);
+        __m128 transformed = _mm_mul_ps(_mm_loadu_ps(mm), _mm_shuffle_ps(input, input, _MM_SHUFFLE(0, 0, 0, 0)));
+        transformed = _mm_add_ps(transformed, _mm_mul_ps(_mm_loadu_ps(mm + 4), _mm_shuffle_ps(input, input, _MM_SHUFFLE(1, 1, 1, 1))));
+        transformed = _mm_add_ps(transformed, _mm_mul_ps(_mm_loadu_ps(mm + 8), _mm_shuffle_ps(input, input, _MM_SHUFFLE(2, 2, 2, 2))));
+        transformed = _mm_add_ps(transformed, _mm_mul_ps(_mm_loadu_ps(mm + 12), _mm_shuffle_ps(input, input, _MM_SHUFFLE(3, 3, 3, 3))));
+        _mm_storeu_ps(out.coord, transformed);
+    #else
         out.x = point.x * m00 + point.y * m10 + point.z * m20 + point.w * m30;
         out.y = point.x * m01 + point.y * m11 + point.z * m21 + point.w * m31;
         out.z = point.x * m02 + point.y * m12 + point.z * m22 + point.w * m32;
         out.w = point.x * m03 + point.y * m13 + point.z * m23 + point.w * m33;
+    #endif
         return out;
     }
 
@@ -564,15 +730,14 @@ namespace SR_MATH_NS {
     }
 
     SR_NODISCARD Quaternion Matrix4x4::GetQuat() const {
-        glm::mat3 glmMat(self);
-
-        // Gram–Schmidt ортонормализация
-        glm::vec3 x = glm::normalize(glmMat[0]);
-        glm::vec3 y = glm::normalize(glmMat[1] - x * glm::dot(glmMat[1], x));
-        glm::vec3 z = glm::cross(x, y); // автоматическая ортогональность
-
-        glm::quat q = glm::quat_cast(glm::mat3(x, y, z));
-        return Quaternion(q.x, q.y, q.z, q.w);
+        const FVector3 right = value[0].XYZ().Normalize();
+        const FVector3 up = (value[1].XYZ() - right * value[1].XYZ().Dot(right)).Normalize();
+        const FVector3 forward = right.Cross(up);
+        return Matrix3x3(
+            FVector3(right.x, up.x, forward.x),
+            FVector3(right.y, up.y, forward.y),
+            FVector3(right.z, up.z, forward.z)
+        ).ToQuaternion();
     }
 
     SR_NODISCARD FVector3 Matrix4x4::GetEulers() const {
@@ -604,32 +769,69 @@ namespace SR_MATH_NS {
     }
 
     Matrix4x4 Matrix4x4::operator+(const Matrix4x4& mat) const {
-        return Matrix4x4(self + mat.self);
+        Matrix4x4 result(0.f);
+    #if SR_SIMD_SUPPORT
+        _mm_storeu_ps(result.mm, _mm_add_ps(_mm_loadu_ps(mm), _mm_loadu_ps(mat.mm)));
+        _mm_storeu_ps(result.mm + 4, _mm_add_ps(_mm_loadu_ps(mm + 4), _mm_loadu_ps(mat.mm + 4)));
+        _mm_storeu_ps(result.mm + 8, _mm_add_ps(_mm_loadu_ps(mm + 8), _mm_loadu_ps(mat.mm + 8)));
+        _mm_storeu_ps(result.mm + 12, _mm_add_ps(_mm_loadu_ps(mm + 12), _mm_loadu_ps(mat.mm + 12)));
+    #else
+        for (int32_t i = 0; i < 16; ++i) {
+            result.mm[i] = mm[i] + mat.mm[i];
+        }
+    #endif
+        return result;
     }
+
     void Matrix4x4::operator+=(const Matrix4x4& right) {
         *this = *this + right;
     }
 
     Matrix4x4 Matrix4x4::operator*(const Unit& scalar) const {
-        return Matrix4x4(self * static_cast<float>(scalar));
+        Matrix4x4 result(0.f);
+    #if SR_SIMD_SUPPORT
+        const __m128 multiplier = _mm_set1_ps(static_cast<float_t>(scalar));
+        _mm_storeu_ps(result.mm, _mm_mul_ps(_mm_loadu_ps(mm), multiplier));
+        _mm_storeu_ps(result.mm + 4, _mm_mul_ps(_mm_loadu_ps(mm + 4), multiplier));
+        _mm_storeu_ps(result.mm + 8, _mm_mul_ps(_mm_loadu_ps(mm + 8), multiplier));
+        _mm_storeu_ps(result.mm + 12, _mm_mul_ps(_mm_loadu_ps(mm + 12), multiplier));
+    #else
+        for (int32_t i = 0; i < 16; ++i) {
+            result.mm[i] = mm[i] * static_cast<float_t>(scalar);
+        }
+    #endif
+        return result;
     }
+
     void Matrix4x4::operator*=(const Unit& scalar) {
         *this = *this * static_cast<float>(scalar);
     }
 
     Matrix4x4 Matrix4x4::operator/(Matrix4x4 mat) {
-        return Matrix4x4(this->self / mat.self);
+        return *this * mat.Inverse();
     }
 
     Matrix4x4 Matrix4x4::operator+(Matrix4x4 mat) {
-        return Matrix4x4(this->self + mat.self);
+        return static_cast<const Matrix4x4&>(*this) + mat;
     }
+
     Matrix4x4 Matrix4x4::operator-(Matrix4x4 mat) {
-        return Matrix4x4(this->self - mat.self);
+        Matrix4x4 result(0.f);
+    #if SR_SIMD_SUPPORT
+        _mm_storeu_ps(result.mm, _mm_sub_ps(_mm_loadu_ps(mm), _mm_loadu_ps(mat.mm)));
+        _mm_storeu_ps(result.mm + 4, _mm_sub_ps(_mm_loadu_ps(mm + 4), _mm_loadu_ps(mat.mm + 4)));
+        _mm_storeu_ps(result.mm + 8, _mm_sub_ps(_mm_loadu_ps(mm + 8), _mm_loadu_ps(mat.mm + 8)));
+        _mm_storeu_ps(result.mm + 12, _mm_sub_ps(_mm_loadu_ps(mm + 12), _mm_loadu_ps(mat.mm + 12)));
+    #else
+        for (int32_t i = 0; i < 16; ++i) {
+            result.mm[i] = mm[i] - mat.mm[i];
+        }
+    #endif
+        return result;
     }
 
     void Matrix4x4::Multiply(Matrix4x4& result, const Matrix4x4& left, const Matrix4x4& right) {
-        GLMMultiplyMat4x4(result.self, left.self, right.self);
+        MultiplyMat4x4(result, left, right);
     }
 
     Matrix4x4 Matrix4x4::CreateOrthographicOffCenter(Unit left, Unit right, Unit bottom, Unit top, Unit zNear, Unit zFar) {
@@ -651,7 +853,7 @@ namespace SR_MATH_NS {
         SR_TRACY_ZONE;
 
         /// 8 углов локального бокса
-        std::array<SR_MATH_NS::FVector3, 8> corners = {
+        SR_MATH_NS::FVector3 corners[8] = {
             SR_MATH_NS::FVector3(localBox.min.x, localBox.min.y, localBox.min.z),
             SR_MATH_NS::FVector3(localBox.max.x, localBox.min.y, localBox.min.z),
             SR_MATH_NS::FVector3(localBox.min.x, localBox.max.y, localBox.min.z),
@@ -662,6 +864,75 @@ namespace SR_MATH_NS {
             SR_MATH_NS::FVector3(localBox.max.x, localBox.max.y, localBox.max.z)
         };
 
+    #if SR_SIMD_SUPPORT
+        const __m128 column0 = _mm_loadu_ps(mm);
+        const __m128 column1 = _mm_loadu_ps(mm + 4);
+        const __m128 column2 = _mm_loadu_ps(mm + 8);
+        const __m128 translation = _mm_loadu_ps(mm + 12);
+        __m128 minimum = _mm_set1_ps(std::numeric_limits<float_t>::max());
+        __m128 maximum = _mm_set1_ps(std::numeric_limits<float_t>::lowest());
+        __m128 world0 = _mm_mul_ps(column0, _mm_set1_ps(corners[0].x));
+        world0 = _mm_add_ps(world0, _mm_mul_ps(column1, _mm_set1_ps(corners[0].y)));
+        world0 = _mm_add_ps(world0, _mm_mul_ps(column2, _mm_set1_ps(corners[0].z)));
+        world0 = _mm_add_ps(world0, translation);
+        minimum = _mm_min_ps(world0, minimum);
+        maximum = _mm_max_ps(world0, maximum);
+
+        __m128 world1 = _mm_mul_ps(column0, _mm_set1_ps(corners[1].x));
+        world1 = _mm_add_ps(world1, _mm_mul_ps(column1, _mm_set1_ps(corners[1].y)));
+        world1 = _mm_add_ps(world1, _mm_mul_ps(column2, _mm_set1_ps(corners[1].z)));
+        world1 = _mm_add_ps(world1, translation);
+        minimum = _mm_min_ps(world1, minimum);
+        maximum = _mm_max_ps(world1, maximum);
+
+        __m128 world2 = _mm_mul_ps(column0, _mm_set1_ps(corners[2].x));
+        world2 = _mm_add_ps(world2, _mm_mul_ps(column1, _mm_set1_ps(corners[2].y)));
+        world2 = _mm_add_ps(world2, _mm_mul_ps(column2, _mm_set1_ps(corners[2].z)));
+        world2 = _mm_add_ps(world2, translation);
+        minimum = _mm_min_ps(world2, minimum);
+        maximum = _mm_max_ps(world2, maximum);
+
+        __m128 world3 = _mm_mul_ps(column0, _mm_set1_ps(corners[3].x));
+        world3 = _mm_add_ps(world3, _mm_mul_ps(column1, _mm_set1_ps(corners[3].y)));
+        world3 = _mm_add_ps(world3, _mm_mul_ps(column2, _mm_set1_ps(corners[3].z)));
+        world3 = _mm_add_ps(world3, translation);
+        minimum = _mm_min_ps(world3, minimum);
+        maximum = _mm_max_ps(world3, maximum);
+
+        __m128 world4 = _mm_mul_ps(column0, _mm_set1_ps(corners[4].x));
+        world4 = _mm_add_ps(world4, _mm_mul_ps(column1, _mm_set1_ps(corners[4].y)));
+        world4 = _mm_add_ps(world4, _mm_mul_ps(column2, _mm_set1_ps(corners[4].z)));
+        world4 = _mm_add_ps(world4, translation);
+        minimum = _mm_min_ps(world4, minimum);
+        maximum = _mm_max_ps(world4, maximum);
+
+        __m128 world5 = _mm_mul_ps(column0, _mm_set1_ps(corners[5].x));
+        world5 = _mm_add_ps(world5, _mm_mul_ps(column1, _mm_set1_ps(corners[5].y)));
+        world5 = _mm_add_ps(world5, _mm_mul_ps(column2, _mm_set1_ps(corners[5].z)));
+        world5 = _mm_add_ps(world5, translation);
+        minimum = _mm_min_ps(world5, minimum);
+        maximum = _mm_max_ps(world5, maximum);
+
+        __m128 world6 = _mm_mul_ps(column0, _mm_set1_ps(corners[6].x));
+        world6 = _mm_add_ps(world6, _mm_mul_ps(column1, _mm_set1_ps(corners[6].y)));
+        world6 = _mm_add_ps(world6, _mm_mul_ps(column2, _mm_set1_ps(corners[6].z)));
+        world6 = _mm_add_ps(world6, translation);
+        minimum = _mm_min_ps(world6, minimum);
+        maximum = _mm_max_ps(world6, maximum);
+
+        __m128 world7 = _mm_mul_ps(column0, _mm_set1_ps(corners[7].x));
+        world7 = _mm_add_ps(world7, _mm_mul_ps(column1, _mm_set1_ps(corners[7].y)));
+        world7 = _mm_add_ps(world7, _mm_mul_ps(column2, _mm_set1_ps(corners[7].z)));
+        world7 = _mm_add_ps(world7, translation);
+        minimum = _mm_min_ps(world7, minimum);
+        maximum = _mm_max_ps(world7, maximum);
+
+        FVector4 newMin;
+        FVector4 newMax;
+        _mm_storeu_ps(newMin.coord, minimum);
+        _mm_storeu_ps(newMax.coord, maximum);
+        return { newMin.XYZ(), newMax.XYZ() };
+    #else
         SR_MATH_NS::FVector3 newMin(
             std::numeric_limits<float_t>::max(),
             std::numeric_limits<float_t>::max(),
@@ -674,7 +945,7 @@ namespace SR_MATH_NS {
             std::numeric_limits<float_t>::lowest()
         );
 
-        for (auto& c : corners) {
+        for (auto&& c : corners) {
             SR_MATH_NS::FVector4 world = TransformVector(SR_MATH_NS::FVector4(c, 1.f));
 
             newMin.x = std::min(newMin.x, world.x);
@@ -687,6 +958,7 @@ namespace SR_MATH_NS {
         }
 
         return { newMin, newMax };
+    #endif
     }
 
     Matrix4x4 Matrix4x4::Orthonormalize() const {
@@ -721,7 +993,7 @@ namespace SR_MATH_NS {
     }
 
     Matrix4x4::Matrix4x4(const Matrix3x3& mat3x3) noexcept {
-        /// Matrix3x3 хранится по строкам, а Matrix4x4 (как и glm::mat4) - по столбцам,
+        /// Matrix3x3 хранится по строкам, а Matrix4x4 - по столбцам,
         /// поэтому при копировании нужно транспонировать
         m00 = mat3x3[0][0]; m01 = mat3x3[1][0]; m02 = mat3x3[2][0]; m03 = 0.f;
         m10 = mat3x3[0][1]; m11 = mat3x3[1][1]; m12 = mat3x3[2][1]; m13 = 0.f;

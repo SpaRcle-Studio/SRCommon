@@ -14,9 +14,6 @@
     #error "Windows.h was included before macros.h"
 #endif
 
-#define GLM_FORCE_RADIANS
-#define GLM_FORCE_DEPTH_ZERO_TO_ONE
-
 #if defined(_MSVC_LANG)
     static_assert(sizeof(size_t) == 8, "The engine supports only 64-bit systems!");
 
@@ -220,7 +217,6 @@
 #define SR_ID_INVALID (-1)
 #define SR_SHADER_PROGRAM int32_t
 #define SR_NULL_SHADER (-1)
-#define GLM_ENABLE_EXPERIMENTAL
 #define SR_NOOP (void)0
 #define SR_FLT_EPSILON FLT_EPSILON
 #define SR_NORETURN [[noreturn]]
@@ -259,7 +255,7 @@
     #define SR_WIN32_BOOL false
 #endif
 
-#if defined(WIN32) && !defined(SR_COMMON_USE_CLANG_EMULATION)
+#if defined(WIN32) && !defined(SR_COMMON_USE_CLANG_EMULATION) && (defined(_M_X64) || defined(__SSE__))
     #define SR_SIMD_SUPPORT 1
 #else
     #define SR_SIMD_SUPPORT 0

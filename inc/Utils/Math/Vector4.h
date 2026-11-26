@@ -36,7 +36,6 @@ namespace SR_MATH_NS {
     public:
         Vector4();
         Vector4(T scalar);
-        Vector4(const glm::vec4& vec4);
         Vector4(T _x, T _y, T _z, T _w);
         Vector4(const Vector3<T>& v, T w);
 
@@ -75,8 +74,6 @@ namespace SR_MATH_NS {
         SR_NODISCARD Vector3<T> XYZ() const noexcept;
         SR_NODISCARD Vector2<T> XY() const noexcept;
 
-        SR_NODISCARD glm::vec4 ToGLM() const { return { x, y, z, w }; }
-
         SR_NODISCARD T Dot3(const Vector3<T>& v) const;
 
         template<typename U> SR_NODISCARD Vector4<U> SR_FASTCALL Cast() const noexcept;
@@ -114,7 +111,6 @@ namespace SR_MATH_NS {
     public:
         FColor();
         FColor(Unit scalar);
-        FColor(const glm::vec4& vec4);
         FColor(const Vector4<Unit>& v);
         FColor(const FColor& color);
         FColor(FColor&& color);
@@ -236,13 +232,6 @@ namespace SR_MATH_NS {
 
     template<typename T> Vector4<T>::Vector4(T scalar) {
         x = y = z = w = scalar;
-    }
-
-    template<typename T> Vector4<T>::Vector4(const glm::vec4& vec4) {
-        x = vec4.x;
-        y = vec4.y;
-        z = vec4.z;
-        w = vec4.w;
     }
 
     template<typename T> Vector4<T>::Vector4(T _x, T _y, T _z, T _w)

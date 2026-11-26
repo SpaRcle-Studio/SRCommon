@@ -320,7 +320,6 @@
             <Item Name="y">y</Item>
             <Item Name="z">z</Item>
             <Item Name="w">w</Item>
-            <Item Name="[glm]">self</Item>
         </Expand>
     </Type>
 

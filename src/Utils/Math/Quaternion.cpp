@@ -463,10 +463,21 @@ namespace SR_MATH_NS {
         _mm_store_ps(result_array, interp_vec);
         return Quaternion(result_array[0], result_array[1], result_array[2], result_array[3]);
 #else
-        glm::quat self = glm::quat(w, x, y, z);
-        glm::quat qself = glm::quat(q.w, q.x, q.y, q.z);
-        glm::quat result = glm::slerp(self, qself, static_cast<float_t>(t));
-        return Quaternion(result.x, result.y, result.z, result.w);
+        Quaternion target = q;
+        Unit cosine = Dot(target);
+        if (cosine < 0.f) {
+            target = -target;
+            cosine = -cosine;
+        }
+
+        if (cosine > 1.f - SR_FLT_EPSILON) {
+            return *this * (1.f - t) + target * t;
+        }
+
+        const Unit angle = acosf(SR_CLAMP(cosine, -1.f, 1.f));
+        const Unit inverseSine = 1.f / sinf(angle);
+        return *this * (sinf((1.f - t) * angle) * inverseSine)
+            + target * (sinf(t * angle) * inverseSine);
 #endif
     }
 

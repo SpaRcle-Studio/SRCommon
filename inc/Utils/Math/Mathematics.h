@@ -67,15 +67,8 @@
 #define SR_CLAMP(x, lower, upper) SR_MATH_NS::Clamp(x, lower, upper)
 #define SR_CLAMP01(x) SR_MATH_NS::Clamp(x, static_cast<decltype(x)>(0), static_cast<decltype(x)>(1))
 
-#define RAD3(v) glm::vec3(RAD(v.x), RAD(v.y), RAD(v.z))
-#define DEG3(v) glm::vec3(DEG(v.x), DEG(v.y), DEG(v.z))
-
-#ifndef SR_ENGINE_CODEGEN_CLANG_PARSE_MODE
-    #include <glm/glm.hpp>
-    #include <glm/gtc/type_ptr.hpp>
-    #include <glm/gtx/string_cast.hpp>
-    #include <glm/gtc/quaternion.hpp>
-#endif
+#define RAD3(v) ((v).Radians())
+#define DEG3(v) ((v).Degrees())
 
 namespace SR_MATH_NS {
     template<typename T> SR_NODISCARD constexpr std::enable_if_t<std::is_arithmetic_v<T>, T> Min(T a, T b) noexcept { return a < b ? a : b; }

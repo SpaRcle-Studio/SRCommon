@@ -5,11 +5,19 @@
 #ifndef SR_ENGINE_MATRIX4X4UTILS_H
 #define SR_ENGINE_MATRIX4X4UTILS_H
 
-#include <Utils/Math/Mathematics.h>
+#include <Utils/Math/Matrix4x4.h>
 #include <Utils/Math/Vector3.h>
 
 namespace SR_MATH_NS {
-    SR_INLINE_STATIC void SR_FASTCALL GLMScaleMat4x4(glm::mat4& matrix, const SR_MATH_NS::FVector3& v) {
+    SR_INLINE_STATIC void SR_FASTCALL ScaleMat4x4(Matrix4x4& matrix, const SR_MATH_NS::FVector3& v) {
+    #if SR_SIMD_SUPPORT
+        const __m128 scaleX = _mm_set1_ps(v.x);
+        const __m128 scaleY = _mm_set1_ps(v.y);
+        const __m128 scaleZ = _mm_set1_ps(v.z);
+        _mm_storeu_ps(matrix.mm, _mm_mul_ps(_mm_loadu_ps(matrix.mm), scaleX));
+        _mm_storeu_ps(matrix.mm + 4, _mm_mul_ps(_mm_loadu_ps(matrix.mm + 4), scaleY));
+        _mm_storeu_ps(matrix.mm + 8, _mm_mul_ps(_mm_loadu_ps(matrix.mm + 8), scaleZ));
+    #else
         // колонка 0
         matrix[0][0] *= v.x;
         matrix[0][1] *= v.x;
@@ -27,10 +35,11 @@ namespace SR_MATH_NS {
         matrix[2][1] *= v.z;
         matrix[2][2] *= v.z;
         matrix[2][3] *= v.z;
+    #endif
     }
 
-    SR_INLINE_STATIC void SR_FASTCALL GLMRotateMat4x4_Fast(glm::mat4& m, const glm::quat& q) noexcept {
-        if (q.w == 1.f) {
+    SR_INLINE_STATIC void SR_FASTCALL RotateMat4x4(Matrix4x4& m, const Quaternion& q) noexcept {
+        if (q.IsIdentity()) {
             return; // identity rotation
         }
 
@@ -48,158 +57,104 @@ namespace SR_MATH_NS {
         const float wy = q.w * y2;
         const float wz = q.w * z2;
 
-        glm::vec4 r0(1 - (yy + zz), xy + wz,       xz - wy,       0);
-        glm::vec4 r1(xy - wz,       1 - (xx + zz), yz + wx,       0);
-        glm::vec4 r2(xz + wy,       yz - wx,       1 - (xx + yy), 0);
+        FVector4 r0(1 - (yy + zz), xy + wz,       xz - wy,       0);
+        FVector4 r1(xy - wz,       1 - (xx + zz), yz + wx,       0);
+        FVector4 r2(xz + wy,       yz - wx,       1 - (xx + yy), 0);
 
-        glm::vec4 c0 = m[0];
-        glm::vec4 c1 = m[1];
-        glm::vec4 c2 = m[2];
+    #if SR_SIMD_SUPPORT
+        const __m128 column0 = _mm_loadu_ps(m.mm);
+        const __m128 column1 = _mm_loadu_ps(m.mm + 4);
+        const __m128 column2 = _mm_loadu_ps(m.mm + 8);
+        __m128 rotated0 = _mm_mul_ps(column0, _mm_set1_ps(r0.x));
+        rotated0 = _mm_add_ps(rotated0, _mm_mul_ps(column1, _mm_set1_ps(r0.y)));
+        rotated0 = _mm_add_ps(rotated0, _mm_mul_ps(column2, _mm_set1_ps(r0.z)));
+        _mm_storeu_ps(m.mm, rotated0);
+
+        __m128 rotated1 = _mm_mul_ps(column0, _mm_set1_ps(r1.x));
+        rotated1 = _mm_add_ps(rotated1, _mm_mul_ps(column1, _mm_set1_ps(r1.y)));
+        rotated1 = _mm_add_ps(rotated1, _mm_mul_ps(column2, _mm_set1_ps(r1.z)));
+        _mm_storeu_ps(m.mm + 4, rotated1);
+
+        __m128 rotated2 = _mm_mul_ps(column0, _mm_set1_ps(r2.x));
+        rotated2 = _mm_add_ps(rotated2, _mm_mul_ps(column1, _mm_set1_ps(r2.y)));
+        rotated2 = _mm_add_ps(rotated2, _mm_mul_ps(column2, _mm_set1_ps(r2.z)));
+        _mm_storeu_ps(m.mm + 8, rotated2);
+    #else
+        FVector4 c0 = m[0];
+        FVector4 c1 = m[1];
+        FVector4 c2 = m[2];
 
         m[0] = c0 * r0.x + c1 * r0.y + c2 * r0.z;
         m[1] = c0 * r1.x + c1 * r1.y + c2 * r1.z;
         m[2] = c0 * r2.x + c1 * r2.y + c2 * r2.z;
+    #endif
     }
 
-    SR_INLINE_STATIC void SR_FASTCALL GLMTranslateMat4x4(glm::mat4& matrix, const SR_MATH_NS::FVector3& v) {
-        auto& B0 = matrix[0];
-        auto& B1 = matrix[1];
-        auto& B2 = matrix[2];
-        auto& B3 = matrix[3];
+    SR_INLINE_STATIC void SR_FASTCALL TranslateMat4x4(Matrix4x4& matrix, const SR_MATH_NS::FVector3& v) {
+    #if SR_SIMD_SUPPORT
+        __m128 offset = _mm_mul_ps(_mm_loadu_ps(matrix.mm), _mm_set1_ps(v.x));
+        offset = _mm_add_ps(offset, _mm_mul_ps(_mm_loadu_ps(matrix.mm + 4), _mm_set1_ps(v.y)));
+        offset = _mm_add_ps(offset, _mm_mul_ps(_mm_loadu_ps(matrix.mm + 8), _mm_set1_ps(v.z)));
+        _mm_storeu_ps(matrix.mm + 12, _mm_add_ps(_mm_loadu_ps(matrix.mm + 12), offset));
+    #else
+        auto&& B0 = matrix[0];
+        auto&& B1 = matrix[1];
+        auto&& B2 = matrix[2];
+        auto&& B3 = matrix[3];
 
         B3.x += B0.x * v.x + B1.x * v.y + B2.x * v.z;
         B3.y += B0.y * v.x + B1.y * v.y + B2.y * v.z;
         B3.z += B0.z * v.x + B1.z * v.y + B2.z * v.z;
         B3.w += B0.w * v.x + B1.w * v.y + B2.w * v.z;
-    }
-
-    SR_INLINE_STATIC void SR_FASTCALL GLMMultiplyMat4x4(glm::mat4& result, const glm::mat4& m1, const glm::mat4& m2) noexcept {
-    #if SR_SIMD_SUPPORT && 0
-        const __m128 a0 = _mm_loadu_ps(&m1[0][0]);
-        const __m128 a1 = _mm_loadu_ps(&m1[1][0]);
-        const __m128 a2 = _mm_loadu_ps(&m1[2][0]);
-        const __m128 a3 = _mm_loadu_ps(&m1[3][0]);
-
-        __m128 b = _mm_loadu_ps(&m2[0][0]);
-        __m128 r = _mm_add_ps(_mm_add_ps(_mm_mul_ps(_mm_shuffle_ps(b, b, 0x00), a0), _mm_mul_ps(_mm_shuffle_ps(b, b, 0x55), a1)), _mm_add_ps(_mm_mul_ps(_mm_shuffle_ps(b, b, 0xAA), a2), _mm_mul_ps(_mm_shuffle_ps(b, b, 0xFF), a3)));
-        _mm_storeu_ps(&result[0][0], r);
-
-        b = _mm_loadu_ps(&m2[1][0]);
-        r = _mm_add_ps(_mm_add_ps(_mm_mul_ps(_mm_shuffle_ps(b, b, 0x00), a0), _mm_mul_ps(_mm_shuffle_ps(b, b, 0x55), a1)), _mm_add_ps(_mm_mul_ps(_mm_shuffle_ps(b, b, 0xAA), a2), _mm_mul_ps(_mm_shuffle_ps(b, b, 0xFF), a3)));
-        _mm_storeu_ps(&result[1][0], r);
-
-        b = _mm_loadu_ps(&m2[2][0]);
-        r = _mm_add_ps(_mm_add_ps(_mm_mul_ps(_mm_shuffle_ps(b, b, 0x00), a0), _mm_mul_ps(_mm_shuffle_ps(b, b, 0x55), a1)), _mm_add_ps(_mm_mul_ps(_mm_shuffle_ps(b, b, 0xAA), a2), _mm_mul_ps(_mm_shuffle_ps(b, b, 0xFF), a3)));
-        _mm_storeu_ps(&result[2][0], r);
-
-        b = _mm_loadu_ps(&m2[3][0]);
-        r = _mm_add_ps(_mm_add_ps(_mm_mul_ps(_mm_shuffle_ps(b, b, 0x00), a0), _mm_mul_ps(_mm_shuffle_ps(b, b, 0x55), a1)), _mm_add_ps(_mm_mul_ps(_mm_shuffle_ps(b, b, 0xAA), a2), _mm_mul_ps(_mm_shuffle_ps(b, b, 0xFF), a3)));
-        _mm_storeu_ps(&result[3][0], r);
-    #else
-        const float* SR_RESTRICT a = &(m1[0].x);
-        const float* SR_RESTRICT b = &(m2[0].x);
-        float* SR_RESTRICT r = &(result[0].x);
-
-        r[0]  = a[0] * b[0]  + a[4] * b[1]  + a[8]  * b[2]  + a[12] * b[3];
-        r[1]  = a[1] * b[0]  + a[5] * b[1]  + a[9]  * b[2]  + a[13] * b[3];
-        r[2]  = a[2] * b[0]  + a[6] * b[1]  + a[10] * b[2]  + a[14] * b[3];
-        r[3]  = a[3] * b[0]  + a[7] * b[1]  + a[11] * b[2]  + a[15] * b[3];
-
-        r[4]  = a[0] * b[4]  + a[4] * b[5]  + a[8]  * b[6]  + a[12] * b[7];
-        r[5]  = a[1] * b[4]  + a[5] * b[5]  + a[9]  * b[6]  + a[13] * b[7];
-        r[6]  = a[2] * b[4]  + a[6] * b[5]  + a[10] * b[6]  + a[14] * b[7];
-        r[7]  = a[3] * b[4]  + a[7] * b[5]  + a[11] * b[6]  + a[15] * b[7];
-
-        r[8]  = a[0] * b[8]  + a[4] * b[9]  + a[8]  * b[10] + a[12] * b[11];
-        r[9]  = a[1] * b[8]  + a[5] * b[9]  + a[9]  * b[10] + a[13] * b[11];
-        r[10] = a[2] * b[8]  + a[6] * b[9]  + a[10] * b[10] + a[14] * b[11];
-        r[11] = a[3] * b[8]  + a[7] * b[9]  + a[11] * b[10] + a[15] * b[11];
-
-        r[12] = a[0] * b[12] + a[4] * b[13] + a[8]  * b[14] + a[12] * b[15];
-        r[13] = a[1] * b[12] + a[5] * b[13] + a[9]  * b[14] + a[13] * b[15];
-        r[14] = a[2] * b[12] + a[6] * b[13] + a[10] * b[14] + a[14] * b[15];
-        r[15] = a[3] * b[12] + a[7] * b[13] + a[11] * b[14] + a[15] * b[15];
     #endif
     }
 
-    SR_INLINE_STATIC void SR_FASTCALL GLMMultiplyMat4x4(glm::mat4& result, const glm::mat4& m1, const glm::mat3& m2) noexcept {
-        typename glm::mat4::col_type& SrcA0 = *(typename glm::mat4::col_type*)(((char*)&m1) + sizeof(typename glm::mat4::col_type) * 0);
-        typename glm::mat4::col_type& SrcA1 = *(typename glm::mat4::col_type*)(((char*)&m1) + sizeof(typename glm::mat4::col_type) * 1);
-        typename glm::mat4::col_type& SrcA2 = *(typename glm::mat4::col_type*)(((char*)&m1) + sizeof(typename glm::mat4::col_type) * 2);
-        typename glm::mat4::col_type& SrcA3 = *(typename glm::mat4::col_type*)(((char*)&m1) + sizeof(typename glm::mat4::col_type) * 3);
+    SR_INLINE_STATIC void SR_FASTCALL MultiplyMat4x4(Matrix4x4& result, const Matrix4x4& left, const Matrix4x4& right) noexcept {
+        Matrix4x4 product(0.f);
+    #if SR_SIMD_SUPPORT
+        const __m128 left0 = _mm_loadu_ps(left.mm);
+        const __m128 left1 = _mm_loadu_ps(left.mm + 4);
+        const __m128 left2 = _mm_loadu_ps(left.mm + 8);
+        const __m128 left3 = _mm_loadu_ps(left.mm + 12);
+        const __m128 rightColumn0 = _mm_loadu_ps(right.mm);
+        __m128 output0 = _mm_mul_ps(left0, _mm_shuffle_ps(rightColumn0, rightColumn0, _MM_SHUFFLE(0, 0, 0, 0)));
+        output0 = _mm_add_ps(output0, _mm_mul_ps(left1, _mm_shuffle_ps(rightColumn0, rightColumn0, _MM_SHUFFLE(1, 1, 1, 1))));
+        output0 = _mm_add_ps(output0, _mm_mul_ps(left2, _mm_shuffle_ps(rightColumn0, rightColumn0, _MM_SHUFFLE(2, 2, 2, 2))));
+        output0 = _mm_add_ps(output0, _mm_mul_ps(left3, _mm_shuffle_ps(rightColumn0, rightColumn0, _MM_SHUFFLE(3, 3, 3, 3))));
+        _mm_storeu_ps(product.mm, output0);
 
-        typename glm::mat3::col_type& SrcB0 = *(typename glm::mat3::col_type*)(((char*)&m2) + sizeof(typename glm::mat3::col_type) * 0);
-        typename glm::mat3::col_type& SrcB1 = *(typename glm::mat3::col_type*)(((char*)&m2) + sizeof(typename glm::mat3::col_type) * 1);
-        typename glm::mat3::col_type& SrcB2 = *(typename glm::mat3::col_type*)(((char*)&m2) + sizeof(typename glm::mat3::col_type) * 2);
+        const __m128 rightColumn1 = _mm_loadu_ps(right.mm + 4);
+        __m128 output1 = _mm_mul_ps(left0, _mm_shuffle_ps(rightColumn1, rightColumn1, _MM_SHUFFLE(0, 0, 0, 0)));
+        output1 = _mm_add_ps(output1, _mm_mul_ps(left1, _mm_shuffle_ps(rightColumn1, rightColumn1, _MM_SHUFFLE(1, 1, 1, 1))));
+        output1 = _mm_add_ps(output1, _mm_mul_ps(left2, _mm_shuffle_ps(rightColumn1, rightColumn1, _MM_SHUFFLE(2, 2, 2, 2))));
+        output1 = _mm_add_ps(output1, _mm_mul_ps(left3, _mm_shuffle_ps(rightColumn1, rightColumn1, _MM_SHUFFLE(3, 3, 3, 3))));
+        _mm_storeu_ps(product.mm + 4, output1);
 
-        typename glm::mat4::col_type& DstB0 = *(typename glm::mat4::col_type*)(((char*)&result) + sizeof(typename glm::mat4::col_type) * 0);
-        typename glm::mat4::col_type& DstB1 = *(typename glm::mat4::col_type*)(((char*)&result) + sizeof(typename glm::mat4::col_type) * 1);
-        typename glm::mat4::col_type& DstB2 = *(typename glm::mat4::col_type*)(((char*)&result) + sizeof(typename glm::mat4::col_type) * 2);
-        typename glm::mat4::col_type& DstB3 = *(typename glm::mat4::col_type*)(((char*)&result) + sizeof(typename glm::mat4::col_type) * 3);
+        const __m128 rightColumn2 = _mm_loadu_ps(right.mm + 8);
+        __m128 output2 = _mm_mul_ps(left0, _mm_shuffle_ps(rightColumn2, rightColumn2, _MM_SHUFFLE(0, 0, 0, 0)));
+        output2 = _mm_add_ps(output2, _mm_mul_ps(left1, _mm_shuffle_ps(rightColumn2, rightColumn2, _MM_SHUFFLE(1, 1, 1, 1))));
+        output2 = _mm_add_ps(output2, _mm_mul_ps(left2, _mm_shuffle_ps(rightColumn2, rightColumn2, _MM_SHUFFLE(2, 2, 2, 2))));
+        output2 = _mm_add_ps(output2, _mm_mul_ps(left3, _mm_shuffle_ps(rightColumn2, rightColumn2, _MM_SHUFFLE(3, 3, 3, 3))));
+        _mm_storeu_ps(product.mm + 8, output2);
 
-        DstB0.x = SrcA0.x * SrcB0.x + SrcA1.x * SrcB0.y + SrcA2.x * SrcB0.z;
-        DstB0.y = SrcA0.y * SrcB0.x + SrcA1.y * SrcB0.y + SrcA2.y * SrcB0.z;
-        DstB0.z = SrcA0.z * SrcB0.x + SrcA1.z * SrcB0.y + SrcA2.z * SrcB0.z;
-        DstB0.w = SrcA0.w * SrcB0.x + SrcA1.w * SrcB0.y + SrcA2.w * SrcB0.z;
-
-        DstB1.x = SrcA0.x * SrcB1.x + SrcA1.x * SrcB1.y + SrcA2.x * SrcB1.z;
-        DstB1.y = SrcA0.y * SrcB1.x + SrcA1.y * SrcB1.y + SrcA2.y * SrcB1.z;
-        DstB1.z = SrcA0.z * SrcB1.x + SrcA1.z * SrcB1.y + SrcA2.z * SrcB1.z;
-        DstB1.w = SrcA0.w * SrcB1.x + SrcA1.w * SrcB1.y + SrcA2.w * SrcB1.z;
-
-        DstB2.x = SrcA0.x * SrcB2.x + SrcA1.x * SrcB2.y + SrcA2.x * SrcB2.z;
-        DstB2.y = SrcA0.y * SrcB2.x + SrcA1.y * SrcB2.y + SrcA2.y * SrcB2.z;
-        DstB2.z = SrcA0.z * SrcB2.x + SrcA1.z * SrcB2.y + SrcA2.z * SrcB2.z;
-        DstB2.w = SrcA0.w * SrcB2.x + SrcA1.w * SrcB2.y + SrcA2.w * SrcB2.z;
-
-        DstB3.x = SrcA3.x;
-        DstB3.y = SrcA3.y;
-        DstB3.z = SrcA3.z;
-        DstB3.w = SrcA3.w;
-    }
-
-    SR_NODISCARD SR_INLINE_STATIC glm::mat4 SR_FASTCALL GLMMultiplyMat4x4(const glm::mat4& m1, const glm::mat4& m2) noexcept {
-        glm::mat4 result;
-        GLMMultiplyMat4x4(result, m1, m2);
-        return result;
-    }
-
-    SR_INLINE_STATIC void SR_FASTCALL GLMRotateMat4x4(glm::mat4& matrix, const glm::quat& q) {
-        static const glm::mat3 mat3x3Identity = glm::mat3(1);
-        glm::mat3 mat3x3 = mat3x3Identity;
-
-        typename glm::mat3::col_type& Src0 = *(typename glm::mat3::col_type*)(((char*)&mat3x3) + sizeof(typename glm::mat3::col_type) * 0);
-        typename glm::mat3::col_type& Src1 = *(typename glm::mat3::col_type*)(((char*)&mat3x3) + sizeof(typename glm::mat3::col_type) * 1);
-        typename glm::mat3::col_type& Src2 = *(typename glm::mat3::col_type*)(((char*)&mat3x3) + sizeof(typename glm::mat3::col_type) * 2);
-
-        /// rotation matrix
-        {
-            const float_t qxx(q.x * q.x);
-            const float_t qyy(q.y * q.y);
-            const float_t qzz(q.z * q.z);
-            const float_t qxz(q.x * q.z);
-            const float_t qxy(q.x * q.y);
-            const float_t qyz(q.y * q.z);
-            const float_t qwx(q.w * q.x);
-            const float_t qwy(q.w * q.y);
-            const float_t qwz(q.w * q.z);
-
-            Src0.x = float_t(1) - float_t(2) * (qyy + qzz);
-            Src0.y = float_t(2) * (qxy + qwz);
-            Src0.z = float_t(2) * (qxz - qwy);
-
-            Src1.x = float_t(2) * (qxy - qwz);
-            Src1.y = float_t(1) - float_t(2) * (qxx + qzz);
-            Src1.z = float_t(2) * (qyz + qwx);
-
-            Src2.x = float_t(2) * (qxz + qwy);
-            Src2.y = float_t(2) * (qyz - qwx);
-            Src2.z = float_t(1) - float_t(2) * (qxx + qyy);
+        const __m128 rightColumn3 = _mm_loadu_ps(right.mm + 12);
+        __m128 output3 = _mm_mul_ps(left0, _mm_shuffle_ps(rightColumn3, rightColumn3, _MM_SHUFFLE(0, 0, 0, 0)));
+        output3 = _mm_add_ps(output3, _mm_mul_ps(left1, _mm_shuffle_ps(rightColumn3, rightColumn3, _MM_SHUFFLE(1, 1, 1, 1))));
+        output3 = _mm_add_ps(output3, _mm_mul_ps(left2, _mm_shuffle_ps(rightColumn3, rightColumn3, _MM_SHUFFLE(2, 2, 2, 2))));
+        output3 = _mm_add_ps(output3, _mm_mul_ps(left3, _mm_shuffle_ps(rightColumn3, rightColumn3, _MM_SHUFFLE(3, 3, 3, 3))));
+        _mm_storeu_ps(product.mm + 12, output3);
+    #else
+        for (int32_t column = 0; column < 4; ++column) {
+            for (int32_t row = 0; row < 4; ++row) {
+                product.m[column][row] = left.m[0][row] * right.m[column][0]
+                    + left.m[1][row] * right.m[column][1]
+                    + left.m[2][row] * right.m[column][2]
+                    + left.m[3][row] * right.m[column][3];
+            }
         }
-
-        glm::mat4 source = matrix;
-        GLMMultiplyMat4x4(matrix, source, mat3x3);
+    #endif
+        result = product;
     }
 }
 
-#endif //SR_ENGINE_MATRIX4X4UTILS_H
+#endif // SR_ENGINE_MATRIX4X4UTILS_H

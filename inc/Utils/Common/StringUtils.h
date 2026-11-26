@@ -5,7 +5,7 @@
 #ifndef SR_ENGINE_COMMON_STRING_UTILS_H
 #define SR_ENGINE_COMMON_STRING_UTILS_H
 
-#include <Utils/Math/Mathematics.h>
+#include <Utils/Math/Vector3.h>
 #include <Utils/Profile/TracyContext.h>
 #include <Utils/Types/String.h>
 
@@ -67,14 +67,6 @@ namespace SR_UTILS_NS {
         static bool CheckSearchMatch(StringView searchBuffer, StringView text);
 
         static String MakeDisplayName(StringView name);
-
-        inline static glm::vec3 IntToColor(size_t index) noexcept {
-            unsigned char r = ((index >> 16) & 0xFF);  // Extract the RR byte
-            unsigned char g = ((index >> 8) & 0xFF);   // Extract the GG byte
-            unsigned char b = ((index) & 0xFF);        // Extract the BB byte
-
-            return { r, g, b };
-        }
 
         static SR_FORCE_INLINE StringView GetDirToFileFromFullPath(StringView path) {
             size_t size = path.size();

@@ -219,8 +219,6 @@ else()
     #set(ASSIMP_BUILD_ALL_IMPORTERS_BY_DEFAULT OFF CACHE INTERNAL "" FORCE)
 endif()
 
-add_subdirectory(libs/glm)
-
 if (SR_COMMON_MESHOPTIMIZER)
     message(STATUS "[SpaRcle Engine] SRCommon will be using meshoptimizer")
 

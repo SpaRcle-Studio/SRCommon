@@ -5,8 +5,6 @@
 #include <Utils/Math/Vector3.h>
 #include <Utils/Math/Quaternion.h>
 
-#include <glm/detail/type_quat.hpp>
-#include <glm/gtc/quaternion.hpp>
 
 namespace SR_MATH_NS {
     SR_MATH_NS::FVector3 ProjectOnPlane(

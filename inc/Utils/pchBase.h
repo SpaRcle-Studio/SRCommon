@@ -17,6 +17,10 @@
 #endif
 
 #ifndef SR_ENGINE_CODEGEN_CLANG_PARSE_MODE
+    #if SR_SIMD_SUPPORT
+        #include <xmmintrin.h>
+    #endif
+
     #include <system_error>
     #include <cfloat>
     #include <cinttypes>
