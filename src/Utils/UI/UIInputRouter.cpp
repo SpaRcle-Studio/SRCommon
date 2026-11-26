@@ -215,6 +215,7 @@ namespace SR_UTILS_NS {
         SR_TRACY_ZONE;
         if (event.phase == PointerPhase::Reset) {
             ResetPointers();
+            m_keyboardNavigation = false;
             m_consumed = true;
             return;
         }
@@ -241,6 +242,10 @@ namespace SR_UTILS_NS {
         }
 
         auto&& pointer = m_pointers[index];
+        if (event.phase == PointerPhase::Down || event.phase == PointerPhase::Scroll
+            || (event.phase == PointerPhase::Move && (pointer.last.position != event.position || pointer.last.space != event.space))) {
+            m_keyboardNavigation = false;
+        }
         pointer.last = event;
         if (pointer.pCapture && (!Contains(pointer.pCapture) || !pointer.pCapture->GetUIInputTarget()->IsInteractable())) {
             pointer.pCapture->GetUIInputTarget()->PointerCancel(event);
@@ -352,6 +357,7 @@ namespace SR_UTILS_NS {
         }
         const bool tab = navigation.nextFocus || navigation.previousFocus;
         if ((tab || navigation.direction != 0) && !m_targets.empty()) {
+            m_keyboardNavigation = true;
             m_consumed = true;
             const int32_t direction = navigation.previousFocus ? -1 : navigation.nextFocus ? 1 : navigation.direction < 0 ? -1 : 1;
             if (tab || !m_focus || !m_focus->GetUIInputTarget()->Navigate(direction)) {
@@ -487,6 +493,7 @@ namespace SR_UTILS_NS {
         if (!navigation.focused) {
             ResetPointers();
             m_focus = nullptr;
+            m_keyboardNavigation = false;
         }
         else {
             {
@@ -522,8 +529,8 @@ namespace SR_UTILS_NS {
                     hovered |= pointer.pHover == pTarget;
                     pressed |= pointer.pCapture == pTarget && Contains(pTarget);
                 }
-                const bool focused = m_focus == pTarget && Contains(pTarget);
-                hovered &= navigation.focused;
+                const bool focused = m_keyboardNavigation && m_focus == pTarget && Contains(pTarget);
+                hovered &= navigation.focused && !m_keyboardNavigation;
                 const uint8_t state = static_cast<uint8_t>((hovered ? 1 : 0) | (pressed ? 2 : 0) | (focused ? 4 : 0));
                 if (forceStates || m_revision != revision || m_targetStates[i] != state) {
                     m_targetStates[i] = state;

@@ -70,6 +70,7 @@ namespace SR_UTILS_NS {
         bool m_targetsDirty = true;
         bool m_requiresPolling = false;
         bool m_windowFocused = false;
+        bool m_keyboardNavigation = false;
         uint64_t m_revision = 1;
         uint64_t m_processedRevision = 0;
         uint64_t m_targetsRevision = 1;
