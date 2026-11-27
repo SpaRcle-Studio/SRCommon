@@ -6,7 +6,7 @@
 #include <Utils/Common/StringAtomLiterals.h>
 
 namespace SR_UTILS_NS {
-    template class SR_COMMON_DLL_API GlobalSettings<TagManager>;
+    template class GlobalSettings<TagManager>;
 
     static uint64_t MixTag(uint64_t x, uint64_t mult, uint64_t shift) {
         return (x * mult) >> shift;

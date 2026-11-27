@@ -51,7 +51,9 @@ namespace SR_UTILS_NS {
 
     };
 
-    extern template class SR_COMMON_DLL_API GlobalSettings<TagManager>;
+#if !defined(SR_COMMON_DLL_EXPORTS) && !defined(SR_COMMON_STATIC_LIBRARY)
+    extern template class GlobalSettings<TagManager>;
+#endif
 }
 
 #endif //SR_ENGINE_TAGMANAGER_H

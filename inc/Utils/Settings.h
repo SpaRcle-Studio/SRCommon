@@ -57,7 +57,7 @@ namespace SR_UTILS_NS {
 
     };
 
-    template<typename T> class GlobalSettings : public Settings, public Singleton<T> {
+    template<typename T> class SR_COMMON_DLL_API GlobalSettings : public Settings, public Singleton<T> {
         friend class Singleton<T>;
     public:
         SR_MAYBE_UNUSED static void DestroySettings();
