@@ -50,6 +50,8 @@ namespace SR_UTILS_NS {
         Vector<StringAtom> m_tags;
 
     };
+
+    extern template class SR_COMMON_DLL_API GlobalSettings<TagManager>;
 }
 
 #endif //SR_ENGINE_TAGMANAGER_H
