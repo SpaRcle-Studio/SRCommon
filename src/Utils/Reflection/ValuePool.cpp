@@ -10,14 +10,16 @@ namespace SR_UTILS_NS::Reflection {
         : m_pType(pType)
     {
         SR_TRACY_ZONE;
-        m_slots.resize(capacity);
         auto&& lifecycle = m_pType->vtable.lifecycle;
         const SizeType stride = ((lifecycle.size + lifecycle.alignment - 1) / lifecycle.alignment) * lifecycle.alignment;
         m_storageSize = stride * capacity;
         if (m_storageSize > 0) {
             m_pStorage = IAllocator::GetDefaultAllocator()->Allocate(m_storageSize, lifecycle.alignment);
-            for (SizeType i = 0; i < capacity; ++i) {
-                m_slots[i].pData = static_cast<uint8_t*>(m_pStorage) + i * stride;
+            m_freeSlots.reserve(capacity);
+
+            /// первый слот оказывается на вершине стека
+            for (SizeType i = capacity; i > 0; --i) {
+                m_freeSlots.emplace_back(static_cast<uint8_t*>(m_pStorage) + (i - 1) * stride);
             }
         }
     }
@@ -30,31 +32,33 @@ namespace SR_UTILS_NS::Reflection {
     }
 
     Value ValuePool::Acquire() {
-        std::lock_guard<std::mutex> lock(m_mutex);
-        for (auto&& slot : m_slots) {
-            if (!slot.used && slot.pData) {
-                m_pType->ConstructAt(slot.pData);
-                slot.used = true;
-                ++m_references;
-                Value result;
-                result.m_typeInfo = m_pType;
-                result.m_storage = ReflectedValue::MakeFromPointer(slot.pData, ReflectedValueStorageType::Dynamic);
-                result.m_pPool = this;
-                return result;
+        void* pData = nullptr;
+
+        {
+            std::lock_guard<std::mutex> lock(m_mutex);
+
+            if (m_freeSlots.empty()) {
+                return {};
             }
+
+            pData = m_freeSlots.back();
+            m_freeSlots.pop_back();
         }
-        return {};
+
+        m_pType->ConstructAt(pData);
+        ++m_references;
+
+        Value result;
+        result.m_typeInfo = m_pType;
+        result.m_storage = ReflectedValue::MakeFromPointer(pData, ReflectedValueStorageType::Dynamic);
+        result.m_pPool = this;
+        return result;
     }
 
     void ValuePool::Release(void* pData) {
         {
             std::lock_guard<std::mutex> lock(m_mutex);
-            for (auto&& slot : m_slots) {
-                if (slot.pData == pData) {
-                    slot.used = false;
-                    break;
-                }
-            }
+            m_freeSlots.emplace_back(pData);
         }
         ReleaseOwner();
     }

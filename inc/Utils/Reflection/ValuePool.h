@@ -20,12 +20,9 @@ namespace SR_UTILS_NS::Reflection {
         void Release(void* pData);
     private:
         ~ValuePool();
-        struct Slot {
-            void* pData = nullptr;
-            bool used = false;
-        };
         const TypeInfo* m_pType = nullptr;
-        Vector<Slot> m_slots;
+        /// стек свободных слотов: Acquire и Release за O(1)
+        Vector<void*> m_freeSlots;
         void* m_pStorage = nullptr;
         SizeType m_storageSize = 0;
         std::atomic<SizeType> m_references = 1;
