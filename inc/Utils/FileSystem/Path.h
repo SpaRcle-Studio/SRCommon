@@ -22,7 +22,6 @@ namespace SR_UTILS_NS {
         Path(const Path& path);
         Path(const char* path);
         Path(SR_UTILS_NS::StringAtom stringAtom);
-        Path(const std::string& path);
         Path(const String& path);
         Path(StringView path);
         Path(std::string_view path);
@@ -37,7 +36,6 @@ namespace SR_UTILS_NS {
         Path& operator=(const Path& path);
         Path& operator=(const String& path);
         Path& operator=(const StringView& path);
-        Path& operator=(const std::string& path);
         Path& operator=(const char* path);
         Path& operator=(std::string_view path);
         bool operator==(const Path& path) const noexcept;
@@ -61,7 +59,7 @@ namespace SR_UTILS_NS {
         SR_NODISCARD bool Copy(const Path& destination) const;
 
         SR_NODISCARD String ToString() const;
-        SR_NODISCARD std::string ConvertToFileName() const;
+        SR_NODISCARD String ConvertToFileName() const;
         SR_NODISCARD const String& ToStringRef() const;
         SR_NODISCARD StringView ToStringView() const;
         SR_NODISCARD std::wstring ToWinApiPath() const;
@@ -78,14 +76,12 @@ namespace SR_UTILS_NS {
         SR_NODISCARD Path GetFolder() const;
 
         SR_NODISCARD Path Concat(StringAtom path) const;
-        SR_NODISCARD Path Concat(const std::string& path) const;
         SR_NODISCARD Path Concat(std::string_view path) const;
         SR_NODISCARD Path Concat(StringView path) const;
         SR_NODISCARD Path Concat(const char* path) const;
         SR_NODISCARD Path Concat(const Path& path) const;
         SR_NODISCARD Path Concat(const String& path) const;
 
-        SR_NODISCARD Path ConcatExt(const std::string& ext) const;
         SR_NODISCARD Path ConcatExt(std::string_view ext) const;
         SR_NODISCARD Path ConcatExt(StringView ext) const;
         SR_NODISCARD Path ConcatExt(const String& ext) const;
@@ -114,12 +110,12 @@ namespace SR_UTILS_NS {
         SR_NODISCARD std::string_view GetExtensionView() const;
         SR_NODISCARD std::string_view GetBaseNameView() const;
         SR_NODISCARD std::string_view View() const;
-        SR_NODISCARD std::string GetExtension() const;
-        SR_NODISCARD std::string GetBaseName() const;
-        SR_NODISCARD std::string GetBaseNameAndExt() const;
+        SR_NODISCARD String GetExtension() const;
+        SR_NODISCARD String GetBaseName() const;
+        SR_NODISCARD String GetBaseNameAndExt() const;
         SR_NODISCARD std::string_view GetBaseNameAndExtView() const;
         SR_NODISCARD std::string_view GetWithoutExtensionView() const;
-        SR_NODISCARD std::string GetWithoutExtension() const;
+        SR_NODISCARD String GetWithoutExtension() const;
 
     private:
         const String& GetNormalized() const;

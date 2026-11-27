@@ -37,8 +37,8 @@ namespace SR_UTILS_NS {
         static bool ExportToMemory(std::string_view data);
 
     private:
-        SR_NODISCARD static std::string HexToBytes(const std::string_view& hex);
-        SR_NODISCARD static std::string Decompress(const Resource& resource);
+        SR_NODISCARD static String HexToBytes(const std::string_view& hex);
+        SR_NODISCARD static String Decompress(const Resource& resource);
 
     private:
         SR_HTYPES_NS::FlatHashMap<std::string_view, Resource> m_resources;

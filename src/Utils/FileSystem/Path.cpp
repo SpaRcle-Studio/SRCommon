@@ -23,7 +23,7 @@ namespace SR_UTILS_NS {
     { }
 
     Path::Path(std::string_view path)
-        : Path(std::string(path))
+        : m_path(path)
     { }
 
     Path::Path(const std::wstring& path)
@@ -32,10 +32,6 @@ namespace SR_UTILS_NS {
 
     Path::Path(SR_UTILS_NS::StringAtom stringAtom)
         : m_path(stringAtom.ToStringView())
-    { }
-
-    Path::Path(const std::string& path)
-        : m_path(path)
     { }
 
     Path::Path(const String& path)
@@ -65,11 +61,6 @@ namespace SR_UTILS_NS {
         return *this;
     }
     Path& Path::operator=(const StringView& path) {
-        m_path = path;
-        m_isNormalized = false;
-        return *this;
-    }
-    Path& Path::operator=(const std::string& path) {
         m_path = path;
         m_isNormalized = false;
         return *this;
@@ -164,13 +155,13 @@ namespace SR_UTILS_NS {
         return GetNormalized().c_str();
     }
 
-    std::string Path::GetExtension() const {
-        return std::string(GetExtensionView());
+    String Path::GetExtension() const {
+        return String(GetExtensionView());
     }
 
-    std::string Path::GetBaseName() const {
+    String Path::GetBaseName() const {
         SR_TRACY_ZONE;
-        return std::string(GetBaseNameView());
+        return String(GetBaseNameView());
     }
 
     size_t Path::GetHash() const {
@@ -203,10 +194,6 @@ namespace SR_UTILS_NS {
         return normalized + path;
     }
 
-    Path Path::Concat(const std::string& path) const {
-        return Concat(StringView(path));
-    }
-
     Path Path::Concat(const Path& path) const {
         return Concat(path.GetNormalized());
     }
@@ -227,10 +214,6 @@ namespace SR_UTILS_NS {
         }
 
         return normalized + "." + ext;
-    }
-
-    Path Path::ConcatExt(const std::string& ext) const {
-        return ConcatExt(StringView(ext));
     }
 
     Path Path::ConcatExt(const String& ext) const {
@@ -277,7 +260,7 @@ namespace SR_UTILS_NS {
             return normalized;
         }
 
-        if (const auto&& pos = normalized.rfind('/'); pos != std::string::npos) {
+        if (const auto&& pos = normalized.rfind('/'); pos != String::npos) {
             if (pos <= 1) {
                 return normalized;
             }
@@ -351,7 +334,7 @@ namespace SR_UTILS_NS {
     }
 
     bool Path::IsSubPath(const Path &subPath) const {
-        return GetNormalized().find(subPath.GetNormalized()) != std::string::npos;
+        return GetNormalized().find(subPath.GetNormalized()) != String::npos;
     }
 
     Path Path::RemoveSubPath(const Path &subPath) const {
@@ -393,15 +376,15 @@ namespace SR_UTILS_NS {
 
      std::string_view Path::GetBaseNameAndExtView() const {
         auto&& normalized = GetNormalized();
-        if (const auto pos = normalized.rfind('/'); pos != std::string::npos) {
+        if (const auto pos = normalized.rfind('/'); pos != String::npos) {
             return std::string_view(normalized.data() + pos + 1, normalized.size() - pos - 1);
         }
         return normalized;
     }
 
-     std::string Path::GetBaseNameAndExt() const {
+     String Path::GetBaseNameAndExt() const {
          SR_TRACY_ZONE;
-        return std::string(GetBaseNameAndExtView());
+        return String(GetBaseNameAndExtView());
     }
 
     std::string_view Path::View() const {
@@ -410,7 +393,7 @@ namespace SR_UTILS_NS {
 
     std::string_view Path::GetWithoutExtensionView() const {
         auto&& normalized = GetNormalized();
-        SR_UTILS_NS::SizeType pos = std::string::npos;
+        SR_UTILS_NS::SizeType pos = String::npos;
         for (SizeType i = normalized.size() - 1; i > 0; --i) {
             if (normalized[i] == '/') {
                 return normalized;
@@ -421,23 +404,23 @@ namespace SR_UTILS_NS {
             }
         }
 
-        if (pos == std::string::npos) {
+        if (pos == String::npos) {
             return normalized;
         }
 
         return std::string_view(normalized.data(), pos);
     }
 
-    std::string Path::GetWithoutExtension() const {
-        return std::string(GetWithoutExtensionView());
+    String Path::GetWithoutExtension() const {
+        return String(GetWithoutExtensionView());
     }
 
     bool Path::Contains(const std::string_view& str) const {
-        return GetNormalized().find(str) != std::string::npos;
+        return GetNormalized().find(str) != String::npos;
     }
 
-    std::string Path::ConvertToFileName() const {
-        std::string str = ToString();
+    String Path::ConvertToFileName() const {
+        String str = ToString();
 
         if (str.size() >= 2 && str[1] == ':') {
             str[2] = '-';
@@ -513,7 +496,7 @@ namespace SR_UTILS_NS {
         // Доп. проверка для Windows: "C:\" или "D:/" и т.п.
         // Если встречается ':', он допустим только сразу после одной буквы
         auto pos = path.find(':');
-        if (pos != std::string::npos) {
+        if (pos != String::npos) {
             if (pos != 1) { return false; }              // только "X:" допустимо
             if (!std::isalpha((unsigned char)path[0])) { // X должен быть буквой
                 return false;

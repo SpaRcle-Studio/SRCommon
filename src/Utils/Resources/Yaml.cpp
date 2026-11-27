@@ -11,23 +11,24 @@
 #include <rapidyaml/src/ryml_std.hpp>
 
 namespace SR_UTILS_NS::Yaml {
-    std::string Node::Name() const {
+    String Node::Name() const {
         if (!IsValid() || !GetTreeImpl()) {
             SRHalt("Node::Name() : node is not valid!");
             return { };
         }
 
-        return ryml::ConstNodeRef(static_cast<ryml::Tree const*>(GetTreeImpl()), m_id).key().str;
+        auto&& key = ryml::ConstNodeRef(static_cast<ryml::Tree const*>(GetTreeImpl()), m_id).key();
+        return String(std::string_view(key.str, key.len));
     }
 
-    std::string Node::GetValue() const {
+    String Node::GetValue() const {
         if (!IsValid() || !GetTreeImpl()) {
             SRHalt("Node::GetValue() : node is not valid!");
             return { };
         }
 
         auto&& node = ryml::ConstNodeRef(static_cast<ryml::Tree const*>(GetTreeImpl()), m_id);
-        return { node.val().begin(), node.val().end() };
+        return String(std::string_view(node.val().begin(), node.val().size()));
     }
 
     std::string_view Node::GetValueView() const {
@@ -40,14 +41,14 @@ namespace SR_UTILS_NS::Yaml {
         return std::string_view(node.val().begin(), node.val().size());
     }
 
-    std::string Node::GetKey() const {
+    String Node::GetKey() const {
         if (!IsValid() || !GetTreeImpl()) {
             SRHalt("Node::GetKey() : node is not valid!");
             return { };
         }
 
         auto&& node = ryml::ConstNodeRef(static_cast<ryml::Tree const*>(GetTreeImpl()), m_id);
-        return { node.key().begin(), node.key().end() };
+        return String(std::string_view(node.key().begin(), node.key().size()));
     }
 
     std::string_view Node::GetKeyView() const {
@@ -60,13 +61,13 @@ namespace SR_UTILS_NS::Yaml {
         return std::string_view(node.key().begin(), node.key().size());
     }
 
-    std::vector<Node> Node::GetChildren() const {
+    Vector<Node> Node::GetChildren() const {
         if (!IsValid() || !GetTreeImpl()) {
             SRHalt("Node::GetChildren() : node is not valid!");
             return { };
         }
 
-        std::vector<Node> children;
+        Vector<Node> children;
 
         auto&& node = ryml::ConstNodeRef(static_cast<ryml::Tree const*>(GetTreeImpl()), m_id);
         children.reserve(node.num_children());
@@ -269,7 +270,7 @@ namespace SR_UTILS_NS::Yaml {
         return Node(static_cast<void*>(root.tree()), root.id());
     }
 
-    std::string Document::Dump() const {
+    String Document::Dump() const {
         if (!IsValid()) {
             SRHalt("Document::Dump() : document is not valid!");
             return {};
@@ -281,6 +282,6 @@ namespace SR_UTILS_NS::Yaml {
             output << node;
         }
 
-        return output.str();
+        return String(output.str());
     }
 }

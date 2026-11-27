@@ -9,7 +9,7 @@ namespace SR_UTILS_NS {
 
     }
 
-    std::string GetStacktrace() {
+    String GetStacktrace() {
         return "Emscripten not support stack trace!";
     }
 }

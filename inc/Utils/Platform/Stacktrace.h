@@ -9,7 +9,7 @@
 
 namespace SR_UTILS_NS {
     extern SR_COMMON_DLL_API void DisableStacktrace();
-    extern SR_COMMON_DLL_API std::string GetStacktrace();
+    extern SR_COMMON_DLL_API String GetStacktrace();
     extern SR_COMMON_DLL_API void StacktraceInit();
 }
 

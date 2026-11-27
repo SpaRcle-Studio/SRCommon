@@ -264,7 +264,7 @@ template<> struct SR_UTILS_NS::SRHash<std::nullptr_t> {
 #define SR_GET_TYPE_NAME(x) SR_UTILS_NS::Hash::Detail::GetTypeName<x>()
 
 #define SR_HASH(x) (SR_UTILS_NS::CalculateHash(x))
-#define SR_HASH_STR(x) (SR_UTILS_NS::CalculateHash<std::string>(x))
+#define SR_HASH_STR(x) (SR_UTILS_NS::CalculateHash<std::string_view>(x))
 #define SR_HASH_STR_VIEW(x) (SR_UTILS_NS::CalculateHash<std::string_view>(x))
 
 #define SR_COMPILE_TIME_CRC32_STR(x) (static_cast<uint64_t>(SR_UTILS_NS::Hash::Detail::MM<sizeof(x)-1>::crc32(x)))

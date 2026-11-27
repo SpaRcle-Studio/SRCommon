@@ -18,7 +18,7 @@ namespace SR_UTILS_NS {
     { }
 
     StringAtom::StringAtom(const std::string& str)
-        : StringAtom(SR_UTILS_NS::HashManager::Instance().GetOrAddInfo(str))
+        : StringAtom(SR_UTILS_NS::HashManager::Instance().GetOrAddInfo(std::string_view(str)))
     { }
 
     StringAtom::StringAtom(std::string_view str)
@@ -68,7 +68,7 @@ namespace SR_UTILS_NS {
     }
 
     StringAtom& StringAtom::operator=(const std::string& str) {
-        m_info = SR_UTILS_NS::HashManager::Instance().GetOrAddInfo(str);
+        m_info = SR_UTILS_NS::HashManager::Instance().GetOrAddInfo(std::string_view(str));
         return *this;
     }
 
@@ -162,7 +162,7 @@ namespace SR_UTILS_NS {
         if (!m_info || m_info->data.empty()) {
             return false;
         }
-        return m_info->data.find(str) != std::string::npos;
+        return m_info->data.find(str) != StringView::npos;
     }
 
     bool StringAtom::operator<(const StringAtom& other) const noexcept {

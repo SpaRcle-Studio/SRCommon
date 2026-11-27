@@ -33,7 +33,7 @@ namespace SR_UTILS_NS::Localization::ICU {
         typedef CharType char_type;
         typedef std::basic_string<char_type> string_type;
     public:
-        explicit IcuStdConverter(std::string charset, EncMethodType cv = EncMethodType::Skip);
+        explicit IcuStdConverter(const SR_UTILS_NS::String& charset, EncMethodType cv = EncMethodType::Skip);
         virtual ~IcuStdConverter() = default;
 
     public:
@@ -54,7 +54,7 @@ namespace SR_UTILS_NS::Localization::ICU {
         typedef CharType char_type;
         typedef std::basic_string<char_type> string_type;
     public:
-        explicit IcuStdConverter(std::string charset, EncMethodType cvt_type = EncMethodType::Skip)
+        explicit IcuStdConverter(const SR_UTILS_NS::String& charset, EncMethodType cvt_type = EncMethodType::Skip)
             : charset_(charset)
             , m_mode(cvt_type)
         {
@@ -101,7 +101,7 @@ namespace SR_UTILS_NS::Localization::ICU {
 
         struct uconv {
         public:
-            explicit uconv(const std::string& charset, EncMethodType cvt_type = EncMethodType::Skip) {
+            explicit uconv(const SR_UTILS_NS::String& charset, EncMethodType cvt_type = EncMethodType::Skip) {
                 UErrorCode err = U_ZERO_ERROR;
                 cvt_ = ucnv_open(charset.c_str(), &err);
                 if(!cvt_ || U_FAILURE(err)) {
@@ -196,7 +196,7 @@ namespace SR_UTILS_NS::Localization::ICU {
 
     private:
         int max_len_;
-        std::string charset_;
+        SR_UTILS_NS::String charset_;
         EncMethodType m_mode;
 
     };
@@ -206,7 +206,7 @@ namespace SR_UTILS_NS::Localization::ICU {
         typedef CharType char_type;
         typedef std::basic_string<char_type> string_type;
     public:
-        explicit IcuStdConverter(std::string, EncMethodType mode = EncMethodType::Skip)
+        explicit IcuStdConverter(const SR_UTILS_NS::String&, EncMethodType mode = EncMethodType::Skip)
             : m_mode(mode)
         { }
 
@@ -275,7 +275,7 @@ namespace SR_UTILS_NS::Localization::ICU {
         typedef CharType char_type;
         typedef std::basic_string<char_type> string_type;
     public:
-        explicit IcuStdConverter(std::string, EncMethodType cvt_type = EncMethodType::Skip)
+        explicit IcuStdConverter(const SR_UTILS_NS::String&, EncMethodType cvt_type = EncMethodType::Skip)
             : m_mode(cvt_type)
         { }
 

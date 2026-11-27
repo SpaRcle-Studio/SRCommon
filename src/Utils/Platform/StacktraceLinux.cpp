@@ -12,15 +12,14 @@ namespace SR_UTILS_NS {
         g_stackStraceEnabled = false;
     }
 
-    std::string GetStacktrace() {
+    String GetStacktrace() {
         if (!g_stackStraceEnabled) {
-            return std::string();
+            return String();
         }
 
         auto&& stacktrace = cpptrace::generate_trace();
-        auto&& result = stacktrace.to_string(true);
 
-        return result;
+        return String(stacktrace.to_string(true));
     }
 }
 

@@ -5,7 +5,8 @@
 #ifndef SR_ENGINE_SETTINGS_H
 #define SR_ENGINE_SETTINGS_H
 
-#include <Utils/Resources/Xml.h>
+#include <Utils/Debug.h>
+#include <Utils/Resources/XmlDocument.h>
 #include <Utils/Resources/IResource.h>
 #include <Utils/Resources/ResourceManager.h>
 #include <Utils/Common/Singleton.h>

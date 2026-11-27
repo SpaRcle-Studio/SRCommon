@@ -71,8 +71,8 @@ namespace SR_MATH_NS {
 
         SR_NODISCARD float Evaluate(float t) const;
 
-        std::vector<CurveKeyframe>& GetKeys() { return keys; }
-        const std::vector<CurveKeyframe>& GetKeys() const { return keys; }
+        SR_UTILS_NS::Vector<CurveKeyframe>& GetKeys() { return keys; }
+        const SR_UTILS_NS::Vector<CurveKeyframe>& GetKeys() const { return keys; }
 
         // Автоматическое вычисление тангентов
         void ComputeAutoTangents();
@@ -88,7 +88,7 @@ namespace SR_MATH_NS {
         SR_NODISCARD static float_t SmoothStep(float_t edge0, float_t edge1, float_t x);
 
     private:
-        std::vector<CurveKeyframe> keys;
+        SR_UTILS_NS::Vector<CurveKeyframe> keys;
         CurveWrapMode preWrap = CurveWrapMode::Clamp;
         CurveWrapMode postWrap = CurveWrapMode::Clamp;
 

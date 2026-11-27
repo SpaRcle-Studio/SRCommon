@@ -10,7 +10,7 @@
 #ifdef SR_COMMON_GNS
 
 namespace SR_NETWORK_NS {
-    GNSAcceptor::GNSAcceptor(Context::Ptr pContext, std::string address, uint16_t port)
+    GNSAcceptor::GNSAcceptor(Context::Ptr pContext, String address, uint16_t port)
         : Super(SocketType::TCP, std::move(pContext), std::move(address), port)
     { }
 
@@ -47,7 +47,7 @@ namespace SR_NETWORK_NS {
             listenAddr.m_port = m_port;
         }
         else {
-            const std::string addrStr = m_address + ":" + std::to_string(m_port);
+            const String addrStr = SR_FORMAT("{}:{}", m_address, m_port);
             if (!listenAddr.ParseString(addrStr.c_str())) {
                 SR_ERROR("GNSAcceptor::Init() : failed to parse listen address: {}", addrStr);
                 return false;
@@ -150,11 +150,11 @@ namespace SR_NETWORK_NS {
         }
     }
 
-    std::string GNSAcceptor::GetLocalAddress() const {
+    String GNSAcceptor::GetLocalAddress() const {
         return m_address;
     }
 
-    std::string GNSAcceptor::GetRemoteAddress() const {
+    String GNSAcceptor::GetRemoteAddress() const {
         /// For a listen socket, the "remote" address is the local address we're bound to.
         return m_address;
     }

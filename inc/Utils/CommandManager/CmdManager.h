@@ -28,7 +28,7 @@ namespace SR_UTILS_NS {
         ~CmdManager() override;
 
     public:
-        SR_NODISCARD const std::string& GetLastCmdName() const;
+        SR_NODISCARD const String& GetLastCmdName() const;
         SR_NODISCARD uint32_t GetHistorySize() const;
         SR_NODISCARD uint32_t GetMaxHistorySize() const;
         SR_NODISCARD uint32_t GetHistoryPC() const;
@@ -57,12 +57,12 @@ namespace SR_UTILS_NS {
 
     private:
         std::queue<Cmd> m_commands;
-        std::vector<ReversibleCommand*> m_history;
+        Vector<ReversibleCommand*> m_history;
         uint32_t m_historyPC = UINT32_MAX;
         uint32_t m_maxHistorySize = 128;
 
         mutable std::recursive_mutex m_mutex;
-        std::string m_lastCmdName;
+        String m_lastCmdName;
 
     };
 }

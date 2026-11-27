@@ -73,7 +73,7 @@ namespace SR_UTILS_NS::Web {
         void SetPercent(const float_t percent) { unit = Unit::Percent; this->percent = percent; OnChanged(); }
         void SetDeg(const float_t deg) { unit = Unit::Deg; this->deg = deg; OnChanged(); }
 
-        SR_NODISCARD std::string ToString() const {
+        SR_NODISCARD String ToString() const {
             switch (unit) {
                 case Unit::Px: return SR_FORMAT("{}px", px);
                 case Unit::Percent: return SR_FORMAT("{}%", percent);

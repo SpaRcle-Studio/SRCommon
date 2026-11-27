@@ -6,7 +6,7 @@
 #include <Utils/Common/LexicalCast.h>
 
 namespace SR_UTILS_NS::MarshalUtils {
-    void Encode(SR_HTYPES_NS::Stream& stream, const std::string& str, StandardType type) {
+    void Encode(SR_HTYPES_NS::Stream& stream, StringView str, StandardType type) {
         switch (type) {
             case StandardType::Bool: SaveValue(stream, LexicalCast<bool>(str)); break;
             case StandardType::Int8: SaveValue(stream, LexicalCast<int8_t>(str)); break;

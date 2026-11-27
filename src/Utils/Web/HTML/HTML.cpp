@@ -96,8 +96,8 @@ namespace SR_UTILS_NS::Web {
         return pPage;
     }
 
-    const std::vector<SR_UTILS_NS::Path>& HTMLPage::GetPaths() const {
-        static std::vector<SpaRcle::Utils::Path> empty;
+    const SR_UTILS_NS::Vector<SR_UTILS_NS::Path>& HTMLPage::GetPaths() const {
+        static SR_UTILS_NS::Vector<SR_UTILS_NS::Path> empty;
         return m_container ? m_container->GetPaths() : empty;
     }
 #endif //SR_COMMON_LITEHTML

@@ -15,7 +15,7 @@ namespace SR_NETWORK_NS {
         // m_socket = Socket::Create(type);
     }
 
-    std::string Client::Request(const std::string& serverIp, void* request, uint64_t size) {
+    String Client::Request(StringView serverIp, void* request, uint64_t size) {
         if (!m_socket->IsOpen()) {
             if (!m_socket->Connect(serverIp, m_port)) {
                 SR_ERROR("Client::Request() : failed to connect to server: {}:{}", serverIp, m_port);
@@ -29,7 +29,7 @@ namespace SR_NETWORK_NS {
         }
 
         constexpr size_t maxSize = 30000; /// TODO: make it configurable
-        std::string response;
+        String response;
         response.reserve(maxSize);
 
         if (!m_socket->Receive(response.data(), maxSize)) {
@@ -40,7 +40,7 @@ namespace SR_NETWORK_NS {
         return response;       
     }
 
-    void Client::Ping(const std::string &ip, int32_t port) {
+    void Client::Ping(StringView ip, int32_t port) {
 
 
     }

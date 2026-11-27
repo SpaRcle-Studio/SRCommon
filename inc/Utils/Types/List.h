@@ -10,7 +10,7 @@
 namespace SR_HTYPES_NS {
     template <typename T> class List {
     private:
-        std::vector<T> self = std::vector<T>();
+        SR_UTILS_NS::Vector<T> self;
         std::mutex m_mutex = std::mutex();
     public:
         List() {
@@ -25,7 +25,7 @@ namespace SR_HTYPES_NS {
             this->self = list.self;
         }
 
-        explicit List(std::vector<T> list) {
+        explicit List(SR_UTILS_NS::Vector<T> list) {
             this->self = list;
         }
 

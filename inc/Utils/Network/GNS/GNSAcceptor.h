@@ -17,7 +17,7 @@ namespace SR_NETWORK_NS {
         using Super = Acceptor;
         friend class GNSContext;
     private:
-        GNSAcceptor(Context::Ptr pContext, std::string address, uint16_t port);
+        GNSAcceptor(Context::Ptr pContext, String address, uint16_t port);
 
     public:
         ~GNSAcceptor() override;
@@ -25,8 +25,8 @@ namespace SR_NETWORK_NS {
     public:
         void Close() override;
 
-        SR_NODISCARD std::string GetLocalAddress() const override;
-        SR_NODISCARD std::string GetRemoteAddress() const override;
+        SR_NODISCARD String GetLocalAddress() const override;
+        SR_NODISCARD String GetRemoteAddress() const override;
 
         SR_NODISCARD uint16_t GetLocalPort() const override;
         SR_NODISCARD uint16_t GetRemotePort() const override;

@@ -30,7 +30,7 @@ namespace SR_NETWORK_NS {
 
         SR_NODISCARD SR_HTYPES_NS::SharedPtr<Socket> CreateSocket(SocketType type) override;
         SR_NODISCARD SR_HTYPES_NS::SharedPtr<Pinger> CreatePinger() override;
-        SR_NODISCARD SR_HTYPES_NS::SharedPtr<Acceptor> CreateAcceptor(SocketType type, const std::string& address, uint16_t port) override;
+        SR_NODISCARD SR_HTYPES_NS::SharedPtr<Acceptor> CreateAcceptor(SocketType type, StringView address, uint16_t port) override;
 
         void RegisterAcceptor(HSteamListenSocket hListenSocket, GNSAcceptor* pAcceptor);
         void UnregisterAcceptor(HSteamListenSocket hListenSocket);
@@ -47,8 +47,8 @@ namespace SR_NETWORK_NS {
     private:
         ISteamNetworkingSockets* m_pInterface = nullptr;
 
-        std::map<HSteamListenSocket, GNSAcceptor*> m_acceptorMap;
-        std::map<HSteamNetConnection, GNSSocket*> m_socketMap;
+        Map<HSteamListenSocket, GNSAcceptor*> m_acceptorMap;
+        Map<HSteamNetConnection, GNSSocket*> m_socketMap;
 
         static GNSContext* s_pCallbackInstance;
     };

@@ -43,7 +43,7 @@ namespace SR_UTILS_NS::Web {
             return SR_MATH_NS::FColor(r / 255.f, g / 255.f, b / 255.f, a / 255.f);
         }
 
-        SR_NODISCARD std::string ToString() const {
+        SR_NODISCARD String ToString() const {
             return SR_FORMAT("RGBA({}, {}, {}, {})", r, g, b, a);
         }
     };
@@ -58,19 +58,19 @@ namespace SR_UTILS_NS::Web {
     struct CSSLinearGradient {
         SR_NODISCARD static CSSLinearGradient Parse(std::string_view data);
 
-        SR_NODISCARD std::string ToString() const;
+        SR_NODISCARD String ToString() const;
 
         CSSDirection direction;
-        std::vector<CSSGradientColor> colors;
+        Vector<CSSGradientColor> colors;
     };
 
     struct CSSRadialGradient {
         SR_NODISCARD static CSSRadialGradient Parse(std::string_view data);
 
-        SR_NODISCARD std::string ToString() const;
+        SR_NODISCARD String ToString() const;
 
         CSSSizeValue at;
-        std::vector<CSSGradientColor> colors;
+        Vector<CSSGradientColor> colors;
 
         enum class Shape : uint8_t {
             Circle, Ellipse,
@@ -84,8 +84,8 @@ namespace SR_UTILS_NS::Web {
     struct CSSColor {
         static CSSColor Parse(std::string_view data);
 
-        SR_NODISCARD std::string ToString() const {
-            std::string result;
+        SR_NODISCARD String ToString() const {
+            String result;
             if (colorType == ColorType::RGBA) {
                 result += color.ToString();
             } else if (colorType == ColorType::LinearGradient) {

@@ -5,7 +5,7 @@
 #include <Utils/Network/FileDownloader.h>
 
 namespace SR_NETWORK_NS {
-    bool FileDownloader::DownloadFile(const std::string& url, const SR_UTILS_NS::Path& filePath) {
+    bool FileDownloader::DownloadFile(StringView url, const SR_UTILS_NS::Path& filePath) {
         return false;
     }
 }

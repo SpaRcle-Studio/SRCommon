@@ -34,7 +34,7 @@
 #include <sys/sendfile.h>
 #include <sys/wait.h>
 
-#include <filesystem>
+#include <climits>
 
 namespace SR_PLATFORM_NS {
     static Display* gLinuxPlatformDisplayPtr = nullptr;
@@ -114,21 +114,28 @@ namespace SR_PLATFORM_NS {
     }
 
     bool IsRunningUnderDebugger() {
-        std::ifstream sf("/proc/self/status");
-        std::string s;
-        while (sf >> s) {
-            if (s == "TracerPid:") {
-                int pid;
-                sf >> pid;
-                return pid != 0;
-            }
-            std::getline(sf, s);
+        FILE* pStatusFile = fopen("/proc/self/status", "r");
+        if (!pStatusFile) {
+            return false;
         }
 
-        return false;
+        constexpr StringView tracerPidKey = "TracerPid:";
+
+        bool isDebugged = false;
+        char line[256];
+        while (fgets(line, sizeof(line), pStatusFile)) {
+            if (StringView(line).starts_with(tracerPidKey)) {
+                isDebugged = atoi(line + tracerPidKey.size()) != 0;
+                break;
+            }
+        }
+
+        fclose(pStatusFile);
+
+        return isDebugged;
     }
 
-    void OpenFile(const SR_UTILS_NS::Path& path, const std::string& args) {
+    void OpenFile(const SR_UTILS_NS::Path& path, const String& args) {
         String command;
         if (path.IsAbs()) {
             command = path.ToStringRef() + " " + args;
@@ -140,7 +147,7 @@ namespace SR_PLATFORM_NS {
     }
 
     void Unzip(const SR_UTILS_NS::Path& source, const SR_UTILS_NS::Path& destination, bool replace) {
-        std::string command;
+        String command;
         if (source.GetExtensionView() == "zip") {
             if (replace) {
                 command = "unzip -q -o " + source.ToStringRef() + " -d " + destination.ToStringRef();
@@ -251,7 +258,7 @@ namespace SR_PLATFORM_NS {
     }
 
     void OpenFile(const SR_UTILS_NS::Path& path) {
-        std::string command;
+        String command;
 
         if (path.IsAbs()) {
             command = path.ToStringRef();
@@ -277,7 +284,7 @@ namespace SR_PLATFORM_NS {
         std::cerr << msg.c_str() << std::flush;
     }
 
-    void TextToClipboard(const std::string& text) { SRHaltOnce("Not implemented!"); }
+    void TextToClipboard(const String& text) { SRHaltOnce("Not implemented!"); }
 
     void CopyFilesToClipboard(std::list<SR_UTILS_NS::Path> paths) { SRHaltOnce("Not implemented!"); }
 
@@ -285,9 +292,9 @@ namespace SR_PLATFORM_NS {
 
     void PasteFilesFromClipboard(const SR_UTILS_NS::Path& topath) { SRHaltOnce("Not implemented!"); }
 
-    std::string GetClipboardText() {
+    String GetClipboardText() {
         SRHaltOnce("Not implemented!");
-        return std::string();
+        return String();
     }
 
     void DeInitializePlatform() {
@@ -381,25 +388,23 @@ namespace SR_PLATFORM_NS {
     void Sleep(uint64_t milliseconds) { std::this_thread::sleep_for(std::chrono::milliseconds(milliseconds)); }
 
     uint64_t GetProcessUsedMemory() {
-        std::ifstream proc_meminfo("/proc/self/status");
-        uint64_t result = 0;
-        if (proc_meminfo.good()) {
-            std::string content((std::istreambuf_iterator<char>(proc_meminfo)), std::istreambuf_iterator<char>());
-
-            static const auto&& getVal = [](const std::string& target, const std::string& content) {
-                int result = -1;
-                std::size_t start = content.find(target);
-                if (start != std::string::npos) {
-                    int begin = start + target.length();
-                    std::size_t end = content.find("kB", start);
-                    std::string substr = content.substr(begin, end - begin);
-                    result = std::stoi(substr);
-                }
-                return result * 1024;
-            };
-
-            result = getVal("VmRSS:", content);
+        FILE* pStatusFile = fopen("/proc/self/status", "r");
+        if (!pStatusFile) {
+            return 0;
         }
+
+        constexpr StringView vmRssKey = "VmRSS:";
+
+        uint64_t result = 0;
+        char line[256];
+        while (fgets(line, sizeof(line), pStatusFile)) {
+            if (StringView(line).starts_with(vmRssKey)) {
+                result = static_cast<uint64_t>(atoll(line + vmRssKey.size())) * 1024;
+                break;
+            }
+        }
+
+        fclose(pStatusFile);
 
         return result;
     }
@@ -423,43 +428,42 @@ namespace SR_PLATFORM_NS {
 
     void OpenWithAssociatedApp(const Path& filepath) { SRHaltOnce("Not implemented!"); }
 
-    std::pair<std::vector<std::string>, std::vector<char*>> BuildArgv(const std::string& command) {
-        std::istringstream iss(command);
-        std::vector<std::string> args;
-        std::string token;
+    static void BuildArgv(const String& command, Vector<String>& args, Vector<char*>& argv) {
+        String token;
 
-        while (iss >> token) {
-            args.push_back(token);
+        for (char symbol : command) {
+            if (std::isspace(static_cast<unsigned char>(symbol))) {
+                if (!token.empty()) {
+                    args.emplace_back(std::move(token));
+                    token = String();
+                }
+                continue;
+            }
+
+            token.push_back(symbol);
         }
 
-        std::vector<char*> argv;
-        for (auto& arg : args) {
+        if (!token.empty()) {
+            args.emplace_back(std::move(token));
+        }
+
+        argv.reserve(args.size() + 1);
+        for (auto&& arg : args) {
             argv.push_back(arg.data());
         }
         argv.push_back(nullptr);
-
-        return {std::move(args), std::move(argv)};
     }
 
-    std::string ExecuteCommand(const std::string& command, const std::vector<std::string>& env) {
+    String ExecuteCommand(const String& command, const Vector<String>& env) {
         int pipefd[2];
         if (pipe(pipefd) == -1) {
-            return "Error: pipe() failed: " + std::string(SR_UTILS_NS::GetErrorString(errno));
+            return "Error: pipe() failed: " + String(SR_UTILS_NS::GetErrorString(errno));
         }
 
         pid_t pid = fork();
         if (pid == -1) {
-            return "Error: fork() failed: " + std::string(SR_UTILS_NS::GetErrorString(errno));
+            return "Error: fork() failed: " + String(SR_UTILS_NS::GetErrorString(errno));
         }
-
-        /*auto [args2, argv2] = BuildArgv(command);
-        for (auto&& a : argv2)
-        {
-            if (a && pid == 0)
-            {
-                SR_LOG("{}: {}", pid, a);
-            }
-        }*/
 
         if (pid == 0) {
             // Дочерний процесс
@@ -469,7 +473,9 @@ namespace SR_PLATFORM_NS {
             dup2(pipefd[1], STDERR_FILENO);
             close(pipefd[1]);
 
-            auto [args, argv] = BuildArgv(command);
+            Vector<String> args;
+            Vector<char*> argv;
+            BuildArgv(command, args, argv);
             execvp(argv[0], argv.data());
 
             // Если execvp завершился, значит ошибка
@@ -480,7 +486,7 @@ namespace SR_PLATFORM_NS {
         // Родительский процесс
         close(pipefd[1]); // Закрыть запись
 
-        std::string result;
+        String result;
         char buffer[256];
         ssize_t count;
         while ((count = read(pipefd[0], buffer, sizeof(buffer))) > 0) {
@@ -498,7 +504,12 @@ namespace SR_PLATFORM_NS {
     }
 
     Path GetApplicationPath() {
-        return std::filesystem::canonical("/proc/self/exe").string();
+        char applicationPath[PATH_MAX] = { };
+        if (!realpath("/proc/self/exe", applicationPath)) {
+            return Path();
+        }
+
+        return Path(applicationPath);
     }
 
     Path GetApplicationDirectory() { return GetApplicationPath().GetFolder(); }
@@ -509,10 +520,21 @@ namespace SR_PLATFORM_NS {
     std::optional<Path> GetApplicationLogPath() { return std::nullopt; }
 
     String GetApplicationName() {
-        std::string sp;
-        std::ifstream("/proc/self/comm") >> sp;
+        FILE* pCommFile = fopen("/proc/self/comm", "r");
+        if (!pCommFile) {
+            return String();
+        }
 
-        return sp;
+        char name[256] = { };
+        if (!fgets(name, sizeof(name), pCommFile)) {
+            name[0] = '\0';
+        }
+
+        fclose(pCommFile);
+
+        name[strcspn(name, " \t\r\n")] = '\0';
+
+        return String(name);
     }
 
     bool FileIsHidden(const Path& path) { return path.GetBaseNameView()[0] == '.'; }
@@ -566,8 +588,8 @@ namespace SR_PLATFORM_NS {
         return (dpiX + dpiY) / 2;
     }
 
-    std::vector<SR_MATH_NS::UVector2> GetScreenResolutions() {
-        std::vector<SR_MATH_NS::UVector2> resolutions;
+    Vector<SR_MATH_NS::UVector2> GetScreenResolutions() {
+        Vector<SR_MATH_NS::UVector2> resolutions;
         if (auto&& pDisplay = XOpenDisplay(":0")) {
             XRRScreenResources* screen;
             XRRCrtcInfo* crtc_info;
@@ -594,17 +616,16 @@ namespace SR_PLATFORM_NS {
         setenv(name.data(), value.data(), 1);
     }
 
-    static std::string GetLastErrorAsString() {
+    static String GetLastErrorAsString() {
         if (errno == 0) {
-            return std::string();
+            return String();
         }
 
         // Shall we use thread-safe strerror_r() instead of strerror()?
-        std::string message(SR_UTILS_NS::GetErrorString(errno));
-        return message;
+        return SR_UTILS_NS::GetErrorString(errno);
     }
 
-    bool DownloadFile(const std::string& url, const Path& outputPath) {
+    bool DownloadFile(const String& url, const Path& outputPath) {
         SRHaltOnce("Not implemented!");
         return false;
     }
@@ -616,7 +637,7 @@ namespace SR_PLATFORM_NS {
         if (!pLibrary) {
             SR_ERROR(
                 "PlatformLinux::LoadLibraryModule() : failed to load library: {}\n\tError: {}", path,
-                std::string(dlerror())
+                static_cast<const char*>(dlerror())
             );
             return nullptr;
         }
@@ -635,7 +656,7 @@ namespace SR_PLATFORM_NS {
             if (errorMessage) {
                 SR_ERROR(
                     "PlatformLinux::UnloadLibraryModule() : failed to unload library!\n\tError: {}",
-                    std::string(errorMessage)
+                    static_cast<const char*>(errorMessage)
                 );
                 return false;
             }

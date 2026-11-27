@@ -33,7 +33,7 @@ namespace SR_HTYPES_NS {
         /// Внимание: это ссылка на путь разделяемого RawMesh. Писать по ней нельзя -
         /// иначе путь подменится у всех держателей этого же ресурса.
         SR_NODISCARD const SR_UTILS_NS::Path& GetMeshPath() const noexcept;
-        SR_NODISCARD std::string GetMeshStringPath() const noexcept;
+        SR_NODISCARD String GetMeshStringPath() const noexcept;
         SR_NODISCARD bool IsValidMeshId() const noexcept;
         SR_NODISCARD StringView GetGeometryName() const noexcept;
         SR_NODISCARD const SR_UTILS_NS::VertexDataBuffer& GetVertexBuffer(const SR_UTILS_NS::VertexLayoutDescription& layout) const;

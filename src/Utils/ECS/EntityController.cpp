@@ -23,7 +23,7 @@ namespace SR_UTILS_NS {
         }
 
         if (!m_entities.empty()) {
-            std::string ids;
+            String ids;
             uint32_t index = 0;
 
             for (const auto& [id, pEntity] : m_entities) {
@@ -224,7 +224,7 @@ namespace SR_UTILS_NS {
         m_entityIds.insert(m_entityIds.end(), list.m_entityIds.begin(), list.m_entityIds.end());
     }
 
-    void EntityIdList::Add(const std::vector<EntityId>& list) {
+    void EntityIdList::Add(const Vector<EntityId>& list) {
         SRAssert2(!m_isReserved, "Ids are reserved!");
         m_entityIds.insert(m_entityIds.end(), list.begin(), list.end());
     }

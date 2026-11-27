@@ -32,9 +32,9 @@ namespace SR_NETWORK_NS {
         ~GNSSocket() override;
 
     public:
-        bool Connect(const std::string& address, uint16_t port) override;
+        bool Connect(StringView address, uint16_t port) override;
         bool Send(const void* data, size_t size) override;
-        bool SendTo(const void* data, uint64_t size, const std::string& address, uint16_t port) override;
+        bool SendTo(const void* data, uint64_t size, StringView address, uint16_t port) override;
         bool Close() override;
 
         uint64_t Receive(void* data, size_t size) override;
@@ -42,8 +42,8 @@ namespace SR_NETWORK_NS {
 
         SR_NODISCARD bool IsOpen() const override;
 
-        SR_NODISCARD std::string GetLocalAddress() const override;
-        SR_NODISCARD std::string GetRemoteAddress() const override;
+        SR_NODISCARD String GetLocalAddress() const override;
+        SR_NODISCARD String GetRemoteAddress() const override;
 
         SR_NODISCARD uint16_t GetLocalPort() const override;
         SR_NODISCARD uint16_t GetRemotePort() const override;

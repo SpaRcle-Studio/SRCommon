@@ -50,7 +50,7 @@ namespace SR_UTILS_NS {
         friend SRASerializer;
     public:
         SR_NODISCARD bool LoadFromFile(const SR_UTILS_NS::Path& path) override;
-        SR_NODISCARD bool LoadFromString(const std::string& str) override;
+        SR_NODISCARD bool LoadFromString(const String& str) override;
         SR_NODISCARD bool LoadFromNode(SR_UTILS_NS::SerializationNode&& node);
 
         SR_NODISCARD bool ShouldSetDefaults(const SerializationId& /* name */) const noexcept override { return true; }
@@ -59,7 +59,7 @@ namespace SR_UTILS_NS {
         SR_NODISCARD bool IsPreserveMode() const noexcept override { return false; }
         SR_NODISCARD bool AllowReAllocPointer(ReAllocPointerReason /* reason */) const noexcept override { return false; }
 
-        void ReportError(const std::string& message) override;
+        void ReportError(const String& message) override;
 
     private:
         SR_NODISCARD bool LoadFromStringsBuffer(const Vector<StringView>& lines);

@@ -3,6 +3,7 @@
 //
 
 #include <Utils/Settings.h>
+#include <Utils/Resources/Xml.h>
 
 #include <Codegen/Settings.generated.hpp>
 

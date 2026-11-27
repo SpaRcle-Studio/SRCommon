@@ -18,7 +18,7 @@ namespace SR_UTILS_NS::Web {
 
         void ParseProperty(std::string_view name, std::string_view data);
 
-        SR_NODISCARD std::string ToString(uint16_t depth = 0) const;
+        SR_NODISCARD String ToString(uint16_t depth = 0) const;
 
         static CSSStyle Merge(const CSSStyle& main, const CSSStyle& other);
 
@@ -68,26 +68,26 @@ namespace SR_UTILS_NS::Web {
         CSS();
 
     public:
-        SR_NODISCARD std::string ToString(uint16_t depth = 0) const;
+        SR_NODISCARD String ToString(uint16_t depth = 0) const;
 
-        SR_NODISCARD const CSSStyle* GetClassStyle(const std::string& token) const {
+        SR_NODISCARD const CSSStyle* GetClassStyle(const String& token) const {
             SR_TRACY_ZONE;
             const auto it = m_styles.find(std::make_pair(token, true));
             return it != m_styles.end() ? &it->second : nullptr;
         }
 
-        SR_NODISCARD const CSSStyle* GetTagStyle(const std::string& token) const {
+        SR_NODISCARD const CSSStyle* GetTagStyle(const String& token) const {
             SR_TRACY_ZONE;
             const auto it = m_styles.find(std::make_pair(token, false));
             return it != m_styles.end() ? &it->second : nullptr;
         }
 
-        void AddClassStyle(std::string&& token, const CSSStyle& style) {
+        void AddClassStyle(String&& token, const CSSStyle& style) {
             SRAssert2(!token.empty(), "Token is empty!");
             m_styles.emplace(std::make_pair(std::move(token), true), style);
         }
 
-        void AddTagStyle(std::string&& token, const CSSStyle& style) {
+        void AddTagStyle(String&& token, const CSSStyle& style) {
             SRAssert2(!token.empty(), "Token is empty!");
             m_styles.emplace(std::make_pair(std::move(token), false), style);
         }

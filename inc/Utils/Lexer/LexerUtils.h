@@ -201,7 +201,7 @@ namespace SR_UTILS_NS::LexerDetails {
 
         SR_NODISCARD String ToString(const Vector<LexerInclude>& files, uint8_t tab) const;
 
-        LexerMessage& SetDescription(const std::string& text) { description = text; return *this; }
+        LexerMessage& SetDescription(const String& text) { description = text; return *this; }
 
         LexerReturnCode code = LexerReturnCode::Unknown;
         uint64_t position = SR_UINT64_MAX;
@@ -209,7 +209,7 @@ namespace SR_UTILS_NS::LexerDetails {
         uint64_t line = SR_UINT64_MAX;
         uint16_t fileIndex = SR_UINT16_MAX;
         LexemKind lexemKind = LexemKind::Unknown;
-        std::string description;
+        String description;
 
     };
 
@@ -241,12 +241,15 @@ namespace SR_UTILS_NS::LexerDetails {
         SR_NODISCARD SR_UTILS_NS::String ToString(const SR_UTILS_NS::Vector<LexerInclude>& files, uint8_t tab = 1) const {
             SR_UTILS_NS::String message;
 
+            SR_UTILS_NS::String tabs;
+            tabs.resize(tab, '\t');
+
             for (auto&& msg : errors) {
-                message += "\n" + std::string(tab, '\t') + "Error code: " + msg.ToString(files, tab + 1);
+                message += "\n" + tabs + "Error code: " + msg.ToString(files, tab + 1);
             }
 
             for (auto&& msg : warnings) {
-                message += "\n" + std::string(tab, '\t') + "Warning: " + msg.ToString(files, tab + 1);
+                message += "\n" + tabs + "Warning: " + msg.ToString(files, tab + 1);
             }
 
             return message;

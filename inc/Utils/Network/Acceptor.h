@@ -17,7 +17,7 @@ namespace SR_NETWORK_NS {
         using Callback = SR_HTYPES_NS::Function<void(SR_HTYPES_NS::SharedPtr<Socket>)>;
 
     protected:
-        explicit Acceptor(SocketType type, Context::Ptr pContext, std::string address, uint16_t port)
+        explicit Acceptor(SocketType type, Context::Ptr pContext, String address, uint16_t port)
             : Super(this, SR_UTILS_NS::SharedPtrPolicy::Automatic)
             , m_type(type)
             , m_context(std::move(pContext))
@@ -28,8 +28,8 @@ namespace SR_NETWORK_NS {
     public:
         virtual ~Acceptor() = default;
 
-        SR_NODISCARD virtual std::string GetLocalAddress() const = 0;
-        SR_NODISCARD virtual std::string GetRemoteAddress() const = 0;
+        SR_NODISCARD virtual String GetLocalAddress() const = 0;
+        SR_NODISCARD virtual String GetRemoteAddress() const = 0;
 
         SR_NODISCARD virtual uint16_t GetLocalPort() const = 0;
         SR_NODISCARD virtual uint16_t GetRemotePort() const = 0;
@@ -65,7 +65,7 @@ namespace SR_NETWORK_NS {
 
         Context::Ptr m_context;
         Callback m_callback;
-        std::string m_address;
+        String m_address;
         uint16_t m_port = 0;
 
     };

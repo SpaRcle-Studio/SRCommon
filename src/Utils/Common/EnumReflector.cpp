@@ -43,7 +43,7 @@ namespace SR_UTILS_NS {
                     if (!IsIdentChar(*body)) {
                         state = state_skip;
                         SRAssert(value_index < count);
-                        m_data->values[value_index].name = std::string(ident_start, body - ident_start);
+                        m_data->values[value_index].name = StringAtom(ident_start, static_cast<SizeType>(body - ident_start));
 
                         switch (typeSize) {
                             case 1: m_data->values[value_index].value = static_cast<int64_t>(static_cast<const int8_t*>(pData)[value_index]); break;
@@ -157,7 +157,7 @@ namespace SR_UTILS_NS {
                (c == '_');
     }
 
-    void EnumReflector::ErrorInternal(const std::string& msg) {
+    void EnumReflector::ErrorInternal(const String& msg) {
         SRHalt(msg);
     }
 

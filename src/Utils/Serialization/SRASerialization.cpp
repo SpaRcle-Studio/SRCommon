@@ -279,9 +279,9 @@ namespace SR_UTILS_NS {
         return LoadFromStringsBuffer(lines);
     }
 
-    bool SRADeserializer::LoadFromString(const std::string& str) {
+    bool SRADeserializer::LoadFromString(const String& str) {
         Vector<StringView> lines;
-        StringUtils::Instance().SplitViewByLines(str, lines);
+        StringUtils::Instance().SplitViewByLines(str.ToStringView(), lines);
         return LoadFromStringsBuffer(lines);
     }
 
@@ -293,7 +293,7 @@ namespace SR_UTILS_NS {
             return false;
         }
 
-        if (lines[0].find("sra format") == std::string::npos) {
+        if (lines[0].find("sra format") == StringView::npos) {
             SR_ERROR("SRADeserializer::LoadFromString() : invalid format!");
             return false;
         }
@@ -308,12 +308,12 @@ namespace SR_UTILS_NS {
             std::string_view line = lines[i];
 
             if (i >= 1 && i <= 2) {
-                if (line.find("use tabs:") != std::string::npos) {
+                if (line.find("use tabs:") != std::string_view::npos) {
                     const std::string_view useTabs = line.substr(line.find_first_of(':') + 1);
                     restoreMode &= (useTabs == " true" || useTabs == "true");
                     continue;
                 }
-                if (line.find("use numeric depth:") != std::string::npos) {
+                if (line.find("use numeric depth:") != std::string_view::npos) {
                     const std::string_view useNumericDepth = line.substr(line.find_first_of(':') + 1);
                     numericDepth = (useNumericDepth == " true" || useNumericDepth == "true");
                     restoreMode |= !numericDepth;
@@ -336,7 +336,7 @@ namespace SR_UTILS_NS {
             }
 
             if (!line.empty() && line[0] == '\t') {
-                if (const size_t pos = line.find_first_not_of('\t'); pos != std::string::npos) {
+                if (const size_t pos = line.find_first_not_of('\t'); pos != std::string_view::npos) {
                     line = line.substr(pos);
                 }
             }
@@ -352,14 +352,14 @@ namespace SR_UTILS_NS {
 
             if (depth == 0) {
                 if (m_stack.size() > 1) {
-                    ReportError("Double root on line: "s + std::to_string(i + 1));
+                    ReportError(SR_FORMAT("Double root on line: {}", i + 1));
                     continue;
                 }
             }
 
             const std::string_view& type = line.substr(line.find_first_of('-') + 1, 1);
             if (type.size() != 1) {
-                ReportError("Type not found on line: "s + std::to_string(i + 1));
+                ReportError(SR_FORMAT("Type not found on line: {}", i + 1));
                 continue;
             }
 
@@ -422,13 +422,13 @@ namespace SR_UTILS_NS {
                     multiline.clear();
 
                     if (lineCount == 0) {
-                        ReportError("Invalid line count: "s + std::to_string(lineCount));
+                        ReportError(SR_FORMAT("Invalid line count: {}", lineCount));
                     }
                     else {
                         for (int32_t j = 0; j < lineCount; ++j) {
                             ++i;
                             if (i >= lines.size()) {
-                                ReportError("Invalid line count: "s + std::to_string(lineCount));
+                                ReportError(SR_FORMAT("Invalid line count: {}", lineCount));
                                 break;
                             }
                             multiline += lines[i];
@@ -470,7 +470,7 @@ namespace SR_UTILS_NS {
                     continue;
                 }
                 default:
-                    ReportError("Invalid type: "s + type.data());
+                    ReportError(SR_FORMAT("Invalid type: {}", type));
                     break;
             }
         }
@@ -485,7 +485,7 @@ namespace SR_UTILS_NS {
         return true;
     }
 
-    void SRADeserializer::ReportError(const std::string& message) {
+    void SRADeserializer::ReportError(const String& message) {
         SR_TRACY_ZONE;
         SRHalt("SRADeserializer::ReportError() : {}!", message);
     }

@@ -38,7 +38,7 @@ namespace SR_UTILS_NS {
             return false;
         }
 
-        std::string decompressedData = Decompress(resource);
+        String decompressedData = Decompress(resource);
         file.Write(decompressedData.data(), static_cast<int64_t>(decompressedData.size()));
 
         auto&& applicationPath = SR_PLATFORM_NS::GetApplicationPath();
@@ -61,12 +61,12 @@ namespace SR_UTILS_NS {
         return false;
     }
 
-    std::string ResourceEmbedder::HexToBytes(const std::string_view& hex) {
+    String ResourceEmbedder::HexToBytes(const std::string_view& hex) {
         if (hex.length() % 2 != 0) {
             throw std::runtime_error("Hex string length must be even!");
         }
 
-        std::string result;
+        String result;
         result.reserve(hex.length() / 2);
 
         for (size_t i = 0; i < hex.length(); i += 2) {
@@ -77,12 +77,13 @@ namespace SR_UTILS_NS {
         return result;
     }
 
-    std::string ResourceEmbedder::Decompress(const Resource& resource) {
+    String ResourceEmbedder::Decompress(const Resource& resource) {
     #ifdef SR_COMMON_ZLIB
-        std::string compressedData = HexToBytes(resource.compressedHex);
+        String compressedData = HexToBytes(resource.compressedHex);
 
         uLongf decompressedSize = resource.decompressedSize;
-        std::vector<char> decompressedData(decompressedSize);
+        String decompressedData;
+        decompressedData.resize(decompressedSize);
 
         z_stream strm;
         strm.zalloc = Z_NULL;
@@ -109,10 +110,12 @@ namespace SR_UTILS_NS {
         decompressedSize = strm.total_out;
         inflateEnd(&strm);
 
-        return {decompressedData.begin(), decompressedData.begin() + decompressedSize };
+        decompressedData.resize(decompressedSize);
+
+        return decompressedData;
     #else
         SRHalt("Decompression is not supported! Please define SR_COMMON_ZLIB to enable it.");
-        return std::string();
+        return String();
     #endif
     }
 

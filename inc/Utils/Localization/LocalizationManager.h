@@ -23,7 +23,7 @@ namespace SR_GTYPES_NS {
 
 namespace SR_UTILS_NS::Localization {
     ///TODO: стоит ли Locale делать через enum или следует использовать коды типа "en"
-    using Locale = std::string;
+    using Locale = String;
     /*SR_ENUM_NS_CLASS(Locale,
                      None,
                      English,
@@ -62,12 +62,12 @@ namespace SR_UTILS_NS::Localization {
         ///void RegisterTextComponent(std::string& id, SR_GTYPES_NS::ITextComponent* textComponent);
         StringAtom MakeLocFile(const std::unordered_map<Locale, Path>& localePaths, const Locale& languageToLoad, StringAtom fileId);
         void MakeLocGroup(std::unordered_map<StringAtom, LocalizationFile>& locFiles, const StringAtom& groupId);
-        void RegisterLocGroup(const std::vector<StringAtom>& locFileIds, const StringAtom& groupId);
+        void RegisterLocGroup(const Vector<StringAtom>& locFileIds, const StringAtom& groupId);
         void RemoveLocGroup(const StringAtom& groupId);
         void RemoveLocFileFromGroup(const StringAtom& fileId, const StringAtom& groupId);
         void AddLocFileIntoGroup(const StringAtom& fileId, const StringAtom& groupId);
         void ChangeLocGroupLocale(const StringAtom& id, const Locale& newLocale);
-        std::vector<StringAtom> GetLocGroupsIds();
+        Vector<StringAtom> GetLocGroupsIds();
 
         void SaveInfoAsConfigFile(const SR_UTILS_NS::Path& filePath);
         void LoadInfoAsConfigFile(const SR_UTILS_NS::Path& filePath);
@@ -75,7 +75,7 @@ namespace SR_UTILS_NS::Localization {
     private:
         ///std::set<LocalizedTextComponent> m_textComponents = { };
         std::unordered_map<StringAtom, LocalizationFile> m_localizationFiles = { };
-        std::unordered_map<StringAtom, std::vector<LocalizationFile*>> m_localizationGroups = { };
+        std::unordered_map<StringAtom, Vector<LocalizationFile*>> m_localizationGroups = { };
     };
 
 }

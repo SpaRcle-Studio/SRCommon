@@ -108,18 +108,41 @@ namespace SR_NETWORK_NS {
                )))));
     }
 
-    SR_MAYBE_UNUSED SR_INLINE_STATIC uint32_t StringToIPv4(const std::string& address) {
-        std::stringstream ss(address);
-        uint32_t a, b, c, d;
-        int8_t dot;
-        ss >> a >> dot >> b >> dot >> c >> dot >> d;
-        return (a << 24) | (b << 16) | (c << 8) | d;
+    SR_MAYBE_UNUSED SR_INLINE_STATIC uint32_t StringToIPv4(StringView address) {
+        uint32_t result = 0;
+        uint32_t octet = 0;
+
+        for (const char c : address) {
+            if (c == '.') {
+                result = (result << 8) | (octet & 0xFF);
+                octet = 0;
+            }
+            else if (c >= '0' && c <= '9') {
+                octet = octet * 10 + static_cast<uint32_t>(c - '0');
+            }
+            else {
+                break;
+            }
+        }
+
+        return (result << 8) | (octet & 0xFF);
     }
 
-    SR_MAYBE_UNUSED SR_INLINE_STATIC std::string IPv4ToString(uint32_t address) {
-        std::stringstream ss;
-        ss << ((address >> 24) & 0xFF) << '.' << ((address >> 16) & 0xFF) << '.' << ((address >> 8) & 0xFF) << '.' << (address & 0xFF);
-        return ss.str();
+    SR_MAYBE_UNUSED SR_INLINE_STATIC String IPv4ToString(uint32_t address) {
+        String result;
+        result.reserve(15);
+
+        for (int32_t shift = 24; shift >= 0; shift -= 8) {
+            char buffer[4];
+            auto&& [pEnd, errorCode] = std::to_chars(buffer, buffer + sizeof(buffer), (address >> shift) & 0xFF);
+            result.append(buffer, static_cast<SizeType>(pEnd - buffer));
+
+            if (shift > 0) {
+                result.append('.');
+            }
+        }
+
+        return result;
     }
 }
 

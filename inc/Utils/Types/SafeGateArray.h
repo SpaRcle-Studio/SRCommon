@@ -67,14 +67,14 @@ namespace SR_HTYPES_NS {
 
         uint32_t Count() const { return m_count; }
         uint32_t Empty() const { return m_count == 0; }
-        std::set<T>& GetElements() { return m_container; }
-        std::set<T>& GetAddedElements() { return m_add; }
-        std::set<T>& GetDeletedElements() { return m_remove; }
+        SR_UTILS_NS::Set<T>& GetElements() { return m_container; }
+        SR_UTILS_NS::Set<T>& GetAddedElements() { return m_add; }
+        SR_UTILS_NS::Set<T>& GetDeletedElements() { return m_remove; }
 
     private:
-        std::set<T> m_add;
-        std::set<T> m_remove;
-        std::set<T> m_container;
+        SR_UTILS_NS::Set<T> m_add;
+        SR_UTILS_NS::Set<T> m_remove;
+        SR_UTILS_NS::Set<T> m_container;
         std::recursive_mutex m_mutex;
         std::atomic<bool> m_needFlush = false;
         std::atomic<uint32_t> m_count = 0;

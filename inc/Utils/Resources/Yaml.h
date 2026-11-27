@@ -31,15 +31,15 @@ namespace SR_UTILS_NS::Yaml {
         explicit operator bool() const { return IsValid(); }
         SR_NODISCARD bool IsValid() const { return (m_treeImpl || m_constTreeImpl) && m_id != -1; }
 
-        SR_NODISCARD std::string Name() const;
+        SR_NODISCARD String Name() const;
         SR_NODISCARD std::string_view NameView() const;
 
         void SetValue(const std::string_view& value);
-        SR_NODISCARD std::string GetValue() const;
+        SR_NODISCARD String GetValue() const;
         SR_NODISCARD std::string_view GetValueView() const;
-        SR_NODISCARD std::string GetKey() const;
+        SR_NODISCARD String GetKey() const;
         SR_NODISCARD std::string_view GetKeyView() const;
-        SR_NODISCARD std::vector<Node> GetChildren() const;
+        SR_NODISCARD Vector<Node> GetChildren() const;
         SR_NODISCARD uint16_t GetId() const;
         SR_NODISCARD Node GetChild(const std::string_view& name) const;
         SR_NODISCARD Node AppendChild(const std::string_view& name);
@@ -72,7 +72,7 @@ namespace SR_UTILS_NS::Yaml {
         Node AppendChild(const std::string_view& name);
 
         SR_NODISCARD bool Save(const SR_UTILS_NS::Path& path) const;
-        SR_NODISCARD std::string Dump() const;
+        SR_NODISCARD String Dump() const;
 
         SR_NODISCARD Node GetRoot() const;
         SR_NODISCARD Node GetRoot();

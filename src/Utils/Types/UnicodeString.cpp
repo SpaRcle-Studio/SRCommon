@@ -34,8 +34,8 @@ namespace SR_UTILS_NS {
         return *this;
     }
 
-    UnicodeString::UnicodeString(const std::string& str)
-        : m_internal(std::begin(str), std::end(str))
+    UnicodeString::UnicodeString(const String& str)
+        : m_internal(str.begin(), str.end())
     { }
 
     UnicodeString::UnicodeString(const std::u16string& str)

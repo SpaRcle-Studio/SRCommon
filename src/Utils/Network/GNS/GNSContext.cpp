@@ -137,13 +137,13 @@ namespace SR_NETWORK_NS {
         return nullptr;
     }
 
-    SR_HTYPES_NS::SharedPtr<Acceptor> GNSContext::CreateAcceptor(SocketType type, const std::string& address, uint16_t port) {
+    SR_HTYPES_NS::SharedPtr<Acceptor> GNSContext::CreateAcceptor(SocketType type, StringView address, uint16_t port) {
         if (type != SocketType::TCP && type != SocketType::UDP) {
             SR_ERROR("GNSContext::CreateAcceptor() : GNS only supports TCP and UDP socket types.");
             return nullptr;
         }
 
-        auto* pAcceptor = new GNSAcceptor(GetThis(), address, port);
+        auto* pAcceptor = new GNSAcceptor(GetThis(), String(address), port);
         return pAcceptor;
     }
 

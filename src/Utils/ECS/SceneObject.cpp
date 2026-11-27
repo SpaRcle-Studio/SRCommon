@@ -4,6 +4,7 @@
 
 #include <Utils/ECS/Component.h>
 #include <Utils/ECS/LayerManager.h>
+#include <Utils/ECS/TagManager.h>
 #include <Utils/ECS/Prefab.h>
 #include <Utils/ECS/SceneObject.h>
 #include <Utils/UI/LayoutRebuilder.h>
@@ -803,7 +804,7 @@ namespace SR_UTILS_NS {
         return SceneObject::Ptr();
     }
 
-    SceneObject::Ptr SceneObject::Find(const std::string& name) const noexcept {
+    SceneObject::Ptr SceneObject::Find(const String& name) const noexcept {
         return Find(SR_HASH_STR(name));
     }
 

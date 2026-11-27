@@ -82,7 +82,7 @@ namespace SR_UTILS_NS {
         bool Work();
 
         SR_NODISCARD ThreadsWorker* GetThreadsWorker() const { return m_threadsWorker; }
-        SR_NODISCARD const std::vector<ThreadWorkerStateBase::Ptr>& GetStates() const { return m_states; }
+        SR_NODISCARD const Vector<ThreadWorkerStateBase::Ptr>& GetStates() const { return m_states; }
         SR_NODISCARD bool IsNeedUseThreads() const { return m_useThreads; }
 
     private:
@@ -92,7 +92,7 @@ namespace SR_UTILS_NS {
     private:
         ThreadsWorker* m_threadsWorker = nullptr;
         SR_HTYPES_NS::Thread* m_thread = nullptr;
-        std::vector<ThreadWorkerStateBase::Ptr> m_states;
+        Vector<ThreadWorkerStateBase::Ptr> m_states;
         uint32_t m_currentState = 0;
         StringAtom m_name;
         std::atomic<bool> m_isActive = false;

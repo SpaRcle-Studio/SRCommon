@@ -7,7 +7,6 @@
 #include <Utils/Resources/ResourceManager.h>
 
 #include <rapidyaml/src/ryml.hpp>
-#include <rapidyaml/src/ryml_std.hpp> ///needed to use rapidyaml with std containers
 
 namespace SR_UTILS_NS::Localization {
 
@@ -32,13 +31,9 @@ namespace SR_UTILS_NS::Localization {
         ryml::Tree tree = ryml::parse_in_arena(ryml::to_csubstr(*pFileContents));
         ryml::ConstNodeRef root = tree.crootref();
         for (auto&& n : root.children()) {
-            std::string id; ///это должен был быть StringAtom
-            std::string str; ///это должен был быть UnicodeString
-            n >> ryml::key(id); ///deserialize key
-            n >> str; ///deserialize value
-            m_locStrings[id] = str; ///но операторы десериализации делают всё сложнее
-            ///альтернативой десериализации может быть закидывание в конструктор std::string двух указателей на начало и конец val() или key() или что-то в подобном роде
-            ///пример auto id = std::string(locFile.key().data(), locFile.key().end());
+            auto&& key = n.key();
+            auto&& value = n.val();
+            m_locStrings[StringAtom(key.str, key.len)] = String(std::string_view(value.str, value.len));
         }
     }
 
@@ -75,7 +70,7 @@ namespace SR_UTILS_NS::Localization {
 
     void LocalizationManager::MakeLocGroup(std::unordered_map<StringAtom, LocalizationFile>& locFiles,
                                            const StringAtom& groupId) {
-        std::vector<LocalizationFile*> localizationGroup;
+        Vector<LocalizationFile*> localizationGroup;
         localizationGroup.reserve(locFiles.size());
         for (auto&& file : locFiles) {
             localizationGroup.emplace_back(&file.second);
@@ -84,8 +79,8 @@ namespace SR_UTILS_NS::Localization {
         m_localizationGroups[groupId] = std::move(localizationGroup);
     }
 
-    void LocalizationManager::RegisterLocGroup(const std::vector<StringAtom> &locFileIds, const StringAtom &groupId) {
-        std::vector<LocalizationFile*> locFiles = { };
+    void LocalizationManager::RegisterLocGroup(const Vector<StringAtom> &locFileIds, const StringAtom &groupId) {
+        Vector<LocalizationFile*> locFiles;
         locFiles.reserve(locFileIds.size());
         for (auto&& id : locFileIds) {
             locFiles.emplace_back(&m_localizationFiles[id]);
@@ -132,27 +127,26 @@ namespace SR_UTILS_NS::Localization {
         ryml::ConstNodeRef root = tree.crootref();
 
         for (auto&& locGroup : root.children()) {
-            std::vector<StringAtom> locFileIds;
+            Vector<StringAtom> locFileIds;
             locFileIds.reserve(locGroup.num_children());
 
             for (auto&& locFile : locGroup.children()) {
-                Locale languageToLoad;
-                locFile[0] >> ryml::key(languageToLoad);
+                auto&& languageKey = locFile[0].key();
+                Locale languageToLoad = std::string_view(languageKey.str, languageKey.len);
                 std::unordered_map<Locale, Path> localePaths;
 
                 for (auto&& localePath : locFile) {
-                    std::string path;
-                    std::string locale;
-                    localePath >> path;
-                    localePath >> ryml::key(locale);
-                    localePaths[locale] = resourcesFolder.Concat(path);
+                    auto&& pathValue = localePath.val();
+                    auto&& localeKey = localePath.key();
+                    localePaths[Locale(std::string_view(localeKey.str, localeKey.len))] = resourcesFolder.Concat(std::string_view(pathValue.str, pathValue.len));
                 }
 
-                std::string id = std::string(locFile.key().data(), locFile.key().end());
-                locFileIds.emplace_back(MakeLocFile(localePaths, languageToLoad, id));
+                auto&& fileKey = locFile.key();
+                locFileIds.emplace_back(MakeLocFile(localePaths, languageToLoad, StringAtom(fileKey.str, fileKey.len)));
             }
 
-            RegisterLocGroup(locFileIds, locGroup.key().data());
+            auto&& groupKey = locGroup.key();
+            RegisterLocGroup(locFileIds, StringAtom(groupKey.str, groupKey.len));
         }
     }
 

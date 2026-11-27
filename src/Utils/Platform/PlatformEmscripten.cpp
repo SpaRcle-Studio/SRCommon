@@ -335,30 +335,31 @@ namespace SR_PLATFORM_NS {
         return points;
     }
 
-    std::vector<std::string> GetWebCommandLineArgs() {
+    Vector<String> GetWebCommandLineArgs() {
+        Vector<String> args;
+
         const int size = SRWebPrepareCommandLineArgs();
         if (size <= 0) {
-            return {};
+            return args;
         }
 
-        std::string tokens(static_cast<size_t>(size) + 1, '\0');
+        String tokens;
+        tokens.resize(static_cast<SizeType>(size) + 1, '\0');
         SRWebTakeCommandLineArgs(tokens.data(), size);
-        tokens.resize(static_cast<size_t>(size));
-
-        std::vector<std::string> args;
+        tokens.resize(static_cast<SizeType>(size));
 
         constexpr char separator = static_cast<char>(0x1F);
 
-        size_t tokenStart = 0;
+        SizeType tokenStart = 0;
 
         while (tokenStart <= tokens.size()) {
-            size_t tokenEnd = tokens.find(separator, tokenStart);
+            SizeType tokenEnd = tokens.find(separator, tokenStart);
 
-            if (tokenEnd == std::string::npos) {
+            if (tokenEnd == String::npos) {
                 tokenEnd = tokens.size();
             }
 
-            args.emplace_back(tokens, tokenStart, tokenEnd - tokenStart);
+            args.emplace_back(StringView(tokens.data() + tokenStart, tokenEnd - tokenStart));
 
             tokenStart = tokenEnd + 1;
         }
@@ -515,7 +516,7 @@ namespace SR_PLATFORM_NS {
         /// instead. Called every frame while the cursor is locked, so it must stay silent.
     }
 
-    void OpenFile(const SR_UTILS_NS::Path& path, const std::string& args) {
+    void OpenFile(const SR_UTILS_NS::Path& path, const String& args) {
         OpenWithAssociatedApp(path);
     }
 
@@ -542,7 +543,7 @@ namespace SR_PLATFORM_NS {
     SR_UTILS_NS::String CLIPBOARD_BUFFER;
     SR_UTILS_NS::Vector<Path> FILE_CLIPBOARD;
 
-    void TextToClipboard(const std::string &text) {
+    void TextToClipboard(const String& text) {
         CLIPBOARD_BUFFER = text;
         EM_ASM({ Module['srWriteClipboard']?.(UTF8ToString($0)); }, text.c_str());
     }
@@ -573,7 +574,7 @@ namespace SR_PLATFORM_NS {
         }
     }
 
-    std::string GetClipboardText() {
+    String GetClipboardText() {
         const int32_t size = EM_ASM_INT({ return lengthBytesUTF8(Module['srReadClipboard']?.() || ''); });
         CLIPBOARD_BUFFER.resize(size + 1);
         EM_ASM({ stringToUTF8(Module['srReadClipboard']?.() || '', $0, $1); }, CLIPBOARD_BUFFER.data(), size + 1);
@@ -678,12 +679,12 @@ namespace SR_PLATFORM_NS {
 
     }
 
-    std::string ExecuteCommand(const std::string& command, const std::vector<std::string>& env) {
-        SR_ERROR("Native command execution is unavailable in the browser.");
-        return {};
+    String ExecuteCommand(const String& command, const Vector<String>& env) {
+        SR_ERROR("Platform::ExecuteCommand() : native command execution is unavailable in the browser.");
+        return String();
     }
 
-    bool DownloadFile(const std::string& url, const Path& outputPath) {
+    bool DownloadFile(const String& url, const Path& outputPath) {
         Path physicalPath = outputPath;
         VFS::Instance().ResolvePath(physicalPath, FileMode::Write);
         return SRWebDownloadFile(url.c_str(), physicalPath.c_str()) != 0;
@@ -724,8 +725,8 @@ namespace SR_PLATFORM_NS {
         return false;
     }
 
-    std::vector<SR_MATH_NS::UVector2> GetScreenResolutions() {
-        auto&& resolutions = std::vector<SR_MATH_NS::UVector2>();
+    Vector<SR_MATH_NS::UVector2> GetScreenResolutions() {
+        Vector<SR_MATH_NS::UVector2> resolutions;
         resolutions.emplace_back(1280, 720);
         return resolutions;
     }

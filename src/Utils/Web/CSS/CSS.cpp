@@ -140,36 +140,40 @@ namespace SR_UTILS_NS::Web {
         }
     }
 
-    std::string CSSStyle::ToString(uint16_t depth) const {
-        std::string result;
+    static void AppendCSSTabs(String& result, uint16_t depth) {
+        for (uint16_t i = 0; i < depth; ++i) {
+            result += '\t';
+        }
+    }
+
+    String CSSStyle::ToString(uint16_t depth) const {
+        String result;
 
         for (const auto& [hash, property] : CSS_CLASS_SIZE_PROPERTIES) {
             const CSSOptionalSizeValue& value = this->*property;
             if (value.IsDefault()) {
                 continue;
             }
-            if (depth > 0) {
-                result += std::string(depth, '\t');
-            }
+            AppendCSSTabs(result, depth);
             result += SR_FORMAT("{}: {};\n", SR_HASH_TO_STR(hash), value.ToString());
         }
 
-        if (depth > 0) { result += std::string(depth, '\t'); }
+        AppendCSSTabs(result, depth);
         result += SR_FORMAT("display: {};\n", SR_HASH_TO_STR(CSSDisplayToString(display)));
 
-        if (depth > 0) { result += std::string(depth, '\t'); }
+        AppendCSSTabs(result, depth);
         result += SR_FORMAT("box-sizing: {};\n", SR_HASH_TO_STR(CSSBoxSizingToString(boxSizing)));
 
-        if (depth > 0) { result += std::string(depth, '\t'); }
+        AppendCSSTabs(result, depth);
         result += SR_FORMAT("position: {};\n", SR_HASH_TO_STR(CSSPositionToString(position)));
 
         if (const auto str = color.ToString(); !str.empty()) {
-            if (depth > 0) { result += std::string(depth, '\t'); }
+            AppendCSSTabs(result, depth);
             result += SR_FORMAT("color: {};\n", str);
         }
 
         if (const auto str = backgroundColor.ToString(); !str.empty()) {
-            if (depth > 0) { result += std::string(depth, '\t'); }
+            AppendCSSTabs(result, depth);
             result += SR_FORMAT("background-color: {};\n", str);
         }
 
@@ -245,16 +249,14 @@ namespace SR_UTILS_NS::Web {
         : Super(this, SR_UTILS_NS::SharedPtrPolicy::Automatic)
     { }
 
-    std::string CSS::ToString(uint16_t depth) const {
-        std::string result;
-        if (depth > 0) {
-            result += std::string(depth, '\t');
-        }
+    String CSS::ToString(uint16_t depth) const {
+        String result;
+        AppendCSSTabs(result, depth);
 
         result = "* {\n" + m_globalStyle.ToString(depth + 1) + "}\n";
 
         for (const auto& [token, style] : m_styles) {
-            std::string body = "{\n" + style.ToString(depth + 1) + "}";
+            String body = "{\n" + style.ToString(depth + 1) + "}";
             if (token.second) {
                 result += SR_FORMAT(".{} {}\n", token.first.c_str(), body);
             }

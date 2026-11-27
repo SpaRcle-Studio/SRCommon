@@ -25,7 +25,7 @@ namespace SR_WORLD_NS {
         using Ptr = SR_HTYPES_NS::SharedPtr<SceneLogic>;
         using ScenePtr = SR_HTYPES_NS::SharedPtr<Scene>;
         using SceneObjectPtr = SR_HTYPES_NS::SharedPtr<SceneObject>;
-        using SceneObjects = std::vector<SceneObjectPtr>;
+        using SceneObjects = Vector<SceneObjectPtr>;
         using OriginType = SceneLogic;
 
     public:

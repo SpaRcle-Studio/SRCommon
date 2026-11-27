@@ -14,7 +14,7 @@
 
 namespace SR_UTILS_NS {
     namespace MarshalUtils {
-        SR_MAYBE_UNUSED void Encode(SR_HTYPES_NS::Stream& stream, const std::string& str, StandardType type);
+        SR_MAYBE_UNUSED void Encode(SR_HTYPES_NS::Stream& stream, StringView str, StandardType type);
     }
 
     enum class MarshalSaveMode {

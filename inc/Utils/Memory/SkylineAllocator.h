@@ -37,7 +37,7 @@ namespace SR_UTILS_NS {
 
         uint32_t m_width = 0;
         uint32_t m_height = 0;
-        std::vector<Node> m_nodes;
+        Vector<Node> m_nodes;
     };
 }
 

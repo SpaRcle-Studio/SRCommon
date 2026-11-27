@@ -66,7 +66,7 @@ namespace SR_UTILS_NS {
         friend JsonSerializer;
     public:
         SR_NODISCARD bool LoadFromFile(const SR_UTILS_NS::Path& path) override;
-        SR_NODISCARD bool LoadFromString(const std::string& str) override;
+        SR_NODISCARD bool LoadFromString(const String& str) override;
         SR_NODISCARD bool LoadFromStringView(StringView str);
         SR_NODISCARD bool LoadValueFromStringView(StringView str);
         SR_NODISCARD bool LoadFromNode(SR_UTILS_NS::SerializationNode&& node);
@@ -80,7 +80,7 @@ namespace SR_UTILS_NS {
         /// В JSON элементы массива безымянные, поэтому идентификатор не сверяется, а восстанавливается
         bool BeginItem(const SerializationId& id, uint32_t index) override;
 
-        void ReportError(const std::string& message) override;
+        void ReportError(const String& message) override;
 
     private:
         SR_NODISCARD bool ParseDocument();
@@ -96,7 +96,7 @@ namespace SR_UTILS_NS {
         SR_NODISCARD char Peek() const noexcept { return HasData() ? m_data[m_position] : '\0'; }
         SR_NODISCARD bool Consume(char symbol);
         void SkipWhitespaces() noexcept;
-        void ReportParseError(const std::string& message);
+        void ReportParseError(const String& message);
 
     private:
         static constexpr uint32_t MaxDepth = 512;

@@ -53,9 +53,9 @@ namespace SR_NETWORK_NS {
 
         SR_NODISCARD virtual SR_HTYPES_NS::SharedPtr<Socket> CreateSocket(SocketType type) = 0;
         SR_NODISCARD virtual SR_HTYPES_NS::SharedPtr<Pinger> CreatePinger() = 0;
-        SR_NODISCARD virtual SR_HTYPES_NS::SharedPtr<Acceptor> CreateAcceptor(SocketType type, const std::string& address, uint16_t port) = 0;
+        SR_NODISCARD virtual SR_HTYPES_NS::SharedPtr<Acceptor> CreateAcceptor(SocketType type, StringView address, uint16_t port) = 0;
 
-        SR_NODISCARD SR_HTYPES_NS::SharedPtr<PeerToPeer> CreateP2P(SocketType type, const std::string& address, uint16_t port);
+        SR_NODISCARD SR_HTYPES_NS::SharedPtr<PeerToPeer> CreateP2P(SocketType type, StringView address, uint16_t port);
 
     protected:
         bool m_isRunning = false;

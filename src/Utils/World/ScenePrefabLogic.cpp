@@ -47,7 +47,7 @@ namespace SR_WORLD_NS {
         }
 
         if (deserializer.BeginObject(SR_UTILS_NS::SerializationId::Create("info"))) {
-            std::string type;
+            SR_UTILS_NS::StringAtom type;
             deserializer.ReadString(type, SR_UTILS_NS::SerializationId::Create("type"));
             pSO = SR_UTILS_NS::Factory::Instance().Create<SceneObject>(type);
             deserializer.EndObject();

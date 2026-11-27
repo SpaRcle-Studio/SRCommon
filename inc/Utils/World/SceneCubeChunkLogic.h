@@ -36,7 +36,7 @@ namespace SR_WORLD_NS {
         bool ReloadChunks();
         void UpdateDebug();
 
-        SR_NODISCARD const std::vector<SceneObject::Ptr>& GetGameObjectsAtChunk(const SR_MATH_NS::IVector3& region, const SR_MATH_NS::IVector3& chunk) const;
+        SR_NODISCARD const Vector<SceneObject::Ptr>& GetGameObjectsAtChunk(const SR_MATH_NS::IVector3& region, const SR_MATH_NS::IVector3& chunk) const;
         SR_NODISCARD Chunk* GetCurrentChunk() const;
         SR_NODISCARD Observer* GetObserver() const { return m_observer; }
         SR_NODISCARD SR_MATH_NS::FVector3 GetWorldPosition(const SR_MATH_NS::IVector3& region, const SR_MATH_NS::IVector3& chunk) const;

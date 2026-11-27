@@ -8,14 +8,14 @@
 namespace SR_UTILS_NS {
     void SubscriptionMessage::SetInt(const StringAtom id, const uint64_t value) { SetValue(id, value); }
     void SubscriptionMessage::SetBool(const StringAtom id, const bool value) { SetValue(id, value); }
-    void SubscriptionMessage::SetString(const StringAtom id, const std::string& value) { SetValue(id, value); }
+    void SubscriptionMessage::SetString(const StringAtom id, const String& value) { SetValue(id, value); }
     void SubscriptionMessage::SetStringAtom(const StringAtom id, const StringAtom value) { SetValue(id, value); }
     void SubscriptionMessage::SetPath(const StringAtom id, const SR_UTILS_NS::Path& value) { SetValue(id, value); }
     void SubscriptionMessage::SetPointer(const StringAtom id, void* value) { SetValue(id, (void*)value); }
 
     uint64_t SubscriptionMessage::GetInt(const StringAtom id, const std::optional<uint64_t>& def) const { return GetValueRef(id, def); }
     bool SubscriptionMessage::GetBool(const StringAtom id, const std::optional<bool>& def) const { return GetValueRef(id, def); }
-    std::string SubscriptionMessage::GetString(const StringAtom id, const std::optional<std::string>& def) const { return GetValueRef(id, def); }
+    String SubscriptionMessage::GetString(const StringAtom id, const std::optional<String>& def) const { return GetValueRef(id, def); }
     StringAtom SubscriptionMessage::GetStringAtom(const StringAtom id, const std::optional<StringAtom>& def) const { return GetValueRef(id, def); }
     SR_UTILS_NS::Path SubscriptionMessage::GetPath(const StringAtom id, const std::optional<SR_UTILS_NS::Path>& def) const { return GetValueRef(id, def); }
     const SR_UTILS_NS::Path& SubscriptionMessage::GetPathRef(const StringAtom id) const { return GetValueRef(id, std::optional<SR_UTILS_NS::Path>()); }

@@ -97,12 +97,11 @@ namespace SR_UTILS_NS {
                 continue;
             }
  
-            std::smatch match;
-            std::string name = migratorName.c_str();
-            if (std::regex_match(name, match, pattern)) {
-                const SR_UTILS_NS::StringAtom objectName = match[1].str();
-                const auto fromVersion = SR_UTILS_NS::LexicalCast<uint64_t>(match[2].str());
-                const auto toVersion = SR_UTILS_NS::LexicalCast<uint64_t>(match[3].str());
+            std::cmatch match;
+            if (std::regex_match(migratorName.c_str(), match, pattern)) {
+                const SR_UTILS_NS::StringAtom objectName = std::string_view(match[1].first, match[1].length());
+                const auto fromVersion = SR_UTILS_NS::LexicalCast<uint64_t>(std::string_view(match[2].first, match[2].length()));
+                const auto toVersion = SR_UTILS_NS::LexicalCast<uint64_t>(std::string_view(match[3].first, match[3].length()));
 
                 MigrationInfo info;
                 info.factory = migratorName;

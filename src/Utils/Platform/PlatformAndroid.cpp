@@ -72,25 +72,30 @@ namespace SR_UTILS_NS::Platform {
 
     }
 
-    void OpenFile(const SR_UTILS_NS::Path& path, const std::string& args) {
+    void OpenFile(const SR_UTILS_NS::Path& path, const String& args) {
         SRHaltOnce("Not implemented!");
     }
 
     bool IsRunningUnderDebugger() {
-        std::ifstream sf("/proc/self/status");
-        std::string s;
-        while (sf >> s)
-        {
-            if (s == "TracerPid:")
-            {
-                int pid;
-                sf >> pid;
-                return pid != 0;
-            }
-            std::getline(sf, s);
+        FILE* pStatusFile = fopen("/proc/self/status", "r");
+        if (!pStatusFile) {
+            return false;
         }
 
-        return false;
+        constexpr StringView tracerPidKey = "TracerPid:";
+
+        bool isDebugged = false;
+        char line[256];
+        while (fgets(line, sizeof(line), pStatusFile)) {
+            if (StringView(line).starts_with(tracerPidKey)) {
+                isDebugged = atoi(line + tracerPidKey.size()) != 0;
+                break;
+            }
+        }
+
+        fclose(pStatusFile);
+
+        return isDebugged;
     }
 
     void* GetInstance() {
@@ -160,7 +165,7 @@ namespace SR_UTILS_NS::Platform {
         WriteMessage(ANDROID_LOG_WARN, msg);
     }
 
-    void TextToClipboard(const std::string &text) {
+    void TextToClipboard(const String& text) {
         SRHaltOnce("Not implemented!");
     }
 
@@ -176,9 +181,9 @@ namespace SR_UTILS_NS::Platform {
         SRHaltOnce("Not implemented!");
     }
 
-    std::string GetClipboardText() {
+    String GetClipboardText() {
         SRHaltOnce("Not implemented!");
-        return std::string();
+        return String();
     }
 
     void DeInitializePlatform() {
@@ -203,20 +208,25 @@ namespace SR_UTILS_NS::Platform {
     }
 
     uint64_t GetProcessUsedMemory() {
-        std::ifstream status("/proc/self/status");
-        if (!status.is_open())
+        FILE* pStatusFile = fopen("/proc/self/status", "r");
+        if (!pStatusFile) {
             return 0;
+        }
 
-        std::string key;
-        uint64_t value;
-        std::string unit;
-        while (status >> key >> value >> unit) {
-            if (key == "VmRSS:") {
-                return value * 1024; // перевод из килобайт в байты
+        constexpr StringView vmRssKey = "VmRSS:";
+
+        uint64_t result = 0;
+        char line[256];
+        while (fgets(line, sizeof(line), pStatusFile)) {
+            if (StringView(line).starts_with(vmRssKey)) {
+                result = static_cast<uint64_t>(atoll(line + vmRssKey.size())) * 1024; // перевод из килобайт в байты
+                break;
             }
         }
 
-        return 0;
+        fclose(pStatusFile);
+
+        return result;
     }
 
     void SetThreadPriority(void *nativeHandle, ThreadPriority priority) {
@@ -350,12 +360,12 @@ namespace SR_UTILS_NS::Platform {
         setenv(name.data(), value.data(), 1);
     }
 
-    std::string ExecuteCommand(const std::string& command, const std::vector<std::string>& env) {
+    String ExecuteCommand(const String& command, const Vector<String>& env) {
         SRHaltOnce("Not implemented!");
-        return std::string();
+        return String();
     }
 
-    bool DownloadFile(const std::string& url, const Path& outputPath) {
+    bool DownloadFile(const String& url, const Path& outputPath) {
         SRHaltOnce("Not implemented!");
         return false;
     }
@@ -396,12 +406,15 @@ namespace SR_UTILS_NS::Platform {
         return false;
     }
 
-    std::vector<SR_MATH_NS::UVector2> GetScreenResolutions() {
+    Vector<SR_MATH_NS::UVector2> GetScreenResolutions() {
+        Vector<SR_MATH_NS::UVector2> resolutions;
+
         const auto size = GetScreenResolution();
-        if (size.HasZero()) {
-            return {};
+        if (!size.HasZero()) {
+            resolutions.emplace_back(size);
         }
-        return {size};
+
+        return resolutions;
     }
 }
 

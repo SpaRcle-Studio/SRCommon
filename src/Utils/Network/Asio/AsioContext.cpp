@@ -30,10 +30,10 @@ namespace SR_NETWORK_NS {
         }
     }
 
-    SR_HTYPES_NS::SharedPtr<Acceptor> AsioContext::CreateAcceptor(SocketType type, const std::string& address, uint16_t port) {
+    SR_HTYPES_NS::SharedPtr<Acceptor> AsioContext::CreateAcceptor(SocketType type, StringView address, uint16_t port) {
         switch (type) {
             case SocketType::TCP: {
-                auto&& pAcceptor = new AsioTCPAcceptor(GetThis(), address, port);
+                auto&& pAcceptor = new AsioTCPAcceptor(GetThis(), String(address), port);
                 return pAcceptor;
             }
             case SocketType::UDP:

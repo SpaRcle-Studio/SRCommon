@@ -14,8 +14,8 @@ namespace SR_UTILS_NS {
     void CLIManager::Init(int argc, char** argv) {
         SR_TRACY_ZONE;
 
-        std::vector<std::string> args;
-        args.reserve(static_cast<size_t>(argc > 1 ? argc - 1 : 0));
+        Vector<String> args;
+        args.reserve(static_cast<SizeType>(argc > 1 ? argc - 1 : 0));
 
         /// argv[0] - путь до исполняемого файла, аргументом он не является.
         for (int i = 1; i < argc; ++i) {
@@ -36,7 +36,7 @@ namespace SR_UTILS_NS {
         Init(args);
     }
 
-    void CLIManager::Init(const std::vector<std::string>& args) {
+    void CLIManager::Init(const Vector<String>& args) {
         SR_TRACY_ZONE;
 
         auto&& rawOptions = SR_UTILS_NS::EnumReflector::GetNames<CLIOptions>();
@@ -46,11 +46,11 @@ namespace SR_UTILS_NS {
         Map<String, CLIFlags> flags;
 
         for (auto&& option : rawOptions) {
-            options[std::string("--" + SR_UTILS_NS::StringUtils::ToKebabCase(option))] = SR_UTILS_NS::EnumReflector::FromString<CLIOptions>(option);
+            options["--" + SR_UTILS_NS::StringUtils::ToKebabCase(option)] =SR_UTILS_NS::EnumReflector::FromString<CLIOptions>(option);
         }
 
         for (auto&& flag : rawFlags) {
-            flags[std::string("--" + SR_UTILS_NS::StringUtils::ToKebabCase(flag))] = SR_UTILS_NS::EnumReflector::FromString<CLIFlags>(flag);
+            flags["--" + SR_UTILS_NS::StringUtils::ToKebabCase(flag)] =SR_UTILS_NS::EnumReflector::FromString<CLIFlags>(flag);
         }
 
         String availableOptions = "CLIManager::Init() : available options:\n";
@@ -63,9 +63,9 @@ namespace SR_UTILS_NS {
         SR_PLATFORM_NS::WriteConsoleLog(availableOptions);
 
         for (size_t i = 0; i < args.size(); ++i) {
-            const std::string& arg = args[i];
+            const String& arg = args[i];
 
-            const bool hasValue = i + 1 < args.size() && args[i + 1].rfind("--", 0) != 0;
+            const bool hasValue = i + 1 < args.size() && !args[i + 1].starts_with("--");
 
             if (flags.count(arg) > 0) {
                 // Check if a value follows the flag
@@ -99,7 +99,7 @@ namespace SR_UTILS_NS {
                     SR_PLATFORM_NS::WriteConsoleLog(SR_FORMAT("CLIManager::Init() : loading project from path: '{}'\n", *m_projectPath));
                 }
             }
-            else if (arg.rfind("-", 0) == 0) {
+            else if (arg.starts_with("-")) {
                 SR_PLATFORM_NS::WriteConsoleWarn(SR_FORMAT("CLIManager::Init() : unknown argument: '{}'\n", arg));
             }
             else {

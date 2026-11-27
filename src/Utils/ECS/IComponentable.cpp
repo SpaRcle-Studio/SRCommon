@@ -34,7 +34,7 @@ namespace SR_UTILS_NS {
         return nullptr;
     }
 
-    bool IComponentable::ContainsComponent(const std::string& name) {
+    bool IComponentable::ContainsComponent(const String& name) {
         return GetComponent(name);
     }
 

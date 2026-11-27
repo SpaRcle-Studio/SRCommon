@@ -30,6 +30,8 @@
 #include <Utils/Types/Set.h>
 #include <Utils/Types/Map.h>
 
+#include <Utils/Profile/TracyContext.h>
+
 #include <Utils/Reflection/Property.h>
 
 #include <Utils/Serialization/Serializable.h>

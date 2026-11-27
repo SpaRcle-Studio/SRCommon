@@ -20,7 +20,7 @@ namespace SR_NETWORK_NS {
     }
 
     void AsioPinger::StartSend() {
-        std::string body("\"Hello!\" from SpaRcle Network ping.");
+        const std::string_view body("\"Hello!\" from SpaRcle Network ping.");
 
         // Create an ICMP header for an echo request.
         ICMPHeader echoRequest;
@@ -79,10 +79,9 @@ namespace SR_NETWORK_NS {
 //                m_receiveTimer.Cancel();
             }
 
-            std::string logMessage;
-            logMessage += &"Received " [bytesReceived] - ipv4_hdr.header_length() +
-                            std::string(" bytes from ") + ipv4_hdr.source_address().to_string();
-            SR_LOG(logMessage);
+            SR_LOG("AsioPinger::HandleReceive() : received {} bytes from {}",
+                bytesReceived - ipv4_hdr.header_length(), ipv4_hdr.source_address().to_string()
+            );
         }
 
         StartReceive();
@@ -96,7 +95,7 @@ namespace SR_NETWORK_NS {
 //        m_sendTimer.AsyncWait([&](){AsioPinger::StartSend();}, std::chrono::seconds(1));
     }
 
-    void AsioPinger::Ping(const std::string& destination) {
+    void AsioPinger::Ping(StringView destination) {
         // asio::ip::icmp::resolver::query query(asio::ip::icmp::v4(), destination, "");
         //
         // asio::io_service io_service;

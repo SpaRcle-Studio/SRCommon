@@ -16,11 +16,13 @@ namespace SR_UTILS_NS::Localization {
         setlocale(LC_NUMERIC, "C");
     }
 
-    template<typename CharOut,typename CharIn> void UtfToUtf(std::basic_string<CharOut>& result, CharIn const* begin, CharIn const* end, EncMethodType how = EncMethodType::Default) {
+    template<typename CharOut, typename CharIn, typename ResultType> void UtfToUtf(ResultType& result, CharIn const* begin, CharIn const* end, EncMethodType how = EncMethodType::Default) {
+        static_assert(std::is_same_v<typename ResultType::value_type, CharOut>, "UtfToUtf() : result char type mismatch!");
+
         result.clear();
         result.reserve(end - begin);
 
-        typedef std::back_insert_iterator<std::basic_string<CharOut>> inserter_type;
+        typedef std::back_insert_iterator<ResultType> inserter_type;
         inserter_type inserter(result);
 
         Utf::CodePoint c;
@@ -43,7 +45,7 @@ namespace SR_UTILS_NS::Localization {
     ///
     /// Convert a Unicode NUL terminated string \a str other Unicode encoding
     ///
-    template<typename CharOut,typename CharIn> void UtfToUtf(std::basic_string<CharOut>& result, CharIn const *str, EncMethodType how = EncMethodType::Default) {
+    template<typename CharOut, typename CharIn, typename ResultType> void UtfToUtf(ResultType& result, CharIn const *str, EncMethodType how = EncMethodType::Default) {
         CharIn const *end = str;
 
         while (*end) {
@@ -56,48 +58,9 @@ namespace SR_UTILS_NS::Localization {
     ///
     /// Convert a Unicode string \a str other Unicode encoding
     ///
-    template<typename CharOut, typename CharIn> void UtfToUtf(std::basic_string<CharOut>& result, std::basic_string<CharIn> const& str, EncMethodType how = EncMethodType::Default) {
-        UtfToUtf<CharOut, CharIn>(result, str.c_str(), str.c_str() + str.size(), how);
-    }
-
-    template<typename CharOut, typename CharIn> void UtfToUtf(std::basic_string<CharOut>& result, std::basic_string_view<CharIn> const& str, EncMethodType how = EncMethodType::Default) {
+    template<typename CharOut, typename CharIn, typename ResultType> void UtfToUtf(ResultType& result, std::basic_string_view<CharIn> const& str, EncMethodType how = EncMethodType::Default) {
         UtfToUtf<CharOut, CharIn>(result, str.data(), str.data() + str.size(), how);
     }
-
-    ///std::string Between(const char* begin,
-    ///    const char* end,
-    ///    const std::string& to_charset,
-    ///    const std::string& from_charset,
-    ///    EncMethodType how = EncMethodType::Default
-    ///) {
-    ///    return ConvertBetween(begin, end, to_charset, from_charset, how);
-    ///}
-
-    template<typename CharType> std::basic_string<CharType> ToUtf(const char* begin, const char* end, const std::string& charset, EncMethodType how = EncMethodType::Default) {
-        return ConvertTo<CharType>(begin, end, charset.c_str(), how);
-    }
-
-    template<typename CharType> std::string FromUtf(const CharType* begin, const CharType* end, const std::string& charset, EncMethodType how = EncMethodType::Default) {
-        return ConvertFrom<CharType>(begin, end, charset.c_str(), how);
-    }
-
-    //std::string NormalizeEncoding(const char* cCharset) {
-    //    std::string charset;
-    //    charset.reserve(std::strlen(cCharset));
-    //    while(*cCharset != 0) {
-    //        char c = *cCharset++;
-    //        if('0' <= c && c <= '9') {
-    //            charset += c;
-    //        }
-    //        else if('a' <= c && c <= 'z') {
-    //            charset += c;
-    //        }
-    //        else if('A' <= c && c <= 'Z') {
-    //            charset += char(c - 'A' + 'a');
-    //        }
-    //    }
-    //    return charset;
-    //}
 }
 
 #endif //SR_ENGINE_ENCODING_H

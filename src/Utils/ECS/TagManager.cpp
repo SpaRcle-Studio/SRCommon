@@ -4,6 +4,7 @@
 
 #include <Utils/ECS/TagManager.h>
 #include <Utils/Common/StringAtomLiterals.h>
+#include <Utils/Resources/Xml.h>
 
 namespace SR_UTILS_NS {
     template class GlobalSettings<TagManager>;
@@ -146,7 +147,7 @@ namespace SR_UTILS_NS {
             }
         }
 
-        std::string tagsList;
+        String tagsList;
         for (uint64_t i = 0; i < m_tags.size(); ++i) {
             tagsList += "\t[{}] {}\n"_format(i, m_tags[i]);
         }

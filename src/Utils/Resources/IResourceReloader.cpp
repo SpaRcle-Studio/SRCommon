@@ -18,7 +18,7 @@ namespace SR_UTILS_NS {
         });
 
         SR_UTILS_NS::SubscriptionMessage msg;
-        msg.SetString("Id", std::string(pStorage->id));
+        msg.SetString("Id", String(pStorage->id));
         SR_UTILS_NS::Broadcaster::Instance().Broadcast(Events::EVENT_ON_RESOURCE_RELOADED_ID, msg);
 
         return true;

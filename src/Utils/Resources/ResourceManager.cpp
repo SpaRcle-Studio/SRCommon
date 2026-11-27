@@ -239,7 +239,7 @@ namespace SR_UTILS_NS {
             }
 
             if (Debug::Instance().GetLevel() >= Debug::Level::Medium) {
-                SR_LOG("ResourceManager::GC() : free \"" + std::string(pResource->GetResourceId()) + "\" resource");
+                SR_LOG("ResourceManager::GC() : free \"{}\" resource", pResource->GetResourceId());
             }
 
             Remove(pResource);
@@ -285,7 +285,7 @@ namespace SR_UTILS_NS {
 
         uint64_t count = 0;
 
-        std::string dump = "\n================================ MEMORY DUMP ================================";
+        String dump = "\n================================ MEMORY DUMP ================================";
 
         for (const auto& [hashName, pResourceType] : m_resources) {
             dump += "\n\t\"{}\": {}"_format(pResourceType->GetName(), pResourceType->GetCount());
@@ -297,15 +297,16 @@ namespace SR_UTILS_NS {
             });
         }
 
-        std::string wait;
+        String wait;
         for (auto&& pResource : m_destroyQueue) {
             wait += "\n\t\t";
             wait += pResource->GetResourceId();
-            wait += "; uses = " + std::to_string(pResource->GetCountUses());
+            wait += SR_FORMAT("; uses = {}", pResource->GetCountUses());
             ++count;
         }
 
-        dump += "\n\tWait destroy: " + std::to_string(m_destroyQueue.size()) + wait;
+        dump += SR_FORMAT("\n\tWait destroy: {}", m_destroyQueue.size());
+        dump += wait;
 
         dump += "\n=============================================================================";
 

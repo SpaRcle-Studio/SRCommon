@@ -133,7 +133,7 @@ struct CoreResLoader {
     template<typename T> SR_NODISCARD static SR_HTYPES_NS::SharedPtr<T> Load(const std::string_view& path, const SR_UTILS_NS::IResourceVariant* pVariant = nullptr) {
         return SR_UTILS_NS::DynamicPointerCast<T>(SR_UTILS_NS::ResourceManager::Instance().LoadResource(SR_UTILS_NS::Path(path), T::GetClassStaticName(), pVariant));
     }
-    template<typename T> SR_NODISCARD static SR_HTYPES_NS::SharedPtr<T> Load(const std::string& path, const SR_UTILS_NS::IResourceVariant* pVariant = nullptr) {
+    template<typename T> SR_NODISCARD static SR_HTYPES_NS::SharedPtr<T> Load(const SR_UTILS_NS::String& path, const SR_UTILS_NS::IResourceVariant* pVariant = nullptr) {
         return SR_UTILS_NS::DynamicPointerCast<T>(SR_UTILS_NS::ResourceManager::Instance().LoadResource(SR_UTILS_NS::Path(path), T::GetClassStaticName(), pVariant));
     }
     template<typename T> SR_NODISCARD static SR_HTYPES_NS::SharedPtr<T> Load(const SR_UTILS_NS::Path& path, const SR_UTILS_NS::IResourceVariant* pVariant = nullptr) {

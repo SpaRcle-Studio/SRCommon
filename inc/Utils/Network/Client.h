@@ -15,9 +15,9 @@ namespace SR_NETWORK_NS {
         Client(SocketType type, int32_t domain, int32_t service, int32_t protocol, int32_t port, uint64_t interface);
 
     public:
-        std::string Request(const std::string& serverIp, void* request, uint64_t size);
+        String Request(StringView serverIp, void* request, uint64_t size);
 
-        void Ping(const std::string& ip, int32_t port);
+        void Ping(StringView ip, int32_t port);
 
     private:
         int32_t m_domain = 0;

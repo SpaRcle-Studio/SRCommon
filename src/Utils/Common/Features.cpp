@@ -83,8 +83,8 @@ namespace SR_UTILS_NS {
             return false;
         }
 
-        std::vector<StringAtom> groups = { SR_FEATURE_COMMON_GROUP_ID };
-        std::vector<StringAtom> variants = {
+        Vector<StringAtom> groups = { SR_FEATURE_COMMON_GROUP_ID };
+        Vector<StringAtom> variants = {
         #ifdef SR_DEBUG
             SR_FEATURE_VARIANT_DEBUG_ID,
         #endif
@@ -168,12 +168,12 @@ namespace SR_UTILS_NS {
         return defaultFeature;
     }
 
-    bool Features::RegisterGroup(StringAtom group, const Xml::Node& node, const std::vector<StringAtom>& variants) {
+    bool Features::RegisterGroup(StringAtom group, const Xml::Node& node, const Vector<StringAtom>& variants) {
         SR_TRACY_ZONE;
 
-        static const std::string valueStr = "Value";
-        static const std::string variantStr = "Variant";
-        static const std::string nameStr = "Name";
+        static const String valueStr = "Value";
+        static const String variantStr = "Variant";
+        static const String nameStr = "Name";
 
         for (const auto& groupNode : node.GetNodes()) {
             if (groupNode.Name() != group) {

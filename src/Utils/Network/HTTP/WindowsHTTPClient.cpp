@@ -36,13 +36,14 @@ namespace SR_NETWORK_NS {
         return result;
     }
 
-    std::string WideToUTF8(std::wstring_view string) {
+    String WideToUTF8(std::wstring_view string) {
         if (string.empty())
             return {};
         const int size = WideCharToMultiByte( CP_UTF8, 0, string.data(), static_cast<int>(string.size()), nullptr, 0, nullptr, nullptr);
         if (size <= 0)
             return {};
-        std::string result(size, '\0');
+        String result;
+        result.resize(static_cast<SizeType>(size));
         WideCharToMultiByte( CP_UTF8, 0, string.data(), static_cast<int>(string.size()), result.data(), size, nullptr, nullptr);
         return result;
     }

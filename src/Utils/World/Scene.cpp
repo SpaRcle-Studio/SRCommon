@@ -15,6 +15,7 @@
 #include <Utils/Types/RawMesh.h>
 #include <Utils/ECS/Component.h>
 #include <Utils/ECS/GameObject.h>
+#include <Utils/Debug.h>
 #include <Utils/Platform/Platform.h>
 #include <Utils/Serialization/SRASerialization.h>
 #include <Utils/FileSystem/FileSystem.h>
@@ -303,7 +304,7 @@ namespace SR_WORLD_NS {
         return true;
     }
 
-    SceneObject::Ptr Scene::FindByComponent(const std::string &name) {
+    SceneObject::Ptr Scene::FindByComponent(const String& name) {
         for (auto&& pObject : m_sceneObjects) {
             if (pObject->ContainsComponent(name)) {
                 return pObject;
@@ -454,7 +455,7 @@ namespace SR_WORLD_NS {
         return Find(name.GetHash());
     }
 
-    SceneObject::Ptr Scene::Find(const std::string& name) {
+    SceneObject::Ptr Scene::Find(const String& name) {
         return Find(SR_HASH_STR(name));
     }
 
@@ -462,7 +463,7 @@ namespace SR_WORLD_NS {
         return Find(SR_UTILS_NS::StringAtom(name));
     }
 
-    std::string Scene::GetName() const {
+    String Scene::GetName() const {
         return m_path.GetBaseName();
     }
 

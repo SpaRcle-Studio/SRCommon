@@ -20,14 +20,14 @@ namespace SR_NETWORK_NS {
         }
     }
 
-    bool AsioICMPSocket::Connect(const std::string& address, uint16_t port) {
+    bool AsioICMPSocket::Connect(StringView address, uint16_t port) {
         if (IsOpen()) {
             SR_ERROR("AsioICMPSocket::Connect() : socket is already open!");
             return false;
         }
 
         asio::error_code errorCode;
-        asio::ip::icmp::endpoint endpoint(asio::ip::make_address(address, errorCode), port);
+        asio::ip::icmp::endpoint endpoint(asio::ip::make_address(std::string_view(address.data(), address.size()), errorCode), port);
 
         if (errorCode) {
             SR_ERROR("AsioICMPSocket::Connect() : failed to create endpoint: {}", errorCode.message());
@@ -102,14 +102,14 @@ namespace SR_NETWORK_NS {
         return m_socket.has_value() && m_socket->is_open();
     }
 
-    std::string AsioICMPSocket::GetLocalAddress() const {
+    String AsioICMPSocket::GetLocalAddress() const {
         SRHalt("AsioICMPSocket::GetLocalAddress() : not yet implemented!");
-        return std::string();
+        return String();
     }
 
-    std::string AsioICMPSocket::GetRemoteAddress() const {
+    String AsioICMPSocket::GetRemoteAddress() const {
         SRHalt("AsioICMPSocket::GetRemoteAddress() : not yet implemented!");
-        return std::string();
+        return String();
     }
 
     uint16_t AsioICMPSocket::GetLocalPort() const {
@@ -135,8 +135,8 @@ namespace SR_NETWORK_NS {
         return 0;
     }
 
-    bool AsioICMPSocket::SendTo(const void *data, uint64_t size, const std::string &address, uint16_t port) {
-        m_socket->send_to(asio::buffer(data, size), asio::ip::icmp::endpoint(asio::ip::make_address(address), port));
+    bool AsioICMPSocket::SendTo(const void *data, uint64_t size, StringView address, uint16_t port) {
+        m_socket->send_to(asio::buffer(data, size), asio::ip::icmp::endpoint(asio::ip::make_address(std::string_view(address.data(), address.size())), port));
 
         return true;
     }

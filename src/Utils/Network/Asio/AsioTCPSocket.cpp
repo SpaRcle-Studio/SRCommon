@@ -20,14 +20,14 @@ namespace SR_NETWORK_NS {
         }
     }
 
-    bool AsioTCPSocket::Connect(const std::string& address, uint16_t port) {
+    bool AsioTCPSocket::Connect(StringView address, uint16_t port) {
         if (IsOpen()) {
             SR_ERROR("AsioTCPSocket::Connect() : socket is already open!");
             return false;
         }
 
         asio::error_code errorCode;
-        asio::ip::tcp::endpoint endpoint(asio::ip::make_address(address, errorCode), port);
+        asio::ip::tcp::endpoint endpoint(asio::ip::make_address(std::string_view(address.data(), address.size()), errorCode), port);
 
         if (errorCode) {
             SR_ERROR("AsioTCPSocket::Connect() : failed to create endpoint: {}", errorCode.message());
@@ -110,14 +110,14 @@ namespace SR_NETWORK_NS {
         return m_socket.has_value() && m_socket->is_open();
     }
 
-    std::string AsioTCPSocket::GetLocalAddress() const {
+    String AsioTCPSocket::GetLocalAddress() const {
         if (m_socket.has_value()) {
-            return m_socket->local_endpoint().address().to_string();
+            return String(m_socket->local_endpoint().address().to_string());
         }
 
         SR_ERROR("AsioTCPSocket::GetLocalAddress() : invalid socket!");
 
-        return std::string(); /// NOLINT
+        return String(); /// NOLINT
     }
 
     uint16_t AsioTCPSocket::GetLocalPort() const {
@@ -130,14 +130,14 @@ namespace SR_NETWORK_NS {
         return 0;
     }
 
-    std::string AsioTCPSocket::GetRemoteAddress() const {
+    String AsioTCPSocket::GetRemoteAddress() const {
         if (m_socket.has_value()) {
-            return m_socket->remote_endpoint().address().to_string();
+            return String(m_socket->remote_endpoint().address().to_string());
         }
 
         SR_ERROR("AsioTCPSocket::GetRemoteAddress() : invalid socket!");
 
-        return std::string(); /// NOLINT
+        return String(); /// NOLINT
     }
 
     uint16_t AsioTCPSocket::GetRemotePort() const {
@@ -188,7 +188,7 @@ namespace SR_NETWORK_NS {
         return 0;
     }
 
-    bool AsioTCPSocket::SendTo(const void *data, uint64_t size, const std::string &address, uint16_t port) {
+    bool AsioTCPSocket::SendTo(const void *data, uint64_t size, StringView address, uint16_t port) {
         SRHalt("AsioTCPSocket::SendTo() : not yet implemented!");
         return false;
     }

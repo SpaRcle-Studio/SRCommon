@@ -54,7 +54,7 @@ namespace SR_UTILS_NS::EntityRefUtils {
         }
     };
 
-    typedef std::vector<PathItem> RefPath;
+    typedef Vector<PathItem> RefPath;
 
     SR_MAYBE_UNUSED SR_COMMON_DLL_API SR_HTYPES_NS::SharedPtr<SR_WORLD_NS::Scene> GetSceneFromOwner(const OwnerRef& owner);
 

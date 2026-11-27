@@ -15,8 +15,8 @@
 #pragma pack(pop, before_imagehlp)
 
 struct module_data {
-    std::string image_name;
-    std::string module_name;
+    SR_UTILS_NS::String image_name;
+    SR_UTILS_NS::String module_name;
     void *base_address{};
     DWORD load_size{};
 };
@@ -36,13 +36,13 @@ public:
         SymGetSymFromAddr64(process, address, &displacement, sym);
     }
 
-    std::string name() { return std::string(sym->Name); }
-    std::string undecorated_name() {
+    SR_UTILS_NS::String name() { return SR_UTILS_NS::String(sym->Name); }
+    SR_UTILS_NS::String undecorated_name() {
         if (*sym->Name == '\0')
             return "<couldn't map PC to fn name>";
-        std::vector<char> und_name(max_name_len);
+        char und_name[max_name_len] = { };
         UnDecorateSymbolName(sym->Name, &und_name[0], max_name_len, UNDNAME_COMPLETE);
-        return std::string(&und_name[0], strlen(&und_name[0]));
+        return SR_UTILS_NS::String(&und_name[0]);
     }
 };
 
@@ -65,14 +65,12 @@ public:
         ret.image_name = temp;
         GetModuleBaseName(process, module, temp, sizeof(temp));
         ret.module_name = temp;
-        std::vector<char> img(ret.image_name.begin(), ret.image_name.end());
-        std::vector<char> mod(ret.module_name.begin(), ret.module_name.end());
-        SymLoadModule64(process, 0, &img[0], &mod[0], (DWORD64)ret.base_address, ret.load_size);
+        SymLoadModule64(process, 0, ret.image_name.data(), ret.module_name.data(), (DWORD64)ret.base_address, ret.load_size);
         return ret;
     }
 };
 
-std::string builder;
+SR_UTILS_NS::String builder;
 
 #ifdef SR_MSVC
 DWORD getStack(EXCEPTION_POINTERS* ep) {
@@ -81,9 +79,9 @@ DWORD getStack(EXCEPTION_POINTERS* ep) {
     int frame_number=0;
     DWORD offset_from_symbol=0;
     IMAGEHLP_LINE64 line = {0};
-    std::vector<module_data> modules;
+    SR_UTILS_NS::Vector<module_data> modules;
     DWORD cbNeeded;
-    std::vector<HMODULE> module_handles(1);
+    SR_UTILS_NS::Vector<HMODULE> module_handles(1, nullptr);
 
     // Load the symbols:
     // WARNING: You'll need to replace <pdb-search-path> with either NULL
@@ -96,7 +94,10 @@ DWORD getStack(EXCEPTION_POINTERS* ep) {
     EnumProcessModules(process, &module_handles[0], module_handles.size() * sizeof(HMODULE), &cbNeeded);
     module_handles.resize(cbNeeded/sizeof(HMODULE));
     EnumProcessModules(process, &module_handles[0], module_handles.size() * sizeof(HMODULE), &cbNeeded);
-    std::transform(module_handles.begin(), module_handles.end(), std::back_inserter(modules), get_mod_info(process));
+    get_mod_info modInfo(process);
+    for (HMODULE module : module_handles) {
+        modules.emplace_back(modInfo(module));
+    }
     void *base = modules[0].base_address;
 
     // Setup stuff:
@@ -126,11 +127,11 @@ DWORD getStack(EXCEPTION_POINTERS* ep) {
     // Build the string:
     do {
         if ( frame.AddrPC.Offset != 0 ) {
-            std::string fnName = symbol(process, frame.AddrPC.Offset).undecorated_name();
+            SR_UTILS_NS::String fnName = symbol(process, frame.AddrPC.Offset).undecorated_name();
             builder += fnName;
             if (SymGetLineFromAddr64( process, frame.AddrPC.Offset, &offset_from_symbol, &line)) {
                 //builder << "  " /*<< line.FileName*/ << "(" << line.LineNumber << ")\n";
-                builder += " (" + std::to_string(line.LineNumber) + ")\n";
+                builder += SR_FORMAT(" ({})\n", line.LineNumber);
             }
             else {
                 builder += "\n";
@@ -177,11 +178,11 @@ namespace SR_UTILS_NS {
         g_stackStraceEnabled = false;
     }
 
-    std::string GetStacktrace() {
+    String GetStacktrace() {
         std::lock_guard lock(g_stackTraceMutex);
 
         if (!g_stackStraceEnabled) {
-            return std::string();
+            return String();
         }
         builder.clear();
         GetStacktraceImpl();

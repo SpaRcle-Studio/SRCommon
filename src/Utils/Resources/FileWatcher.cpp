@@ -43,11 +43,11 @@ namespace SR_UTILS_NS {
         return m_path;
     }
 
-    void FileWatcher::SetName(std::string name) {
+    void FileWatcher::SetName(String name) {
         m_name = std::move(name);
     }
 
-    std::string FileWatcher::GetName() const noexcept {
+    String FileWatcher::GetName() const noexcept {
         return m_name;
     }
 

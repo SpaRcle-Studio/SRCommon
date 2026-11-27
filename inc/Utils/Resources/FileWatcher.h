@@ -27,12 +27,12 @@ namespace SR_UTILS_NS {
 
     public:
         void SetCallBack(CallBack callBack);
-        void SetName(std::string name);
+        void SetName(String name);
 
         void Pause();
         void Resume();
 
-        SR_NODISCARD std::string GetName() const noexcept;
+        SR_NODISCARD String GetName() const noexcept;
         SR_NODISCARD const SR_UTILS_NS::Path& GetPath() const noexcept;
 
     private:
@@ -45,7 +45,7 @@ namespace SR_UTILS_NS {
         std::optional<Subscription> m_subscription;
         SR_UTILS_NS::Path m_path;
         CallBack m_callBack;
-        std::string m_name;
+        String m_name;
 
     };
 }

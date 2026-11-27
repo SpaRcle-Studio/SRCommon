@@ -38,13 +38,11 @@ namespace SR_UTILS_NS {
 
         SR_NODISCARD const Storage& GetStorage() const { return m_strings; }
 
-        SR_NODISCARD StringHashInfo* GetOrAddInfo(const std::string& str);
         SR_NODISCARD StringHashInfo* GetOrAddInfo(const String& str);
         SR_NODISCARD StringHashInfo* GetOrAddInfo(StringView str);
         SR_NODISCARD StringHashInfo* GetOrAddInfo(std::string_view str);
         SR_NODISCARD StringHashInfo* GetOrAddInfo(const char* str);
 
-        Hash AddHash(const std::string& str);
         Hash AddHash(const std::string_view& str);
         Hash AddHash(const char* str);
 

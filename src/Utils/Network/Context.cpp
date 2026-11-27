@@ -42,7 +42,7 @@ namespace SR_NETWORK_NS {
         return pContext;
     }
 
-    SR_HTYPES_NS::SharedPtr<PeerToPeer> Context::CreateP2P(SocketType type, const std::string& address, uint16_t port) {
+    SR_HTYPES_NS::SharedPtr<PeerToPeer> Context::CreateP2P(SocketType type, StringView address, uint16_t port) {
         return new PeerToPeer(type, GetThis(), address, port);
     }
 

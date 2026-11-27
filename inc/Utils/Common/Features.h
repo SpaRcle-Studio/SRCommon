@@ -48,7 +48,7 @@ namespace SR_UTILS_NS {
     private:
         SR_NODISCARD const FeatureGroup& GetGroup(StringAtom name) const;
         bool Register(StringAtom group, StringAtom name, bool value);
-        bool RegisterGroup(StringAtom group, const Xml::Node& node, const std::vector<StringAtom>& variants);
+        bool RegisterGroup(StringAtom group, const Xml::Node& node, const Vector<StringAtom>& variants);
 
     private:
         bool m_isInitialized = false;

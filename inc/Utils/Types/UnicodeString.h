@@ -19,7 +19,7 @@ namespace SR_UTILS_NS {
         UnicodeString(const UnicodeString& other);
         UnicodeString(UnicodeString&& other) noexcept;
 
-        UnicodeString(const std::string& str); /// NOLINT(google-explicit-constructor)
+        UnicodeString(const String& str); /// NOLINT(google-explicit-constructor)
         UnicodeString(const std::u16string& str); /// NOLINT(google-explicit-constructor)
         UnicodeString(const std::u32string& str); /// NOLINT(google-explicit-constructor)
 

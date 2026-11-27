@@ -55,7 +55,7 @@ namespace SR_HTYPES_NS {
             return *this;
         }
 
-        FastMemoryArray(const std::vector<T>& other) {
+        FastMemoryArray(const SR_UTILS_NS::Vector<T>& other) {
             SR_TRACY_ZONE;
             m_size = other.size();
             m_capacity = m_size;

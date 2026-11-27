@@ -18,7 +18,8 @@ namespace SR_UTILS_NS {
     static SR_INLINE double_t ParseDouble(std::string_view sv) {
     #if defined(SR_LINUX) || defined(SR_ANDROID)
         // GCC не умеет from_chars для double
-        return std::stod(std::string(sv));
+        const String buffer(sv);
+        return std::strtod(buffer.c_str(), nullptr);
     #else
         double_t result = 0.0;
         auto [ptr, ec] = std::from_chars(sv.data(), sv.data() + sv.size(), result);
@@ -33,7 +34,8 @@ namespace SR_UTILS_NS {
     static SR_INLINE float_t ParseFloat(std::string_view sv) {
     #if defined(SR_LINUX) || defined(SR_ANDROID)
         // GCC не умеет from_chars для float
-        return std::stof(std::string(sv));
+        const String buffer(sv);
+        return std::strtof(buffer.c_str(), nullptr);
     #else
         float_t result = 0.0f;
         auto [ptr, ec] = std::from_chars(sv.data(), sv.data() + sv.size(), result);
@@ -254,9 +256,7 @@ namespace SR_UTILS_NS {
                     uint8_t offset = r + g + b + a; // max 4
 
                     if (str[offset] == '(' && str.back() == ')') {
-                        std::vector<std::string> values;
-
-                        values = SR_UTILS_NS::StringUtils::Split(std::string(str.substr(offset + 1, str.size() - (offset + 1) - 1)), ",");
+                        Vector<String> values = SR_UTILS_NS::StringUtils::Split(str.substr(offset + 1, str.size() - (offset + 1) - 1), ",");
 
                         uint8_t index = 0;
                         SR_MATH_NS::FColor color = SR_MATH_NS::FColor::Alpha();

@@ -18,7 +18,7 @@ namespace SR_UTILS_NS {
 
         void SetInt(StringAtom id, uint64_t value);
         void SetBool(StringAtom id, bool value);
-        void SetString(StringAtom id, const std::string& value);
+        void SetString(StringAtom id, const String& value);
         void SetStringAtom(StringAtom id, StringAtom value);
         void SetPath(StringAtom id, const SR_UTILS_NS::Path& value);
         void SetPointer(StringAtom id, void* value);
@@ -27,7 +27,7 @@ namespace SR_UTILS_NS {
 
         SR_NODISCARD uint64_t GetInt(StringAtom id, const std::optional<uint64_t>& def = std::nullopt) const;
         SR_NODISCARD bool GetBool(StringAtom id, const std::optional<bool>& def = std::nullopt) const;
-        SR_NODISCARD std::string GetString(StringAtom id, const std::optional<std::string>& def = std::nullopt) const;
+        SR_NODISCARD String GetString(StringAtom id, const std::optional<String>& def = std::nullopt) const;
         SR_NODISCARD StringAtom GetStringAtom(StringAtom id, const std::optional<StringAtom>& def = std::nullopt) const;
         SR_NODISCARD SR_UTILS_NS::Path GetPath(StringAtom id, const std::optional<SR_UTILS_NS::Path>& def = std::nullopt) const;
         SR_NODISCARD void* GetPointer(StringAtom id, const std::optional<void*>& def = std::nullopt) const;
@@ -87,7 +87,7 @@ namespace SR_UTILS_NS {
             uint64_t intValue = 0;
             StringAtom atomValue;
             std::optional<SR_UTILS_NS::Path> pathValue;
-            std::optional<std::string> strValue;
+            std::optional<String> strValue;
 
             template<typename T> SR_NODISCARD T& GetValueRef() {
                 if constexpr (std::is_same_v<T, bool>) {
@@ -99,7 +99,7 @@ namespace SR_UTILS_NS {
                 else if constexpr (std::is_same_v<T, StringAtom>) {
                     return atomValue;
                 }
-                else if constexpr (std::is_same_v<T, std::string>) {
+                else if constexpr (std::is_same_v<T, String>) {
                     if (!strValue.has_value()) {
                         strValue.emplace();
                     }

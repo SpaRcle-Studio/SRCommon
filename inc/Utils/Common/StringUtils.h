@@ -82,55 +82,6 @@ namespace SR_UTILS_NS {
             return path;
         }
 
-        static SR_FORCE_INLINE std::string MultiConcat(const std::string& target, int32_t n) {
-            std::string out;
-            for (auto i = 0; i < n; i++) {
-                out += target;
-            }
-
-            return out;
-        }
-
-        static SR_FORCE_INLINE std::string GetDirFromPath(const std::string &path) {
-            return path.substr(0, path.find_last_of("/\\"));
-        }
-
-        static SR_FORCE_INLINE int32_t IndexOf(const std::string& str, const char& symbol, uint32_t offset = 0) {
-            for (uint32_t i = offset; i < str.size(); i++)
-                if (str[i] == symbol)
-                    return (int32_t)i;
-            return SR_INVALID_STR_POS;
-        }
-
-        static SR_FORCE_INLINE int32_t IndexOf(const std::string& str, const std::string& subStr, uint32_t offset = 0) {
-            auto&& index = str.find(subStr, offset);
-            if (index == std::string::npos) {
-                return SR_INVALID_STR_POS;
-            }
-            return static_cast<int32_t>(index);
-        }
-
-        static SR_FORCE_INLINE std::string GetFileNameFromFullPath(std::string full_path) {
-            size_t size = full_path.size();
-
-            while (size > 0){
-                size--;
-                if (full_path[size] == '\\' || full_path[size] == '/'){
-                    full_path = full_path.erase(0, size + 1);
-                    break;
-                }
-            }
-
-            return full_path;
-        }
-
-        static std::string RemoveCharsFromString(std::string source, const std::string& charsToRemove) {
-            for (char i : charsToRemove) {
-                source.erase(std::remove(source.begin(), source.end(), i), source.end());
-            }
-            return source;
-        }
-
         static String RemoveCharsFromString(String source, StringView charsToRemove);
 
         static char* Strncat(char* dest, const char* src, size_t count) {
@@ -154,101 +105,15 @@ namespace SR_UTILS_NS {
             return dest;
         }
 
-        static std::string Remove(const String& source, uint64_t count);
-        static std::string Remove(const String& source, uint64_t start, uint64_t count);
+        static String Remove(const String& source, uint64_t count);
+        static String Remove(const String& source, uint64_t start, uint64_t count);
 
-        static std::string GetBetween(const std::string& source, int64_t begin, uint64_t end);
         static std::string_view GetBetween(std::string_view source, char begin, char end, int8_t* pResult = nullptr);
-        static std::string GetBetween(const std::string& source, const std::string& begin, const std::string& end);
-
-        static std::string Tab(std::string code, uint32_t count = 1);
-
-        static std::string Substring(const std::string& source, char symbol, uint32_t offset = 0) {
-            if (auto&& pos = source.find(symbol); pos == std::string::npos)
-                return source;
-            else
-                return source.substr(pos + offset, source.size() - 1);
-        }
-
-        static std::string Substring(const std::string& source, const char* subStr) {
-            if (auto&& pos = source.find(subStr); pos == std::string::npos)
-                return source;
-            else {
-                return source.substr(pos, source.size() - 1);
-            }
-        }
-
-        static std::string Substring(const std::string_view& source, char symbol, uint32_t offset = 0) {
-            if (auto&& pos = source.find(symbol); pos == std::string::npos)
-                return std::string(source);
-            else {
-                return std::string(source.substr(pos + offset, source.size() - 1));
-            }
-        }
 
         static std::string_view SubstringView(const std::string_view& source, char symbol, uint32_t offset = 0);
         static std::string_view SubstringView(const std::string_view& source, StringAtom substr, uint32_t offset = 0);
 
-        static SR_FORCE_INLINE std::string BackRead(const std::string& str, const char c, const int offset = 0) {
-            std::string result = std::string();
-
-            size_t size = str.size();
-
-            for (int64_t i = (static_cast<int64_t>(size) - 1) + offset; i >= 0; --i) {
-                if (str[i] != c)
-                    result += str[i];
-                else
-                    break;
-            }
-
-            std::reverse(result.begin(), result.end());
-
-            return result;
-        }
-
-        static std::string ReadFrom(const std::string& str, const char& c, uint32_t start);
-
-        static std::string ReadNumber(const std::string& str, uint32_t start);
-
-        static int32_t FindClosest(const std::string& str, const std::string& characters) {
-            int32_t pos = SR_INVALID_STR_POS;
-            for (char c : characters) {
-                auto find = str.find(c);
-                if (find != std::string::npos && (pos == -1 || find < pos)) {
-                    pos = static_cast<int32_t>(find);
-                }
-            }
-            return pos;
-        }
-
-        static inline std::string ReadTo(std::string str, const char c, int offset = 0) {
-            size_t size = str.size();
-            for (size_t t = 0; t < size; t++){
-                if (str[t] == c){
-                    str.resize(t + offset + 1);
-                    break;
-                }
-            }
-            return str;
-        }
-
-        static inline std::string Resize(std::string str, size_t newSize) noexcept {
-            str.resize(newSize);
-            return str;
-        }
-
-        static inline std::string BackSubstring(const std::string& str, char c){
-            std::string result;
-            for (size_t t = str.size() - 1; t > 0; t--){
-                if (str[t] == c)
-                    return result;
-                else
-                    result += str[t];
-            }
-            return std::string();
-        }
-
-        static std::string ToKebabCase(std::string_view str);
+        static String ToKebabCase(std::string_view str);
 
         inline static unsigned long FastStrLen(const char* str) noexcept {
             unsigned long len = 0;
@@ -259,11 +124,8 @@ namespace SR_UTILS_NS {
             return len;
         }
 
-        SR_NODISCARD static std::pair<std::string, std::string> SplitTwo(std::string source, const std::string& delimiter);
-
-        SR_NODISCARD static std::vector<std::string_view> SplitView(std::string_view source, std::string_view delimiter);
-        SR_NODISCARD static std::vector<std::string_view> SplitViewWithEmpty(std::string_view source, std::string_view delimiter);
-        SR_NODISCARD static std::vector<std::string> Split(std::string source, const std::string& delimiter);
+        SR_NODISCARD static Vector<std::string_view> SplitView(std::string_view source, std::string_view delimiter);
+        SR_NODISCARD static Vector<String> Split(std::string_view source, std::string_view delimiter);
 
         void SplitView(StringView source, StringView delimiter, Vector<StringView>& out) const;
 
@@ -310,10 +172,6 @@ namespace SR_UTILS_NS {
                 }
             }
             return nullptr;
-        }
-
-        SR_NODISCARD inline static bool Contains(const std::string& str, const std::string& word) noexcept {
-            return str.find(word) != std::string::npos;
         }
 
         SR_NODISCARD inline static float* SplitFloats(const char* source, char chr, unsigned short start, unsigned short count_floats) {
@@ -373,8 +231,6 @@ namespace SR_UTILS_NS {
             return count;
         }
 
-        SR_NODISCARD static std::string ReplaceAllRecursive(const std::string& original, const std::vector<std::string>& fromList, const std::string& to) noexcept;
-
         template<typename ST1, typename ST2, typename ST3> SR_NODISCARD static ST1 ReplaceAll(ST1 const& original, ST2 const& from, ST3 const& to) noexcept {
             ST1 results;
             results.reserve(original.size());
@@ -393,13 +249,8 @@ namespace SR_UTILS_NS {
 
         SR_NODISCARD String MakePath(StringView str, bool toLower = false) noexcept;
 
-        SR_NODISCARD inline static std::string FromCharVector(const std::vector<char>& vs) noexcept {
-            std::string result(begin(vs), end(vs));
-            return result;
-        }
-
         // Cut string (file name) to output it
-        SR_NODISCARD static std::string CutName(std::string str, unsigned int frompos){
+        SR_NODISCARD static String CutName(String str, uint32_t frompos){
             SR_TRACY_ZONE;
             if (str.size() > frompos){
                 str = str.substr(0,frompos);

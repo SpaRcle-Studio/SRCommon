@@ -98,8 +98,8 @@ namespace SR_UTILS_NS {
 
     private:
         void InitNotNulls(SRClass* pClass) const noexcept;
-        void WriteLog(const std::string& message) const noexcept;
-        void WriteError(const std::string& message) const noexcept;
+        void WriteLog(const String& message) const noexcept;
+        void WriteError(const String& message) const noexcept;
 
     private:
         SR_HTYPES_NS::FlatHashMap<StringView, StringAtom> m_nameTypeId;

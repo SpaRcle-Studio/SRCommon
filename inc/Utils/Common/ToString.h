@@ -32,12 +32,12 @@ namespace SR_UTILS_NS {
         return StringView(pBuffer, length);
     }
 
-    template<typename T> std::string ToString(const T& value) {
+    template<typename T> String ToString(const T& value) {
         if constexpr (IsLogical<T>()) {
             return value ? "true" : "false";
         }
         else if constexpr (SR_MATH_NS::IsNumber<T>()) {
-            return std::to_string(value);
+            return String(std::to_string(value));
         }
         else if constexpr (IsString<T>()) {
             return value;
@@ -47,7 +47,7 @@ namespace SR_UTILS_NS {
         }
         else {
             SRHalt("ToStringAtom: unsupported type!");
-            return std::string(); /// NOLINT
+            return String(); /// NOLINT
         }
     }
 }

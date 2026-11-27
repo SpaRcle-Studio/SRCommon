@@ -68,7 +68,7 @@ namespace SR_UTILS_NS {
         template<typename EnumType> SR_NODISCARD static SR_UTILS_NS::StringAtom ToStringAtom(int64_t value);
         template<typename EnumType> SR_NODISCARD static EnumType FromString(const SR_UTILS_NS::StringAtom& value);
         template<typename EnumType> SR_NODISCARD static bool FromString(const SR_UTILS_NS::StringAtom& value, EnumType& result);
-        template<typename EnumType> SR_NODISCARD static EnumType FromStringLowerCase(const std::string& value);
+        template<typename EnumType> SR_NODISCARD static EnumType FromStringLowerCase(const String& value);
         template<typename EnumType> SR_NODISCARD static uint64_t GetIntegralTypeSize();
 
         template<typename EnumType> SR_NODISCARD static const Vector<StringAtom>& GetNames();
@@ -97,7 +97,7 @@ namespace SR_UTILS_NS {
 
     private:
         static bool IsIdentChar(char c);
-        static void ErrorInternal(const std::string& msg);
+        static void ErrorInternal(const String& msg);
         static uint64_t GetAndRegisterHash(const char* name);
 
     private:
@@ -180,7 +180,7 @@ namespace SR_UTILS_NS {
         return GetIndex<EnumType>(static_cast<int64_t>(value));
     }
 
-    template<typename EnumType> EnumType EnumReflector::FromStringLowerCase(const std::string &value) {
+    template<typename EnumType> EnumType EnumReflector::FromStringLowerCase(const String &value) {
         if (auto&& result = GetReflector<EnumType>()->FromStringLowerCaseInternal(value); result.has_value()) {
             return static_cast<EnumType>(result.value());
         }

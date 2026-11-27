@@ -17,7 +17,7 @@ namespace SR_NETWORK_NS {
         ~AsioPinger();
 
     public:
-        void Ping(const std::string& address) override;
+        void Ping(StringView address) override;
 
     private:
         void StartSend();

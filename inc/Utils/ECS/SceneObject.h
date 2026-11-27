@@ -7,7 +7,6 @@
 
 #include <Utils/ECS/EntityController.h>
 #include <Utils/ECS/LayerManager.h>
-#include <Utils/ECS/TagManager.h>
 #include <Utils/ECS/IComponentable.h>
 #include <Utils/Reflection/Property.h>
 #include <Utils/Reflection/Value.h>
@@ -81,7 +80,7 @@ namespace SR_UTILS_NS {
         SR_NODISCARD SR_FORCE_INLINE bool IsActive() const noexcept override { return m_isActive && !m_isDestroyed; }
 
         SR_NODISCARD SceneObject::Ptr Find(uint64_t hashName) const noexcept;
-        SR_NODISCARD SceneObject::Ptr Find(const std::string& name) const noexcept;
+        SR_NODISCARD SceneObject::Ptr Find(const String& name) const noexcept;
         SR_NODISCARD SceneObject::Ptr Find(const std::string_view& name) const noexcept;
         SR_NODISCARD SceneObject::Ptr Find(StringAtom name) const noexcept;
         SR_NODISCARD SceneObject::Ptr FindRecursively(StringAtom name) const noexcept;
@@ -202,9 +201,9 @@ namespace SR_UTILS_NS {
         SRHashType m_idInScene = SRInvalidHash;
 
     private:
-        /// @property @setter(SetTag) @hidden @dontSaveTags(Inspector)
+        /// @property @setter(SetTag) @hidden @dontSaveTags(Inspector) @defaultValue(SR_UTILS_NS::TagManager::GetDefaultTag())
         /// @loadCondition(!This.IsPrefabLoadingState())
-        StringAtom m_tag = TagManager::GetDefaultTag();
+        StringAtom m_tag;
         /// @loadCondition(!This.IsPrefabLoadingState())
         /// @property @setter(SetName) @hidden @dontSaveTags(Inspector)
         StringAtom m_name;

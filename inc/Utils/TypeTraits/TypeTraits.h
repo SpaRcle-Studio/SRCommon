@@ -49,7 +49,7 @@ namespace SR_UTILS_NS {
 		SR_NODISCARD uint64_t GetSize() const noexcept { return sizeof(name); }
 		SR_NODISCARD const char* GetName() const noexcept { return name; }
 		SR_NODISCARD uint64_t GetHash() const noexcept { return hash; }
-		SR_NODISCARD std::string ToString() const noexcept { return std::string(name); }
+		SR_NODISCARD String ToString() const noexcept { return String(StringView(name, length)); }
 		SR_NODISCARD StringView GetNameView() const noexcept { return StringView(name, length); }
 
 	private:

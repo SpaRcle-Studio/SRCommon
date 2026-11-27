@@ -35,7 +35,7 @@ namespace SR_UTILS_NS {
         SR_REGISTER_SINGLETON(CLIManager);
     public:
         void Init(int argc, char** argv);
-        void Init(const std::vector<std::string>& args);
+        void Init(const Vector<String>& args);
 
         void SetProjectPath(const std::optional<Path>& path) { m_projectPath = path; }
 

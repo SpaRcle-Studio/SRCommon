@@ -23,10 +23,10 @@ namespace SR_UTILS_NS::Web {
         SR_REGISTER_SINGLETON(CSSParser)
     public:
         SR_NODISCARD CSS::Ptr Parse(const Path& path, const CSSParserContext& context = CSSParserContext::GetDefault());
-        SR_NODISCARD CSS::Ptr Parse(const std::string& data, const CSSParserContext& context = CSSParserContext::GetDefault());
+        SR_NODISCARD CSS::Ptr Parse(const String& data, const CSSParserContext& context = CSSParserContext::GetDefault());
 
     private:
-        bool EvaluateMedia(const std::string& media, const CSSParserContext& context) const;
+        bool EvaluateMedia(const String& media, const CSSParserContext& context) const;
 
     private:
         CSS::Ptr m_pCSS = nullptr;

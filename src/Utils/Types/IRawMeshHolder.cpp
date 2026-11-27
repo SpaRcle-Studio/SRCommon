@@ -98,13 +98,12 @@ namespace SR_HTYPES_NS {
         }
     }
 
-    std::string IRawMeshHolder::GetMeshStringPath() const noexcept {
+    String IRawMeshHolder::GetMeshStringPath() const noexcept {
         if (m_rawMesh) {
             return m_rawMesh->GetResourcePath().ToStringRef();
         }
 
-        static const std::string empty;
-        return empty;
+        return String();
     }
 
     bool IRawMeshHolder::IsValidMeshId() const noexcept {

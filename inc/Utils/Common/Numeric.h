@@ -20,7 +20,7 @@ namespace SR_UTILS_NS {
     public:
         static void Initialize();
 
-        template<typename T> void Shuffle(std::vector<T>& vector);
+        template<typename T> void Shuffle(Vector<T>& vector);
 
         /// @method @evaluate
         SR_NODISCARD bool Bool();
@@ -46,8 +46,8 @@ namespace SR_UTILS_NS {
 
     };
 
-    template<typename T> void Random::Shuffle(std::vector<T>& vector) {
-        std::shuffle(std::begin(vector), std::end(vector), m_randomDevice);
+    template<typename T> void Random::Shuffle(Vector<T>& vector) {
+        std::shuffle(vector.begin(), vector.end(), m_randomDevice);
     }
 }
 

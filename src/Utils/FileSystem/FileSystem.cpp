@@ -177,7 +177,7 @@ namespace SR_UTILS_NS {
         while (read <= path.size()) {
             size_t start = read;
             size_t end = path.find('/', read);
-            if (end == std::string::npos) end = path.size();
+            if (end == String::npos) end = path.size();
             size_t len = end - start;
 
             if (len > 0) {

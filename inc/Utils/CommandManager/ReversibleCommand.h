@@ -6,8 +6,11 @@
 #define SR_ENGINE_REVERSIBLECOMMAND_H
 
 #include <Utils/CommandManager/ICommand.h>
-#include <Utils/Resources/Xml.h>
 #include <Utils/Types/Vector.h>
+
+namespace SR_UTILS_NS::Xml {
+    class Node;
+}
 
 namespace SR_UTILS_NS {
     class CmdManager;
@@ -21,11 +24,11 @@ namespace SR_UTILS_NS {
     public:
         virtual bool Redo() = 0;
         virtual bool Undo() = 0;
-        virtual std::string GetName() { return "Unnamed"; }
+        virtual String GetName() { return "Unnamed"; }
 
     public:
-        virtual bool Load(const Xml::Node&) { return false; }
-        SR_NODISCARD virtual Xml::Node Save() const { return Xml::Node(); }
+        virtual bool Load(const Xml::Node&);
+        SR_NODISCARD virtual Xml::Node Save() const;
 
     };
 
@@ -38,11 +41,11 @@ namespace SR_UTILS_NS {
     private:
         bool Redo() override;
         bool Undo() override;
-        std::string GetName() override { return "GroupCommand"; } ;
+        String GetName() override { return "GroupCommand"; } ;
 
     public:
-        bool Load(const Xml::Node&) override { return false; }
-        SR_NODISCARD Xml::Node Save() const override { return Xml::Node(); }
+        bool Load(const Xml::Node&) override;
+        SR_NODISCARD Xml::Node Save() const override;
 
     private:
         Vector<ReversibleCommand*> m_commands;

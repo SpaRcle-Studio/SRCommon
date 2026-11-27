@@ -118,7 +118,7 @@ namespace SR_UTILS_NS::Platform {
         return "{} {}"_format(dateUtf8, timeUtf8);
     }
 
-    std::wstring ConvertToUnicode(const std::string& str) {
+    std::wstring ConvertToUnicode(const String& str) {
         UINT codePage = CP_ACP;
         DWORD flags = 0;
         int resultSize = MultiByteToWideChar
@@ -129,7 +129,7 @@ namespace SR_UTILS_NS::Platform {
                         , NULL         // lpWideCharStr
                         , 0            // cchWideChar
                 );
-        std::vector<wchar_t> result(resultSize + 1);
+        Vector<wchar_t> result(static_cast<SizeType>(resultSize + 1), L'\0');
         MultiByteToWideChar
                 (codePage     // CodePage
                         , flags        // dwFlags
@@ -156,20 +156,19 @@ namespace SR_UTILS_NS::Platform {
         std::cout << msg.c_str() << std::flush;
     }
 
-    std::string GetLastErrorAsString()
+    String GetLastErrorAsString()
     {
         //Get the error message ID, if any.
         DWORD errorMessageID = ::GetLastError();
         if(errorMessageID == 0) {
-            return std::string(); //No error message has been recorded
+            return String(); //No error message has been recorded
         }
         LPSTR messageBuffer = nullptr;
         //Ask Win32 to give us the string version of that message ID.
         //The parameters we pass in, tell Win32 to create the buffer that holds the message for us (because we don't yet know how long the message string will be).
         size_t size = FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
                                      NULL, errorMessageID, MAKELANGID(LANG_ENGLISH, SUBLANG_DEFAULT), (LPSTR)&messageBuffer, 0, NULL);
-        //Copy the error message into a std::string.
-        std::string message(messageBuffer, size - 3);
+        String message(StringView(messageBuffer, size - 3));
         //Free the Win32's string's buffer.
         LocalFree(messageBuffer);
         return message;
@@ -183,15 +182,15 @@ namespace SR_UTILS_NS::Platform {
         );
 
         if (dw) {
-            SR_ERROR("PlatformWindows::PrintErrorMessage() : " + std::string((char*)msgBuffer));
+            SR_ERROR("PlatformWindows::PrintErrorMessage() : {}", static_cast<const char*>(msgBuffer));
             LocalFree(msgBuffer);
         }
         else {
-            SR_ERROR("PlatformWindows::PrintErrorMessage() : unknown error code: " + std::to_string(hr));
+            SR_ERROR("PlatformWindows::PrintErrorMessage() : unknown error code: {}", hr);
         }
     }
 
-    std::string ErrorCodeToString(const DWORD a_error_code)
+    String ErrorCodeToString(const DWORD a_error_code)
     {
         // Get the last windows error message.
         char msg_buf[1025] = { 0 };
@@ -214,9 +213,9 @@ namespace SR_UTILS_NS::Platform {
             {
                 *nl_ptr = '\0';
             }
-            return std::string(msg_buf);
+            return String(msg_buf);
         }
-        return std::string("Failed to get error message");
+        return String("Failed to get error message");
     }
 }
 
@@ -332,17 +331,16 @@ namespace SR_UTILS_NS::Platform {
 
         /// Регистрация расширения .srproject для открытия проектов в редакторе
         {
-            std::string executablePath = GetApplicationPath().ToString();
+            String executablePath = GetApplicationPath().ToString();
             std::replace(executablePath.begin(), executablePath.end(), '/', '\\');
-            std::string appPath = "\"{}\" \"%1\""_format(executablePath);
+            String appPath = "\"{}\" \"%1\""_format(executablePath);
 
             // .srproject → SRProjectFile
             SetRegistryValue(HKEY_CURRENT_USER, "Software\\Classes\\.srproject", "SRProjectFile");
             // описание
             SetRegistryValue(HKEY_CURRENT_USER, "SRProjectFile", "SpaRcle Project File");
             // команда запуска
-            std::string cmdKey = "Software\\Classes\\SRProjectFile\\shell\\open\\command";
-            SetRegistryValue(HKEY_CURRENT_USER, cmdKey.c_str(), appPath.c_str());
+            SetRegistryValue(HKEY_CURRENT_USER, "Software\\Classes\\SRProjectFile\\shell\\open\\command", appPath.c_str());
 
             /// Уведомляем систему об изменении ассоциаций файлов, чтобы изменения вступили в силу
             SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_IDLIST, NULL, NULL);
@@ -421,7 +419,7 @@ namespace SR_UTILS_NS::Platform {
     }
 
     void* LoadLibraryModule(const Path& path) {
-        std::string winAPIPath = path.ToString();
+        String winAPIPath = path.ToString();
         std::replace(winAPIPath.begin(), winAPIPath.end(), '/', '\\');
 
         void* pLibrary = LoadLibrary(winAPIPath.c_str());
@@ -467,7 +465,7 @@ namespace SR_UTILS_NS::Platform {
         return false;
     }
 
-    void TextToClipboard(const std::string &text) {
+    void TextToClipboard(const String& text) {
         if (text.empty()) {
             SR_WARN("Platform::TextToClipboard() : text is empty!");
             return;
@@ -553,7 +551,7 @@ namespace SR_UTILS_NS::Platform {
             CloseClipboard();
 
             const uint64_t size = 32768;
-            std::string buffer;
+            String buffer;
             buffer.resize(size);
             for (int i = 0; i < DragQueryFileA(hDrop,0xFFFFFFFF,NULL,NULL); i++) {
                 DragQueryFileA(hDrop,i,&buffer[0],size);
@@ -579,8 +577,8 @@ namespace SR_UTILS_NS::Platform {
         return KeyboardState();
     }
 
-    std::string GetClipboardText() {
-        std::string text{};
+    String GetClipboardText() {
+        String text;
 
         if (OpenClipboard(NULL)) {
             HANDLE hData = GetClipboardData(CF_TEXT);
@@ -593,7 +591,7 @@ namespace SR_UTILS_NS::Platform {
                 char *pszText = static_cast<char *>(GlobalLock(hData));
 
                 text.resize(size);
-                memcpy((void *) text.c_str(), pszText, size);
+                memcpy(text.data(), pszText, size);
 
                 GlobalUnlock(hData);
             }
@@ -761,7 +759,7 @@ namespace SR_UTILS_NS::Platform {
         return false;
     }
 
-    void OpenFile(const SR_UTILS_NS::Path& path, const std::string& args) {
+    void OpenFile(const SR_UTILS_NS::Path& path, const String& args) {
         STARTUPINFO si;
         PROCESS_INFORMATION pi;
 
@@ -795,7 +793,7 @@ namespace SR_UTILS_NS::Platform {
     void Unzip(const SR_UTILS_NS::Path& source, const SR_UTILS_NS::Path& destination, bool replace) {
 		//TODO: Add support for the 'replace' argument.
         destination.CreateDirectories();
-        std::string command = "tar -xf "+ source.ToString() + " -C " + destination.ToString();
+        String command = "tar -xf " + source.ToString() + " -C " + destination.ToString();
         system(command.c_str());
     }
 
@@ -822,8 +820,8 @@ namespace SR_UTILS_NS::Platform {
         ShellExecuteA(NULL, "open", path.ToString().c_str(), NULL, NULL, SW_SHOWDEFAULT);
     }
 
-    std::vector<SR_MATH_NS::UVector2> GetScreenResolutions() {
-        auto&& resolutions = std::vector<SR_MATH_NS::UVector2>();
+    Vector<SR_MATH_NS::UVector2> GetScreenResolutions() {
+        Vector<SR_MATH_NS::UVector2> resolutions;
 
         resolutions.reserve(64);
 
@@ -891,7 +889,7 @@ namespace SR_UTILS_NS::Platform {
         SetEnvironmentVariableA(name.data(), value.data());
     }
 
-    std::string ExecuteCommand(const std::string& command, const std::vector<std::string>& env) {
+    String ExecuteCommand(const String& command, const Vector<String>& env) {
         HANDLE hReadPipe, hWritePipe;
         SECURITY_ATTRIBUTES sa = { sizeof(SECURITY_ATTRIBUTES), nullptr, TRUE };
         if (!CreatePipe(&hReadPipe, &hWritePipe, &sa, 0)) {
@@ -905,10 +903,10 @@ namespace SR_UTILS_NS::Platform {
         }
 
         // Скопировать окружение в модифицируемую структуру
-        std::vector<char> newEnv;
+        Vector<char> newEnv;
         LPCH ptr = envStrings;
         while (*ptr) {
-            std::string entry(ptr);
+            StringView entry(ptr);
             newEnv.insert(newEnv.end(), entry.begin(), entry.end());
             newEnv.push_back('\0');
             ptr += entry.size() + 1;
@@ -935,7 +933,7 @@ namespace SR_UTILS_NS::Platform {
 
         CloseHandle(hWritePipe); // Закрываем ненужную часть пайпа
 
-        std::string result;
+        String result;
         char buffer[128];
         DWORD bytesRead;
         while (::ReadFile(hReadPipe, buffer, sizeof(buffer) - 1, &bytesRead, nullptr) && bytesRead > 0) {
@@ -951,7 +949,7 @@ namespace SR_UTILS_NS::Platform {
         return result;
     }
 
-    bool DownloadFile(const std::string& url, const Path& outputPath) {
+    bool DownloadFile(const String& url, const Path& outputPath) {
         SR_LOG("Platform::DownloadFile() : downloading file from url: {}", url);
 
         if (!outputPath.CreateDirectories()) {

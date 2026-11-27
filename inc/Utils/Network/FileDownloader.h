@@ -16,7 +16,7 @@ namespace SR_NETWORK_NS {
         SR_REGISTER_SINGLETON(FileDownloader)
         using Super = SR_UTILS_NS::Singleton<FileDownloader>;
     public:
-        SR_NODISCARD bool DownloadFile(const std::string& url, const SR_UTILS_NS::Path& filePath);
+        SR_NODISCARD bool DownloadFile(StringView url, const SR_UTILS_NS::Path& filePath);
 
     };
 }

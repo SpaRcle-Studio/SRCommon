@@ -229,7 +229,7 @@ namespace SR_UTILS_NS {
         return true;
     }
 
-    const std::string& CmdManager::GetLastCmdName() const {
+    const String& CmdManager::GetLastCmdName() const {
         SR_LOCK_GUARD;
         return m_lastCmdName;
     }

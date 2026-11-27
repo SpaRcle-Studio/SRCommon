@@ -320,8 +320,8 @@ namespace SR_UTILS_NS {
         return LoadFromStringView(StringView(buffer));
     }
 
-    bool JsonDeserializer::LoadFromString(const std::string& str) {
-        return LoadFromStringView(StringView(str));
+    bool JsonDeserializer::LoadFromString(const String& str) {
+        return LoadFromStringView(str.ToStringView());
     }
 
     bool JsonDeserializer::LoadFromStringView(const StringView str) {
@@ -820,7 +820,7 @@ namespace SR_UTILS_NS {
         return true;
     }
 
-    void JsonDeserializer::ReportParseError(const std::string& message) {
+    void JsonDeserializer::ReportParseError(const String& message) {
         if (m_isFailed) {
             return; /// сообщаем только о первой ошибке, дальше разбор всё равно не имеет смысла
         }
@@ -843,7 +843,7 @@ namespace SR_UTILS_NS {
         SR_ERROR("JsonDeserializer::ReportParseError() : {}!\n\tLine: {}, column: {}", message, line, column);
     }
 
-    void JsonDeserializer::ReportError(const std::string& message) {
+    void JsonDeserializer::ReportError(const String& message) {
         SR_TRACY_ZONE;
         SRHalt("JsonDeserializer::ReportError() : {}!", message);
     }

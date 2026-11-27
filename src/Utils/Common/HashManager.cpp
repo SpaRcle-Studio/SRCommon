@@ -39,10 +39,6 @@ namespace SR_UTILS_NS {
         return GetOrAddInfo(str)->hash;
     }
 
-    HashManager::Hash HashManager::AddHash(const std::string& str) {
-        return GetOrAddInfo(str)->hash;
-    }
-
     HashManager::Hash HashManager::AddHash(const std::string_view& str) {
         return GetOrAddInfo(str)->hash;
     }
@@ -85,10 +81,6 @@ namespace SR_UTILS_NS {
         pInfo->hash = hash;
         m_strings.insert(std::make_pair(hash, pInfo));
         return pInfo;
-    }
-
-    StringHashInfo* HashManager::GetOrAddInfo(const std::string& str) {
-        return GetOrAddInfo(std::string_view(str));
     }
 
     StringHashInfo* HashManager::GetOrAddInfo(const String& str) {

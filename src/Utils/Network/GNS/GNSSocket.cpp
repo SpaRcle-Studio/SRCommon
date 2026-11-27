@@ -20,7 +20,7 @@ namespace SR_NETWORK_NS {
         }
     }
 
-    bool GNSSocket::Connect(const std::string& address, uint16_t port) {
+    bool GNSSocket::Connect(StringView address, uint16_t port) {
         if (IsOpen()) {
             SR_ERROR("GNSSocket::Connect() : connection is already open!");
             return false;
@@ -35,7 +35,8 @@ namespace SR_NETWORK_NS {
         SteamNetworkingIPAddr serverAddr;
         serverAddr.Clear();
 
-        if (!serverAddr.ParseString(std::string(address + ":" + std::to_string(port)).c_str())) {
+        const String addressWithPort = SR_FORMAT("{}:{}", address, port);
+        if (!serverAddr.ParseString(addressWithPort.c_str())) {
             SR_ERROR("GNSSocket::Connect() : failed to parse address: {}:{}", address, port);
             return false;
         }
@@ -94,7 +95,7 @@ namespace SR_NETWORK_NS {
         return true;
     }
 
-    bool GNSSocket::SendTo(const void* data, uint64_t size, const std::string& address, uint16_t port) {
+    bool GNSSocket::SendTo(const void* data, uint64_t size, StringView address, uint16_t port) {
         /// GNS is connection-oriented; SendTo is not applicable.
         /// Data is always sent to the connected peer.
         SR_ERROR("GNSSocket::SendTo() : not supported with GNS. Use Send() on a connected socket instead.");
@@ -177,33 +178,33 @@ namespace SR_NETWORK_NS {
             || info.m_eState == k_ESteamNetworkingConnectionState_Connecting;
     }
 
-    std::string GNSSocket::GetLocalAddress() const {
+    String GNSSocket::GetLocalAddress() const {
         /// GNS does not expose the local address through SteamNetConnectionInfo_t.
         /// Return "0.0.0.0" as a placeholder; the remote address is the meaningful one.
         return "0.0.0.0";
     }
 
-    std::string GNSSocket::GetRemoteAddress() const {
+    String GNSSocket::GetRemoteAddress() const {
         if (m_hConn == k_HSteamNetConnection_Invalid) {
             SR_ERROR("GNSSocket::GetRemoteAddress() : invalid connection!");
-            return std::string();
+            return String();
         }
 
         auto&& pGNSContext = m_context.DynamicCast<GNSContext>();
         if (!pGNSContext || !pGNSContext->GetInterface()) {
             SR_ERROR("GNSSocket::GetRemoteAddress() : invalid context!");
-            return std::string();
+            return String();
         }
 
         SteamNetConnectionInfo_t info;
         if (!pGNSContext->GetInterface()->GetConnectionInfo(m_hConn, &info)) {
             SR_ERROR("GNSSocket::GetRemoteAddress() : failed to get connection info!");
-            return std::string();
+            return String();
         }
 
         char buf[SteamNetworkingIPAddr::k_cchMaxString];
         info.m_addrRemote.ToString(buf, sizeof(buf), false);
-        return std::string(buf);
+        return String(buf);
     }
 
     uint16_t GNSSocket::GetLocalPort() const {

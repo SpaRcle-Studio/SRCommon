@@ -119,9 +119,9 @@ namespace SR_UTILS_NS::Platform {
     SR_COMMON_DLL_API extern bool IsSupportThreads();
     SR_COMMON_DLL_API extern void ShowWindow(void* pHandle, ShowWindowActionType action);
 
-    SR_COMMON_DLL_API extern std::string ExecuteCommand(const std::string& command, const std::vector<std::string>& env = {});
+    SR_COMMON_DLL_API extern String ExecuteCommand(const String& command, const Vector<String>& env = {});
     SR_COMMON_DLL_API extern void SetEnvironmentVar(const std::string_view& name, const std::string_view& value);
-    SR_COMMON_DLL_API extern void TextToClipboard(const std::string& text);
+    SR_COMMON_DLL_API extern void TextToClipboard(const String& text);
     SR_COMMON_DLL_API extern void CopyFilesToClipboard(std::list<SR_UTILS_NS::Path> paths);
     SR_COMMON_DLL_API extern void SetCurrentProcessDirectory(const SR_UTILS_NS::Path& directory);
     SR_COMMON_DLL_API extern void PasteFilesFromClipboard(const SR_UTILS_NS::Path& topath);
@@ -131,7 +131,7 @@ namespace SR_UTILS_NS::Platform {
     SR_COMMON_DLL_API extern void WriteConsoleError(StringView msg);
     SR_COMMON_DLL_API extern void WriteConsoleWarn(StringView msg);
     SR_COMMON_DLL_API extern void SelfOpen();
-    SR_COMMON_DLL_API extern void OpenFile(const SR_UTILS_NS::Path& path, const std::string& args);
+    SR_COMMON_DLL_API extern void OpenFile(const SR_UTILS_NS::Path& path, const String& args);
     SR_COMMON_DLL_API extern void Unzip(const SR_UTILS_NS::Path& source, const SR_UTILS_NS::Path& destination, bool replace = true);
     SR_COMMON_DLL_API extern void OpenWithAssociatedApp(const Path& filepath);
     SR_COMMON_DLL_API extern bool CreateDirectories(StringView path);
@@ -141,7 +141,7 @@ namespace SR_UTILS_NS::Platform {
     SR_COMMON_DLL_API extern bool ReplaceFileAtomic(StringView source, StringView destination);
     SR_COMMON_DLL_API extern String FormatLocalDateTime(const std::tm& calendar);
     SR_COMMON_DLL_API extern bool IsDirectoryExists(StringView path);
-    SR_COMMON_DLL_API extern bool DownloadFile(const std::string& url, const SR_UTILS_NS::Path& outputPath);
+    SR_COMMON_DLL_API extern bool DownloadFile(const String& url, const SR_UTILS_NS::Path& outputPath);
     SR_COMMON_DLL_API extern void* LoadLibraryModule(const Path& path);
     SR_COMMON_DLL_API extern bool UnloadLibraryModule(void* pLibrary);
     SR_COMMON_DLL_API extern void* GetLibraryFunctionAddress(void* pLibrary, const char* pFunctionName);
@@ -154,7 +154,7 @@ namespace SR_UTILS_NS::Platform {
     SR_COMMON_DLL_API extern SR_MATH_NS::FVector2 GetMousePos();
     SR_COMMON_DLL_API extern MouseState GetMouseState();
     SR_COMMON_DLL_API extern KeyboardState GetSystemKeyboardState();
-    SR_COMMON_DLL_API extern std::string GetClipboardText();
+    SR_COMMON_DLL_API extern String GetClipboardText();
     SR_COMMON_DLL_API extern Path GetApplicationResourcesPath();
     SR_COMMON_DLL_API extern Path GetApplicationPath();
     SR_COMMON_DLL_API extern Path GetApplicationDirectory();
@@ -163,7 +163,7 @@ namespace SR_UTILS_NS::Platform {
     SR_COMMON_DLL_API extern String GetApplicationName();
     SR_COMMON_DLL_API extern SR_MATH_NS::UVector2 GetScreenResolution();
     SR_COMMON_DLL_API extern double_t GetScreenDPI();
-    SR_COMMON_DLL_API extern std::vector<SR_MATH_NS::UVector2> GetScreenResolutions();
+    SR_COMMON_DLL_API extern Vector<SR_MATH_NS::UVector2> GetScreenResolutions();
     SR_COMMON_DLL_API extern bool FileIsHidden(const Path& path);
     SR_COMMON_DLL_API extern bool IsAbsolutePath(const StringView path);
     SR_COMMON_DLL_API extern bool IsRunningUnderDebugger();
@@ -204,7 +204,7 @@ namespace SR_UTILS_NS::Platform {
     /// В браузере нет командной строки, поэтому её роль играет query-строка адреса:
     /// `index.html?headless&run-scene=Scenes/Test.scene`. Возвращает уже раскодированные
     /// токены в том же виде, в котором они пришли бы в argv.
-    SR_COMMON_DLL_API extern std::vector<std::string> GetWebCommandLineArgs();
+    SR_COMMON_DLL_API extern Vector<String> GetWebCommandLineArgs();
 #endif
 
     extern std::atomic<std::optional<MouseState>> g_overriddenMouseState;

@@ -31,7 +31,7 @@ namespace SR_UTILS_NS::Web {
         CSSLinearGradient result;
 
         constexpr size_t prefixLength = sizeof("linear-gradient(") - 1;
-        auto&& values = SR_UTILS_NS::StringUtils::Split(std::string(data.substr(prefixLength, data.size() - prefixLength - 1)), ",");
+        auto&& values = SR_UTILS_NS::StringUtils::Split(data.substr(prefixLength, data.size() - prefixLength - 1), ",");
         if (values.size() < 2) {
             SRHalt("CSSLinearGradient::Parse() : invalid data!");
             return {};
@@ -84,8 +84,8 @@ namespace SR_UTILS_NS::Web {
         return result;
     }
 
-    std::string CSSLinearGradient::ToString() const {
-        std::string result = "linear-gradient(";
+    String CSSLinearGradient::ToString() const {
+        String result = "linear-gradient(";
         switch (direction.type) {
             case CSSDirection::DirectionType::To:
                 result += "to ";
@@ -134,8 +134,8 @@ namespace SR_UTILS_NS::Web {
         return result;
     }
 
-    std::string CSSRadialGradient::ToString() const {
-        std::string result = "radial-gradient(";
+    String CSSRadialGradient::ToString() const {
+        String result = "radial-gradient(";
         return result + ")";
     }
 

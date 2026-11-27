@@ -120,24 +120,24 @@ namespace SR_UTILS_NS {
         return nullptr;
     }
 
-    void Factory::WriteLog(const std::string& message) const noexcept {
+    void Factory::WriteLog(const String& message) const noexcept {
         if (SR_UTILS_NS::Debug::IsSingletonInitialized()) {
             if (SR_UTILS_NS::Debug::Instance().IsInitialized()) {
                 SR_LOG(message);
                 return;
             }
         }
-        SR_PLATFORM_NS::WriteConsoleLog(std::string(message).append("\n"));
+        SR_PLATFORM_NS::WriteConsoleLog(String(message).append("\n"));
     }
 
-    void Factory::WriteError(const std::string& message) const noexcept {
+    void Factory::WriteError(const String& message) const noexcept {
         if (SR_UTILS_NS::Debug::IsSingletonInitialized()) {
             if (SR_UTILS_NS::Debug::Instance().IsInitialized()) {
                 SRHalt(message);
                 return;
             }
         }
-        SR_PLATFORM_NS::WriteConsoleError(std::string(message).append("\n"));
+        SR_PLATFORM_NS::WriteConsoleError(String(message).append("\n"));
         SR_MAKE_BREAKPOINT;
     }
 

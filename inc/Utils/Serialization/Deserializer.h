@@ -33,8 +33,8 @@ namespace SR_UTILS_NS {
 
         SR_NODISCARD virtual bool SaveToFile(const SR_UTILS_NS::Path& path) const = 0;
         SR_NODISCARD virtual bool LoadFromFile(const SR_UTILS_NS::Path& path) = 0;
-        SR_NODISCARD virtual bool LoadFromString(const std::string& str) = 0;
-        SR_NODISCARD virtual std::string ToString() const noexcept { return ""; }
+        SR_NODISCARD virtual bool LoadFromString(const String& str) = 0;
+        SR_NODISCARD virtual String ToString() const noexcept { return ""; }
 
         SR_NODISCARD virtual bool IsDefault(const SerializationId& name) const noexcept = 0;
         SR_NODISCARD virtual bool HasKey(const SerializationId& name) const noexcept = 0;
@@ -56,7 +56,6 @@ namespace SR_UTILS_NS {
         virtual uint64_t BeginArray(const SerializationId& id) = 0;
         virtual void EndArray() = 0;
 
-        virtual void ReadString(std::string& value, const SerializationId& name) = 0;
         virtual void ReadString(String& value, const SerializationId& name) = 0;
         virtual void ReadString(StringAtom& value, const SerializationId& name) = 0;
         virtual void ReadString(UnicodeString& value, const SerializationId& name) = 0;
@@ -73,7 +72,7 @@ namespace SR_UTILS_NS {
         virtual void ReadFloat(float_t& value, const SerializationId& name) = 0;
         virtual void ReadDouble(double_t& value, const SerializationId& name) = 0;
 
-        virtual void ReportError(const std::string& message) = 0;
+        virtual void ReportError(const String& message) = 0;
 
         void AddDontLoadTag(const StringAtom& tag) {
             m_dontLoadTags.insert(tag);

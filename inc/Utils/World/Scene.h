@@ -68,7 +68,7 @@ namespace SR_WORLD_NS {
         void SetEditorMode(bool isEditorMode) { m_isEditorMode = isEditorMode; }
 
     public:
-        SR_NODISCARD std::string GetName() const;
+        SR_NODISCARD String GetName() const;
         SR_NODISCARD const Path& GetPath() const { return m_path; }
         SR_NODISCARD Path GetAbsPath() const;
         SR_NODISCARD bool IsPrefab() const noexcept override;
@@ -88,8 +88,8 @@ namespace SR_WORLD_NS {
         SceneObjects& GetRootSceneObjects();
         bool MoveRootSceneObject(const SceneObjectPtr& pSO, int32_t index);
 
-        SceneObjectPtr FindByComponent(const std::string& name);
-        SceneObjectPtr Find(const std::string& name);
+        SceneObjectPtr FindByComponent(const String& name);
+        SceneObjectPtr Find(const String& name);
         SceneObjectPtr Find(const char* name);
         SceneObjectPtr Find(uint64_t hashName);
         SceneObjectPtr Find(SR_UTILS_NS::StringAtom name);
@@ -132,7 +132,7 @@ namespace SR_WORLD_NS {
 
     private:
         mutable EntityReplaceMap m_registerEntityIdReplaceCache;
-        mutable SR_HTYPES_NS::FlatHashMap<const void*, std::vector<Entity*>> m_registerEntityCache;
+        mutable SR_HTYPES_NS::FlatHashMap<const void*, Vector<Entity*>> m_registerEntityCache;
 
         SceneUpdater* m_sceneUpdater = nullptr;
 

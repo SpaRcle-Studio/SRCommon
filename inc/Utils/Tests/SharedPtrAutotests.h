@@ -22,7 +22,7 @@ namespace SR_UTILS_NS {
             }
 
         private:
-            std::vector<int> m_data;
+            SR_UTILS_NS::Vector<int32_t> m_data;
 
         };
 
@@ -83,7 +83,7 @@ namespace SR_UTILS_NS {
                 using TestClass = AutoTests::ManuallySharedPtrTestClass;
 
                 SR_HTYPES_NS::SharedPtr<TestClass> pInt = TestClass::MakeShared();
-                std::vector<SR_HTYPES_NS::SharedPtr<TestClass>> v;
+                SR_UTILS_NS::Vector<SR_HTYPES_NS::SharedPtr<TestClass>> v;
 
                 v.emplace_back(pInt);
 
@@ -96,7 +96,7 @@ namespace SR_UTILS_NS {
                     pInt2.AutoFree();
                 }
 
-                v = std::vector<SR_HTYPES_NS::SharedPtr<TestClass>>();
+                v = SR_UTILS_NS::Vector<SR_HTYPES_NS::SharedPtr<TestClass>>();
 
                 if (pInt) {
                     pInt->DoSomething();
@@ -206,13 +206,13 @@ namespace SR_UTILS_NS {
             }
 
             {
-                std::vector<SR_HTYPES_NS::SharedPtr<AutoTests::AutomaticallySharedPtrTestClass>> v;
+                SR_UTILS_NS::Vector<SR_HTYPES_NS::SharedPtr<AutoTests::AutomaticallySharedPtrTestClass>> v;
                 v.emplace_back(new AutoTests::AutomaticallySharedPtrTestClass());
                 v.emplace_back(new AutoTests::AutomaticallySharedPtrTestClass());
                 for (auto&& pInt : v) {
                     pInt.AutoFree();
                 }
-                auto newVector = std::vector<SR_HTYPES_NS::SharedPtr<AutoTests::AutomaticallySharedPtrTestClass>>({ new AutoTests::AutomaticallySharedPtrTestClass() });
+                auto newVector = SR_UTILS_NS::Vector<SR_HTYPES_NS::SharedPtr<AutoTests::AutomaticallySharedPtrTestClass>>({ new AutoTests::AutomaticallySharedPtrTestClass() });
                 v = newVector;
                 v.emplace_back(new AutoTests::AutomaticallySharedPtrTestClass());
             }

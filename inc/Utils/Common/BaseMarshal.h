@@ -155,22 +155,16 @@ namespace SR_UTILS_NS {
             return value;
         }
 
-        SR_MAYBE_UNUSED SR_INLINE_STATIC void SR_FASTCALL SaveShortString(SR_HTYPES_NS::Stream& stream, const std::string& str) {
+        SR_MAYBE_UNUSED SR_INLINE_STATIC void SR_FASTCALL SaveShortString(SR_HTYPES_NS::Stream& stream, StringView str) {
             const int16_t size = static_cast<int16_t>(str.size());
             stream.write((const char*)&size, sizeof(int16_t));
-            stream.write((const char*)&str[0], size * sizeof(char));
+            stream.write(str.data(), size * sizeof(char));
         }
 
         SR_MAYBE_UNUSED SR_INLINE_STATIC void SR_FASTCALL SaveUnicodeString(SR_HTYPES_NS::Stream& stream, const UnicodeString& str) {
             const int16_t size = static_cast<int16_t>(str.size());
             stream.write((const char*)&size, sizeof(int16_t));
             stream.write((const char*)&str[0], size * sizeof(UnicodeString::CharType));
-        }
-
-        SR_MAYBE_UNUSED SR_INLINE_STATIC void SR_FASTCALL SaveString(SR_HTYPES_NS::Stream& stream, const std::string& str) {
-            const uint64_t size = str.size();
-            stream.write((const char*)&size, sizeof(uint64_t));
-            stream.write((const char*)&str[0], size * sizeof(char));
         }
 
         SR_MAYBE_UNUSED SR_INLINE_STATIC void SR_FASTCALL SaveString(SR_HTYPES_NS::Stream& stream, const String& str) {
@@ -221,16 +215,16 @@ namespace SR_UTILS_NS {
             return std::move(vector);
         }
 
-        SR_MAYBE_UNUSED SR_INLINE_STATIC std::string SR_FASTCALL LoadShortStr(SR_HTYPES_NS::Stream& stream) {
+        SR_MAYBE_UNUSED SR_INLINE_STATIC String SR_FASTCALL LoadShortStr(SR_HTYPES_NS::Stream& stream) {
             uint16_t size;
             stream.read((char*)&size, sizeof(uint16_t));
             SRAssert(size < SR_UINT16_MAX);
             if (size >= SR_UINT16_MAX) {
                 return {};
             }
-            std::string str;
+            String str;
             str.resize(size);
-            stream.read((char*)&str[0], size * sizeof(char));
+            stream.read(str.data(), size * sizeof(char));
             return str;
         }
 
@@ -247,20 +241,20 @@ namespace SR_UTILS_NS {
             return str;
         }
 
-        SR_MAYBE_UNUSED SR_INLINE_STATIC std::string SR_FASTCALL LoadStr(SR_HTYPES_NS::Stream& stream) {
+        SR_MAYBE_UNUSED SR_INLINE_STATIC String SR_FASTCALL LoadStr(SR_HTYPES_NS::Stream& stream) {
             uint64_t size;
             stream.read((char*)&size, sizeof(uint64_t));
             SRAssert(size < SR_UINT16_MAX);
             if (size >= SR_UINT16_MAX) {
-                return std::string(); /// NOLINT
+                return String(); /// NOLINT
             }
-            std::string str;
+            String str;
             str.resize(size);
-            stream.read((char*)&str[0], size * sizeof(char));
+            stream.read(str.data(), size * sizeof(char));
             return str;
         }
 
-        SR_MAYBE_UNUSED SR_INLINE_STATIC std::string SR_FASTCALL LoadString(SR_HTYPES_NS::Stream& stream) {
+        SR_MAYBE_UNUSED SR_INLINE_STATIC String SR_FASTCALL LoadString(SR_HTYPES_NS::Stream& stream) {
             return LoadStr(stream);
         }
 
@@ -268,8 +262,8 @@ namespace SR_UTILS_NS {
             return SR_UTILS_NS::StringAtom(LoadStr(stream));
         }
 
-        SR_MAYBE_UNUSED SR_INLINE_STATIC std::string SR_FASTCALL TryLoadShortStr(SR_HTYPES_NS::Stream& stream) {
-            std::string str;
+        SR_MAYBE_UNUSED SR_INLINE_STATIC String SR_FASTCALL TryLoadShortStr(SR_HTYPES_NS::Stream& stream) {
+            String str;
             uint16_t size;
             stream.TryRead((char*)&size, sizeof(uint16_t));
             SRAssert(size < SR_UINT16_MAX);
@@ -277,7 +271,7 @@ namespace SR_UTILS_NS {
                 return str;
             }
             str.resize(size);
-            stream.TryRead((char*)&str[0], size * sizeof(char));
+            stream.TryRead(str.data(), size * sizeof(char));
             return str;
         }
 

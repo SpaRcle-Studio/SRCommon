@@ -18,7 +18,7 @@ namespace SR_ANIMATIONS_NS {
         if (std::ranges::any_of(ignoreBonesStartsWith, [&](const auto& prefix) { return name.ToStringView().starts_with(prefix.ToStringView()); })) {
             return true;
         }
-        if (std::ranges::any_of(ignoreBonesContains, [&](const auto& substring) { return name.ToStringView().find(substring.ToStringView()) != std::string::npos; })) {
+        if (std::ranges::any_of(ignoreBonesContains, [&](const auto& substring) { return name.ToStringView().find(substring.ToStringView()) != SR_UTILS_NS::StringView::npos; })) {
             return true;
         }
         if (std::ranges::any_of(ignoreBonesEndsWith, [&](const auto& suffix) { return name.ToStringView().ends_with(suffix.ToStringView()); })) {
@@ -34,7 +34,7 @@ namespace SR_ANIMATIONS_NS {
         if (std::ranges::any_of(customBonesStartsWith, [&](const auto& prefix) { return name.ToStringView().starts_with(prefix.ToStringView()); })) {
             return true;
         }
-        if (std::ranges::any_of(customBonesContains, [&](const auto& substring) { return name.ToStringView().find(substring.ToStringView()) != std::string::npos; })) {
+        if (std::ranges::any_of(customBonesContains, [&](const auto& substring) { return name.ToStringView().find(substring.ToStringView()) != SR_UTILS_NS::StringView::npos; })) {
             return true;
         }
         if (std::ranges::any_of(customBonesEndsWith, [&](const auto& suffix) { return name.ToStringView().ends_with(suffix.ToStringView()); })) {

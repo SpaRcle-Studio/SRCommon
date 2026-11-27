@@ -12,11 +12,11 @@ namespace SR_UTILS_NS::Web {
     CSS::Ptr CSSParser::Parse(const Path& path, const CSSParserContext& context) {
         const SR_UTILS_NS::Path fullPath = SR_UTILS_NS::ResourceManager::Instance().GetResPath().Concat(path);
         //const std::string data = SR_UTILS_NS::FileSystem::ReadBinaryAsString(fullPath);
-        std::string data;
+        String data;
         return Parse(data);
     }
 
-    CSS::Ptr CSSParser::Parse(const std::string& data, const CSSParserContext& context) {
+    CSS::Ptr CSSParser::Parse(const String& data, const CSSParserContext& context) {
         /*if (data.empty()) {
             SRHalt("CSSParser::Parse() : empty data");
             return {};
@@ -139,7 +139,7 @@ namespace SR_UTILS_NS::Web {
         return SR_EXCHANGE(m_pCSS, {});
     }
 
-    bool CSSParser::EvaluateMedia(const std::string&, const CSSParserContext&) const {
+    bool CSSParser::EvaluateMedia(const String&, const CSSParserContext&) const {
         volatile bool result = true;
         return result;
     }

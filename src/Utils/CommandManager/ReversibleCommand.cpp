@@ -3,8 +3,25 @@
 //
 
 #include <Utils/CommandManager/ReversibleCommand.h>
+#include <Utils/Resources/Xml.h>
 
 namespace SR_UTILS_NS {
+    bool ReversibleCommand::Load(const Xml::Node&) {
+        return false;
+    }
+
+    Xml::Node ReversibleCommand::Save() const {
+        return Xml::Node();
+    }
+
+    bool GroupCommand::Load(const Xml::Node&) {
+        return false;
+    }
+
+    Xml::Node GroupCommand::Save() const {
+        return Xml::Node();
+    }
+
     GroupCommand::GroupCommand(Vector<ReversibleCommand*>&& commands)
         : m_commands(std::move(commands))
     { }

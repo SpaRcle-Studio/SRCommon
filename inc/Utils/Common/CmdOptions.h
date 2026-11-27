@@ -8,8 +8,8 @@
 #include <Utils/Debug.h>
 
 namespace SR_UTILS_NS {
-    extern std::string GetCmdOption(char **begin, char **end, const std::string &option);
-    extern bool HasCmdOption(char **begin, char **end, const std::string &option);
+    extern String GetCmdOption(char **begin, char **end, StringView option);
+    extern bool HasCmdOption(char **begin, char **end, StringView option);
 }
 
 #endif //SR_ENGINE_CMDOPTIONS_H

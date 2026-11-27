@@ -17,8 +17,8 @@ namespace SR_UTILS_NS {
         return (isalnum(c) || (c == '+') || (c == '/'));
     }
 
-    std::string StringUtils::ToKebabCase(std::string_view str) {
-        std::string result;
+    String StringUtils::ToKebabCase(std::string_view str) {
+        String result;
         bool was_lower_or_digit = false; // to detect camelCase boundaries
         bool in_separator = false;
 
@@ -48,49 +48,21 @@ namespace SR_UTILS_NS {
         }
 
         if (!result.empty() && result.back() == '-') {
-            result.pop_back();
+            result.resize(result.size() - 1);
         }
 
         return result;
     }
 
-    std::string StringUtils::ReadFrom(const std::string &str, const char &c, uint32_t start) {
-        if (start >= str.size())
-            return std::string();
+    Vector<String> StringUtils::Split(std::string_view source, std::string_view delimiter)  {
+        SizeType pos = 0;
+        Vector<String> tokens;
 
-        std::string newStr = str.substr(start, str.size() - 1);
-
-        int32_t to = IndexOf(newStr, c);
-        if (to <= 0)
-            return std::string();
-
-        return newStr.substr(0, to);
-    }
-
-    std::vector<std::string> StringUtils::Split(std::string source, const std::string &delimiter)  {
-        size_t pos = 0;
-        std::vector<std::string> tokens = {};
-        while ((pos = source.find(delimiter)) != std::string::npos) {
-            if (auto&& token = source.substr(0, pos); !token.empty())
-                tokens.emplace_back(std::move(token));
-            source.erase(0, pos + delimiter.length());
-        }
-
-        if (!source.empty())
-            tokens.emplace_back(source);
-
-        return tokens;
-    }
-
-    std::vector<std::string_view> StringUtils::SplitView(std::string_view source, std::string_view delimiter) {
-        size_t pos = 0;
-
-        std::vector<std::string_view> tokens;
-        while ((pos = source.find(delimiter)) != std::string::npos) {
+        while ((pos = source.find(delimiter)) != std::string_view::npos) {
             if (auto&& token = source.substr(0, pos); !token.empty()) {
                 tokens.emplace_back(token);
             }
-            source.remove_prefix(pos + delimiter.length());
+            source.remove_prefix(pos + delimiter.size());
         }
 
         if (!source.empty()) {
@@ -100,43 +72,22 @@ namespace SR_UTILS_NS {
         return tokens;
     }
 
-    std::vector<std::string_view> StringUtils::SplitViewWithEmpty(std::string_view source, std::string_view delimiter) {
-        size_t pos = 0;
-        std::vector<std::string_view> tokens;
+    Vector<std::string_view> StringUtils::SplitView(std::string_view source, std::string_view delimiter) {
+        SizeType pos = 0;
+        Vector<std::string_view> tokens;
 
-        while ((pos = source.find(delimiter)) != std::string::npos) {
-            auto&& token = source.substr(0, pos);
-            tokens.emplace_back(token);
-            source.remove_prefix(pos + delimiter.length());
-        }
-
-        if (!source.empty()) {
-            tokens.emplace_back(source);
-        }
-
-        return tokens;
-    }
-
-    std::string StringUtils::Tab(std::string code, uint32_t count) {
-        if (!code.empty()) {
-            code = std::string(count, '\t') + code;
-
-            uint64_t lastPos = 0;
-
-            do {
-                const auto pos = code.find("\n", lastPos);
-                lastPos = pos + 1;
-
-                if (pos == std::string::npos || pos + 1 == code.size()) {
-                    break;
-                }
-
-                code.insert(pos + 1, std::string(count, '\t'));
+        while ((pos = source.find(delimiter)) != std::string_view::npos) {
+            if (auto&& token = source.substr(0, pos); !token.empty()) {
+                tokens.emplace_back(token);
             }
-            while (true);
+            source.remove_prefix(pos + delimiter.size());
         }
 
-        return code;
+        if (!source.empty()) {
+            tokens.emplace_back(source);
+        }
+
+        return tokens;
     }
 
     void StringUtils::Reverse(String& str) {
@@ -238,71 +189,19 @@ namespace SR_UTILS_NS {
         }
     }
 
-    std::string StringUtils::Remove(const String& source, uint64_t count) {
+    String StringUtils::Remove(const String& source, uint64_t count) {
         return source.substr(count, source.size() - count);
     }
 
-    std::string StringUtils::Remove(const String& source, uint64_t start, uint64_t count) {
+    String StringUtils::Remove(const String& source, uint64_t start, uint64_t count) {
         const uint64_t size = source.size();
 
         if (static_cast<int64_t>(size) - count < 0) {
             SRHalt("StringUtils::Remove() : out of range!");
-            return std::string();
+            return String();
         }
 
         return source.substr(count + start, size - count);
-    }
-
-    std::string StringUtils::ReadNumber(const std::string& str, uint32_t start) {
-        if (start >= str.size()) {
-            return std::string();
-        }
-
-        std::string numberStr;
-        numberStr.reserve(str.size() / 2);
-
-        for (uint32_t i = start; i < str.size(); ++i) {
-            switch (str[i]) {
-                case '-':
-                case '0':
-                case '1':
-                case '2':
-                case '3':
-                case '4':
-                case '5':
-                case '6':
-                case '7':
-                case '8':
-                case '9':
-                case '.':
-                    numberStr += str[i];
-                    break;
-                default:
-                    return numberStr;
-            }
-        }
-
-        return numberStr;
-    }
-
-    std::string StringUtils::ReplaceAllRecursive(const std::string &original, const std::vector<std::string> &fromList, const std::string &to) noexcept {
-        std::string result = original;
-
-    repeat:
-        for (const auto& from : fromList) {
-            size_t pos = result.find(from);
-
-            if (pos != std::string::npos) {
-                result.replace(pos, from.size(), to);
-                goto repeat;
-            }
-        }
-
-        return result;
-    }
-
-    std::string StringUtils::GetBetween(const std::string &source, int64_t begin, uint64_t end) {
-        return source.substr(begin + 1, (end - begin) - 1);
     }
 
     std::string_view StringUtils::GetBetween(std::string_view source, char begin, char end, int8_t *pResult) {
@@ -311,7 +210,7 @@ namespace SR_UTILS_NS {
         }
 
         auto first = source.find(begin);
-        if (first == std::string::npos) {
+        if (first == std::string_view::npos) {
             first = 0;
             if (pResult) {
                 *pResult -= 1;
@@ -319,30 +218,18 @@ namespace SR_UTILS_NS {
         }
 
         auto last = source.find(end);
-        if (last == std::string::npos) {
+        if (last == std::string_view::npos) {
             last = source.size() - 1;
             if (pResult) {
                 *pResult -= 1;
             }
         }
-
-        return source.substr(first + 1, (last - first) - 1);
-    }
-
-    std::string StringUtils::GetBetween(const std::string &source, const std::string &begin, const std::string &end) {
-        auto first = source.find(begin);
-        if (first == std::string::npos)
-            first = 0;
-
-        auto last = source.find(end);
-        if (last == std::string::npos)
-            last = source.size() - 1;
 
         return source.substr(first + 1, (last - first) - 1);
     }
 
     std::string_view StringUtils::SubstringView(const std::string_view &source, StringAtom substr, uint32_t offset) {
-        if (auto&& pos = source.find(substr.ToStringView()); pos == std::string::npos) {
+        if (auto&& pos = source.find(substr.ToStringView()); pos == std::string_view::npos) {
             return source;
         }
         else {
@@ -351,28 +238,12 @@ namespace SR_UTILS_NS {
     }
 
     std::string_view StringUtils::SubstringView(const std::string_view &source, char symbol, uint32_t offset) {
-        if (auto&& pos = source.find(symbol); pos == std::string::npos) {
+        if (auto&& pos = source.find(symbol); pos == std::string_view::npos) {
             return source;
         }
         else {
             return source.substr(pos + offset, source.size() - 1);
         }
-    }
-
-    std::pair<std::string, std::string> StringUtils::SplitTwo(std::string source, const std::string &delimiter) {
-        std::pair<std::string, std::string> result = {};
-        auto pos = source.find(delimiter);
-        if (pos == std::string::npos) {
-            result.first = source;
-            result.second = "";
-            return result;
-        }
-
-        result.first = source.substr(0, pos);
-        source.erase(0, pos + delimiter.length());
-        result.second = source;
-
-        return result;
     }
 
     String StringUtils::MakeDisplayName(StringView name) {
@@ -475,7 +346,7 @@ namespace SR_UTILS_NS {
     void StringUtils::SplitView(StringView source, StringView delimiter, Vector<StringView>& out) const {
         out.clear();
         size_t pos = 0;
-        while ((pos = source.find(delimiter)) != std::string::npos) {
+        while ((pos = source.find(delimiter)) != StringView::npos) {
             if (auto&& token = source.substr(0, pos); !token.empty()) {
                 out.emplace_back(token);
             }

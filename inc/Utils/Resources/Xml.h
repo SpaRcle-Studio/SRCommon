@@ -11,6 +11,7 @@
 #include <Utils/Math/Vector3.h>
 #include <Utils/Math/Vector2.h>
 #include <Utils/Common/NonCopyable.h>
+#include <Utils/Resources/XmlDocument.h>
 
 #ifndef SR_ENGINE_CODEGEN_CLANG_PARSE_MODE
 
@@ -36,13 +37,13 @@ namespace SR_UTILS_NS::Xml {
         bool m_valid;
 
     private:
-        SR_NODISCARD bool CheckError(const std::string &msg) const;
+        SR_NODISCARD bool CheckError(const String& msg) const;
 
     public:
         explicit operator bool() const;
 
         SR_NODISCARD bool Valid() const;
-        SR_NODISCARD std::string ToString() const;
+        SR_NODISCARD String ToString() const;
         SR_NODISCARD int32_t ToInt() const;
         SR_NODISCARD uint32_t ToUInt() const;
         SR_NODISCARD int64_t ToInt64() const;
@@ -51,7 +52,7 @@ namespace SR_UTILS_NS::Xml {
         SR_NODISCARD double_t ToDouble() const;
         SR_NODISCARD bool ToBool() const;
 
-        SR_NODISCARD std::string ToString(const std::string &def) const;
+        SR_NODISCARD String ToString(const String& def) const;
         SR_NODISCARD int32_t ToInt(int32_t def) const;
         SR_NODISCARD uint32_t ToUInt(uint32_t def) const;
         SR_NODISCARD int64_t ToInt64(int64_t def) const;
@@ -76,24 +77,24 @@ namespace SR_UTILS_NS::Xml {
 
     public:
         SR_NODISCARD bool Valid() const;
-        SR_NODISCARD std::string Name() const;
+        SR_NODISCARD String Name() const;
         SR_NODISCARD std::string_view NameView() const;
         SR_NODISCARD Document ToDocument() const;
-        SR_NODISCARD Attribute GetAttribute(const std::string &name) const;
-        SR_NODISCARD Attribute TryGetAttribute(const std::string &name) const;
+        SR_NODISCARD Attribute GetAttribute(const String& name) const;
+        SR_NODISCARD Attribute TryGetAttribute(const String& name) const;
 
         template<typename T> SR_NODISCARD T TryGetAttribute(const T& def) const {
             return m_valid ? GetAttribute<T>() : def;
         }
 
-        SR_NODISCARD bool HasAttribute(const std::string &name) const;
+        SR_NODISCARD bool HasAttribute(const String& name) const;
 
-        SR_NODISCARD std::vector<Node> TryGetNodes() const;
-        SR_NODISCARD std::vector<Node> TryGetNodes(const std::string &name) const;
-        SR_NODISCARD std::vector<Node> GetNodes(const std::string &name) const;
-        SR_NODISCARD std::vector<Node> GetNodes() const;
+        SR_NODISCARD Vector<Node> TryGetNodes() const;
+        SR_NODISCARD Vector<Node> TryGetNodes(const String& name) const;
+        SR_NODISCARD Vector<Node> GetNodes(const String& name) const;
+        SR_NODISCARD Vector<Node> GetNodes() const;
 
-        template<typename T> Xml::Node NAppendAttribute(const std::string &name, const T &value) {
+        template<typename T> Xml::Node NAppendAttribute(const String& name, const T &value) {
             if (!m_valid) {
                 SRAssert2(false, "Node::NAppendAttribute() : node is not valid!");
                 g_xml_last_error = -2;
@@ -104,7 +105,7 @@ namespace SR_UTILS_NS::Xml {
             if (attrib.empty())
                 return *this;
 
-            if constexpr (std::is_same<T, std::string>() || std::is_same<T, SR_UTILS_NS::StringAtom>()) {
+            if constexpr (requires { value.c_str(); }) {
                 attrib.set_value(value.c_str());
             }
             else  {
@@ -114,7 +115,7 @@ namespace SR_UTILS_NS::Xml {
             return *this;
         }
 
-        template<typename T, typename U> Xml::Node NAppendAttributeDef(const std::string &name, const T &value, const U& def) {
+        template<typename T, typename U> Xml::Node NAppendAttributeDef(const String& name, const T &value, const U& def) {
             if (!m_valid) {
                 SRAssert2(false, "Node::NAppendAttributeDef() : node is not valid!");
                 g_xml_last_error = -2;
@@ -126,7 +127,7 @@ namespace SR_UTILS_NS::Xml {
                 if (attrib.empty())
                     return *this;
 
-                if constexpr (std::is_same<T, std::string>()) {
+                if constexpr (requires { value.c_str(); }) {
                     attrib.set_value(value.c_str());
                 } else {
                     attrib.set_value(value);
@@ -244,7 +245,7 @@ namespace SR_UTILS_NS::Xml {
             else if constexpr (std::is_same<T, double_t>()) {
                 return GetAttribute("Double").ToDouble();
             }
-            else if constexpr (std::is_same<T, std::string>() || std::is_same<T, SR_UTILS_NS::StringAtom>()) {
+            else if constexpr (std::is_same<T, String>() || std::is_same<T, SR_UTILS_NS::StringAtom>()) {
                 return GetAttribute("String").ToString();
             }
             else
@@ -308,7 +309,7 @@ namespace SR_UTILS_NS::Xml {
             else if constexpr (std::is_same<T, SR_UTILS_NS::Path>()) {
                 hasErrors |= AppendAttribute("Path", value);
             }
-            else if constexpr (std::is_same<T, std::string>() || std::is_same<T, SR_UTILS_NS::StringAtom>()) {
+            else if constexpr (std::is_same<T, String>() || std::is_same<T, SR_UTILS_NS::StringAtom>()) {
                 hasErrors |= AppendAttribute("String", value);
             }
             else if constexpr (std::is_same<T, SR_MATH_NS::FVector2>()) {
@@ -346,54 +347,22 @@ namespace SR_UTILS_NS::Xml {
             return !hasErrors;
         }
 
-        template<typename T> bool AppendAttribute(const std::string &name, const T &value);
-        template<typename T, typename U> bool AppendAttributeDef(const std::string &name, const T &value, const U& def);
+        template<typename T> bool AppendAttribute(const String& name, const T &value);
+        template<typename T, typename U> bool AppendAttributeDef(const String& name, const T &value, const U& def);
 
         Node AppendChild(StringView name);
         Node AppendChild(const Node &node);
 
-        Node AppendNode(const std::string &name);
+        Node AppendNode(const String& name);
         Node AppendNode(const Node &node);
 
-        SR_NODISCARD Node TryGetNode(const std::string &name) const;
-        SR_NODISCARD Node GetNode(const std::string &name) const;
+        SR_NODISCARD Node TryGetNode(const String& name) const;
+        SR_NODISCARD Node GetNode(const String& name) const;
 
     private:
         pugi::xml_node m_node;
         bool m_valid;
 
-    };
-
-    class SR_COMMON_DLL_API Document : public NonCopyable {
-    public:
-        Document();
-        Document(Document&& document) noexcept;
-        ~Document() override;
-
-        Document& operator=(Document&& document) noexcept;
-
-    private:
-        pugi::xml_document* m_document = nullptr;
-        bool m_valid;
-        std::string m_path;
-
-    public:
-        static Document Empty();
-        static Document New();
-        static Document Load(const SR_UTILS_NS::Path &path);
-        static int32_t GetLastError();
-
-    public:
-        Xml::Node AppendChild(const std::string& name);
-        bool Save(const SR_UTILS_NS::Path& path) const; /// NOLINT
-
-        SR_NODISCARD std::string Dump() const;
-        SR_NODISCARD Node Root() const;
-        SR_NODISCARD Node TryRoot() const;
-        SR_NODISCARD Node DocumentElement() const;
-        SR_NODISCARD bool Valid() const;
-
-        operator bool() const; /// NOLINT
     };
 
     template<bool NeedConvert> static SR_MATH_NS::FColor NodeToColor(const Xml::Node& node) {
@@ -418,7 +387,7 @@ namespace SR_UTILS_NS::Xml {
     SR_MAYBE_UNUSED void AppendColorNode(Xml::Node& node, const SR_MATH_NS::FColor& color);
 
     template<typename T, typename U>
-    bool Xml::Node::AppendAttributeDef(const std::string &name, const T &value, const U &def)  {
+    bool Xml::Node::AppendAttributeDef(const String& name, const T &value, const U &def)  {
         if (!m_valid) {
             SRAssert2(false, "Node::AddAttribute() : node is not valid!");
             g_xml_last_error = -2;
@@ -430,7 +399,7 @@ namespace SR_UTILS_NS::Xml {
             if (attrib.empty())
                 return false;
 
-            if constexpr (std::is_same<T, std::string>()) {
+            if constexpr (requires { value.c_str(); }) {
                 attrib.set_value(value.c_str());
             } else {
                 attrib.set_value(value);
@@ -440,7 +409,7 @@ namespace SR_UTILS_NS::Xml {
         return true;
     }
 
-    template<typename T> bool Xml::Node::AppendAttribute(const std::string &name, const T &value) {
+    template<typename T> bool Xml::Node::AppendAttribute(const String& name, const T &value) {
         if (!m_valid) {
             SRAssert2(false, "Node::AddAttribute() : node is not valid!");
             g_xml_last_error = -2;
@@ -451,11 +420,11 @@ namespace SR_UTILS_NS::Xml {
         if (attrib.empty())
             return false;
 
-        if constexpr (std::is_same<T, std::string>() || std::is_same<T, SR_UTILS_NS::StringAtom>() || std::is_same<T, String>()) {
-            attrib.set_value(value.empty() ? "" : value.c_str());
-        }
-        else if constexpr (std::is_same<T, SR_UTILS_NS::Path>()) {
+        if constexpr (std::is_same<T, SR_UTILS_NS::Path>()) {
             attrib.set_value(value.CStr());
+        }
+        else if constexpr (requires { value.c_str(); value.empty(); }) {
+            attrib.set_value(value.empty() ? "" : value.c_str());
         }
         else if constexpr (std::is_same<T, std::string_view>()) {
             attrib.set_value(value.data());

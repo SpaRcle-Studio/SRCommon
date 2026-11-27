@@ -70,13 +70,13 @@ namespace SR_UTILS_NS::Web {
     	void AddPath(const SR_UTILS_NS::Path& path);
     	void SetPage(HTMLPage* page) { m_page = page; }
 
-    	SR_NODISCARD const std::vector<SR_UTILS_NS::Path>& GetPaths() const { return m_paths; }
+    	SR_NODISCARD const SR_UTILS_NS::Vector<SR_UTILS_NS::Path>& GetPaths() const { return m_paths; }
     	SR_NODISCARD const SR_UTILS_NS::Path& GetPath() const;
     	SR_NODISCARD HTMLPage* GetPage() const { return m_page; }
 
     private:
     	HTMLPage* m_page = nullptr;
-    	std::vector<SR_UTILS_NS::Path> m_paths;
+    	SR_UTILS_NS::Vector<SR_UTILS_NS::Path> m_paths;
 
     };
 #else
@@ -98,7 +98,7 @@ namespace SR_UTILS_NS::Web {
     public:
         static Ptr Load(const SR_UTILS_NS::Path& path, const HTMLContainerInterface::Ptr& pContainer = nullptr);
 
-        SR_NODISCARD const std::vector<SR_UTILS_NS::Path>& GetPaths() const;
+        SR_NODISCARD const SR_UTILS_NS::Vector<SR_UTILS_NS::Path>& GetPaths() const;
 		SR_NODISCARD HTMLContainerInterface::Ptr GetContainer() const { return m_container; }
 	#ifdef SR_COMMON_LITEHTML
     	SR_NODISCARD litehtml::document::ptr GetDocument() const { return m_document; }

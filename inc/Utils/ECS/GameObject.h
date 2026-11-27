@@ -6,7 +6,6 @@
 #define SR_ENGINE_GAME_OBJECT_H
 
 #include <Utils/ECS/SceneObject.h>
-#include <Utils/ECS/TagManager.h>
 #include <Utils/ECS/Prefab.h>
 #include <Utils/ECS/Transform.h>
 

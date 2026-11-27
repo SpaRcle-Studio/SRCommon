@@ -6,7 +6,7 @@
 #include <Utils/Network/Asio/AsioContext.h>
 
 namespace SR_NETWORK_NS {
-    AsioTCPAcceptor::AsioTCPAcceptor(Context::Ptr pContext, std::string address, uint16_t port)
+    AsioTCPAcceptor::AsioTCPAcceptor(Context::Ptr pContext, String address, uint16_t port)
         : Super(SocketType::TCP, std::move(pContext), std::move(address), port)
     { }
 
@@ -80,7 +80,7 @@ namespace SR_NETWORK_NS {
         }
 
         asio::error_code errorCode;
-        asio::ip::tcp::endpoint endpoint(asio::ip::make_address(m_address, errorCode), m_port);
+        asio::ip::tcp::endpoint endpoint(asio::ip::make_address(m_address.c_str(), errorCode), m_port);
 
         if (errorCode) {
             SR_ERROR("AsioTCPAcceptor::Init() : failed to create endpoint: {}", errorCode.message());
@@ -98,7 +98,7 @@ namespace SR_NETWORK_NS {
         return true;
     }
 
-    std::string AsioTCPAcceptor::GetLocalAddress() const {
+    String AsioTCPAcceptor::GetLocalAddress() const {
         if (!m_acceptor.has_value()) {
             SR_ERROR("AsioTCPAcceptor::GetLocalAddress() : acceptor is not started!");
             return {};
@@ -115,7 +115,7 @@ namespace SR_NETWORK_NS {
         return endpoint.address().to_string();
     }
 
-    std::string AsioTCPAcceptor::GetRemoteAddress() const {
+    String AsioTCPAcceptor::GetRemoteAddress() const {
         if (!m_acceptor.has_value()) {
             SR_ERROR("AsioTCPAcceptor::GetRemoteAddress() : acceptor is not started!");
             return {};

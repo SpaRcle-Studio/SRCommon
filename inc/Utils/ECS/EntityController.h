@@ -86,10 +86,10 @@ namespace SR_UTILS_NS {
 
         void Add(EntityId id);
         void Add(const EntityIdList& list);
-        void Add(const std::vector<EntityId>& list);
+        void Add(const Vector<EntityId>& list);
 
     private:
-        std::vector<EntityId> m_entityIds;
+        Vector<EntityId> m_entityIds;
         EntityController::Ptr m_pController;
         bool m_isReserved = false;
 

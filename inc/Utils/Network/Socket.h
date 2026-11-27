@@ -31,8 +31,8 @@ namespace SR_NETWORK_NS {
         SR_NODISCARD virtual bool Connect(StringView address, uint16_t port) = 0;
         SR_NODISCARD virtual bool IsOpen() const = 0;
 
-        SR_NODISCARD virtual std::string GetLocalAddress() const = 0;
-        SR_NODISCARD virtual std::string GetRemoteAddress() const = 0;
+        SR_NODISCARD virtual String GetLocalAddress() const = 0;
+        SR_NODISCARD virtual String GetRemoteAddress() const = 0;
 
         SR_NODISCARD virtual uint16_t GetLocalPort() const = 0;
         SR_NODISCARD virtual uint16_t GetRemotePort() const = 0;

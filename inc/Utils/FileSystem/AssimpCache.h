@@ -36,8 +36,8 @@ namespace SR_UTILS_NS {
         SR_MAYBE_UNUSED SR_INLINE_STATIC const uint64_t VERSION = 1015;
         using NodeIndex = uint64_t;
         using MeshIndex = uint64_t;
-        using NodeMap = std::pair<std::vector<aiNode*>, std::unordered_map<aiNode*, NodeIndex>>;
-        using MeshMap = std::pair<std::vector<aiMesh*>, std::unordered_map<aiMesh*, MeshIndex>>;
+        using NodeMap = std::pair<Vector<aiNode*>, std::unordered_map<aiNode*, NodeIndex>>;
+        using MeshMap = std::pair<Vector<aiMesh*>, std::unordered_map<aiMesh*, MeshIndex>>;
     public:
         bool Save(const SR_UTILS_NS::Path& path, const aiScene* pScene) const;
         aiScene* Load(const SR_UTILS_NS::Path& path, File& cache) const;

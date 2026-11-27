@@ -115,6 +115,10 @@ namespace SR_UTILS_NS::LexerDetails {
 
     String LexerMessage::ToString(const Vector<LexerInclude> &files, uint8_t tab) const {
         auto&& message = SR_UTILS_NS::String(SR_UTILS_NS::EnumReflector::ToStringAtom(code));
+
+        String tabs;
+        tabs.resize(tab, '\t');
+
         if (fileIndex != SR_UINT16_MAX) {
             if (fileIndex >= files.size()) {
                 SRHalt("Invalid index!");
@@ -122,19 +126,19 @@ namespace SR_UTILS_NS::LexerDetails {
             else {
                 auto&& resourcesPath = SR_UTILS_NS::ResourceManager::Instance().GetResPath();
             #ifdef SR_WIN32
-                message += "\n{}File: {}/{}:{}:{}"_format(std::string(tab, '\t'), resourcesPath, files[fileIndex].name.ToStringView(), line, position);
+                message += "\n{}File: {}/{}:{}:{}"_format(tabs, resourcesPath, files[fileIndex].name.ToStringView(), line, position);
             #else
-                message += "\n{}File: file:///{}/{}:{}:{}"_format(std::string(tab, '\t'), resourcesPath, files[fileIndex].name.ToStringView(), line, position);
+                message += "\n{}File: file:///{}/{}:{}:{}"_format(tabs, resourcesPath, files[fileIndex].name.ToStringView(), line, position);
             #endif
             }
         }
 
         if (!description.empty()) {
-            message += "\n" + std::string(tab, '\t') + "Description: " + description;
+            message += "\n" + tabs + "Description: " + description;
         }
 
         if (lexemKind != LexemKind::Unknown) {
-            message += "\n" + std::string(tab, '\t') + "Lexem: ";
+            message += "\n" + tabs + "Lexem: ";
             message += SR_UTILS_NS::EnumReflector::ToStringAtom(lexemKind);
         }
 

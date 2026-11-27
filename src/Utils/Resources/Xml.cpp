@@ -7,9 +7,9 @@
 #include <Utils/Profile/TracyContext.h>
 
 namespace SR_UTILS_NS {
-    std::string Xml::Attribute::ToString() const {
+    String Xml::Attribute::ToString() const {
         if (!CheckError(SR_FORMAT("Attribute::ToStringAtom() : attribute isn't valid! Name: {}", m_attribute.name()))) {
-            return std::string();
+            return String();
         }
         else
             return m_attribute.as_string();
@@ -47,8 +47,8 @@ namespace SR_UTILS_NS {
             return m_attribute.as_bool();
     }
 
-    std::string Xml::Attribute::ToString(const std::string &def) const {
-        return m_valid ? m_attribute.as_string() : def;
+    String Xml::Attribute::ToString(const String& def) const {
+        return m_valid ? String(m_attribute.as_string()) : def;
     }
 
     int32_t Xml::Attribute::ToInt(int32_t def) const {
@@ -106,7 +106,7 @@ namespace SR_UTILS_NS {
         m_valid = !m_attribute.empty();
     }
 
-    bool Xml::Attribute::CheckError(const std::string &msg) const {
+    bool Xml::Attribute::CheckError(const String& msg) const {
         if (m_valid) {
             return true;
         }
@@ -146,10 +146,10 @@ namespace SR_UTILS_NS {
 
         if (pugi::xml_parse_result result = xml.m_document->load_string(fileData.c_str())) {
             xml.m_valid = true;
-            xml.m_path = std::move(path.ToString());
+            xml.m_path = path.ToString();
         }
         else {
-            SR_ERROR("Document::Load() : failed to load xml! \n\tPath: " + path.ToString() + "\n\tDescription: " + std::string(result.description()));
+            SR_ERROR("Document::Load() : failed to load xml! \n\tPath: {}\n\tDescription: {}", path, result.description());
             Xml::g_xml_last_error = -3;
             xml.m_valid = false;
         }
@@ -157,12 +157,26 @@ namespace SR_UTILS_NS {
         return xml;
     }
 
-    std::string Xml::Document::Dump() const {
+    String Xml::Document::Dump() const {
         if (!Valid())
-            return std::string();
-        std::ostringstream stream;
-        m_document->save(stream, PUGIXML_TEXT("    "));
-        return stream.str();
+            return String();
+
+        struct StringWriter final : public pugi::xml_writer {
+            explicit StringWriter(String& result)
+                : result(result)
+            { }
+
+            void write(const void* pData, size_t size) override {
+                result.append(static_cast<const char*>(pData), static_cast<SizeType>(size));
+            }
+
+            String& result;
+        };
+
+        String result;
+        StringWriter writer(result);
+        m_document->save(writer, PUGIXML_TEXT("    "));
+        return result;
     }
 
     Xml::Document::operator bool() const {
@@ -191,21 +205,21 @@ namespace SR_UTILS_NS {
     }
 
     bool Xml::Document::Save(const Path& path) const {
-        std::string document = Dump();
+        String document = Dump();
         if (document.empty()) {
             SR_ERROR("Document::Save() : document is empty!");
             return false;
         }
 
-        if (!FileSystem::WriteToFile(path, document)) {
-            SR_ERROR("Document::Save() : failed to save document! \n\tPath: " + path.ToString());
+        if (!FileSystem::WriteToFile(path, document.ToStringView())) {
+            SR_ERROR("Document::Save() : failed to save document! \n\tPath: {}", path);
             return false;
         }
 
         return true;
     }
 
-    Xml::Node Xml::Document::AppendChild(const std::string &name) {
+    Xml::Node Xml::Document::AppendChild(const String& name) {
         if (!m_valid) {
             SRAssert2(false,"Document::AppendChild() : document is not valid!");
             g_xml_last_error = -2;
@@ -282,45 +296,45 @@ namespace SR_UTILS_NS {
         return Node(m_node.append_child(name.c_str()));
     }
 
-    std::vector<Xml::Node> Xml::Node::GetNodes() const {
+    Vector<Xml::Node> Xml::Node::GetNodes() const {
         if (!m_valid) {
             SRAssert2(false,"Node::GetNodes() : node is not valid!");
             g_xml_last_error = -2;
             return {};
         }
 
-        auto&& nodes = std::vector<Node>();
+        Vector<Node> nodes;
         for (const auto child : m_node.children())
             nodes.emplace_back(Node(child));
 
         return nodes;
     }
 
-    std::vector<Xml::Node> Xml::Node::TryGetNodes(const std::string &name) const {
+    Vector<Xml::Node> Xml::Node::TryGetNodes(const String& name) const {
         if (Valid())
             return GetNodes(name);
 
-        return std::vector<Node>();
+        return Vector<Node>();
     }
 
-    std::vector<Xml::Node> Xml::Node::TryGetNodes() const {
+    Vector<Xml::Node> Xml::Node::TryGetNodes() const {
         if (Valid())
             return GetNodes();
 
-        return std::vector<Node>();
+        return Vector<Node>();
     }
 
 
-    std::vector<Xml::Node> Xml::Node::GetNodes(const std::string &name) const {
+    Vector<Xml::Node> Xml::Node::GetNodes(const String& name) const {
         if (!m_valid) {
             SRAssert2(false,"Node::GetNodes() : node is not valid!");
             g_xml_last_error = -2;
             return {};
         }
 
-        auto nodes = std::vector<Node>();
+        Vector<Node> nodes;
         for (const auto child : m_node.children())
-            if (std::string(child.name()) == name)
+            if (name == child.name())
                 nodes.emplace_back(Node(child));
 
         return nodes;
@@ -330,7 +344,7 @@ namespace SR_UTILS_NS {
         return Xml::Node(m_node.append_copy(node.m_node));
     }
 
-    Xml::Node Xml::Node::GetNode(const std::string &name) const  {
+    Xml::Node Xml::Node::GetNode(const String& name) const  {
         if (!m_valid) {
             SRAssert2(false, "Node::GetNode() : node is not valid!");
             g_xml_last_error = -2;
@@ -340,19 +354,19 @@ namespace SR_UTILS_NS {
         return Node(m_node.child(name.c_str()));
     }
 
-    Xml::Node Xml::Node::TryGetNode(const std::string &name) const  {
+    Xml::Node Xml::Node::TryGetNode(const String& name) const  {
         return m_valid ? Node(m_node.child(name.c_str())) : Node();
     }
 
-    bool Xml::Node::HasAttribute(const std::string &name) const {
+    bool Xml::Node::HasAttribute(const String& name) const {
         return m_valid ? !m_node.attribute(name.c_str()).empty() : false;
     }
 
-    Xml::Attribute Xml::Node::TryGetAttribute(const std::string &name) const {
+    Xml::Attribute Xml::Node::TryGetAttribute(const String& name) const {
         return m_valid ? Attribute(m_node.attribute(name.c_str())) : Attribute();
     }
 
-    Xml::Attribute Xml::Node::GetAttribute(const std::string &name) const {
+    Xml::Attribute Xml::Node::GetAttribute(const String& name) const {
         if (!m_valid) {
             SRAssert2(false, "Node::GetAttribute() : node is not valid!");
             g_xml_last_error = -4;
@@ -372,7 +386,7 @@ namespace SR_UTILS_NS {
         return m_node.name();
     }
 
-    std::string Xml::Node::Name() const {
+    String Xml::Node::Name() const {
         if (!m_valid) {
             SRAssert2(false, "Node::Name() : node is not valid!");
             g_xml_last_error = -4;
@@ -399,8 +413,8 @@ namespace SR_UTILS_NS {
         return Node();
     }
 
-    Xml::Node Xml::Node::AppendNode(const std::string &name) {
-        return AppendChild(name);
+    Xml::Node Xml::Node::AppendNode(const String& name) {
+        return AppendChild(name.ToStringView());
     }
 
     Xml::Node Xml::Node::AppendNode(const Xml::Node &node) {

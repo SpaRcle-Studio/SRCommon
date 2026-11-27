@@ -13,7 +13,7 @@ namespace SR_NETWORK_NS {
         Pinger() = default;
 
     public:
-        virtual void Ping(const std::string& address) = 0;
+        virtual void Ping(StringView address) = 0;
 
     public:
         void SetContext(Context::Ptr context) { m_context = std::move(context); }

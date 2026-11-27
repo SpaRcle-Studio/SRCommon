@@ -74,7 +74,7 @@ namespace SR_UTILS_NS {
 
         void RemoveComponents();
         virtual bool RemoveComponent(const ComponentPtr& pComponent);
-        virtual bool ContainsComponent(const std::string& name);
+        virtual bool ContainsComponent(const String& name);
 
         virtual void ForEachComponent(const SR_HTYPES_NS::Function<bool(const Component&)>& fun) const;
         virtual void ForEachComponent(const SR_HTYPES_NS::Function<bool(Component&)>& fun);

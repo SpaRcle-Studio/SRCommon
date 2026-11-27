@@ -52,7 +52,7 @@ namespace SR_WORLD_NS {
     class Region;
     class Chunk;
 
-    typedef std::unordered_map<TensorKey, std::vector<SR_HTYPES_NS::SharedPtr<SceneObject>>> Tensor;
+    typedef std::unordered_map<TensorKey, Vector<SR_HTYPES_NS::SharedPtr<SceneObject>>> Tensor;
     typedef std::list<Region*> Regions;
 }
 
