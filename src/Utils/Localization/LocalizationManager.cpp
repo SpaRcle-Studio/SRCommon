@@ -28,7 +28,7 @@ namespace SR_UTILS_NS::Localization {
             return;
         }
 
-        ryml::Tree tree = ryml::parse_in_arena(ryml::to_csubstr(*pFileContents));
+        ryml::Tree tree = ryml::parse_in_arena(ryml::csubstr(pFileContents->data(), pFileContents->size()));
         ryml::ConstNodeRef root = tree.crootref();
         for (auto&& n : root.children()) {
             auto&& key = n.key();
