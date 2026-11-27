@@ -26,6 +26,8 @@ namespace SR_UTILS_NS::Reflection {
         };
         const TypeInfo* m_pType = nullptr;
         Vector<Slot> m_slots;
+        void* m_pStorage = nullptr;
+        SizeType m_storageSize = 0;
         std::atomic<SizeType> m_references = 1;
         std::mutex m_mutex;
     };

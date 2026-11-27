@@ -12,17 +12,20 @@ namespace SR_UTILS_NS::Reflection {
         SR_TRACY_ZONE;
         m_slots.resize(capacity);
         auto&& lifecycle = m_pType->vtable.lifecycle;
-        for (auto&& slot : m_slots) {
-            slot.pData = IAllocator::GetDefaultAllocator()->Allocate(lifecycle.size, lifecycle.alignment);
+        const SizeType stride = ((lifecycle.size + lifecycle.alignment - 1) / lifecycle.alignment) * lifecycle.alignment;
+        m_storageSize = stride * capacity;
+        if (m_storageSize > 0) {
+            m_pStorage = IAllocator::GetDefaultAllocator()->Allocate(m_storageSize, lifecycle.alignment);
+            for (SizeType i = 0; i < capacity; ++i) {
+                m_slots[i].pData = static_cast<uint8_t*>(m_pStorage) + i * stride;
+            }
         }
     }
 
     ValuePool::~ValuePool() {
         auto&& lifecycle = m_pType->vtable.lifecycle;
-        for (auto&& slot : m_slots) {
-            if (slot.pData) {
-                IAllocator::GetDefaultAllocator()->Free(slot.pData, lifecycle.size, lifecycle.alignment);
-            }
+        if (m_pStorage) {
+            IAllocator::GetDefaultAllocator()->Free(m_pStorage, m_storageSize, lifecycle.alignment);
         }
     }
 
