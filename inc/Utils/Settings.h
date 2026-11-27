@@ -76,7 +76,7 @@ namespace SR_UTILS_NS {
 
     };
 
-#ifdef SR_COMMON_DLL_EXPORTS
+#if defined(SR_COMMON_DLL_EXPORTS) || defined(SR_COMMON_STATIC_LIBRARY)
     template<typename T> bool GlobalSettings<T>::IsSingletonCanBeDestroyed() const { return false; }
 
     template<typename T> SR_MAYBE_UNUSED void GlobalSettings<T>::DestroySettings() {
