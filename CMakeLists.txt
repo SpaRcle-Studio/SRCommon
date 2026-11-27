@@ -349,11 +349,11 @@ else()
 endif()
 
 if (UNIX AND NOT APPLE AND NOT SR_EMSCRIPTEN)
-    target_link_libraries(Utils atomic)
+    target_link_libraries(Utils PUBLIC atomic)
 endif()
 
 if (SR_COMMON_ZLIB)
-    target_link_libraries(Utils SRUtilsMinizip)
+    target_link_libraries(Utils PUBLIC SRUtilsMinizip)
 endif()
 
 SR_COPY_STATIC_LIBRARY_TO_LIBRARY_FOLDER(Utils)
@@ -369,7 +369,7 @@ if (SR_COMMON_USE_MINHOOK AND MSVC AND NOT SR_COMMON_USE_CLANG_EMULATION)
     message(STATUS "MinHook will be included in the build.")
     add_subdirectory(libs/minhook)
     SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_SOURCE_DIR}/libs/MinHook/include)
-    target_link_libraries(Utils minhook)
+    target_link_libraries(Utils PUBLIC minhook)
     target_compile_definitions(Utils PUBLIC SR_COMMON_USE_MINHOOK)
 endif()
 
@@ -396,27 +396,27 @@ endif()
 
 if (UNIX AND NOT APPLE AND NOT SR_EMSCRIPTEN AND NOT ANDROID_NDK)
     find_package(TBB REQUIRED)
-    target_link_libraries(Utils TBB::tbb)
+    target_link_libraries(Utils PUBLIC TBB::tbb)
 endif()
 
 if (NOT ANDROID_NDK AND UNIX AND NOT APPLE AND NOT SR_EMSCRIPTEN)
-    target_link_libraries(Utils ${X11_LIBRARIES})
-    target_link_libraries(Utils ${X11_Xrandr_LIB})
+    target_link_libraries(Utils PUBLIC ${X11_LIBRARIES})
+    target_link_libraries(Utils PUBLIC ${X11_Xrandr_LIB})
     SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${X11_Xrandr_INCLUDE_PATH})
 
-    target_link_libraries(Utils ${X11_Xfixes_LIB})
+    target_link_libraries(Utils PUBLIC ${X11_Xfixes_LIB})
     SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${X11_Xfixes_INCLUDE_PATH})
 
     if (X11_xcb_randr_FOUND)
-        target_link_libraries(Utils ${X11_xcb_randr_LIB})
+        target_link_libraries(Utils PUBLIC ${X11_xcb_randr_LIB})
         SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${X11_xcb_randr_INCLUDE_PATH})
     endif()
 
-    target_link_libraries(Utils bfd)
+    target_link_libraries(Utils PUBLIC bfd)
 endif()
 
 if (WIN32)
-    target_link_libraries(Utils wininet ws2_32 shell32)
+    target_link_libraries(Utils PUBLIC wininet ws2_32 shell32)
 endif()
 
 if (SR_COMMON_MYHTML)
@@ -429,13 +429,13 @@ if (SR_COMMON_MYHTML)
 
     add_subdirectory(libs/myhtml)
     SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_SOURCE_DIR}/libs/myhtml/include)
-    target_link_libraries(Utils myhtml_static)
+    target_link_libraries(Utils PUBLIC myhtml_static)
 endif()
 
 if (SR_COMMON_LITEHTML)
     add_subdirectory(libs/litehtml)
     SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_SOURCE_DIR}/libs/litehtml/include)
-    target_link_libraries(Utils litehtml)
+    target_link_libraries(Utils PUBLIC litehtml)
 endif()
 
 SR_UTILS_INCLUDE_DIRECTORIES_APPEND(${CMAKE_CURRENT_BINARY_DIR}/include)
@@ -460,15 +460,15 @@ endif()
 
 if (SR_UTILS_FMT_HEADER_ONLY)
 else()
-    target_link_libraries(Utils fmt::fmt)
+    target_link_libraries(Utils PUBLIC fmt::fmt)
 endif()
 
-target_link_libraries(Utils ryml::ryml)
+target_link_libraries(Utils PUBLIC ryml::ryml)
 target_include_directories(Utils PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/libs/yyjson/src")
-target_link_libraries(Utils $<LINK_ONLY:yyjson>)
+target_link_libraries(Utils PUBLIC $<LINK_ONLY:yyjson>)
 
 if (SR_COMMON_CPPTRACE_ENABLED)
-    target_link_libraries(Utils cpptrace::cpptrace)
+    target_link_libraries(Utils PUBLIC cpptrace::cpptrace)
 endif()
 
 get_property(SR_UTILS_INCLUDE_DIRECTORIES_CONTENT GLOBAL PROPERTY SR_UTILS_INCLUDE_DIRECTORIES)
@@ -480,7 +480,7 @@ set(SR_UTILS_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR} CACHE INTERNAL "" FORCE)
 
 if (SR_COMMON_DLL_EXPORTS)
     message("[SpaRcle Engine] SRCommon will be using DLL exports")
-    target_compile_definitions(Utils PUBLIC SR_COMMON_DLL_EXPORTS)
+    target_compile_definitions(Utils PRIVATE SR_COMMON_DLL_EXPORTS)
 endif()
 
 if (SR_COMMON_CI_BUILD)

@@ -12,6 +12,33 @@
 #include <assimp/matrix4x4.h>
 
 namespace SR_UTILS_NS::AssimpTools {
+    StringView GetDiffuseTexturePath(const void* pScene, uint32_t meshId) {
+        auto&& pAssimpScene = static_cast<const aiScene*>(pScene);
+        if (!pAssimpScene || meshId >= pAssimpScene->mNumMeshes) {
+            return {};
+        }
+
+        const uint32_t materialIndex = pAssimpScene->mMeshes[meshId]->mMaterialIndex;
+        if (materialIndex >= pAssimpScene->mNumMaterials) {
+            return {};
+        }
+
+        const aiMaterialProperty* pProperty = nullptr;
+        if (aiGetMaterialProperty(pAssimpScene->mMaterials[materialIndex], AI_MATKEY_TEXTURE_DIFFUSE(0), &pProperty) != aiReturn_SUCCESS
+            || !pProperty || pProperty->mType != aiPTI_String || pProperty->mDataLength < sizeof(uint32_t) + 1)
+        {
+            return {};
+        }
+
+        uint32_t length = 0;
+        memcpy(&length, pProperty->mData, sizeof(length));
+        if (length >= pProperty->mDataLength - sizeof(length) || pProperty->mData[sizeof(length) + length] != '\0') {
+            return {};
+        }
+
+        return StringView(pProperty->mData + sizeof(length), length);
+    }
+
     uint32_t NormalizeWeights(const aiMesh* pMesh) {
         SR_TRACY_ZONE;
 

@@ -25,6 +25,10 @@
 #include <Codegen/Scene.generated.hpp>
 
 namespace SR_WORLD_NS {
+    const StringView Scene::RuntimeScenePath = "Scenes/Runtime-cache-scene";
+    const StringView Scene::NewScenePath = "Scenes/New-cache-scene";
+    const StringView Scene::NewPrefabPath = "Scenes/New-cache-prefab";
+
     bool Scene::IsUIInputConsumed() const {
         return m_sceneUpdater && m_sceneUpdater->IsUIInputConsumed();
     }

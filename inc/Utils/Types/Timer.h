@@ -9,7 +9,7 @@
 #include <Utils/Profile/TracyContext.h>
 
 namespace SR_HTYPES_NS {
-    class SR_COMMON_DLL_API Timer {
+    class Timer {
     public:
         explicit Timer(float_t updateFrequency)
             : m_updateFrequency(updateFrequency)

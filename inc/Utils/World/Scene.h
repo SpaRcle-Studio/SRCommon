@@ -41,9 +41,9 @@ namespace SR_WORLD_NS {
         using SceneObjects = Vector<SceneObjectPtr>;
         using GameObjectPtr = SR_HTYPES_NS::SharedPtr<GameObject>;
 
-        SR_MAYBE_UNUSED SR_INLINE_STATIC const StringView RuntimeScenePath = "Scenes/Runtime-cache-scene"; /// NOLINT
-        SR_MAYBE_UNUSED SR_INLINE_STATIC const StringView NewScenePath = "Scenes/New-cache-scene"; /// NOLINT
-        SR_MAYBE_UNUSED SR_INLINE_STATIC const StringView NewPrefabPath = "Scenes/New-cache-prefab"; /// NOLINT
+        static const StringView RuntimeScenePath;
+        static const StringView NewScenePath;
+        static const StringView NewPrefabPath;
 
     public:
         Scene();

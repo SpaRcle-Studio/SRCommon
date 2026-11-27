@@ -24,6 +24,7 @@ namespace SR_UTILS_NS {
     ArchiveVFSBackend::ArchiveVFSBackend(StringView archive, ArchiveVFSBackendMode mode, uint64_t decompressedSize)
         : m_decompressedSize(decompressedSize), m_mode(mode)
     {
+        SR_TRACY_ZONE;
         if (mode == ArchiveVFSBackendMode::File) {
             m_archivePath = archive;
             File file(new StreamFileImpl(), archive, FileMode::Read);
@@ -37,6 +38,7 @@ namespace SR_UTILS_NS {
                 StringView(footer.data(), ResourceMagic.size()) != ResourceMagic) {
                 return;
             }
+            SR_LOG("ArchiveVFSBackend::ArchiveVFSBackend() : decompressing embedded resources...");
             SizeType position = ResourceMagic.size();
             uint64_t compressedSize = 0;
             if (!ReadArchiveValue(footer, position, &m_decompressedSize, sizeof(uint64_t)) ||
