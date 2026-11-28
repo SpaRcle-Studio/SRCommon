@@ -82,9 +82,13 @@ namespace SR_MATH_NS {
         SR_NODISCARD bool Intersects(const OctreeNodeId& node, uint8_t maxLevel) const;
         /// Добавлен ли сам узел или узел, который его содержит
         SR_NODISCARD bool ContainsSelfOrAncestor(const OctreeNodeId& node, uint8_t maxLevel) const;
-        SR_NODISCARD bool IsEmpty() const noexcept { return m_nodes.empty(); }
+        SR_NODISCARD bool IsEmpty() const noexcept {
+            return m_nodes.empty();
+        }
         /// Добавлен ли именно этот узел
-        SR_NODISCARD bool Contains(const OctreeNodeId& node) const { return m_nodes.contains(node); }
+        SR_NODISCARD bool Contains(const OctreeNodeId& node) const {
+            return m_nodes.contains(node);
+        }
 
     private:
         SR_HTYPES_NS::FlatHashSet<OctreeNodeId> m_nodes;

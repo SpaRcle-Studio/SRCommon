@@ -97,8 +97,12 @@ namespace SR_UTILS_NS {
 
         SR_NODISCARD bool IsPrefab() const noexcept override { return m_prefabInfo.pPrefab; }
         /// Дети создаются в рантайме (например, пул объектов чанков террейна) и не сохраняются вместе со сценой
-        SR_NODISCARD bool IsChildrenTransient() const noexcept { return m_isChildrenTransient; }
-        void SetChildrenTransient(bool value) noexcept { m_isChildrenTransient = value; }
+        SR_NODISCARD bool IsChildrenTransient() const noexcept {
+            return m_isChildrenTransient;
+        }
+        void SetChildrenTransient(bool value) noexcept {
+            m_isChildrenTransient = value;
+        }
 
         SR_NODISCARD virtual SceneObjectType GetSceneObjectType() const noexcept {
             SRHalt("Abstract method called!");
