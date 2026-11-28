@@ -96,6 +96,9 @@ namespace SR_UTILS_NS {
         SR_NODISCARD uint32_t GetHierarchyObjectCount() const;
 
         SR_NODISCARD bool IsPrefab() const noexcept override { return m_prefabInfo.pPrefab; }
+        /// Дети создаются в рантайме (например, пул объектов чанков террейна) и не сохраняются вместе со сценой
+        SR_NODISCARD bool IsChildrenTransient() const noexcept { return m_isChildrenTransient; }
+        void SetChildrenTransient(bool value) noexcept { m_isChildrenTransient = value; }
 
         SR_NODISCARD virtual SceneObjectType GetSceneObjectType() const noexcept {
             SRHalt("Abstract method called!");
@@ -192,6 +195,7 @@ namespace SR_UTILS_NS {
         bool m_isActive = false;
         bool m_isDestroyed = false;
         bool m_isPrefabLoadingState = false;
+        bool m_isChildrenTransient = false;
         Vector<PrefabPropertyOverride> m_prefabPropertyOverrides;
 
         StringAtom m_cachedLayer;
@@ -207,7 +211,7 @@ namespace SR_UTILS_NS {
         /// @loadCondition(!This.IsPrefabLoadingState())
         /// @property @setter(SetName) @hidden @dontSaveTags(Inspector)
         StringAtom m_name;
-        /// @property @condition(!This.IsPrefab()) @hidden @dontSaveTags(Inspector)
+        /// @property @condition(!This.IsPrefab() && !This.IsChildrenTransient()) @hidden @dontSaveTags(Inspector)
         /// @loadCondition(!This.IsPrefab())
         Vector<SceneObject::Ptr> m_children;
         /// @property @setter(SetEnabled) @hidden @dontSaveTags(Inspector)

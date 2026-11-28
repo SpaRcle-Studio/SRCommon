@@ -7,6 +7,7 @@
 
 #include <Utils/Math/Vector3.h>
 #include <Utils/Types/Function.h>
+#include <Utils/Types/FlatHashMap.h>
 #include <Utils/Types/Vector.h>
 
 namespace SR_MATH_NS {
@@ -22,6 +23,8 @@ namespace SR_MATH_NS {
         /// Расстояние от точки до границ узла, 0 если точка внутри
         SR_NODISCARD float_t DistanceTo(const FVector3& point) const noexcept;
         SR_NODISCARD bool Intersects(const OctreeNodeId& other) const noexcept;
+        /// Узел уровня level, содержащий этот (level >= this->level)
+        SR_NODISCARD OctreeNodeId GetAncestor(uint8_t ancestorLevel) const noexcept;
 
         SR_NODISCARD bool operator==(const OctreeNodeId& other) const noexcept { return level == other.level && position == other.position; }
         SR_NODISCARD bool operator!=(const OctreeNodeId& other) const noexcept { return !(*this == other); }
@@ -62,6 +65,32 @@ namespace std {
             hash_vector3_combine<uint8_t>(res, node.level);
             return res;
         }
+    };
+}
+
+namespace SR_MATH_NS {
+    /// Множество узлов октодерева для запросов пересечения за O(число уровней) вместо перебора.
+    /// Выровненные узлы октодерева либо вложены, либо не пересекаются: узел пересекает добавленный, только если
+    /// он сам или его предок добавлен, либо он предок добавленного. Поэтому хранятся узлы и все их предки.
+    class SR_COMMON_DLL_API OctreeNodeSet {
+    public:
+        void Clear();
+        /// maxLevel - уровень корней дерева, выше предки не нужны
+        void Add(const OctreeNodeId& node, uint8_t maxLevel);
+
+        /// Пересекает ли узел хотя бы один из добавленных
+        SR_NODISCARD bool Intersects(const OctreeNodeId& node, uint8_t maxLevel) const;
+        /// Добавлен ли сам узел или узел, который его содержит
+        SR_NODISCARD bool ContainsSelfOrAncestor(const OctreeNodeId& node, uint8_t maxLevel) const;
+        SR_NODISCARD bool IsEmpty() const noexcept { return m_nodes.empty(); }
+        /// Добавлен ли именно этот узел
+        SR_NODISCARD bool Contains(const OctreeNodeId& node) const { return m_nodes.contains(node); }
+
+    private:
+        SR_HTYPES_NS::FlatHashSet<OctreeNodeId> m_nodes;
+        /// Добавленные узлы и все их предки
+        SR_HTYPES_NS::FlatHashSet<OctreeNodeId> m_cover;
+
     };
 }
 
