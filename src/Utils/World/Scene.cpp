@@ -663,4 +663,27 @@ namespace SR_WORLD_NS {
     void Scene::SetModule(StringView name, ISceneModule *pModule) {
         m_modules[name] = pModule;
     }
+
+    void Scene::RegisterWorldShape(SR_UTILS_NS::WorldShape* pShape) {
+        if (!pShape) {
+            return;
+        }
+
+        for (auto&& pRegistered : m_worldShapes) {
+            if (pRegistered == pShape) {
+                return;
+            }
+        }
+
+        m_worldShapes.emplace_back(pShape);
+    }
+
+    void Scene::UnregisterWorldShape(SR_UTILS_NS::WorldShape* pShape) {
+        for (auto pIt = m_worldShapes.begin(); pIt != m_worldShapes.end(); ++pIt) {
+            if (*pIt == pShape) {
+                m_worldShapes.erase(pIt);
+                return;
+            }
+        }
+    }
 }

@@ -20,6 +20,7 @@ namespace SR_UTILS_NS {
     class EntityController;
     class Component;
     class GameObject;
+    class WorldShape;
 }
 
 namespace SR_HTYPES_NS {
@@ -99,6 +100,11 @@ namespace SR_WORLD_NS {
 
         void SetModule(StringView name, ISceneModule* pModule);
 
+        /// Активные формы мира (WorldShape регистрирует себя сам), запросы - через WorldShape::Find*
+        void RegisterWorldShape(SR_UTILS_NS::WorldShape* pShape);
+        void UnregisterWorldShape(SR_UTILS_NS::WorldShape* pShape);
+        SR_NODISCARD const Vector<SR_UTILS_NS::WorldShape*>& GetWorldShapes() const noexcept { return m_worldShapes; }
+
         /// @method
         virtual SR_HTYPES_NS::SharedPtr<SceneObject> InstanceFromFile(const SR_UTILS_NS::Path& path);
         virtual SR_HTYPES_NS::SharedPtr<SceneObject> Instance(SR_HTYPES_NS::RawMesh* rawMesh);
@@ -157,6 +163,7 @@ namespace SR_WORLD_NS {
 
         SR_HTYPES_NS::SharedPtr<SR_UTILS_NS::EntityController> m_pEntityController;
         Map<StringAtom, ISceneModule*> m_modules;
+        Vector<SR_UTILS_NS::WorldShape*> m_worldShapes;
 
     private:
         /// @property

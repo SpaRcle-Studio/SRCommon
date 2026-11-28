@@ -137,6 +137,24 @@ namespace SR_MATH_NS {
         return result;
     }
 
+    Matrix4x4 Matrix4x4::PerspectiveReverseInfinite(float_t FOV, float_t aspect, float_t nearValue) {
+        const float_t tangent = tanf(FOV * 0.5f);
+        Matrix4x4 result(0.f);
+        result.m00 = 1.f / (aspect * tangent);
+        result.m11 = 1.f / tangent;
+        result.m22 = 0.f;
+        result.m23 = -1.f;
+        result.m32 = nearValue;
+        return result;
+    }
+
+    Matrix4x4 Matrix4x4::ReverseDepth() {
+        Matrix4x4 result = Identity();
+        result.m22 = -1.f;
+        result.m32 = 1.f;
+        return result;
+    }
+
     Matrix4x4 Matrix4x4::FromEulers(const FVector3& eulers) {
         return Matrix4x4::RotationYawPitchRoll(eulers.Radians());
     }

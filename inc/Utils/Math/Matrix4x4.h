@@ -59,6 +59,10 @@ namespace SR_MATH_NS {
         SR_NODISCARD static Matrix4x4 Identity();
         SR_NODISCARD static Matrix4x4 RotationYawPitchRoll(const FVector3& angles);
         SR_NODISCARD static Matrix4x4 Perspective(float_t FOV, float_t aspect, float_t nearValue, float_t farValue);
+        /// Reverse-Z, глубина [0, 1]: ближняя плоскость - 1, бесконечность - 0 (depth = near / distance)
+        SR_NODISCARD static Matrix4x4 PerspectiveReverseInfinite(float_t FOV, float_t aspect, float_t nearValue);
+        /// Переворот глубины ортографической или любой проекции с глубиной [0, 1]: z' = w - z
+        SR_NODISCARD static Matrix4x4 ReverseDepth();
         SR_NODISCARD static Matrix4x4 FromEulers(const FVector3& eulers);
         SR_NODISCARD static Matrix4x4 CreateOrthographicOffCenter(Unit left, Unit right, Unit bottom, Unit top, Unit zNear, Unit zFar);
         SR_NODISCARD static Matrix4x4 Ortho(Unit left, Unit right, Unit bottom, Unit top, Unit zNear, Unit zFar);
