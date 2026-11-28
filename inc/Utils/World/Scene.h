@@ -21,6 +21,7 @@ namespace SR_UTILS_NS {
     class Component;
     class GameObject;
     class WorldShape;
+    class FloatingOrigin;
 }
 
 namespace SR_HTYPES_NS {
@@ -105,6 +106,15 @@ namespace SR_WORLD_NS {
         void UnregisterWorldShape(SR_UTILS_NS::WorldShape* pShape);
         SR_NODISCARD const Vector<SR_UTILS_NS::WorldShape*>& GetWorldShapes() const noexcept { return m_worldShapes; }
 
+        /// Активный FloatingOrigin (регистрирует себя сам, один на сцену), запросы - через FloatingOrigin::Find*
+        bool RegisterFloatingOrigin(SR_UTILS_NS::FloatingOrigin* pFloatingOrigin);
+        void UnregisterFloatingOrigin(SR_UTILS_NS::FloatingOrigin* pFloatingOrigin);
+        SR_NODISCARD SR_UTILS_NS::FloatingOrigin* GetFloatingOrigin() const noexcept { return m_pFloatingOrigin; }
+
+        /// Сдвиг начала координат: корневые 3D-объекты переезжают на -delta, затем OnOriginShifted(delta)
+        /// получают модули сцены (физика) и все компоненты. Абсолютную позицию начала хранит FloatingOrigin
+        void ShiftOrigin(const SR_MATH_NS::FVector3& delta);
+
         /// @method
         virtual SR_HTYPES_NS::SharedPtr<SceneObject> InstanceFromFile(const SR_UTILS_NS::Path& path);
         virtual SR_HTYPES_NS::SharedPtr<SceneObject> Instance(SR_HTYPES_NS::RawMesh* rawMesh);
@@ -135,6 +145,7 @@ namespace SR_WORLD_NS {
     private:
         void RegisterSceneObjectImpl(const SceneObjectPtr& pSO);
         void ProcessNewSO(const SceneObjectPtr& pSO);
+        void NotifyOriginShifted(SceneObject& object, const SR_MATH_NS::FVector3& delta);
 
     private:
         mutable EntityReplaceMap m_registerEntityIdReplaceCache;
@@ -164,6 +175,7 @@ namespace SR_WORLD_NS {
         SR_HTYPES_NS::SharedPtr<SR_UTILS_NS::EntityController> m_pEntityController;
         Map<StringAtom, ISceneModule*> m_modules;
         Vector<SR_UTILS_NS::WorldShape*> m_worldShapes;
+        SR_UTILS_NS::FloatingOrigin* m_pFloatingOrigin = nullptr;
 
     private:
         /// @property

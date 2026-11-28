@@ -686,4 +686,88 @@ namespace SR_WORLD_NS {
             }
         }
     }
+
+    bool Scene::RegisterFloatingOrigin(SR_UTILS_NS::FloatingOrigin* pFloatingOrigin) {
+        if (!pFloatingOrigin) {
+            return false;
+        }
+
+        if (m_pFloatingOrigin && m_pFloatingOrigin != pFloatingOrigin) {
+            SR_WARN("Scene::RegisterFloatingOrigin() : scene already has an active floating origin, the new one is ignored!");
+            return false;
+        }
+
+        m_pFloatingOrigin = pFloatingOrigin;
+        return true;
+    }
+
+    void Scene::UnregisterFloatingOrigin(SR_UTILS_NS::FloatingOrigin* pFloatingOrigin) {
+        if (m_pFloatingOrigin == pFloatingOrigin) {
+            m_pFloatingOrigin = nullptr;
+        }
+    }
+
+    void Scene::ShiftOrigin(const SR_MATH_NS::FVector3& delta) {
+        SR_TRACY_ZONE;
+
+        const SR_MATH_NS::FVector3 offset = -delta;
+
+        auto&& shiftObject = [&offset](const SceneObjectPtr& pObject) {
+            if (!pObject || pObject->GetParent() || pObject->IsDestroyed()) {
+                return;
+            }
+
+            auto&& pGameObject = dynamic_cast<const SR_UTILS_NS::GameObject*>(pObject.Get());
+            if (!pGameObject) {
+                return;
+            }
+
+            /// Только 3D: у UI (TransformRect, Transform2D) свои координаты экрана
+            auto&& pTransform = pGameObject->TryGetTransform();
+            if (pTransform && pTransform->GetMeasurement() == SR_UTILS_NS::Measurement::Space3D) {
+                pTransform->GlobalTranslate(offset);
+            }
+        };
+
+        for (auto&& pObject : GetRootSceneObjects()) {
+            shiftObject(pObject);
+        }
+
+        /// Созданные в этом кадре объекты ещё не в списке корней, но уже стоят в старых координатах
+        for (auto&& pObject : m_newQueue) {
+            shiftObject(pObject);
+        }
+
+        for (auto&& [name, pModule] : m_modules) {
+            if (pModule) {
+                pModule->OnOriginShifted(delta);
+            }
+        }
+
+        for (auto&& pObject : GetRootSceneObjects()) {
+            if (pObject && !pObject->IsDestroyed()) {
+                NotifyOriginShifted(*pObject, delta);
+            }
+        }
+
+        for (auto&& pObject : m_newQueue) {
+            if (pObject && !pObject->GetParent() && !pObject->IsDestroyed()) {
+                NotifyOriginShifted(*pObject, delta);
+            }
+        }
+    }
+
+    void Scene::NotifyOriginShifted(SceneObject& object, const SR_MATH_NS::FVector3& delta) {
+        for (auto&& pComponent : object.GetComponents()) {
+            if (pComponent) {
+                pComponent->OnOriginShifted(delta);
+            }
+        }
+
+        for (auto&& pChild : object.GetChildrenRef()) {
+            if (pChild && !pChild->IsDestroyed()) {
+                NotifyOriginShifted(*pChild, delta);
+            }
+        }
+    }
 }

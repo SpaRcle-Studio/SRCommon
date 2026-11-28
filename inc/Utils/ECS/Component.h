@@ -80,6 +80,10 @@ namespace SR_UTILS_NS {
         virtual void OnBeforeLayerChanged();
         virtual void OnLayerChanged();
 
+        /// Начало координат мира сдвинуто (Scene::ShiftOrigin): корневые объекты уже переехали на -delta.
+        /// Нужно только компонентам, которые хранят мировые позиции вне трансформов
+        virtual void OnOriginShifted(const SR_MATH_NS::FVector3& delta);
+
         virtual void OnCollisionEnter(const CollisionData& data);
         virtual void OnCollisionStay(const CollisionData& data);
         virtual void OnCollisionExit(const CollisionData& data);

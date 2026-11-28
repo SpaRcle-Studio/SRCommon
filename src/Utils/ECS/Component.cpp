@@ -221,6 +221,8 @@ namespace SR_UTILS_NS {
     void Component::OnBeforeLayerChanged() { }
     void Component::OnLayerChanged() { }
 
+    void Component::OnOriginShifted(const SR_MATH_NS::FVector3& delta) { }
+
     void Component::Start() {
         m_isStarted = true;
     }
